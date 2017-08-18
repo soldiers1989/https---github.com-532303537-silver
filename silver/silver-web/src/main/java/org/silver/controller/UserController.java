@@ -31,7 +31,7 @@ public class UserController {
     @ResponseBody
     public String login(@RequestParam("account") String email, @RequestParam("password") String password) {
         Subject currentUser = SecurityUtils.getSubject();
-        System.out.println(testService.method_1());
+        System.out.println(testService.method_1()+"doMethod_1");
         currentUser.logout();
         if (!currentUser.isAuthenticated()) {
             CustomizedToken customizedToken = new CustomizedToken(email, password, USER_LOGIN_TYPE);
