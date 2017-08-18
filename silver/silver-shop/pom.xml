@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.silver</groupId>
+    <artifactId>silver</artifactId>
+    <version>1.0.0</version>
+  </parent>
+ <artifactId>silver-shop</artifactId>
+	<name>${project.artifactId}</name>
+	<packaging>pom</packaging>
+
+	<properties>
+		<skip_maven_deploy>true</skip_maven_deploy>
+	</properties>
+	
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <modules>
+    <module>silver-shop-api</module>
+    <module>silver-shop-service</module>
+  </modules>
+</project>
