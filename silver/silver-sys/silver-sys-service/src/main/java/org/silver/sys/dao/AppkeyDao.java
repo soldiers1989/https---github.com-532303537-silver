@@ -247,6 +247,7 @@ public class AppkeyDao extends HibernateDaoImpl{
 			
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		
 		AppkeyDao appkeyDao = new AppkeyDao();
 		Appkey entity = new Appkey();
 		entity.setApp_key("app_key");

@@ -1,14 +1,12 @@
 package org.silver.util;
 
 import java.util.ResourceBundle;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 
@@ -88,9 +86,11 @@ public class JedisTemplate {
 		return null;
 	}
 	 public static void main(String[] args) {
-		 Jedis jedis = new Jedis("150.242.58.22", 6380);
+	
+		 
+	//	 Jedis jedis = new Jedis("150.242.58.22", 6380);
 		// jedis.auth("jugg"); 
-		 jedis.set("name", "678");
-		 System.out.println(jedis.get("name"));
+		// jedis.set("name", "678");
+	//	 System.out.println(jedis.get("name"));
 	}
 }

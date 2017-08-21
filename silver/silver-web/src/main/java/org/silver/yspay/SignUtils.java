@@ -77,8 +77,8 @@ public class SignUtils {
 	public static String rsaSign(String content, String charset,
 			InputStream pfxCertFileInputStream) throws Exception {
 		try {
-			System.out.println("进入签名方法：content[" + content + "], charset["
-					+ charset + "]");
+		/*	System.out.println("进入签名方法：content[" + content + "], charset["
+					+ charset + "]");*/
 			PrivateKey priKey = getPrivateKeyFromPKCS12(
 					DirectPayConfig.PASSWORD_PARTNER_PKCS12,
 					pfxCertFileInputStream);
@@ -98,8 +98,8 @@ public class SignUtils {
 
 			String sign = new String(Base64.encodeBase64(signed), charset);
 
-			System.out.println("进入签名方法：content[" + content + "], charset["
-					+ charset + "], sign[" + sign + "]");
+			/*System.out.println("进入签名方法：content[" + content + "], charset["
+					+ charset + "], sign[" + sign + "]");*/
 
 			return sign;
 		} catch (Exception e) {
@@ -138,9 +138,9 @@ public class SignUtils {
 	public static boolean rsaCheckContent(
 			InputStream publicCertFileInputStream, String content, String sign,
 			String charset) throws Exception {
-		System.out.println("进入验证签名方法: content[" + content
+	/*	System.out.println("进入验证签名方法: content[" + content
 				+ "], sign[" + sign + "], charset["
-				+ charset + "]");
+				+ charset + "]");*/
 		boolean bFlag = false;
 		try {
 			java.security.Signature signetcheck = java.security.Signature
@@ -148,17 +148,17 @@ public class SignUtils {
 			signetcheck
 					.initVerify(getPublicKeyFromCert(publicCertFileInputStream));
 			signetcheck.update(content.getBytes(charset));
-			System.out.println("abc");
+	
 			if (signetcheck.verify(Base64.decodeBase64(sign.getBytes(charset)))) {
 				
 				bFlag = true;
-				System.out.println("解密成功");
-				System.out.println("sign:"+Base64.decodeBase64(sign.getBytes(charset)).toString());
+				/*System.out.println("解密成功");
+				System.out.println("sign:"+Base64.decodeBase64(sign.getBytes(charset)).toString());*/
 			}
-			System.out.println("123");
-			System.out.println("进入验证签名方法: content[" + content + "], sign["
+		
+			/*System.out.println("进入验证签名方法: content[" + content + "], sign["
 					+ sign + "], charset[" + charset + "], result[" + bFlag
-					+ "]");
+					+ "]");*/
 		} catch (Exception e) {
 			System.out.println("验证签名异常" + ": content[" + content + "], sign["
 					+ sign + "], charset[" + charset + "]");

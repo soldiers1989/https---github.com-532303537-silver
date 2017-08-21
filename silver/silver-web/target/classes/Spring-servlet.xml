@@ -90,7 +90,7 @@
 	
 
     <mvc:resources mapping="/res/**" location="/WEB-INF/res/" />
-	<bean id="exceptionHandler" class="org.silver.shiro.CustomExceptionHandler" /> 
+	<bean id="exceptionHandler" class="org.silver.shiro.CustomExceptionHandler" />  
 	<!-- 资源重定向(仅作为后台使用不提供静态资源) -->
 	<mvc:resources mapping="upload/**" location="/WEB-INF/upload/" cache-period="300" />
 	<mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/"/>
