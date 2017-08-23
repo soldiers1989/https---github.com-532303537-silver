@@ -9,7 +9,7 @@
               
   <!--    <bean id="helloWorld" class="org.silver.shop.service.HelloWorldImpl"/>  -->
       
-  <bean id="ChooseDatasourceHandler" class="org.silver.shop.service.ChooseDatasourceHandler"/>  
+  <bean id="ChooseDatasourceHandler" class="org.silver.shop.component.ChooseDatasourceHandler"/>  
       
   <!--   <bean id="config" class="org.silver.shop.dao.UserDao"/>  --> 
     <aop:config>  

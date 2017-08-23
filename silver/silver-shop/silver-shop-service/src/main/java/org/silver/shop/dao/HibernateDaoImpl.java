@@ -1,7 +1,7 @@
 package org.silver.shop.dao;
 
 import org.hibernate.Session;
-import org.silver.shop.service.ChooseDatasourceHandler;
+import org.silver.shop.component.ChooseDatasourceHandler;
 
 public class HibernateDaoImpl {
 	private Session session;

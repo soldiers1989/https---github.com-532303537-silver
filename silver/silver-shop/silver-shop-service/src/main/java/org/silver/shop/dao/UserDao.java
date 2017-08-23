@@ -8,8 +8,8 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.silver.shop.component.DataSourcesKey;
 import org.silver.shop.model.User;
-import org.silver.shop.service.DataSourcesKey;
 import org.springframework.stereotype.Repository;
 
 @Repository("userDao")

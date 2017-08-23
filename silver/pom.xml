@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.silver</groupId>
 	<artifactId>silver</artifactId>
@@ -12,8 +11,9 @@
 		<module>silver-common</module>
 		<module>silver-sys</module>
 		<module>silver-web</module>
-		<module>silver-shop</module>
-	</modules>
+		<module>silver-web-pay</module>
+		<module>silver-web-shop</module>
+  </modules>
 
 	<!-- clean:clean package -P build tomcat7:run-war-only -->
 	<!-- mybatis-generator:generate -->
@@ -230,11 +230,12 @@
 			<version>3.15.0-GA</version>
 		</dependency>
 		<!-- jdbc封装 -->
-		<dependency>
+			<dependency>
 			<groupId>com.justep.baas</groupId>
 			<artifactId>baas-api</artifactId>
 			<version>1.0</version>
 		</dependency>
+		
 		<!-- Dubbo -->
 		<dependency>
 			<groupId>com.alibaba</groupId>

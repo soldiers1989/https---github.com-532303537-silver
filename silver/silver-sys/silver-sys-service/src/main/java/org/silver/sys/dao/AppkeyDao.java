@@ -255,6 +255,7 @@ public class AppkeyDao extends HibernateDaoImpl{
 		entity.setUser_mobile("251211");
 		entity.setCreate_date(new Date());
 		System.out.println(appkeyDao.add(entity));
+		
 	}
 
 
