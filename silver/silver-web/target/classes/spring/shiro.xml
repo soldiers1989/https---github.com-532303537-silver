@@ -69,7 +69,6 @@
 				/account/oauth=anon
 				/oauth/token=anon
 				/manage/manageLoginController/*=anon
-				/erp/UserAccount/*=anon
 				/logout=anon
 				/test=anon
 				/*.ico=anon

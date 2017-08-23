@@ -32,7 +32,7 @@ public class CbspController {
 	    * 通用网关接口 
 	    * @param req
 	    * @param resp 
-	    * @param type 0 商品备案   1 订单备案   2支付单备案 
+	    * @param type 0 商品备案   1 订单备案   2清单（未确定）
 	    * @param eport 口岸  0 广州电子口岸   1广东智检 
 	    * @param ieFlag 进出口标识 I 进口  E 出口（广州口岸）
 	    * @param businessType 跨境业务类型    1-特殊监管区域BBC保税进口； 2-保税仓库BBC保税进口；3-BC直购进口；（广州口岸）
