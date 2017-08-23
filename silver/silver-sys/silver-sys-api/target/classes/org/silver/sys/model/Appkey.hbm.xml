@@ -37,13 +37,7 @@
               <column name="user_id" not-null="true"/>
          </property>
         
-         <property name="company_name">
-              <column name="company_name" not-null="true"/>
-         </property>
-        
-          <property name="website">
-              <column name="website" not-null="true"/>
-         </property>
+       
       
           <property name="del_flag" type="java.lang.Integer">
               <column name="del_flag" not-null="true"/>

@@ -35,8 +35,6 @@ public class AppkeyServiceImpl implements AppkeyService {
 			entity.setUser_name(user_name);
 			entity.setUser_mobile(user_mobile);
 			entity.setUser_id(user_id);
-			entity.setCompany_name(company_name);
-			entity.setWebsite(website);
 			entity.setApp_key(appKey);
 			entity.setApp_secret(appSecret);
 			entity.setCreate_date(new Date());

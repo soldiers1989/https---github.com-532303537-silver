@@ -11,14 +11,14 @@ public class Appkey implements Serializable{
 	private static final long serialVersionUID = -8656470389536641103L;
  
 	private long id;
-	private String app_key;//appKey
+	private String app_key;//appKey  关联的各个电商平台企业备案号
 	private String app_secret;//appSecret
 	private String app_name;//应用名
 	private String user_name;//申请人姓名
 	private String user_mobile;//联系电话
 	private String user_id;//身份证
-	private String company_name;//公司名 (必须)
-	private String website;//应用域名 或IP （必须 ）
+	
+	
 	private int del_flag;//0正常   1删除
 	private Date create_date; //创建时间
 	private String create_by; //创建人
@@ -103,18 +103,7 @@ public class Appkey implements Serializable{
 	public void setUser_id(String user_id) {
 		this.user_id = user_id;
 	}
-	public String getCompany_name() {
-		return company_name;
-	}
-	public void setCompany_name(String company_name) {
-		this.company_name = company_name;
-	}
-	public String getWebsite() {
-		return website;
-	}
-	public void setWebsite(String website) {
-		this.website = website;
-	}
+	
 	
 	
 	
