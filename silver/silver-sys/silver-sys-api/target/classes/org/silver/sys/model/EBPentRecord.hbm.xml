@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.sys.model">
+          
+          <class name="EBPentRecord" table="ym_cbsp_ebpent_record" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+         
+          <property name="app_key">
+              <column name="app_key" not-null="true" />
+         </property>
+         
+          <property name="eport">
+              <column name="eport" not-null="true"/>
+         </property>
+         
+         <property name="EBPEntNo">
+              <column name="EBPEntNo" not-null="true"/>
+         </property>
+        
+         <property name="EBPEntName">
+              <column name="EBPEntName" not-null="true"/>
+         </property>
+        
+           <property name="internetDomainName">
+              <column name="internetDomainName" not-null="true"/>
+         </property>
+         
+          <property name="del_flag" type="java.lang.Integer">
+              <column name="del_flag" not-null="true"/>
+         </property>
+        
+           <property name="create_date" type="java.util.Date">
+              <column name="create_date" not-null="true"/>
+            </property>
+            
+            <property name="create_by">
+              <column name="create_by" />
+            </property>
+            
+            <property name="update_date" type="java.util.Date">
+              <column name="update_date" />
+            </property>
+        
+           <property name="update_by">
+              <column name="update_by" />
+            </property>
+             
+        <property name="remarks">
+              <column name="remarks" />
+            </property>
+        
+        
+        
+          </class>
+          
+        </hibernate-mapping>

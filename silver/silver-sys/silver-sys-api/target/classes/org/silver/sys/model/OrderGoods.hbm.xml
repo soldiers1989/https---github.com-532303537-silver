@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.sys.model">
+          
+         <class name="OrderGoods" table="ym_cbsp_order_goods" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+     
+         <property name="seq" type="long">
+              <column name="seq" not-null="true"/>
+         </property>
+         
+         <property name="entGoodsNo">
+              <column name="entGoodsNo" not-null="true" />
+         </property>
+              
+         <property name="ciqGoodsNo">
+              <column name="ciqGoodsNo" not-null="true"/>
+         </property>
+        
+         <property name="cusGoodsNo">
+              <column name="cusGoodsNo" not-null="true"/>
+         </property>
+        
+         <property name="entOrderNo">
+              <column name="entOrderNo" not-null="true" />
+         </property>
+         
+         <property name="hsCode">
+              <column name="hsCode" not-null="true" />
+         </property>
+
+         <property name="goodsName">
+              <column name="goodsName" not-null="true" />
+         </property>
+        
+         <property name="goodsStyle">
+              <column name="goodsStyle" not-null="true"/>
+         </property>
+         
+         <property name="goodsDescribe">
+              <column name="goodsDescribe" />
+         </property>
+         
+         <property name="originCountry">
+              <column name="originCountry" not-null="true" />
+         </property>
+         
+         <property name="barCode">
+              <column name="barCode" />
+         </property>
+   
+         <property name="brand">
+              <column name="brand" not-null="true"/>
+         </property>
+         
+         <property name="qty">
+              <column name="qty" not-null="true"/>
+         </property>
+         
+         <property name="unit">
+              <column name="unit" not-null="true" />
+         </property>
+         
+         <property name="price" type="java.lang.Double">
+              <column name="price" not-null="true"/>
+         </property>
+         
+         <property name="total" type="java.lang.Double">
+              <column name="total" not-null="true"/>
+         </property>
+         
+         <property name="currCode">
+              <column name="currCode" not-null="true"/>
+         </property>
+        
+         <property name="notes" >
+              <column name="notes" />
+         </property>
+        
+         <property name="sku">
+              <column name="sku" />
+         </property>
+         
+ 
+        
+        
+          </class>
+          
+        </hibernate-mapping>
