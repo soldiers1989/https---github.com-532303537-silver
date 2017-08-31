@@ -197,7 +197,9 @@ public class UserDao extends HibernateDaoImpl{
 			session.close();
 			return results;
 		} catch (Exception re) {
+
             re.printStackTrace();
+
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
@@ -236,6 +238,7 @@ public class UserDao extends HibernateDaoImpl{
 			session.close();
 			return count;
 		} catch (Exception re) {
+			re.printStackTrace();
 			return (long) 0;
 		} finally {
 			if (session != null && session.isOpen()) {
@@ -248,14 +251,12 @@ public class UserDao extends HibernateDaoImpl{
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		UserDao ud = new UserDao();
+
 		Map params = new HashMap();
 		params.put("id", (long)33);
 		params.put("del_flag", 1);//
 		List<User> list=ud.findByProperty(params, 1, 5);
-	//	System.out.println(ulist.get(0).getCreate_date());
-	//	ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-	//	ud.update(ulist.get(0));
-		//System.out.println(u.getCreate_date());
+
 	}
 
 	
