@@ -8,7 +8,6 @@ import javax.servlet.http.HttpUtils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.silver.shop.api.UserService;
-import org.silver.sys.api.WXService;
 import org.silver.util.HttpUtil;
 import org.silver.util.MD5;
 import org.silver.util.XmlUtil;
@@ -23,8 +22,7 @@ import net.sf.json.JSONObject;
 
 @Service
 public class TestService {
-    @Reference
-	private WXService wXService;
+   
     @Reference
     private UserService userService;
     
@@ -32,7 +30,7 @@ public class TestService {
     	try{
     		System.out.println(userService.findAll());
     		System.out.println(userService.pageFind(1, 5));
-        	return wXService.sum(5, 6)+"";
+        	return "";
     	}catch (Exception e) {
 			return e.toString();
 		}

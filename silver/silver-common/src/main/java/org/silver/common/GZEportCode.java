@@ -17,6 +17,8 @@ public class GZEportCode {
 	public static final String CURR_CODE = "142";
 	/** 报文发送者标识*/
 	public static final String SENDER = "YINMENG";
+	/** 报文发送者标识*/
+	public static final String SENDER_PAY = "YINSHENGPAY";
 	/** 报文接收人标识*/
 	public static final String RECEIVER = "KJPUBLICPT";
 	/** 业务类型-单向海关申报填CUS*/

@@ -1,6 +1,7 @@
 package org.silver.shop.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.component.DataSourcesKey;
 import org.silver.shop.model.User;
 import org.springframework.stereotype.Repository;
@@ -128,6 +130,7 @@ public class UserDao extends HibernateDaoImpl{
 			session.close();
 			return list;
 		} catch (Exception re) {
+			re.printStackTrace();
 			// log.error("查询数据出错！", re);
 			return null;
 		} finally {
@@ -194,7 +197,7 @@ public class UserDao extends HibernateDaoImpl{
 			session.close();
 			return results;
 		} catch (Exception re) {
-
+            re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
@@ -242,7 +245,18 @@ public class UserDao extends HibernateDaoImpl{
 	}
 	
 	
-	
+	public static void main(String[] args) {
+		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+		UserDao ud = new UserDao();
+		Map params = new HashMap();
+		params.put("id", (long)33);
+		params.put("del_flag", 1);//
+		List<User> list=ud.findByProperty(params, 1, 5);
+	//	System.out.println(ulist.get(0).getCreate_date());
+	//	ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+	//	ud.update(ulist.get(0));
+		//System.out.println(u.getCreate_date());
+	}
 
 	
 

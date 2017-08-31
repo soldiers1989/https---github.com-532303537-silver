@@ -192,7 +192,7 @@ public class AppkeyDao extends HibernateDaoImpl{
 			session.close();
 			return results;
 		} catch (Exception re) {
-
+re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {

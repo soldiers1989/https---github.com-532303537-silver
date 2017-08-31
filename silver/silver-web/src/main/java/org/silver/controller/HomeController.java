@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class HomeController {
 	 @RequestMapping(value="/unauthorized")
 	 public String unauthorized(){
-		 System.out.println("sada");
-		 return "index";
+		 
+		 return null;
 	 }
 }

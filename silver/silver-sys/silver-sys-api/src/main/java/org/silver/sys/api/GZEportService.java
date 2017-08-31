@@ -54,7 +54,7 @@ public interface GZEportService {
 	 * @return
 	 */
 	
-	public   Map<String,Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName);
+	public   Map<String,Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName,String ebpentNo,String ebpentName );
 	
 	/**
 	 * 生成订单备案xml 
@@ -64,7 +64,7 @@ public interface GZEportService {
 	 * @param ieFlag
 	 * @return
 	 */
-	public   Map<String,Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName);
+	public   Map<String,Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName);
 	
 	/**
 	 * 

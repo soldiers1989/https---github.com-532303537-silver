@@ -114,7 +114,7 @@ public class GZEportServiceImpl implements GZEportService {
 		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER));
 		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
 		elements.addContent(new Element("SendTime").setText(time));
-		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_CIQ));
+		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_BOTH));
 		elements.addContent(new Element("SignerInfo").setText(""));
 		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
 		// 创建节点 ;
@@ -179,7 +179,7 @@ public class GZEportServiceImpl implements GZEportService {
 		System.out.println(xmlpath);
 		// xml输出路径
 		String uploadPath = xmlpath + strName + ".xml";
-		logger.info("-----------生成XML报文路径：============" + uploadPath);
+		System.out.println("-----------生成XML报文路径：============" + uploadPath);
 		try {
 			XMLOut.output(Doc, new FileOutputStream(uploadPath));
 			File file1 = new File(uploadPath);
@@ -194,7 +194,7 @@ public class GZEportServiceImpl implements GZEportService {
 	}
 
 	@Override
-	public Map<String, Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName) {
+	public Map<String, Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName,String ebpentNo,String ebpentName) {
 		//System.out.println("=================开始处理接收的records===============================");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
@@ -254,11 +254,11 @@ public class GZEportServiceImpl implements GZEportService {
 		if ((int) checkMap.get("status") != 1) {
 			return checkMap;
 		}
-		return createOrder(list, "", opType, ieFlag,internetDomainName);
+		return createOrder(list, "", opType, ieFlag,internetDomainName,ebpentNo,ebpentName);
 	}
 
 	@Override
-	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName)
+	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName)
 			{
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		statusMap.put("status", 1);
@@ -429,7 +429,7 @@ public class GZEportServiceImpl implements GZEportService {
 		Element elements = new Element("Head");
 		elements.addContent(new Element("MessageID").setText(strName));
 		elements.addContent(new Element("MessageType").setText(GZEportCode.MESSAGE_TYPE_GOOD));
-		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER));
+		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER_PAY));
 		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
 		elements.addContent(new Element("SendTime").setText(time));
 		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_CIQ));
@@ -438,8 +438,8 @@ public class GZEportServiceImpl implements GZEportService {
 		//支付信息报文头
 		Element declaration = new Element("Declaration");
 		Element paymentHead = new Element("PaymentHead");
-		paymentHead.addContent(new Element("DeclEntNo").setText(GZEportCode.DECL_ENT_NO));
-		paymentHead.addContent(new Element("DeclEntName").setText(GZEportCode.DECL_ENT_NAME));
+		paymentHead.addContent(new Element("DeclEntNo").setText("C100085134"));
+		paymentHead.addContent(new Element("DeclEntName").setText("银盛支付"));
 		paymentHead.addContent(new Element("PayEntNo").setText("C100085134"));//支付企业备案号
 		paymentHead.addContent(new Element("PayEntName").setText("银盛支付"));
 		paymentHead.addContent(new Element("DeclTime").setText(time));

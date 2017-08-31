@@ -9,7 +9,9 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.silver.sys.api.AppkeyService;
+import org.silver.sys.component.ChooseDatasourceHandler;
 import org.silver.sys.dao.AppkeyDao;
+import org.silver.sys.dao.SessionFactory;
 import org.silver.sys.model.Appkey;
 import org.silver.util.AppUtil;
 import org.silver.util.JedisUtil;
@@ -21,7 +23,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 public class AppkeyServiceImpl implements AppkeyService {
 
 	@Resource
-	private AppkeyDao appkeyDao;
+	private AppkeyDao appkeyDao ;
 
 	@Override
 	public Map<String, String> createRecord(String app_name, String user_name, String user_mobile,String user_id,String company_name,String website) {
@@ -69,6 +71,7 @@ public class AppkeyServiceImpl implements AppkeyService {
 			statusMap.put("app_key", appkey);
 			statusMap.put("del_flag", 0);
 			List<Appkey> list = appkeyDao.findByProperty(statusMap, 1, 1);
+			System.out.println(list);
 			if (list != null && list.size() > 0) {
 				appsecret = list.get(0).getApp_secret();
 				JedisUtil.set(appkey, 3600 * 5, appsecret);// 设置缓存的appkey 5小时有效
@@ -113,6 +116,7 @@ public class AppkeyServiceImpl implements AppkeyService {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println(tureSign+"---->");
     		if(tureSign.equals(clientsign)){
     			statusMap.put("status", 1);
     			statusMap.put("msg", "accept");
@@ -125,5 +129,12 @@ public class AppkeyServiceImpl implements AppkeyService {
     	 statusMap.put("status", -1);
 		 statusMap.put("msg", "AccessToken is expire or missing!");
 		 return statusMap;
+	}
+	public static void main(String[] args) {
+		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+		AppkeyServiceImpl as =new AppkeyServiceImpl();
+		System.out.println(as.createRecord("银盟通网网关", "YM", "020-85668893", "123", "广州银盟信息科技有限公司", "http://www.191ec.com"));
+		//{msg=生成成功,请注意保护好您的密钥, appKey=4a5de70025a7425dabeef6e8ea752976, appSecret=NeMs1DFG8xFARwZeSlRZwlT22ayY5oIbkgZg1uCziQ3LfSgqcPN4qGydAt7s3jMW, status=1}
+		
 	}
 }

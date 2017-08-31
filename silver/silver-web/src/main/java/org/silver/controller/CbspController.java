@@ -36,17 +36,32 @@ public class CbspController {
 	    * @param eport 口岸  0 广州电子口岸   1广东智检 
 	    * @param ieFlag 进出口标识 I 进口  E 出口（广州口岸）
 	    * @param businessType 跨境业务类型    1-特殊监管区域BBC保税进口； 2-保税仓库BBC保税进口；3-BC直购进口；（广州口岸）
-	    * @param opType 操作类型  A新增     M修改     D取消
-	    * @param internetDomainName 电商平台互联网域名 （订单备案时必须字段）
+	   
+	    * @param appkey 
 	    * @return   
 	    */
 	   @RequestMapping(value="/Report" ,produces = "application/json; charset=utf-8")
-	   public String doNSRecord(HttpServletRequest req,HttpServletResponse resp,int type,int eport,String opType,String ieFlag,String businessType,String appkey,String clientsign,String timestamp ,String datas,String notifyurl,String internetDomainName){
+	   public String doNSRecord(HttpServletRequest req,HttpServletResponse resp,int type,int eport,String opType,String ieFlag,String businessType,String appkey,String clientsign,String timestamp ,String datas,String notifyurl){
 		   Map statusMap = new HashMap();
+		   if(opType==null){
+			   opType="A";
+		   }
+		   if(ieFlag==null){
+			   ieFlag="I";
+		   }
+		   
 		   if(appkey!=null&&clientsign!=null&&timestamp!=null&&datas!=null&&opType!=null){
 			    statusMap =oauthService.checkSign(appkey, clientsign,datas,notifyurl, timestamp); //eportService.checkDatas(req);
 			    if((int)statusMap.get("status")==1){
-			    	statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,internetDomainName);
+			    	Map<String,Object> dataMap =  eportEntry.getInternetDomainName(eport, appkey);
+			    	System.out.println(dataMap);
+			    	if(dataMap.size()<1){
+			        	statusMap.put("status", -7);
+			        	statusMap.put("msg", "当前口岸未提供有电商平台备案信息");
+			        	return JSONObject.fromObject(statusMap).toString();
+			        }
+			    	
+			    	statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,statusMap.get("internetDomainName")+"",statusMap.get("no")+"",statusMap.get("name")+"");
 			   }
 			    return JSONObject.fromObject(statusMap).toString();
 		   }
