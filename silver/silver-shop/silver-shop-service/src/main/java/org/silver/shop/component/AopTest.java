@@ -1,7 +1,7 @@
 package org.silver.shop.component;
 
 
-import org.silver.shop.dao.UserDao;
+import org.silver.shop.dao.MemberDao;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -9,7 +9,7 @@ public class AopTest {
 	 public static void main(String[] args) {  
 	        
 			ApplicationContext ctx = new ClassPathXmlApplicationContext("benx.xml");  
-	        final UserDao config = (UserDao) ctx.getBean("config");  
+	        final MemberDao config = (MemberDao) ctx.getBean("config");  
 	        Thread t = new Thread(){
 	        	@Override
 	        	public void run() {

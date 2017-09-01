@@ -14,8 +14,8 @@ import org.silver.shop.component.DataSourcesKey;
 import org.silver.shop.model.User;
 import org.springframework.stereotype.Repository;
 
-@Repository("userDao")
-public class UserDao extends HibernateDaoImpl{
+@Repository("memberDao")
+public class MemberDao extends HibernateDaoImpl{
 	
 	public boolean add(User entity) {
 		Session session = null;
@@ -247,7 +247,7 @@ public class UserDao extends HibernateDaoImpl{
 	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		UserDao ud = new UserDao();
+		MemberDao ud = new MemberDao();
 		Map params = new HashMap();
 		params.put("id", (long)33);
 		params.put("del_flag", 1);//

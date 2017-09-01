@@ -3,7 +3,7 @@ package org.silver.shop.impl;
 import javax.annotation.Resource;
 
 import org.silver.shop.api.UserService;
-import org.silver.shop.dao.UserDao;
+import org.silver.shop.dao.MemberDao;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
@@ -11,7 +11,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 public class UserServiceImpl implements UserService{
 
 	@Resource
-	private UserDao userDao;
+	private MemberDao userDao;
 	
 	@Override
 	public Object findAll() {
