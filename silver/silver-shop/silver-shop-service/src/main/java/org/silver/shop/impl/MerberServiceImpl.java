@@ -2,13 +2,13 @@ package org.silver.shop.impl;
 
 import javax.annotation.Resource;
 
-import org.silver.shop.api.MerberService;
+import org.silver.shop.api.MemberService;
 import org.silver.shop.dao.MemberDao;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
-@Service(interfaceClass=MerberService.class)
-public class MerberServiceImpl implements MerberService{
+@Service(interfaceClass=MemberService.class)
+public class MerberServiceImpl implements MemberService{
 
 	@Resource
 	private MemberDao memberDao;

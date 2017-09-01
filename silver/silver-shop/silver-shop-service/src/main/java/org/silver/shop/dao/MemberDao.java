@@ -11,7 +11,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.component.DataSourcesKey;
-import org.silver.shop.model.User;
 import org.silver.shop.model.system.organization.Member;
 import org.springframework.stereotype.Repository;
 
@@ -40,7 +39,7 @@ public class MemberDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean delete(User entity) {
+	public boolean delete(Member entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -61,7 +60,7 @@ public class MemberDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean update(User entity) {
+	public boolean update(Member entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -81,12 +80,12 @@ public class MemberDao extends HibernateDaoImpl{
 		}
 	}
 
-	public User findMailboxbyId(long id) {
+	public Member findMailboxbyId(long id) {
 
 		Session session = null;
 		try {
 			session = getSession();
-			User instance = (User) session.get(User.class, id);
+			Member instance = (Member) session.get(Member.class, id);
 			session.close();
 			return instance;
 		} catch (Exception re) {
@@ -118,7 +117,7 @@ public class MemberDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<User> findAll(int page, int size) {
+	public List<Member> findAll(int page, int size) {
 		Session session = null;
 		try {
 			String hql = "from Member model ";
@@ -127,7 +126,7 @@ public class MemberDao extends HibernateDaoImpl{
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<User> list = query.list();
+			List<Member> list = query.list();
 			session.close();
 			return list;
 		} catch (Exception re) {
@@ -168,7 +167,7 @@ public class MemberDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<User> findByProperty(Map<String, Object> params, int page, int size) {
+	public List<Member> findByProperty(Map<String, Object> params, int page, int size) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -194,7 +193,7 @@ public class MemberDao extends HibernateDaoImpl{
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<User> results = query.list();
+			List<Member> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -252,7 +251,7 @@ public class MemberDao extends HibernateDaoImpl{
 		Map params = new HashMap();
 		params.put("id", (long)33);
 		params.put("deletFlag", 1);//
-		List<User> list=ud.findByProperty(params, 1, 5);
+		List<Member> list=ud.findByProperty(params, 1, 5);
 		System.out.println(ud.findByProperty(params, 1, 5));
 	//	System.out.println(ulist.get(0).getCreate_date());
 	//	ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
