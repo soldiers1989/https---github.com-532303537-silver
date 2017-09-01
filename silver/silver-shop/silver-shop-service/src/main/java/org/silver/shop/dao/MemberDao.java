@@ -12,12 +12,13 @@ import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.component.DataSourcesKey;
 import org.silver.shop.model.User;
+import org.silver.shop.model.system.organization.Member;
 import org.springframework.stereotype.Repository;
 
 @Repository("memberDao")
 public class MemberDao extends HibernateDaoImpl{
 	
-	public boolean add(User entity) {
+	public boolean add(Member entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -101,7 +102,7 @@ public class MemberDao extends HibernateDaoImpl{
 	public Long findAllCount() {
 		Session session = null;
 		try {
-			String hql = "select count(model) from User model ";
+			String hql = "select count(model) from Member model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			Long count = (Long) query.uniqueResult();
@@ -120,7 +121,7 @@ public class MemberDao extends HibernateDaoImpl{
 	public List<User> findAll(int page, int size) {
 		Session session = null;
 		try {
-			String hql = "from User model ";
+			String hql = "from Member model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			if (page > 0 && size > 0) {
@@ -147,7 +148,7 @@ public class MemberDao extends HibernateDaoImpl{
 	public List findByProperty(String propertyName, Object value, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "from User as model where model." + propertyName + "= ?";
+			String queryString = "from Member as model where model." + propertyName + "= ?";
 			session = getSession();
 			Query queryObject = session.createQuery(queryString);
 			queryObject.setParameter(0, value);
@@ -171,7 +172,7 @@ public class MemberDao extends HibernateDaoImpl{
 		Session session = null;
 		try {
 			session = getSession();
-			String hql = "from User model ";
+			String hql = "from Member model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -212,7 +213,7 @@ public class MemberDao extends HibernateDaoImpl{
 	public Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
-			String hql = "select count(model) from User model ";
+			String hql = "select count(model) from Member model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -250,8 +251,9 @@ public class MemberDao extends HibernateDaoImpl{
 		MemberDao ud = new MemberDao();
 		Map params = new HashMap();
 		params.put("id", (long)33);
-		params.put("del_flag", 1);//
+		params.put("deletFlag", 1);//
 		List<User> list=ud.findByProperty(params, 1, 5);
+		System.out.println(ud.findByProperty(params, 1, 5));
 	//	System.out.println(ulist.get(0).getCreate_date());
 	//	ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 	//	ud.update(ulist.get(0));

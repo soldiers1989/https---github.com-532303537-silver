@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 9:31:39 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.OrderContent" table="ym_shop_order_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="userId" type="java.lang.String">
+            <column name="userId" not-null="true"/>
+        </property>
+        <property name="entOrderNo" type="java.lang.String">
+            <column name="entOrderNo" not-null="true"/>
+        </property>
+        <property name="orderStatus" type="int">
+            <column name="orderStatus" not-null="true"/>
+        </property>
+        <property name="payStatus" type="int">
+            <column name="payStatus" not-null="true"/>
+        </property>
+        <property name="orderGoodTotal" type="long">
+            <column name="orderGoodTotal" />
+        </property>
+        <property name="orderGoodTotalCurr" type="java.lang.String">
+            <column name="orderGoodTotalCurr" />
+        </property>
+        <property name="freight" type="long">
+            <column name="freight" />
+        </property>
+        <property name="tax" type="long">
+            <column name="tax" />
+        </property>
+        <property name="otherPayment" type="long">
+            <column name="otherPayment" />
+        </property>
+        <property name="otherPayNotes" type="long">
+            <column name="otherPayNotes" />
+        </property>
+        <property name="otherCharges" type="long">
+            <column name="otherCharges" />
+        </property>
+        <property name="actualAmountPaid" type="long">
+            <column name="actualAmountPaid" />
+        </property>
+        <property name="recipientName" type="java.lang.String">
+            <column name="recipientName" not-null="true"/>
+        </property>
+        <property name="recipientCardId" type="java.lang.String">
+            <column name="recipientCardId" not-null="true"/>
+        </property>
+        <property name="recipientTel" type="java.lang.String">
+            <column name="recipientTel" not-null="true"/>
+        </property>
+        <property name="recipientAddr" type="java.lang.String">
+            <column name="recipientAddr" not-null="true"/>
+        </property>
+        <property name="recipientCountry" type="java.lang.String">
+            <column name="recipientCountry" not-null="true"/>
+        </property>
+        <property name="recipientProvincesCode" type="java.lang.String">
+            <column name="recipientProvincesCode" not-null="true"/>
+        </property>
+        <property name="orderDocAcount" type="java.lang.String">
+            <column name="orderDocAcount" />
+        </property>
+        <property name="orderDocName" type="java.lang.String">
+            <column name="orderDocName" />
+        </property>
+        <property name="orderDocType" type="int">
+            <column name="orderDocType" />
+        </property>
+        <property name="OrderDocId" type="java.lang.String">
+            <column name="OrderDocId" />
+        </property>
+        <property name="OrderDocTel" type="java.lang.String">
+            <column name="OrderDocTel" />
+        </property>
+        <property name="batchNumbers" type="java.lang.String">
+            <column name="batchNumbers" />
+        </property>
+        <property name="invoiceType" type="int">
+            <column name="invoiceType" />
+        </property>
+        <property name="invoiceNo" type="java.lang.String">
+            <column name="invoiceNo" />
+        </property>
+        <property name="invoiceTitle" type="java.lang.String">
+            <column name="invoiceTitle" />
+        </property>
+        <property name="invoiceIdentifyID" type="java.lang.String">
+            <column name="invoiceIdentifyID" />
+        </property>
+        <property name="invoiceDesc" type="java.lang.String">
+            <column name="invoiceDesc" />
+        </property>
+        <property name="invoiceAmount" type="java.lang.String">
+            <column name="invoiceAmount" />
+        </property>
+        <property name="invoiceDate" type="java.util.Date">
+            <column name="invoiceDate" />
+        </property>
+        <property name="notes" type="java.lang.String">
+            <column name="notes" />
+        </property>
+        <property name="payTime" type="java.util.Date">
+            <column name="payTime" />
+        </property>
+        <property name="orderRecordStatus" type="java.lang.String">
+            <column name="orderRecordStatus" />
+        </property>
+        <property name="ehsStatus" type="int">
+            <column name="ehsStatus" />
+        </property>
+        <property name="wbEhsentName" type="java.lang.String">
+            <column name="wbEhsentName" />
+        </property>
+        <property name="wbEhsentNo" type="java.lang.String">
+            <column name="wbEhsentNo" />
+        </property>
+        <property name="entPayNo" type="java.lang.String">
+            <column name="entPayNo" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

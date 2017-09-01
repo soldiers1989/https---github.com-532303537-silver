@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 9:42:37 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.cross.PaymentContent" table="ym_shop_payment_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="userId" type="java.lang.String">
+            <column name="userId" not-null="true"/>
+        </property>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="entPayNo" type="java.lang.String">
+            <column name="entPayNo" not-null="true"/>
+        </property>
+        <property name="payStatus" type="java.lang.String">
+            <column name="payStatus" not-null="true"/>
+        </property>
+        <property name="payAmount" type="long">
+            <column name="payAmount" not-null="true"/>
+        </property>
+        <property name="payCurrCode" type="java.lang.String">
+            <column name="payCurrCode" not-null="true"/>
+        </property>
+        <property name="payTime" type="java.util.Date">
+            <column name="payTime" not-null="true"/>
+        </property>
+        <property name="payerName" type="java.lang.String">
+            <column name="payerName" not-null="true"/>
+        </property>
+        <property name="payerDocumentType" type="int">
+            <column name="payerDocumentType" not-null="true"/>
+        </property>
+        <property name="payerDocumentNumber" type="java.lang.String">
+            <column name="payerDocumentNumber" not-null="true"/>
+        </property>
+        <property name="payerPhoneNumber" type="java.lang.String">
+            <column name="payerPhoneNumber" />
+        </property>
+        <property name="entOrderNo" type="java.lang.String">
+            <column name="entOrderNo" not-null="true"/>
+        </property>
+        <property name="notes" type="java.lang.String">
+            <column name="notes" />
+        </property>
+        <property name="payRecord" type="int">
+            <column name="payRecord" />
+        </property>
+        <property name="PayFalg" type="int">
+            <column name="PayFalg" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

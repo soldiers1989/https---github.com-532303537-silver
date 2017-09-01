@@ -2,25 +2,25 @@ package org.silver.shop.impl;
 
 import javax.annotation.Resource;
 
-import org.silver.shop.api.UserService;
+import org.silver.shop.api.MerberService;
 import org.silver.shop.dao.MemberDao;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
-@Service(interfaceClass=UserService.class)
-public class UserServiceImpl implements UserService{
+@Service(interfaceClass=MerberService.class)
+public class MerberServiceImpl implements MerberService{
 
 	@Resource
-	private MemberDao userDao;
+	private MemberDao memberDao;
 	
 	@Override
 	public Object findAll() {
-		return userDao.findAllCount();
+		return memberDao.findAllCount();
 	}
 
 	@Override
 	public Object pageFind(int page, int size) {
-		return userDao.findAll(page, size);
+		return memberDao.findAll(page, size);
 	}
 
 }

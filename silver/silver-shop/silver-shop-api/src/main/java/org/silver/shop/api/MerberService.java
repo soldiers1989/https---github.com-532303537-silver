@@ -1,6 +1,6 @@
 package org.silver.shop.api;
 
-public interface UserService {
+public interface MerberService {
       Object findAll();
       Object pageFind(int page,int size);
 }

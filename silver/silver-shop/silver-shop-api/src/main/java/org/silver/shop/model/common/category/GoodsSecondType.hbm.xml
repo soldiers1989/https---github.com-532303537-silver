@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-28 9:55:55 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.common.category.GoodsSecondType" table="ym_shop_godds_second_type">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="firstTypeId" type="long">
+            <column name="firstTypeId" not-null="true"/>
+        </property>
+        <property name="goodsSecondTypeName" type="java.lang.String">
+            <column name="goodsSecondTypeName" not-null="true"/>
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" not-null="true"/>
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>
