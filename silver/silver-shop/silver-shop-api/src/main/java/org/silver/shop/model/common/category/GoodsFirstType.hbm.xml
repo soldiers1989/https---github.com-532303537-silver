@@ -23,7 +23,7 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
+        <property name="deletFlag" type="java.lang.Integer">
             <column name="deletFlag" not-null="true"/>
         </property>
         <property name="deleteBy" type="java.lang.String">

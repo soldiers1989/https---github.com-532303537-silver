@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-28 9:55:55 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.common.category.GoodsSecondType" table="ym_shop_godds_second_type">
+    <class name="org.silver.shop.model.common.category.GoodsSecondType" table="ym_shop_goods_second_type">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />

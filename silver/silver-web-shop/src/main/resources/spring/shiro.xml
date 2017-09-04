@@ -65,6 +65,7 @@
 				/servlet/validateCodeServlet=anon
 				/regin=anon
 				/login=anon
+				/category/*=anon
 				/tests/a=anon
 				/manage/manageLoginController/*=anon
 				/logout=anon
