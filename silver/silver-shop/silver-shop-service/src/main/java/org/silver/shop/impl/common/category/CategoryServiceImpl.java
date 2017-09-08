@@ -28,5 +28,5 @@ public class CategoryServiceImpl implements CategoryService {
 	public List<Object> findAllThirdType() {
 		return categoryDao.findAllThirdType();
 	}
-
+  
 }
