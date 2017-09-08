@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-29 9:47:42 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.common.base.Metering" table="ym_shop_base_metering">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="meteringCode" type="java.lang.String">
+            <column name="meteringCode" />
+        </property>
+        <property name="meteringName" type="java.lang.String">
+            <column name="meteringName" />
+        </property>
+    </class>
+</hibernate-mapping>

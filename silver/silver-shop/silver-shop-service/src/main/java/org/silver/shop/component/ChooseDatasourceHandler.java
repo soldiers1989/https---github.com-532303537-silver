@@ -28,18 +28,18 @@ public class ChooseDatasourceHandler {
 			}
 
 		}
-		//System.out.println(
-		//		joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " Start");
+		System.out.println(
+				joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " Start");
 	}
 
 	public void methodAfter(JoinPoint joinPoint) {
-		//System.out.println(
-		//		joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " end");
+		System.out.println(
+				joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " end");
 	}
 
 	public void methodException(JoinPoint joinPoint) {
-		//System.out.println(
-		//		joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " mett Error");
+		System.out.println(
+				joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " mett Error");
 	}
 
 	/*

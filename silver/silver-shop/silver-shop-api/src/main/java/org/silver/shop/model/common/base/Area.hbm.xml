@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-28 16:31:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.common.base.Area" table="ym_shop_base_area">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="areaCode" type="java.lang.String">
+            <column name="areaCode" />
+        </property>
+        <property name="areaName" type="java.lang.String">
+            <column name="areaName" />
+        </property>
+        <property name="cityCode" type="java.lang.String">
+            <column name="cityCode" />
+        </property>
+    </class>
+</hibernate-mapping>

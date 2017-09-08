@@ -4,13 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpUtils;
-
 import org.apache.commons.codec.binary.Base64;
-import org.silver.shop.api.UserService;
-import org.silver.util.HttpUtil;
+import org.silver.shop.api.MemberService;
 import org.silver.util.MD5;
-import org.silver.util.XmlUtil;
 import org.silver.util.YmHttpUtil;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +20,12 @@ import net.sf.json.JSONObject;
 public class TestService {
    
     @Reference
-    private UserService userService;
+    private MemberService memberService;
     
     public String method_1(){
     	try{
-    		System.out.println(userService.findAll());
-    		System.out.println(userService.pageFind(1, 5));
+    		System.out.println(memberService.findAll());
+    		System.out.println(memberService.pageFind(1, 5));
         	return "";
     	}catch (Exception e) {
 			return e.toString();

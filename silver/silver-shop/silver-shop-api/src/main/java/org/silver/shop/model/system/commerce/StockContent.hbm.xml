@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 9:32:35 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.StockContent" table="ym_shop_stock_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="goodsId" type="java.lang.String">
+            <column name="goodsId" not-null="true"/>
+        </property>
+        <property name="totalStock" type="int">
+            <column name="totalStock" not-null="true"/>
+        </property>
+        <property name="sellCount" type="int">
+            <column name="sellCount" not-null="true"/>
+        </property>
+        <property name="paymentCount" type="int">
+            <column name="paymentCount" not-null="true"/>
+        </property>
+        <property name="paidCount" type="int">
+            <column name="paidCount" not-null="true"/>
+        </property>
+        <property name="shippedCount" type="int">
+            <column name="shippedCount" not-null="true"/>
+        </property>
+        <property name="doneCount" type="int">
+            <column name="doneCount" not-null="true"/>
+        </property>
+        <property name="regPrice" type="long">
+            <column name="regPrice" not-null="true"/>
+        </property>
+        <property name="freePrice" type="long">
+            <column name="freePrice" not-null="true"/>
+        </property>
+        <property name="freight" type="long">
+            <column name="freight" />
+        </property>
+        <property name="warehousCode" type="java.lang.String">
+            <column name="warehousCode" not-null="true"/>
+        </property>
+        <property name="warehousName" type="java.lang.String">
+            <column name="warehousName" not-null="true"/>
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

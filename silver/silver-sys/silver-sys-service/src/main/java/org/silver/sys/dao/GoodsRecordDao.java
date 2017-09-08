@@ -11,7 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.common.GZEportCode;
 import org.silver.sys.component.ChooseDatasourceHandler;
-import org.silver.sys.model.GoodsRecord;
+import org.silver.sys.model.goods.GoodsRecord;
 import org.springframework.stereotype.Repository;
 
 @Repository("goodsRecordDao")

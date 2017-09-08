@@ -38,11 +38,11 @@
 		<property name="hbm2ddl.auto">update</property> 	
 		<mapping resource="org/silver/sys/model/Appkey.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/EBPentRecord.hbm.xml"/>
-		<mapping resource="org/silver/sys/model/GoodsRecord.hbm.xml"/>
-		<mapping resource="org/silver/sys/model/GoodsInfo.hbm.xml"/>
-		<mapping resource="org/silver/sys/model/OrderHead.hbm.xml"/>
-		<mapping resource="org/silver/sys/model/OrderRecord.hbm.xml"/>
-		<mapping resource="org/silver/sys/model/OrderGoods.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/goods/GoodsRecord.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/goods/GoodsInfo.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/order/OrderHead.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/order/OrderRecord.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/order/OrderGoods.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/User.hbm.xml"/>
 		
 	</session-factory>

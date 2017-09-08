@@ -8,8 +8,8 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.silver.sys.model.GoodsRecord;
-import org.silver.sys.model.OrderGoods;
+import org.silver.sys.model.goods.GoodsRecord;
+import org.silver.sys.model.order.OrderGoods;
 import org.springframework.stereotype.Repository;
 
 @Repository("orderGoodsDao")

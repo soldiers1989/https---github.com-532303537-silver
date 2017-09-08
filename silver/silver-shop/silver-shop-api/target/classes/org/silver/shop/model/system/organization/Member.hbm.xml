@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 11:59:34 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.organization.Member" table="ym_shop_member">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" not-null="true" unique="true"/>
+        </property>
+        <property name="memberName" type="java.lang.String">
+            <column name="memberName" not-null="true"/>
+        </property>
+        <property name="loginPass" type="java.lang.String">
+            <column name="loginPass" not-null="true"/>
+        </property>
+        <property name="memberTel" type="java.lang.String">
+            <column name="memberTel" />
+        </property>
+        <property name="memberMail" type="java.lang.String">
+            <column name="memberMail" />
+        </property>
+        <property name="memberIdCardName" type="java.lang.String">
+            <column name="memberIdCardName" />
+        </property>
+        <property name="memberIdCard" type="java.lang.String">
+            <column name="memberIdCard" />
+        </property>
+        <property name="memberStatus" type="int">
+            <column name="memberStatus" />
+        </property>
+        <property name="memberRealName" type="int">
+            <column name="memberRealName" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

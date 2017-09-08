@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 9:54:31 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.PortManage" table="ym_shop_sys_port_manage">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="province" type="java.lang.String">
+            <column name="province" not-null="true"/>
+        </property>
+        <property name="city" type="java.lang.String">
+            <column name="city" not-null="true"/>
+        </property>
+        <property name="customsPort" type="java.lang.String">
+            <column name="customsPort" not-null="true" unique="true"/>
+        </property>
+        <property name="customsPortName" type="java.lang.String">
+            <column name="customsPortName" not-null="true" unique="true"/>
+        </property>
+        <property name="customsCode" type="java.lang.String">
+            <column name="customsCode" not-null="true"/>
+        </property>
+        <property name="customsName" type="java.lang.String">
+            <column name="customsName" not-null="true" />
+        </property>
+        <property name="ciqOrgCode" type="java.lang.String">
+            <column name="ciqOrgCode" not-null="true"/>
+        </property>
+        <property name="ciqOrgName" type="java.lang.String">
+            <column name="ciqOrgName" not-null="true"/>
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deletFlag" type="int">
+            <column name="deletFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

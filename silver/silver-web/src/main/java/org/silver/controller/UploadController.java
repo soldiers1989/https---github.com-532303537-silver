@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.service.Uploader;
 import org.silver.util.FileUpLoadService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-29 9:47:42 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.common.base.Currency" table="ym_shop_base_currency">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="currencyCode" type="java.lang.String">
+            <column name="currencyCode" />
+        </property>
+        <property name="currencySymb" type="java.lang.String">
+            <column name="currencySymb" />
+        </property>
+        <property name="currencyName" type="java.lang.String">
+            <column name="currencyName" />
+        </property>
+    </class>
+</hibernate-mapping>

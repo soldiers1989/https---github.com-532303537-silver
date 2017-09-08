@@ -7,7 +7,6 @@ import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shiro.CustomizedToken;
-import org.silver.shop.api.UserService;
 import org.silver.shop.service.TestService;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;

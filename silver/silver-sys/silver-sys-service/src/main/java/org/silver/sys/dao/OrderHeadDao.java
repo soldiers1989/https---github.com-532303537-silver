@@ -9,7 +9,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.sys.model.Appkey;
-import org.silver.sys.model.OrderHead;
+import org.silver.sys.model.order.OrderHead;
 import org.springframework.stereotype.Repository;
 
 @Repository("orderHeadDao")
