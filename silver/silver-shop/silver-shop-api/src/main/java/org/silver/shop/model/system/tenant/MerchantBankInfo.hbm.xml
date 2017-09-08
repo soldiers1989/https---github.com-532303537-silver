@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-9-8 10:14:39 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.MerchantBankInfo" table="ym_shop_merchant_bank_info">
+        <id name="id" type="long">
+            <column name="id" />
+           <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" />
+        </property>
+        <property name="bankName" type="java.lang.String">
+            <column name="bankName" />
+        </property>
+        <property name="bankNumber" type="java.lang.String">
+            <column name="bankNumber" />
+        </property>
+        <property name="defaultFalg" type="int">
+            <column name="defaultFalg" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+    </class>
+</hibernate-mapping>

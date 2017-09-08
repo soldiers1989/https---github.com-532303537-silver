@@ -14,7 +14,7 @@
 	<properties>
 		<server.port>8088</server.port>
 	</properties>
-	<dependencies>
+	<dependencies>  
 		<dependency>
 			<groupId>org.silver</groupId>
 			<artifactId>silver-common</artifactId>
