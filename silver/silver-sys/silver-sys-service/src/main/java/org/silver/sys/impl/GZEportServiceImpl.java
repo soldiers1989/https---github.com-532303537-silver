@@ -278,18 +278,20 @@ public class GZEportServiceImpl implements GZEportService {
 		statusMap.put("msg", "本地存储失败");
 		return statusMap;
 	}
-
-	/**
-	 * 上送本地文件至ftp服务器
-	 * 
-	 * @param filePath
-	 * @return
-	 */
-	private boolean uploadXMLFile(String filePath) {
+    /**
+     * 上送本地文件至ftp服务器
+     * @param filePath  读取本地文件的路径
+     * @param url
+     * @param port
+     * @param username
+     * @param password
+     * @param routePath  文件存储到FTP的路径
+     * @return
+     */
+	private boolean uploadXMLFile(String filePath,String url,int port,String username,String password,String routePath) {
 		try {
-			// XMLOut.output(Doc, new FileOutputStream(uploadPath));
-			File file1 = new File(filePath);
-			FtpUtils.upload(file1, "/in");
+			File file = new File(filePath);
+			FtpUtil.upload(url,port,username,password,routePath,file);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.util.Map;
 
 import net.sf.json.JSONArray;
-
+/**
+ * 南沙智检   业务处理接口
+ * @author zhangxin 2017/9/8
+ *
+ */
 public interface ZJEportService {
     /**
      * 智检平台商品备案
