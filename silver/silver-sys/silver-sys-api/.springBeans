@@ -8,8 +8,9 @@
 	<enableImports><![CDATA[false]]></enableImports>
 	<configs>
 		<config>src/main/java/org/silver/sys/model/EBPentRecord.hbm.xml</config>
-		<config>src/main/java/org/silver/sys/model/OrderRecord.hbm.xml</config>
 		<config>src/main/java/org/silver/sys/model/OrderGoods.hbm.xml</config>
+		<config>src/main/java/org/silver/sys/model/User.hbm.xml</config>
+		<config>src/main/java/org/silver/sys/model/GoodsInfo.hbm.xml</config>
 	</configs>
 	<autoconfigs>
 	</autoconfigs>

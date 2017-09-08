@@ -9,378 +9,294 @@ import java.util.Date;
  */
 public class OrderRecord implements Serializable {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
-	private Long id;
-	private String declEntNo;           //申报企业编号
-	private String declEntName;         //申报企业名称
-	private String ebEntNo;             //电商企业编号
-	private String ebEntName;           //电商企业名称
-	private String ebpEntNo;            //电商平台企业编码
-	private String ebpEntName;          //电商平台企业名称
-	private String internetDomainName;  //电商平台互联网域名
-	private Date declTime;              //申报时间
-	private String opType;              //操作方式
-	private String ieFlag;              //进出口标示
-	private String customsCode;         //主管海关代码 
-	private String ciqOrgCode;          //检验检疫机构代码
-	private String entOrderNo; // 企业电子订单编号
-	private String orderStatus; // 电子订单状态
-	private String payStatus; // 支付状态
-	private Double orderGoodTotal; // 订单商品总额
-	private String orderGoodTotalCurr; // 订单商品总额币制
-	private Double freight; // 订单运费
-	private Double tax; // 税款
-	private Double otherPayment; // 抵押金额
-	private String otherPayNotes; // 低付说明
-	private Double otherCharges; // 其它费用
-	private Double actualAmountPaid; // 实际支付金额
-	private String recipientName; // 收货人名称
-	private String recipientAddr; // 收货人地址
-	private String recipientTel; // 收货人电话
-	private String recipientCountry; // 收货人所在国
-	private String recipientProvincesCode; // 收货人行政区代码
-	private String orderDocAcount; // 下单人账户
-	private String orderDocName; // 下单人姓名
-	private String orderDocType; // 下单人证件类型
-	private String orderDocId; // 下单人证件号码
-	private String orderDocTel; // 下单人电话
-	private Date orderDate; // 下单日期
-	private String batchNumbers; // 商品批次
-	private String invoiceType; // 发票类型
-	private String invoiceNo; // 发票编号
-	private String invoiceTitle; // 发票抬头
-	private String invoiceIdentifyId; // 纳税人标示号
-	private String invoiceDesc; // 发票内容
-	private Double invoiceAmount; // 发票金额
-	private Date invoiceDate; // 开票日期
-	private String invoiceNotes; // 备注
-	private String ehsEntNo;     //物流企业代码
-	private String ehsEntName;   //物流企业名称
-	private String waybillNo;    //电子运单编号 
-	private String payEntNo;     //支付企业代码
-	private String payEntName;   //支付企业名称
-	private String payNo;        //支付交易编号
 	
-	private String OrgMessageID; //原始报文编号
+	private long id;
+	private String OrgMessageID;        //报文编号
+	private String EntOrderNo;          //企业电子订单编号
+	private String OrderStatus;         //电子订单状态
+	private String PayStatus;           //支付状态
+	private double OrderGoodTotal;      //订单商品总额
+	private String OrderGoodTotalCurr;  //订单商品总额币制
+	private double Freight;             //订单运费
+	private double Tax;                 //税款
+	private double OtherPayment;        //抵押金额
+	private String OtherPayNotes;       //低付说明
+	private double OtherCharges;        //其它费用
+	private double ActualAmountPaid;    //实际支付金额
+	private String RecipientName; // 收货人名称
+	private String RecipientAddr; // 收货人地址
+	private String RecipientTel; // 收货人电话
+	private String RecipientCountry; // 收货人所在国
+	private String RecipientProvincesCode; // 收货人行政区代码
+	private String OrderDocAcount; //下单人账户
+	private String OrderDocName;  //下单人姓名
+	private String OrderDocType;  //下单人证件类型
+	private String OrderDocId;   //下单人证件号码
+	private String OrderDocTel;  //下单人电话
+	private String OrderDate;    //下单日期
+	private String BatchNumbers; //商品批次
+	private String InvoiceType;  //发票类型
+	private String InvoiceNo;    //发票编号
+	private String InvoiceTitle; //发票抬头
+	private String InvoiceIdentifyId; // 纳税人标示号
+	private String InvoiceDesc;  //发票内容
+	private double InvoiceAmount;//发票金额
+	private String InvoiceDate;  //开票日期
+	private String InvoiceNotes; //备注
+	private String EHSEntNo;     //物流企业代码
+	private String EHSEntName;   //物流企业名称
+	private String WaybillNo;    //电子运单编号 
+	private String PayEntNo;     //支付企业代码
+	private String PayEntName;   //支付企业名称
+	private String PayNo;        //支付交易编号
+	
 	private String ciqNotes;// 国检审核备注
 	private String ciqStatus;// 国检审核备注
 	private String cusNotes;// 海关审核备注
 	private String cusStatus;// 海关审核备注
-	private String status;// 发送状态
+	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private int count;//重发计数      重发次数不能超过5次
 	private int del_flag;// 0正常 1删除
 	private Date create_date; // 创建时间
 	private String create_by; // 创建人
 	private Date update_date; // 更新时间
 	private String update_by;// 更新人
 	private String remarks;// 备注
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
-	public String getDeclEntNo() {
-		return declEntNo;
-	}
-	public void setDeclEntNo(String declEntNo) {
-		this.declEntNo = declEntNo;
-	}
-	public String getDeclEntName() {
-		return declEntName;
-	}
-	public void setDeclEntName(String declEntName) {
-		this.declEntName = declEntName;
-	}
-	public String getEbEntNo() {
-		return ebEntNo;
-	}
-	public void setEbEntNo(String ebEntNo) {
-		this.ebEntNo = ebEntNo;
-	}
-	public String getEbEntName() {
-		return ebEntName;
-	}
-	public void setEbEntName(String ebEntName) {
-		this.ebEntName = ebEntName;
-	}
-	public String getEbpEntNo() {
-		return ebpEntNo;
-	}
-	public void setEbpEntNo(String ebpEntNo) {
-		this.ebpEntNo = ebpEntNo;
-	}
-	public String getEbpEntName() {
-		return ebpEntName;
-	}
-	public void setEbpEntName(String ebpEntName) {
-		this.ebpEntName = ebpEntName;
-	}
-	public String getInternetDomainName() {
-		return internetDomainName;
-	}
-	public void setInternetDomainName(String internetDomainName) {
-		this.internetDomainName = internetDomainName;
-	}
-	public Date getDeclTime() {
-		return declTime;
-	}
-	public void setDeclTime(Date declTime) {
-		this.declTime = declTime;
-	}
-	public String getOpType() {
-		return opType;
-	}
-	public void setOpType(String opType) {
-		this.opType = opType;
-	}
-	public String getIeFlag() {
-		return ieFlag;
-	}
-	public void setIeFlag(String ieFlag) {
-		this.ieFlag = ieFlag;
-	}
-	public String getCustomsCode() {
-		return customsCode;
-	}
-	public void setCustomsCode(String customsCode) {
-		this.customsCode = customsCode;
-	}
-	public String getCiqOrgCode() {
-		return ciqOrgCode;
-	}
-	public void setCiqOrgCode(String ciqOrgCode) {
-		this.ciqOrgCode = ciqOrgCode;
-	}
 	public String getEntOrderNo() {
-		return entOrderNo;
+		return EntOrderNo;
 	}
 	public void setEntOrderNo(String entOrderNo) {
-		this.entOrderNo = entOrderNo;
-	}
-	public String getOrderStatus() {
-		return orderStatus;
-	}
-	public void setOrderStatus(String orderStatus) {
-		this.orderStatus = orderStatus;
-	}
-	public String getPayStatus() {
-		return payStatus;
-	}
-	public void setPayStatus(String payStatus) {
-		this.payStatus = payStatus;
-	}
-	public Double getOrderGoodTotal() {
-		return orderGoodTotal;
-	}
-	public void setOrderGoodTotal(Double orderGoodTotal) {
-		this.orderGoodTotal = orderGoodTotal;
-	}
-	public String getOrderGoodTotalCurr() {
-		return orderGoodTotalCurr;
-	}
-	public void setOrderGoodTotalCurr(String orderGoodTotalCurr) {
-		this.orderGoodTotalCurr = orderGoodTotalCurr;
-	}
-	public Double getFreight() {
-		return freight;
-	}
-	public void setFreight(Double freight) {
-		this.freight = freight;
-	}
-	public Double getTax() {
-		return tax;
-	}
-	public void setTax(Double tax) {
-		this.tax = tax;
-	}
-	public Double getOtherPayment() {
-		return otherPayment;
-	}
-	public void setOtherPayment(Double otherPayment) {
-		this.otherPayment = otherPayment;
-	}
-	public String getOtherPayNotes() {
-		return otherPayNotes;
-	}
-	public void setOtherPayNotes(String otherPayNotes) {
-		this.otherPayNotes = otherPayNotes;
-	}
-	public Double getOtherCharges() {
-		return otherCharges;
-	}
-	public void setOtherCharges(Double otherCharges) {
-		this.otherCharges = otherCharges;
-	}
-	public Double getActualAmountPaid() {
-		return actualAmountPaid;
-	}
-	public void setActualAmountPaid(Double actualAmountPaid) {
-		this.actualAmountPaid = actualAmountPaid;
-	}
-	public String getRecipientName() {
-		return recipientName;
-	}
-	public void setRecipientName(String recipientName) {
-		this.recipientName = recipientName;
-	}
-	public String getRecipientAddr() {
-		return recipientAddr;
-	}
-	public void setRecipientAddr(String recipientAddr) {
-		this.recipientAddr = recipientAddr;
-	}
-	public String getRecipientTel() {
-		return recipientTel;
-	}
-	public void setRecipientTel(String recipientTel) {
-		this.recipientTel = recipientTel;
-	}
-	public String getRecipientCountry() {
-		return recipientCountry;
-	}
-	public void setRecipientCountry(String recipientCountry) {
-		this.recipientCountry = recipientCountry;
-	}
-	public String getRecipientProvincesCode() {
-		return recipientProvincesCode;
-	}
-	public void setRecipientProvincesCode(String recipientProvincesCode) {
-		this.recipientProvincesCode = recipientProvincesCode;
-	}
-	public String getOrderDocAcount() {
-		return orderDocAcount;
-	}
-	public void setOrderDocAcount(String orderDocAcount) {
-		this.orderDocAcount = orderDocAcount;
-	}
-	public String getOrderDocName() {
-		return orderDocName;
-	}
-	public void setOrderDocName(String orderDocName) {
-		this.orderDocName = orderDocName;
-	}
-	public String getOrderDocType() {
-		return orderDocType;
-	}
-	public void setOrderDocType(String orderDocType) {
-		this.orderDocType = orderDocType;
-	}
-	public String getOrderDocId() {
-		return orderDocId;
-	}
-	public void setOrderDocId(String orderDocId) {
-		this.orderDocId = orderDocId;
-	}
-	public String getOrderDocTel() {
-		return orderDocTel;
-	}
-	public void setOrderDocTel(String orderDocTel) {
-		this.orderDocTel = orderDocTel;
-	}
-	public Date getOrderDate() {
-		return orderDate;
-	}
-	public void setOrderDate(Date orderDate) {
-		this.orderDate = orderDate;
-	}
-	public String getBatchNumbers() {
-		return batchNumbers;
-	}
-	public void setBatchNumbers(String batchNumbers) {
-		this.batchNumbers = batchNumbers;
-	}
-	public String getInvoiceType() {
-		return invoiceType;
-	}
-	public void setInvoiceType(String invoiceType) {
-		this.invoiceType = invoiceType;
-	}
-	public String getInvoiceNo() {
-		return invoiceNo;
-	}
-	public void setInvoiceNo(String invoiceNo) {
-		this.invoiceNo = invoiceNo;
-	}
-	public String getInvoiceTitle() {
-		return invoiceTitle;
-	}
-	public void setInvoiceTitle(String invoiceTitle) {
-		this.invoiceTitle = invoiceTitle;
-	}
-	public String getInvoiceIdentifyId() {
-		return invoiceIdentifyId;
-	}
-	public void setInvoiceIdentifyId(String invoiceIdentifyId) {
-		this.invoiceIdentifyId = invoiceIdentifyId;
-	}
-	public String getInvoiceDesc() {
-		return invoiceDesc;
-	}
-	public void setInvoiceDesc(String invoiceDesc) {
-		this.invoiceDesc = invoiceDesc;
-	}
-	public Double getInvoiceAmount() {
-		return invoiceAmount;
-	}
-	public void setInvoiceAmount(Double invoiceAmount) {
-		this.invoiceAmount = invoiceAmount;
-	}
-	public Date getInvoiceDate() {
-		return invoiceDate;
-	}
-	public void setInvoiceDate(Date invoiceDate) {
-		this.invoiceDate = invoiceDate;
-	}
-	public String getInvoiceNotes() {
-		return invoiceNotes;
-	}
-	public void setInvoiceNotes(String invoiceNotes) {
-		this.invoiceNotes = invoiceNotes;
-	}
-	public String getEhsEntNo() {
-		return ehsEntNo;
-	}
-	public void setEhsEntNo(String ehsEntNo) {
-		this.ehsEntNo = ehsEntNo;
-	}
-	public String getEhsEntName() {
-		return ehsEntName;
-	}
-	public void setEhsEntName(String ehsEntName) {
-		this.ehsEntName = ehsEntName;
-	}
-	public String getWaybillNo() {
-		return waybillNo;
-	}
-	public void setWaybillNo(String waybillNo) {
-		this.waybillNo = waybillNo;
-	}
-	public String getPayEntNo() {
-		return payEntNo;
-	}
-	public void setPayEntNo(String payEntNo) {
-		this.payEntNo = payEntNo;
-	}
-	public String getPayEntName() {
-		return payEntName;
-	}
-	public void setPayEntName(String payEntName) {
-		this.payEntName = payEntName;
-	}
-	public String getPayNo() {
-		return payNo;
-	}
-	public void setPayNo(String payNo) {
-		this.payNo = payNo;
+		EntOrderNo = entOrderNo;
 	}
 	public String getOrgMessageID() {
 		return OrgMessageID;
 	}
 	public void setOrgMessageID(String orgMessageID) {
 		OrgMessageID = orgMessageID;
+	}
+	public String getOrderStatus() {
+		return OrderStatus;
+	}
+	public void setOrderStatus(String orderStatus) {
+		OrderStatus = orderStatus;
+	}
+	public String getPayStatus() {
+		return PayStatus;
+	}
+	public void setPayStatus(String payStatus) {
+		PayStatus = payStatus;
+	}
+	public double getOrderGoodTotal() {
+		return OrderGoodTotal;
+	}
+	public void setOrderGoodTotal(double orderGoodTotal) {
+		OrderGoodTotal = orderGoodTotal;
+	}
+	public String getOrderGoodTotalCurr() {
+		return OrderGoodTotalCurr;
+	}
+	public void setOrderGoodTotalCurr(String orderGoodTotalCurr) {
+		OrderGoodTotalCurr = orderGoodTotalCurr;
+	}
+	public double getFreight() {
+		return Freight;
+	}
+	public void setFreight(double freight) {
+		Freight = freight;
+	}
+	public double getTax() {
+		return Tax;
+	}
+	public void setTax(double tax) {
+		Tax = tax;
+	}
+	public double getOtherPayment() {
+		return OtherPayment;
+	}
+	public void setOtherPayment(double otherPayment) {
+		OtherPayment = otherPayment;
+	}
+	public String getOtherPayNotes() {
+		return OtherPayNotes;
+	}
+	public void setOtherPayNotes(String otherPayNotes) {
+		OtherPayNotes = otherPayNotes;
+	}
+	public double getOtherCharges() {
+		return OtherCharges;
+	}
+	public void setOtherCharges(double otherCharges) {
+		OtherCharges = otherCharges;
+	}
+	public double getActualAmountPaid() {
+		return ActualAmountPaid;
+	}
+	public void setActualAmountPaid(double actualAmountPaid) {
+		ActualAmountPaid = actualAmountPaid;
+	}
+	public String getRecipientName() {
+		return RecipientName;
+	}
+	public void setRecipientName(String recipientName) {
+		RecipientName = recipientName;
+	}
+	public String getRecipientAddr() {
+		return RecipientAddr;
+	}
+	public void setRecipientAddr(String recipientAddr) {
+		RecipientAddr = recipientAddr;
+	}
+	public String getRecipientTel() {
+		return RecipientTel;
+	}
+	public void setRecipientTel(String recipientTel) {
+		RecipientTel = recipientTel;
+	}
+	public String getRecipientCountry() {
+		return RecipientCountry;
+	}
+	public void setRecipientCountry(String recipientCountry) {
+		RecipientCountry = recipientCountry;
+	}
+	public String getRecipientProvincesCode() {
+		return RecipientProvincesCode;
+	}
+	public void setRecipientProvincesCode(String recipientProvincesCode) {
+		RecipientProvincesCode = recipientProvincesCode;
+	}
+	public String getOrderDocAcount() {
+		return OrderDocAcount;
+	}
+	public void setOrderDocAcount(String orderDocAcount) {
+		OrderDocAcount = orderDocAcount;
+	}
+	public String getOrderDocName() {
+		return OrderDocName;
+	}
+	public void setOrderDocName(String orderDocName) {
+		OrderDocName = orderDocName;
+	}
+	public String getOrderDocType() {
+		return OrderDocType;
+	}
+	public void setOrderDocType(String orderDocType) {
+		OrderDocType = orderDocType;
+	}
+	public String getOrderDocId() {
+		return OrderDocId;
+	}
+	public void setOrderDocId(String orderDocId) {
+		OrderDocId = orderDocId;
+	}
+	public String getOrderDocTel() {
+		return OrderDocTel;
+	}
+	public void setOrderDocTel(String orderDocTel) {
+		OrderDocTel = orderDocTel;
+	}
+	public String getOrderDate() {
+		return OrderDate;
+	}
+	public void setOrderDate(String orderDate) {
+		OrderDate = orderDate;
+	}
+	public String getBatchNumbers() {
+		return BatchNumbers;
+	}
+	public void setBatchNumbers(String batchNumbers) {
+		BatchNumbers = batchNumbers;
+	}
+	public String getInvoiceType() {
+		return InvoiceType;
+	}
+	public void setInvoiceType(String invoiceType) {
+		InvoiceType = invoiceType;
+	}
+	public String getInvoiceNo() {
+		return InvoiceNo;
+	}
+	public void setInvoiceNo(String invoiceNo) {
+		InvoiceNo = invoiceNo;
+	}
+	public String getInvoiceTitle() {
+		return InvoiceTitle;
+	}
+	public void setInvoiceTitle(String invoiceTitle) {
+		InvoiceTitle = invoiceTitle;
+	}
+	public String getInvoiceIdentifyId() {
+		return InvoiceIdentifyId;
+	}
+	public void setInvoiceIdentifyId(String invoiceIdentifyId) {
+		InvoiceIdentifyId = invoiceIdentifyId;
+	}
+	public String getInvoiceDesc() {
+		return InvoiceDesc;
+	}
+	public void setInvoiceDesc(String invoiceDesc) {
+		InvoiceDesc = invoiceDesc;
+	}
+	public double getInvoiceAmount() {
+		return InvoiceAmount;
+	}
+	public void setInvoiceAmount(double invoiceAmount) {
+		InvoiceAmount = invoiceAmount;
+	}
+	public String getInvoiceDate() {
+		return InvoiceDate;
+	}
+	public void setInvoiceDate(String invoiceDate) {
+		InvoiceDate = invoiceDate;
+	}
+	public String getInvoiceNotes() {
+		return InvoiceNotes;
+	}
+	public void setInvoiceNotes(String invoiceNotes) {
+		InvoiceNotes = invoiceNotes;
+	}
+	public String getEHSEntNo() {
+		return EHSEntNo;
+	}
+	public void setEHSEntNo(String eHSEntNo) {
+		EHSEntNo = eHSEntNo;
+	}
+	public String getEHSEntName() {
+		return EHSEntName;
+	}
+	public void setEHSEntName(String eHSEntName) {
+		EHSEntName = eHSEntName;
+	}
+	public String getWaybillNo() {
+		return WaybillNo;
+	}
+	public void setWaybillNo(String waybillNo) {
+		WaybillNo = waybillNo;
+	}
+	public String getPayEntNo() {
+		return PayEntNo;
+	}
+	public void setPayEntNo(String payEntNo) {
+		PayEntNo = payEntNo;
+	}
+	public String getPayEntName() {
+		return PayEntName;
+	}
+	public void setPayEntName(String payEntName) {
+		PayEntName = payEntName;
+	}
+	public String getPayNo() {
+		return PayNo;
+	}
+	public void setPayNo(String payNo) {
+		PayNo = payNo;
 	}
 	public String getCiqNotes() {
 		return ciqNotes;
@@ -411,6 +327,12 @@ public class OrderRecord implements Serializable {
 	}
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	public int getCount() {
+		return count;
+	}
+	public void setCount(int count) {
+		this.count = count;
 	}
 	public int getDel_flag() {
 		return del_flag;
@@ -448,5 +370,8 @@ public class OrderRecord implements Serializable {
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
+	
+	
+	
 	
 }
