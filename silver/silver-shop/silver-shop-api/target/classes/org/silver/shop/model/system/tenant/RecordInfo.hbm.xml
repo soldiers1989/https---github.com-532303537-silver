@@ -9,7 +9,7 @@
             <generator class="identity" />
         </id>
         <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" not-null="true" unique="true"/>
+            <column name="merchantId" not-null="true" />
         </property>
         <property name="eport">
         	<column name="eport"></column>

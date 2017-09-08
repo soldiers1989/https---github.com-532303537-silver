@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.silver.shop.dao.BaseDao;
 
-public interface CategoryDao extends BaseDao{
+public interface CategoryDao<T> extends BaseDao<T>{
 	
 	/**
 	 * 查询商品所有第一类型

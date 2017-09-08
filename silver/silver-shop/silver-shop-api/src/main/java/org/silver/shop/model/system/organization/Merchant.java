@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 商户信息
+ * 商户信息实体类
  */
 public class Merchant implements Serializable {
 
@@ -23,7 +23,6 @@ public class Merchant implements Serializable {
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱
 	private String merchantIdcard;// 商户身份证号码
-	private String merchantBankAccount;// 商户银行账号
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
 	private String merchantBusinessLicenseLink;// 企业营业执照(图片地址)
@@ -37,7 +36,7 @@ public class Merchant implements Serializable {
 	private String merchantChecktheRegistrationCode;// 报检注册编码
 	private int merchantLevel;// 商户等级
 	private long merchantProfit;// 平台服务费(原分润),按0.0X算
-	private String merchantStatus;// 商户状态：01-启用，02-禁用，03-审核
+	private String merchantStatus;// 商户状态：1-启用，2-禁用，3-审核
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
@@ -45,8 +44,9 @@ public class Merchant implements Serializable {
 	private int deletFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
-	private int merchantRealName;//商户实名表示1-未实名,2-已实名;
-	
+	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
+	private String merchantIdCardName; // 身份证名字
+
 	public Long getId() {
 		return id;
 	}
@@ -127,13 +127,6 @@ public class Merchant implements Serializable {
 		this.merchantIdcard = merchantIdcard;
 	}
 
-	public String getMerchantBankAccount() {
-		return merchantBankAccount;
-	}
-
-	public void setMerchantBankAccount(String merchantBankAccount) {
-		this.merchantBankAccount = merchantBankAccount;
-	}
 
 	public String getMerchantAddress() {
 		return merchantAddress;
@@ -315,7 +308,11 @@ public class Merchant implements Serializable {
 		this.id = id;
 	}
 
+	public String getMerchantIdCardName() {
+		return merchantIdCardName;
+	}
 
-	
-
+	public void setMerchantIdCardName(String merchantIdCardName) {
+		this.merchantIdCardName = merchantIdCardName;
+	}
 }

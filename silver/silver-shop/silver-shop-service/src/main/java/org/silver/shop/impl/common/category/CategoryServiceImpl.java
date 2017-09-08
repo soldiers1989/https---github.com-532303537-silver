@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
-@Service(interfaceClass=CategoryService.class)
+@Service(interfaceClass = CategoryService.class)
 public class CategoryServiceImpl implements CategoryService {
 
 	@Autowired
@@ -16,7 +16,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public List<Object> findAllfirstType() {
-		return  categoryDao.findAllfirstType();
+		return categoryDao.findAllfirstType();
 	}
 
 	@Override

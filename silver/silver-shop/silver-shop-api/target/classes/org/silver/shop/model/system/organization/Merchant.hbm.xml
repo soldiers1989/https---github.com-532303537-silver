@@ -35,9 +35,7 @@
         <property name="merchantIdcard" type="java.lang.String">
             <column name="merchantIdcard" />
         </property>
-        <property name="merchantBankAccount" type="java.lang.String">
-            <column name="merchantBankAccount" />
-        </property>
+      
         <property name="merchantAddress" type="java.lang.String">
             <column name="merchantAddress" />
         </property>
@@ -72,10 +70,10 @@
             <column name="merchantChecktheRegistrationCode" />
         </property>
         <property name="merchantLevel" type="int">
-            <column name="merchantLevel" />
+            <column name="merchantLevel" default="0" />
         </property>
         <property name="merchantProfit" type="long">
-            <column name="merchantProfit" />
+            <column name="merchantProfit" default="0"/>
         </property>
         <property name="merchantStatus" type="java.lang.String">
             <column name="merchantStatus" not-null="true"/>
@@ -101,9 +99,11 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-        
         <property name="merchantRealName" type="int">
             <column name="merchantRealName" />
+        </property>
+         <property name="merchantIdCardName" type="java.lang.String">
+            <column name="merchantIdCardName" />
         </property>
     </class>
 </hibernate-mapping>

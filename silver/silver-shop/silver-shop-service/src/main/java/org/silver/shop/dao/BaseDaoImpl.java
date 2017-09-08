@@ -10,16 +10,18 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.component.DataSourcesKey;
 import org.silver.shop.model.common.category.GoodsFirstType;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Merchant;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 提供数据访问层共用DAO方法
  */
-public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
+public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
-	public <T> boolean add(T entity) {
+	// 将实体数据插入数据库
+	public boolean add(Object entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -30,7 +32,6 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 			session.close();
 			return true;
 		} catch (Exception re) {
-
 			re.printStackTrace();
 			return false;
 		} finally {
@@ -41,7 +42,7 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public <T> boolean delete(T entity) {
+	public boolean delete(Object entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -62,7 +63,7 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public <T> boolean update(T entity) {
+	public boolean update(Object entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -83,7 +84,6 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 	}
 
 	public Member findMailboxbyId(long id) {
-
 		Session session = null;
 		try {
 			session = getSession();
@@ -99,11 +99,12 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-
-	public Long findAllCount() {
+	// 统计数据库表中数据数量
+	public Long findAllCount(Class entity) {
 		Session session = null;
 		try {
-			String hql = "select count(model) from Member model ";
+			String entName = entity.getSimpleName();
+			String hql = "select count(model) from " + entName + " model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			Long count = (Long) query.uniqueResult();
@@ -111,7 +112,7 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 			return count;
 		} catch (Exception re) {
 			re.printStackTrace();
-			return (long) 0;
+			return (long) -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
@@ -119,13 +120,13 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	
+	/*
+	 * public List findByProperty(String propertyName, Object value) { return
+	 * findByProperty(propertyName, value, 0, 0); }
+	 */
 
-	public List findByProperty(String propertyName, Object value) {
-		return findByProperty(propertyName, value, 0, 0);
-	}
-
-	public List findByProperty(String propertyName, Object value, int page, int size) {
+	//
+	public List<Object> findByProperty(String propertyName, Object value, int page, int size) {
 		Session session = null;
 		try {
 			String queryString = "from Member as model where model." + propertyName + "= ?";
@@ -135,50 +136,10 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				queryObject.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List l = queryObject.list();
+			List<Object> l = queryObject.list();
 			session.close();
 			return l;
 		} catch (RuntimeException re) {
-			re.printStackTrace();
-			return null;
-		} finally {
-			if (session != null && session.isOpen()) {
-				session.close();
-			}
-		}
-	}
-
-	public List<Member> findByProperty(Map<String, Object> params, int page, int size) {
-		Session session = null;
-		try {
-			session = getSession();
-			System.out.println(session);
-			String hql = "from Member model ";
-			List<Object> list = new ArrayList<Object>();
-			if (params != null && params.size() > 0) {
-				hql += "where ";
-				String property;
-				Iterator<String> is = params.keySet().iterator();
-				while (is.hasNext()) {
-					property = is.next();
-					hql = hql + "model." + property + "=" + "?" + " and ";
-					list.add(params.get(property));
-				}
-				hql += " 1=1 ";
-			}
-			Query query = session.createQuery(hql);
-			if (list.size() > 0) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, list.get(i));
-				}
-			}
-			if (page > 0 && size > 0) {
-				query.setFirstResult((page - 1) * size).setMaxResults(size);
-			}
-			List<Member> results = query.list();
-			session.close();
-			return results;
-		} catch (Exception re) {
 			re.printStackTrace();
 			return null;
 		} finally {
@@ -222,30 +183,9 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-	@Override
-	public <T> List<Object> findAll(Class<T> entity) {
-		Session session = null;
-		try {
-			String entName = entity.getSimpleName();
-			String hql = "from " + entName + " model ";
-			session = getSession();
-			Query query = session.createQuery(hql);
-			List<Object> list = query.list();
-			session.close();
-			return list;
-		} catch (Exception re) {
-			re.printStackTrace();
-			// log.error("查询数据出错！", re);
-			return null;
-		} finally {
-			if (session != null && session.isOpen()) {
-				session.close();
-			}
-		}
-	}
 
-	@Override
-	public <T> List<Object> findAllPage(Class<T> entity, int page, int size) {
+	// 根据实体查询实体表中所有数据
+	public List<Object> findAll(Class entity, int page, int size) {
 		Session session = null;
 		try {
 			String entName = entity.getSimpleName();
@@ -268,18 +208,83 @@ public class BaseDaoImpl extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-	
+
+	// 根据传递进来的Map查询数据
+	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = "from " + entName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += "where ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + "=" + "?" + " and ";
+					list.add(params.get(property));
+				}
+				hql += " 1=1 ";
+			}
+			Query query = session.createQuery(hql);
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<Object> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	// 查询数据库表中最后一条记录的自增ID
+	public Long findLastId(Class entity) {
+		Session session = null;
+		try {
+			String entName = entity.getSimpleName();
+			String hql = "select model.id from " + entName + " model order by model.id desc ";
+			session = getSession();
+			Query query = session.createQuery(hql);
+
+			// 设置查询结果分页
+			query.setFirstResult(0).setMaxResults(1);
+			if (query.uniqueResult() == null) {
+				return (long) 0;
+			}
+			Long count = (long) query.uniqueResult();
+			session.close();
+			return count;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return (long) -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		BaseDaoImpl ud = new BaseDaoImpl();
-		//Map params = new HashMap();
-		//params.put("id", (long) 33);
-		//params.put("deletFlag", 1);//
-		// List<Member> list=ud.findByProperty(params, 1, 5);
-		System.out.println(ud.findAll(GoodsFirstType.class).size());
-		// System.out.println(ulist.get(0).getCreate_date());
-		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		// ud.update(ulist.get(0));
-		// System.out.println(u.getCreate_date());
+		Merchant merchant = new Merchant();
+		merchant.setMerchantId("测试ID");
+		merchant.setMerchantCusNo("商户编码");
+
+		System.out.println(ud.findLastId(Merchant.class));
+
 	}
 }

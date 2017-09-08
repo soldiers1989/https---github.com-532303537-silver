@@ -23,7 +23,7 @@ public class ChooseDatasourceHandler {
 				if (annotation != null && (annotation.value().equals("read"))) {
 					hibernateDaoImpl.setSession(SessionFactory.getSession());
 				} else {
-					hibernateDaoImpl.setSession(SessionFactory2.getSession());
+					hibernateDaoImpl.setSession(SessionFactory.getSession());
 				}
 			}
 
