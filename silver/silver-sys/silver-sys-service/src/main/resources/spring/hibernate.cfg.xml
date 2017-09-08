@@ -39,7 +39,11 @@
 		<mapping resource="org/silver/sys/model/Appkey.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/EBPentRecord.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/GoodsRecord.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/GoodsInfo.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/OrderHead.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/OrderRecord.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/OrderGoods.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/User.hbm.xml"/>
+		
 	</session-factory>
 </hibernate-configuration>

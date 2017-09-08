@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.sys.model">
+          
+         <class name="GoodsInfo" table="ym_cbsp_goods_info" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+         
+         <property name="OrgMessageID">
+              <column name="OrgMessageID" not-null="true"/>
+         </property>
+        
+         <property name="Seq">
+              <column name="Seq" not-null="true"/>
+         </property>
+          <property name="EntGoodsNo">
+              <column name="EntGoodsNo" not-null="true" />
+         </property>
+         
+         <property name="EPortGoodsNo">
+              <column name="EPortGoodsNo" />
+         </property>
+         
+         <property name="CIQGoodsNo">
+              <column name="CIQGoodsNo" />
+         </property>
+        
+         <property name="CusGoodsNo">
+              <column name="CusGoodsNo" />
+         </property>
+        
+         <property name="EmsNo">
+              <column name="EmsNo" />
+         </property>
+         
+         <property name="ItemNo">
+              <column name="ItemNo" />
+         </property>
+        
+         <property name="ShelfGName">
+              <column name="ShelfGName" not-null="true"/>
+         </property>
+          <property name="NcadCode">
+              <column name="NcadCode" not-null="true" />
+         </property>
+         
+         <property name="HSCode">
+              <column name="HSCode" not-null="true" />
+         </property>
+         
+         <property name="BarCode">
+              <column name="BarCode" />
+         </property>
+        
+         <property name="GoodsName">
+              <column name="GoodsName" not-null="true" />
+         </property>
+        
+           <property name="GoodsStyle">
+              <column name="GoodsStyle" not-null="true"/>
+         </property>
+   
+          <property name="Brand">
+              <column name="Brand" not-null="true"/>
+         </property>
+         
+         <property name="GUnit">
+              <column name="GUnit" not-null="true" />
+         </property>
+         
+         <property name="StdUnit">
+              <column name="StdUnit" not-null="true" />
+         </property>
+         
+         <property name="SecUnit">
+              <column name="SecUnit" />
+         </property>
+        
+         <property name="RegPrice" type="java.lang.Double">
+              <column name="RegPrice" not-null="true"/>
+         </property>
+        
+         <property name="GiftFlag">
+              <column name="GiftFlag" not-null="true"/>
+         </property>
+          <property name="OriginCountry">
+              <column name="OriginCountry" not-null="true"/>
+         </property>
+          <property name="Quality">
+              <column name="Quality" not-null="true" />
+         </property>
+         
+         <property name="QualityCertify">
+              <column name="QualityCertify"  />
+         </property>
+         
+         <property name="Manufactory">
+              <column name="Manufactory" not-null="true"/>
+         </property>
+        
+         <property name="NetWt" type="java.lang.Double">
+              <column name="NetWt" not-null="true"/>
+         </property>
+        
+         <property name="GrossWt" type="java.lang.Double">
+              <column name="GrossWt" not-null="true"/>
+         </property>
+         <property name="Notes">
+              <column name="Notes"  />
+         </property>
+         
+       
+        
+          </class>
+          
+        </hibernate-mapping>

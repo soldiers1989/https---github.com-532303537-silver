@@ -13,158 +13,67 @@
             </generator>       
           </id>
          
-          <property name="declEntNo">
-              <column name="declEntNo" not-null="true" />
+          <property name="DeclEntNo">
+              <column name="DeclEntNo" not-null="true" />
          </property>
          
-          <property name="declEntName">
-              <column name="declEntName" not-null="true"/>
+          <property name="DeclEntName">
+              <column name="DeclEntName" not-null="true"/>
          </property>
          
-         <property name="ebEntNo">
-              <column name="ebEntNo" not-null="true"/>
+         <property name="EBEntNo">
+              <column name="EBEntNo" not-null="true"/>
          </property>
         
-         <property name="ebEntName">
-              <column name="ebEntName" not-null="true"/>
+         <property name="EBEntName">
+              <column name="EBEntName" not-null="true"/>
          </property>
         
-           <property name="opType">
-              <column name="opType" not-null="true"/>
+           <property name="OpType">
+              <column name="OpType" not-null="true"/>
          </property>
          
-          <property name="customsCode">
-              <column name="customsCode" not-null="true" />
+          <property name="CustomsCode">
+              <column name="CustomsCode" not-null="true" />
          </property>
          
-          <property name="ciqOrgCode">
-              <column name="ciqOrgCode" not-null="true"/>
+          <property name="CIQOrgCode">
+              <column name="CIQOrgCode" not-null="true"/>
          </property>
          
-         <property name="ebpEntNo">
-              <column name="ebpEntNo" not-null="true"/>
+         <property name="EBPEntNo">
+              <column name="EBPEntNo" not-null="true"/>
          </property>
         
-         <property name="ebpEntName">
-              <column name="ebpEntName" not-null="true"/>
+         <property name="EBPEntName">
+              <column name="EBPEntName" not-null="true"/>
          </property>
         
-           <property name="currCode">
-              <column name="currCode" not-null="true"/>
+           <property name="CurrCode">
+              <column name="CurrCode" not-null="true"/>
          </property>
-          <property name="businessType">
-              <column name="businessType" not-null="true" />
+          <property name="BusinessType">
+              <column name="BusinessType" not-null="true" />
          </property>
          
-          <property name="inputDate" type="java.util.Date">
-              <column name="inputDate" not-null="true"/>
+          <property name="InputDate" >
+              <column name="InputDate" not-null="true"/>
          </property>
          
-         <property name="declTime" type="java.util.Date">
-              <column name="declTime" not-null="true"/>
+         <property name="DeclTime" >
+              <column name="DeclTime" not-null="true"/>
          </property>
         
-         <property name="ieFlag">
-              <column name="ieFlag" not-null="true"/>
+         <property name="IeFlag">
+              <column name="IeFlag" not-null="true"/>
          </property>
         
-           <property name="seq">
-              <column name="seq" not-null="true"/>
-         </property>
-          <property name="entGoodsNo">
-              <column name="entGoodsNo" not-null="true" />
-         </property>
-         
-          <property name="eportGoodsNo">
-              <column name="eportGoodsNo" />
-         </property>
-         
-         <property name="ciqGoodsNo">
-              <column name="ciqGoodsNo" />
-         </property>
-        
-         <property name="cusGoodsNo">
-              <column name="cusGoodsNo" />
-         </property>
-        
-           <property name="emsNo">
-              <column name="emsNo" />
-         </property>
-         
-          <property name="itemNo">
-              <column name="itemNo" />
-         </property>
-        
-           <property name="shelfGname">
-              <column name="shelfGname" not-null="true"/>
-         </property>
-          <property name="ncadCode">
-              <column name="ncadCode" not-null="true" />
-         </property>
-         
-          <property name="hsCode">
-              <column name="hsCode" not-null="true" />
-         </property>
-         
-         <property name="barCode">
-              <column name="barCode" />
-         </property>
-        
-         <property name="goodsName">
-              <column name="goodsName" not-null="true" />
-         </property>
-        
-           <property name="goodsStyle">
-              <column name="goodsStyle" not-null="true"/>
-         </property>
-   
-          <property name="brand">
-              <column name="brand" not-null="true"/>
-         </property>
-          <property name="gunit">
-              <column name="gunit" not-null="true" />
-         </property>
-         
-          <property name="stdUnit">
-              <column name="stdUnit" not-null="true" />
-         </property>
-         
-         <property name="secUnit">
-              <column name="secUnit" />
-         </property>
-        
-         <property name="regPrice" type="java.lang.Double">
-              <column name="regPrice" not-null="true"/>
-         </property>
-        
-           <property name="giftFlag">
-              <column name="giftFlag" not-null="true"/>
-         </property>
-          <property name="originCountry">
-              <column name="originCountry" not-null="true"/>
-         </property>
-          <property name="quality">
-              <column name="quality" not-null="true" />
-         </property>
-         
-          <property name="qualityCertify">
-              <column name="qualityCertify"  />
-         </property>
-         
-         <property name="manufactory">
-              <column name="manufactory" not-null="true"/>
-         </property>
-        
-         <property name="netwt" type="java.lang.Double">
-              <column name="netwt" not-null="true"/>
-         </property>
-        
-           <property name="grosswt" type="java.lang.Double">
-              <column name="grosswt" not-null="true"/>
+         <property name="Notes" >
+              <column name="Notes" />
          </property>
  
-          <property name="OrgMessageID">
-              <column name="OrgMessageID" />
+         <property name="OrgMessageID">
+              <column name="OrgMessageID" unique="true" not-null="true"/>
          </property>
           <property name="ciqNotes">
               <column name="ciqNotes" />
@@ -183,7 +92,11 @@
          <property name="status">
               <column name="status" />
          </property>
-                
+             
+         <property name="count" type="java.lang.Integer">
+              <column name="count" />
+         </property>   
+         
           <property name="del_flag" type="java.lang.Integer">
               <column name="del_flag" not-null="true"/>
          </property>

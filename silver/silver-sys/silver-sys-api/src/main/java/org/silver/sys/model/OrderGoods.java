@@ -8,143 +8,147 @@ import java.io.Serializable;
  */
 public class OrderGoods implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	private Long id;
-	private String entOrderNo; // 企业电子订单编号
-	private Long seq;	         //商品序号
-	private String entGoodsNo;   //企业商品自编号
-	private String ciqGoodsNo;   //检验检疫商品备案编号
-	private String cusGoodsNo;   //海关正式备案号
-	private String hsCode;       //HS编码
-	private String goodsName;    //企业商品名称
-	private String goodsStyle;   //规格型号
-	private String goodsDescribe;//企业商品描述
-	private String originCountry;//原产国
-	private String barCode;	     //商品条形码
-	private String brand;        //品牌
-	private Long qty;	         //数量
-	private String unit;         //计量单位
-	private Double price;	         //单价
-	private Double total;        //总价
-	private String currCode;     //币制
-	private String notes;        //备注
+	private long id;
+	private String OrgMessageID; //报文编号
+	private String EntOrderNo;   //企业电子订单编号
+	private int Seq;	         //商品序号
+	private String EntGoodsNo;   //企业商品自编号
+	private String CIQGoodsNo;   //检验检疫商品备案编号
+	private String CusGoodsNo;   //海关正式备案号
+	private String HSCode;       //HS编码
+	private String GoodsName;    //企业商品名称
+	private String GoodsStyle;   //规格型号
+	private String GoodsDescribe;//企业商品描述
+	private String OriginCountry;//原产国
+	private String BarCode;	     //商品条形码
+	private String Brand;        //品牌
+	private int Qty;	         //数量
+	private String Unit;         //计量单位
+	private Double Price;	     //单价
+	private Double Total;        //总价
+	private String CurrCode;     //币制
+	private String Notes;        //备注
 	private String sku;          //填启邦提供的商品备案信息中的客户SKU
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
-	public String getEntOrderNo() {
-		return entOrderNo;
-	}
-	public void setEntOrderNo(String entOrderNo) {
-		this.entOrderNo = entOrderNo;
-	}
-	public Long getSeq() {
-		return seq;
-	}
-	public void setSeq(Long seq) {
-		this.seq = seq;
-	}
 	public String getEntGoodsNo() {
-		return entGoodsNo;
+		return EntGoodsNo;
 	}
 	public void setEntGoodsNo(String entGoodsNo) {
-		this.entGoodsNo = entGoodsNo;
+		EntGoodsNo = entGoodsNo;
 	}
-	public String getCiqGoodsNo() {
-		return ciqGoodsNo;
+	public String getOrgMessageID() {
+		return OrgMessageID;
 	}
-	public void setCiqGoodsNo(String ciqGoodsNo) {
-		this.ciqGoodsNo = ciqGoodsNo;
+	public void setOrgMessageID(String orgMessageID) {
+		OrgMessageID = orgMessageID;
+	}
+	public String getEntOrderNo() {
+		return EntOrderNo;
+	}
+	public void setEntOrderNo(String entOrderNo) {
+		EntOrderNo = entOrderNo;
+	}
+	public int getSeq() {
+		return Seq;
+	}
+	public void setSeq(int seq) {
+		Seq = seq;
+	}
+	public String getCIQGoodsNo() {
+		return CIQGoodsNo;
+	}
+	public void setCIQGoodsNo(String cIQGoodsNo) {
+		CIQGoodsNo = cIQGoodsNo;
 	}
 	public String getCusGoodsNo() {
-		return cusGoodsNo;
+		return CusGoodsNo;
 	}
 	public void setCusGoodsNo(String cusGoodsNo) {
-		this.cusGoodsNo = cusGoodsNo;
+		CusGoodsNo = cusGoodsNo;
 	}
-	public String getHsCode() {
-		return hsCode;
+	public String getHSCode() {
+		return HSCode;
 	}
-	public void setHsCode(String hsCode) {
-		this.hsCode = hsCode;
+	public void setHSCode(String hSCode) {
+		HSCode = hSCode;
 	}
 	public String getGoodsName() {
-		return goodsName;
+		return GoodsName;
 	}
 	public void setGoodsName(String goodsName) {
-		this.goodsName = goodsName;
+		GoodsName = goodsName;
 	}
 	public String getGoodsStyle() {
-		return goodsStyle;
+		return GoodsStyle;
 	}
 	public void setGoodsStyle(String goodsStyle) {
-		this.goodsStyle = goodsStyle;
+		GoodsStyle = goodsStyle;
 	}
 	public String getGoodsDescribe() {
-		return goodsDescribe;
+		return GoodsDescribe;
 	}
 	public void setGoodsDescribe(String goodsDescribe) {
-		this.goodsDescribe = goodsDescribe;
+		GoodsDescribe = goodsDescribe;
 	}
 	public String getOriginCountry() {
-		return originCountry;
+		return OriginCountry;
 	}
 	public void setOriginCountry(String originCountry) {
-		this.originCountry = originCountry;
+		OriginCountry = originCountry;
 	}
 	public String getBarCode() {
-		return barCode;
+		return BarCode;
 	}
 	public void setBarCode(String barCode) {
-		this.barCode = barCode;
+		BarCode = barCode;
 	}
 	public String getBrand() {
-		return brand;
+		return Brand;
 	}
 	public void setBrand(String brand) {
-		this.brand = brand;
+		Brand = brand;
 	}
-	public Long getQty() {
-		return qty;
+	public int getQty() {
+		return Qty;
 	}
-	public void setQty(Long qty) {
-		this.qty = qty;
+	public void setQty(int qty) {
+		Qty = qty;
 	}
 	public String getUnit() {
-		return unit;
+		return Unit;
 	}
 	public void setUnit(String unit) {
-		this.unit = unit;
+		Unit = unit;
 	}
 	public Double getPrice() {
-		return price;
+		return Price;
 	}
 	public void setPrice(Double price) {
-		this.price = price;
+		Price = price;
 	}
 	public Double getTotal() {
-		return total;
+		return Total;
 	}
 	public void setTotal(Double total) {
-		this.total = total;
+		Total = total;
 	}
 	public String getCurrCode() {
-		return currCode;
+		return CurrCode;
 	}
 	public void setCurrCode(String currCode) {
-		this.currCode = currCode;
+		CurrCode = currCode;
 	}
 	public String getNotes() {
-		return notes;
+		return Notes;
 	}
 	public void setNotes(String notes) {
-		this.notes = notes;
+		Notes = notes;
 	}
 	public String getSku() {
 		return sku;
@@ -152,9 +156,7 @@ public class OrderGoods implements Serializable {
 	public void setSku(String sku) {
 		this.sku = sku;
 	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
+	
 	
 	
 }

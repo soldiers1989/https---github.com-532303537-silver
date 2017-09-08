@@ -4,306 +4,124 @@ import java.io.Serializable;
 import java.util.Date;
 /**
  * 商品备案信息存储表
- * @author zhangxin
+ * @author zhangxin 2017/9/6
  *
  */
 public class GoodsRecord implements Serializable{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	private Long id;
-	private String declEntNo; // 申报企业编号
-	private String declEntName; // 申报企业名称
-	private String ebEntNo; // 电商企业编号
-	private String ebEntName; // 电商企业名称
-	private String opType; // 操作方式 A-新增；M-修改；D-取消备案；
-	private String customsCode; // 主管海关代码
-	private String ciqOrgCode; // 检验检疫机构代码
-	private String ebpEntNo; // 电商平台企业编号
-	private String ebpEntName; // 电商平台名称
-	private String currCode; // 币制代码
-	private String businessType; // 跨境业务类型 1-特殊监管区域BBC保税进口 2-保税仓库BBC保税进口；
-	private String inputDate; // 录入日期 YYYYMMDDhhmmss
-	private String declTime; // 申请备案时间 YYYYMMDDhhmmss
-	private String ieFlag; // 进出境标志 I-进，E-出
-	private Long seq; // 商品序号    1-999
-	private String entGoodsNo;// 企业商品自编号
-	private String eportGoodsNo;// 跨境公共平台商品备案申请号
-	private String ciqGoodsNo;// 检验检疫商品备案编号
-	private String cusGoodsNo;// 海关正式备案编号
-	private String emsNo;// 账册号
-	private String itemNo;// 项号
-	private String shelfGname;// 上架品名
-	private String ncadCode;// 行邮税号
-	private String hsCode;// HS编码
-	private String barCode;// 商品条形码
-	private String goodsName;// 商品名称
-	private String goodsStyle;// 型号规格
-	private String brand;// 品牌
-	private String gunit;// 申报计量单位
-	private String stdUnit;// 第一法定计量单位
-	private String secUnit;// 第二法定计量单位
-	private double regPrice;// 单价
-	private String giftFlag;// 是否赠品:0-是，1-否，默认否
-	private String originCountry;// 原产国
-	private String quality;// 商品品质及说明
-	private String qualityCertify;// 品质证明说明
-	private String manufactory;// 生产厂家或供应商
-	private double netwt;// 净重
-	private double grosswt;// 毛重
-	private String OrgMessageID; //原始报文编号
-	private String ciqNotes;// 国检审核备注
-	private String ciqStatus;// 国检审核状态
-	private String cusNotes;// 海关审核备注
-	private String cusStatus;// 海关审核状态
-	private String status;// 发送状态
-	private int del_flag;// 0正常 1删除
-	private Date create_date; // 创建时间
-	private String create_by; // 创建人
-	private Date update_date; // 更新时间
-	private String update_by;// 更新人
-	private String remarks;// 备注
-	public Long getId() {
+	private long id;
+	private String DeclEntNo; // 申报企业编号
+	private String DeclEntName; // 申报企业名称
+	private String EBEntNo; // 电商企业编号
+	private String EBEntName; // 电商企业名称
+	private String OpType; // 操作方式 A-新增；M-修改；D-取消备案；
+	private String CustomsCode; // 主管海关代码
+	private String CIQOrgCode; // 检验检疫机构代码
+	private String EBPEntNo; // 电商平台企业编号
+	private String EBPEntName; // 电商平台名称
+	private String CurrCode; // 币制代码
+	private String BusinessType; // 跨境业务类型 1-特殊监管区域BBC保税进口 2-保税仓库BBC保税进口；
+	private String InputDate; // 录入日期 YYYYMMDDhhmmss
+	private String DeclTime; // 申请备案时间 YYYYMMDDhhmmss
+	private String IeFlag; // 进出境标志 I-进，E-出
+	private String Notes;//备注
+	
+	public String getNotes() {
+		return Notes;
+	}
+	public void setNotes(String notes) {
+		Notes = notes;
+	}
+	public long getId() {
 		return id;
 	}
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	public String getDeclEntNo() {
-		return declEntNo;
+		return DeclEntNo;
 	}
 	public void setDeclEntNo(String declEntNo) {
-		this.declEntNo = declEntNo;
+		DeclEntNo = declEntNo;
 	}
 	public String getDeclEntName() {
-		return declEntName;
+		return DeclEntName;
 	}
 	public void setDeclEntName(String declEntName) {
-		this.declEntName = declEntName;
+		DeclEntName = declEntName;
 	}
-	public String getEbEntNo() {
-		return ebEntNo;
+	public String getEBEntNo() {
+		return EBEntNo;
 	}
-	public void setEbEntNo(String ebEntNo) {
-		this.ebEntNo = ebEntNo;
+	public void setEBEntNo(String eBEntNo) {
+		EBEntNo = eBEntNo;
 	}
-	public String getEbEntName() {
-		return ebEntName;
+	public String getEBEntName() {
+		return EBEntName;
 	}
-	public void setEbEntName(String ebEntName) {
-		this.ebEntName = ebEntName;
+	public void setEBEntName(String eBEntName) {
+		EBEntName = eBEntName;
 	}
 	public String getOpType() {
-		return opType;
+		return OpType;
 	}
 	public void setOpType(String opType) {
-		this.opType = opType;
+		OpType = opType;
 	}
 	public String getCustomsCode() {
-		return customsCode;
+		return CustomsCode;
 	}
 	public void setCustomsCode(String customsCode) {
-		this.customsCode = customsCode;
+		CustomsCode = customsCode;
 	}
-	public String getCiqOrgCode() {
-		return ciqOrgCode;
+	public String getCIQOrgCode() {
+		return CIQOrgCode;
 	}
-	public void setCiqOrgCode(String ciqOrgCode) {
-		this.ciqOrgCode = ciqOrgCode;
+	public void setCIQOrgCode(String cIQOrgCode) {
+		CIQOrgCode = cIQOrgCode;
 	}
-	public String getEbpEntNo() {
-		return ebpEntNo;
+	public String getEBPEntNo() {
+		return EBPEntNo;
 	}
-	public void setEbpEntNo(String ebpEntNo) {
-		this.ebpEntNo = ebpEntNo;
+	public void setEBPEntNo(String eBPEntNo) {
+		EBPEntNo = eBPEntNo;
 	}
-	public String getEbpEntName() {
-		return ebpEntName;
+	public String getEBPEntName() {
+		return EBPEntName;
 	}
-	public void setEbpEntName(String ebpEntName) {
-		this.ebpEntName = ebpEntName;
+	public void setEBPEntName(String eBPEntName) {
+		EBPEntName = eBPEntName;
 	}
 	public String getCurrCode() {
-		return currCode;
+		return CurrCode;
 	}
 	public void setCurrCode(String currCode) {
-		this.currCode = currCode;
+		CurrCode = currCode;
 	}
 	public String getBusinessType() {
-		return businessType;
+		return BusinessType;
 	}
 	public void setBusinessType(String businessType) {
-		this.businessType = businessType;
+		BusinessType = businessType;
 	}
 	public String getInputDate() {
-		return inputDate;
+		return InputDate;
 	}
 	public void setInputDate(String inputDate) {
-		this.inputDate = inputDate;
+		InputDate = inputDate;
 	}
 	public String getDeclTime() {
-		return declTime;
+		return DeclTime;
 	}
 	public void setDeclTime(String declTime) {
-		this.declTime = declTime;
+		DeclTime = declTime;
 	}
 	public String getIeFlag() {
-		return ieFlag;
+		return IeFlag;
 	}
 	public void setIeFlag(String ieFlag) {
-		this.ieFlag = ieFlag;
-	}
-	public Long getSeq() {
-		return seq;
-	}
-	public void setSeq(Long seq) {
-		this.seq = seq;
-	}
-	public String getEntGoodsNo() {
-		return entGoodsNo;
-	}
-	public void setEntGoodsNo(String entGoodsNo) {
-		this.entGoodsNo = entGoodsNo;
-	}
-	public String getEportGoodsNo() {
-		return eportGoodsNo;
-	}
-	public void setEportGoodsNo(String eportGoodsNo) {
-		this.eportGoodsNo = eportGoodsNo;
-	}
-	public String getCiqGoodsNo() {
-		return ciqGoodsNo;
-	}
-	public void setCiqGoodsNo(String ciqGoodsNo) {
-		this.ciqGoodsNo = ciqGoodsNo;
-	}
-	public String getCusGoodsNo() {
-		return cusGoodsNo;
-	}
-	public void setCusGoodsNo(String cusGoodsNo) {
-		this.cusGoodsNo = cusGoodsNo;
-	}
-	public String getEmsNo() {
-		return emsNo;
-	}
-	public void setEmsNo(String emsNo) {
-		this.emsNo = emsNo;
-	}
-	public String getItemNo() {
-		return itemNo;
-	}
-	public void setItemNo(String itemNo) {
-		this.itemNo = itemNo;
-	}
-	public String getShelfGname() {
-		return shelfGname;
-	}
-	public void setShelfGname(String shelfGname) {
-		this.shelfGname = shelfGname;
-	}
-	public String getNcadCode() {
-		return ncadCode;
-	}
-	public void setNcadCode(String ncadCode) {
-		this.ncadCode = ncadCode;
-	}
-	public String getHsCode() {
-		return hsCode;
-	}
-	public void setHsCode(String hsCode) {
-		this.hsCode = hsCode;
-	}
-	public String getBarCode() {
-		return barCode;
-	}
-	public void setBarCode(String barCode) {
-		this.barCode = barCode;
-	}
-	public String getGoodsName() {
-		return goodsName;
-	}
-	public void setGoodsName(String goodsName) {
-		this.goodsName = goodsName;
-	}
-	public String getGoodsStyle() {
-		return goodsStyle;
-	}
-	public void setGoodsStyle(String goodsStyle) {
-		this.goodsStyle = goodsStyle;
-	}
-	public String getBrand() {
-		return brand;
-	}
-	public void setBrand(String brand) {
-		this.brand = brand;
-	}
-	public String getGunit() {
-		return gunit;
-	}
-	public void setGunit(String gunit) {
-		this.gunit = gunit;
-	}
-	public String getStdUnit() {
-		return stdUnit;
-	}
-	public void setStdUnit(String stdUnit) {
-		this.stdUnit = stdUnit;
-	}
-	public String getSecUnit() {
-		return secUnit;
-	}
-	public void setSecUnit(String secUnit) {
-		this.secUnit = secUnit;
-	}
-	public double getRegPrice() {
-		return regPrice;
-	}
-	public void setRegPrice(double regPrice) {
-		this.regPrice = regPrice;
-	}
-	public String getGiftFlag() {
-		return giftFlag;
-	}
-	public void setGiftFlag(String giftFlag) {
-		this.giftFlag = giftFlag;
-	}
-	public String getOriginCountry() {
-		return originCountry;
-	}
-	public void setOriginCountry(String originCountry) {
-		this.originCountry = originCountry;
-	}
-	public String getQuality() {
-		return quality;
-	}
-	public void setQuality(String quality) {
-		this.quality = quality;
-	}
-	public String getQualityCertify() {
-		return qualityCertify;
-	}
-	public void setQualityCertify(String qualityCertify) {
-		this.qualityCertify = qualityCertify;
-	}
-	public String getManufactory() {
-		return manufactory;
-	}
-	public void setManufactory(String manufactory) {
-		this.manufactory = manufactory;
-	}
-	public double getNetwt() {
-		return netwt;
-	}
-	public void setNetwt(double netwt) {
-		this.netwt = netwt;
-	}
-	public double getGrosswt() {
-		return grosswt;
-	}
-	public void setGrosswt(double grosswt) {
-		this.grosswt = grosswt;
+		IeFlag = ieFlag;
 	}
 	public String getOrgMessageID() {
 		return OrgMessageID;
@@ -341,6 +159,12 @@ public class GoodsRecord implements Serializable{
 	public void setStatus(String status) {
 		this.status = status;
 	}
+	public int getCount() {
+		return count;
+	}
+	public void setCount(int count) {
+		this.count = count;
+	}
 	public int getDel_flag() {
 		return del_flag;
 	}
@@ -377,6 +201,21 @@ public class GoodsRecord implements Serializable{
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
+	private String OrgMessageID; //原始报文编号
+	private String ciqNotes;// 国检审核备注
+	private String ciqStatus;// 国检审核状态
+	private String cusNotes;// 海关审核备注
+	private String cusStatus;// 海关审核状态
+	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private int count;//重发计数      重发次数不能超过5次
+	private int del_flag;// 0正常 1删除
+	private Date create_date; // 创建时间
+	private String create_by; // 创建人
+	private Date update_date; // 更新时间
+	private String update_by;// 更新人
+	private String remarks;// 备注
+	
+
 	
 	
 }

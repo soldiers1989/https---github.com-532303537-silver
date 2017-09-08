@@ -32,16 +32,21 @@ public class CbspController {
 	    * 通用网关接口 
 	    * @param req
 	    * @param resp 
-	    * @param type 0 商品备案   1 订单备案   2清单（未确定）
-	    * @param eport 口岸  0 广州电子口岸   1广东智检 
+	    * @param type 0 商品备案   1 订单备案   2支付单（未确定）
+	    * @param eport 口岸  1 广州电子口岸   2广东智检 
 	    * @param ieFlag 进出口标识 I 进口  E 出口（广州口岸）
 	    * @param businessType 跨境业务类型    1-特殊监管区域BBC保税进口； 2-保税仓库BBC保税进口；3-BC直购进口；（广州口岸）
-	   
 	    * @param appkey 
+	      @param ebEntNo	电商企业编号
+          @param ebEntName	电商企业名称
+          @param customsCode 主管海关代码
+          @param ciqOrgCode	   检验检疫机构代码
+          @param currCode	币制代码
+	    
 	    * @return   
 	    */
 	   @RequestMapping(value="/Report" ,produces = "application/json; charset=utf-8")
-	   public String doNSRecord(HttpServletRequest req,HttpServletResponse resp,int type,int eport,String opType,String ieFlag,String businessType,String appkey,String clientsign,String timestamp ,String datas,String notifyurl){
+	   public String doNSRecord(HttpServletRequest req,HttpServletResponse resp,int type,int eport,String opType,String ieFlag,String businessType,String appkey,String clientsign,String timestamp ,String datas,String notifyurl,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode){
 		   Map statusMap = new HashMap();
 		   if(opType==null){
 			   opType="A";
@@ -49,7 +54,9 @@ public class CbspController {
 		   if(ieFlag==null){
 			   ieFlag="I";
 		   }
-		   
+		   if(currCode==null){
+			   ieFlag="142";
+		   }
 		   if(appkey!=null&&clientsign!=null&&timestamp!=null&&datas!=null&&opType!=null){
 			    statusMap =oauthService.checkSign(appkey, clientsign,datas,notifyurl, timestamp); //eportService.checkDatas(req);
 			    if((int)statusMap.get("status")==1){
@@ -60,8 +67,10 @@ public class CbspController {
 			        	statusMap.put("msg", "当前口岸未提供有电商平台备案信息");
 			        	return JSONObject.fromObject(statusMap).toString();
 			        }
-			    	
-			    	statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,statusMap.get("internetDomainName")+"",statusMap.get("no")+"",statusMap.get("name")+"");
+			    	if(ebEntNo!=null&&ebEntName!=null){
+			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode);
+			    		System.out.println("电商企业平台：------》"+dataMap.get("no")+""+dataMap.get("name")+"");
+			    	}
 			   }
 			    return JSONObject.fromObject(statusMap).toString();
 		   }

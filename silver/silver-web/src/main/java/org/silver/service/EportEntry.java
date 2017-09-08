@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.silver.sys.api.EBPentRecordService;
 import org.silver.sys.api.GZEportService;
+import org.silver.sys.api.ZJEportService;
 import org.silver.sys.model.EBPentRecord;
 import org.springframework.stereotype.Service;
 
@@ -18,17 +19,18 @@ public class EportEntry {
 	private GZEportService gZEportService;
 	@Reference
 	private EBPentRecordService eBPentRecordService;
+	@Reference
+	private ZJEportService zJEportService;
 	
-	
-	public Map<String,Object> uploadDatas(int eport, int type, String opType,String ieFlag,String businessType,Object jsonstr, String notifyurl,String internetDomainName,String ebpentNo,String ebpentName) {
+	public Map<String,Object> uploadDatas(int eport, int type, String opType,String ieFlag,String businessType,Object jsonstr, String notifyurl,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode) {
 		 Map<String,Object>  reqMap = new HashMap<String,Object>();
 		 if("A".equals(opType)||"M".equals(opType)||"D".equals(opType)){
 			 switch(eport){
-				case 0://广州
+				case 1://广州
 					switch(type){
 					case 0://商品备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&("1".equals(businessType)||"2".equals(businessType)||"3".equals(businessType))){
-							reqMap=gZEportService.goodsRecord(opType,ieFlag,businessType,jsonstr);
+							reqMap=gZEportService.goodsRecord(opType,ieFlag,businessType,jsonstr,ebEntNo,ebEntName,currCode,customsCode,ciqOrgCode,ebpentNo,ebpentName);
 							return reqMap;
 						}
 						reqMap.put("status", -5);
@@ -37,7 +39,8 @@ public class EportEntry {
 						return	reqMap;
 					case 1://订单备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
-							reqMap=gZEportService.orderRecord(jsonstr, opType, ieFlag,internetDomainName,ebpentNo,ebpentName);
+							System.out.println("JSON数据："+jsonstr.toString());
+							reqMap=gZEportService.orderRecord(jsonstr,opType,ieFlag,internetDomainName,ebpentNo,ebpentName,ebEntNo,ebEntName,customsCode,ciqOrgCode);
 							return reqMap;	
 						}
 						reqMap.put("status", -6);
@@ -54,8 +57,32 @@ public class EportEntry {
 						 
 					}
 					
-				case 1://南沙
-				default:
+				case 2://南沙
+					switch(type){
+					case 0://商品备案
+						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&("1".equals(businessType)||"2".equals(businessType)||"3".equals(businessType))){
+							reqMap=zJEportService.zjCreateGoodsRecord(jsonstr, "", opType, businessType, ieFlag);
+							return reqMap;
+						}
+						reqMap.put("status", -5);
+						reqMap.put("err", "错误的业务类型或者进出口标识，请确认后再提交");
+						
+						return	reqMap;
+					case 1://订单备案
+						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
+							System.out.println("JSON数据："+jsonstr.toString());
+							reqMap=zJEportService.zjCreateOrderRecord(jsonstr, "", opType, ieFlag);
+							return reqMap;	
+						}
+						reqMap.put("status", -6);
+						reqMap.put("err", "错误的进出口标识，请确认后再提交");
+						return	reqMap;
+						
+					default:	
+						reqMap.put("status", -1);
+						reqMap.put("err", "未知的业务类型-type");
+					    return reqMap;
+					}
 						
 				} 
 		 }

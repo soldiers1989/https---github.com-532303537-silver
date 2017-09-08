@@ -9,15 +9,14 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.silver.common.GZEportCode;
 import org.silver.sys.component.ChooseDatasourceHandler;
-import org.silver.sys.model.GoodsRecord;
+import org.silver.sys.model.User;
 import org.springframework.stereotype.Repository;
 
-@Repository("goodsRecordDao")
-public class GoodsRecordDao extends HibernateDaoImpl {
-
-	public boolean add(GoodsRecord entity) {
+@Repository("userDao")
+public class UserDao extends HibernateDaoImpl {
+	
+	public boolean add(User entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -28,6 +27,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 			session.close();
 			return true;
 		} catch (Exception re) {
+
 			re.printStackTrace();
 			return false;
 		} finally {
@@ -38,7 +38,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		}
 	}
 
-	public boolean delete(GoodsRecord entity) {
+	public boolean delete(User entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -59,7 +59,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		}
 	}
 
-	public boolean update(GoodsRecord entity) {
+	public boolean update(User entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -79,12 +79,12 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		}
 	}
 
-	public GoodsRecord findbyId(long id) {
+	public User findMailboxbyId(long id) {
 
 		Session session = null;
 		try {
 			session = getSession();
-			GoodsRecord instance = (GoodsRecord) session.get(GoodsRecord.class, id);
+			User instance = (User) session.get(User.class, id);
 			session.close();
 			return instance;
 		} catch (Exception re) {
@@ -99,7 +99,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 	public Long findAllCount() {
 		Session session = null;
 		try {
-			String hql = "select count(model) from GoodsRecord model ";
+			String hql = "select count(model) from User model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			Long count = (Long) query.uniqueResult();
@@ -114,16 +114,16 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		}
 	}
 
-	public List<GoodsRecord> findAll(int page, int size) {
+	public List<User> findAll(int page, int size) {
 		Session session = null;
 		try {
-			String hql = "from GoodsRecord model ";
+			String hql = "from Appkey model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<GoodsRecord> list = query.list();
+			List<User> list = query.list();
 			session.close();
 			return list;
 		} catch (Exception re) {
@@ -143,7 +143,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 	public List findByProperty(String propertyName, Object value, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "from GoodsRecord as model where model." + propertyName + "= ?";
+			String queryString = "from User as model where model." + propertyName + "= ?";
 			session = getSession();
 			Query queryObject = session.createQuery(queryString);
 			queryObject.setParameter(0, value);
@@ -163,11 +163,11 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		}
 	}
 
-	public List<GoodsRecord> findByProperty(Map<String, Object> params, int page, int size) {
+	public List<User> findByProperty(Map<String, Object> params, int page, int size) {
 		Session session = null;
 		try {
 			session = getSession();
-			String hql = "from GoodsRecord model ";
+			String hql = "from User model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -189,11 +189,11 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<GoodsRecord> results = query.list();
+			List<User> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
-
+            re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
@@ -208,7 +208,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 	public Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
-			String hql = "select count(model) from GoodsRecord model ";
+			String hql = "select count(model) from Appkey model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -239,35 +239,25 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 			}
 		}
 	}
+	
+
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		GoodsRecordDao ed = new GoodsRecordDao();
-		GoodsRecord gr =new GoodsRecord();
-		gr.setDeclEntNo(GZEportCode.DECL_ENT_NO);//申报企业编号
-		gr.setDeclEntName(GZEportCode.DECL_ENT_NAME);//申报企业名称
-		gr.setEBEntNo(GZEportCode.DECL_ENT_NO);//电商企业编号
-		gr.setEBEntName(GZEportCode.DECL_ENT_NAME);//电商企业名称
-		gr.setOpType("A");//操作方式
-		gr.setCustomsCode("5208");//主管海关代码
-		gr.setCIQOrgCode("442300");//检验检疫机构代码
-		gr.setEBPEntNo(GZEportCode.DECL_ENT_NO);//电商平台企业编号
-		gr.setEBPEntName(GZEportCode.DECL_ENT_NAME);//电商平台名称
-		gr.setCurrCode("142");//币制
-		gr.setBusinessType("3");//跨境业务类型
-		gr.setInputDate("20170905143522");//录入日期
-		gr.setDeclTime("20170905143522");//备案申请时间
-		gr.setIeFlag("I");//进出口标识
-		gr.setOrgMessageID("4566456");
-		gr.setCiqStatus("0");
-		gr.setCusStatus("0");
-		gr.setStatus("0");
-		gr.setCount(0);
-		gr.setCreate_date(new Date());
-		gr.setDel_flag(0);
-		ed.add(gr);
+		UserDao ed = new UserDao();
+		User ebp = new User();
+		//ebp.setApp_key("4a5de70025a7425dabeef6e8ea752976");
+		ebp.setDel_flag(0);;
+		ebp.setAccount("1509007917");
+		ebp.setPassword("123456");
+		ebp.setDescription("广州银盟信息科技有限公司");
+		ebp.setUserType("1");
+		ebp.setCreate_date(new Date());
+		System.out.println(ed.add(ebp));
 //		System.out.println(ed.findAllCount());
-//		JedisUtil.set("message_id"+"_resendCount",0,60*60*3);
-//		JedisUtil.get("message_id"+"_resendCount");
 	}
 	
+	
+	
+	
+
 }

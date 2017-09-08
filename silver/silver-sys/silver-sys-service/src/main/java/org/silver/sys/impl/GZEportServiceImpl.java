@@ -4,10 +4,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,7 +23,18 @@ import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 import org.silver.common.GZEportCode;
 import org.silver.sys.api.GZEportService;
+import org.silver.sys.dao.GoodsInfoDao;
+import org.silver.sys.dao.GoodsRecordDao;
+import org.silver.sys.dao.OrderGoodsDao;
+import org.silver.sys.dao.OrderHeadDao;
+import org.silver.sys.dao.OrderRecordDao;
+import org.silver.sys.model.GoodsInfo;
+import org.silver.sys.model.GoodsRecord;
+import org.silver.sys.model.OrderGoods;
+import org.silver.sys.model.OrderHead;
+import org.silver.sys.model.OrderRecord;
 import org.silver.sys.util.CheckDatasUtil;
+import org.silver.sys.util.FtpUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.FtpUtils;
 
@@ -25,39 +42,36 @@ import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-@Service(interfaceClass=GZEportService.class)
+
+@Service(interfaceClass = GZEportService.class)
 public class GZEportServiceImpl implements GZEportService {
 
 	private final static Log logger = LogFactory.getLog(GZEportServiceImpl.class);
+	@Resource
+	private GoodsRecordDao goodsRecordDao;
+	@Resource
+	private GoodsInfoDao goodsInfoDao;
+	@Resource
+	private OrderHeadDao orderHeadDao;
+	@Resource
+	private OrderRecordDao orderRecordDao;
+	@Resource
+	private OrderGoodsDao orderGoodsDao;
 
 	@Override
 	public void requestAnalysis(Object records, String type, String eport) {
 		logger.info("=================开始处理接收的数据===============================");
-		if ("0".equals(eport)) {// 电子口岸
-			if ("0".equals(type)) {// 商品备案
-				//goodsRecord(records);
-			}
-			if ("1".equals(type)) {// 订单备案
-
-			}
-			if ("2".equals(type)) {// 支付单备案
-
-			}
-		} else if ("1".equals(eport)) {// 智检
-
-		}
 
 	}
 
 	@Override
-	public Map<String, Object> goodsRecord(String opType,String ieFlag,String businessType,Object records) {
+	public Map<String, Object> goodsRecord(String opType, String ieFlag, String businessType, Object records,
+			String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode, String ebpentNo,
+			String ebpentName) {
 		logger.info("=================开始处理接收的records===============================");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
 		List<String> noNullKeys = new ArrayList<>();
-		
-	//	noNullKeys.add("CustomsCode");//海关区域代码
-	//	noNullKeys.add("CIQOrgCode");//检验检疫机构
 		noNullKeys.add("Seq");
 		noNullKeys.add("EntGoodsNo");
 		noNullKeys.add("ShelfGName");
@@ -80,9 +94,9 @@ public class GZEportServiceImpl implements GZEportService {
 			return checkMap;
 		}
 		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
-		//JSONObject record = JSONObject.fromObject(list.get(0));
 		try {
-			checkMap = createHead(list, "", opType,  businessType, ieFlag);
+			checkMap = createHead(list, "", opType, businessType, ieFlag, ebEntNo, ebEntName, currCode, customsCode,
+					ciqOrgCode, ebpentNo, ebpentName);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			checkMap.put("status", -1);
@@ -96,138 +110,243 @@ public class GZEportServiceImpl implements GZEportService {
 		return checkMap;
 	}
 
+	// 生成唯一报文messageID
+	private String createRemitSerialNumber(String topSign, String time) {
+		return topSign + time + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
+	}
+
+	/**
+	 * 订单实体保存
+	 * 
+	 * @param messageID
+	 * @param time
+	 * @param now
+	 * @param opType
+	 * @param businessType
+	 * @param ieFlag
+	 * @param ebEntNo
+	 * @param ebEntName
+	 * @param currCode
+	 * @param customsCode
+	 * @param ciqOrgCode
+	 * @param ebpentNo
+	 * @param ebpentName
+	 * @return
+	 */
+	private GoodsRecord saveRecord(String messageID, String time, Date now, String opType, String businessType,
+			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
+			String ebpentNo, String ebpentName) {
+		GoodsRecord goodsRecord = new GoodsRecord();
+		goodsRecord.setDeclEntNo(GZEportCode.DECL_ENT_NO);// 申报企业编号
+		goodsRecord.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
+		goodsRecord.setEBEntNo(ebEntNo);// 电商企业编号
+		goodsRecord.setEBEntName(ebEntName);// 电商企业名称
+		goodsRecord.setOpType(opType);// 操作方式
+		goodsRecord.setCustomsCode(customsCode);// 主管海关代码
+		goodsRecord.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
+		goodsRecord.setEBPEntNo(ebpentNo);// 电商平台企业编号
+		goodsRecord.setEBPEntName(ebpentName);// 电商平台名称
+		goodsRecord.setCurrCode(currCode);// 币制
+		goodsRecord.setBusinessType(businessType);// 跨境业务类型
+		goodsRecord.setInputDate(time);// 录入日期
+		goodsRecord.setDeclTime(time);// 备案申请时间
+		goodsRecord.setIeFlag(ieFlag);// 进出口标识
+		goodsRecord.setOrgMessageID(messageID);
+		goodsRecord.setCiqStatus("0");
+		goodsRecord.setCusStatus("0");
+		goodsRecord.setStatus("0");
+		goodsRecord.setCount(0);
+		goodsRecord.setCreate_date(now);
+		goodsRecord.setDel_flag(0);
+		if (goodsRecordDao.add(goodsRecord)) {
+			return goodsRecord;
+		}
+		return null;
+	}
+
+	/**
+	 * 订单商品实体存储
+	 * 
+	 * @param list
+	 * @param messageID
+	 * @return
+	 */
+	private List<GoodsInfo> saveGoods(JSONArray list, String messageID) {
+		List<GoodsInfo> goodsList = new ArrayList<>();
+		GoodsInfo goodsInfo = null;
+		for (int i = 0; i < list.size(); i++) {
+			goodsInfo = new GoodsInfo();
+			JSONObject map = JSONObject.fromObject(list.get(i));
+			goodsInfo = (GoodsInfo) jsonChangeToEntity(map, goodsInfo);
+			goodsInfo.setOrgMessageID(messageID);
+			if (goodsInfoDao.add(goodsInfo)) {
+				goodsList.add(goodsInfo);
+			} else {
+				return null;
+			}
+		}
+		return goodsList;
+	}
+
 	@Override
-	public Map<String, Object> createHead(JSONArray list, String path, String opType, String businessType, String ieFlag) throws FileNotFoundException, IOException {
-		logger.info("=================开始处理接收的JSonList生成XML文件===============================");
-	
+	public Map<String, Object> createHead(JSONArray list, String path, String opType, String businessType,
+			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
+			String ebpentNo, String ebpentName) throws FileNotFoundException, IOException {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
-		statusMap.put("status", 1);
-		statusMap.put("msg", "报文发送成功 ");
+		Date now = new Date();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		String time = sdf.format(now);
+		String messageID = createRemitSerialNumber("KJ881101_YINMENG_", time);
+		// 保存商品备案头，并返回
+		GoodsRecord goodsRecord = saveRecord(messageID, time, now, opType, businessType, ieFlag, ebEntNo, ebEntName,
+				currCode, customsCode, ciqOrgCode, ebpentNo, ebpentName);
+		if (goodsRecord != null) {
+			// 保存商品备案的多中商品，并返回商品List
+			List<GoodsInfo> goodsInfoList = saveGoods(list, messageID);
+			if (goodsInfoList != null && goodsInfoList.size() > 0) {
+				// 封装商品备案报文
+				statusMap = convertGoodsRecordIntoXML(goodsRecord, goodsInfoList);
+				String path2=statusMap.get("path")+"";
+				
+//				FtpUtil.upload(url, port, username, password, remotePath, new File(path2));
+				
+			}
+		}
+		return statusMap;
+	}
+
+	/**
+	 * 商品备案数据转成XML报文格式
+	 * 
+	 * @param goodsRecord
+	 *            商品备案头部信息
+	 * @param list
+	 *            商品详细信息List
+	 * @return
+	 */
+	private Map<String, Object> convertGoodsRecordIntoXML(GoodsRecord goodsRecord, List<GoodsInfo> list) {
+		Map<String, Object> statusMap = new HashMap<String, Object>();
 		Element root = new Element("InternationalTrade");
 		Document Doc = new Document(root);
-		String time = DateUtil.getDate("yyyyMMddHHmmss");
-		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
-		String strName = "KJ881101_YINMENG_" + remitSerialNumber;
 		Element elements = new Element("Head");
-		elements.addContent(new Element("MessageID").setText(strName));
+		elements.addContent(new Element("MessageID").setText(goodsRecord.getOrgMessageID()));
 		elements.addContent(new Element("MessageType").setText(GZEportCode.MESSAGE_TYPE_GOOD));
 		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER));
 		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
-		elements.addContent(new Element("SendTime").setText(time));
+		elements.addContent(new Element("SendTime").setText(goodsRecord.getDeclTime()));
 		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_BOTH));
 		elements.addContent(new Element("SignerInfo").setText(""));
 		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
 		// 创建节点 ;
 		Element declaration = new Element("Declaration");
-		Element goodsRegHead = new Element("GoodsRegHead");
-		goodsRegHead.addContent(new Element("DeclEntNo").setText(GZEportCode.DECL_ENT_NO));
-		goodsRegHead.addContent(new Element("DeclEntName").setText(GZEportCode.DECL_ENT_NAME));
-		goodsRegHead.addContent(new Element("EBEntNo").setText(GZEportCode.EB_ENT_NO));
-		goodsRegHead.addContent(new Element("EBEntName").setText(GZEportCode.EB_ENT_NAME));
-		goodsRegHead.addContent(new Element("OpType").setText(opType));
-		goodsRegHead.addContent(new Element("CustomsCode").setText("442100"));
-		goodsRegHead.addContent(new Element("CIQOrgCode").setText("5208"));
-		goodsRegHead.addContent(new Element("EBPEntNo").setText(GZEportCode.EBP_ENT_NO));
-		goodsRegHead.addContent(new Element("EBPEntName").setText(GZEportCode.EBP_ENT_NAME));
-		goodsRegHead.addContent(new Element("CurrCode").setText(GZEportCode.CURR_CODE));
-		goodsRegHead.addContent(new Element("BusinessType").setText(businessType));
-		goodsRegHead.addContent(new Element("InputDate").setText(time));
-		goodsRegHead.addContent(new Element("DeclTime").setText(time));
-		goodsRegHead.addContent(new Element("IeFlag").setText(ieFlag));
-		goodsRegHead.addContent(new Element("Notes").setText(""));
+		List slist = new ArrayList<>();
+		slist.add("serialVersionUID");
+		slist.add("id");
+		slist.add("OrgMessageID");
+		slist.add("ciqStatus");
+		slist.add("cusStatus");
+		slist.add("status");
+		slist.add("count");
+		slist.add("del_flag");
+		slist.add("create_date");
+		Element goodsRegHead = entityChangeToXmlElement(goodsRecord, "GoodsRegHead", slist);
 		Element goodsRegList = new Element("GoodsRegList");
-		Element goodsContent = new Element("GoodsContent");
+		GoodsInfo goodsInfo = null;
 		for (int i = 0; i < list.size(); i++) {
-			JSONObject map = JSONObject.fromObject(list.get(i));
-			goodsContent.addContent(new Element("Seq").setText(map.get("Seq") + ""));
-			goodsContent.addContent(new Element("EntGoodsNo").setText(map.get("EntGoodsNo") + ""));
-			//goodsContent.addContent(new Element("EPortGoodsNo").setText(""));
-			//goodsContent.addContent(new Element("CIQGoodsNo").setText(""));
-			//goodsContent.addContent(new Element("CusGoodsNo").setText(""));
-			goodsContent.addContent(new Element("EmsNo").setText(map.get("EmsNo")+""));
-			goodsContent.addContent(new Element("ItemNo").setText(map.get("ItemNo")+""));
-			goodsContent.addContent(new Element("ShelfGName").setText(map.get("ShelfGName") + ""));
-			goodsContent.addContent(new Element("NcadCode").setText(map.get("NcadCode") + ""));
-			goodsContent.addContent(new Element("HSCode").setText(map.get("HSCode") + ""));
-			goodsContent.addContent(new Element("BarCode").setText(""));
-			goodsContent.addContent(new Element("GoodsName").setText(map.get("GoodsName") + ""));
-			goodsContent.addContent(new Element("GoodsStyle").setText(map.get("GoodsStyle") + ""));
-			goodsContent.addContent(new Element("Brand").setText(map.get("Brand") + ""));
-			goodsContent.addContent(new Element("GUnit").setText(map.get("GUnit") + ""));
-			goodsContent.addContent(new Element("StdUnit").setText(map.get("StdUnit") + ""));
-			goodsContent.addContent(new Element("SecUnit").setText(""));
-			goodsContent.addContent(new Element("RegPrice").setText(map.get("RegPrice") + ""));
-			goodsContent.addContent(new Element("GiftFlag").setText(map.get("GiftFlag") + ""));
-			goodsContent.addContent(new Element("OriginCountry").setText(map.get("OriginCountry") + ""));
-			goodsContent.addContent(new Element("Quality").setText(map.get("Quality") + ""));
-			goodsContent.addContent(new Element("QualityCertify").setText(""));
-			goodsContent.addContent(new Element("Manufactory").setText(map.get("Manufactory") + ""));
-			goodsContent.addContent(new Element("NetWt").setText(map.get("NetWt") + ""));
-			goodsContent.addContent(new Element("GrossWt").setText(map.get("GrossWt") + ""));
-			goodsContent.addContent(new Element("Notes").setText(""));
+			goodsInfo = list.get(i);
+			List elist = new ArrayList<>();
+			elist.add("serialVersionUID");
+			elist.add("id");
+			elist.add("OrgMessageID");
+			Element goodsContent = entityChangeToXmlElement(goodsInfo, "GoodsContent", elist);
+			goodsRegList.addContent(goodsContent);
 		}
 		declaration.addContent(goodsRegHead);
-		goodsRegList.addContent(goodsContent);
 		declaration.addContent(goodsRegList);
 		// 给父节点root添加子节点;
 		root.addContent(elements);
 		root.addContent(declaration);
-		Format format = Format.getPrettyFormat();
-		XMLOutputter XMLOut = new XMLOutputter(format);
-		// 获取 user.xml根路径
 		String xmlpath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-		System.out.println(xmlpath);
-		// xml输出路径
-		String uploadPath = xmlpath + strName + ".xml";
-		System.out.println("-----------生成XML报文路径：============" + uploadPath);
-		try {
-			XMLOut.output(Doc, new FileOutputStream(uploadPath));
-			File file1 = new File(uploadPath);
-			FtpUtils.upload(file1, "/in");
-		} catch (Exception e) {
-			e.printStackTrace();
-			statusMap.put("status", -1);
-			statusMap.put("msg", "报文发送异常，请重试 ");
+		String uploadPath = xmlpath + goodsRecord.getOrgMessageID() + ".xml";
+		if (createLocalXMLFile(Doc, uploadPath)) {
+			statusMap.put("status", 1);
+			statusMap.put("msg", "本地存储成功");
+			statusMap.put("path", xmlpath);
+			return statusMap;
 		}
-
+		statusMap.put("status", -1);
+		statusMap.put("msg", "本地存储失败");
 		return statusMap;
 	}
 
+	/**
+	 * 上送本地文件至ftp服务器
+	 * 
+	 * @param filePath
+	 * @return
+	 */
+	private boolean uploadXMLFile(String filePath) {
+		try {
+			// XMLOut.output(Doc, new FileOutputStream(uploadPath));
+			File file1 = new File(filePath);
+			FtpUtils.upload(file1, "/in");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * 生成本地xml文件
+	 * 
+	 * @param doc
+	 * @param savePath
+	 * @return
+	 */
+	private boolean createLocalXMLFile(Document doc, String savePath) {
+		Format format = Format.getPrettyFormat();
+		XMLOutputter XMLOut = new XMLOutputter(format);
+		try {
+			XMLOut.output(doc, new FileOutputStream(savePath));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
 	@Override
-	public Map<String, Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName,String ebpentNo,String ebpentName) {
-		//System.out.println("=================开始处理接收的records===============================");
+	public Map<String, Object> orderRecord(Object records, String opType, String ieFlag, String internetDomainName,
+			String ebpentNo, String ebpentName, String ebEntNo, String ebEntName, String customsCode,
+			String ciqOrgCode) {
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
 		// 将必填的字段添加到list
 		List<String> noNullKeys = new ArrayList<>();
-
-		// noNullKeys.add("InternetDomainName");//电商平台互联网域名
-		noNullKeys.add("EntOrderNo");//企业电子订单编号
-		noNullKeys.add("OrderStatus");//电子订单状态		
-		noNullKeys.add("PayStatus");//支付状态
-		noNullKeys.add("OrderGoodTotal");//订单商品总额
-		noNullKeys.add("OrderGoodTotalCurr");//订单商品总额币制
-		noNullKeys.add("Freight");//订单运费
-		noNullKeys.add("Tax");//税款
-		noNullKeys.add("OtherPayment");//抵付金额
-		noNullKeys.add("ActualAmountPaid");//实际支付金额
-		noNullKeys.add("RecipientName");//收货人名称
-		noNullKeys.add("RecipientAddr");//收货人地址
-		noNullKeys.add("RecipientTel");//收货人电话
-		noNullKeys.add("RecipientCountry");//收货人所在国
-		noNullKeys.add("RecipientProvincesCode");//收货人行政区代码
-		noNullKeys.add("OrderDocAcount");//下单人账户
-		noNullKeys.add("OrderDocName");//下单人姓名
-		noNullKeys.add("OrderDocType");//下单人证件类型
-		noNullKeys.add("OrderDocId");//下单人证件号
-		noNullKeys.add("OrderDocTel");//下单人电话
-		noNullKeys.add("OrderDate");//订单日期
-		noNullKeys.add("EHSEntNo");//物流企业代码
-		noNullKeys.add("EHSEntName");//物流企业名称
-		noNullKeys.add("WaybillNo");//电子运单编号
-		noNullKeys.add("PayEntNo");//支付企业代码
-		noNullKeys.add("PayEntName");//支付企业名称
-		noNullKeys.add("PayNo");//支付交易编号
+		noNullKeys.add("EntOrderNo");// 企业电子订单编号
+		noNullKeys.add("OrderStatus");// 电子订单状态
+		noNullKeys.add("PayStatus");// 支付状态
+		noNullKeys.add("OrderGoodTotal");// 订单商品总额
+		noNullKeys.add("OrderGoodTotalCurr");// 订单商品总额币制
+		noNullKeys.add("Freight");// 订单运费
+		noNullKeys.add("Tax");// 税款
+		noNullKeys.add("OtherPayment");// 抵付金额
+		noNullKeys.add("ActualAmountPaid");// 实际支付金额
+		noNullKeys.add("RecipientName");// 收货人名称
+		noNullKeys.add("RecipientAddr");// 收货人地址
+		noNullKeys.add("RecipientTel");// 收货人电话
+		noNullKeys.add("RecipientCountry");// 收货人所在国
+		noNullKeys.add("RecipientProvincesCode");// 收货人行政区代码
+		noNullKeys.add("OrderDocAcount");// 下单人账户
+		noNullKeys.add("OrderDocName");// 下单人姓名
+		noNullKeys.add("OrderDocType");// 下单人证件类型
+		noNullKeys.add("OrderDocId");// 下单人证件号
+		noNullKeys.add("OrderDocTel");// 下单人电话
+		noNullKeys.add("OrderDate");// 订单日期
 		// 验证必填数据
 		checkMap = CheckDatasUtil.checkData(jList, noNullKeys);
 		if ((int) checkMap.get("status") != 1) {
@@ -237,39 +356,126 @@ public class GZEportServiceImpl implements GZEportService {
 		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
 		JSONObject record = JSONObject.fromObject(list.get(0));
 		JSONArray goodsList = JSONArray.fromObject(record.get("orderGoodsList"));
-		noNullKeys.add("Seq");//商品序号
-		noNullKeys.add("EntGoodsNo");//企业商品自编号
-		noNullKeys.add("CIQGoodsNo");//检验检疫商品备案编号
-		noNullKeys.add("CusGoodsNo");//海关正式备案编号 
-		noNullKeys.add("GoodsName");//企业商品品名
-		noNullKeys.add("GoodsStyle");//规格型号
-		noNullKeys.add("OriginCountry");//原产国
-		noNullKeys.add("Qty");//数量
-		noNullKeys.add("Unit");//计量单位
-		noNullKeys.add("Price");//单价
-		noNullKeys.add("Total");//总价
-		noNullKeys.add("CurrCode");//币制
-	    noNullKeys.add("HSCode");//海关商品分类编号，BBC业务必填，BC业务可空
+		noNullKeys.add("Seq");// 商品序号
+		noNullKeys.add("EntGoodsNo");// 企业商品自编号
+		noNullKeys.add("CIQGoodsNo");// 检验检疫商品备案编号
+		noNullKeys.add("CusGoodsNo");// 海关正式备案编号
+		noNullKeys.add("GoodsName");// 企业商品品名
+		noNullKeys.add("GoodsStyle");// 规格型号
+		noNullKeys.add("OriginCountry");// 原产国
+		noNullKeys.add("Qty");// 数量
+		noNullKeys.add("Unit");// 计量单位
+		noNullKeys.add("Price");// 单价
+		noNullKeys.add("Total");// 总价
+		noNullKeys.add("CurrCode");// 币制
+		noNullKeys.add("HSCode");// 海关商品分类编号，BBC业务必填，BC业务可空
 		CheckDatasUtil.checkData(goodsList, noNullKeys);
 		if ((int) checkMap.get("status") != 1) {
 			return checkMap;
 		}
-		return createOrder(list, "", opType, ieFlag,internetDomainName,ebpentNo,ebpentName);
+		return createOrder(list, "", opType, ieFlag, internetDomainName, ebpentNo, ebpentName, ebEntNo, ebEntName,
+				customsCode, ciqOrgCode);
+	}
+
+	private OrderHead saveOrderHead(String messageID, String time, Date now, String opType, String ieFlag,
+			String ebEntNo, String ebEntName, String customsCode, String ciqOrgCode, String ebpentNo, String ebpentName,
+			String internetDomainName) {
+		OrderHead orderHead = new OrderHead();
+		orderHead.setDeclEntNo(GZEportCode.DECL_ENT_NO);// 申报企业编号
+		orderHead.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
+		orderHead.setEBEntNo(ebEntNo);// 电商企业编号
+		orderHead.setEBEntName(ebEntName);// 电商企业名称
+		orderHead.setEBPEntNo(ebpentNo);// 电商平台企业编号
+		orderHead.setEBPEntName(ebpentName);// 电商平台名称
+		orderHead.setInternetDomainName(internetDomainName);// 电商平台域名
+		orderHead.setDeclTime(time);// 申报时间
+		orderHead.setOpType(opType);// 操作方式
+		orderHead.setIeFlag(ieFlag);// 进出口标识
+		orderHead.setCustomsCode(customsCode);// 主管海关代码
+		orderHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
+		orderHead.setOrgMessageID(messageID);
+		orderHead.setCreate_date(now);
+		orderHead.setDel_flag(0);
+		if (orderHeadDao.add(orderHead)) {
+			return orderHead;
+		}
+		return null;
+	}
+
+	private OrderRecord saveOrderRecord(JSONObject orderObj, String messageID, Date now) {
+		OrderRecord orderRecord = new OrderRecord();
+		orderRecord = (OrderRecord) jsonChangeToEntity(orderObj, orderRecord);
+		orderRecord.setOrgMessageID(messageID);
+		orderRecord.setCreate_date(now);
+		orderRecord.setDel_flag(0);
+		if (orderRecordDao.add(orderRecord)) {
+			return orderRecord;
+		}
+		return null;
+	}
+
+	private OrderGoods saveOrderGoods(JSONObject json, String messageID, String entOrderNo) {
+		OrderGoods orderGoods = new OrderGoods();
+		orderGoods = (OrderGoods) jsonChangeToEntity(json, orderGoods);
+		orderGoods.setOrgMessageID(messageID);
+		orderGoods.setEntOrderNo(entOrderNo);
+		if (orderGoodsDao.add(orderGoods)) {
+			return orderGoods;
+		}
+		return null;
 	}
 
 	@Override
-	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName)
-			{
+	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,
+			String internetDomainName, String ebpentNo, String ebpentName, String ebEntNo, String ebEntName,
+			String customsCode, String ciqOrgCode) {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
+		List<OrderRecord> orderRecordList = new ArrayList<>();
+		List<OrderGoods> orderGoodsLists = new ArrayList<>();
 		statusMap.put("status", 1);
 		statusMap.put("msg", "报文发送成功 ");
-		Element root = new Element("InternationalTrade");
-		Document Doc = new Document(root);
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
-		String strName = "KJ881111_YINMENG_" + remitSerialNumber;
+		String messageID = "KJ881111_YINMENG_" + remitSerialNumber;
+		Date now = new Date();
+		OrderHead orderHeadEnt = saveOrderHead(messageID, time, now, opType, ieFlag, ebEntNo, ebEntName, customsCode,
+				ciqOrgCode, ebpentNo, ebpentName, internetDomainName);
+		String entOrderNo = "";
+		if (orderHeadEnt != null) {
+			for (int i = 0; i < list.size(); i++) {
+				// 获取订单信息
+				JSONObject orderObj = JSONObject.fromObject(list.get(i));
+				// 保存订单信息
+				OrderRecord orderRecord = saveOrderRecord(orderObj, messageID, now);
+				// 获取订单编号
+				entOrderNo = orderObj.get("EntOrderNo") + "";
+				orderRecordList.add(orderRecord);
+				if (orderRecord != null) {
+					// 获取订单中的商品信息集
+					JSONArray goodList = JSONArray.fromObject(orderObj.get("orderGoodsList"));
+					for (int j = 0; j < goodList.size(); j++) {
+						// 获取各个商品的详细信息
+						JSONObject goods = JSONObject.fromObject(goodList.get(j));
+						// 保存订单商品详细信息
+						OrderGoods orderGoods = saveOrderGoods(goods, messageID, entOrderNo);
+						orderGoodsLists.add(orderGoods);
+					}
+				}
+			}
+			if (orderHeadEnt != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
+				statusMap = convertOrderRecordIntoXML(time, orderHeadEnt, orderRecordList, orderGoodsLists);
+			}
+		}
+		return statusMap;
+	}
+
+	private Map<String, Object> convertOrderRecordIntoXML(String time, OrderHead orderHeadEnt,
+			List<OrderRecord> orderRecordList, List<OrderGoods> orderGoodsLists) {
+		Map<String, Object> statusMap = new HashMap<String, Object>();
+		Element root = new Element("InternationalTrade");
+		Document Doc = new Document(root);
 		Element elements = new Element("Head");
-		elements.addContent(new Element("MessageID").setText(strName));
+		elements.addContent(new Element("MessageID").setText(orderHeadEnt.getOrgMessageID()));
 		elements.addContent(new Element("MessageType").setText(GZEportCode.MESSAGE_TYPE_GOOD));
 		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER));
 		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
@@ -279,94 +485,49 @@ public class GZEportServiceImpl implements GZEportService {
 		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
 		// 创建节点 OrderHead;
 		Element declaration = new Element("Declaration");
-		Element orderHead = new Element("OrderHead");
+		List slist = new ArrayList<>();
+		slist.add("serialVersionUID");
+		slist.add("id");
+		slist.add("OrgMessageID");
+		slist.add("del_flag");
+		slist.add("create_date");
+		Element orderHead = entityChangeToXmlElement(orderHeadEnt, "OrderHead", slist);
 		declaration.addContent(orderHead);
-		orderHead.addContent(new Element("DeclEntNo").setText(GZEportCode.DECL_ENT_NO));
-		orderHead.addContent(new Element("DeclEntName").setText(GZEportCode.DECL_ENT_NAME));
-		orderHead.addContent(new Element("EBEntNo").setText(GZEportCode.EB_ENT_NO));
-		orderHead.addContent(new Element("EBEntName").setText(GZEportCode.EB_ENT_NAME));
-		orderHead.addContent(new Element("EBPEntNo").setText(GZEportCode.EBP_ENT_NO));
-		orderHead.addContent(new Element("EBPEntName").setText(GZEportCode.EBP_ENT_NAME));
-		orderHead.addContent(new Element("InternetDomainName").setText(internetDomainName));
-		orderHead.addContent(new Element("DeclTime").setText(time));
-		orderHead.addContent(new Element("OpType").setText(opType));
-		orderHead.addContent(new Element("IeFlag").setText(ieFlag));
-		orderHead.addContent(new Element("CustomsCode").setText("442100"));//海关
-		orderHead.addContent(new Element("CIQOrgCode").setText("5208"));//检疫局
-        //订单信息  可循环
+		// 订单信息 可循环
 		Element orderList = new Element("OrderList");
 		Element orderContent = new Element("OrderContent");
-		Element orderDetail = new Element("OrderDetail");
 		declaration.addContent(orderList);
 		orderList.addContent(orderContent);
-		for (int i = 0; i < list.size(); i++) {
-			JSONObject orderObj = JSONObject.fromObject(list.get(i));
-			orderDetail.addContent(new Element("EntOrderNo").setText(orderObj.get("EntOrderNo")+""));
-			orderDetail.addContent(new Element("OrderStatus").setText(orderObj.get("OrderStatus")+""));
-			orderDetail.addContent(new Element("PayStatus").setText(orderObj.get("PayStatus")+""));
-			orderDetail.addContent(new Element("OrderGoodTotal").setText(orderObj.get("OrderGoodTotal")+""));
-			orderDetail.addContent(new Element("OrderGoodTotalCurr").setText(orderObj.get("OrderGoodTotalCurr")+""));
-			orderDetail.addContent(new Element("Freight").setText(orderObj.get("Freight")+""));
-			orderDetail.addContent(new Element("Tax").setText(orderObj.get("Tax")+""));
-			orderDetail.addContent(new Element("OtherPayment").setText(orderObj.get("OtherPayment")+""));
-			orderDetail.addContent(new Element("OtherPayNotes").setText(orderObj.get("OtherPayNotes")+""));
-			orderDetail.addContent(new Element("OtherCharges").setText("0"));
-			orderDetail.addContent(new Element("ActualAmountPaid").setText(orderObj.get("ActualAmountPaid")+""));
-			orderDetail.addContent(new Element("RecipientName").setText(orderObj.get("RecipientName")+""));
-			orderDetail.addContent(new Element("RecipientAddr").setText(orderObj.get("RecipientAddr")+""));
-			orderDetail.addContent(new Element("RecipientTel").setText(orderObj.get("RecipientTel")+""));
-			orderDetail.addContent(new Element("RecipientCountry").setText(orderObj.get("RecipientCountry")+""));
-			orderDetail.addContent(new Element("RecipientProvincesCode").setText(orderObj.get("RecipientProvincesCode")+""));
-			orderDetail.addContent(new Element("OrderDocAcount").setText(orderObj.get("OrderDocAcount")+""));
-			orderDetail.addContent(new Element("OrderDocName").setText(orderObj.get("OrderDocName")+""));
-			orderDetail.addContent(new Element("OrderDocType").setText(orderObj.get("OrderDocType")+""));
-			orderDetail.addContent(new Element("OrderDocId").setText(orderObj.get("OrderDocId")+""));
-			orderDetail.addContent(new Element("OrderDocTel").setText(orderObj.get("OrderDocTel")+""));
-			orderDetail.addContent(new Element("OrderDate").setText(orderObj.get("OrderDate")+""));
-			orderDetail.addContent(new Element("Notes").setText(orderObj.get("Notes")+""));
+		for (int i = 0; i < orderRecordList.size(); i++) {
+			OrderRecord order = orderRecordList.get(i);
+			List elist = new ArrayList<>();
+			elist.add("serialVersionUID");
+			elist.add("id");
+			elist.add("OrgMessageID");
+			elist.add("count");
+			elist.add("del_flag");
+			elist.add("create_date");
+			Element orderDetail = entityChangeToXmlElement(order, "OrderDetail", elist);
+			String entOrderNo = order.getEntOrderNo();
 			orderContent.addContent(orderDetail);
-			//订单的商品信息  可循环
+			// 订单的商品信息 可循环
 			Element goodsList = new Element("GoodsList");
-			Element orderGoodsList = new Element("OrderGoodsList");
-			JSONArray goodList = JSONArray.fromObject(orderObj.get("orderGoodsList"));
-			for (int j = 0; j < goodList.size(); j++) {
-				JSONObject goods = JSONObject.fromObject(goodList.get(i));
-				orderGoodsList.addContent(new Element("Seq").setText(goods.get("Seq") + ""));
-				orderGoodsList.addContent(new Element("EntGoodsNo").setText(goods.get("EntGoodsNo") + ""));
-				orderGoodsList.addContent(new Element("CIQGoodsNo").setText(goods.get("CIQGoodsNo") + ""));
-				orderGoodsList.addContent(new Element("CusGoodsNo").setText(goods.get("CusGoodsNo") + ""));
-				orderGoodsList.addContent(new Element("HSCode").setText(goods.get("HSCode") + ""));
-				orderGoodsList.addContent(new Element("GoodsName").setText(goods.get("GoodsName") + ""));
-				orderGoodsList.addContent(new Element("GoodsStyle").setText(goods.get("GoodsStyle") + ""));
-				orderGoodsList.addContent(new Element("GoodsDescribe").setText(goods.get("GoodsDescribe") + ""));
-				orderGoodsList.addContent(new Element("OriginCountry").setText(goods.get("OriginCountry") + ""));
-				orderGoodsList.addContent(new Element("BarCode").setText(goods.get("BarCode") + ""));
-				orderGoodsList.addContent(new Element("Brand").setText(goods.get("Brand") + ""));
-				orderGoodsList.addContent(new Element("Qty").setText(goods.get("Qty") + ""));
-				orderGoodsList.addContent(new Element("Unit").setText(goods.get("Unit") + ""));
-				orderGoodsList.addContent(new Element("Price").setText(goods.get("Price") + ""));
-				orderGoodsList.addContent(new Element("Total").setText(goods.get("Total") + ""));
-				orderGoodsList.addContent(new Element("CurrCode").setText(goods.get("CurrCode") + ""));
-				orderGoodsList.addContent(new Element("Notes").setText(goods.get("Notes") + ""));
+			for (int j = 0; j < orderGoodsLists.size(); j++) {
+				OrderGoods goods = orderGoodsLists.get(j);
+				String gentOrderNo = goods.getEntOrderNo();
+				if (gentOrderNo.equals(entOrderNo)) {
+					List zlist = new ArrayList<>();
+					zlist.add("serialVersionUID");
+					zlist.add("id");
+					zlist.add("OrgMessageID");
+					zlist.add("EntOrderNo");
+					Element orderGoodsList = entityChangeToXmlElement(goods, "OrderGoodsList", zlist);
+					goodsList.addContent(orderGoodsList);
+				}
 			}
 			orderDetail.addContent(goodsList);
-			goodsList.addContent(orderGoodsList);
-			//关联运单表
-			Element orderWaybillRel = new Element("OrderWaybillRel");
-			orderWaybillRel.addContent(new Element("EHSEntNo").setText(orderObj.get("EHSEntNo")+""));
-			orderWaybillRel.addContent(new Element("EHSEntName").setText(orderObj.get("EHSEntName")+""));
-			orderWaybillRel.addContent(new Element("WaybillNo").setText(orderObj.get("WaybillNo")+""));
-			orderWaybillRel.addContent(new Element("Notes").setText(orderObj.get("Notes")+""));
-			orderContent.addContent(orderWaybillRel);
-			//关联支付表
-			Element orderPaymentRel = new Element("OrderPaymentRel");
-			orderPaymentRel.addContent(new Element("PayEntNo").setText(orderObj.get("PayEntNo")+""));
-			orderPaymentRel.addContent(new Element("PayEntName").setText(orderObj.get("PayEntName")+""));
-			orderPaymentRel.addContent(new Element("PayNo").setText(orderObj.get("PayNo")+""));
-			orderPaymentRel.addContent(new Element("Notes").setText(orderObj.get("Notes")+""));
-			orderContent.addContent(orderPaymentRel);
 		}
-		//给父节点root添加子节点;
+		// 给父节点root添加子节点;
 		root.addContent(elements);
 		root.addContent(declaration);
 		// 格式化
@@ -374,7 +535,7 @@ public class GZEportServiceImpl implements GZEportService {
 		XMLOutputter XMLOut = new XMLOutputter(format);
 		// 输出 user.xml 文件；
 		String outPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-		String uploadPath =""+ outPath + strName + ".xml";
+		String uploadPath = "" + outPath + orderHeadEnt.getOrgMessageID() + ".xml";
 		try {
 			XMLOut.output(Doc, new FileOutputStream(uploadPath));
 		} catch (FileNotFoundException e) {
@@ -391,7 +552,6 @@ public class GZEportServiceImpl implements GZEportService {
 
 	@Override
 	public Map<String, Object> payRecord(Object records, String opType) {
-	//	System.out.println("=================开始处理接收的支付records===============================");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
 		List<String> noNullKeys = new ArrayList<>();
@@ -411,7 +571,7 @@ public class GZEportServiceImpl implements GZEportService {
 			return checkMap;
 		}
 		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
-		checkMap = createPay(list, "",opType);
+		checkMap = createPay(list, "", opType);
 		return checkMap;
 	}
 
@@ -435,36 +595,36 @@ public class GZEportServiceImpl implements GZEportService {
 		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_CIQ));
 		elements.addContent(new Element("SignerInfo").setText(" "));
 		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
-		//支付信息报文头
+		// 支付信息报文头
 		Element declaration = new Element("Declaration");
 		Element paymentHead = new Element("PaymentHead");
 		paymentHead.addContent(new Element("DeclEntNo").setText("C100085134"));
 		paymentHead.addContent(new Element("DeclEntName").setText("银盛支付"));
-		paymentHead.addContent(new Element("PayEntNo").setText("C100085134"));//支付企业备案号
+		paymentHead.addContent(new Element("PayEntNo").setText("C100085134"));// 支付企业备案号
 		paymentHead.addContent(new Element("PayEntName").setText("银盛支付"));
 		paymentHead.addContent(new Element("DeclTime").setText(time));
 		paymentHead.addContent(new Element("OpType").setText(opType));
 		paymentHead.addContent(new Element("CustomsCode").setText(""));
 		paymentHead.addContent(new Element("CIQOrgCode").setText(""));
 		declaration.addContent(paymentHead);
-		//支付信息
+		// 支付信息
 		Element paymentList = new Element("PaymentList");
 		Element paymentDetail = new Element("PaymentDetail");
 		for (int i = 0; i < list.size(); i++) {
 			JSONObject pay = JSONObject.fromObject(list.get(i));
-			paymentDetail.addContent(new Element("EntPayNo").setText(pay.get("EntPayNo")+""));
-			paymentDetail.addContent(new Element("PayStatus").setText(pay.get("PayStatus")+""));
-			paymentDetail.addContent(new Element("PayAmount").setText(pay.get("PayAmount")+""));
-			paymentDetail.addContent(new Element("PayCurrCode").setText(pay.get("PayCurrCode")+""));
-			paymentDetail.addContent(new Element("PayTime").setText(pay.get("PayTime")+""));
-			paymentDetail.addContent(new Element("PayerName").setText(pay.get("PayerName")+""));
-			paymentDetail.addContent(new Element("PayerDocumentType").setText(pay.get("PayerDocumentType")+""));
-			paymentDetail.addContent(new Element("PayerDocumentNumber").setText(pay.get("PayerDocumentNumber")+""));
-			paymentDetail.addContent(new Element("PayerPhoneNumber").setText(pay.get("PayerPhoneNumber")+""));
-			paymentDetail.addContent(new Element("EntOrderNo").setText(pay.get("EntOrderNo")+""));
-			paymentDetail.addContent(new Element("EBPEntNo").setText(pay.get("EBPEntNo")+""));
-			paymentDetail.addContent(new Element("EBPEntName").setText(pay.get("EBPEntName")+""));
-			paymentDetail.addContent(new Element("Notes").setText(pay.get("Notes")+""));
+			paymentDetail.addContent(new Element("EntPayNo").setText(pay.get("EntPayNo") + ""));
+			paymentDetail.addContent(new Element("PayStatus").setText(pay.get("PayStatus") + ""));
+			paymentDetail.addContent(new Element("PayAmount").setText(pay.get("PayAmount") + ""));
+			paymentDetail.addContent(new Element("PayCurrCode").setText(pay.get("PayCurrCode") + ""));
+			paymentDetail.addContent(new Element("PayTime").setText(pay.get("PayTime") + ""));
+			paymentDetail.addContent(new Element("PayerName").setText(pay.get("PayerName") + ""));
+			paymentDetail.addContent(new Element("PayerDocumentType").setText(pay.get("PayerDocumentType") + ""));
+			paymentDetail.addContent(new Element("PayerDocumentNumber").setText(pay.get("PayerDocumentNumber") + ""));
+			paymentDetail.addContent(new Element("PayerPhoneNumber").setText(pay.get("PayerPhoneNumber") + ""));
+			paymentDetail.addContent(new Element("EntOrderNo").setText(pay.get("EntOrderNo") + ""));
+			paymentDetail.addContent(new Element("EBPEntNo").setText(pay.get("EBPEntNo") + ""));
+			paymentDetail.addContent(new Element("EBPEntName").setText(pay.get("EBPEntName") + ""));
+			paymentDetail.addContent(new Element("Notes").setText(pay.get("Notes") + ""));
 		}
 		paymentList.addContent(paymentDetail);
 		declaration.addContent(paymentList);
@@ -488,5 +648,72 @@ public class GZEportServiceImpl implements GZEportService {
 			return statusMap;
 		}
 		return statusMap;
+	}
+
+	/**
+	 * 数据实体转XML报文节点
+	 * 
+	 * @param obj
+	 *            数据实体
+	 * @param elementName
+	 *            节点
+	 * @param untiList
+	 *            实体不需要转节点的元素List
+	 * @return
+	 */
+	private Element entityChangeToXmlElement(Object obj, String elementName, List<String> untiList) {
+		Element elements = new Element(elementName);
+		for (Field field : obj.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				if (!untiList.contains(field.getName())) {
+					if (field.get(obj) != null && !(field.get(obj) + "").trim().equals("")
+							&& !(field.get(obj) + "").trim().equals("null")) {
+						elements.addContent(new Element(field.getName()).setText(field.get(obj) + ""));
+					}
+				}
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		return elements;
+	}
+
+	/**
+	 * json转数据表实体
+	 * 
+	 * @param json
+	 * @param obj
+	 * @return
+	 */
+	public static Object jsonChangeToEntity(JSONObject json, Object obj) {
+		String key = "";
+		String type = "";
+		Object value = null;
+		for (Field field : obj.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				key = field.getName();
+				if (json.get(field.getName()) != null) {
+					Method method = obj.getClass().getDeclaredMethod("set" + key, field.getType());
+					type = field.getType().getSimpleName();
+					value = json.get(key);
+					if (type.equals("int") || type.equals("Integer")) {
+						value = Integer.parseInt(value + "");
+					} else if (type.equals("long") || type.equals("Long")) {
+						value = Long.parseLong(value + "");
+					} else if (type.equals("double") || type.equals("Double")) {
+						value = Double.parseDouble(value + "");
+					}
+					method.invoke(obj, value);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return obj;
+
 	}
 }
