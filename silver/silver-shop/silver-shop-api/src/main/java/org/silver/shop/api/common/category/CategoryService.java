@@ -1,25 +1,13 @@
 package org.silver.shop.api.common.category;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public interface CategoryService {
-	
 	/**
-	 * 查询商品所有第一类型
-	 * @return list
+	 * 查询所有商品类型,并进行对应的级联封装到Map
+	 * @return
 	 */
-	public List<Object> findAllfirstType();
-	
-	/**
-	 * 查询商品所有第二类型
-	 * @return list
-	 */
-	public List<Object> findAllSecondType();
-	
-	/**
-	 *  查询商品所有第三类型
-	 * @return list
-	 */
-	public List<Object> findAllThirdType();
+	public Map<String, HashMap<String, Object>> findGoodsType();
 }

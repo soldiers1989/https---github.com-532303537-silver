@@ -2,8 +2,6 @@ package org.silver.shop.api.system.organization;
 
 import java.util.List;
 import java.util.Map;
-
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.RecordInfo;
 
 /**
@@ -12,11 +10,12 @@ import org.silver.shop.model.system.tenant.RecordInfo;
 public interface MerchantService {
 
 	/**
-	 * 商戶基本信息实例化
+	 * 保存商戶基本信息与备案信息
 	 * 
-	 * @return boolean
+	 * @return Map
 	 */
-	public boolean merchantRegister(Merchant entity);
+	public Map<String,Object> merchantRegister(String merchantId,String account, String loginPassword, String merchantIdCard,
+			String merchantIdCardName, String recordInfoPack, String type);
 
 	/**
 	 * 检查商户名是否重复
@@ -35,11 +34,10 @@ public interface MerchantService {
 	public String findMerchantBy(String account);
 
 	/**
-	 * 查询数据库表中的商户自增长ID
-	 * 
-	 * @return long
+	 * 获取数据库查询自增ID后,自编ID
+	 * @return Map
 	 */
-	public Long findOriginalMerchantId();
+	public Map<String, Object> findOriginalMerchantId();
 
 	/**
 	 * 保存商户对应的电商平台名称(及编码)
