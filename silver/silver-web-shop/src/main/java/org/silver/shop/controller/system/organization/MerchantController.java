@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.organization;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +48,13 @@ public class MerchantController {
 	 * @param loginPassword
 	 *            登录密码
 	 * @return
+	 * @throws IOException
 	 */
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "商户--登录")
-	public Map<String, Object> login(@RequestParam("account") String account,
-			@RequestParam("loginPassword") String loginPassword) {
+	public String login(@RequestParam("account") String account, @RequestParam("loginPassword") String loginPassword
+			)  {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
@@ -62,22 +64,23 @@ public class MerchantController {
 				customizedToken.setRememberMe(false);
 				try {
 					currentUser.login(customizedToken);
-					WebUtil.getSession().setAttribute(USER_LOGIN_TYPE, currentUser);
 					statusMap.put("status", 1);
 					statusMap.put("msg", "登录成功");
-					return statusMap;
+					return JSONObject.fromObject(statusMap).toString();
 				} catch (IncorrectCredentialsException ice) {
 					System.out.println("账号/密码不匹配！");
 				} catch (LockedAccountException lae) {
 					System.out.println("账户已被冻结！");
 				} catch (AuthenticationException ae) {
 					System.out.println(ae.getMessage());
+					ae.printStackTrace();
 				}
 			}
 		}
 		statusMap.put("status", -1);
 		statusMap.put("msg", "账号不存在或密码错误");
-		return statusMap;
+		//resp.getWriter().println(JSONObject.fromObject(statusMap).toString());
+		 return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
@@ -152,7 +155,7 @@ public class MerchantController {
 		MerchantRealm merchantRealm = new MerchantRealm();
 		merchantRealm.getName();
 		Subject currentUser = SecurityUtils.getSubject();
-		Merchant m = (Merchant) currentUser.getSession().getAttribute("USER_LOGIN_TYPE");
+		Merchant m = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
 		System.out.println("-->" + m);
 		return null;
 	}

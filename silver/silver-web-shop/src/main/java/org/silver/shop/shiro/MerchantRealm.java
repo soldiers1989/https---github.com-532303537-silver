@@ -1,8 +1,8 @@
 package org.silver.shop.shiro;
 
+import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -11,21 +11,26 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shiro.CustomizedToken;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.MerchantTransaction;
+import org.silver.util.WebUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
-public class MerchantRealm extends AuthorizingRealm{
-
-	MerchantTransaction merchantTransaction =new MerchantTransaction();
-	//@Autowired
-	//private MerchantTransaction merchantTransaction;
+public class MerchantRealm extends AuthorizingRealm implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2900919279652771749L;
+	@Autowired
+	private MerchantTransaction merchantTransaction;
+	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		 Subject currentUser = SecurityUtils.getSubject();
+		 Merchant merchant =(Merchant) WebUtil.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
 		 SimpleAuthorizationInfo info =null;
-		 if(currentUser!=null){
+		 if(merchant!=null){
 			 info = new SimpleAuthorizationInfo();
 			 info.addRole(LoginType.MERCHANT.toString());
 		 }

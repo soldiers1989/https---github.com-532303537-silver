@@ -3,10 +3,10 @@ package org.silver.shiro;
 import org.apache.shiro.authc.UsernamePasswordToken;
 
 public class CustomizedToken extends UsernamePasswordToken{
-	  /**
+	private static final long serialVersionUID = -5901884784736492913L;
+	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
 	
     private String loginType;
 

@@ -16,7 +16,7 @@
 		check="false" /> <dubbo:reference id="sysAuthorizeProvider" interface="org.cloudx.provider.sys.SysAuthorizeProvider" 
 		check="false" /> -->
 	
-
+   <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
 	<!-- 配置Realm -->
 	
 	<bean id="userRealm" class="org.silver.shop.shiro.UserRealm" />

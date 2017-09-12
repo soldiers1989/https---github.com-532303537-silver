@@ -12,9 +12,8 @@ import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.MD5;
 import org.silver.util.WebUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.alibaba.dubbo.config.annotation.Reference;
 
 /**
  * 商戶Transaction(事物)层
@@ -22,7 +21,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 @Service("merchantTransaction")
 public class MerchantTransaction {
 	
-	@Reference
+	@Autowired
 	private MerchantService merchantService;
 
 	/**
@@ -36,7 +35,7 @@ public class MerchantTransaction {
 		Map<String, Object> dataMap = new HashMap<>();
 		// key=(表中列名),value=传递过来的值
 		dataMap.put("merchantName", account);
-		System.out.println(merchantService+"----<");
+		System.out.println(merchantService+"----<"); 
 		return merchantService.checkMerchantName(dataMap);
 	}
 
