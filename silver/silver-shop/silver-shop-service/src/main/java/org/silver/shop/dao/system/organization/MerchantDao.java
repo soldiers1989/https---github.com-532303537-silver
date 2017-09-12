@@ -5,33 +5,30 @@ import java.util.Map;
 
 import org.silver.shop.dao.BaseDao;
 
-public interface MerchantDao<T> extends BaseDao<T>{
-	
-	/**
-	 * 检查商户名是否存在
-	 * @param entity 实体类
-	 * @param account 商户名称
-	 * @return list
-	 */
-	public List<Object> checkMerchantName(Class<T> entity, Map params,int page , int size);
-	
+public interface MerchantDao extends BaseDao {
+
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
+	 * 
 	 * @return long
 	 */
 	public Long findLastId();
-	
+
 	/**
-	 * 保存商户基本信息
+	 * 保存商户信息
 	 * @param entity
 	 * @return
 	 */
-	public boolean saveMerchantContent(Object entity);
-	
+	public boolean add(Object entity);
+
 	/**
-	 * 保存商户对应的备案信息
+	 * 根据实体,及Map键值对查询数据
+	 * key=(表中列名称),value=(查询参数)
 	 * @param entity
-	 * @return
+	 * @param params
+	 * @param page
+	 * @param size
 	 */
-	public boolean savenMerchantRecordInfo(Object entity);
+	public List<Object> findByProperty(Class entity,Map params ,int page,int size);
+	
 }

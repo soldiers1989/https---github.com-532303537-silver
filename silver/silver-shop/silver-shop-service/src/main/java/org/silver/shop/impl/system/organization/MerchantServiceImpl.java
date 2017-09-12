@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
@@ -19,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
@@ -35,7 +36,6 @@ public class MerchantServiceImpl implements MerchantService {
 		record1.put("ebEntName", "广州银盟信息科技有限公司");
 		record1.put("ebpEntNo", "C010000000537118");
 		record1.put("ebpEntName", "广州银盟信息科技有限公司");
-
 		record2.put("eport", 1);// 2-南沙智检(支持BBC业务)
 		record2.put("ebEntNo", "1509007917");
 		record2.put("ebEntName", "广州银盟信息科技有限公司");
@@ -45,16 +45,11 @@ public class MerchantServiceImpl implements MerchantService {
 		list.add(record2);
 	}
 	@Autowired
-	private MerchantDao<Merchant> merchantDao;
+	private MerchantDao merchantDao;
 
 	@Override
 	public List<Object> checkMerchantName(Map dataMap) {
-		return merchantDao.checkMerchantName(Merchant.class, dataMap, 1, 1);
-	}
-
-	@Override
-	public String findMerchantBy(String account) {
-		return null;
+		return merchantDao.findByProperty(Merchant.class, dataMap, 1, 1);
 	}
 
 	@Override
@@ -77,7 +72,7 @@ public class MerchantServiceImpl implements MerchantService {
 		merchantId = "MerchantId_" + merchantId;
 		statusMap.put("status", StatusCode.SUCCESS.getStatus());
 		statusMap.put("msg", StatusCode.SUCCESS.getMsg());
-		statusMap.put("datas",merchantId);
+		statusMap.put("datas", merchantId);
 		return statusMap;
 	}
 
@@ -92,10 +87,10 @@ public class MerchantServiceImpl implements MerchantService {
 				entity.setEbEntName(listMap.get("ebEntName") + "");
 				entity.setEbpEntNo(listMap.get("ebpEntNo") + "");
 				entity.setEbpEntName(listMap.get("ebpEntName") + "");
-				flag = merchantDao.savenMerchantRecordInfo(entity);
+				flag = merchantDao.add(entity);
 			}
 		} else {// 第三方商戶备案信息插入
-			flag = merchantDao.savenMerchantRecordInfo(entity);
+			flag = merchantDao.add(entity);
 		}
 		return flag;
 	}
@@ -126,7 +121,7 @@ public class MerchantServiceImpl implements MerchantService {
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
-			merchantFlag = merchantDao.saveMerchantContent(merchant);
+			merchantFlag = merchantDao.add(merchant);
 			if (merchantFlag) {
 				// 保存商户对应的电商平台名称(及编码)
 				recordFlag = addMerchantRecordInfo(recordInfo, "1");
@@ -148,7 +143,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setCreateDate(dateTime);
 			merchant.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
-			merchantFlag = merchantDao.saveMerchantContent(merchant);
+			merchantFlag = merchantDao.add(merchant);
 			if (merchantFlag) {
 				JSONArray jsonList = null;
 				try {
@@ -199,6 +194,20 @@ public class MerchantServiceImpl implements MerchantService {
 			}
 		}
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> findMerchantBy(String account) {
+		Map<String, Object> datasMap = new HashMap<>();
+		datasMap.put("merchantName", account);
+		List reList = merchantDao.findByProperty(Merchant.class, datasMap, 0, 0);
+		if (!reList.isEmpty()) {
+				datasMap.put("status", 1);
+				datasMap.put("datas", reList);
+				return datasMap;
+		}
+		datasMap.put("status", -1);
+		return datasMap;
 	}
 
 }

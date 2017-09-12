@@ -28,12 +28,4 @@ public class CategoryDaoImpl extends BaseDaoImpl<Object> implements CategoryDao 
 	public List<Object> findAllThirdType() {
 		return this.findAll(GoodsThirdType.class,0,0);
 	}
-	
-	public static void main(String[] args) {
-		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		CategoryDaoImpl cdao = new CategoryDaoImpl();
-		/*System.out.println(cdao.findAllCount());*/
-		System.out.println(cdao.findAll(GoodsFirstType.class,0,0).size());
-		
-	}
 }

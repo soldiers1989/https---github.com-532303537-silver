@@ -1,7 +1,6 @@
 package org.silver.shop.dao;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -10,10 +9,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.model.common.category.GoodsFirstType;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -21,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 	// 将实体数据插入数据库
+	@Override
 	public boolean add(Object entity) {
 		Session session = null;
 		try {
@@ -41,7 +39,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 		}
 	}
-
+	
+	@Override
 	public boolean delete(Object entity) {
 		Session session = null;
 		try {
@@ -63,6 +62,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
 	public boolean update(Object entity) {
 		Session session = null;
 		try {
@@ -83,6 +83,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
 	public Member findMailboxbyId(long id) {
 		Session session = null;
 		try {
@@ -99,7 +100,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	// 统计数据库表中数据数量
+	@Override
 	public Long findAllCount(Class entity) {
 		Session session = null;
 		try {
@@ -125,12 +126,14 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	 * findByProperty(propertyName, value, 0, 0); }
 	 */
 
-	//
-	public List<Object> findByProperty(String propertyName, Object value, int page, int size) {
+	//共用findByProperty,此方法暂时不用,
+	/*public List<Object> findByProperty(Class entity,String propertyName, Object value, int page, int size) {
 		Session session = null;
+		String enName = entity.getSimpleName();
 		try {
-			String queryString = "from Member as model where model." + propertyName + "= ?";
+			String queryString = "from "+enName+" as model where model." + propertyName + "= ?";
 			session = getSession();
+			System.out.println(session);
 			Query queryObject = session.createQuery(queryString);
 			queryObject.setParameter(0, value);
 			if (page > 0 && size > 0) {
@@ -147,9 +150,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				session.close();
 			}
 		}
-	}
+	}*/
 
-	public Long findByPropertyCount(Map<String, Object> params) {
+	//待说明
+	/*public Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
 			String hql = "select count(model) from Member model ";
@@ -182,9 +186,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				session.close();
 			}
 		}
-	}
+	}*/
 
 	// 根据实体查询实体表中所有数据
+	@Override
 	public List<Object> findAll(Class entity, int page, int size) {
 		Session session = null;
 		try {
@@ -210,6 +215,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	// 根据传递进来的Map查询数据
+	@Override
 	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
@@ -228,6 +234,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				}
 				hql += " 1=1 ";
 			}
+			System.out.println(session);
 			Query query = session.createQuery(hql);
 			if (list.size() > 0) {
 				for (int i = 0; i < list.size(); i++) {
@@ -250,7 +257,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	// 查询数据库表中最后一条记录的自增ID
+	@Override
 	public Long findLastId(Class entity) {
 		Session session = null;
 		try {
@@ -283,8 +290,13 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId("测试ID");
 		merchant.setMerchantCusNo("商户编码");
-
-		System.out.println(ud.findLastId(Merchant.class));
+		//List reList= ud.findByProperty(Merchant.class, "merchantName", "dang_Star@live.com", 0,0);
+		/*for(int x =0 ; x<reList.size();x++){
+			Merchant list = (Merchant) reList.get(x);
+			System.out.println(list.getMerchantName());
+			System.out.println(list.getLoginPassword());
+		}*/
+		System.out.println();
 
 	}
 }

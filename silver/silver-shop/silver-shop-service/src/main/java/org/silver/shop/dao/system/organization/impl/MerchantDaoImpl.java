@@ -11,10 +11,6 @@ import org.springframework.stereotype.Repository;
 @Repository("merchantDao")
 public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
 
-	@Override
-	public List<Object> checkMerchantName(Class entity, Map params, int page, int size) {
-		return this.findByProperty(Merchant.class, params, page, size);
-	}
 
 	@Override
 	public Long findLastId() {
@@ -22,14 +18,12 @@ public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
 	}
 
 	@Override
-	public boolean saveMerchantContent(Object entity) {
-		return this.add(entity);
+	public boolean add(Object entity) {
+		return super.add(entity);
 	}
 
 	@Override
-	public boolean savenMerchantRecordInfo(Object entity) {
-		return this.add(entity);
+	public List<Object> findByProperty(Class entity, Map params,  int page, int size) {
+		return super.findByProperty(entity, params,  page, size);
 	}
-
-	
 }

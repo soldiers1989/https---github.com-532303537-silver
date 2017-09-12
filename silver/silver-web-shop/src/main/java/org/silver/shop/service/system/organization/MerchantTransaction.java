@@ -3,17 +3,25 @@ package org.silver.shop.service.system.organization;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
+
+import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.MD5;
+import org.silver.util.WebUtil;
 import org.springframework.stereotype.Service;
+
 import com.alibaba.dubbo.config.annotation.Reference;
+
 /**
  * 商戶Transaction(事物)层
  */
 @Service("merchantTransaction")
 public class MerchantTransaction {
-
+	
 	@Reference
 	private MerchantService merchantService;
 
@@ -28,6 +36,7 @@ public class MerchantTransaction {
 		Map<String, Object> dataMap = new HashMap<>();
 		// key=(表中列名),value=传递过来的值
 		dataMap.put("merchantName", account);
+		System.out.println(merchantService+"----<");
 		return merchantService.checkMerchantName(dataMap);
 	}
 
@@ -52,15 +61,15 @@ public class MerchantTransaction {
 	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
 			String merchantIdCardName, String recordInfoPack, String type) {
 		Map<String, Object> statusMap = new HashMap<>();
-		//获取商户ID
-		Map<String,Object> reIdMap = merchantService.findOriginalMerchantId();
-		String status = reIdMap.get("status")+"";
-		if(status.equals("1")){//从数据库获取ID成功
-			//获取返回来的商户ID
-			String merchantId = reIdMap.get("datas")+"";
-			//商户注册
-			statusMap = merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard, merchantIdCardName,
-					recordInfoPack, type);
+		// 获取商户ID
+		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
+		String status = reIdMap.get("status") + "";
+		if (status.equals("1")) {// 从数据库获取ID成功
+			// 获取返回来的商户ID
+			String merchantId = reIdMap.get("datas") + "";
+			// 商户注册
+			statusMap = merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
+					merchantIdCardName, recordInfoPack, type);
 			return statusMap;
 		}
 		statusMap.put("status", StatusCode.NOTICE.getStatus());
@@ -68,17 +77,39 @@ public class MerchantTransaction {
 		return statusMap;
 	}
 
-	public Map<String, Object> merchantLogin(String account) {
-		Map<String, Object> dataMap = new HashMap<>();
-		// key=(表中列名),value=传递过来的值
-		dataMap.put("merchantName", account);
+	/**
+	 * 商户登录
+	 * 
+	 * @param account
+	 * @return
+	 */
+	public Map<String, Object> merchantLogin(String account, String loginPassword) {
+		MD5 md5 = new MD5();
+		System.out.println(merchantService+"----------<<<");
+		Map<String, Object> datasMap = merchantService.findMerchantBy(account);
+		System.out.println("--------------->"+merchantService);
+		if (!datasMap.isEmpty()) {
+			if ((int) datasMap.get("status") == 1) {
+				List<Merchant> merchantList = (List<Merchant>) datasMap.get("datas");
+				String name = merchantList.get(0).getMerchantName();
+				String loginpas = merchantList.get(0).getLoginPassword();
+				String md5Pas = md5.getMD5ofStr(loginPassword);
+				if (account.equals(name) && md5Pas.equals(loginpas)) {
+					datasMap.clear();
+					WebUtil.getSession().setAttribute(LoginType.MERCHANT.toString() + "_info", merchantList.get(0));
+					datasMap.put("status", StatusCode.SUCCESS.getStatus());
+					datasMap.put("msg", "登录成功");
+					return datasMap;
+				}
+			}
+
+		}
 		return null;
 	}
 
 	public static void main(String[] args) {
 		MD5 md2 = new MD5();
-		System.out.println(md2.getMD5ofStr("abc"));
-		System.out.println(md2.getMD5ofStr("7692DCDC19E41E66C6AE2DE54A696B25"));
+		System.out.println(md2.getMD5ofStr("123"));
 	}
 
 }
