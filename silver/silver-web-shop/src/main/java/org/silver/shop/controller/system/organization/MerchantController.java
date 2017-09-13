@@ -20,10 +20,13 @@ import org.silver.shop.shiro.MerchantRealm;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.dubbo.common.json.JSONArray;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
@@ -53,8 +56,7 @@ public class MerchantController {
 	@RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "商户--登录")
-	public String login(@RequestParam("account") String account, @RequestParam("loginPassword") String loginPassword
-			)  {
+	public String login(@RequestParam("account") String account, @RequestParam("loginPassword") String loginPassword) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
@@ -79,8 +81,7 @@ public class MerchantController {
 		}
 		statusMap.put("status", -1);
 		statusMap.put("msg", "账号不存在或密码错误");
-		//resp.getWriter().println(JSONObject.fromObject(statusMap).toString());
-		 return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
@@ -128,7 +129,6 @@ public class MerchantController {
 	 */
 	@RequestMapping(value = "/checkMerchantName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	// @RequiresRoles(value = { "Merchant" })
 	public String checkMerchantName(@RequestParam("account") String account) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null || !"".equals(account)) {// 判断前台传递的值不为空
@@ -148,15 +148,41 @@ public class MerchantController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/findMerchantGoods")
+	/**
+	 * 查询商户信息
+	 * 
+	 * @return Map
+	 */
+	@RequestMapping(value = "/findMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	public Map<String, Object> findMerchantGoods() {
-		MerchantRealm merchantRealm = new MerchantRealm();
-		merchantRealm.getName();
+	public String getMerchantInfo() {
+		Map<String, Object> reMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
-		Merchant m = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
-		System.out.println("-->" + m);
-		return null;
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession()
+				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		if (!"".equals(merchantInfo) || merchantInfo != null) {
+			// 将session内的商户登录密码清空
+			merchantInfo.setLoginPassword("");
+			reMap.put("status", 1);
+			reMap.put("datas", merchantInfo);
+			reMap.put("msg", StatusCode.SUCCESS.getMsg());
+			return JSONObject.fromObject(reMap).toString();
+		}
+		reMap.put("status", StatusCode.LOSS_SESSION.getStatus());
+		reMap.put("msg", StatusCode.LOSS_SESSION.getMsg());
+		return JSONObject.fromObject(reMap).toString();
 	}
+
+	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	public void logout() {
+		Subject currentUser = SecurityUtils.getSubject();
+		if (currentUser != null) {
+			currentUser.logout();
+		}
+	}
+
 }

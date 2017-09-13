@@ -47,4 +47,6 @@ public interface MerchantService {
 	 * @return
 	 */
 	public boolean addMerchantRecordInfo(RecordInfo entity, String type);
+	
+
 }

@@ -63,8 +63,9 @@
 		<property name="filterChainDefinitions">
 			<value>
 				/servlet/validateCodeServlet=anon
-				/regin=anon
+				/regin=anon 
 				/login=anon
+				/merchantBank/*=anon
 				/merchant/*=anon
 				/category/*=anon
 				/tests/a=anon

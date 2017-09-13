@@ -14,8 +14,8 @@
         <property name="bankName" type="java.lang.String">
             <column name="bankName" />
         </property>
-        <property name="bankNumber" type="java.lang.String">
-            <column name="bankNumber" />
+        <property name="bankAccount" type="java.lang.String">
+            <column name="bankAccount" />
         </property>
         <property name="defaultFalg" type="int">
             <column name="defaultFalg" />

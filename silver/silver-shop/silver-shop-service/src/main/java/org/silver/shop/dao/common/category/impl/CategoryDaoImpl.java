@@ -12,7 +12,7 @@ import org.silver.shop.model.common.category.GoodsThirdType;
 import org.springframework.stereotype.Repository;
 
 @Repository("categoryDao")
-public class CategoryDaoImpl extends BaseDaoImpl<Object> implements CategoryDao {
+public class CategoryDaoImpl extends BaseDaoImpl implements CategoryDao {
 	
 	@Override
 	public List<Object> findAllfirstType() {

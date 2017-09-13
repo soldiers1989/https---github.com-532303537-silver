@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 商户管理银行实体类
+ * 商户银行信息实体类
  */
 public class MerchantBankInfo implements Serializable{
 	/**
@@ -14,7 +14,7 @@ public class MerchantBankInfo implements Serializable{
 	private long id;
 	private String merchantId;//商户ID
 	private String bankName;//银行名称
-	private String bankNumber;// 银行卡号码
+	private String bankAccount;// 银行账号
 	private int defaultFalg;//默认表示：1-默认选中,2-备用
 	private String createBy;//创建人
 	private Date createDate;//创建时间
@@ -36,11 +36,12 @@ public class MerchantBankInfo implements Serializable{
 	public void setBankName(String bankName) {
 		this.bankName = bankName;
 	}
-	public String getBankNumber() {
-		return bankNumber;
+	
+	public String getBankAccount() {
+		return bankAccount;
 	}
-	public void setBankNumber(String bankNumber) {
-		this.bankNumber = bankNumber;
+	public void setBankAccount(String bankAccount) {
+		this.bankAccount = bankAccount;
 	}
 	public int getDefaultFalg() {
 		return defaultFalg;

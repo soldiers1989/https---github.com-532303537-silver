@@ -4,7 +4,7 @@ import org.hibernate.Session;
 import org.silver.shop.component.ChooseDatasourceHandler;
 
 public class HibernateDaoImpl {
-	private Session session;
+	 Session session;
 	
 
 	public Session getSession() {

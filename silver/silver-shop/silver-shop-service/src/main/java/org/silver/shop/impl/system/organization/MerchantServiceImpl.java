@@ -12,6 +12,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantBankInfo;
 import org.silver.shop.model.system.tenant.RecordInfo;
 import org.silver.util.MD5;
 import org.slf4j.Logger;
@@ -27,20 +28,27 @@ public class MerchantServiceImpl implements MerchantService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	static List<Map> list = null;
 	static {
+		//银盟商城备案信息 1-广州电子口岸(目前只支持BC业务)
+		final String ebEntNo = "C010000000537118";
+		final String ebEntName ="广州银盟信息科技有限公司";
+		
+		//银盟商城备案信息2-南沙智检(支持BBC业务)
+		final String ebEntNo2 = "1509007917";
+		
 		// 初始化银盟自己商户备案信息
 		list = new ArrayList<>();
 		Map<String, Object> record1 = new HashMap<>();
 		Map<String, Object> record2 = new HashMap<>();
 		record1.put("eport", 0);// 1-广州电子口岸(目前只支持BC业务)
-		record1.put("ebEntNo", "C010000000537118");
-		record1.put("ebEntName", "广州银盟信息科技有限公司");
-		record1.put("ebpEntNo", "C010000000537118");
-		record1.put("ebpEntName", "广州银盟信息科技有限公司");
+		record1.put("ebEntNo", ebEntNo);
+		record1.put("ebEntName", ebEntName);
+		record1.put("ebpEntNo", ebEntNo);
+		record1.put("ebpEntName", ebEntName);
 		record2.put("eport", 1);// 2-南沙智检(支持BBC业务)
-		record2.put("ebEntNo", "1509007917");
-		record2.put("ebEntName", "广州银盟信息科技有限公司");
-		record2.put("ebpEntNo", "1509007917");
-		record2.put("ebpEntName", "广州银盟信息科技有限公司");
+		record2.put("ebEntNo", ebEntNo2);
+		record2.put("ebEntName", ebEntName);
+		record2.put("ebpEntNo",ebEntNo2);
+		record2.put("ebpEntName", ebEntName);
 		list.add(record1);
 		list.add(record2);
 	}
@@ -209,5 +217,7 @@ public class MerchantServiceImpl implements MerchantService {
 		datasMap.put("status", -1);
 		return datasMap;
 	}
+
+	
 
 }

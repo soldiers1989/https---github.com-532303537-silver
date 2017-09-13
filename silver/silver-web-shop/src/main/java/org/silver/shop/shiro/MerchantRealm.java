@@ -18,35 +18,35 @@ import org.silver.shop.service.system.organization.MerchantTransaction;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class MerchantRealm extends AuthorizingRealm implements Serializable{
+public class MerchantRealm extends AuthorizingRealm implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2900919279652771749L;
 	@Autowired
 	private MerchantTransaction merchantTransaction;
-	
+
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		 Merchant merchant =(Merchant) WebUtil.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
-		 SimpleAuthorizationInfo info =null;
-		 if(merchant!=null){
-			 info = new SimpleAuthorizationInfo();
-			 info.addRole(LoginType.MERCHANT.toString());
-		 }
+		Merchant merchant = (Merchant) WebUtil.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
+		SimpleAuthorizationInfo info = null;
+		if (merchant != null) {
+			info = new SimpleAuthorizationInfo();
+			info.addRole(LoginType.MERCHANT.toString());
+		}
 		return info;
 	}
 
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
 		CustomizedToken customizedToken = (CustomizedToken) token;
-		AuthenticationInfo authcInfo =null;
+		AuthenticationInfo authcInfo = null;
 		String account = customizedToken.getUsername();
-		String pass=new String(customizedToken.getPassword());
-		Map a= merchantTransaction.merchantLogin(account, pass);
-		if(a!=null){
-			 authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MERCHANT.toString());
-			 //WebUtil.getSession().setAttribute( LoginType.MERCHANT.toString()+"_info", value);
+		String pass = new String(customizedToken.getPassword());
+		if (merchantTransaction.merchantLogin(account, pass) != null) {
+			authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MERCHANT.toString());
+			// WebUtil.getSession().setAttribute(
+			// LoginType.MERCHANT.toString()+"_info", value);
 		}
 		return authcInfo;
 	}

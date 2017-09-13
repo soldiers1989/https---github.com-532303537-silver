@@ -16,7 +16,6 @@ import org.silver.shop.model.system.organization.Merchant;
  * 提供数据访问层共用DAO方法
  */
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
-
 	// 将实体数据插入数据库
 	@Override
 	public boolean add(Object entity) {
@@ -39,7 +38,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 		}
 	}
-	
+
 	@Override
 	public boolean delete(Object entity) {
 		Session session = null;
@@ -126,67 +125,38 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	 * findByProperty(propertyName, value, 0, 0); }
 	 */
 
-	//共用findByProperty,此方法暂时不用,
-	/*public List<Object> findByProperty(Class entity,String propertyName, Object value, int page, int size) {
-		Session session = null;
-		String enName = entity.getSimpleName();
-		try {
-			String queryString = "from "+enName+" as model where model." + propertyName + "= ?";
-			session = getSession();
-			System.out.println(session);
-			Query queryObject = session.createQuery(queryString);
-			queryObject.setParameter(0, value);
-			if (page > 0 && size > 0) {
-				queryObject.setFirstResult((page - 1) * size).setMaxResults(size);
-			}
-			List<Object> l = queryObject.list();
-			session.close();
-			return l;
-		} catch (RuntimeException re) {
-			re.printStackTrace();
-			return null;
-		} finally {
-			if (session != null && session.isOpen()) {
-				session.close();
-			}
-		}
-	}*/
+	// 共用findByProperty,此方法暂时不用,
+	/*
+	 * public List<Object> findByProperty(Class entity,String propertyName,
+	 * Object value, int page, int size) { Session session = null; String enName
+	 * = entity.getSimpleName(); try { String queryString =
+	 * "from "+enName+" as model where model." + propertyName + "= ?"; session =
+	 * getSession(); System.out.println(session); Query queryObject =
+	 * session.createQuery(queryString); queryObject.setParameter(0, value); if
+	 * (page > 0 && size > 0) { queryObject.setFirstResult((page - 1) *
+	 * size).setMaxResults(size); } List<Object> l = queryObject.list();
+	 * session.close(); return l; } catch (RuntimeException re) {
+	 * re.printStackTrace(); return null; } finally { if (session != null &&
+	 * session.isOpen()) { session.close(); } } }
+	 */
 
-	//待说明
-	/*public Long findByPropertyCount(Map<String, Object> params) {
-		Session session = null;
-		try {
-			String hql = "select count(model) from Member model ";
-			List<Object> list = new ArrayList<Object>();
-			if (params != null && params.size() > 0) {
-				hql += "where ";
-				String property;
-				Iterator<String> is = params.keySet().iterator();
-				while (is.hasNext()) {
-					property = is.next();
-					hql = hql + "model." + property + "=" + "?" + " and ";
-					list.add(params.get(property));
-				}
-				hql += " 1=1 ";
-			}
-			session = getSession();
-			Query query = session.createQuery(hql);
-			if (list.size() > 0) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, list.get(i));
-				}
-			}
-			Long count = (Long) query.uniqueResult();
-			session.close();
-			return count;
-		} catch (Exception re) {
-			return (long) 0;
-		} finally {
-			if (session != null && session.isOpen()) {
-				session.close();
-			}
-		}
-	}*/
+	// 待说明
+	/*
+	 * public Long findByPropertyCount(Map<String, Object> params) { Session
+	 * session = null; try { String hql =
+	 * "select count(model) from Member model "; List<Object> list = new
+	 * ArrayList<Object>(); if (params != null && params.size() > 0) { hql +=
+	 * "where "; String property; Iterator<String> is =
+	 * params.keySet().iterator(); while (is.hasNext()) { property = is.next();
+	 * hql = hql + "model." + property + "=" + "?" + " and ";
+	 * list.add(params.get(property)); } hql += " 1=1 "; } session =
+	 * getSession(); Query query = session.createQuery(hql); if (list.size() >
+	 * 0) { for (int i = 0; i < list.size(); i++) { query.setParameter(i,
+	 * list.get(i)); } } Long count = (Long) query.uniqueResult();
+	 * session.close(); return count; } catch (Exception re) { return (long) 0;
+	 * } finally { if (session != null && session.isOpen()) { session.close(); }
+	 * } }
+	 */
 
 	// 根据实体查询实体表中所有数据
 	@Override
@@ -290,12 +260,13 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId("测试ID");
 		merchant.setMerchantCusNo("商户编码");
-		//List reList= ud.findByProperty(Merchant.class, "merchantName", "dang_Star@live.com", 0,0);
-		/*for(int x =0 ; x<reList.size();x++){
-			Merchant list = (Merchant) reList.get(x);
-			System.out.println(list.getMerchantName());
-			System.out.println(list.getLoginPassword());
-		}*/
+		// List reList= ud.findByProperty(Merchant.class, "merchantName",
+		// "dang_Star@live.com", 0,0);
+		/*
+		 * for(int x =0 ; x<reList.size();x++){ Merchant list = (Merchant)
+		 * reList.get(x); System.out.println(list.getMerchantName());
+		 * System.out.println(list.getLoginPassword()); }
+		 */
 		System.out.println();
 
 	}

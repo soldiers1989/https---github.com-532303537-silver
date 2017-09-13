@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
  */
 @Service("merchantTransaction")
 public class MerchantTransaction {
-	
+
 	@Autowired
 	private MerchantService merchantService;
 
@@ -35,7 +35,6 @@ public class MerchantTransaction {
 		Map<String, Object> dataMap = new HashMap<>();
 		// key=(表中列名),value=传递过来的值
 		dataMap.put("merchantName", account);
-		System.out.println(merchantService+"----<"); 
 		return merchantService.checkMerchantName(dataMap);
 	}
 
@@ -84,15 +83,14 @@ public class MerchantTransaction {
 	 */
 	public Map<String, Object> merchantLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
-		System.out.println(merchantService+"----------<<<");
 		Map<String, Object> datasMap = merchantService.findMerchantBy(account);
-		System.out.println("--------------->"+merchantService);
 		if (!datasMap.isEmpty()) {
-			if ((int) datasMap.get("status") == 1) {
+			if ((int) datasMap.get("status") == 1) {// 查询商户成功
 				List<Merchant> merchantList = (List<Merchant>) datasMap.get("datas");
 				String name = merchantList.get(0).getMerchantName();
 				String loginpas = merchantList.get(0).getLoginPassword();
 				String md5Pas = md5.getMD5ofStr(loginPassword);
+				// 判断查询出的账号密码与前台登录的账号密码是否一致
 				if (account.equals(name) && md5Pas.equals(loginpas)) {
 					datasMap.clear();
 					WebUtil.getSession().setAttribute(LoginType.MERCHANT.toString() + "_info", merchantList.get(0));
@@ -104,11 +102,6 @@ public class MerchantTransaction {
 
 		}
 		return null;
-	}
-
-	public static void main(String[] args) {
-		MD5 md2 = new MD5();
-		System.out.println(md2.getMD5ofStr("123"));
 	}
 
 }
