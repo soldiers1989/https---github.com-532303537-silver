@@ -17,8 +17,8 @@
         <property name="bankAccount" type="java.lang.String">
             <column name="bankAccount" />
         </property>
-        <property name="defaultFalg" type="int">
-            <column name="defaultFalg" />
+        <property name="defaultFlag" type="int">
+            <column name="defaultFlag" />
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />

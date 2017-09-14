@@ -30,4 +30,9 @@ public class MerchantBankInfoDaoImpl<T> extends BaseDaoImpl<T> implements Mercha
 		return super.update(entity);
 	}
 
+	@Override
+	public boolean delete(Class entity) {
+		return super.delete(entity);
+	}
+
 }

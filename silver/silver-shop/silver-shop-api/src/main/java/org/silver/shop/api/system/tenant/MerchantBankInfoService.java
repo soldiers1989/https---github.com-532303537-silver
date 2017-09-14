@@ -27,8 +27,18 @@ public interface MerchantBankInfoService {
 	
 	/**
 	 * 商户选择默认银行卡
-	 * @param id
+	 * @param id 自增ID(唯一)
+	 * @param merchantId (商户ID)
 	 * @return
 	 */
-	public boolean selectMerchantBank(int id);
+	public boolean selectMerchantBank(long id,String merchantId);
+
+	
+	/**
+	 * 商户删除银行卡信息
+	 * @param id 自增ID(唯一)
+	 * @param merchantId (商户ID)
+	 * @return 
+	 */
+	public boolean deleteMerchantBankInfo(long id, String merchantId);
 }

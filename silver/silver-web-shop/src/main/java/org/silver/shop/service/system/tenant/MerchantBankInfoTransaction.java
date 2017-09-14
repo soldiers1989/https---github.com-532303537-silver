@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.MerchantBankInfoService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
@@ -58,9 +59,48 @@ public class MerchantBankInfoTransaction {
 		flag = merchantBankInfoService.addMerchantBankInfo(merchantInfo, bankName, bankAccount, defaultFalg);
 		return flag;
 	}
-	
-	public boolean selectMerchantBank(){
-		
-		return true;
+
+	/**
+	 * 设置默认银行卡
+	 * @param id
+	 * @return
+	 */
+	public Map<String, Object> selectMerchantBank(long id) {
+		Map<String,Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession()
+				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		String merchantId = merchantInfo.getMerchantId();
+		boolean flag = merchantBankInfoService.selectMerchantBank(id, merchantId);
+		if(flag){
+			datasMap.put("status", 1);
+			datasMap.put("msg", "设置成功!");
+			return datasMap;
+		}
+		datasMap.put("status", StatusCode.FORMAT_ERR.getStatus());
+		datasMap.put("msg", "参数错误,修改失败!");
+		return datasMap;
+	}
+
+	/**
+	 * 删除商户银行卡信息
+	 * @param id
+	 */
+	public Map<String,Object> deleteBankInfo(long id) {
+		Map<String,Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
+		String merchantId = merchantInfo.getMerchantId();
+		boolean reFlag = merchantBankInfoService.deleteMerchantBankInfo(id,merchantId);
+		if(reFlag){
+			datasMap.put("status", 1);
+			datasMap.put("msg", "删除成功!");
+			return datasMap;
+		}
+		datasMap.put("status", StatusCode.FORMAT_ERR.getStatus());
+		datasMap.put("msg", "参数错误,删除失败!");
+		return datasMap;
 	}
 }

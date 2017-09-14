@@ -204,7 +204,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				}
 				hql += " 1=1 ";
 			}
-			System.out.println(session);
 			Query query = session.createQuery(hql);
 			if (list.size() > 0) {
 				for (int i = 0; i < list.size(); i++) {
