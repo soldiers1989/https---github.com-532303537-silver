@@ -162,7 +162,7 @@ public class MerchantController {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession()
 				.getAttribute(LoginType.MERCHANT.toString() + "_info");
-		if (!"".equals(merchantInfo) || merchantInfo != null) {
+		if (!"".equals(merchantInfo) ) {
 			// 将session内的商户登录密码清空
 			merchantInfo.setLoginPassword("");
 			reMap.put("status", 1);
@@ -177,6 +177,7 @@ public class MerchantController {
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
+	@ApiOperation("商户注销")
 	@RequiresRoles("Merchant")
 	public void logout() {
 		Subject currentUser = SecurityUtils.getSubject();

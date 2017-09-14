@@ -15,7 +15,7 @@ public class MerchantBankInfo implements Serializable{
 	private String merchantId;//商户ID
 	private String bankName;//银行名称
 	private String bankAccount;// 银行账号
-	private int defaultFalg;//默认表示：1-默认选中,2-备用
+	private int defaultFlag;//默认表示：1-默认选中,2-备用
 	private String createBy;//创建人
 	private Date createDate;//创建时间
 	public long getId() {
@@ -43,11 +43,11 @@ public class MerchantBankInfo implements Serializable{
 	public void setBankAccount(String bankAccount) {
 		this.bankAccount = bankAccount;
 	}
-	public int getDefaultFalg() {
-		return defaultFalg;
+	public int getDefaultFlag() {
+		return defaultFlag;
 	}
-	public void setDefaultFalg(int defaultFalg) {
-		this.defaultFalg = defaultFalg;
+	public void setDefaultFlag(int defaultFlag) {
+		this.defaultFlag = defaultFlag;
 	}
 	public String getCreateBy() {
 		return createBy;

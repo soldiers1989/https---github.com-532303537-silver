@@ -32,4 +32,11 @@ public interface MerchantBankInfoDao extends BaseDao {
 	 * @return
 	 */
 	public boolean update(Class entity);
+	
+	/**
+	 * 根据实体删除数据
+	 * @param entity
+	 * @return
+	 */
+	public boolean delete(Class entity);
 }

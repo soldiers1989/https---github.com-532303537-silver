@@ -86,15 +86,33 @@ public class MerchantBankController {
 		return JSONObject.fromObject(reMap).toString();
 	}
 
-	@RequestMapping(value = "/selectBankInfodefault", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/selectMerchantBankInfoDefault", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
 	@ApiOperation("设置默认银行卡")
-	public String selectBankInfodefault(@RequestParam(value = "id") int id) {
+	public String selectMerchantBankInfoDefault(@RequestParam(value = "id") long id) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (id > 0) {
-			
+			statusMap = merchantBankInfoTransaction.selectMerchantBank(id);
+			return JSONObject.fromObject(statusMap).toString();
 		}
-		return null;
+		statusMap.put(STATUS, StatusCode.UNKNOWN.getStatus());
+		statusMap.put(MSG, StatusCode.UNKNOWN.getMsg());
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/deleteMerchantBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("删除银行卡信息")
+	public String deleteMerchantBankInfo(@RequestParam(value = "id") long id) {
+		Map<String, Object> statusMap = new HashMap<>();
+		if (id > 0) {
+			statusMap = merchantBankInfoTransaction.deleteBankInfo(id);
+			return JSONObject.fromObject(statusMap).toString();
+		}
+		statusMap.put(STATUS, StatusCode.UNKNOWN.getStatus());
+		statusMap.put(MSG, StatusCode.UNKNOWN.getMsg());
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }
