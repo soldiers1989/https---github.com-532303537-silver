@@ -15,7 +15,6 @@ import org.silver.common.NSFtpConfig;
 import org.silver.sys.api.ZJEportService;
 import org.silver.sys.util.FtpUtil;
 import org.silver.util.DateUtil;
-import org.silver.util.FtpUtils;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
@@ -117,13 +116,15 @@ public class ZJEportServiceImpl implements ZJEportService {
 		}
 	    //上传文件
 		try {
-			FtpUtil.upload(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
-					NSFtpConfig.FTP_USER_NAME_YM,
-					NSFtpConfig.FTP_PASS_WORD_YM, 
-					NSFtpConfig.FTP_GOODS_ROUTE_IN,
-					file1);
+			if(uploadXMLFile(ePath,NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
+					NSFtpConfig.FTP_USER_NAME_YM, NSFtpConfig.FTP_PASS_WORD_YM, 
+					NSFtpConfig.FTP_GOODS_ROUTE_IN)){
+				statusMap.put("status", 1);
+				statusMap.put("msg", "上传文件成功 ");
+				return statusMap;
+			}
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return statusMap;
@@ -235,17 +236,20 @@ public class ZJEportServiceImpl implements ZJEportService {
 
 		return statusMap;
 	}
-	/**
-	 * 上送本地文件至ftp服务器
-	 * 
-	 * @param filePath
-	 * @return
-	 */
-	private boolean uploadXMLFile(String filePath) {
+    /**
+     * 上送本地文件至ftp服务器
+     * @param filePath  读取本地文件的路径
+     * @param url
+     * @param port
+     * @param username
+     * @param password
+     * @param routePath  文件存储到FTP的路径
+     * @return
+     */
+	private boolean uploadXMLFile(String filePath,String url,int port,String username,String password,String routePath) {
 		try {
-			// XMLOut.output(Doc, new FileOutputStream(uploadPath));
-			File file1 = new File(filePath);
-			FtpUtils.upload(file1, "/in");
+			File file = new File(filePath);
+			FtpUtil.upload(url,port,username,password,routePath,file);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

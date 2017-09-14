@@ -6,12 +6,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.httpclient.util.DateUtil;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.silver.common.GZFtpConfig;
 import org.silver.common.NSFtpConfig;
 
 
@@ -108,22 +113,20 @@ public class FtpUtil {
      * @throws SocketException
      * @throws IOException
      */
-    public static boolean downFile(String url, int port, String username, String password, String remotePath,
+    public static Map<String, Object> downFile(String url, int port, String username, String password, String remotePath,
 			String fileName, String localPath) throws SocketException, IOException {
-		boolean result = false;
+    	Map<String, Object> statusMap = new HashMap<String, Object>();
+    	List pathList =  new ArrayList<>();
 		FTPClient ftpClient = FTPclientLogin(url, port, username, password, "utf-8");
 		String encoding = System.getProperty("file.encoding");
 		try {
-			int reply;
 			// 转移到FTP服务器目录至指定的目录下
 			ftpClient.changeWorkingDirectory(new String(remotePath.getBytes(encoding)));
 			// 获取文件列表
 			FTPFile[] fs = ftpClient.listFiles();
 			OutputStream is = null;
 			File localFile = null;
-//			if (fs != null && fs.length > 2) {
 				for (FTPFile ff : fs) {
-					// if (ff.getName().equals(fileName)) {
 					if (!(ff.getName().equals("outime") || ff.getName().equals("tar"))) {
 						//文件生成所在目录
 						String path = localPath+"/"+DateUtil.formatDate(new Date(), "yyyyMMdd");
@@ -135,26 +138,23 @@ public class FtpUtil {
 						localFile = new File(path);
 						is = new FileOutputStream(localFile);
 						ftpClient.retrieveFile(ff.getName(), is);
-						try {
-							DOMXMLService.getHeadBeanList(localFile);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
 						is.close();
+						pathList.add(path);
 					}
-
-					// }
 				}
+				statusMap.put("status", 1);
+				statusMap.put("msg", "报文下载成功 ");
+				statusMap.put("path", pathList);
 //				for (FTPFile ff : fs) {
 //					System.out.println(ftpClient.deleteFile(ff.getName()));
-//				}
-//			}
-
-			System.out.println("delete");
+//			    }
+			System.out.println("---FTP服务器回执报文清除完毕！---");
 			ftpClient.logout();
-			result = true;
 		} catch (IOException e) {
 			e.printStackTrace();
+			statusMap.put("status", 1);
+			statusMap.put("msg", "报文下载失败 ");
+			return statusMap;
 		} finally {
 			if (ftpClient.isConnected()) {
 				try {
@@ -163,36 +163,58 @@ public class FtpUtil {
 				}
 			}
 		}
-		return result;
+		return statusMap;
 	}
 	
 	public static void main(String[] args) {
+		//上传文件
+//		File file = new File("F:/tools/download/20170911/DOCREC_201708031044225020001_dataA1FE78E12B8E867EA46AB6D2A61F1A87.xml");
 //		try {
-			File file = new File("C:/work/order/66110120170802102831000.xml");
-			try {
-				FtpUtil.upload(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
-						NSFtpConfig.FTP_USER_NAME_YM,
-						NSFtpConfig.FTP_PASS_WORD_YM, 
-						"/4200.IMPBA.SWBEBTRADE.REPORT/in/",
-						file);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-//			Boolean fTPClient =FtpUtil.downFile(NSFtpConfig.FTP_ID, 
-//					NSFtpConfig.FTP_PORT, 
-//					NSFtpConfig.FTP_USER_NAME_YM, 
-//					NSFtpConfig.FTP_PASS_WORD_YM, "/4200.IMPBA.SWBEBTRADE.REPORT/out/", "", "f:/tools/download");
-//			fTPClient.disconnect();
-//			System.out.println(fTPClient.isConnected());
-			
-//		} catch (SocketException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
+//			FtpUtil.upload(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
+//					NSFtpConfig.FTP_USER_NAME_YM,
+//					NSFtpConfig.FTP_PASS_WORD_YM, 
+//					"/4200.IMPBA.SWBEBTRADE.REPORT/out/",
+//					file);
+//		} catch (Exception e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+		
+		//关闭fTPClient
+//			fTPClient.disconnect();
+//			System.out.println(fTPClient.isConnected());
+		
+//		//下载解析回执文件
+		try {
+//			Map<String, Object> map  =FtpUtil.downFile(NSFtpConfig.FTP_ID, 
+//					NSFtpConfig.FTP_PORT, 
+//					NSFtpConfig.FTP_USER_NAME_YM, 
+//					NSFtpConfig.FTP_PASS_WORD_YM, "/4200.IMPBA.SWBEBTRADE.REPORT/out/", "", "f:/tools/download");
+			Map<String, Object> map1  =FtpUtil.downFile(GZFtpConfig.FTP_ID, 
+					GZFtpConfig.FTP_PORT, 
+					GZFtpConfig.FTP_USER_NAME_YM, 
+					GZFtpConfig.FTP_PASS_WORD_YM, "/out/", "", "f:/tools/download");
+			String path ="";
+			List pathList =(List) map1.get("path");
+			for (int i = 0; i < pathList.size(); i++) {
+				path=(String) pathList.get(i);
+				File file =new File(path);
+				try {
+					Map<String, Object> resultMap=DOMXMLService.getHeadBeanList(file);
+					System.out.println("resultMap--->"+resultMap);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 		
 }
