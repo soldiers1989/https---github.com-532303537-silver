@@ -15,7 +15,6 @@ import org.silver.common.NSFtpConfig;
 import org.silver.sys.api.ZJEportService;
 import org.silver.sys.util.FtpUtil;
 import org.silver.util.DateUtil;
-import org.silver.util.FtpUtils;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
