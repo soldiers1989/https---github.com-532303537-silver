@@ -10,6 +10,8 @@
 	<modules>
 		<module>silver-common</module>
 		<module>silver-sys</module>
+		<module>silver-shop</module>
+		<module>silver-pay</module>
 		<module>silver-web</module>
 		<module>silver-web-pay</module>
 		<module>silver-web-shop</module>
