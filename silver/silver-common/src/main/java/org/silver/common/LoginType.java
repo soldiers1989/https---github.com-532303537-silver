@@ -13,4 +13,5 @@ public enum LoginType {
     public String toString() {
         return this.type.toString();
     }
+    
 }

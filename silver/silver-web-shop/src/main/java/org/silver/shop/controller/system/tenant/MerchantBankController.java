@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.tenant.MerchantBankInfoTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,6 @@ import net.sf.json.JSONObject;
 @RequestMapping("/merchantBank")
 public class MerchantBankController {
 
-	private static final String STATUS = "status";
-	private static final String MSG = "msg";
-	private static final String DATAS = "datas";
 	@Autowired
 	private MerchantBankInfoTransaction merchantBankInfoTransaction;
 
@@ -49,13 +47,13 @@ public class MerchantBankController {
 		if (bankName != null && bankAccount != null) {
 			boolean flag = merchantBankInfoTransaction.addMerchantBankInfo(bankName, bankAccount, defaultFalg);
 			if (flag) {
-				statusMap.put(STATUS, 1);
-				statusMap.put(MSG, "保存银行卡信息成功！");
+				statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "保存银行卡信息成功！");
 				return JSONObject.fromObject(statusMap).toString();
 			}
 		}
-		statusMap.put(STATUS, StatusCode.UNKNOWN.getStatus());
-		statusMap.put(MSG, StatusCode.UNKNOWN.getMsg());
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -76,16 +74,21 @@ public class MerchantBankController {
 		Map<String, Object> reMap = new HashMap<>();
 		List<Object> bankInfoList = merchantBankInfoTransaction.findMerchantBankInfo(page, size);
 		if (!bankInfoList.isEmpty()) {
-			reMap.put(STATUS, 1);
-			reMap.put(DATAS, bankInfoList);
-			reMap.put(MSG, StatusCode.SUCCESS.getMsg());
+			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
+			reMap.put(BaseCode.DATAS.getBaseCode(), bankInfoList);
+			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			return JSONObject.fromObject(reMap).toString();
 		}
-		reMap.put(STATUS, StatusCode.NO_DATAS.getStatus());
-		reMap.put(MSG, StatusCode.NO_DATAS.getMsg());
+		reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+		reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 		return JSONObject.fromObject(reMap).toString();
 	}
 
+	/**
+	 * 设置默认银行卡
+	 * @param id 
+	 * @return
+	 */
 	@RequestMapping(value = "/selectMerchantBankInfoDefault", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
@@ -96,8 +99,8 @@ public class MerchantBankController {
 			statusMap = merchantBankInfoTransaction.selectMerchantBank(id);
 			return JSONObject.fromObject(statusMap).toString();
 		}
-		statusMap.put(STATUS, StatusCode.UNKNOWN.getStatus());
-		statusMap.put(MSG, StatusCode.UNKNOWN.getMsg());
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -111,8 +114,8 @@ public class MerchantBankController {
 			statusMap = merchantBankInfoTransaction.deleteBankInfo(id);
 			return JSONObject.fromObject(statusMap).toString();
 		}
-		statusMap.put(STATUS, StatusCode.UNKNOWN.getStatus());
-		statusMap.put(MSG, StatusCode.UNKNOWN.getMsg());
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		return JSONObject.fromObject(statusMap).toString();
 	}
 }

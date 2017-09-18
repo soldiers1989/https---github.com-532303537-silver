@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.MerchantBankInfoService;
@@ -17,6 +18,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 @Service("merchantBankInfoTransaction")
 public class MerchantBankInfoTransaction {
 
+	private static final String MERCHANTINFO = LoginType.MERCHANT.toString() + "_info";
 	@Reference
 	private MerchantBankInfoService merchantBankInfoService;
 
@@ -29,8 +31,7 @@ public class MerchantBankInfoTransaction {
 		Map<String, Object> dataMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession()
-				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
 		// key=(表中列名),value=传递过来的值
 		dataMap.put("merchantId", merchantInfo.getMerchantId());
 		List<Object> reList = merchantBankInfoService.findMerchantBankInfo(dataMap, page, size);
@@ -54,53 +55,55 @@ public class MerchantBankInfoTransaction {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession()
-				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
 		flag = merchantBankInfoService.addMerchantBankInfo(merchantInfo, bankName, bankAccount, defaultFalg);
 		return flag;
 	}
 
 	/**
 	 * 设置默认银行卡
+	 * 
 	 * @param id
 	 * @return
 	 */
 	public Map<String, Object> selectMerchantBank(long id) {
-		Map<String,Object> datasMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession()
-				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
 		String merchantId = merchantInfo.getMerchantId();
 		boolean flag = merchantBankInfoService.selectMerchantBank(id, merchantId);
-		if(flag){
-			datasMap.put("status", 1);
-			datasMap.put("msg", "设置成功!");
+		if (flag) {
+			datasMap.put(BaseCode.STATUS.toString(), 1);
+			datasMap.put(BaseCode.MSG.getBaseCode(), "设置成功!");
 			return datasMap;
 		}
-		datasMap.put("status", StatusCode.FORMAT_ERR.getStatus());
-		datasMap.put("msg", "参数错误,修改失败!");
+		datasMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+		datasMap.put(BaseCode.MSG.getBaseCode(), "参数错误,修改失败!");
 		return datasMap;
 	}
 
 	/**
 	 * 删除商户银行卡信息
+	 * 
 	 * @param id
 	 */
-	public Map<String,Object> deleteBankInfo(long id) {
-		Map<String,Object> datasMap = new HashMap<>();
+	public Map<String, Object> deleteBankInfo(long id) {
+		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
 		String merchantId = merchantInfo.getMerchantId();
-		boolean reFlag = merchantBankInfoService.deleteMerchantBankInfo(id,merchantId);
-		if(reFlag){
-			datasMap.put("status", 1);
-			datasMap.put("msg", "删除成功!");
+		boolean reFlag = merchantBankInfoService.deleteMerchantBankInfo(id, merchantId);
+		if (reFlag) {
+			datasMap.put(BaseCode.STATUS.toString(), 1);
+			datasMap.put(BaseCode.MSG.getBaseCode(), "删除成功!");
 			return datasMap;
 		}
-		datasMap.put("status", StatusCode.FORMAT_ERR.getStatus());
-		datasMap.put("msg", "参数错误,删除失败!");
+		datasMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+		datasMap.put(BaseCode.MSG.getBaseCode(), "参数错误,删除失败!");
 		return datasMap;
 	}
+	
+	
 }

@@ -70,6 +70,8 @@ public class FileUpLoadService {
 							try {
 								if (compressPic.compressPic(fi.getStoreLocation(),path,imgName, width, height, true)) {
 									strl.add(imgName);
+								}else{
+									strl.add("");
 								}
 							} catch (IllegalStateException e) {
 								e.printStackTrace();
