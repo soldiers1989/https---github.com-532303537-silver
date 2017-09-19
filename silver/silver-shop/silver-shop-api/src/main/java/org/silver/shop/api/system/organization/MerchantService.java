@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.RecordInfo;
 
 /**
@@ -35,7 +36,7 @@ public interface MerchantService {
 	 * @param account
 	 * @return
 	 */
-	public Map<String, Object> findMerchantBy(String account);
+	public List<Object> findMerchantBy(String account);
 
 	/**
 	 * 获取数据库查询自增ID后,自编ID
@@ -66,4 +67,12 @@ public interface MerchantService {
 	 */
 	public Map<String,Object> editBusinessInfo( Object merchantInfo, List<Object> imglist,  int[] array, String customsregistrationCode, String organizationCode, String checktheRegistrationCode);
 
+	/**
+	 * 更新商户登录密码
+	 * @param merchantInfo  商户实体类
+	 * @param newLoginPassword 新登录密码
+	 */
+	public Map<String,Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword);
+
+	
 }

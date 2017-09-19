@@ -22,7 +22,7 @@ public class Merchant implements Serializable {
 	private String merchantPhone;// 商户手机号码
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱
-	private String merchantIdcard;// 商户身份证号码
+	private String merchantIdCard;// 商户身份证号码
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
 	private String merchantBusinessLicenseLink;// 企业营业执照(图片地址)
@@ -119,12 +119,12 @@ public class Merchant implements Serializable {
 		this.merchantEmail = merchantEmail;
 	}
 
-	public String getMerchantIdcard() {
-		return merchantIdcard;
+	public String getMerchantIdCard() {
+		return merchantIdCard;
 	}
 
-	public void setMerchantIdcard(String merchantIdcard) {
-		this.merchantIdcard = merchantIdcard;
+	public void setMerchantIdCard(String merchantIdCard) {
+		this.merchantIdCard = merchantIdCard;
 	}
 
 

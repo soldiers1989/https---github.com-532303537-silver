@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.organization;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,15 +19,12 @@ import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import net.sf.json.JSONObject;
-
 /**
  * 商戶Transaction(事物)层
  */
 @Service("merchantTransaction")
 public class MerchantTransaction {
-	private static final String STATUS = "status";
-
+	private static final String MERCHANTINFO = LoginType.MERCHANT.toString() + "_info";
 	@Autowired
 	private MerchantService merchantService;
 	@Autowired
@@ -71,17 +67,17 @@ public class MerchantTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
-		String status = reIdMap.get(STATUS) + "";
+		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
 		if (status.equals("1")) {// 从数据库获取ID成功
 			// 获取返回来的商户ID
-			String merchantId = reIdMap.get("datas") + "";
+			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 			// 商户注册
 			datasMap = merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
 					merchantIdCardName, recordInfoPack, type);
 			return datasMap;
 		}
-		datasMap.put(STATUS, StatusCode.NOTICE.getStatus());
-		datasMap.put("msg", "注册失败,请检查商户信息是否正确！");
+		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+		datasMap.put(BaseCode.MSG.getBaseCode(), "注册失败,请检查商户信息是否正确！");
 		return datasMap;
 	}
 
@@ -89,43 +85,46 @@ public class MerchantTransaction {
 	 * 商户登录
 	 * 
 	 * @param account
-	 * @return
+	 *            账号
+	 * @param loginPassword
+	 *            登录密码
+	 * @return map
 	 */
 	public Map<String, Object> merchantLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
-		Map<String, Object> datasMap = merchantService.findMerchantBy(account);
-		if (!datasMap.isEmpty()) {
-			if ((int) datasMap.get(STATUS) == 1) {// 查询商户成功
-				List<Merchant> merchantList = (List<Merchant>) datasMap.get("datas");
-				String name = merchantList.get(0).getMerchantName();
-				String loginpas = merchantList.get(0).getLoginPassword();
-				String md5Pas = md5.getMD5ofStr(loginPassword);
-				// 判断查询出的账号密码与前台登录的账号密码是否一致
-				if (account.equals(name) && md5Pas.equals(loginpas)) {
-					datasMap.clear();
-					WebUtil.getSession().setAttribute(LoginType.MERCHANT.toString() + "_info", merchantList.get(0));
-					datasMap.put(STATUS, StatusCode.SUCCESS.getStatus());
-					datasMap.put("msg", "登录成功");
-					return datasMap;
+		Map<String, Object> datasMap = new HashMap<>();
+		List<Object> reList = merchantService.findMerchantBy(account);
+		if (!reList.isEmpty()) {// 商户数据不为空
+			Merchant merchant = (Merchant) reList.get(0);
+			String name = merchant.getMerchantName();
+			String loginpas = merchant.getLoginPassword();
+			String md5Pas = md5.getMD5ofStr(loginPassword);
+			// 判断查询出的账号密码与前台登录的账号密码是否一致
+			if (account.equals(name) && md5Pas.equals(loginpas)) {
+				Subject currentUser = SecurityUtils.getSubject();
+				// 获取商户登录时,shiro存入在session中的数据
+				Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+				if (merchantInfo == null) {
+					WebUtil.getSession().setAttribute(MERCHANTINFO, reList.get(0));
 				}
+				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
+				return datasMap;
 			}
-
 		}
 		return null;
 	}
 
 	/**
-	 * 修改商户业务信息
+	 * 修改商户业务信息(图片及编码)
 	 * 
 	 * @param req
-	 * @return
+	 * @return map
 	 */
 	public Map<String, Object> editBusinessInfo(HttpServletRequest req) {
-		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession()
-				.getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
 		// 海关注册编码
 		String customsregistrationCode = req.getParameter("merchantCustomsregistrationCode");
 		// 组织机构编码
@@ -134,33 +133,50 @@ public class MerchantTransaction {
 		String checktheRegistrationCode = req.getParameter("merchantChecktheRegistrationCode");
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/business/", ".jpg",
 				true, 800, 800, null);
-		System.out.println("-0---->" + JSONObject.fromObject(imgMap).toString());
-		//获取文件上传后的文件名称
-		List<Object> imglist = (List) imgMap.get("datas");
-		//获取前台传递过来的图片数量
+		// 获取文件上传后的文件名称
+		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
+		// 获取前台传递过来的图片数量
 		int imgLength = Integer.parseInt(req.getParameter("imgLength"));
-		//创建一个与前台图片数量一样长度的数组
+		// 创建一个与前台图片数量一样长度的数组
 		int[] array = new int[imgLength];
 		for (int i = 0; i < imgLength; i++) {
 			array[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
 		}
-		datasMap = merchantService.editBusinessInfo(merchantInfo, imglist, array, customsregistrationCode,
-				organizationCode, checktheRegistrationCode);
-		boolean reFlag = (boolean) datasMap.get(STATUS);
+		Map<String, Object> datasMap = merchantService.editBusinessInfo(merchantInfo, imglist, array,
+				customsregistrationCode, organizationCode, checktheRegistrationCode);
+		boolean reFlag = (boolean) datasMap.get(BaseCode.STATUS.getBaseCode());
 		if (reFlag) {
-			datasMap.put(STATUS, 1);
-			datasMap.put("msg", "更新成功,待审核！");
+			datasMap.put(BaseCode.STATUS.getBaseCode(), 1);
+			datasMap.put(BaseCode.MSG.getBaseCode(), "更新成功,待审核！");
 			Merchant reMerchantInfo = (Merchant) datasMap.get("datas");
 			// 更新session中的实体数据
-			WebUtil.getSession().setAttribute(LoginType.MERCHANT.toString() + "_info", reMerchantInfo);
+			WebUtil.getSession().setAttribute(MERCHANTINFO, reMerchantInfo);
 			return datasMap;
 		}
-		datasMap.put(STATUS, StatusCode.WARN.getStatus());
-		datasMap.put("msg", StatusCode.WARN.getMsg());
+		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+		datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 		return datasMap;
 	}
 
-	public static void main(String[] args) {
-		int[] array = new int[0];
+	public Map<String, Object> editLoginPassword(String oldLoginPassword, String newLoginPassword) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		// 获取登录后的商户账号
+		String account = merchantInfo.getMerchantName();
+		//验证输入的原密码是否能登录
+		Map<String, Object> reMap = merchantLogin(account, oldLoginPassword);
+		if (reMap != null) {
+			String status =  reMap.get(BaseCode.STATUS.getBaseCode())+"";
+			if (status.equals("1")) {
+				datasMap = merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
+			} else {
+				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+				datasMap.put(BaseCode.MSG.getBaseCode(), "原登录密码输入错误");
+			}
+		}
+		return datasMap;
+
 	}
 }

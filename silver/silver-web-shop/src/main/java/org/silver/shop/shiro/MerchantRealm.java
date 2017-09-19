@@ -1,7 +1,6 @@
 package org.silver.shop.shiro;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;

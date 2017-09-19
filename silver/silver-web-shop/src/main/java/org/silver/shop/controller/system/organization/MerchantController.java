@@ -176,7 +176,7 @@ public class MerchantController {
 	}
 
 	/**
-	 * 修改商户业务信息(营业执照、税务登记证等等图片及代码)
+	 * 修改商户业务信息(营业执照、税务登记证等等图片及编码)
 	 * 
 	 * @param merchantInfoPack
 	 * @return
@@ -195,6 +195,9 @@ public class MerchantController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 注销商户信息
+	 */
 	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户注销")
@@ -206,4 +209,25 @@ public class MerchantController {
 		}
 	}
 
+	@RequestMapping(value = "/editMerchantLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("修改商户登录密码")
+	@RequiresRoles("Merchant")
+	public String editMerchantLoginPassword(@RequestParam("loginPassword") String oldLoginPassword,
+			@RequestParam("newLoginPassword") String newLoginPassword) {
+		Map<String, Object> statusMap = new HashMap<>();
+		if (oldLoginPassword != null && newLoginPassword !=null) {
+			statusMap = merchantTransaction.editLoginPassword(oldLoginPassword,newLoginPassword);
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@ResponseBody
+	@RequestMapping(value = "/checkMerchantRealName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("检查商户实名")
+	@RequiresRoles("Merchant")
+	public String checkMerchantRealName() {
+
+		return null;
+	}
 }

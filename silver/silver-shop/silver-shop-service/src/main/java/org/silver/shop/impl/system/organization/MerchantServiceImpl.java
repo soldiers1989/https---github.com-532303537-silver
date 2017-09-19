@@ -35,8 +35,7 @@ public class MerchantServiceImpl implements MerchantService {
 	private static final String EBPENTNO = "ebpEntNo";
 	// 电商平台名称
 	private static final String EBPENTNAME = "EBPEntName";
-	// 返回状态
-	private static final String STATUS = "status";
+	
 	//
 	static List<Map> list = null;
 	static {
@@ -130,7 +129,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantCusNo("YM_" + merchantId);
 			merchant.setMerchantName(account);
 			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
-			merchant.setMerchantIdcard(merchantIdCard);
+			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
 			merchant.setCreateBy(account);
@@ -156,7 +155,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantCusNo("TP_" + merchantId);
 			merchant.setMerchantName(account);
 			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
-			merchant.setMerchantIdcard(merchantIdCard);
+			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
 			merchant.setCreateBy(account);
@@ -215,17 +214,11 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String, Object> findMerchantBy(String account) {
-		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put("merchantName", account);
-		List reList = merchantDao.findByProperty(Merchant.class, datasMap, 0, 0);
-		if (!reList.isEmpty()) {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), 1);
-			datasMap.put(BaseCode.DATAS.getBaseCode(), reList);
-			return datasMap;
-		}
-		datasMap.put(BaseCode.STATUS.getBaseCode(), -1);
-		return datasMap;
+	public List<Object> findMerchantBy(String account) {
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("merchantName", account);
+		
+		return merchantDao.findByProperty(Merchant.class, paramsMap, 0, 0);
 	}
 
 	@Override
@@ -276,5 +269,19 @@ public class MerchantServiceImpl implements MerchantService {
 		return entityMap;
 	}
 
-	
+	@Override
+	public Map<String,Object> updateLoginPassword(Merchant merchantInfo,String newLoginPassword) {
+		Map<String,Object> reMap = new HashMap<>();
+		MD5 md5 = new MD5();
+		merchantInfo.setLoginPassword(md5.getMD5ofStr(newLoginPassword));
+		boolean flag = merchantDao.update(merchantInfo);
+		if(flag){
+			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
+			reMap.put(BaseCode.MSG.getBaseCode(), "修改成功");
+		}else{
+			reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
+			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
+		}
+		return reMap;
+	}
 }
