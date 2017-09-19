@@ -73,6 +73,7 @@
 				/logout=anon
 				/*.ico=anon
 				/upload/*=anon
+				/merchantGoods/*=anon
 				/resource/*=anon
 				/res/*=anon
 				/unauthorized=anon

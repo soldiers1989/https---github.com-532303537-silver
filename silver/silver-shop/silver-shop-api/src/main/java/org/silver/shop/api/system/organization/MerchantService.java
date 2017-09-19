@@ -39,8 +39,7 @@ public interface MerchantService {
 	public List<Object> findMerchantBy(String account);
 
 	/**
-	 * 获取数据库查询自增ID后,自编ID
-	 * 
+	 * 获取商户自增ID后,自编ID
 	 * @return Map
 	 */
 	public Map<String, Object> findOriginalMerchantId();
