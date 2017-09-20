@@ -35,7 +35,7 @@ public class MerchantBankInfoTransaction {
 		// key=(表中列名),value=传递过来的值
 		dataMap.put("merchantId", merchantInfo.getMerchantId());
 		List<Object> reList = merchantBankInfoService.findMerchantBankInfo(dataMap, page, size);
-		if (!reList.isEmpty()) {
+		if (reList !=null && !reList.isEmpty()) {
 			dataMap.clear();
 			return reList;
 		}

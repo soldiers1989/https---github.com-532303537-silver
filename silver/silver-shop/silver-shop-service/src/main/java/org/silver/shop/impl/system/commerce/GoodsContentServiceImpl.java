@@ -52,12 +52,11 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		// 拼接多张图片字符串
 		for (int i = 0; i < imgList.size(); i++) {
 			String imgStr = imgList.get(i) + "";
-			if (!"".equals(imgStr) || imgStr != null) {
+			if (imgStr != null && !"".equals(imgStr.trim())) {
 				goodsImage = goodsImage + imgStr + ";";
 			} else {
 				return false;
 			}
-
 		}
 		GoodsContent goodsInfo = new GoodsContent();
 		goodsInfo.setGoodsId(goodsId);
@@ -81,4 +80,75 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		flag = goodsContentDao.add(goodsInfo);
 		return flag;
 	}
+
+	@Override
+	public List<Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName, String startTime,
+			String endTime, String ymYear, int page, int size) {
+		// key=数据库列名,value=查询参数
+		Map<String, Object> params = new HashMap<>();
+		if (goodsId != null && !"".equals(goodsId.trim())) {
+			params.put("goodsId", goodsId);
+			page = 0;
+			size = 0;
+			System.out.println("根據ID查詢");
+		} else {
+			if (merchantName != null && !"".equals(merchantName.trim())) {
+				params.put("goodsMerchantName", merchantName);
+			}
+			if (startTime != null && !"".equals(startTime.trim())) {
+				params.put("goodsName", goodsName);
+			}
+			if (ymYear != null && !"".equals(ymYear.trim())) {
+				params.put("ymYear", ymYear);
+			}
+			System.out.println("模糊查詢");
+		}
+		return goodsContentDao.findBlurryProperty(GoodsContent.class, params, startTime, endTime, page, size);
+	}
+
+	@Override
+	public boolean editGoodsBaseInfo(String goodsId, String goodsName, String goodsFirstType, String goodsSecondType,
+			String goodsThirdType, List<Object> imgList, String goodsDetail, String goodsBrand, String goodsStyle,
+			String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
+			String merchantName) {
+		Date date = new Date();
+		boolean flag = false;
+		String goodsImage = "";
+		// 拼接多张图片字符串
+		for (int i = 0; i < imgList.size(); i++) {
+			String imgStr = imgList.get(i) + "";
+			if (imgStr != null && !"".equals(imgStr.trim())) {
+				goodsImage = goodsImage + imgStr + ";";
+			} else {
+				return false;
+			}
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("goodsId", goodsId);
+		params.put("goodsMerchantName", merchantName);
+		// 根据商品ID查询商品基本信息
+		List reList = goodsContentDao.findByProperty(GoodsContent.class, params, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
+			goodsInfo.setGoodsName(goodsName);
+			goodsInfo.setGoodsImage(goodsImage);
+			goodsInfo.setGoodsFirstType(goodsFirstType);
+			goodsInfo.setGoodsSecondType(goodsSecondType);
+			goodsInfo.setGoodsThirdType(goodsThirdType);
+			goodsInfo.setGoodsDetail(goodsDetail);
+			goodsInfo.setGoodsBrand(goodsBrand);
+			goodsInfo.setGoodsStyle(goodsStyle);
+			goodsInfo.setGoodsUnit(goodsUnit);
+			goodsInfo.setGoodsRegPrice(Long.parseLong(goodsRegPrice));
+			goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
+			goodsInfo.setGoodsBarCode(goodsBarCode);
+			goodsInfo.setUpdateDate(date);
+			goodsInfo.setUpdateBy(merchantName);
+			goodsInfo.setDeletFlag(0);
+			flag = goodsContentDao.update(goodsInfo);
+		}
+
+		return flag;
+	}
+
 }

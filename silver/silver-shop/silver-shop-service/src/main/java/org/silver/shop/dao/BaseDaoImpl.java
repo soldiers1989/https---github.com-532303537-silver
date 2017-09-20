@@ -1,6 +1,10 @@
 package org.silver.shop.dao;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +13,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 
@@ -120,44 +125,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	/*
-	 * public List findByProperty(String propertyName, Object value) { return
-	 * findByProperty(propertyName, value, 0, 0); }
-	 */
-
-	// 共用findByProperty,此方法暂时不用,
-	/*
-	 * public List<Object> findByProperty(Class entity,String propertyName,
-	 * Object value, int page, int size) { Session session = null; String enName
-	 * = entity.getSimpleName(); try { String queryString =
-	 * "from "+enName+" as model where model." + propertyName + "= ?"; session =
-	 * getSession(); System.out.println(session); Query queryObject =
-	 * session.createQuery(queryString); queryObject.setParameter(0, value); if
-	 * (page > 0 && size > 0) { queryObject.setFirstResult((page - 1) *
-	 * size).setMaxResults(size); } List<Object> l = queryObject.list();
-	 * session.close(); return l; } catch (RuntimeException re) {
-	 * re.printStackTrace(); return null; } finally { if (session != null &&
-	 * session.isOpen()) { session.close(); } } }
-	 */
-
-	// 待说明
-	/*
-	 * public Long findByPropertyCount(Map<String, Object> params) { Session
-	 * session = null; try { String hql =
-	 * "select count(model) from Member model "; List<Object> list = new
-	 * ArrayList<Object>(); if (params != null && params.size() > 0) { hql +=
-	 * "where "; String property; Iterator<String> is =
-	 * params.keySet().iterator(); while (is.hasNext()) { property = is.next();
-	 * hql = hql + "model." + property + "=" + "?" + " and ";
-	 * list.add(params.get(property)); } hql += " 1=1 "; } session =
-	 * getSession(); Query query = session.createQuery(hql); if (list.size() >
-	 * 0) { for (int i = 0; i < list.size(); i++) { query.setParameter(i,
-	 * list.get(i)); } } Long count = (Long) query.uniqueResult();
-	 * session.close(); return count; } catch (Exception re) { return (long) 0;
-	 * } finally { if (session != null && session.isOpen()) { session.close(); }
-	 * } }
-	 */
-
 	// 根据实体查询实体表中所有数据
 	@Override
 	public List<Object> findAll(Class entity, int page, int size) {
@@ -253,20 +220,63 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
+	public List<Object> findBlurryProperty(Class entity, Map params, String startTime,
+			String endTime, int page, int size) { 
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = "from " + entName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += "where ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " like " + " ? " + " and ";
+					list.add(params.get(property));
+				}
+				if (startTime != null && !"".equals(startTime.trim())) {
+					hql = hql + "model.createDate >= '" + startTime + " 00:00:00'" + " and ";
+				}
+				if (endTime != null && !"".equals(endTime.trim())) {
+					hql = hql + "model.createDate <= '" + endTime + " 23:59:59'" + " and ";
+				}
+				hql += " 1=1 ";
+			}
+			Query query = session.createQuery(hql);
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, "%" + list.get(i) + "%");
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<Object> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		BaseDaoImpl ud = new BaseDaoImpl();
+		Map<String, Object> paramMap = new HashMap<>();
+		BaseDaoImpl bd = new BaseDaoImpl();
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId("测试ID");
 		merchant.setMerchantCusNo("商户编码");
-		// List reList= ud.findByProperty(Merchant.class, "merchantName",
-		// "dang_Star@live.com", 0,0);
-		/*
-		 * for(int x =0 ; x<reList.size();x++){ Merchant list = (Merchant)
-		 * reList.get(x); System.out.println(list.getMerchantName());
-		 * System.out.println(list.getLoginPassword()); }
-		 */
-		System.out.println();
+		paramMap.put("goodsMerchantName", "商户测试");
+		
+		}
 
-	}
 }

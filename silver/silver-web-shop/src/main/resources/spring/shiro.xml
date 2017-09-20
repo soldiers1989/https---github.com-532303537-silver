@@ -68,6 +68,7 @@
 				/merchantBank/*=anon
 				/merchant/*=anon
 				/category/*=anon
+				/country/*=anon
 				/tests/a=anon
 				/manage/manageLoginController/*=anon
 				/logout=anon

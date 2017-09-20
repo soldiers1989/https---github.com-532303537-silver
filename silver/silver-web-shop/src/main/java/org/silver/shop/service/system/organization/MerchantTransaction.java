@@ -1,5 +1,6 @@
 package org.silver.shop.service.system.organization;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,7 @@ public class MerchantTransaction {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Object> reList = merchantService.findMerchantBy(account);
-		if (!reList.isEmpty()) {// 商户数据不为空
+		if (reList !=null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
 			String name = merchant.getMerchantName();
 			String loginpas = merchant.getLoginPassword();
@@ -177,6 +178,5 @@ public class MerchantTransaction {
 			}
 		}
 		return datasMap;
-
 	}
 }

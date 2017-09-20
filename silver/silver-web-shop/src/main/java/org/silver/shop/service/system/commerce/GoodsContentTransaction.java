@@ -2,6 +2,7 @@ package org.silver.shop.service.system.commerce;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
@@ -74,13 +76,56 @@ public class GoodsContentTransaction {
 		return flag;
 	}
 
-	public Map<String, Object> findAllGoodsInfo(String goodsName, String starDate, String endDate, String ymYear) {
+	public Map<String, Object> findAllGoodsInfo(String goodsId,String goodsName, String startTime, String endTime, String ymYear,
+			int page, int size) {
+		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
-		String name = merchantInfo.getMerchantName();
-		
-		return null;
+		String merchantName = merchantInfo.getMerchantName();
+		if (merchantName != null && !"".equals(merchantName.trim())) {
+			List<Object> datasList = goodsContentService.blurryFindGoodsInfo(goodsId,merchantName, goodsName, startTime,
+					endTime, ymYear, page, size);
+			if (datasList != null && !datasList.isEmpty()) {
+				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+				datasMap.put(BaseCode.DATAS.getBaseCode(), datasList);
+				datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			}
+		} else {
+			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.PERMISSION_DENIED.getStatus());
+			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.PERMISSION_DENIED.getMsg());
+		}
+		return datasMap;
+	}
+
+	public boolean editMerchantGoodsBaseInfo(HttpServletRequest req) {
+		boolean flag = false;
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg",
+				false, 800, 800, null);
+		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
+		if(status.equals("1")){
+			String goodsId = req.getParameter("goodsId");
+			String goodsName = req.getParameter("goodsName");
+			String goodsFirstType = req.getParameter("goodsFirstType");
+			String goodsSecondType = req.getParameter("goodsSecondType");
+			String goodsThirdType = req.getParameter("goodsThirdType");
+			List<Object> imgList = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
+			String goodsDetail = req.getParameter("goodsDetail");
+			String goodsBrand = req.getParameter("goodsBrand");
+			String goodsStyle = req.getParameter("goodsStyle");
+			String goodsUnit = req.getParameter("goodsUnit");
+			String goodsRegPrice = req.getParameter("goodsRegPrice");
+			String goodsOriginCountry = req.getParameter("goodsOriginCountry");
+			String goodsBarCode = req.getParameter("goodsBarCode");
+			String merchantName = merchantInfo.getMerchantName();
+					
+			flag = goodsContentService.editGoodsBaseInfo(goodsId,goodsName,goodsFirstType,goodsSecondType,goodsThirdType,
+					imgList,goodsDetail,goodsBrand,goodsStyle,goodsUnit,goodsRegPrice,goodsOriginCountry,goodsBarCode,merchantName);
+		}
+		return false;
 	}
 
 }

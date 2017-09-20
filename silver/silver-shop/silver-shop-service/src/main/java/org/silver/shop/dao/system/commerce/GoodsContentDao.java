@@ -36,4 +36,16 @@ public interface GoodsContentDao {
 	 */
 	public boolean update(GoodsContent entity);
 
+	/**
+	 * 模糊查询数据匹配时间段参数
+	 * 
+	 * @param entity 实体类名
+	 * @param params 属性键值对
+	 * @param page	页面属性
+	 * @param size	页面数值
+	 * @param startTime 开始时间
+	 * @param endTime	结束时间
+	 * @return List
+	 */
+	public List<Object> findBlurryProperty(Class entity,Map params ,String startTime,String endTime,int page,int size);
 }

@@ -22,12 +22,18 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	}
 
 	@Override
-	public List<Object> findByProperty(Class entity, Map params,  int page, int size) {
-		return super.findByProperty(entity, params,  page, size);
+	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
+		return super.findByProperty(entity, params, page, size);
 	}
 
 	@Override
 	public boolean update(GoodsContent entity) {
 		return super.update(entity);
+	}
+
+	@Override
+	public List<Object> findBlurryProperty(Class entity, Map params, String startTime, String endTime, int page,
+			int size) {
+		return super.findBlurryProperty(entity, params, startTime, endTime, page, size);
 	}
 }

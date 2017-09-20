@@ -37,4 +37,43 @@ public interface GoodsContentService {
 	 */
 	public Map<String, Object> findGoodsId();
 
+
+
+	/**
+	 * 商户模糊查询商品基本信息
+	 * @param goodsId 
+	 * @param merchantName 商户名
+	 * @param goodsName	商品名
+	 * @param starTime 开始时间
+	 * @param endTime 结束时间
+	 * @param ymYear 商品年份
+	 * @param size 
+	 * @param page 
+	 */
+	public List<Object> blurryFindGoodsInfo(String goodsId,String merchantName, String goodsName, String startTime, String endTime, String ymYear,  int page, int size);
+
+
+
+	/**
+	 *  商户修改商品基本信息
+	 * @param goodsId
+	 * @param goodsName
+	 * @param goodsFirstType
+	 * @param goodsSecondType
+	 * @param goodsThirdType
+	 * @param imgList
+	 * @param goodsDetail
+	 * @param goodsBrand
+	 * @param goodsStyle
+	 * @param goodsUnit
+	 * @param goodsRegPrice
+	 * @param goodsOriginCountry
+	 * @param goodsBarCode
+	 * @param merchantName 
+	 * @return
+	 */
+	public boolean editGoodsBaseInfo(String goodsId, String goodsName, String goodsFirstType, String goodsSecondType,
+			String goodsThirdType, List<Object> imgList, String goodsDetail, String goodsBrand, String goodsStyle,
+			String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode, String merchantName);
+
 }

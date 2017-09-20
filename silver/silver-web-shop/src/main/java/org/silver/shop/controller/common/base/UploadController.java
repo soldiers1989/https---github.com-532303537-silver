@@ -44,7 +44,8 @@ public class UploadController {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
-		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/";
+		String merchantName= merchantInfo.getMerchantName();
+		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/"+merchantName+"/";
 		try {
 			req.setCharacterEncoding("utf-8");
 		} catch (UnsupportedEncodingException e2) {
@@ -57,7 +58,7 @@ public class UploadController {
 		up.setAllowFiles(fileType);
 		up.setMaxSize(100000); // 单位KB
 		try {
-			up.upload(path);
+			up.upload(path,merchantName);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
