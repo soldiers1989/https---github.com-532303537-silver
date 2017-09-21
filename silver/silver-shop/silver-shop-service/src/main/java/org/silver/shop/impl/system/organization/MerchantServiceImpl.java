@@ -134,11 +134,11 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
 			merchant.setCreateBy(account);
 			merchant.setCreateDate(dateTime);
-			merchant.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
+			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			recordInfo.setMerchantId(merchantId);
 			recordInfo.setCreateBy(account);
 			recordInfo.setCreateDate(dateTime);
-			recordInfo.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
+			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
 			merchantFlag = merchantDao.add(merchant);
 			if (merchantFlag) {
@@ -160,7 +160,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
 			merchant.setCreateBy(account);
 			merchant.setCreateDate(dateTime);
-			merchant.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
+			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
 			merchantFlag = merchantDao.add(merchant);
 			if (merchantFlag) {
@@ -191,7 +191,7 @@ public class MerchantServiceImpl implements MerchantService {
 					recordInfo.setEbpEntName(ebpEntName);
 					recordInfo.setCreateBy(account);
 					recordInfo.setCreateDate(dateTime);
-					recordInfo.setDeletFlag(0);// 删除标识:0-未删除,1-已删除
+					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 					// 保存商户对应的电商平台名称(及编码)
 					recordFlag = addMerchantRecordInfo(recordInfo, "2");
 					if (!recordFlag) {

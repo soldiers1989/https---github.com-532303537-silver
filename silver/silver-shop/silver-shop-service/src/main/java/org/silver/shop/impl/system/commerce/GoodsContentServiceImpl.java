@@ -70,13 +70,13 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		goodsInfo.setGoodsBrand(goodsBrand);
 		goodsInfo.setGoodsStyle(goodsStyle);
 		goodsInfo.setGoodsUnit(goodsUnit);
-		goodsInfo.setGoodsRegPrice(Long.parseLong(goodsRegPrice));
+		goodsInfo.setGoodsRegPrice(Double.valueOf((goodsRegPrice)));
 		goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
 		goodsInfo.setGoodsBarCode(goodsBarCode);
 		goodsInfo.setYmYear(year + "");
 		goodsInfo.setCreateDate(date);
 		goodsInfo.setCreateBy(merchantName);
-		goodsInfo.setDeletFlag(0);
+		goodsInfo.setDeleteFlag(0);
 		flag = goodsContentDao.add(goodsInfo);
 		return flag;
 	}
@@ -90,7 +90,6 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			params.put("goodsId", goodsId);
 			page = 0;
 			size = 0;
-			System.out.println("根據ID查詢");
 		} else {
 			if (merchantName != null && !"".equals(merchantName.trim())) {
 				params.put("goodsMerchantName", merchantName);
@@ -101,8 +100,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			if (ymYear != null && !"".equals(ymYear.trim())) {
 				params.put("ymYear", ymYear);
 			}
-			System.out.println("模糊查詢");
 		}
+		// 删除标识:0-未删除,1-已删除
+		params.put("deleteFlag", 0);
 		return goodsContentDao.findBlurryProperty(GoodsContent.class, params, startTime, endTime, page, size);
 	}
 
@@ -139,15 +139,34 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			goodsInfo.setGoodsBrand(goodsBrand);
 			goodsInfo.setGoodsStyle(goodsStyle);
 			goodsInfo.setGoodsUnit(goodsUnit);
-			goodsInfo.setGoodsRegPrice(Long.parseLong(goodsRegPrice));
+			goodsInfo.setGoodsRegPrice(Double.valueOf((goodsRegPrice)));
 			goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
 			goodsInfo.setGoodsBarCode(goodsBarCode);
 			goodsInfo.setUpdateDate(date);
 			goodsInfo.setUpdateBy(merchantName);
-			goodsInfo.setDeletFlag(0);
+			goodsInfo.setDeleteFlag(0);
 			flag = goodsContentDao.update(goodsInfo);
 		}
 
+		return flag;
+	}
+
+	@Override
+	public boolean deleteBaseInfo(String merchantName, String goodsId) {
+		boolean flag = false;
+		Map<String, Object> params = new HashMap<>();
+		// key=数据库列名,value=查询参数
+		params.put("goodsMerchantName", merchantName);
+		params.put("goodsId", goodsId);
+		// 根据商户名与商品ID查询商品,确认商品是否存在
+		List reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
+		if (reList != null && reList.size() > 0) {
+			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
+			// 删除标识:0-未删除,1-已删除
+			goodsInfo.setDeleteFlag(1);
+			goodsInfo.setGoodsMerchantName(merchantName);;
+			flag = goodsContentDao.update(goodsInfo);
+		}
 		return flag;
 	}
 

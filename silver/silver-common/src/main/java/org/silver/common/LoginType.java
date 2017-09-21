@@ -1,7 +1,22 @@
 package org.silver.common;
 
 public enum LoginType {
-	USER("User"),  ADMIN("Admin") ,MERCHANT("Merchant");
+	/**
+	 * 用户
+	 */
+	USER("User"),  
+	/**
+	 * 管理员
+	 */
+	ADMIN("Admin") ,
+	/**
+	 * 商户
+	 */
+	MERCHANT("Merchant"),
+	/**
+	 * 商户的info
+	 */
+	MERCHANTINFO(MERCHANT+"_info");
 
     private String type;
 

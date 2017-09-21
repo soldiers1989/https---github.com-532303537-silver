@@ -32,13 +32,13 @@
         <property name="doneCount" type="int">
             <column name="doneCount" not-null="true"/>
         </property>
-        <property name="regPrice" type="long">
+        <property name="regPrice" type="java.lang.Double">
             <column name="regPrice" not-null="true"/>
         </property>
-        <property name="freePrice" type="long">
+        <property name="freePrice" type="java.lang.Double">
             <column name="freePrice" not-null="true"/>
         </property>
-        <property name="freight" type="long">
+        <property name="freight" type="java.lang.Double">
             <column name="freight" />
         </property>
         <property name="warehousCode" type="java.lang.String">
@@ -59,8 +59,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
-            <column name="deletFlag" />
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />

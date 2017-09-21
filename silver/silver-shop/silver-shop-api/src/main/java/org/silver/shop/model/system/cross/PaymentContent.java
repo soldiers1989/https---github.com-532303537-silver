@@ -18,7 +18,7 @@ public class PaymentContent implements Serializable{
 	private String merchantId;//商户ID
 	private String entPayNo;// 支付交易编号
 	private String payStatus;//D-代扣(款项由消费者账户转至第三方支付企业账户)S-实扣(款项由消费者账户转至收款方账户)C-取消(退款)
-	private long payAmount;// 支付企业的订单交易金额(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
+	private Double payAmount;// 支付企业的订单交易金额
 	private String payCurrCode;// 币制参照币制代码表
 	private Date payTime;// 付款时间
 	private String payerName;//支付人姓名
@@ -33,7 +33,7 @@ public class PaymentContent implements Serializable{
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新时间
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	public long getId() {
@@ -66,11 +66,12 @@ public class PaymentContent implements Serializable{
 	public void setPayStatus(String payStatus) {
 		this.payStatus = payStatus;
 	}
-	public long getPayAmount() {
-		return payAmount;
-	}
-	public void setPayAmount(long payAmount) {
+	public void setPayAmount(Double payAmount) {
 		this.payAmount = payAmount;
+	}
+	
+	public Double getPayAmount() {
+		return payAmount;
 	}
 	public String getPayCurrCode() {
 		return payCurrCode;
@@ -156,11 +157,12 @@ public class PaymentContent implements Serializable{
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

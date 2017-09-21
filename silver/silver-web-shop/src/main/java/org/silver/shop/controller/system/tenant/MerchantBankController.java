@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 商户银行Controller
+ * 商户银行Controller,商户银行卡信息的操作
  */
 @Controller
 @RequestMapping("/merchantBank")

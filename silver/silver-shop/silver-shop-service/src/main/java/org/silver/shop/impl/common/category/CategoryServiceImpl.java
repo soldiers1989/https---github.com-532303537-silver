@@ -42,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
 			firstTypeMap.put("createDate", firstType.getCreateDate());
 			firstTypeMap.put("updateBy", firstType.getUpdateBy());
 			firstTypeMap.put("updateDate", firstType.getUpdateDate());
-			firstTypeMap.put("deletFlag", firstType.getDeletFlag());
+			firstTypeMap.put("deletFlag", firstType.getDeleteFlag());
 			firstTypeMap.put("deleteBy", firstType.getDeleteBy());
 			firstTypeMap.put("deleteDate", firstType.getDeleteDate());
 			// 商品类型第二级map计数
@@ -64,7 +64,7 @@ public class CategoryServiceImpl implements CategoryService {
 					secondTypeMap.put("createDate", firstType.getCreateDate());
 					secondTypeMap.put("updateBy", firstType.getUpdateBy());
 					secondTypeMap.put("updateDate", firstType.getUpdateDate());
-					secondTypeMap.put("deletFlag", firstType.getDeletFlag());
+					secondTypeMap.put("deletFlag", firstType.getDeleteFlag());
 					secondTypeMap.put("deleteBy", firstType.getDeleteBy());
 					secondTypeMap.put("deleteDate", firstType.getDeleteDate());
 					// 商品类型第三级map计数
@@ -87,7 +87,7 @@ public class CategoryServiceImpl implements CategoryService {
 							thirdTypeMap.put("createDate", firstType.getCreateDate());
 							thirdTypeMap.put("updateBy", firstType.getUpdateBy());
 							thirdTypeMap.put("updateDate", firstType.getUpdateDate());
-							thirdTypeMap.put("deletFlag", firstType.getDeletFlag());
+							thirdTypeMap.put("deletFlag", firstType.getDeleteFlag());
 							thirdTypeMap.put("deleteBy", firstType.getDeleteBy());
 							thirdTypeMap.put("deleteDate", firstType.getDeleteDate());
 							secondTypeMap.put("thirdTypeMap" + thirdCount++, thirdTypeMap);

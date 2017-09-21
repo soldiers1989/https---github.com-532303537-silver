@@ -23,28 +23,28 @@
         <property name="payStatus" type="int">
             <column name="payStatus" not-null="true"/>
         </property>
-        <property name="orderGoodTotal" type="long">
+        <property name="orderGoodTotal" type="java.lang.Double">
             <column name="orderGoodTotal" />
         </property>
         <property name="orderGoodTotalCurr" type="java.lang.String">
             <column name="orderGoodTotalCurr" />
         </property>
-        <property name="freight" type="long">
+        <property name="freight" type="java.lang.Double">
             <column name="freight" />
         </property>
-        <property name="tax" type="long">
+        <property name="tax" type="java.lang.Double">
             <column name="tax" />
         </property>
-        <property name="otherPayment" type="long">
+        <property name="otherPayment" type="java.lang.Double">
             <column name="otherPayment" />
         </property>
-        <property name="otherPayNotes" type="long">
+        <property name="otherPayNotes" type="java.lang.Double">
             <column name="otherPayNotes" />
         </property>
-        <property name="otherCharges" type="long">
+        <property name="otherCharges" type="java.lang.Double">
             <column name="otherCharges" />
         </property>
-        <property name="actualAmountPaid" type="long">
+        <property name="actualAmountPaid" type="java.lang.Double">
             <column name="actualAmountPaid" />
         </property>
         <property name="recipientName" type="java.lang.String">
@@ -137,8 +137,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
-            <column name="deletFlag" />
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />

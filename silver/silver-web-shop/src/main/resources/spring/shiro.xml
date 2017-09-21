@@ -67,8 +67,10 @@
 				/login=anon
 				/merchantBank/*=anon
 				/merchant/*=anon
+				/goodsRecord/*=anon
 				/category/*=anon
 				/country/*=anon
+				/metering/*=anon
 				/tests/a=anon
 				/manage/manageLoginController/*=anon
 				/logout=anon

@@ -76,4 +76,14 @@ public interface GoodsContentService {
 			String goodsThirdType, List<Object> imgList, String goodsDetail, String goodsBrand, String goodsStyle,
 			String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode, String merchantName);
 
+
+
+	/**
+	 * 删除商品基本信息
+	 * @param goodsId 商品ID
+	 * @param merchantName 商户名称
+	 * @return boolean
+	 */
+	public boolean deleteBaseInfo(String merchantName, String goodsId);
+
 }

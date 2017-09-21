@@ -96,4 +96,17 @@ public interface BaseDao<T> {
 	 */
 	public List<Object> findBlurryProperty(Class entity, Map<String, Object> params,
 			String startTime, String endTime, int page, int size);
+	
+	/**
+	 * 根据实体、列(名)、值查询数据 倒序
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params
+	 *            属性
+	 * @param page
+	 * @param size
+	 * @return List
+	 */
+	public List<Object> findByPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page, int size);
 }

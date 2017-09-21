@@ -8,7 +8,7 @@ import org.silver.shop.model.system.commerce.GoodsContent;
 public interface GoodsContentDao {
 
 	/**
-	 * 查询自增ID
+	 * 查询数据库表中最后一条记录的自增ID
 	 * 
 	 * @return
 	 */

@@ -29,6 +29,6 @@ public enum BaseCode {
 
 	@Override
 	public String toString() {
-		return this.toString();
+		return this.baseCode.toString();
 	}
 }

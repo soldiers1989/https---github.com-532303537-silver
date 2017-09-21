@@ -62,7 +62,7 @@
         <property name="secUnit" type="java.lang.String">
             <column name="secUnit" />
         </property>
-        <property name="regPrice" type="long">
+        <property name="regPrice" type="java.lang.Double">
             <column name="regPrice" not-null="true"/>
         </property>
         <property name="giftFlag" type="java.lang.String">
@@ -107,8 +107,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
-            <column name="deletFlag" not-null="true"/>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" not-null="true"/>
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />

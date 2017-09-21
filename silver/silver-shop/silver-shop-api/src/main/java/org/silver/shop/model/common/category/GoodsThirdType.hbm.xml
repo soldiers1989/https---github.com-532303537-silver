@@ -8,22 +8,22 @@
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="firstTypeId" type="long">
+        <property name="firstTypeId" type="java.lang.Double">
             <column name="firstTypeId" not-null="true"/>
         </property>
-        <property name="secondTypeId" type="long">
+        <property name="secondTypeId" type="java.lang.Double">
             <column name="secondTypeId" not-null="true" />
         </property>
         <property name="goodsThirdTypeName" type="java.lang.String">
             <column name="goodsThirdTypeName" not-null="true"/>
         </property>
-        <property name="vat" type="long">
+        <property name="vat" type="java.lang.Double">
             <column name="vat" />
         </property>
-        <property name="consumptionTax" type="long">
+        <property name="consumptionTax" type="java.lang.Double">
             <column name="consumptionTax" />
         </property>
-        <property name="consolidatedTax" type="long">
+        <property name="consolidatedTax" type="java.lang.Double">
             <column name="consolidatedTax" />
         </property>
         <property name="createBy" type="java.lang.String">
@@ -38,8 +38,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
-            <column name="deletFlag" not-null="true"/>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" not-null="true"/>
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />
@@ -47,7 +47,7 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-        <property name="tariff" type="long">
+        <property name="tariff" type="java.lang.Double">
         	<column name="tariff" />
         </property>
     </class>

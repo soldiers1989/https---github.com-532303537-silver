@@ -1,54 +1,66 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+                                   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-28 17:35:30 by Hibernate Tools 3.4.0.CR1 -->
-<hibernate-mapping>
-    <class name="org.silver.shop.model.common.category.HsCode" table="ym_shop_goods_hs_code">
-        <id name="id" type="long">
-            <column name="id" />
-            <generator class="identity" />
-        </id>
-        <property name="hsCode" type="java.lang.String">
-            <column name="hsCode" not-null="true"/>
-        </property>
-        <property name="typeName" type="java.lang.String">
-            <column name="typeName" not-null="true"/>
-        </property>
-        <property name="vat" type="long">
-            <column name="vat" />
-        </property>
-        <property name="consumptionTax" type="long">
-            <column name="consumptionTax" />
-        </property>
-        <property name="consolidatedTax" type="long">
-            <column name="consolidatedTax" />
-        </property>
-        <property name="tariff" type="long">
-            <column name="tariff" />
-        </property>
-        <property name="notes" type="java.lang.String">
-            <column name="notes" />
-        </property>
-        <property name="createBy" type="java.lang.String">
-            <column name="createBy" />
-        </property>
-        <property name="createDate" type="java.util.Date">
-            <column name="createDate" />
-        </property>
-        <property name="updateBy" type="java.lang.String">
-            <column name="updateBy" />
-        </property>
-        <property name="updateDate" type="java.util.Date">
-            <column name="updateDate" />
-        </property>
-        <property name="deletFlag" type="int">
-            <column name="deletFlag" not-null="true"/>
-        </property>
-        <property name="deleteBy" type="java.lang.String">
-            <column name="deleteBy" />
-        </property>
-        <property name="deleteDate" type="java.util.Date">
-            <column name="deleteDate" />
-        </property>
-    </class>
+<hibernate-mapping default-lazy="false">
+	<class name="org.silver.shop.model.common.category.HsCode" table="ym_shop_goods_hs_code">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property generated="never" lazy="false" name="hsCode"
+			type="java.lang.String">
+			<column name="hsCode" not-null="true" />
+		</property>
+		<property generated="never" lazy="false" name="typeName"
+			type="java.lang.String">
+			<column name="typeName" not-null="true" />
+		</property>
+		<property generated="never" lazy="false" name="vat" type="java.lang.Double">
+			<column name="vat" />
+		</property>
+		<property generated="never" lazy="false" name="consumptionTax"
+			type="java.lang.Double">
+			<column name="consumptionTax" />
+		</property>
+		<property generated="never" lazy="false" name="consolidatedTax"
+			type="java.lang.Double">
+			<column name="consolidatedTax" />
+		</property>
+		<property generated="never" lazy="false" name="tariff" type="java.lang.Double">
+			<column name="tariff" />
+		</property>
+		<property generated="never" lazy="false" name="notes"
+			type="java.lang.String">
+			<column name="notes" />
+		</property>
+		<property generated="never" lazy="false" name="createBy"
+			type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property generated="never" lazy="false" name="createDate"
+			type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property generated="never" lazy="false" name="updateBy"
+			type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property generated="never" lazy="false" name="updateDate"
+			type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property generated="never" lazy="false" name="deleteFlag"
+			type="int">
+			<column name="deleteFlag" not-null="true" />
+		</property>
+		<property generated="never" lazy="false" name="deleteBy"
+			type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property generated="never" lazy="false" name="deleteDate"
+			type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+	</class>
 </hibernate-mapping>

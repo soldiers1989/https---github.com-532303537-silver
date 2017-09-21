@@ -24,7 +24,7 @@ public class GoodsContent implements Serializable {
 	private String goodsBrand;// 商品品牌
 	private String goodsStyle;// 商品规格
 	private String goodsUnit;// 申报计量单位
-	private long goodsRegPrice;// 商品价格(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
+	private Double goodsRegPrice;// 商品价格
 	private String goodsOriginCountry;// 商品原厂国
 	private String goodsBarCode;// 商品货号(条形码)
 	private String ymYear;//商品录入年份
@@ -32,7 +32,7 @@ public class GoodsContent implements Serializable {
 	private Date createDate;//创建时间
 	private String updateBy;//修改人
 	private Date updateDate;//修改时间
-	private int deletFlag;//删除标识:0-未删除,1-已删除
+	private int deleteFlag;//删除标识:0-未删除,1-已删除
 	private String deleteBy;//删除人
 	private Date deleteDate;//删除时间
 	public long getId() {
@@ -107,10 +107,11 @@ public class GoodsContent implements Serializable {
 	public void setGoodsUnit(String goodsUnit) {
 		this.goodsUnit = goodsUnit;
 	}
-	public long getGoodsRegPrice() {
+	
+	public Double getGoodsRegPrice() {
 		return goodsRegPrice;
 	}
-	public void setGoodsRegPrice(long goodsRegPrice) {
+	public void setGoodsRegPrice(Double goodsRegPrice) {
 		this.goodsRegPrice = goodsRegPrice;
 	}
 	public String getGoodsOriginCountry() {
@@ -156,11 +157,12 @@ public class GoodsContent implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

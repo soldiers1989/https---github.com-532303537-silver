@@ -24,8 +24,6 @@ import com.alibaba.dubbo.config.annotation.Reference;
 @Service("goodsContentTransaction")
 public class GoodsContentTransaction {
 
-	private static final String MERCHANTINFO = LoginType.MERCHANT.toString() + "_info";
-
 	@Reference
 	private GoodsContentService goodsContentService;
 	@Autowired
@@ -35,7 +33,7 @@ public class GoodsContentTransaction {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg",
 				false, 800, 800, null);
 		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
@@ -76,16 +74,16 @@ public class GoodsContentTransaction {
 		return flag;
 	}
 
-	public Map<String, Object> findAllGoodsInfo(String goodsId,String goodsName, String startTime, String endTime, String ymYear,
-			int page, int size) {
+	public Map<String, Object> findAllGoodsInfo(String goodsId, String goodsName, String startTime, String endTime,
+			String ymYear, int page, int size) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		if (merchantName != null && !"".equals(merchantName.trim())) {
-			List<Object> datasList = goodsContentService.blurryFindGoodsInfo(goodsId,merchantName, goodsName, startTime,
-					endTime, ymYear, page, size);
+			List<Object> datasList = goodsContentService.blurryFindGoodsInfo(goodsId, merchantName, goodsName,
+					startTime, endTime, ymYear, page, size);
 			if (datasList != null && !datasList.isEmpty()) {
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.DATAS.getBaseCode(), datasList);
@@ -102,11 +100,11 @@ public class GoodsContentTransaction {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg",
 				false, 800, 800, null);
 		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if(status.equals("1")){
+		if (status.equals("1")) {
 			String goodsId = req.getParameter("goodsId");
 			String goodsName = req.getParameter("goodsName");
 			String goodsFirstType = req.getParameter("goodsFirstType");
@@ -121,11 +119,30 @@ public class GoodsContentTransaction {
 			String goodsOriginCountry = req.getParameter("goodsOriginCountry");
 			String goodsBarCode = req.getParameter("goodsBarCode");
 			String merchantName = merchantInfo.getMerchantName();
-					
-			flag = goodsContentService.editGoodsBaseInfo(goodsId,goodsName,goodsFirstType,goodsSecondType,goodsThirdType,
-					imgList,goodsDetail,goodsBrand,goodsStyle,goodsUnit,goodsRegPrice,goodsOriginCountry,goodsBarCode,merchantName);
+
+			flag = goodsContentService.editGoodsBaseInfo(goodsId, goodsName, goodsFirstType, goodsSecondType,
+					goodsThirdType, imgList, goodsDetail, goodsBrand, goodsStyle, goodsUnit, goodsRegPrice,
+					goodsOriginCountry, goodsBarCode, merchantName);
 		}
 		return false;
 	}
 
+	public Map<String,Object> deleteMerchantBaseInfo(String goodsId) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantName = merchantInfo.getMerchantName();
+		boolean flag = goodsContentService.deleteBaseInfo(merchantName, goodsId);
+		if (flag) {
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		}else{
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+		}
+		return datasMap;
+	}
+	
+	
 }

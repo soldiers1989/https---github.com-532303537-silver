@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 商户controller层
+ * 商户controller,商户的操作
  */
 @Controller
 @RequestMapping("/merchant")

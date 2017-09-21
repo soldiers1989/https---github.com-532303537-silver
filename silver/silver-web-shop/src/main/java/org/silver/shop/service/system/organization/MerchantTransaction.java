@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.organization;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ import org.springframework.stereotype.Service;
  */
 @Service("merchantTransaction")
 public class MerchantTransaction {
-	private static final String MERCHANTINFO = LoginType.MERCHANT.toString() + "_info";
+
 	@Autowired
 	private MerchantService merchantService;
 	@Autowired
@@ -95,7 +94,7 @@ public class MerchantTransaction {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Object> reList = merchantService.findMerchantBy(account);
-		if (reList !=null && !reList.isEmpty()) {// 商户数据不为空
+		if (reList != null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
 			String name = merchant.getMerchantName();
 			String loginpas = merchant.getLoginPassword();
@@ -104,9 +103,9 @@ public class MerchantTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+				Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 				if (merchantInfo == null) {
-					WebUtil.getSession().setAttribute(MERCHANTINFO, reList.get(0));
+					WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reList.get(0));
 				}
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
@@ -125,15 +124,16 @@ public class MerchantTransaction {
 	public Map<String, Object> editBusinessInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantName = merchantInfo.getMerchantName();
+		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantName + "/";
 		// 海关注册编码
 		String customsregistrationCode = req.getParameter("merchantCustomsregistrationCode");
 		// 组织机构编码
 		String organizationCode = req.getParameter("merchantOrganizationCode");
 		// 报检注册编码
 		String checktheRegistrationCode = req.getParameter("merchantChecktheRegistrationCode");
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/business/", ".jpg",
-				true, 800, 800, null);
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
 		// 获取文件上传后的文件名称
 		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
 		// 获取前台传递过来的图片数量
@@ -151,7 +151,7 @@ public class MerchantTransaction {
 			datasMap.put(BaseCode.MSG.getBaseCode(), "更新成功,待审核！");
 			Merchant reMerchantInfo = (Merchant) datasMap.get("datas");
 			// 更新session中的实体数据
-			WebUtil.getSession().setAttribute(MERCHANTINFO, reMerchantInfo);
+			WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reMerchantInfo);
 			return datasMap;
 		}
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
@@ -163,13 +163,13 @@ public class MerchantTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(MERCHANTINFO);
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String account = merchantInfo.getMerchantName();
-		//验证输入的原密码是否能登录
+		// 验证输入的原密码是否能登录
 		Map<String, Object> reMap = merchantLogin(account, oldLoginPassword);
 		if (reMap != null) {
-			String status =  reMap.get(BaseCode.STATUS.getBaseCode())+"";
+			String status = reMap.get(BaseCode.STATUS.getBaseCode()) + "";
 			if (status.equals("1")) {
 				datasMap = merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
 			} else {

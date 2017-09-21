@@ -17,15 +17,15 @@ public class GoodsThirdType implements Serializable{
 	private long firstTypeId;//第一级ID
 	private long secondTypeId;//第二级ID
 	private String goodsThirdTypeName;//商品第三(级)类别名称
-	private long vat;//增值税 
-	private long consumptionTax;//消费税 
-	private long tariff;//关税税率暂设为0%
-	private long consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+	private Double vat;//增值税 
+	private Double consumptionTax;//消费税 
+	private Double tariff;//关税税率暂设为0%
+	private Double consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 	private String createBy;//创建人
 	private Date createDate;//创建时间
 	private String updateBy;//更新人
 	private Date updateDate;//更新时间
-	private int deletFlag;//删除标识:0-未删除,1-已删除
+	private int deleteFlag;//删除标识:0-未删除,1-已删除
 	private String deleteBy;//删除人
 	private Date deleteDate;//删除时间
 	public long getId() {
@@ -53,24 +53,8 @@ public class GoodsThirdType implements Serializable{
 	public void setGoodsThirdTypeName(String goodsThirdTypeName) {
 		this.goodsThirdTypeName = goodsThirdTypeName;
 	}
-	public long getVat() {
-		return vat;
-	}
-	public void setVat(long vat) {
-		this.vat = vat;
-	}
-	public long getConsumptionTax() {
-		return consumptionTax;
-	}
-	public void setConsumptionTax(long consumptionTax) {
-		this.consumptionTax = consumptionTax;
-	}
-	public long getConsolidatedTax() {
-		return consolidatedTax;
-	}
-	public void setConsolidatedTax(long consolidatedTax) {
-		this.consolidatedTax = consolidatedTax;
-	}
+	
+	
 	public String getCreateBy() {
 		return createBy;
 	}
@@ -110,18 +94,38 @@ public class GoodsThirdType implements Serializable{
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
-	public long getTariff() {
+	public Double getVat() {
+		return vat;
+	}
+	public void setVat(Double vat) {
+		this.vat = vat;
+	}
+	public Double getConsumptionTax() {
+		return consumptionTax;
+	}
+	public void setConsumptionTax(Double consumptionTax) {
+		this.consumptionTax = consumptionTax;
+	}
+	public Double getTariff() {
 		return tariff;
 	}
-	public void setTariff(long tariff) {
+	public void setTariff(Double tariff) {
 		this.tariff = tariff;
 	}
+	public Double getConsolidatedTax() {
+		return consolidatedTax;
+	}
+	public void setConsolidatedTax(Double consolidatedTax) {
+		this.consolidatedTax = consolidatedTax;
+	}
+	
 	
 	
 }
