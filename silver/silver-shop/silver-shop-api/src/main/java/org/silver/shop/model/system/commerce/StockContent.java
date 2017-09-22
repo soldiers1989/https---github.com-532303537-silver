@@ -22,16 +22,16 @@ public class StockContent implements Serializable {
 	private int paidCount;// 已支付待发货数量
 	private int shippedCount;// 已发货数量
 	private int doneCount;// 成交完成数量
-	private long regPrice; // 单价(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
-	private long freePrice;// 特价(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
-	private long freight;// 运杂费(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
+	private Double regPrice; // 单价
+	private Double freePrice;// 特价
+	private Double freight;// 运杂费
 	private String warehousCode;// 仓库编码 
 	private String warehousName;// 仓库名称
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新时间
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	public long getId() {
@@ -88,22 +88,23 @@ public class StockContent implements Serializable {
 	public void setDoneCount(int doneCount) {
 		this.doneCount = doneCount;
 	}
-	public long getRegPrice() {
+	
+	public Double getRegPrice() {
 		return regPrice;
 	}
-	public void setRegPrice(long regPrice) {
+	public void setRegPrice(Double regPrice) {
 		this.regPrice = regPrice;
 	}
-	public long getFreePrice() {
+	public Double getFreePrice() {
 		return freePrice;
 	}
-	public void setFreePrice(long freePrice) {
+	public void setFreePrice(Double freePrice) {
 		this.freePrice = freePrice;
 	}
-	public long getFreight() {
+	public Double getFreight() {
 		return freight;
 	}
-	public void setFreight(long freight) {
+	public void setFreight(Double freight) {
 		this.freight = freight;
 	}
 	public String getWarehousCode() {
@@ -142,11 +143,12 @@ public class StockContent implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

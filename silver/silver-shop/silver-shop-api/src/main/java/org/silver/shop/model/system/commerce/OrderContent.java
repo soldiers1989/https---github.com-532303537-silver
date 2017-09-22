@@ -20,14 +20,14 @@ public class OrderContent implements Serializable {
 	private String entOrderNo;// 电商平台的原始订单编号
 	private int orderStatus;// 电子订单状态0-订单确认,1-订单完成,2-订单取消
 	private int payStatus;// 支付状态0-已付款,1-未付款(待支付) 2：支付失败，3：支付超时
-	private long orderGoodTotal;// 订单商品总金额
+	private Double orderGoodTotal;// 订单商品总金额
 	private String orderGoodTotalCurr;// 订单商品总额币制-参照币制代码表
-	private long freight;// 运费：运杂费，无则填“0”
-	private long tax;// 税款-按照货款金额计算的税款，无则填“0”
-	private long otherPayment;// 抵付金额优惠减免金额，无则填“0”
-	private long otherPayNotes;// 抵付说明抵付情况说明。如果填写抵付金额时，此项必填。
-	private long otherCharges;// 其它费用无则填“0”
-	private long actualAmountPaid;// 实际支付金额 货款+运费+税款-优惠金额，与支付保持一致
+	private Double freight;// 运费：运杂费，无则填“0”
+	private Double tax;// 税款-按照货款金额计算的税款，无则填“0”
+	private Double otherPayment;// 抵付金额优惠减免金额，无则填“0”
+	private Double otherPayNotes;// 抵付说明抵付情况说明。如果填写抵付金额时，此项必填。
+	private Double otherCharges;// 其它费用无则填“0”
+	private Double actualAmountPaid;// 实际支付金额 货款+运费+税款-优惠金额，与支付保持一致
 	private String recipientName;// 收货人姓名,同运单
 	private String recipientCardId;// 收货人身份证号码
 	private String recipientTel;// 收货人电话,同运单
@@ -58,7 +58,7 @@ public class OrderContent implements Serializable {
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新时间
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	public long getId() {
@@ -97,10 +97,11 @@ public class OrderContent implements Serializable {
 	public void setPayStatus(int payStatus) {
 		this.payStatus = payStatus;
 	}
-	public long getOrderGoodTotal() {
+	
+	public Double getOrderGoodTotal() {
 		return orderGoodTotal;
 	}
-	public void setOrderGoodTotal(long orderGoodTotal) {
+	public void setOrderGoodTotal(Double orderGoodTotal) {
 		this.orderGoodTotal = orderGoodTotal;
 	}
 	public String getOrderGoodTotalCurr() {
@@ -109,40 +110,40 @@ public class OrderContent implements Serializable {
 	public void setOrderGoodTotalCurr(String orderGoodTotalCurr) {
 		this.orderGoodTotalCurr = orderGoodTotalCurr;
 	}
-	public long getFreight() {
+	public Double getFreight() {
 		return freight;
 	}
-	public void setFreight(long freight) {
+	public void setFreight(Double freight) {
 		this.freight = freight;
 	}
-	public long getTax() {
+	public Double getTax() {
 		return tax;
 	}
-	public void setTax(long tax) {
+	public void setTax(Double tax) {
 		this.tax = tax;
 	}
-	public long getOtherPayment() {
+	public Double getOtherPayment() {
 		return otherPayment;
 	}
-	public void setOtherPayment(long otherPayment) {
+	public void setOtherPayment(Double otherPayment) {
 		this.otherPayment = otherPayment;
 	}
-	public long getOtherPayNotes() {
+	public Double getOtherPayNotes() {
 		return otherPayNotes;
 	}
-	public void setOtherPayNotes(long otherPayNotes) {
+	public void setOtherPayNotes(Double otherPayNotes) {
 		this.otherPayNotes = otherPayNotes;
 	}
-	public long getOtherCharges() {
+	public Double getOtherCharges() {
 		return otherCharges;
 	}
-	public void setOtherCharges(long otherCharges) {
+	public void setOtherCharges(Double otherCharges) {
 		this.otherCharges = otherCharges;
 	}
-	public long getActualAmountPaid() {
+	public Double getActualAmountPaid() {
 		return actualAmountPaid;
 	}
-	public void setActualAmountPaid(long actualAmountPaid) {
+	public void setActualAmountPaid(Double actualAmountPaid) {
 		this.actualAmountPaid = actualAmountPaid;
 	}
 	public String getRecipientName() {
@@ -325,11 +326,12 @@ public class OrderContent implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

@@ -3,7 +3,6 @@ package org.silver.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -70,6 +69,8 @@ public class FileUpLoadService {
 							try {
 								if (compressPic.compressPic(fi.getStoreLocation(),path,imgName, width, height, true)) {
 									strl.add(imgName);
+								}else{
+									strl.add("");
 								}
 							} catch (IllegalStateException e) {
 								e.printStackTrace();

@@ -25,7 +25,7 @@ public class Member implements Serializable {
 	private Date createDate;//创建时间
 	private String updateBy;//更新人
 	private Date updateDate;//更新时间
-	private int deletFlag;//删除标识0-未删除,1-已删除
+	private int deleteFlag;//删除标识0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 	public long getId() {
@@ -112,11 +112,12 @@ public class Member implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

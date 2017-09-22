@@ -2,6 +2,10 @@ package org.silver.shop.api.system.organization;
 
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.RecordInfo;
 
 /**
@@ -14,13 +18,14 @@ public interface MerchantService {
 	 * 
 	 * @return Map
 	 */
-	public Map<String,Object> merchantRegister(String merchantId,String account, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, String type);
+	public Map<String, Object> merchantRegister(String merchantId, String account, String loginPassword,
+			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type);
 
 	/**
 	 * 检查商户名是否重复
 	 * 
-	 * @param dataMap key=(表中列名称),value=(查询参数)
+	 * @param dataMap
+	 *            key=(表中列名称),value=(查询参数)
 	 * @return List
 	 */
 	public List<Object> checkMerchantName(Map dataMap);
@@ -31,10 +36,10 @@ public interface MerchantService {
 	 * @param account
 	 * @return
 	 */
-	public Map<String, Object> findMerchantBy(String account);
+	public List<Object> findMerchantBy(String account);
 
 	/**
-	 * 获取数据库查询自增ID后,自编ID
+	 * 获取商户自增ID后,自编ID
 	 * @return Map
 	 */
 	public Map<String, Object> findOriginalMerchantId();
@@ -43,10 +48,30 @@ public interface MerchantService {
 	 * 保存商户对应的电商平台名称(及编码)
 	 * 
 	 * @param entity
-	 * @param type  1-银盟商户注册,2-第三方商户注册
+	 * @param type
+	 *            1-银盟商户注册,2-第三方商户注册
 	 * @return
 	 */
 	public boolean addMerchantRecordInfo(RecordInfo entity, String type);
-	
 
+	/**
+	 * 修改商户业务信息(图片)
+	 * @param merchantInfo 商户实体
+	 * @param imglist 上传后的图片名称
+	 * @param array	上传图片的下标
+	 * @param customsregistrationCode 海关注册编码
+	 * @param organizationCode 	组织机构编码
+	 * @param checktheRegistrationCode 报检注册编码
+	 * @return Map
+	 */
+	public Map<String,Object> editBusinessInfo( Object merchantInfo, List<Object> imglist,  int[] array, String customsregistrationCode, String organizationCode, String checktheRegistrationCode);
+
+	/**
+	 * 更新商户登录密码
+	 * @param merchantInfo  商户实体类
+	 * @param newLoginPassword 新登录密码
+	 */
+	public Map<String,Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword);
+
+	
 }

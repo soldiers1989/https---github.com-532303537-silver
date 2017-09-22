@@ -16,16 +16,16 @@ public class HsCode implements Serializable{
 	private long id;
 	private String hsCode;//HS编码
 	private String typeName;//名称
-	private long vat;//增值税 
-	private long consumptionTax;//消费税 
-	private long consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
-	private long tariff;//关税税率暂设为0%
+	private Double vat;//增值税 
+	private Double consumptionTax;//消费税 
+	private Double consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+	private Double tariff;//关税税率暂设为0%
 	private String notes;//备注
 	private String createBy;//创建人
 	private Date createDate;//创建时间
 	private String updateBy;//更新人
 	private Date updateDate;//更新时间
-	private int deletFlag;//删除标识:0-未删除,1-已删除
+	private int deleteFlag;//删除标识:0-未删除,1-已删除
 	private String deleteBy;//删除人
 	private Date deleteDate;//删除时间
 	public long getId() {
@@ -46,28 +46,29 @@ public class HsCode implements Serializable{
 	public void setTypeName(String typeName) {
 		this.typeName = typeName;
 	}
-	public long getVat() {
+	
+	public Double getVat() {
 		return vat;
 	}
-	public void setVat(long vat) {
+	public void setVat(Double vat) {
 		this.vat = vat;
 	}
-	public long getConsumptionTax() {
+	public Double getConsumptionTax() {
 		return consumptionTax;
 	}
-	public void setConsumptionTax(long consumptionTax) {
+	public void setConsumptionTax(Double consumptionTax) {
 		this.consumptionTax = consumptionTax;
 	}
-	public long getConsolidatedTax() {
+	public Double getConsolidatedTax() {
 		return consolidatedTax;
 	}
-	public void setConsolidatedTax(long consolidatedTax) {
+	public void setConsolidatedTax(Double consolidatedTax) {
 		this.consolidatedTax = consolidatedTax;
 	}
-	public long getTariff() {
+	public Double getTariff() {
 		return tariff;
 	}
-	public void setTariff(long tariff) {
+	public void setTariff(Double tariff) {
 		this.tariff = tariff;
 	}
 	public String getNotes() {
@@ -100,11 +101,12 @@ public class HsCode implements Serializable{
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

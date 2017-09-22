@@ -22,7 +22,7 @@ public class Merchant implements Serializable {
 	private String merchantPhone;// 商户手机号码
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱
-	private String merchantIdcard;// 商户身份证号码
+	private String merchantIdCard;// 商户身份证号码
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
 	private String merchantBusinessLicenseLink;// 企业营业执照(图片地址)
@@ -41,7 +41,7 @@ public class Merchant implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
@@ -119,12 +119,12 @@ public class Merchant implements Serializable {
 		this.merchantEmail = merchantEmail;
 	}
 
-	public String getMerchantIdcard() {
-		return merchantIdcard;
+	public String getMerchantIdCard() {
+		return merchantIdCard;
 	}
 
-	public void setMerchantIdcard(String merchantIdcard) {
-		this.merchantIdcard = merchantIdcard;
+	public void setMerchantIdCard(String merchantIdCard) {
+		this.merchantIdCard = merchantIdCard;
 	}
 
 
@@ -272,12 +272,14 @@ public class Merchant implements Serializable {
 		this.updateDate = updateDate;
 	}
 
-	public int getDeletFlag() {
-		return deletFlag;
+	
+
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
 
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 
 	public String getDeleteBy() {

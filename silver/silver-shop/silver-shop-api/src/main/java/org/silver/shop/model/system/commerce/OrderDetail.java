@@ -20,17 +20,17 @@ public class OrderDetail implements Serializable{
 	private String entOrderNo;//订单编号
 	private String goodsId;//商品ID
 	private String goodsName;//商品名称
-	private long goodsPrice;//商品价格
+	private Double goodsPrice;//商品价格
 	private long goodsCount;//商品数量
-	private long goodsTotal;//订单商品总价格
+	private Double goodsTotal;//订单商品总价格
 	private String goodsImage;//商品图片
-	private long Tax;//税费
-	private long logisticsCosts;//物流费
+	private Double Tax;//税费
+	private Double logisticsCosts;//物流费
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新时间
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	public long getId() {
@@ -75,10 +75,11 @@ public class OrderDetail implements Serializable{
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goodsName;
 	}
-	public long getGoodsPrice() {
+
+	public Double getGoodsPrice() {
 		return goodsPrice;
 	}
-	public void setGoodsPrice(long goodsPrice) {
+	public void setGoodsPrice(Double goodsPrice) {
 		this.goodsPrice = goodsPrice;
 	}
 	public long getGoodsCount() {
@@ -87,10 +88,10 @@ public class OrderDetail implements Serializable{
 	public void setGoodsCount(long goodsCount) {
 		this.goodsCount = goodsCount;
 	}
-	public long getGoodsTotal() {
+	public Double getGoodsTotal() {
 		return goodsTotal;
 	}
-	public void setGoodsTotal(long goodsTotal) {
+	public void setGoodsTotal(Double goodsTotal) {
 		this.goodsTotal = goodsTotal;
 	}
 	public String getGoodsImage() {
@@ -99,16 +100,16 @@ public class OrderDetail implements Serializable{
 	public void setGoodsImage(String goodsImage) {
 		this.goodsImage = goodsImage;
 	}
-	public long getTax() {
+	public Double getTax() {
 		return Tax;
 	}
-	public void setTax(long tax) {
+	public void setTax(Double tax) {
 		Tax = tax;
 	}
-	public long getLogisticsCosts() {
+	public Double getLogisticsCosts() {
 		return logisticsCosts;
 	}
-	public void setLogisticsCosts(long logisticsCosts) {
+	public void setLogisticsCosts(Double logisticsCosts) {
 		this.logisticsCosts = logisticsCosts;
 	}
 	public String getCreateBy() {
@@ -135,11 +136,12 @@ public class OrderDetail implements Serializable{
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

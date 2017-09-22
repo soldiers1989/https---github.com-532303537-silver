@@ -32,8 +32,7 @@ public class GoodsRecordContent implements Serializable {
 	private String gUnit; // 申报计量单位 计量单位代码表(UNIT)
 	private String stdUnit; // 第一法定计量单位 参照公共代码表
 	private String secUnit; // 第二法定计量单位 参照公共代码表
-	private long regPrice; // 单价 境物品：指无税的销售价格,
-							// RMB价格;(默认存储以"分钱"为单位,如：100(分钱)=1(块钱))
+	private Double regPrice; // 单价 境物品：指无税的销售价格, RMB价格;
 	private String giftFlag; // 是否赠品 0-是，1-否，默认否
 	private String originCountry;// 原产国 参照国别代码表
 	private String quality; // 商品品质及说明 用文字描述
@@ -48,7 +47,7 @@ public class GoodsRecordContent implements Serializable {
 	private Date createDate;// 创建时间
 	private String updateBy;// 修改人
 	private Date updateDate;// 修改时间
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	private String  customsCode;//主管海关代码
@@ -168,10 +167,11 @@ public class GoodsRecordContent implements Serializable {
 	public void setSecUnit(String secUnit) {
 		this.secUnit = secUnit;
 	}
-	public long getRegPrice() {
+	
+	public Double getRegPrice() {
 		return regPrice;
 	}
-	public void setRegPrice(long regPrice) {
+	public void setRegPrice(Double regPrice) {
 		this.regPrice = regPrice;
 	}
 	public String getGiftFlag() {
@@ -258,11 +258,12 @@ public class GoodsRecordContent implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public int getDeletFlag() {
-		return deletFlag;
+	
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 	public String getDeleteBy() {
 		return deleteBy;

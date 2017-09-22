@@ -29,8 +29,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="deletFlag" type="int">
-            <column name="DELETFLAG" />
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />

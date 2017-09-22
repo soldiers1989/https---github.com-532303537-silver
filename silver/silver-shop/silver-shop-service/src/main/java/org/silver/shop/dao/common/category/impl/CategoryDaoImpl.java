@@ -2,9 +2,7 @@ package org.silver.shop.dao.common.category.impl;
 
 import java.util.List;
 
-import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.dao.BaseDaoImpl;
-import org.silver.shop.dao.SessionFactory;
 import org.silver.shop.dao.common.category.CategoryDao;
 import org.silver.shop.model.common.category.GoodsFirstType;
 import org.silver.shop.model.common.category.GoodsSecondType;

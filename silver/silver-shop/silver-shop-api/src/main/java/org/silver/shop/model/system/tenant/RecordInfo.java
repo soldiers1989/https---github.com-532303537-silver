@@ -24,7 +24,7 @@ public class RecordInfo implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private int deletFlag;// 删除标识:0-未删除,1-已删除
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 
@@ -118,12 +118,14 @@ public class RecordInfo implements Serializable {
 		this.updateDate = updateDate;
 	}
 
-	public int getDeletFlag() {
-		return deletFlag;
+	
+
+	public int getDeleteFlag() {
+		return deleteFlag;
 	}
 
-	public void setDeletFlag(int deletFlag) {
-		this.deletFlag = deletFlag;
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
 	}
 
 	public String getDeleteBy() {

@@ -1,7 +1,6 @@
 package org.silver.shop.shiro;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -28,7 +27,7 @@ public class MerchantRealm extends AuthorizingRealm implements Serializable {
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		Merchant merchant = (Merchant) WebUtil.getSession().getAttribute(LoginType.MERCHANT.toString() + "_info");
+		Merchant merchant = (Merchant) WebUtil.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		SimpleAuthorizationInfo info = null;
 		if (merchant != null) {
 			info = new SimpleAuthorizationInfo();

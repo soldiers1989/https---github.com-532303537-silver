@@ -20,6 +20,6 @@ public class StringUtil {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(StringUtil.addPrefixZero("2356", 6));
+		System.out.println(StringUtil.addPrefixZero("2356", 8));
 	}
 }
