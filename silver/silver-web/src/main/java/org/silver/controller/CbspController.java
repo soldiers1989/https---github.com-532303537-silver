@@ -55,7 +55,7 @@ public class CbspController {
 			   ieFlag="I";
 		   }
 		   if(currCode==null){
-			   ieFlag="142";
+			   currCode="142";
 		   }
 		   if(appkey!=null&&clientsign!=null&&timestamp!=null&&datas!=null&&opType!=null){
 			    statusMap =oauthService.checkSign(appkey, clientsign,datas,notifyurl, timestamp); //eportService.checkDatas(req);

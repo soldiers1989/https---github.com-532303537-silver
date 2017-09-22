@@ -71,6 +71,14 @@
          <property name="Notes" >
               <column name="Notes" />
          </property>
+         
+          <property name="eport" type="java.lang.Integer">
+              <column name="eport" not-null="true"/>
+         </property>
+         
+         <property name="filePath">
+              <column name="filePath" />
+         </property>
  
          <property name="OrgMessageID">
               <column name="OrgMessageID" unique="true" not-null="true"/>

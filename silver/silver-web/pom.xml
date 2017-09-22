@@ -37,10 +37,9 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
-	<dependency>
+		<dependency>
 			<groupId>org.silver</groupId>
-			<artifactId>silver-shop-api</artifactId>
+			<artifactId>silver-pay-api</artifactId>
 			<version>${project.version}</version>
 			<exclusions>
 				<exclusion>
@@ -49,6 +48,8 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+
+
 		
 		<!-- Spring -->
 		<dependency>

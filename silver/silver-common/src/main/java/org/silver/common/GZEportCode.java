@@ -6,13 +6,9 @@ public class GZEportCode {
 	/** 申报企业名称*/
 	public static final String DECL_ENT_NAME = "广州银盟信息科技有限公司";
 	/** 电商企业编号*/
-	public static final String EB_ENT_NO = "C010000000537118";
+	public static final String PAY_ENT_NO = "C000010000803304";
 	/** 电商企业名称*/
-	public static final String EB_ENT_NAME = "广州银盟信息科技有限公司";
-	/** 电商平台企业编号*/
-	public static final String EBP_ENT_NO = "C010000000537118";
-	/** 电商平台名称*/
-	public static final String EBP_ENT_NAME = "广州银盟信息科技有限公司";
+	public static final String PAY_ENT_NAME = "银盛支付服务股份有限公司";
 	/** 币制代码*/
 	public static final String CURR_CODE = "142";
 	/** 报文发送者标识*/

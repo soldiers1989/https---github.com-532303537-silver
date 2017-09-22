@@ -167,6 +167,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		Session session = null;
 		try {
 			session = getSession();
+			
 			String hql = "from GoodsRecord model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
@@ -193,7 +194,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 			session.close();
 			return results;
 		} catch (Exception re) {
-
+			re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {

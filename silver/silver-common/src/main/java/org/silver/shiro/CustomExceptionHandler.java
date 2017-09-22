@@ -16,7 +16,7 @@ public class CustomExceptionHandler implements HandlerExceptionResolver {
 	@Override
 	public ModelAndView resolveException(HttpServletRequest arg0, HttpServletResponse response, Object arg2,
 			Exception ex) {
-	
+		ex.printStackTrace();
 		ModelAndView mv = new ModelAndView();	
 		response.setStatus(HttpStatus.OK.value()); // 设置状态码
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE); // 设置ContentType

@@ -90,21 +90,5 @@ public interface GZEportService {
 	 */
 	public   Map<String,Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String customsCode,String ciqOrgCode);
 	
-	/**
-	 * 
-	 * @param records
-	 * @param opType
-	 * @return
-	 */
-	public Map<String,Object> payRecord(Object records, String opType);
 	
-	
-	/**
-	 * 
-	 * @param list
-	 * @param path
-	 * @param opType
-	 * @return
-	 */
-	public Map<String, Object> createPay(JSONArray list, String path, String opType);
 }

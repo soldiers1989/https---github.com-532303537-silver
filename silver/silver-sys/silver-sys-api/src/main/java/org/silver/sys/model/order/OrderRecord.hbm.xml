@@ -182,13 +182,7 @@
          <property name="cusStatus">
               <column name="cusStatus" />
          </property>
-         <property name="status">
-              <column name="status" />
-         </property>
-         
-         <property name="count" type="java.lang.Integer">
-              <column name="count" />
-         </property> 
+
                 
           <property name="del_flag" type="java.lang.Integer">
               <column name="del_flag" not-null="true"/>

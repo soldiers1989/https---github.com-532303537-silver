@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.pay.model">
+          
+          <class name="PaymentDetail" table="ym_cbsp_payment_detail" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+         <property name="OrgMessageID">
+              <column name="OrgMessageID"  not-null="true" />
+         </property>
+         
+         <property name="EntPayNo">
+              <column name="EntPayNo" not-null="true" />
+         </property>
+         
+          <property name="PayStatus">
+              <column name="PayStatus" not-null="true"/>
+         </property>
+         
+         <property name="PayAmount" type="java.lang.Double">
+              <column name="PayAmount" not-null="true"/>
+         </property>
+        
+         <property name="PayCurrCode">
+              <column name="PayCurrCode" not-null="true"/>
+         </property>
+         
+         <property name="PayTime" >
+              <column name="PayTime" not-null="true" />
+         </property>
+         
+         <property name="PayerName">
+              <column name="PayerName" not-null="true"/>
+         </property>
+         
+         <property name="PayerDocumentType">
+              <column name="PayerDocumentType" not-null="true" />
+         </property>
+         
+         <property name="PayerDocumentNumber">
+              <column name="PayerDocumentNumber" not-null="true"/>
+         </property>
+         
+         <property name="PayerPhoneNumber">
+              <column name="PayerPhoneNumber" />
+         </property>
+         
+         <property name="EntOrderNo">
+              <column name="EntOrderNo" not-null="true"/>
+         </property>
+         <property name="EBPEntNo">
+              <column name="EBPEntNo" not-null="true"/>
+         </property>
+         <property name="EBPEntName">
+              <column name="EBPEntName" not-null="true"/>
+         </property>
+         <property name="Notes">
+              <column name="Notes" />
+         </property>
+         
+          <property name="status">
+              <column name="status" />
+         </property>
+         
+          <property name="count" type="java.lang.Integer">
+              <column name="count" />
+         </property>
+         
+         
+      
+         <property name="del_flag" type="java.lang.Integer">
+              <column name="del_flag" not-null="true"/>
+         </property>
+        
+           <property name="create_date" type="java.util.Date">
+              <column name="create_date" not-null="true"/>
+            </property>
+        
+           <property name="create_by">
+              <column name="create_by" />
+            </property>
+        
+        <property name="update_date" type="java.util.Date">
+              <column name="update_date"/>
+            </property>
+        
+         <property name="update_by">
+              <column name="update_by" />
+            </property>
+        
+        <property name="remarks">
+              <column name="remarks" />
+            </property>
+        
+        
+        
+          </class>
+          
+        </hibernate-mapping>

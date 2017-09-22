@@ -36,7 +36,6 @@ import org.silver.sys.model.order.OrderRecord;
 import org.silver.sys.util.CheckDatasUtil;
 import org.silver.sys.util.FtpUtil;
 import org.silver.util.DateUtil;
-import org.silver.util.FtpUtils;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
@@ -97,6 +96,8 @@ public class GZEportServiceImpl implements GZEportService {
 		try {
 			checkMap = createHead(list, "", opType, businessType, ieFlag, ebEntNo, ebEntName, currCode, customsCode,
 					ciqOrgCode, ebpentNo, ebpentName);
+			//FtpUtil.upload(url, port, username, password, remotePath, new File(checkMap.get("path")+""));
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			checkMap.put("status", -1);
@@ -133,7 +134,7 @@ public class GZEportServiceImpl implements GZEportService {
 	 * @param ebpentName
 	 * @return
 	 */
-	private GoodsRecord saveRecord(String messageID, String time, Date now, String opType, String businessType,
+	public GoodsRecord saveRecord(String messageID, String time, Date now, String opType, String businessType,
 			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
 			String ebpentNo, String ebpentName) {
 		GoodsRecord goodsRecord = new GoodsRecord();
@@ -152,6 +153,7 @@ public class GZEportServiceImpl implements GZEportService {
 		goodsRecord.setDeclTime(time);// 备案申请时间
 		goodsRecord.setIeFlag(ieFlag);// 进出口标识
 		goodsRecord.setOrgMessageID(messageID);
+		goodsRecord.setEport(1);//口岸    1  电子口岸 2 智检
 		goodsRecord.setCiqStatus("0");
 		goodsRecord.setCusStatus("0");
 		goodsRecord.setStatus("0");
@@ -165,7 +167,7 @@ public class GZEportServiceImpl implements GZEportService {
 	}
 
 	/**
-	 * 订单商品实体存储
+	 * 备案商品实体存储
 	 * 
 	 * @param list
 	 * @param messageID
@@ -206,8 +208,8 @@ public class GZEportServiceImpl implements GZEportService {
 			if (goodsInfoList != null && goodsInfoList.size() > 0) {
 				// 封装商品备案报文
 				statusMap = convertGoodsRecordIntoXML(goodsRecord, goodsInfoList);
-				String path2=statusMap.get("path")+"";
-				
+			//	String path2=statusMap.get("path")+"";
+			//	statusMap.put("filePath", path2);
 //				FtpUtil.upload(url, port, username, password, remotePath, new File(path2));
 				
 			}
@@ -224,7 +226,8 @@ public class GZEportServiceImpl implements GZEportService {
 	 *            商品详细信息List
 	 * @return
 	 */
-	private Map<String, Object> convertGoodsRecordIntoXML(GoodsRecord goodsRecord, List<GoodsInfo> list) {
+	public Map<String, Object> convertGoodsRecordIntoXML(GoodsRecord goodsRecord, List<GoodsInfo> list) {
+		System.out.println("开始生成报文");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		Element root = new Element("InternationalTrade");
 		Document Doc = new Document(root);
@@ -249,6 +252,7 @@ public class GZEportServiceImpl implements GZEportService {
 		slist.add("count");
 		slist.add("del_flag");
 		slist.add("create_date");
+		slist.add("eport");
 		Element goodsRegHead = entityChangeToXmlElement(goodsRecord, "GoodsRegHead", slist);
 		Element goodsRegList = new Element("GoodsRegList");
 		GoodsInfo goodsInfo = null;
@@ -266,12 +270,19 @@ public class GZEportServiceImpl implements GZEportService {
 		// 给父节点root添加子节点;
 		root.addContent(elements);
 		root.addContent(declaration);
-		String xmlpath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-		String uploadPath = xmlpath + goodsRecord.getOrgMessageID() + ".xml";
-		if (createLocalXMLFile(Doc, uploadPath)) {
+		String outPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+		String ePath = outPath+"gz_goods\\"+DateUtil.getDate("yyyyMMdd");
+		String fileName = goodsRecord.getOrgMessageID() + ".xml";
+		File uploadFile = new File(ePath); //
+		if (!uploadFile.exists() || uploadFile == null) { //
+			uploadFile.mkdirs();
+		}
+		ePath = uploadFile.getPath() + "\\" + fileName;
+		if (createLocalXMLFile(Doc, ePath)) {
+			System.out.println("====="+ePath);
 			statusMap.put("status", 1);
 			statusMap.put("msg", "本地存储成功");
-			statusMap.put("path", xmlpath);
+			statusMap.put("path", ePath);
 			return statusMap;
 		}
 		statusMap.put("status", -1);
@@ -325,6 +336,7 @@ public class GZEportServiceImpl implements GZEportService {
 	public Map<String, Object> orderRecord(Object records, String opType, String ieFlag, String internetDomainName,
 			String ebpentNo, String ebpentName, String ebEntNo, String ebEntName, String customsCode,
 			String ciqOrgCode) {
+		System.out.println("开始验证数据");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
 		// 将必填的字段添加到list
@@ -396,6 +408,7 @@ public class GZEportServiceImpl implements GZEportService {
 		orderHead.setCustomsCode(customsCode);// 主管海关代码
 		orderHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		orderHead.setOrgMessageID(messageID);
+		orderHead.setEport(1);//口岸   1 电子口岸 2 智检
 		orderHead.setCreate_date(now);
 		orderHead.setDel_flag(0);
 		if (orderHeadDao.add(orderHead)) {
@@ -431,6 +444,7 @@ public class GZEportServiceImpl implements GZEportService {
 	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,
 			String internetDomainName, String ebpentNo, String ebpentName, String ebEntNo, String ebEntName,
 			String customsCode, String ciqOrgCode) {
+		System.out.println("开始存储数据");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		List<OrderRecord> orderRecordList = new ArrayList<>();
 		List<OrderGoods> orderGoodsLists = new ArrayList<>();
@@ -464,9 +478,9 @@ public class GZEportServiceImpl implements GZEportService {
 					}
 				}
 			}
-			if (orderHeadEnt != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
-				statusMap = convertOrderRecordIntoXML(time, orderHeadEnt, orderRecordList, orderGoodsLists);
-			}
+		}
+		if (orderHeadEnt != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
+			statusMap = convertOrderRecordIntoXML(time, orderHeadEnt, orderRecordList, orderGoodsLists);
 		}
 		return statusMap;
 	}
@@ -493,6 +507,7 @@ public class GZEportServiceImpl implements GZEportService {
 		slist.add("OrgMessageID");
 		slist.add("del_flag");
 		slist.add("create_date");
+		slist.add("eport");
 		Element orderHead = entityChangeToXmlElement(orderHeadEnt, "OrderHead", slist);
 		declaration.addContent(orderHead);
 		// 订单信息 可循环
@@ -537,118 +552,21 @@ public class GZEportServiceImpl implements GZEportService {
 		XMLOutputter XMLOut = new XMLOutputter(format);
 		// 输出 user.xml 文件；
 		String outPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-		String uploadPath = "" + outPath + orderHeadEnt.getOrgMessageID() + ".xml";
-		try {
-			XMLOut.output(Doc, new FileOutputStream(uploadPath));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			statusMap.put("status", -1);
-			statusMap.put("msg", "上送报文失败，请重试 ");
-		} catch (IOException e) {
-			e.printStackTrace();
-			statusMap.put("status", -2);
-			statusMap.put("msg", "上送报文出错，请重试 ");
+		String ePath = outPath+"gz_order\\"+DateUtil.getDate("yyyyMMdd");
+		String fileName = orderHeadEnt.getOrgMessageID() + ".xml";
+		File uploadFile = new File(ePath); //
+		if (!uploadFile.exists() || uploadFile == null) { //
+			uploadFile.mkdirs();
 		}
-		return statusMap;
-	}
-
-	@Override
-	public Map<String, Object> payRecord(Object records, String opType) {
-		Map<String, Object> checkMap = new HashMap<String, Object>();
-		JSONArray jList = JSONArray.fromObject(records);
-		List<String> noNullKeys = new ArrayList<>();
-		noNullKeys.add("EntPayNo");
-		noNullKeys.add("PayStatus");
-		noNullKeys.add("PayAmount");
-		noNullKeys.add("PayCurrCode");
-		noNullKeys.add("PayTime");
-		noNullKeys.add("PayerName");
-		noNullKeys.add("PayerDocumentType");
-		noNullKeys.add("PayerDocumentNumber");
-		noNullKeys.add("EntOrderNo");
-		noNullKeys.add("EBPEntNo");
-		noNullKeys.add("EBPEntName");
-		checkMap = CheckDatasUtil.checkData(jList, noNullKeys);
-		if ((int) checkMap.get("status") != 1) {
-			return checkMap;
-		}
-		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
-		checkMap = createPay(list, "", opType);
-		return checkMap;
-	}
-
-	@Override
-	public Map<String, Object> createPay(JSONArray list, String path, String opType) {
-		System.out.println("=================开始处理接收的JSonList生成XML文件===============================");
-		Map<String, Object> statusMap = new HashMap<String, Object>();
-		statusMap.put("status", 1);
-		statusMap.put("msg", "报文发送成功 ");
-		Element root = new Element("InternationalTrade");
-		Document Doc = new Document(root);
-		String time = DateUtil.getDate("yyyyMMddHHmmss");
-		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
-		String strName = "KJ881112_YINMENG_" + remitSerialNumber;
-		Element elements = new Element("Head");
-		elements.addContent(new Element("MessageID").setText(strName));
-		elements.addContent(new Element("MessageType").setText(GZEportCode.MESSAGE_TYPE_GOOD));
-		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER_PAY));
-		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
-		elements.addContent(new Element("SendTime").setText(time));
-		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_CIQ));
-		elements.addContent(new Element("SignerInfo").setText(" "));
-		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
-		// 支付信息报文头
-		Element declaration = new Element("Declaration");
-		Element paymentHead = new Element("PaymentHead");
-		paymentHead.addContent(new Element("DeclEntNo").setText("C100085134"));
-		paymentHead.addContent(new Element("DeclEntName").setText("银盛支付"));
-		paymentHead.addContent(new Element("PayEntNo").setText("C100085134"));// 支付企业备案号
-		paymentHead.addContent(new Element("PayEntName").setText("银盛支付"));
-		paymentHead.addContent(new Element("DeclTime").setText(time));
-		paymentHead.addContent(new Element("OpType").setText(opType));
-		paymentHead.addContent(new Element("CustomsCode").setText(""));
-		paymentHead.addContent(new Element("CIQOrgCode").setText(""));
-		declaration.addContent(paymentHead);
-		// 支付信息
-		Element paymentList = new Element("PaymentList");
-		Element paymentDetail = new Element("PaymentDetail");
-		for (int i = 0; i < list.size(); i++) {
-			JSONObject pay = JSONObject.fromObject(list.get(i));
-			paymentDetail.addContent(new Element("EntPayNo").setText(pay.get("EntPayNo") + ""));
-			paymentDetail.addContent(new Element("PayStatus").setText(pay.get("PayStatus") + ""));
-			paymentDetail.addContent(new Element("PayAmount").setText(pay.get("PayAmount") + ""));
-			paymentDetail.addContent(new Element("PayCurrCode").setText(pay.get("PayCurrCode") + ""));
-			paymentDetail.addContent(new Element("PayTime").setText(pay.get("PayTime") + ""));
-			paymentDetail.addContent(new Element("PayerName").setText(pay.get("PayerName") + ""));
-			paymentDetail.addContent(new Element("PayerDocumentType").setText(pay.get("PayerDocumentType") + ""));
-			paymentDetail.addContent(new Element("PayerDocumentNumber").setText(pay.get("PayerDocumentNumber") + ""));
-			paymentDetail.addContent(new Element("PayerPhoneNumber").setText(pay.get("PayerPhoneNumber") + ""));
-			paymentDetail.addContent(new Element("EntOrderNo").setText(pay.get("EntOrderNo") + ""));
-			paymentDetail.addContent(new Element("EBPEntNo").setText(pay.get("EBPEntNo") + ""));
-			paymentDetail.addContent(new Element("EBPEntName").setText(pay.get("EBPEntName") + ""));
-			paymentDetail.addContent(new Element("Notes").setText(pay.get("Notes") + ""));
-		}
-		paymentList.addContent(paymentDetail);
-		declaration.addContent(paymentList);
-		root.addContent(elements);
-		root.addContent(declaration);
-		Format format = Format.getPrettyFormat();
-		XMLOutputter XMLOut = new XMLOutputter(format);
-		String outPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-		String uploadPath = "" + outPath + strName + ".xml";
-		try {
-			XMLOut.output(Doc, new FileOutputStream(uploadPath));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			statusMap.put("status", -4);
-			statusMap.put("msg", "上送报文失败，请重试");
-			return statusMap;
-		} catch (IOException e) {
-			e.printStackTrace();
-			statusMap.put("status", -5);
-			statusMap.put("msg", "上送报文出错，请重试");
+		ePath = uploadFile.getPath() + "\\" + fileName;
+		if (createLocalXMLFile(Doc, ePath)) {
+			statusMap.put("status", 1);
+			statusMap.put("msg", "本地存储成功");
+			statusMap.put("path", ePath);
 			return statusMap;
 		}
+		statusMap.put("status", -1);
+		statusMap.put("msg", "本地存储失败");
 		return statusMap;
 	}
 

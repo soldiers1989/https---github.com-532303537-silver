@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.pay.model">
+          
+          <class name="PaymentHead" table="ym_cbsp_payment_head" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+         <property name="OrgMessageID">
+              <column name="OrgMessageID" unique="true"  not-null="true" />
+         </property>
+         
+         <property name="DeclEntNo">
+              <column name="DeclEntNo" not-null="true" />
+         </property>
+         
+          <property name="DeclEntName">
+              <column name="DeclEntName" not-null="true"/>
+         </property>
+         
+         <property name="PayEntNo">
+              <column name="PayEntNo" not-null="true"/>
+         </property>
+        
+         <property name="PayEntName">
+              <column name="PayEntName" not-null="true"/>
+         </property>
+         
+         <property name="DeclTime" >
+              <column name="DeclTime" not-null="true" />
+         </property>
+         
+         <property name="OpType">
+              <column name="OpType" not-null="true"/>
+         </property>
+         
+         <property name="CustomsCode">
+              <column name="CustomsCode" not-null="true" />
+         </property>
+         
+         <property name="CIQOrgCode">
+              <column name="CIQOrgCode" not-null="true"/>
+         </property>
+         
+         <property name="filePath">
+              <column name="filePath" />
+         </property>
+         
+      
+         <property name="del_flag" type="java.lang.Integer">
+              <column name="del_flag" not-null="true"/>
+         </property>
+        
+           <property name="create_date" type="java.util.Date">
+              <column name="create_date" not-null="true"/>
+            </property>
+        
+           <property name="create_by">
+              <column name="create_by" />
+            </property>
+        
+        <property name="update_date" type="java.util.Date">
+              <column name="update_date"/>
+            </property>
+        
+         <property name="update_by">
+              <column name="update_by" />
+            </property>
+        
+        <property name="remarks">
+              <column name="remarks" />
+            </property>
+        
+        
+        
+          </class>
+          
+        </hibernate-mapping>

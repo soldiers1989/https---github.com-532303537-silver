@@ -27,6 +27,22 @@ public class GoodsRecord implements Serializable{
 	private String IeFlag; // 进出境标志 I-进，E-出
 	private String Notes;//备注
 	
+	private int eport;                  //口岸：1 电子口岸 2 南沙智检
+	private String filePath;            //报文存储路径
+	private String OrgMessageID; //原始报文编号
+	private String ciqNotes;// 国检审核备注
+	private String ciqStatus;// 国检审核状态
+	private String cusNotes;// 海关审核备注
+	private String cusStatus;// 海关审核状态
+	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private int count;//重发计数      重发次数不能超过5次
+	private int del_flag;// 0正常 1删除
+	private Date create_date; // 创建时间
+	private String create_by; // 创建人
+	private Date update_date; // 更新时间
+	private String update_by;// 更新人
+	private String remarks;// 备注
+	
 	public String getNotes() {
 		return Notes;
 	}
@@ -201,19 +217,19 @@ public class GoodsRecord implements Serializable{
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
-	private String OrgMessageID; //原始报文编号
-	private String ciqNotes;// 国检审核备注
-	private String ciqStatus;// 国检审核状态
-	private String cusNotes;// 海关审核备注
-	private String cusStatus;// 海关审核状态
-	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
-	private int count;//重发计数      重发次数不能超过5次
-	private int del_flag;// 0正常 1删除
-	private Date create_date; // 创建时间
-	private String create_by; // 创建人
-	private Date update_date; // 更新时间
-	private String update_by;// 更新人
-	private String remarks;// 备注
+	public int getEport() {
+		return eport;
+	}
+	public void setEport(int eport) {
+		this.eport = eport;
+	}
+	public String getFilePath() {
+		return filePath;
+	}
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+	
 	
 
 	

@@ -106,7 +106,7 @@ public class DOMXMLService {
 			if(respondBy.equals("01")){//电子口岸回执
 				for (int i = 0; i < list.size(); i++) {
 					orderRecord=list.get(i);
-					orderRecord.setStatus(map.get("status")+"");
+//					orderRecord.setStatus(map.get("status")+"");
 					orderRecord.setRemarks(map.get("RespondNotes")+"");
 					if(orderRecordDao.update(orderRecord)){
 						resultMap.put("status", 1);
