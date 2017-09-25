@@ -3,6 +3,8 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.GoodsContent;
+
 public interface GoodsRecordDao {
 
 	/**
@@ -30,4 +32,23 @@ public interface GoodsRecordDao {
 	 * @return
 	 */
 	public Long findLastId();
+	
+	/**
+	 * 根据实体、列(名)、值查询数据 倒序
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params
+	 *            属性
+	 * @param descParams
+	 *            倒序参数
+	 * @param page 页数
+	 * @param size 数据条数
+	 * @return List
+	 */
+	public List<Object> findPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
+			int size);
+
+	
+	public String findGoodsYearLastId(Class entity, int year);
 }

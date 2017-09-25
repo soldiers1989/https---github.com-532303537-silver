@@ -123,5 +123,8 @@
         <property name="ciqOrgCode">
         	<column name="ciqOrgCode"></column>
         </property>
+         <property name="goodsMerchantName" type="java.lang.String">
+            <column name="goodsMerchantName" not-null="true"/>
+        </property>
     </class>
 </hibernate-mapping>

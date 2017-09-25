@@ -61,10 +61,11 @@ public class GoodsRecordController {
 	@RequestMapping(value = "/getMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")
-	public String getMerchantGoodsRecordInfo(@RequestParam("goodsIdPack") String goodsIdPack) {
+	@RequiresRoles("Merchant")
+	public String getMerchantGoodsRecordInfo(@RequestParam("goodsIdPack") String goodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (goodsIdPack != null) {
-			List datasList = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsIdPack);
+		if (goodsInfoPack != null) {
+			List datasList = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsInfoPack);
 			if (datasList != null && datasList.size() > 0) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				statusMap.put(BaseCode.DATAS.toString(), datasList);

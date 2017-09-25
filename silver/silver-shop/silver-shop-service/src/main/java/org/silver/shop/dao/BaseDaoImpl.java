@@ -18,7 +18,7 @@ import org.silver.shop.model.system.organization.Merchant;
  * 提供数据访问层共用DAO方法
  */
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
-	// 将实体数据插入数据库
+
 	@Override
 	public boolean add(Object entity) {
 		Session session = null;
@@ -148,7 +148,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	// 根据传递进来的Map查询数据
 	@Override
 	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
 		Session session = null;
@@ -306,15 +305,51 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
+	public String findGoodsYearLastId(Class entity, int year) {
+		Session session = null;
+		try {
+			String entName = entity.getSimpleName();
+			String hql = "select model.goodsId from " + entName + " model  WHERE model.createDate >='" + year
+					+ "-01-01 00:00:00'" + "and model.createDate <= '" + year
+					+ "-12-31 23:59:59' "
+					+ " order by model.goodsId desc";
+			session = getSession();
+			Query query = session.createQuery(hql);
+			// 设置查询结果分页
+			query.setFirstResult(0).setMaxResults(1);
+			if (query.uniqueResult() == null) {
+				return null;
+			}
+			String str = query.uniqueResult() + "";
+			session.close();
+			return str;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return "-1";
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId("测试ID");
-		merchant.setMerchantCusNo("商户编码");
 		paramMap.put("goodsMerchantName", "商户测试");
-		List reList = bd.findByPropertyDesc(GoodsContent.class, paramMap, null, 0, 0);
-		System.out.println(reList.size());
+		String goodsMerchantName = "商户测试";
+		String goodsId = "YM_20170000715060732279179879";
+		String goodsName = "商户测试";
+		
+		List str = bd.findByProperty(GoodsContent.class, paramMap,1,1);
+		System.out.println(str.size());
+		GoodsContent goods= (GoodsContent) str.get(0);
+		//System.out.println("--->"+goods.getCreateDate());
 	}
+
 }

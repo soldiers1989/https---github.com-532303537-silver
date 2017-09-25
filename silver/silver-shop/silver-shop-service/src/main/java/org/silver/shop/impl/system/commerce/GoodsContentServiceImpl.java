@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.commerce;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,33 +11,54 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {
-
+	private Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired
 	private GoodsContentDao goodsContentDao;
 
 	@Override
-	public Map<String, Object> findGoodsId() {
+	public Map<String, Object> createGoodsId() {
 		Map<String, Object> datasMap = new HashMap<>();
-		// 扫描获取数据库表中的商户自增长ID
-		Long goodsCount = goodsContentDao.findLastId();
-		// 得出的总数上+1
-		Long count = goodsCount + 1;
-		if (count < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
+		Calendar cal = Calendar.getInstance();
+		String goodsId = "";
+		String topStr = "YM_";
+		int count = 0;
+		// 获取当前年份
+		int year = cal.get(Calendar.YEAR) ;
+		// 根据年份查询,当前年份有多少条数据
+		String lastOneGoodsId = goodsContentDao.findGoodsYearLastId(GoodsContent.class, year);
+		if (lastOneGoodsId == null) {
+			// 当查询无记录时为：1
+			count = 1;
+		} else if (lastOneGoodsId.equals("-1")) {
 			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			logger.debug("连接数据错误!");
 			return datasMap;
+		} else {
+			// 截取 YM_2017|00001|15058114089963091 自增部分
+			String countId = lastOneGoodsId.substring(7, 12);
+			// 商品自增ID,得出的自增数上+1
+			count = Integer.parseInt(countId) + 1;
 		}
-		String goodsId = count + "";
+		String strCount = String.valueOf(count);
 		// 当商户ID没有5位数时,前面补0
-		while (goodsId.length() < 5) {
-			goodsId = "0" + goodsId;
+		while (strCount.length() < 5) {
+			strCount = "0" + strCount;
 		}
+		// 获取到当前时间戳
+		Long current = System.currentTimeMillis();
+		// 随机4位数
+		int ramCount = (int) ((Math.random() * 9 + 1) * 1000);
+		// 商品自编号为 YM_+(当前)年+五位自增数(数据库中当前年份的数量+1)+时间戳(13位)+4位随机数
+		goodsId = topStr + year + strCount + current + ramCount;
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		datasMap.put(BaseCode.DATAS.getBaseCode(), goodsId);
 		return datasMap;
@@ -164,7 +186,8 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			// 删除标识:0-未删除,1-已删除
 			goodsInfo.setDeleteFlag(1);
-			goodsInfo.setGoodsMerchantName(merchantName);;
+			goodsInfo.setGoodsMerchantName(merchantName);
+			;
 			flag = goodsContentDao.update(goodsInfo);
 		}
 		return flag;

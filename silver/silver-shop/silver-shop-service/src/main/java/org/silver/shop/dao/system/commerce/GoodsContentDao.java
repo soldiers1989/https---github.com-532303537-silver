@@ -48,4 +48,14 @@ public interface GoodsContentDao {
 	 * @return List
 	 */
 	public List<Object> findBlurryProperty(Class entity,Map params ,String startTime,String endTime,int page,int size);
+	
+	
+	/**
+	 * 根据年份查询,当前年份有多少条数据
+	 * @param entity
+	 * @param goodsMerchantName
+	 * @param year 格式：yyyy
+	 * @return
+	 */
+	public String findGoodsYearLastId(Class entity,int year);
 }

@@ -52,7 +52,7 @@ public class GoodsRecordContent implements Serializable {
 	private Date deleteDate;// 删除时间
 	private String  customsCode;//主管海关代码
 	private String  ciqOrgCode;//检验检疫机构代码
-	
+	private String goodsMerchantName;//商品归属商戶名
 	public long getId() {
 		return id;
 	}
@@ -288,6 +288,12 @@ public class GoodsRecordContent implements Serializable {
 	}
 	public void setCiqOrgCode(String ciqOrgCode) {
 		this.ciqOrgCode = ciqOrgCode;
+	}
+	public String getGoodsMerchantName() {
+		return goodsMerchantName;
+	}
+	public void setGoodsMerchantName(String goodsMerchantName) {
+		this.goodsMerchantName = goodsMerchantName;
 	}
 	
 	

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
-import net.sf.json.JSONArray;
 
 /**
  * 商品备案Transaction
@@ -37,17 +36,16 @@ public class GoodsRecordTransaction {
 		return null;
 	}
 
-	public List<Object> getMerchantGoodsRecordInfo(String goodsIdPack) {
-		System.out.println(goodsIdPack);
+	public List<Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
-		System.out.println("-------->"+merchantInfo);
-		datasMap = goodsRecordService.getGoodsRecordInfo(merchantName,goodsIdPack);
+		datasMap = goodsRecordService.getGoodsRecordInfo(merchantName,goodsInfoPack);
 		if (datasMap != null && datasMap.size() > 0) {
 			List reList = (List) datasMap.get(BaseCode.DATAS.toString());
+			System.out.println("---list--->"+reList.size());
 			return reList;
 		}
 		return null;
