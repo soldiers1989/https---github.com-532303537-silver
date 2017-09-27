@@ -1,4 +1,4 @@
-package org.silver.shop.model.system;
+package org.silver.shop.model.system.commerce;
 
 import java.io.Serializable;
 import java.util.Date;

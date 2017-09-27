@@ -1,5 +1,6 @@
 package org.silver.shop.dao;
 
+import java.awt.geom.Area;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,9 +11,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.common.base.City;
+import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.organization.Merchant;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -311,8 +312,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		try {
 			String entName = entity.getSimpleName();
 			String hql = "select model.goodsId from " + entName + " model  WHERE model.createDate >='" + year
-					+ "-01-01 00:00:00'" + "and model.createDate <= '" + year
-					+ "-12-31 23:59:59' "
+					+ "-01-01 00:00:00'" + "and model.createDate <= '" + year + "-12-31 23:59:59' "
 					+ " order by model.goodsId desc";
 			session = getSession();
 			Query query = session.createQuery(hql);
@@ -334,22 +334,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		Merchant merchant = new Merchant();
-		merchant.setMerchantId("测试ID");
-		paramMap.put("goodsMerchantName", "商户测试");
-		String goodsMerchantName = "商户测试";
-		String goodsId = "YM_20170000715060732279179879";
-		String goodsName = "商户测试";
-		
-		List str = bd.findByProperty(GoodsContent.class, paramMap,1,1);
-		System.out.println(str.size());
-		GoodsContent goods= (GoodsContent) str.get(0);
-		//System.out.println("--->"+goods.getCreateDate());
 	}
 
 }

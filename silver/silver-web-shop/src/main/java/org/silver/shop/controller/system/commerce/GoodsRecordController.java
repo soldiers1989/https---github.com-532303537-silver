@@ -58,6 +58,11 @@ public class GoodsRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
+	 * @param goodsInfoPack 
+	 * @return
+	 */
 	@RequestMapping(value = "/getMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")

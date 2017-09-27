@@ -50,12 +50,12 @@ public class MerchantServiceImpl implements MerchantService {
 		list = new ArrayList<>();
 		Map<String, Object> record1 = new HashMap<>();
 		Map<String, Object> record2 = new HashMap<>();
-		record1.put(EPORT, 0);// 1-广州电子口岸(目前只支持BC业务)
+		record1.put(EPORT, 1);// 1-广州电子口岸(目前只支持BC业务)
 		record1.put(EBENTNO, ebEntNo);
 		record1.put(EBENTNAME, ebEntName);
 		record1.put(EBPENTNO, ebEntNo);
 		record1.put(EBPENTNAME, ebEntName);
-		record2.put(EPORT, 1);// 2-南沙智检(支持BBC业务)
+		record2.put(EPORT, 2);// 2-南沙智检(支持BBC业务)
 		record2.put(EBENTNO, ebEntNo2);
 		record2.put(EBENTNAME, ebEntName);
 		record2.put(EBPENTNO, ebEntNo2);
@@ -168,7 +168,6 @@ public class MerchantServiceImpl implements MerchantService {
 				try {
 					jsonList = JSONArray.fromObject(recordInfoPack);
 				} catch (Exception e) {
-					logger.debug("商户备案参数不正确！");
 					e.getStackTrace();
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 					statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,请检查商户备案信息是否正确！");
@@ -195,9 +194,9 @@ public class MerchantServiceImpl implements MerchantService {
 					// 保存商户对应的电商平台名称(及编码)
 					recordFlag = addMerchantRecordInfo(recordInfo, "2");
 					if (!recordFlag) {
-						if (Integer.valueOf(eport) == 0) {
+						if (Integer.valueOf(eport) == 1) {
 							eport = "电子口岸";
-						} else if (Integer.valueOf(eport) == 1) {
+						} else if (Integer.valueOf(eport) == 2) {
 							eport = "南沙智检";
 						}
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -217,7 +216,6 @@ public class MerchantServiceImpl implements MerchantService {
 	public List<Object> findMerchantBy(String account) {
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("merchantName", account);
-		
 		return merchantDao.findByProperty(Merchant.class, paramsMap, 0, 0);
 	}
 
@@ -283,5 +281,9 @@ public class MerchantServiceImpl implements MerchantService {
 			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		}
 		return reMap;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(JSONArray.fromObject(list).toString());
 	}
 }

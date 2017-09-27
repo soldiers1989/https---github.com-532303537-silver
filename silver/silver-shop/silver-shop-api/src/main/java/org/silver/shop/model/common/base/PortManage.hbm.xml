@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-31 9:54:31 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.PortManage" table="ym_shop_sys_port_manage">
+    <class name="org.silver.shop.model.common.base.PortManage" table="ym_shop_sys_port_manage">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -52,6 +52,13 @@
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
+        </property>
+        
+         <property name="provinceCode" type="java.lang.String">
+            <column name="provinceCode" not-null="true"/>
+        </property>
+        <property name="cityCode" type="java.lang.String">
+            <column name="cityCode" not-null="true"/>
         </property>
     </class>
 </hibernate-mapping>

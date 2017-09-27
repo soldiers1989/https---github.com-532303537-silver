@@ -15,7 +15,7 @@ public class RecordInfo implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private int eport;// 口岸 0 广州电子口岸 1广东智检
+	private int eport;//口岸:1-广州电子口岸,2-广东智检
 	private String ebEntNo;// 电商企业编号
 	private String ebEntName;// 电商企业名称
 	private String ebpEntNo;// 电商平台企业编号

@@ -45,7 +45,6 @@ public class GoodsRecordTransaction {
 		datasMap = goodsRecordService.getGoodsRecordInfo(merchantName,goodsInfoPack);
 		if (datasMap != null && datasMap.size() > 0) {
 			List reList = (List) datasMap.get(BaseCode.DATAS.toString());
-			System.out.println("---list--->"+reList.size());
 			return reList;
 		}
 		return null;

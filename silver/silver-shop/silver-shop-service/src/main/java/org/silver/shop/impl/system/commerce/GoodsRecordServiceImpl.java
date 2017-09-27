@@ -129,7 +129,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	public static void main(String[] args) {
 		List list = new ArrayList();
 		Map<String, Object> datasMap = null;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 2; i++) {
 			datasMap = new HashMap<>();
 			datasMap.put("goodsId", "YM_20170000715060732279179879");
 			datasMap.put("goodsMerchantName", "商户测试");

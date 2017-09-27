@@ -55,8 +55,8 @@
 		<mapping resource="org/silver/shop/model/system/commerce/StockContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/cross/PaymentContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/ReceiptInfo.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/PortManage.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/Warehous.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/common/base/PortManage.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/Warehous.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/organization/Manager.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/organization/Member.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantBankInfo.hbm.xml"/>

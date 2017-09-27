@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-31 9:54:31 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.Warehous" table="ym_shop_warehous">
+    <class name="org.silver.shop.model.system.commerce.Warehous" table="ym_shop_warehous">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />

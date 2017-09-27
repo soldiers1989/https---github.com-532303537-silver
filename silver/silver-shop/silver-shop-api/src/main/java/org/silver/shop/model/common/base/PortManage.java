@@ -1,4 +1,4 @@
-package org.silver.shop.model.system;
+package org.silver.shop.model.common.base;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,9 +14,11 @@ public class PortManage implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private long id;
-	private String province;// 省份编码
-	private String city;// 城市编码
-	private String customsPort;// 海关口岸 0 广州电子口岸 1广东智检
+	private String province;// 省份名称
+	private String provinceCode;// 省份编码
+	private String city;// 城市名称
+	private String cityCode;// 城市编码
+	private String customsPort;// 海关口岸 1-广州电子口岸 ,2-广东智检
 	private String customsPortName;// 海关口岸名称
 	private String customsCode;// 主管海关代码(同仓库编码)
 	private String customsName;// 主管海关代码名称
@@ -29,6 +31,7 @@ public class PortManage implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+
 	public long getId() {
 		return id;
 	}
@@ -125,6 +128,18 @@ public class PortManage implements Serializable {
 	}
 	public void setCustomsPortName(String customsPortName) {
 		this.customsPortName = customsPortName;
+	}
+	public String getProvinceCode() {
+		return provinceCode;
+	}
+	public void setProvinceCode(String provinceCode) {
+		this.provinceCode = provinceCode;
+	}
+	public String getCityCode() {
+		return cityCode;
+	}
+	public void setCityCode(String cityCode) {
+		this.cityCode = cityCode;
 	}
 
 }
