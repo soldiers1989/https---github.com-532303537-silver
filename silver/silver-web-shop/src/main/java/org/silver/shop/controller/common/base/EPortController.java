@@ -21,14 +21,22 @@ import io.swagger.annotations.ApiOperation;
 public class EPortController {
 	@Autowired
 	private EPortTransaction ePortTransaction;
-	
-	@RequestMapping(value="/addEPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+
+	/**
+	 * 添加开通的口岸
+	 * @param customsPort 口岸编码
+	 * @param customsPortName 口岸名称
+	 * @param cityCode  关联城市编码
+	 * @return
+	 */
+	@RequestMapping(value = "/addEPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("添加已开通的口岸")
-	public String addEPort(@RequestParam("ePortInfo")String ePortInfo){
-		Map<String,Object> statusMap = new HashMap<>();
-		if(ePortInfo!=null){
-			
+	public String addEPort(@RequestParam("customsPort") String customsPort,
+			@RequestParam("customsPortName") String customsPortName, @RequestParam("cityCode") String cityCode) {
+		Map<String, Object> statusMap = new HashMap<>();
+		if (customsPortName != null && customsPortName != null && cityCode != null) {
+
 		}
 		return null;
 	}

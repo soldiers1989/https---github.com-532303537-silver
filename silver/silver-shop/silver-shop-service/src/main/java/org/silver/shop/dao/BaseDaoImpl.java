@@ -123,7 +123,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	// 根据实体查询实体表中所有数据
+
 	@Override
 	public List<Object> findAll(Class entity, int page, int size) {
 		Session session = null;
@@ -338,6 +338,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
+		bd.findAll(org.silver.shop.model.common.base.Area.class, 0, 0);
 	}
 
 }

@@ -8,10 +8,10 @@
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="firstTypeId" type="java.lang.Double">
+        <property name="firstTypeId" type="long">
             <column name="firstTypeId" not-null="true"/>
         </property>
-        <property name="secondTypeId" type="java.lang.Double">
+        <property name="secondTypeId" type="long">
             <column name="secondTypeId" not-null="true" />
         </property>
         <property name="goodsThirdTypeName" type="java.lang.String">
