@@ -70,6 +70,7 @@
 				/merchant/*=anon
 				/goodsRecord/*=anon
 				/category/*=anon
+				/port/*=anon
 				/country/*=anon
 				/metering/*=anon
 				/tests/a=anon

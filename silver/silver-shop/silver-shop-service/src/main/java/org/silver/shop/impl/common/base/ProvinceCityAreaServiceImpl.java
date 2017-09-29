@@ -1,21 +1,20 @@
 package org.silver.shop.impl.common.base;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.dao.common.base.ProvinceCityAreaDao;
-import org.silver.shop.dao.common.base.impl.ProvinceCityAreaDaoImpl;
-import org.silver.shop.model.common.base.Area;
-import org.silver.shop.model.common.base.City;
-import org.silver.shop.model.common.base.Province;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 @Service(interfaceClass = ProvinceCityAreaService.class)
 public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
@@ -24,43 +23,58 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	private ProvinceCityAreaDao provinceCityAreaDao;
 
 	@Override
-	public Map<String, HashMap<String, Object>> getProvinceCityArea() {
-		Map<String, HashMap<String, Object>> provinceCityArea = new HashMap<>();
-		Map<String, Object> provinceMap = null;
-		Map<String, Object> cityMap = null;
+	public Map<String, Object> getProvinceCityArea() {
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Object> provinceList = new ArrayList<>();
+		Map<String, Map<String, Map<String, Object>>> provinceMap = new HashMap<>();
+		Map<String, Map<String, Object>> cityMap = null;
 		Map<String, Object> areaMap = null;
-		//查询省市区
-		List<Object> datasList = provinceCityAreaDao.findAllCountry();
-		String province = "";
-		String city = "";
-		for (int i = 0; i < datasList.size(); i++) {
-			List list = JSONArray.fromObject(datasList.get(i));
-			areaMap = new HashMap<>();
-			String areaCode = list.get(0) + "";
-			String areaName = list.get(1) + "";
-			String cityCode = list.get(2) + "";
-			String cityName = list.get(3) + "";
-			String provinceCode = list.get(4) + "";
-			String provinceName = list.get(5) + "";
-			if(!province.equals(provinceCode) ){
-				provinceMap = new HashMap<>();
-				provinceMap.put("provinceName"+i, provinceName);
-				provinceMap.put("provinceCode"+i, provinceCode);
-				province = provinceMap.get("provinceCode"+i)+"";
-				provinceCityArea.put("province" + i, (HashMap<String, Object>) provinceMap);
+		// 查询省市区
+		Table table = provinceCityAreaDao.findAllProvinceCityArea();
+		// System.out.println(Transform.tableToJson(table));
+		if (table != null && table.getRows().size() > 0) {
+			List<Row> lr = table.getRows();
+			for (int i = 0; i < lr.size(); i++) {
+				areaMap = new HashMap<>();
+				String areaCode = lr.get(i).getValue("areaCode") + "";
+				String areaName = lr.get(i).getValue("areaName") + "";
+				String cityCode = lr.get(i).getValue("cityCode") + "";
+				String cityName = lr.get(i).getValue("cityName") + "";
+				String provinceCode = lr.get(i).getValue("provinceCode") + "";
+				String provinceName = lr.get(i).getValue("provinceName") + "";
+				if (provinceMap != null && provinceMap.get(provinceName + "_" + provinceCode) != null) {
+					String cityKey = provinceMap.get(provinceName + "_" + provinceCode).get(cityName + "_" + cityCode)
+							+ "";
+					if (cityKey != null && !cityKey.equals("null")) {
+						cityMap = new HashMap<>();
+						provinceMap.get(provinceName + "_" + provinceCode).get(cityName + "_" + cityCode).put(areaCode,
+								areaName);
+					} else {
+						areaMap.put(areaCode, areaName);
+						provinceMap.get(provinceName + "_" + provinceCode).put(cityName + "_" + cityCode, areaMap);
+
+					}
+				} else {//省份不存在时
+					provinceMap = new HashMap<>();
+					if (areaCode != null && !areaCode.trim().equals("null")) {
+						cityMap = new HashMap<>();
+						areaMap.put(areaCode, areaName);
+						cityMap.put(cityName + "_" + cityCode, areaMap);
+					} else {//当省份下没有城市时
+						cityMap = new HashMap<>();
+						areaMap.put("", "");
+						cityMap.put("", areaMap);
+					}
+					provinceMap.put(provinceName + "_" + provinceCode, cityMap);
+					provinceList.add(provinceMap);
+				}
 			}
-			if(!city.equals(cityCode) ){
-				cityMap = new HashMap<>();
-				cityMap.put("cityName"+i, cityName);
-				cityMap.put("cityCode"+i, cityCode);
-				provinceMap.put("city" + i, cityMap);
-				city = cityMap.get("cityCode"+i)+"";
-			}
-			areaMap.put("areaName" + i, areaName);
-			areaMap.put("areaCode" + i, areaCode);
-			cityMap.put("area" + i, areaMap);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), provinceList);
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 		}
-		return provinceCityArea;
+		return statusMap;
 	}
 
 }

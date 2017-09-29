@@ -9,10 +9,10 @@
             <generator class="identity" />
         </id>
         <property name="customsPort" type="java.lang.String">
-            <column name="customsPort" />
+            <column name="customsPort" unique="true"/>
         </property>
         <property name="customsPortName" type="java.lang.String">
-            <column name="customsPortName" />
+            <column name="customsPortName" unique="true"/>
         </property>
         <property name="cityCode" type="java.lang.String">
             <column name="cityCode" />
