@@ -29,6 +29,7 @@ public class GoodsContentTransaction {
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
+	//商户添加商品基本信息
 	public boolean addMerchantGoodsBaseInfo(HttpServletRequest req) {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
@@ -69,6 +70,7 @@ public class GoodsContentTransaction {
 	}
 
 
+	//商户查询商品基本信息
 	public Map<String, Object> findAllGoodsInfo(String goodsId, String goodsName, String startTime, String endTime,
 			String ymYear, int page, int size) {
 		Map<String, Object> datasMap = new HashMap<>();
@@ -92,6 +94,7 @@ public class GoodsContentTransaction {
 	}
 
 	
+	//商户修改商品信息
 	public boolean editMerchantGoodsBaseInfo(HttpServletRequest req) {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
@@ -122,7 +125,7 @@ public class GoodsContentTransaction {
 		return flag;
 	}
 
-	
+	//删除商品基本信息
 	public Map<String, Object> deleteMerchantBaseInfo(String goodsId) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();

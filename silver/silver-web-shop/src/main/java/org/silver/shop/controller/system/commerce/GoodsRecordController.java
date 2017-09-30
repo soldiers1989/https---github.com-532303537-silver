@@ -84,6 +84,7 @@ public class GoodsRecordController {
 	}
 	
 	
+	
 	public static void main(String[] args) {
 		JSONArray json = new JSONArray();
 		String a = "YM_20170000115058114089963091";

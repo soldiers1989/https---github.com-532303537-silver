@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 口岸管理实体类
+ * 口岸及已开通海关、国检信息实体类
  */
-public class PortManage implements Serializable {
+public class CustomsPort implements Serializable {
 
 	/**
 	 * 

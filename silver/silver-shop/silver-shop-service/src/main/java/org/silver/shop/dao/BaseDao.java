@@ -132,4 +132,5 @@ public interface BaseDao<T> {
 	 */
 	public String findGoodsYearLastId(Class entity, int year);
 
+
 }

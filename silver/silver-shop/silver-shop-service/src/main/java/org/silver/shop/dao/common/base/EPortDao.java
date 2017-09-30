@@ -16,18 +16,27 @@ public interface EPortDao {
 	 */
 	public List<Object> findByProperty(Class entity, Map params, int page, int size);
 
-	
 	/**
 	 * 保存实体
+	 * 
 	 * @param entity
 	 * @return
 	 */
 	public boolean add(Object entity);
 
-
 	/**
-	 * 将省市口岸三级联动,汇成一张表数据
+	 * 根据实体查询所有数据
+	 * @param entity
+	 * @param page
+	 * @param size
 	 * @return
 	 */
-	public Table findProvinceCityEport();
+	public List<Object> findAll(Class entity, int page, int size);
+	
+	/**
+	 * 根据实体更新数据
+	 * @param entity
+	 * @return
+	 */
+	public boolean update(Object entity);
 }

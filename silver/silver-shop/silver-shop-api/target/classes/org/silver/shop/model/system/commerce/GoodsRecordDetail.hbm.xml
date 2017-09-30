@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-9-30 17:07:39 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.GoodsRecordDetail" table="ym_shop_goods_record_detail">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="seq" type="int">
+            <column name="seq" />
+        </property>
+        <property name="entGoodsNo" type="java.lang.String">
+            <column name="entGoodsNo" />
+        </property>
+        <property name="entGoodsNoSKU" type="java.lang.String">
+            <column name="entGoodsNoSKU" />
+        </property>
+        <property name="eportGoodsNo" type="java.lang.String">
+            <column name="eportGoodsNo" />
+        </property>
+        <property name="ciqGoodsNo" type="java.lang.String">
+            <column name="ciqGoodsNo" />
+        </property>
+        <property name="cusGoodsNo" type="java.lang.String">
+            <column name="cusGoodsNo" />
+        </property>
+        <property name="emsNo" type="java.lang.String">
+            <column name="emsNo" />
+        </property>
+        <property name="itemNo" type="java.lang.String">
+            <column name="itemNo" />
+        </property>
+        <property name="shelfGName" type="java.lang.String">
+            <column name="shelfGName" />
+        </property>
+        <property name="ncadCode" type="java.lang.String">
+            <column name="ncadCode" />
+        </property>
+        <property name="hsCode" type="java.lang.String">
+            <column name="hsCode" />
+        </property>
+        <property name="barCode" type="java.lang.String">
+            <column name="barCode" />
+        </property>
+        <property name="goodsName" type="java.lang.String">
+            <column name="goodsName" />
+        </property>
+        <property name="goodsStyle" type="java.lang.String">
+            <column name="goodsStyle" />
+        </property>
+        <property name="brand" type="java.lang.String">
+            <column name="brand" />
+        </property>
+        <property name="gUnit" type="java.lang.String" access="field">
+            <column name="gUnit" />
+        </property>
+        <property name="stdUnit" type="java.lang.String">
+            <column name="stdUnit" />
+        </property>
+        <property name="secUnit" type="java.lang.String">
+            <column name="secUnit" />
+        </property>
+        <property name="regPrice" type="java.lang.Double">
+            <column name="regPrice" />
+        </property>
+        <property name="giftFlag" type="java.lang.String">
+            <column name="giftFlag" />
+        </property>
+        <property name="originCountry" type="java.lang.String">
+            <column name="originCountry" />
+        </property>
+        <property name="quality" type="java.lang.String">
+            <column name="quality" />
+        </property>
+        <property name="qualityCertify" type="java.lang.String">
+            <column name="qualityCertify" />
+        </property>
+        <property name="manufactory" type="java.lang.String">
+            <column name="manufactory" />
+        </property>
+        <property name="netWt" type="java.lang.Double">
+            <column name="netWt" />
+        </property>
+        <property name="grossWt" type="java.lang.Double">
+            <column name="grossWt" />
+        </property>
+        <property name="notes" type="java.lang.String">
+            <column name="notes" />
+        </property>
+        <property name="status" type="int">
+            <column name="status" />
+        </property>
+        <property name="recordFalg" type="int">
+            <column name="recordFalg" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+        <property name="goodsMerchantName" type="java.lang.String">
+            <column name="goodsMerchantName" />
+        </property>
+        <property name="goodsSerialNo" type="java.lang.String">
+        	<column name="goodsSerialNo" />
+        </property>
+    </class>
+</hibernate-mapping>

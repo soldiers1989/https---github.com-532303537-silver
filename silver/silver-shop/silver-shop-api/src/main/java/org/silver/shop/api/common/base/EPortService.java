@@ -18,14 +18,32 @@ public interface EPortService {
 	 * @param customsPort 口岸编码
 	 * @param customsPortName 口岸名称
 	 * @param cityCode 关联城市编码
+	 * @param provinceName 
+	 * @param provinceCode 
+	 * @param cityName 
 	 * @return 
 	 */
-	public Map<String, Object> addEPort(String customsPort, String customsPortName, String cityCode);
+	public Map<String, Object> addEPort(String customsPort, String customsPortName, String cityCode, String cityName, String provinceCode, String provinceName);
 
 	
 	/**
-	 *	查询省市口岸,并进行响应等级封装
+	 *	查询所有省市口岸
 	 */
-	public List<Object> findEPort();
+	public Map<String, Object> findAllEPort();
+
+	
+	
+	/**
+	 * 根据口岸自增ID,修改信息
+	 * @param id
+	 * @param provinceName 
+	 * @param provinceCode 
+	 * @param cityName 
+	 * @param cityCode 
+	 * @param customsPortName 
+	 * @param customsPort 
+	 * @return 
+	 */
+	public Map<String, Object> editEPotInfo(long id, String customsPort, String customsPortName, String cityCode, String cityName, String provinceCode, String provinceName);
 	
 }

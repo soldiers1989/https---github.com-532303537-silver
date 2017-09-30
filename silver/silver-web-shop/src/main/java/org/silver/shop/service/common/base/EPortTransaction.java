@@ -21,6 +21,7 @@ public class EPortTransaction {
 	@Reference
 	private EPortService ePortService;
 
+	// 检查口岸名是否重复
 	public Map<String, Object> checkEPortName(String customsPortName) {
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Object> reList = ePortService.checkEportName(customsPortName);
@@ -34,23 +35,50 @@ public class EPortTransaction {
 		return datasMap;
 	}
 
-	public Map<String,Object> addEPort(String customsPort, String customsPortName, String cityCode) {
-		Map<String,Object> datasMap = new HashMap<>();
-		datasMap = ePortService.addEPort(customsPort,customsPortName,cityCode);
-		String status = datasMap.get(BaseCode.STATUS.toString())+"";
-		if(status.equals("1")){
+	// 添加开通的口岸
+	public Map<String, Object> addEPort(String customsPort, String customsPortName, String cityCode, String cityName,
+			String provinceCode, String provinceName) {
+		Map<String, Object> datasMap = new HashMap<>();
+		datasMap = ePortService.addEPort(customsPort, customsPortName, cityCode, cityName, provinceCode, provinceName);
+		String status = datasMap.get(BaseCode.STATUS.toString()) + "";
+		if (status.equals("1")) {
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		}else{
+		} else {
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getStatus());
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
 		}
 		return datasMap;
 	}
 
-	public void findEPort() {
-		Map<String,Object> datasMap = new HashMap<>();
-		ePortService.findEPort();
+	// 查询全部口岸信息
+	public Map<String, Object> findEPort() {
+		Map<String, Object> reStatusMap = null;
+		reStatusMap = ePortService.findAllEPort();
+		String status = reStatusMap.get(BaseCode.STATUS.toString()) + "";
+		if (status.equals("1")) {
+			return reStatusMap;
+		} else {
+			reStatusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		}
+		return reStatusMap;
 	}
 
+	// 修改口岸信息
+	public Map<String, Object> editEPot(long id, String customsPort, String customsPortName, String cityCode,
+			String cityName, String provinceCode, String provinceName) {
+		Map<String, Object> reStatusMap = new HashMap<>();
+		reStatusMap = ePortService.editEPotInfo(id, customsPort, customsPortName, cityCode, cityName, provinceCode,
+				provinceName);
+		String status = reStatusMap.get(BaseCode.STATUS.toString()) + "";
+		
+		if (status.equals("1")) {
+			reStatusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			reStatusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			reStatusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getStatus());
+			reStatusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+		}
+		return reStatusMap;
+	}
 }

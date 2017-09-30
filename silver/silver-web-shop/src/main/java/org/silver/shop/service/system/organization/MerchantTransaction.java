@@ -30,13 +30,7 @@ public class MerchantTransaction {
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
-	/**
-	 * 检查商户名称是否重复
-	 * 
-	 * @param account
-	 *            商户名称
-	 * @return Map
-	 */
+	//检查商户名称是否重复
 	public List<Object> checkMerchantName(String account) {
 		Map<String, Object> dataMap = new HashMap<>();
 		// key=(表中列名),value=传递过来的值
@@ -44,24 +38,7 @@ public class MerchantTransaction {
 		return merchantService.checkMerchantName(dataMap);
 	}
 
-	/**
-	 * 商户注册
-	 * 
-	 * @param account
-	 *            账号名
-	 * @param loginPassword
-	 *            登录密码
-	 * @param merchantIdCard
-	 *            身份证号码
-	 * @param merchantIdCardName
-	 *            身份证名称
-	 * @param recordInfoPack
-	 *            第三方商户注册备案信息包(由JSON转成String)
-	 * @param type
-	 *            1-银盟商户注册,2-第三方商户注册
-	 * @param eport
-	 *            1-广州电子口岸(目前只支持BC业务) 2-南沙智检(支持BBC业务)
-	 */
+	// 商戶注册
 	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
 			String merchantIdCardName, String recordInfoPack, String type) {
 		Map<String, Object> datasMap = new HashMap<>();
@@ -81,15 +58,7 @@ public class MerchantTransaction {
 		return datasMap;
 	}
 
-	/**
-	 * 商户登录
-	 * 
-	 * @param account
-	 *            账号
-	 * @param loginPassword
-	 *            登录密码
-	 * @return map
-	 */
+	// 商户登录
 	public Map<String, Object> merchantLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
@@ -103,7 +72,8 @@ public class MerchantTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+				Merchant merchantInfo = (Merchant) currentUser.getSession()
+						.getAttribute(LoginType.MERCHANTINFO.toString());
 				if (merchantInfo == null) {
 					WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reList.get(0));
 				}
@@ -115,12 +85,7 @@ public class MerchantTransaction {
 		return null;
 	}
 
-	/**
-	 * 修改商户业务信息(图片及编码)
-	 * 
-	 * @param req
-	 * @return map
-	 */
+	// 修改商户业务信息(图片及编码)
 	public Map<String, Object> editBusinessInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -159,6 +124,7 @@ public class MerchantTransaction {
 		return datasMap;
 	}
 
+	//修改登录密码
 	public Map<String, Object> editLoginPassword(String oldLoginPassword, String newLoginPassword) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();

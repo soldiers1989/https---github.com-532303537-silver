@@ -27,32 +27,6 @@ public class EPortController {
 	private EPortTransaction ePortTransaction;
 
 	/**
-	 * 添加开通的口岸
-	 * 
-	 * @param customsPort
-	 *            口岸编码
-	 * @param customsPortName
-	 *            口岸名称
-	 * @param cityCode
-	 *            关联城市编码
-	 * @return
-	 */
-	@RequestMapping(value = "/addEPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("添加已开通的口岸")
-	public String addEPort(@RequestParam("customsPort") String customsPort,
-			@RequestParam("customsPortName") String customsPortName, @RequestParam("cityCode") String cityCode) {
-		Map<String, Object> statusMap = new HashMap<>();
-		if (customsPort != null && customsPortName != null && cityCode != null) {
-			statusMap = ePortTransaction.addEPort(customsPort, customsPortName, cityCode);
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.UNKNOWN.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
-	/**
 	 * 检查口岸名是否重复
 	 * 
 	 * @param customsPortName
@@ -73,16 +47,81 @@ public class EPortController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	/**
+	 * 添加开通的口岸
+	 * @param customsPort 口岸编码
+	 * @param customsPortName 口岸名称
+	 * @param cityCode 城市编码
+	 * @param cityName 城市中文名称
+	 * @param provinceCode 省份编码
+	 * @param provinceName 省份中文名称
+	 * @return String
+	 */
+	@RequestMapping(value = "/addEPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("添加已开通的口岸")
+	public String addEPort(@RequestParam("customsPort") String customsPort,
+			@RequestParam("customsPortName") String customsPortName, @RequestParam("cityCode") String cityCode,
+			@RequestParam("cityName") String cityName, @RequestParam("provinceCode") String provinceCode,
+			@RequestParam("provinceName") String provinceName) {
+		Map<String, Object> statusMap = new HashMap<>();
+		if (customsPort != null && customsPortName != null) {
+			statusMap = ePortTransaction.addEPort(customsPort, customsPortName, cityCode, cityName, provinceCode,
+					provinceName);
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.UNKNOWN.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	
 
 	/**
-	 * 查询省市口岸三级联动
+	 * 查询省市下关联的口岸
+	 * 
 	 * @return
 	 */
 	@RequestMapping(value = "/findEPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("查询省市口岸三级联动")
+	@ApiOperation("查询省市下关联的口岸")
 	public String findEPort() {
-		ePortTransaction.findEPort();
-		return null;
+		Map<String, Object> statusMap = new HashMap<>();
+		statusMap = ePortTransaction.findEPort();
+		if (statusMap != null) {
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.UNKNOWN.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	/**
+	 * 修改口岸
+	 * @param id 数据库流水ID
+	 * @param customsPort 口岸编码
+	 * @param customsPortName 口岸名称
+	 * @param cityCode 城市编码
+	 * @param cityName 城市名称
+	 * @param provinceCode 省份编码
+	 * @param provinceName 省份名字
+	 * @return
+	 */
+	@RequestMapping(value = "/editEPot", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("修改口岸")
+	public String editEPot(@RequestParam("id")long id,@RequestParam("customsPort") String customsPort,@RequestParam("customsPortName")String customsPortName,
+			@RequestParam("cityCode")String cityCode,@RequestParam("cityName")String cityName,@RequestParam("provinceCode")String provinceCode,
+			@RequestParam("provinceName")String provinceName){
+		Map<String,Object> stautsMap = new HashMap<>();
+		if(StringEmptyUtils.isNotEmpty(id)){
+			stautsMap = ePortTransaction.editEPot(id,customsPort,customsPortName,cityCode,cityName,provinceCode,provinceName);
+		}else{
+			stautsMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+			stautsMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(stautsMap).toString();
 	}
 }

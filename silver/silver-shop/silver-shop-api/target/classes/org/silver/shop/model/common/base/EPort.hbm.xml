@@ -3,19 +3,31 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-9-27 11:14:29 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.common.base.EPort" table="ym_shop_sys_eport">
-        <id name="id" type="long">
-            <column name="id" />
-            <generator class="identity" />
-        </id>
-        <property name="customsPort" type="java.lang.String">
-            <column name="customsPort" unique="true"/>
-        </property>
-        <property name="customsPortName" type="java.lang.String">
-            <column name="customsPortName" unique="true"/>
-        </property>
-        <property name="cityCode" type="java.lang.String">
-            <column name="cityCode" />
-        </property>
-    </class>
+	<class name="org.silver.shop.model.common.base.EPort" table="ym_shop_sys_eport">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="customsPort" type="java.lang.String">
+			<column name="customsPort" unique="true" />
+		</property>
+		<property name="customsPortName" type="java.lang.String">
+			<column name="customsPortName" unique="true" />
+		</property>
+		<property name="cityCode" type="java.lang.String">
+			<column name="cityCode" />
+		</property>
+
+		<property name="cityName">
+			<column name="cityName" />
+		</property>
+
+		<property name="provinceCode">
+			<column name="provinceCode" not-null="true" />
+		</property>
+
+		<property name="provinceName">
+			<column name="provinceName" not-null="true" />
+		</property>
+	</class>
 </hibernate-mapping>

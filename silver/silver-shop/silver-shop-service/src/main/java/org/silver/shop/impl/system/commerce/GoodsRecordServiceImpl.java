@@ -13,6 +13,7 @@ import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordContent;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,17 +98,17 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			String mapGoodsName = goodsMap.get("goodsName") + "";
 			String descParam = "createDate";
 			// key=数据库列名,value=查询参数
-			params.put("goodsMerchantName", mapGoodsName);
+			params.put("goodsName", mapGoodsName);
+			params.put("goodsMerchantName", merchantName);
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
 			// 根据商品名,扫描商品备案信息表
 			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecordContent.class, params, descParam,
 					1, 1);
 			if (goodsRecordList != null && goodsRecordList.size() > 0) {
-				GoodsRecordContent goodsRecordInfo = (GoodsRecordContent) goodsRecordList.get(0);
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
 				goodsRecordInfo.setEntGoodsNo(goodsId);
 				goodsBaseList.add(goodsRecordInfo);
-				System.out.println("扫描了备案商品信息表");
 			} else {// 如果该商品在商品备案信息表中没有数据,则根据商品名称商品ID扫描商品基本信息表
 				params.clear();
 				// key=数据库列名,value=查询参数
@@ -119,7 +120,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
 				goodsInfo.setGoodsId(goodsId);
 				goodsBaseList.add(goodsInfo);
-				System.out.println("扫描了商品信息表");
 			}
 		}
 		params.put(BaseCode.DATAS.toString(), goodsBaseList);

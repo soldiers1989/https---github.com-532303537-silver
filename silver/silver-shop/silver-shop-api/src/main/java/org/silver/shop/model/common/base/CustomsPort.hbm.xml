@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-31 9:54:31 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.common.base.PortManage" table="ym_shop_sys_port_manage">
+    <class name="org.silver.shop.model.common.base.CustomsPort" table="ym_shop_sys_customs_port">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />

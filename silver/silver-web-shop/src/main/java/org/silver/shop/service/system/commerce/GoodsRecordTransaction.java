@@ -23,6 +23,7 @@ public class GoodsRecordTransaction {
 	@Reference
 	private GoodsRecordService goodsRecordService;
 
+	//查询商户下商品基本信息
 	public List<Object> findMerchantGoodsBaseInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -32,10 +33,10 @@ public class GoodsRecordTransaction {
 		if (datasList != null && datasList.size() > 0) {
 			return datasList;
 		}
-
 		return null;
 	}
 
+	//商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	public List<Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
