@@ -11,7 +11,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.RecordInfo;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,15 +75,15 @@ public class MerchantServiceImpl implements MerchantService {
 	public Map<String, Object> findOriginalMerchantId() {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 扫描获取数据库表中的商户自增长ID
-		Long merchantCount = merchantDao.findLastId();
-		// 得出的总数上+1
-		Long count = merchantCount + 1;
-		if (count < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
+		long merchantCount = merchantDao.findLastId();
+		if (merchantCount < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		String merchantId = count + "";
+		// 得出的总数上+1
+		long count = merchantCount + 1;
+		String merchantId = String.valueOf(count);
 		// 当商户ID没有5位数时,前面补0
 		while (merchantId.length() < 5) {
 			merchantId = "0" + merchantId;
@@ -96,7 +96,7 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public boolean addMerchantRecordInfo(RecordInfo entity, String type) {
+	public boolean addMerchantRecordInfo(MerchantRecordInfo entity, String type) {
 		boolean flag = false;
 		if (type.equals("1")) {// 银盟自己商户备案信息插入
 			for (int x = 0; x < list.size(); x++) {
@@ -120,7 +120,7 @@ public class MerchantServiceImpl implements MerchantService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
-		RecordInfo recordInfo = new RecordInfo();
+		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
 		boolean merchantFlag = false;
 		boolean recordFlag = false;

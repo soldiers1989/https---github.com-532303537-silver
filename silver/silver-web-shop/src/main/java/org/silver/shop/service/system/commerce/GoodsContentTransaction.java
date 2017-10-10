@@ -36,11 +36,12 @@ public class GoodsContentTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
+		String merchantId = merchantInfo.getMerchantId();
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg",
 				false, 800, 800, null);
 		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
 		if (status.equals("1")) {// 商品展示图片上传成功后
-			System.out.println("商品展示图片上传成功后");
+			//System.out.println("商品展示图片上传成功后");
 			Date date = new Date();
 			// 获取商品基本信息的自增ID
 			Map<String, Object> reMap = goodsContentService.createGoodsId();
@@ -63,7 +64,7 @@ public class GoodsContentTransaction {
 				String goodsBarCode = req.getParameter("goodsBarCode");
 				flag = goodsContentService.addGoodsBaseInfo(goodsId, merchantName, goodsName, imgList, goodsFirstType,
 						goodsSecondType, goodsThirdType, goodsDetail, goodsBrand, goodsStyle, goodsUnit, goodsRegPrice,
-						goodsOriginCountry, goodsBarCode, year, date);
+						goodsOriginCountry, goodsBarCode, year, date,merchantId);
 			}
 		}
 		return flag;

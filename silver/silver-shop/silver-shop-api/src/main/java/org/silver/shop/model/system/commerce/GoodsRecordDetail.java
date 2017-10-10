@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 备案商品信息
+ * 备案商品详细信息
  */
 public class GoodsRecordDetail implements Serializable {
 
@@ -52,6 +52,7 @@ public class GoodsRecordDetail implements Serializable {
 	private Date deleteDate;// 删除时间
 	private String goodsMerchantName;//商品归属商戶名
 	private String goodsSerialNo;// 备案所属商品流水号
+	private String goodsMerchantId;//归属商户ID
 	public long getId() {
 		return id;
 	}
@@ -288,6 +289,12 @@ public class GoodsRecordDetail implements Serializable {
 	}
 	public void setGoodsSerialNo(String goodsSerialNo) {
 		this.goodsSerialNo = goodsSerialNo;
+	}
+	public String getGoodsMerchantId() {
+		return goodsMerchantId;
+	}
+	public void setGoodsMerchantId(String goodsMerchantId) {
+		this.goodsMerchantId = goodsMerchantId;
 	}
 	
 	

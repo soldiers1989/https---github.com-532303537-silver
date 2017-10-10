@@ -27,7 +27,7 @@ public class GoodsContent implements Serializable {
 	private Double goodsRegPrice;// 商品价格
 	private String goodsOriginCountry;// 商品原厂国
 	private String goodsBarCode;// 商品货号(条形码)
-	private String ymYear;//商品录入年份
+	private String goodsYear;//商品录入年份
 	private String createBy;//创建人
 	private Date createDate;//创建时间
 	private String updateBy;//修改人
@@ -35,6 +35,8 @@ public class GoodsContent implements Serializable {
 	private int deleteFlag;//删除标识:0-未删除,1-已删除
 	private String deleteBy;//删除人
 	private Date deleteDate;//删除时间
+	
+	private String goodsMerchantId;//商品归属商戶id
 	public long getId() {
 		return id;
 	}
@@ -127,12 +129,7 @@ public class GoodsContent implements Serializable {
 		this.goodsBarCode = goodsBarCode;
 	}
 	
-	public String getYmYear() {
-		return ymYear;
-	}
-	public void setYmYear(String ymYear) {
-		this.ymYear = ymYear;
-	}
+	
 	public String getCreateBy() {
 		return createBy;
 	}
@@ -175,6 +172,18 @@ public class GoodsContent implements Serializable {
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getGoodsYear() {
+		return goodsYear;
+	}
+	public void setGoodsYear(String goodsYear) {
+		this.goodsYear = goodsYear;
+	}
+	public String getGoodsMerchantId() {
+		return goodsMerchantId;
+	}
+	public void setGoodsMerchantId(String goodsMerchantId) {
+		this.goodsMerchantId = goodsMerchantId;
 	}
 	
 	

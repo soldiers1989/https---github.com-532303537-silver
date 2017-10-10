@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 商戶海关(口岸)备案编码信息
  */
-public class RecordInfo implements Serializable {
+public class MerchantRecordInfo implements Serializable {
 
 	/**
 	 * 

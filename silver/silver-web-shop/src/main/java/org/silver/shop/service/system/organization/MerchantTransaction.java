@@ -30,7 +30,7 @@ public class MerchantTransaction {
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
-	//检查商户名称是否重复
+	// 检查商户名称是否重复
 	public List<Object> checkMerchantName(String account) {
 		Map<String, Object> dataMap = new HashMap<>();
 		// key=(表中列名),value=传递过来的值
@@ -40,8 +40,7 @@ public class MerchantTransaction {
 
 	// 商戶注册
 	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, String type) {
-		Map<String, Object> datasMap = new HashMap<>();
+		String merchantIdCardName, String recordInfoPack, String type) {
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
 		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
@@ -49,13 +48,9 @@ public class MerchantTransaction {
 			// 获取返回来的商户ID
 			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 			// 商户注册
-			datasMap = merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type);
-			return datasMap;
+			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,merchantIdCardName, recordInfoPack, type);
 		}
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), "注册失败,请检查商户信息是否正确！");
-		return datasMap;
+		return reIdMap;
 	}
 
 	// 商户登录
@@ -124,7 +119,7 @@ public class MerchantTransaction {
 		return datasMap;
 	}
 
-	//修改登录密码
+	// 修改登录密码
 	public Map<String, Object> editLoginPassword(String oldLoginPassword, String newLoginPassword) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();

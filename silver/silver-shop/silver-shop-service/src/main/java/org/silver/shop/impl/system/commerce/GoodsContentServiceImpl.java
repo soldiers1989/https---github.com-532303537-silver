@@ -11,6 +11,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.util.SerialNoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	public Map<String, Object> createGoodsId() {
 		Map<String, Object> datasMap = new HashMap<>();
 		Calendar cal = Calendar.getInstance();
-		String goodsId = "";
-		String topStr = "YM_";
 		int count = 0;
 		// 获取当前年份
-		int year = cal.get(Calendar.YEAR) ;
+		int year = cal.get(Calendar.YEAR);
 		// 根据年份查询,当前年份有多少条数据
 		String lastOneGoodsId = goodsContentDao.findGoodsYearLastId(GoodsContent.class, year);
 		if (lastOneGoodsId == null) {
@@ -48,17 +47,11 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			// 商品自增ID,得出的自增数上+1
 			count = Integer.parseInt(countId) + 1;
 		}
+		// 商品基本信息编号抬头
+		String topStr = "YM_";
+		//自增数
 		String strCount = String.valueOf(count);
-		// 当商户ID没有5位数时,前面补0
-		while (strCount.length() < 5) {
-			strCount = "0" + strCount;
-		}
-		// 获取到当前时间戳
-		Long current = System.currentTimeMillis();
-		// 随机4位数
-		int ramCount = (int) ((Math.random() * 9 + 1) * 1000);
-		// 商品自编号为 YM_+(当前)年+五位自增数(数据库中当前年份的数量+1)+时间戳(13位)+4位随机数
-		goodsId = topStr + year + strCount + current + ramCount;
+		String goodsId = SerialNoUtils.getSerialNo(topStr, strCount);
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		datasMap.put(BaseCode.DATAS.getBaseCode(), goodsId);
 		return datasMap;
@@ -68,7 +61,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	public boolean addGoodsBaseInfo(String goodsId, String merchantName, String goodsName, List imgList,
 			String goodsFirstType, String goodsSecondType, String goodsThirdType, String goodsDetail, String goodsBrand,
 			String goodsStyle, String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			int year, Date date) {
+			int year, Date date,String merchantId) {
 		boolean flag = false;
 		String goodsImage = "";
 		// 拼接多张图片字符串
@@ -95,10 +88,11 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		goodsInfo.setGoodsRegPrice(Double.valueOf((goodsRegPrice)));
 		goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
 		goodsInfo.setGoodsBarCode(goodsBarCode);
-		goodsInfo.setYmYear(year + "");
+		goodsInfo.setGoodsYear(year + "");
 		goodsInfo.setCreateDate(date);
 		goodsInfo.setCreateBy(merchantName);
 		goodsInfo.setDeleteFlag(0);
+		goodsInfo.setGoodsMerchantId(merchantId);
 		flag = goodsContentDao.add(goodsInfo);
 		return flag;
 	}

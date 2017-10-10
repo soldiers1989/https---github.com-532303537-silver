@@ -12,7 +12,7 @@ public interface MerchantDao extends BaseDao {
 	 * 
 	 * @return long
 	 */
-	public Long findLastId();
+	public long findLastId();
 
 	/**
 	 * 保存商户信息

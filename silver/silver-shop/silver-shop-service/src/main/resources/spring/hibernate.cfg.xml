@@ -39,6 +39,7 @@
 		<mapping resource="org/silver/shop/model/system/organization/Merchant.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantRecordInfo.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/GoodsContent.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/GoodsRecord.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/GoodsRecordDetail.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/category/GoodsFirstType.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/category/GoodsSecondType.hbm.xml"/>

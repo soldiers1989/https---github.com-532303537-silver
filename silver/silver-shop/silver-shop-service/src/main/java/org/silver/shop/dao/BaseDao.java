@@ -85,7 +85,7 @@ public interface BaseDao<T> {
 	 *            实体类名
 	 * @return
 	 */
-	public Long findLastId(Class<T> entity);
+	public long findLastId(Class<T> entity);
 
 	/**
 	 * 模糊查询数据匹配时间段参数

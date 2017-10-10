@@ -122,5 +122,8 @@
         <property name="goodsSerialNo" type="java.lang.String">
         	<column name="goodsSerialNo" />
         </property>
+        <property name="goodsMerchantId" type="java.lang.String">
+        	<column name="goodsMerchantId"/>
+        </property>
     </class>
 </hibernate-mapping>

@@ -1,6 +1,5 @@
 package org.silver.shop.dao;
 
-import java.awt.geom.Area;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,8 +10,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.model.common.base.City;
-import org.silver.shop.model.common.base.Province;
+import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
 
 /**
@@ -191,7 +189,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public Long findLastId(Class entity) {
+	public long findLastId(Class entity) {
 		Session session = null;
 		try {
 			String entName = entity.getSimpleName();
@@ -202,9 +200,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			// 设置查询结果分页
 			query.setFirstResult(0).setMaxResults(1);
 			if (query.uniqueResult() == null) {
-				return (long) 0;
+				return (int) 0;
 			}
-			Long count = (long) query.uniqueResult();
+			long count = (long) query.uniqueResult();
 			session.close();
 			return count;
 		} catch (Exception re) {
@@ -338,7 +336,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		bd.findAll(org.silver.shop.model.common.base.Area.class, 0, 0);
+		System.out.println(bd.findGoodsYearLastId(GoodsContent.class,2017));
 	}
 
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
-import org.silver.shop.model.system.commerce.GoodsRecordContent;
+import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.springframework.stereotype.Repository;
 
 @Repository("goodsRecordDao")
@@ -24,7 +24,7 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsReco
 
 	@Override
 	public Long findLastId() {
-		return super.findLastId(GoodsRecordContent.class);
+		return super.findLastId(GoodsRecord.class);
 	}
 	
 	@Override
