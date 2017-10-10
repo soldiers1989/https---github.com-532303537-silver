@@ -13,11 +13,12 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private Long id;  //流水号ID
+	private String tenantNo;
 	private String account; //账号
 	private String password; //密码
 	private String description;  //描述
 	private String userType;//登录账户类别：1 管理员（admin）  2 电商平台  3 物流企业  4电商 5运营人员 
-	
+	private String app_key;//appKey  关联的各个电商平台企业备案号
 	private int del_flag;//0正常   1删除
 	private Date create_date; //创建时间
 	private String create_by; //创建人
@@ -90,8 +91,11 @@ public class User implements Serializable {
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
+	public String getApp_key() {
+		return app_key;
+	}
+	public void setApp_key(String app_key) {
+		this.app_key = app_key;
 	}
 	
 }

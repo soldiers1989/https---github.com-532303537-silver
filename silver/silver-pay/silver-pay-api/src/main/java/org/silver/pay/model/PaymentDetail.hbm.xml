@@ -66,13 +66,7 @@
               <column name="Notes" />
          </property>
          
-          <property name="status">
-              <column name="status" />
-         </property>
-         
-          <property name="count" type="java.lang.Integer">
-              <column name="count" />
-         </property>
+        
          
          
       

@@ -261,7 +261,7 @@ public class GoodsRecordDao extends HibernateDaoImpl {
 		gr.setOrgMessageID("4566456");
 		gr.setCiqStatus("0");
 		gr.setCusStatus("0");
-		gr.setStatus("0");
+		gr.setStatus(0);
 		gr.setCount(0);
 		gr.setCreate_date(new Date());
 		gr.setDel_flag(0);

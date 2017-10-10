@@ -26,19 +26,14 @@ import org.silver.sys.model.order.OrderHead;
 import org.silver.sys.model.order.OrderRecord;
 import org.springframework.stereotype.Component;
 
-@Component("timedTaskTest")
-public class TimedTaskTest {
+@Component("timedTaskGoodsRecord")
+public class TimedTaskGoodsRecord {
 
 	@Resource
 	private GoodsRecordDao goodsRecordDao;
 	@Resource
 	private GoodsInfoDao goodsInfoDao;
-	@Resource
-	private OrderHeadDao orderHeadDao;
-	@Resource
-	private OrderRecordDao orderRecordDao;
-	@Resource
-	private OrderGoodsDao orderGoodsDao;
+	
 
 	private Timer task;
 
@@ -55,6 +50,7 @@ public class TimedTaskTest {
 	public void findOutFromGoodsRecordToFTP(String status) {
 		List<GoodsRecord> goodsRecordList = findOutFromGoodsRecord(status);
 		GoodsRecord goodsRecord = null;
+		boolean bln;
 		if (goodsRecordList == null) {
 			return;
 		}
@@ -63,69 +59,83 @@ public class TimedTaskTest {
 			goodsRecord = goodsRecordList.get(i);
 			if (goodsRecord.getFilePath() != null) {// 判断文件路径不为空时
 				if (1 == goodsRecord.getEport() && goodsRecord.getCount() <= 10) {// 电子口岸
-
 					File file = new File(goodsRecord.getFilePath());
 					if (file.exists()) {// 判断文件是否存在
-						if (findOutFromGoodsRecordToFtp(GZFtpConfig.FTP_ID, GZFtpConfig.FTP_PORT,
+						bln=findOutFromGoodsRecordToFtp(GZFtpConfig.FTP_ID, GZFtpConfig.FTP_PORT,
 								GZFtpConfig.FTP_USER_NAME_YM, GZFtpConfig.FTP_PASS_WORD_YM, "/in/",
-								goodsRecord.getFilePath())) {
+								goodsRecord.getFilePath());
+						if(bln){
 							updateGoodsRecord(goodsRecord);
+						}else{
+							uploadFailedGoodsRecord(goodsRecord);
 						}
 					} else {
 						String orgMessageID = goodsRecord.getOrgMessageID();
-						List<GoodsInfo> goodsInfoList = findOutFromGoodsInfo(orgMessageID);
-						GZEportServiceImpl impl = new GZEportServiceImpl();
-						Map<String, Object> statusMap = impl.convertGoodsRecordIntoXML(goodsRecord, goodsInfoList);
-						if (1 == Integer.valueOf(statusMap.get("status") + "")) {
-							if (findOutFromGoodsRecordToFtp(GZFtpConfig.FTP_ID, GZFtpConfig.FTP_PORT,
-									GZFtpConfig.FTP_USER_NAME_YM, GZFtpConfig.FTP_PASS_WORD_YM, "/in/",
-									statusMap.get("path") + "")) {
-								updateGoodsRecord(goodsRecord);
-							}
-
-						}
+						gzAccordingToIdProductionDocuments(orgMessageID, goodsRecord);
 					}
-
 				}
 				if (2 == goodsRecord.getEport() && goodsRecord.getCount() < 10) {// 智检口岸
-					findOutFromGoodsRecordToFtp(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT, NSFtpConfig.FTP_USER_NAME_YM,
-							NSFtpConfig.FTP_PASS_WORD_YM, NSFtpConfig.FTP_GOODS_ROUTE_IN, goodsRecord.getFilePath());
-
+					File file = new File(goodsRecord.getFilePath());
+					if (file.exists()) {// 判断文件是否存在
+						bln=findOutFromGoodsRecordToFtp(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT, NSFtpConfig.FTP_USER_NAME_YM,
+								NSFtpConfig.FTP_PASS_WORD_YM, NSFtpConfig.FTP_GOODS_ROUTE_IN, goodsRecord.getFilePath());
+						if(bln){
+							updateGoodsRecord(goodsRecord);
+						}else{
+							uploadFailedGoodsRecord(goodsRecord);
+						}
+					}else{
+						String orgMessageID = goodsRecord.getOrgMessageID();
+						zjAccordingToIdProductionDocuments(orgMessageID, goodsRecord);
+					}
 				}
-
 			} else {// 当文件路径为空时
 				if (goodsRecord.getEport() == 1 && goodsRecord.getCount() <= 10) {// 判断口岸
-																					
 					String orgMessageID = goodsRecord.getOrgMessageID();
-					List<GoodsInfo> goodsInfoList = findOutFromGoodsInfo(orgMessageID);
-					GZEportServiceImpl impl = new GZEportServiceImpl();
-					Map<String, Object> statusMap = impl.convertGoodsRecordIntoXML(goodsRecord, goodsInfoList);
-					if (1 == Integer.valueOf(statusMap.get("status") + "")) {
-						if (findOutFromGoodsRecordToFtp(GZFtpConfig.FTP_ID, GZFtpConfig.FTP_PORT,
-								GZFtpConfig.FTP_USER_NAME_YM, GZFtpConfig.FTP_PASS_WORD_YM, "/in/",
-								statusMap.get("path") + "")) {
-							updateGoodsRecord(goodsRecord);
-						}
-
-					}
+					gzAccordingToIdProductionDocuments(orgMessageID, goodsRecord);
 				}
 				if (2 == goodsRecord.getEport() && goodsRecord.getCount() < 10) {
 					String orgMessageID = goodsRecord.getOrgMessageID();
-					List<GoodsInfo> goodsInfoList = findOutFromGoodsInfo(orgMessageID);
-					ZJEportServiceImpl impl = new ZJEportServiceImpl();
-					Map<String, Object> statusMap = impl.zjCreateGoodsRecordXML(goodsRecord, goodsInfoList, "A");
-					System.out.println("重新生成报文成功！" + statusMap.get("status"));
-					if (Integer.valueOf(statusMap.get("status") + "") == 1) {
-						if (findOutFromGoodsRecordToFtp(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
-								NSFtpConfig.FTP_USER_NAME_YM, NSFtpConfig.FTP_PASS_WORD_YM,
-								NSFtpConfig.FTP_GOODS_ROUTE_IN, statusMap.get("path") + "")) {
-							updateGoodsRecord(goodsRecord);
-						}
-					}
+					zjAccordingToIdProductionDocuments(orgMessageID, goodsRecord);
 				}
 			}
 		}
 
+	}
+	public void gzAccordingToIdProductionDocuments(String orgMessageID,GoodsRecord goodsRecord){
+		boolean bln;
+		List<GoodsInfo> goodsInfoList = findOutFromGoodsInfo(orgMessageID);
+		GZEportServiceImpl impl = new GZEportServiceImpl();
+		Map<String, Object> statusMap = impl.convertGoodsRecordIntoXML(goodsRecord, goodsInfoList);
+		if (1 == Integer.valueOf(statusMap.get("status") + "")) {
+			bln=findOutFromGoodsRecordToFtp(GZFtpConfig.FTP_ID, GZFtpConfig.FTP_PORT,
+					GZFtpConfig.FTP_USER_NAME_YM, GZFtpConfig.FTP_PASS_WORD_YM, "/in/",
+					statusMap.get("path") + "");
+		    if(bln){
+		    	updateGoodsRecord(goodsRecord);
+		    }else{
+		    	uploadFailedGoodsRecord(goodsRecord);
+		    }
+		}
+	}
+	
+	public void zjAccordingToIdProductionDocuments(String orgMessageID,GoodsRecord goodsRecord){
+		boolean bln;
+		List<GoodsInfo> goodsInfoList = findOutFromGoodsInfo(orgMessageID);
+		ZJEportServiceImpl impl = new ZJEportServiceImpl();
+		Map<String, Object> statusMap = impl.zjCreateGoodsRecordXML(goodsRecord, goodsInfoList, "A");
+		System.out.println("重新生成报文成功！" + statusMap.get("status"));
+		if (Integer.valueOf(statusMap.get("status") + "") == 1) {
+			bln=findOutFromGoodsRecordToFtp(NSFtpConfig.FTP_ID, NSFtpConfig.FTP_PORT,
+					NSFtpConfig.FTP_USER_NAME_YM, NSFtpConfig.FTP_PASS_WORD_YM,
+					NSFtpConfig.FTP_GOODS_ROUTE_IN, statusMap.get("path") + "");
+			if(bln){
+				updateGoodsRecord(goodsRecord);
+			}else{
+				uploadFailedGoodsRecord(goodsRecord);
+			}	
+			
+		}
 	}
 
 	public boolean findOutFromGoodsRecordToFtp(String url, int port, String username, String password,
@@ -157,7 +167,7 @@ public class TimedTaskTest {
 
 	// 重发成功，更新数据
 	public void updateGoodsRecord(GoodsRecord goodsRecord) {
-		goodsRecord.setStatus("1");
+		goodsRecord.setStatus(1);
 		goodsRecord.setCount(goodsRecord.getCount() + 1);
 		goodsRecord.setUpdate_date(new Date());
 		goodsRecord.setUpdate_by("System");
@@ -193,38 +203,7 @@ public class TimedTaskTest {
 		return null;
 	}
 
-	// 查出发送失败的订单备案
-	public List<OrderHead> findOutFromOrderHead(String status) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("del_flag", 0);
-		params.put("status", status);// 状态 0未发送 1已发送 2发送失败 3已被接收成功 4（已接收回执）完成
-		List<OrderHead> orderHeadList = orderHeadDao.findByProperty(params, 0, 0);
-		if (orderHeadList.size() > 0) {
-			return orderHeadList;
-		}
-		return null;
-	}
-
-	public List<OrderRecord> findOutFromOrderRecord(String orgMessageID) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("del_flag", 0);
-		params.put("OrgMessageID", orgMessageID);
-		List<OrderRecord> orderRecordList = orderRecordDao.findByProperty(params, 0, 0);
-		if (orderRecordList.size() > 0) {
-			return orderRecordList;
-		}
-		return null;
-	}
-
-	public List<OrderGoods> findOutFromOrderGoods(String orgMessageID) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("OrgMessageID", orgMessageID);
-		List<OrderGoods> orderGoodsList = orderGoodsDao.findByProperty(params, 0, 0);
-		if (orderGoodsList.size() > 0) {
-			return orderGoodsList;
-		}
-		return null;
-	}
+	
 
 	public void release() {
 		if (task != null) {
@@ -234,7 +213,7 @@ public class TimedTaskTest {
 
 	public static void main(String[] args) {
 
-		TimedTaskTest obj = new TimedTaskTest();
+		TimedTaskGoodsRecord obj = new TimedTaskGoodsRecord();
 		obj.timer();
 
 	}

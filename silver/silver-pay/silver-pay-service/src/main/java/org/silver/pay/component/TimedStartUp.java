@@ -1,22 +1,23 @@
-package org.silver.sys.component;
+package org.silver.pay.component;
 
-import org.silver.sys.util.TimedTaskGoodsRecord;
+import org.silver.pay.util.TimedTaskPayment;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class TimerStartUp implements InitializingBean {
+public class TimedStartUp implements InitializingBean{
+
 	@Autowired
-	private TimedTaskGoodsRecord TimedTask;
+	private TimedTaskPayment TimedTask;
 
 	public void close() {
 		TimedTask.release();
 	}
-
+	
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		System.out.println("start--timer");
+		// TODO Auto-generated method stub
+		System.out.println("start--payment--timer");
 //		TimedTask.timer();
-
 	}
 
 }

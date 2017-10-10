@@ -53,6 +53,17 @@
               <column name="filePath" />
          </property>
          
+         <property name="eport" type="java.lang.Integer">
+              <column name="eport" />
+         </property>
+         
+           <property name="status" type="java.lang.Integer">
+              <column name="status" />
+         </property>
+         
+          <property name="count" type="java.lang.Integer">
+              <column name="count" />
+         </property>
       
          <property name="del_flag" type="java.lang.Integer">
               <column name="del_flag" not-null="true"/>

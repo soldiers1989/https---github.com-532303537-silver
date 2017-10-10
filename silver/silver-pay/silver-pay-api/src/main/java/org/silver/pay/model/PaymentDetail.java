@@ -26,8 +26,7 @@ public class PaymentDetail implements Serializable{
 	private String EBPEntName;// 电商平台企业名称
 	private String Notes;// 备注
 	
-	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
-	private int count;//重发计数      重发次数不能超过5次
+
 	private int del_flag;// 0正常 1删除
 	private Date create_date; // 创建时间
 	private String create_by; // 创建人
@@ -124,18 +123,7 @@ public class PaymentDetail implements Serializable{
 	public void setNotes(String notes) {
 		Notes = notes;
 	}
-	public String getStatus() {
-		return status;
-	}
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	public int getCount() {
-		return count;
-	}
-	public void setCount(int count) {
-		this.count = count;
-	}
+	
 	public int getDel_flag() {
 		return del_flag;
 	}

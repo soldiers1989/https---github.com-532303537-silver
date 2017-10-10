@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface ZJPayEportService {
 
-	public Map<String, Object> zjCreatePayRecord(Object obj, String path, String opType);
+	public Map<String, Object> zjCreatePayRecord(Object obj, String path, String opType,String customsCode,String ciqOrgCode);
 }

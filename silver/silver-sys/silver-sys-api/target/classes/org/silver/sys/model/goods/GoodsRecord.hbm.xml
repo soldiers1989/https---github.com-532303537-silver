@@ -97,7 +97,7 @@
          <property name="cusStatus">
               <column name="cusStatus" />
          </property>
-         <property name="status">
+         <property name="status" type="java.lang.Integer">
               <column name="status" />
          </property>
              
@@ -129,7 +129,9 @@
               <column name="remarks" />
             </property>
         
-        
+           <property name="app_key">
+              <column name="app_key" not-null="true" />
+         </property>
         
           </class>
           

@@ -21,6 +21,8 @@
 			</props>
 		</property>
 	</bean>
+	
+	<bean id="timedStartUp" class="org.silver.pay.component.TimedStartUp" lazy-init="false" destroy-method="close" />
 	<!-- 扫描注解 -->
 	<context:component-scan base-package="org.silver.">
 		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
