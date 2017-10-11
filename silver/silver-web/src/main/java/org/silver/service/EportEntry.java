@@ -28,7 +28,7 @@ public class EportEntry {
 	@Reference
 	private ZJPayEportService zJPayEportService;
 	
-	public Map<String,Object> uploadDatas(int eport, int type, String opType,String ieFlag,String businessType,Object jsonstr, String notifyurl,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String appkey) {
+	public Map<String,Object> uploadDatas(int eport, int type, String opType,String ieFlag,String businessType,Object jsonstr, String notifyurl,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String appkey ) {
 		 Map<String,Object>  reqMap = new HashMap<String,Object>();
 		 if("A".equals(opType)||"M".equals(opType)||"D".equals(opType)){
 			 switch(eport){
@@ -36,7 +36,7 @@ public class EportEntry {
 					switch(type){
 					case 0://商品备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&("1".equals(businessType)||"2".equals(businessType)||"3".equals(businessType))){
-							reqMap=gZEportService.goodsRecord(opType,ieFlag,businessType,jsonstr,ebEntNo,ebEntName,currCode,customsCode,ciqOrgCode,ebpentNo,ebpentName,appkey);
+							reqMap=gZEportService.goodsRecord(opType,ieFlag,businessType,jsonstr,ebEntNo,ebEntName,currCode,customsCode,ciqOrgCode,ebpentNo,ebpentName,appkey,notifyurl);
 							return reqMap;
 						}
 						reqMap.put("status", -5);
@@ -46,7 +46,7 @@ public class EportEntry {
 					case 1://订单备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
 							System.out.println("JSON数据："+jsonstr.toString());
-							reqMap=gZEportService.orderRecord(jsonstr,opType,ieFlag,internetDomainName,ebpentNo,ebpentName,ebEntNo,ebEntName,customsCode,ciqOrgCode,appkey);
+							reqMap=gZEportService.orderRecord(jsonstr,opType,ieFlag,internetDomainName,ebpentNo,ebpentName,ebEntNo,ebEntName,customsCode,ciqOrgCode,appkey,notifyurl);
 							return reqMap;	
 						}
 						reqMap.put("status", -6);
@@ -55,7 +55,6 @@ public class EportEntry {
 					case 2://支付单
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
 							System.out.println("JSON数据："+jsonstr.toString());
-							System.out.println("222222222222222222222"+gZPayEportService);
 							
 							reqMap=gZPayEportService.payRecord(jsonstr, opType, customsCode, ciqOrgCode);
 							return reqMap;	

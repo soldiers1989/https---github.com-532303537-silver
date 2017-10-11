@@ -484,16 +484,16 @@ public class ZJEportServiceImpl implements ZJEportService {
 	
 
 	public static void main(String[] args) {
-		GZEportServiceImpl gz = new GZEportServiceImpl();
-		String time = DateUtil.getDate("yyyyMMddHHmmss");
-		System.out.println(time + "------->");
-		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
-		String messageID ="YINMENG_"+remitSerialNumber;
-		Date now = new Date();
-		List<GoodsInfo> goodsLilt =new ArrayList<>();
-		// 5165 南沙保税   443400 南沙局本部
-		GoodsRecord goodsRecord=gz.saveRecord(messageID, time, now, "c", "3", "I", "ASDFADF", "ADFADF", 
-				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME,"");
-		System.out.println(goodsRecord);
+//		GZEportServiceImpl gz = new GZEportServiceImpl();
+//		String time = DateUtil.getDate("yyyyMMddHHmmss");
+//		System.out.println(time + "------->");
+//		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
+//		String messageID ="YINMENG_"+remitSerialNumber;
+//		Date now = new Date();
+//		List<GoodsInfo> goodsLilt =new ArrayList<>();
+//		// 5165 南沙保税   443400 南沙局本部
+//		GoodsRecord goodsRecord=gz.saveRecord(messageID, time, now, "c", "3", "I", "ASDFADF", "ADFADF", 
+//				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME,"","");
+//		System.out.println(goodsRecord);
 	}
 }

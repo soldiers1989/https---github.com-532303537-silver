@@ -213,8 +213,8 @@ public class TimedTaskGoodsRecord {
 
 	public static void main(String[] args) {
 
-		TimedTaskGoodsRecord obj = new TimedTaskGoodsRecord();
-		obj.timer();
+//		TimedTaskGoodsRecord obj = new TimedTaskGoodsRecord();
+//		obj.timer();
 
 	}
 }

@@ -29,6 +29,7 @@ public class GoodsRecord implements Serializable{
 	private String app_key;//appKey  关联的各个电商平台企业备案号
 	private int eport;                  //口岸：1 电子口岸 2 南沙智检
 	private String filePath;            //报文存储路径
+	private String url;    //回调的URL
 	private String OrgMessageID; //原始报文编号
 	private String ciqNotes;// 国检审核备注
 	private String ciqStatus;// 国检审核状态
@@ -235,6 +236,12 @@ public class GoodsRecord implements Serializable{
 	}
 	public void setApp_key(String app_key) {
 		this.app_key = app_key;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
 	}
 	
 

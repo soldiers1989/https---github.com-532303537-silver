@@ -132,6 +132,10 @@
            <property name="app_key">
               <column name="app_key" not-null="true" />
          </property>
+         
+         <property name="url">
+              <column name="url" not-null="true" />
+         </property>
         
           </class>
           

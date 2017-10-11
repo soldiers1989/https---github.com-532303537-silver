@@ -53,7 +53,7 @@
               <column name="update_by" />
             </property>
              
-        <property name="remarks">
+           <property name="remarks">
               <column name="remarks" />
             </property>
         

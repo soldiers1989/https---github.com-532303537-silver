@@ -202,6 +202,7 @@ public class FtpUtil {
 				try {
 					Map<String, Object> resultMap=DOMXMLService.getHeadBeanList(file);
 					System.out.println("resultMap--->"+resultMap);
+					System.out.println(resultMap.get("OrgMessageID"));
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

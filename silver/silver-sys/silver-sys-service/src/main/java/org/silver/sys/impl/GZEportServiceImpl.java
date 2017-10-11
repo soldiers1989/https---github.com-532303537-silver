@@ -66,7 +66,7 @@ public class GZEportServiceImpl implements GZEportService {
 	@Override
 	public Map<String, Object> goodsRecord(String opType, String ieFlag, String businessType, Object records,
 			String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode, String ebpentNo,
-			String ebpentName,String appkey) {
+			String ebpentName,String appkey,String notifyurl) {
 		logger.info("=================开始处理接收的records===============================");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
@@ -95,7 +95,7 @@ public class GZEportServiceImpl implements GZEportService {
 		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
 		try {
 			checkMap = createHead(list, "", opType, businessType, ieFlag, ebEntNo, ebEntName, currCode, customsCode,
-					ciqOrgCode, ebpentNo, ebpentName ,appkey);
+					ciqOrgCode, ebpentNo, ebpentName ,appkey,notifyurl);
 			//FtpUtil.upload(url, port, username, password, remotePath, new File(checkMap.get("path")+""));
 			
 		} catch (FileNotFoundException e) {
@@ -136,7 +136,7 @@ public class GZEportServiceImpl implements GZEportService {
 	 */
 	public GoodsRecord saveRecord(String messageID, String time, Date now, String opType, String businessType,
 			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
-			String ebpentNo, String ebpentName,String appkey) {
+			String ebpentNo, String ebpentName,String appkey,String notifyurl) {
 		GoodsRecord goodsRecord = new GoodsRecord();
 		goodsRecord.setDeclEntNo(GZEportCode.DECL_ENT_NO);// 申报企业编号
 		goodsRecord.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
@@ -154,6 +154,7 @@ public class GZEportServiceImpl implements GZEportService {
 		goodsRecord.setIeFlag(ieFlag);// 进出口标识
 		goodsRecord.setOrgMessageID(messageID);
 		goodsRecord.setApp_key(appkey);
+		goodsRecord.setUrl(notifyurl);//回调URL
 		goodsRecord.setEport(1);//口岸    1  电子口岸 2 智检
 		goodsRecord.setCiqStatus("0");
 		goodsRecord.setCusStatus("0");
@@ -194,7 +195,7 @@ public class GZEportServiceImpl implements GZEportService {
 	@Override
 	public Map<String, Object> createHead(JSONArray list, String path, String opType, String businessType,
 			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
-			String ebpentNo, String ebpentName,String appkey) throws FileNotFoundException, IOException {
+			String ebpentNo, String ebpentName,String appkey,String notifyurl) throws FileNotFoundException, IOException {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		Date now = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -202,7 +203,7 @@ public class GZEportServiceImpl implements GZEportService {
 		String messageID = createRemitSerialNumber("KJ881101_YINMENG_", time);
 		// 保存商品备案头，并返回
 		GoodsRecord goodsRecord = saveRecord(messageID, time, now, opType, businessType, ieFlag, ebEntNo, ebEntName,
-				currCode, customsCode, ciqOrgCode, ebpentNo, ebpentName,appkey);
+				currCode, customsCode, ciqOrgCode, ebpentNo, ebpentName,appkey,notifyurl);
 		if (goodsRecord != null) {
 			// 保存商品备案的多中商品，并返回商品List
 			List<GoodsInfo> goodsInfoList = saveGoods(list, messageID);
@@ -215,6 +216,7 @@ public class GZEportServiceImpl implements GZEportService {
 				
 			}
 		}
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 
@@ -337,7 +339,7 @@ public class GZEportServiceImpl implements GZEportService {
 	@Override
 	public Map<String, Object> orderRecord(Object records, String opType, String ieFlag, String internetDomainName,
 			String ebpentNo, String ebpentName, String ebEntNo, String ebEntName, String customsCode,
-			String ciqOrgCode,String appkey) {
+			String ciqOrgCode,String appkey,String notifyurl) {
 		System.out.println("开始验证数据");
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
@@ -390,12 +392,12 @@ public class GZEportServiceImpl implements GZEportService {
 			return checkMap;
 		}
 		return createOrder(list, "", opType, ieFlag, internetDomainName, ebpentNo, ebpentName, ebEntNo, ebEntName,
-				customsCode, ciqOrgCode,appkey);
+				customsCode, ciqOrgCode,appkey,notifyurl);
 	}
 
 	private OrderHead saveOrderHead(String messageID, String time, Date now, String opType, String ieFlag,
 			String ebEntNo, String ebEntName, String customsCode, String ciqOrgCode, String ebpentNo, String ebpentName,
-			String internetDomainName,String appkey) {
+			String internetDomainName,String appkey,String notifyurl) {
 		OrderHead orderHead = new OrderHead();
 		orderHead.setDeclEntNo(GZEportCode.DECL_ENT_NO);// 申报企业编号
 		orderHead.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
@@ -410,7 +412,8 @@ public class GZEportServiceImpl implements GZEportService {
 		orderHead.setCustomsCode(customsCode);// 主管海关代码
 		orderHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		orderHead.setOrgMessageID(messageID);
-		orderHead.setApp_key(appkey);;
+		orderHead.setApp_key(appkey);
+		orderHead.setUrl(notifyurl);
 		orderHead.setEport(1);//口岸   1 电子口岸 2 智检
 		orderHead.setCreate_date(now);
 		orderHead.setDel_flag(0);
@@ -446,7 +449,7 @@ public class GZEportServiceImpl implements GZEportService {
 	@Override
 	public Map<String, Object> createOrder(JSONArray list, String path, String opType, String ieFlag,
 			String internetDomainName, String ebpentNo, String ebpentName, String ebEntNo, String ebEntName,
-			String customsCode, String ciqOrgCode,String appkey) {
+			String customsCode, String ciqOrgCode,String appkey,String notifyurl) {
 		System.out.println("开始存储数据");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		List<OrderRecord> orderRecordList = new ArrayList<>();
@@ -458,7 +461,7 @@ public class GZEportServiceImpl implements GZEportService {
 		String messageID = "KJ881111_YINMENG_" + remitSerialNumber;
 		Date now = new Date();
 		OrderHead orderHeadEnt = saveOrderHead(messageID, time, now, opType, ieFlag, ebEntNo, ebEntName, customsCode,
-				ciqOrgCode, ebpentNo, ebpentName, internetDomainName,appkey);
+				ciqOrgCode, ebpentNo, ebpentName, internetDomainName,appkey,notifyurl);
 		String entOrderNo = "";
 		if (orderHeadEnt != null) {
 			for (int i = 0; i < list.size(); i++) {

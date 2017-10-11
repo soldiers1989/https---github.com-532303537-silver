@@ -37,7 +37,7 @@ public interface GZEportService {
 	 * @param ebpentName
 	 * @return
 	 */
-	public  Map<String,Object> goodsRecord(String opType,String ieFlag,String businessType,Object records,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String ebpentNo,String ebpentName,String appkey);
+	public  Map<String,Object> goodsRecord(String opType,String ieFlag,String businessType,Object records,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String ebpentNo,String ebpentName,String appkey,String notifyurl);
 	/**
 	 * 商品备案
 	 * @param list    商品信息list
@@ -55,7 +55,7 @@ public interface GZEportService {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public  Map<String,Object> createHead(JSONArray list,String path,String opType,String businessType,String ieFlag,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String ebpentNo,String ebpentName,String appkey) throws FileNotFoundException, IOException;
+	public  Map<String,Object> createHead(JSONArray list,String path,String opType,String businessType,String ieFlag,String ebEntNo,String ebEntName,String currCode,String customsCode,String ciqOrgCode,String ebpentNo,String ebpentName,String appkey,String notifyurl) throws FileNotFoundException, IOException;
 	
 	/**
 	 * 订单备案非空字段验证
@@ -71,7 +71,7 @@ public interface GZEportService {
 	 * @param ciqOrgCode
 	 * @return
 	 */
-	public   Map<String,Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String customsCode,String ciqOrgCode,String appkey);
+	public   Map<String,Object> orderRecord(Object records,String opType,String ieFlag,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String customsCode,String ciqOrgCode,String appkey,String notifyurl);
 	
 	/**
 	 * 电子订单备案
@@ -88,7 +88,7 @@ public interface GZEportService {
 	 * @param ciqOrgCode  检验检疫机构
 	 * @return
 	 */
-	public   Map<String,Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String customsCode,String ciqOrgCode,String appkey);
+	public   Map<String,Object> createOrder(JSONArray list, String path, String opType, String ieFlag,String internetDomainName,String ebpentNo,String ebpentName,String ebEntNo,String ebEntName,String customsCode,String ciqOrgCode,String appkey,String notifyurl);
 	
 	
 }
