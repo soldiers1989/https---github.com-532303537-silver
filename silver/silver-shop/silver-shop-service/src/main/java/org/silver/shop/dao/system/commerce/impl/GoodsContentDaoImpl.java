@@ -36,4 +36,9 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			int size) {
 		return super.findBlurryProperty(entity, params, startTime, endTime, page, size);
 	}
+	
+	@Override
+	public String findGoodsYearLastId(Class entity,int year){
+		return super.findGoodsYearLastId(entity, year);
+	}
 }

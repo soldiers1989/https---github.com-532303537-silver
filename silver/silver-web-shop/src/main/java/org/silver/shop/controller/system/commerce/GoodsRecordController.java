@@ -58,14 +58,21 @@ public class GoodsRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
+	 * 
+	 * @param goodsInfoPack
+	 * @return
+	 */
 	@RequestMapping(value = "/getMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")
-	public String getMerchantGoodsRecordInfo(@RequestParam("goodsIdPack") String goodsIdPack) {
+	@RequiresRoles("Merchant")
+	public String getMerchantGoodsRecordInfo(@RequestParam("goodsIdPack") String goodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (goodsIdPack != null) {
-			List datasList = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsIdPack);
-			if (datasList != null && datasList.size() > 0) {
+		if (goodsInfoPack != null) {
+			List<Object> datasList = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsInfoPack);
+			if (datasList != null && datasList.isEmpty()) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				statusMap.put(BaseCode.DATAS.toString(), datasList);
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
@@ -76,8 +83,19 @@ public class GoodsRecordController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
+	@RequestMapping(value = "/merchantSendGoodsRecord", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商戶发起商品备案")
+	@RequiresRoles("Merchant")
+	public String merchantSendGoodsRecord(@RequestParam("eport") String eport,
+			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgCode") String ciqOrgCode,
+			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack) {
+		Map<String, Object> statusMap = new HashMap<>();
+		goodsRecordTransaction.merchantSendGoodsRecord(eport,customsCode,ciqOrgCode,recordGoodsInfoPack);
+		return null;
+	}
+
 	public static void main(String[] args) {
 		JSONArray json = new JSONArray();
 		String a = "YM_20170000115058114089963091";

@@ -10,20 +10,20 @@ import org.silver.shop.model.common.category.GoodsThirdType;
 import org.springframework.stereotype.Repository;
 
 @Repository("categoryDao")
-public class CategoryDaoImpl extends BaseDaoImpl implements CategoryDao {
+public class CategoryDaoImpl extends BaseDaoImpl<Object> implements CategoryDao {
 	
 	@Override
 	public List<Object> findAllfirstType() {
-		return  this.findAll(GoodsFirstType.class,0,0);
+		return super.findAll(GoodsFirstType.class,0,0);
 	}
 
 	@Override
 	public List<Object> findAllSecondType() {
-		return this.findAll(GoodsSecondType.class,0,0);
+		return super.findAll(GoodsSecondType.class,0,0);
 	}
 
 	@Override
 	public List<Object> findAllThirdType() {
-		return this.findAll(GoodsThirdType.class,0,0);
+		return super.findAll(GoodsThirdType.class,0,0);
 	}
 }

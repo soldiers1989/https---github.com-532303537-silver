@@ -3,10 +3,8 @@ package org.silver.shop.api.system.organization;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.RecordInfo;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 
 /**
  * 商户service层
@@ -52,7 +50,7 @@ public interface MerchantService {
 	 *            1-银盟商户注册,2-第三方商户注册
 	 * @return
 	 */
-	public boolean addMerchantRecordInfo(RecordInfo entity, String type);
+	public boolean addMerchantRecordInfo(MerchantRecordInfo entity, String type);
 
 	/**
 	 * 修改商户业务信息(图片)

@@ -66,9 +66,12 @@
 				/regin=anon 
 				/login=anon
 				/merchantBank/*=anon
+				/provinceCityArea/*=anon
 				/merchant/*=anon
 				/goodsRecord/*=anon
 				/category/*=anon
+				/port/*=anon
+				/customsPort/*=anon
 				/country/*=anon
 				/metering/*=anon
 				/tests/a=anon

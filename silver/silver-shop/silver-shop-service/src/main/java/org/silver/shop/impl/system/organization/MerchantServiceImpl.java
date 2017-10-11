@@ -11,7 +11,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.RecordInfo;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +50,12 @@ public class MerchantServiceImpl implements MerchantService {
 		list = new ArrayList<>();
 		Map<String, Object> record1 = new HashMap<>();
 		Map<String, Object> record2 = new HashMap<>();
-		record1.put(EPORT, 0);// 1-广州电子口岸(目前只支持BC业务)
+		record1.put(EPORT, 1);// 1-广州电子口岸(目前只支持BC业务)
 		record1.put(EBENTNO, ebEntNo);
 		record1.put(EBENTNAME, ebEntName);
 		record1.put(EBPENTNO, ebEntNo);
 		record1.put(EBPENTNAME, ebEntName);
-		record2.put(EPORT, 1);// 2-南沙智检(支持BBC业务)
+		record2.put(EPORT, 2);// 2-南沙智检(支持BBC业务)
 		record2.put(EBENTNO, ebEntNo2);
 		record2.put(EBENTNAME, ebEntName);
 		record2.put(EBPENTNO, ebEntNo2);
@@ -75,15 +75,15 @@ public class MerchantServiceImpl implements MerchantService {
 	public Map<String, Object> findOriginalMerchantId() {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 扫描获取数据库表中的商户自增长ID
-		Long merchantCount = merchantDao.findLastId();
-		// 得出的总数上+1
-		Long count = merchantCount + 1;
-		if (count < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
+		long merchantCount = merchantDao.findLastId();
+		if (merchantCount < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		String merchantId = count + "";
+		// 得出的总数上+1
+		long count = merchantCount + 1;
+		String merchantId = String.valueOf(count);
 		// 当商户ID没有5位数时,前面补0
 		while (merchantId.length() < 5) {
 			merchantId = "0" + merchantId;
@@ -96,7 +96,7 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public boolean addMerchantRecordInfo(RecordInfo entity, String type) {
+	public boolean addMerchantRecordInfo(MerchantRecordInfo entity, String type) {
 		boolean flag = false;
 		if (type.equals("1")) {// 银盟自己商户备案信息插入
 			for (int x = 0; x < list.size(); x++) {
@@ -120,7 +120,7 @@ public class MerchantServiceImpl implements MerchantService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
-		RecordInfo recordInfo = new RecordInfo();
+		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
 		boolean merchantFlag = false;
 		boolean recordFlag = false;
@@ -168,7 +168,6 @@ public class MerchantServiceImpl implements MerchantService {
 				try {
 					jsonList = JSONArray.fromObject(recordInfoPack);
 				} catch (Exception e) {
-					logger.debug("商户备案参数不正确！");
 					e.getStackTrace();
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 					statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,请检查商户备案信息是否正确！");
@@ -195,9 +194,9 @@ public class MerchantServiceImpl implements MerchantService {
 					// 保存商户对应的电商平台名称(及编码)
 					recordFlag = addMerchantRecordInfo(recordInfo, "2");
 					if (!recordFlag) {
-						if (Integer.valueOf(eport) == 0) {
+						if (Integer.valueOf(eport) == 1) {
 							eport = "电子口岸";
-						} else if (Integer.valueOf(eport) == 1) {
+						} else if (Integer.valueOf(eport) == 2) {
 							eport = "南沙智检";
 						}
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -217,7 +216,6 @@ public class MerchantServiceImpl implements MerchantService {
 	public List<Object> findMerchantBy(String account) {
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("merchantName", account);
-		
 		return merchantDao.findByProperty(Merchant.class, paramsMap, 0, 0);
 	}
 
@@ -283,5 +281,9 @@ public class MerchantServiceImpl implements MerchantService {
 			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		}
 		return reMap;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(JSONArray.fromObject(list).toString());
 	}
 }

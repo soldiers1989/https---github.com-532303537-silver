@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
 import redis.clients.jedis.ShardedJedis;
@@ -1221,4 +1222,21 @@ public final class JedisUtil {
 			}
 		});
 	}
+
+	/**
+	 * 用于解决list存入数据库 循环引用
+	 * @param key
+	 * @param seconds
+	 * @param value
+	 * @return
+	 */
+	public static final String setListDatas(final String key, final Integer seconds, final Object value) {
+		return JedisTemplate.run(key, new Executor<String>() {
+			public String execute(ShardedJedis jedis) {
+				return jedis.setex(key, seconds, JSON.toJSONStringWithDateFormat(value, "yyyy-MM-dd HH:mm:ss",
+						SerializerFeature.DisableCircularReferenceDetect));
+			}
+		}, seconds, seconds);
+	}
+
 }

@@ -15,12 +15,22 @@ public interface GoodsRecordService {
 	public List findGoodsBaseInfo(String merchantName, int page, int size);
 
 	/**
-	 * 
-	 * @param merchantName
-	 * @param goodsIdPack
+	 * 根据商户名称及商户ID、商品名称查询商户下商品备案信息,如未备案商品则查询商品基本信息
+	 * @param merchantName 商户名称
+	 * @param goodsIdPack 商品信息包
 	 * @return 
 	 */
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsIdPack);
-	
-	
+
+	/**
+	 * 
+	 * @param merchantName 商户名称
+	 * @param merchantId 
+	 * @param ciqOrgCode 
+	 * @param customsCode 
+	 * @param eport 
+	 * @param goodsIdPack 商品信息包
+	 * @return
+	 */
+	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String recordGoodsInfoPack, String eport, String customsCode, String ciqOrgCode);
 }

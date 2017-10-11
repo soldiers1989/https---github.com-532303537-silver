@@ -13,7 +13,7 @@ public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
 
 
 	@Override
-	public Long findLastId() {
+	public long findLastId() {
 		return this.findLastId(Merchant.class);
 	}
 

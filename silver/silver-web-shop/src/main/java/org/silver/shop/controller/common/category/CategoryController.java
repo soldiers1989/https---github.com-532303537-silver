@@ -1,6 +1,7 @@
 package org.silver.shop.controller.common.category;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
@@ -31,16 +32,16 @@ public class CategoryController {
 	@RequestMapping(value = "/AllGoodsCategory", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String findAllCategory() {
-		Map<String, Object> datasMap = new HashMap<>();
-		Map<String, HashMap<String, Object>> reMap = categoryTransaction.findAllCategory();
-		if (!reMap.isEmpty()) {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.DATAS.getBaseCode(), reMap);
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			return JSONObject.fromObject(datasMap).toString();
+		Map<String, Object> statusMap = new HashMap<>();
+		List datasList = categoryTransaction.findAllCategory();
+		if (datasList != null && datasList.size() > 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), datasList);
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
 		}
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-		return JSONObject.fromObject(datasMap).toString();
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }

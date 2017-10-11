@@ -14,6 +14,7 @@
         <property name="goodsMerchantName" type="java.lang.String">
             <column name="goodsMerchantName" not-null="true"/>
         </property>
+      
         <property name="goodsName" type="java.lang.String">
             <column name="goodsName" not-null="true"/>
         </property>
@@ -50,8 +51,8 @@
         <property name="goodsBarCode" type="java.lang.String">
             <column name="goodsBarCode" />
         </property>
-        <property name="ymYear" type="java.lang.String">
-            <column name="ymYear" not-null="true"/>
+        <property name="goodsYear" type="java.lang.String">
+            <column name="goodsYear" not-null="true"/>
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />
@@ -74,5 +75,9 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
+        <property name="goodsMerchantId" type="java.lang.String">
+            <column name="goodsMerchantId" />
+        </property>
+        
     </class>
 </hibernate-mapping>

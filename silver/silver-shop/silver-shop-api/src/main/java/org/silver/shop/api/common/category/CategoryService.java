@@ -9,5 +9,5 @@ public interface CategoryService {
 	 * 查询所有商品类型,并进行对应的级联封装到Map
 	 * @return
 	 */
-	public Map<String, HashMap<String, Object>> findGoodsType();
+	public Map<String, Object>  findGoodsType();
 }

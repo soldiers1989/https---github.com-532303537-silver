@@ -37,9 +37,10 @@
 		<property name="show_sql">false</property>
 		<property name="hbm2ddl.auto">update</property>
 		<mapping resource="org/silver/shop/model/system/organization/Merchant.hbm.xml" />
-		<mapping resource="org/silver/shop/model/system/tenant/RecordInfo.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/tenant/MerchantRecordInfo.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/GoodsContent.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/GoodsRecordContent.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/GoodsRecord.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/GoodsRecordDetail.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/category/GoodsFirstType.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/category/GoodsSecondType.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/category/GoodsThirdType.hbm.xml"/>
@@ -55,11 +56,14 @@
 		<mapping resource="org/silver/shop/model/system/commerce/StockContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/cross/PaymentContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/ReceiptInfo.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/PortManage.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/Warehous.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/common/base/CustomsPort.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/Warehous.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/organization/Manager.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/organization/Member.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantBankInfo.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/common/base/CCIQ.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/common/base/GAC.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml"/>
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

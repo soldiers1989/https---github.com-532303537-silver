@@ -14,6 +14,7 @@ import java.util.Date;
 public final class DateUtil {
 	private DateUtil() {
 	}
+
 	static String PATTERN = "yyyy-MM-dd";
 
 	/**
@@ -119,14 +120,13 @@ public final class DateUtil {
 		}
 	}
 
-	
 	public static String getDate(String format) {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat(format);
 		String strDate = sdf.format(date);
 		return strDate;
 	}
-	
+
 	/**
 	 * 间隔天数
 	 * 
@@ -204,4 +204,6 @@ public final class DateUtil {
 		}
 		return n;
 	}
+
+
 }

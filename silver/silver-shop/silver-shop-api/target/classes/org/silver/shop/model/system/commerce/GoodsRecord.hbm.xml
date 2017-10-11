@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-9-30 17:07:39 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+	<class name="org.silver.shop.model.system.commerce.GoodsRecord"
+		table="ym_shop_goods_record">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="merchantId" type="java.lang.String">
+			<column name="merchantId" />
+		</property>
+		<property name="merchantName" type="java.lang.String">
+			<column name="merchantName"/>
+		</property>
+		<property name="goodsSerialNo" type="java.lang.String">
+			<column name="goodsSerialNo" />
+		</property>
+		<property name="customsPort" type="java.lang.String">
+			<column name="customsPort" />
+		</property>
+		<property name="customsPortName" type="java.lang.String">
+			<column name="customsPortName" />
+		</property>
+		<property name="customsCode" type="java.lang.String">
+			<column name="customsCode" />
+		</property>
+		<property name="customsName" type="java.lang.String">
+			<column name="customsName" />
+		</property>
+		<property name="ciqOrgCode" type="java.lang.String">
+			<column name="ciqOrgCode" />
+		</property>
+		<property name="ciqOrgName" type="java.lang.String">
+			<column name="ciqOrgName" />
+		</property>
+		<property name="ebEntNo" type="java.lang.String">
+			<column name="ebEntNo" />
+		</property>
+		<property name="ebEntName" type="java.lang.String">
+			<column name="ebEntName" />
+		</property>
+		<property name="ebpEntNo" type="java.lang.String">
+			<column name="ebpEntNo" />
+		</property>
+		<property name="ebpEntName" type="java.lang.String">
+			<column name="ebpEntName" />
+		</property>
+		<property name="status" type="java.lang.String">
+			<column name="status" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+
+	</class>
+</hibernate-mapping>

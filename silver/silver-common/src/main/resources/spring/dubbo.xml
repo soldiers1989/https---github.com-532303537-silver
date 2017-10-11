@@ -18,7 +18,9 @@
 	<!-- 使用zookeeper注册中心暴露服务地址 -->
 	<dubbo:registry address="${dubbo.registry.address}" check="false" file="${dubbo.cache.dir}/dubbo-${dubbo.application.name}.cache" />
 	<!-- 用dubbo协议在20880端口暴露服务 -->
-	<dubbo:protocol name="dubbo" port="${dubbo.protocol.port}" threads="${dubbo.protocol.threads}" />
+	<dubbo:protocol name="dubbo" port="${dubbo.protocol.port}" threads="${dubbo.protocol.threads}" payload="18557050"/>
+	
+	
 	<!-- 服务端要暴露的服务接口,注解@com.alibaba.dubbo.config.annotation.Service -->
     <dubbo:annotation package="org.silver" />
 	
