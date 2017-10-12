@@ -125,7 +125,6 @@ public interface BaseDao<T> {
 
 	/**
 	 * 根据年份查询,当前年份添加的最后一条商品ID
-	 * 
 	 * @param entity
 	 * @param year
 	 * @return

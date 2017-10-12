@@ -10,6 +10,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
 
@@ -336,7 +337,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		System.out.println(bd.findGoodsYearLastId(GoodsContent.class,2017));
+		System.out.println(bd.findAll(CustomsPort.class,0,0));
 	}
 
 }

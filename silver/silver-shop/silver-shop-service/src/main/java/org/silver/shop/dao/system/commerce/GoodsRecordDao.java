@@ -19,17 +19,17 @@ public interface GoodsRecordDao {
 	
 	/**
 	 * 根据实体,及Map键值对查询数据 key=(表中列名称),value=(查询参数)
-	 * @param entity
-	 * @param params
-	 * @param page
-	 * @param size
+	 * @param entity 实体类Class
+	 * @param params 查询参数
+	 * @param page 页数 
+	 * @param size 数据条数
 	 */
 	public List<Object> findByProperty(Class entity, Map params, int page, int size);
 	
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
 	 * 
-	 * @return
+	 * @return Long
 	 */
 	public Long findLastId();
 	
@@ -49,6 +49,11 @@ public interface GoodsRecordDao {
 	public List<Object> findPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
 			int size);
 
-	
+	/**
+	 * 根据年份查询,当前年份添加的最后一条商品ID
+	 * @param entity 实体类Class
+	 * @param year 年份
+	 * @return String
+	 */
 	public String findGoodsYearLastId(Class entity, int year);
 }
