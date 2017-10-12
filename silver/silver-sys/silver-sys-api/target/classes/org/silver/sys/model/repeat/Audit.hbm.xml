@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.sys.model.repeat">
+          
+          <class name="Audit" table="ym_cbsp_audit" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+         
+          <property name="content">
+              <column name="content" not-null="true" />
+         </property>
+         
+          <property name="orgMessageID">
+              <column name="orgMessageID" not-null="true"/>
+         </property>
+         
+         <property name="orgMessageType">
+              <column name="orgMessageType" not-null="true"/>
+         </property>
+        
+          <property name="url">
+              <column name="url" not-null="true"/>
+         </property> 
+       
+      
+         <property name="delFlag" type="java.lang.Integer">
+              <column name="delFlag" not-null="true"/>
+         </property>
+        
+           <property name="createDate" type="java.util.Date">
+              <column name="createDate" not-null="true"/>
+            </property>
+        
+           <property name="createBy">
+              <column name="createBy" />
+            </property>
+        
+        <property name="updateDate" type="java.util.Date">
+              <column name="updateDate"/>
+            </property>
+        
+         <property name="updateBy">
+              <column name="updateBy" />
+            </property>
+        
+        <property name="remarks">
+              <column name="remarks" />
+            </property>
+        
+        
+        
+          </class>
+          
+        </hibernate-mapping>
