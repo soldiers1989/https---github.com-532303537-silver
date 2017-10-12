@@ -1,12 +1,12 @@
 package org.silver.sys.component;
 
-import org.silver.sys.util.TimedTaskTest;
+import org.silver.sys.util.TimedTaskGoodsRecord;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TimerStartUp implements InitializingBean {
 	@Autowired
-	private TimedTaskTest TimedTask;
+	private TimedTaskGoodsRecord TimedTask;
 
 	public void close() {
 		TimedTask.release();
@@ -15,7 +15,7 @@ public class TimerStartUp implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		System.out.println("start--timer");
-		TimedTask.timer();
+//		TimedTask.timer();
 
 	}
 

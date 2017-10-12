@@ -45,7 +45,7 @@ public class SerialNoUtils {
 	 * 截取字符串的第7位开始至第12位结束 
 	 * 如：YM_2017|00001|15058114089963091 自增部分
 	 * 
-	 * @return Map
+	 * @return Map 
 	 */
 	public static final int splitSerialNo(String serialNo) {
 		int count = 0;

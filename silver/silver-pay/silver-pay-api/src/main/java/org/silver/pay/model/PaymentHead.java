@@ -21,6 +21,9 @@ public class PaymentHead implements Serializable {
 	private String CustomsCode;         //主管海关代码 
 	private String CIQOrgCode;          //检验检疫机构代码
 	
+	private int eport;               //口岸
+	private int status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private int count;//重发计数      重发次数不能超过5次
 	private String filePath;            //报文存储路径
 	private int del_flag;// 0正常 1删除
 	private Date create_date; // 创建时间
@@ -130,5 +133,26 @@ public class PaymentHead implements Serializable {
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
 	}
+
+	public int getStatus() {
+		return status;
+	}
+	public void setStatus(int status) {
+		this.status = status;
+	}
+	
+	public int getCount() {
+		return count;
+	}
+	public void setCount(int count) {
+		this.count = count;
+	}
+	public int getEport() {
+		return eport;
+	}
+	public void setEport(int eport) {
+		this.eport = eport;
+	}
+	
 	
 }

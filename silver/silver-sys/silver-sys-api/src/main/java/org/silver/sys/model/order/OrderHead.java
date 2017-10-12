@@ -24,10 +24,11 @@ public class OrderHead implements Serializable {
 	private String IeFlag;              //进出口标示
 	private String CustomsCode;         //主管海关代码 
 	private String CIQOrgCode;          //检验检疫机构代码
-	
+	private String app_key;//appKey  关联的各个电商平台企业备案号
 	private int eport;                  //口岸：1 电子口岸 2 南沙智检
 	private String filePath;            //报文存储路径
-	private String status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private String url; //回调URL
+	private int status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
 	private int count;//重发计数      重发次数不能超过5次
 	private int del_flag;// 0正常 1删除
 	private Date create_date; // 创建时间
@@ -167,10 +168,11 @@ public class OrderHead implements Serializable {
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
-	public String getStatus() {
+	
+	public int getStatus() {
 		return status;
 	}
-	public void setStatus(String status) {
+	public void setStatus(int status) {
 		this.status = status;
 	}
 	public int getCount() {
@@ -178,6 +180,18 @@ public class OrderHead implements Serializable {
 	}
 	public void setCount(int count) {
 		this.count = count;
+	}
+	public String getApp_key() {
+		return app_key;
+	}
+	public void setApp_key(String app_key) {
+		this.app_key = app_key;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
 	}
 	
 	

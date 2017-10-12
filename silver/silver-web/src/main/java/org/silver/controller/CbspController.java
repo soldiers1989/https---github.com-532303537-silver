@@ -36,13 +36,12 @@ public class CbspController {
 	    * @param eport 口岸  1 广州电子口岸   2广东智检 
 	    * @param ieFlag 进出口标识 I 进口  E 出口（广州口岸）
 	    * @param businessType 跨境业务类型    1-特殊监管区域BBC保税进口； 2-保税仓库BBC保税进口；3-BC直购进口；（广州口岸）
-	    * @param appkey 
-	      @param ebEntNo	电商企业编号
-          @param ebEntName	电商企业名称
-          @param customsCode 主管海关代码
-          @param ciqOrgCode	   检验检疫机构代码
-          @param currCode	币制代码
-	    
+	    * @param appkey     开发Key
+	    * @param ebEntNo	电商企业编号
+        * @param ebEntName	电商企业名称
+        * @param customsCode 主管海关代码
+        * @param ciqOrgCode	   检验检疫机构代码
+        * @param currCode	币制代码
 	    * @return   
 	    */
 	   @RequestMapping(value="/Report" ,produces = "application/json; charset=utf-8")
@@ -68,7 +67,7 @@ public class CbspController {
 			        	return JSONObject.fromObject(statusMap).toString();
 			        }
 			    	if(ebEntNo!=null&&ebEntName!=null){
-			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode);
+			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode,appkey);
 //			    		System.out.println("电商企业平台：------》"+dataMap.get("no")+""+dataMap.get("name")+"");
 			    	}
 			   }

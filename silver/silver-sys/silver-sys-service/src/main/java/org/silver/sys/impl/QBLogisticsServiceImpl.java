@@ -10,11 +10,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
+
 import org.apache.commons.codec.binary.Base64;
 import org.silver.sys.api.QBLogisticsService;
+import org.silver.sys.component.ChooseDatasourceHandler;
+import org.silver.sys.dao.AreaDao;
+import org.silver.sys.dao.SessionFactory;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.silver.util.YmHttpUtil;
+
+import com.justep.baas.data.Table;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -22,7 +29,8 @@ import net.sf.json.JSONObject;
 public class QBLogisticsServiceImpl implements QBLogisticsService {
 
 	String key = "316A721244p44";
-
+	@Resource
+	private AreaDao areaDao = new AreaDao();
 	@Override
 	public String pushOrderToQB(String store_code, String order_code, String n_kos, String receiver_info,
 			String sender_info, JSONArray list, int package_count, String order_ename, String order_phone,
@@ -214,4 +222,32 @@ public class QBLogisticsServiceImpl implements QBLogisticsService {
 		}
 		return true;
 	}
+	
+	public String queryZipCode(String areaCode,String addr,String name,String tel,String phone){
+		String str="";
+		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+		Table t=areaDao.findRecordByAreaCode(areaCode);
+		String zip=t.getRows().get(0).getValue("zip")+"";
+		String provinceName=t.getRows().get(0).getValue("provinceName")+"";
+		String cityName= t.getRows().get(0).getValue("cityName")+"";
+		String areaName=t.getRows().get(0).getValue("areaName")+"";
+		if(tel==null||tel.trim().length()==0){
+			tel="NA";
+		}
+		if(phone==null||phone.trim().length()==0){
+			phone="NA";
+		}
+		str =zip+"^^^"+provinceName+"^^^"+cityName+"^^^"+areaName+"^^^"+addr+"^^^"+name+"^^^"+tel+"^^^"+phone;
+		return str;
+	}
+	public static void main(String[] args) {
+		QBLogisticsServiceImpl qb = new QBLogisticsServiceImpl();
+		//Map<String,Object> zipMap=qb.queryZipCode("440115");
+//		for (Object v : zipMap.values()) {
+//			System.out.println("value= " + v);
+//	    }
+		String s=qb.queryZipCode("440105", "佳都商务大厦", "张旭", "18102538226","");
+		System.out.println(s);
+	}
+	
 }

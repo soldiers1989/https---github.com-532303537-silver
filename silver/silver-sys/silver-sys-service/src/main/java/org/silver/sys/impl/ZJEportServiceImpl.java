@@ -75,7 +75,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 		goodsRecord.setEport(2);//口岸    1  电子口岸 2 智检
 		goodsRecord.setCiqStatus("0");
 		goodsRecord.setCusStatus("0");
-		goodsRecord.setStatus("0");
+		goodsRecord.setStatus(0);
 		goodsRecord.setCount(0);
 		goodsRecord.setCreate_date(now);
 		goodsRecord.setDel_flag(0);
@@ -304,14 +304,14 @@ public class ZJEportServiceImpl implements ZJEportService {
 		}
 		
 		if (orderHead != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
-			statusMap = zjCreateOrderRecordXML(time, orderHead, orderRecordList, orderGoodsLists);
+			statusMap = zjCreateOrderRecordXML(orderHead, orderRecordList, orderGoodsLists);
 		}
 
 
 		return statusMap;
 	}
 
-	public Map<String, Object> zjCreateOrderRecordXML(String time, OrderHead orderHead,
+	public Map<String, Object> zjCreateOrderRecordXML(OrderHead orderHead,
 			List<OrderRecord> orderRecordList, List<OrderGoods> orderGoodsLists) {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		System.out.println("=================开始处理接收的JSonList生成XML文件===============================");
@@ -325,7 +325,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 			Head.addContent(new Element("MessageType").setText(NSEportCode.MESSAGE_TYPE_ORDER));
 			Head.addContent(new Element("Sender").setText(NSEportCode.ENT_RECORD_CODE));
 			Head.addContent(new Element("Receiver").setText(NSEportCode.RECEIVER));
-			Head.addContent(new Element("SendTime").setText(time));
+			Head.addContent(new Element("SendTime").setText(orderHead.getDeclTime()));
 			Head.addContent(new Element("FunctionCode").setText(""));
 			Head.addContent(new Element("Version").setText("1.0"));
 
@@ -381,7 +381,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 			Format format = Format.getPrettyFormat();
 			XMLOutputter XMLOut = new XMLOutputter(format);
 
-			String fileName = "661101_" + time  + "001.xml";
+			String fileName = "661101_" + orderHead.getDeclTime()  + "001.xml";
 			System.out.println("生成的文件名为：" + fileName);
 			String str = Thread.currentThread().getContextClassLoader().getResource("").getPath();
 			String ePath = str + "zj_order\\" + DateUtil.getDate("yyyyMMdd");
@@ -484,16 +484,16 @@ public class ZJEportServiceImpl implements ZJEportService {
 	
 
 	public static void main(String[] args) {
-		GZEportServiceImpl gz = new GZEportServiceImpl();
-		String time = DateUtil.getDate("yyyyMMddHHmmss");
-		System.out.println(time + "------->");
-		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
-		String messageID ="YINMENG_"+remitSerialNumber;
-		Date now = new Date();
-		List<GoodsInfo> goodsLilt =new ArrayList<>();
-		// 5165 南沙保税   443400 南沙局本部
-		GoodsRecord goodsRecord=gz.saveRecord(messageID, time, now, "c", "3", "I", "ASDFADF", "ADFADF", 
-				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME);
-		System.out.println(goodsRecord);
+//		GZEportServiceImpl gz = new GZEportServiceImpl();
+//		String time = DateUtil.getDate("yyyyMMddHHmmss");
+//		System.out.println(time + "------->");
+//		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
+//		String messageID ="YINMENG_"+remitSerialNumber;
+//		Date now = new Date();
+//		List<GoodsInfo> goodsLilt =new ArrayList<>();
+//		// 5165 南沙保税   443400 南沙局本部
+//		GoodsRecord goodsRecord=gz.saveRecord(messageID, time, now, "c", "3", "I", "ASDFADF", "ADFADF", 
+//				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME,"","");
+//		System.out.println(goodsRecord);
 	}
 }

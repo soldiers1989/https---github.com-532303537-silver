@@ -85,7 +85,7 @@ public class DOMXMLService {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			if (!nodeList.item(i).getNodeName().equals("#text")) {
-//				System.out.println(nodeList.item(i).getNodeName() + "----->" + nodeList.item(i).getFirstChild().getNodeValue());
+				System.out.println(nodeList.item(i).getNodeName() + "----->" + nodeList.item(i).getFirstChild().getNodeValue());
 				resultMap.put(nodeList.item(i).getNodeName(), nodeList.item(i).getFirstChild().getNodeValue());
 			}
 		}

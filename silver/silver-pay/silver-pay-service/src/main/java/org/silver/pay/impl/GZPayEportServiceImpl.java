@@ -76,6 +76,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		paymentHead.setCustomsCode(customsCode);// 主管海关代码
 		paymentHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		paymentHead.setOrgMessageID(messageID);
+		paymentHead.setEport(1);
 		paymentHead.setCreate_date(now);
 		paymentHead.setDel_flag(0);
 		if(paymentHeadDao.add(paymentHead)){
@@ -141,8 +142,6 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		System.out.println("=================开始处理接收的JSonList生成XML文件===============================");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		List<PaymentDetail> paymentList =new ArrayList<>();
-		statusMap.put("status", 1);
-		statusMap.put("msg", "报文保存成功 ");
 		Date now = new Date();
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
@@ -153,12 +152,12 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 			paymentList =savePaymentDetail(list, messageID, now);
 		}
 		if(paymentHead!=null&& paymentList.size()>0){//生成XML报文
-			convertPaymentRecordChangeToXML(paymentHead, paymentList, time);
+			statusMap=convertPaymentRecordChangeToXML(paymentHead, paymentList);
 		}
 		return statusMap;
 	}
 	
-	public Map<String, Object> convertPaymentRecordChangeToXML(PaymentHead payHead,List<PaymentDetail> payList,String time) {
+	public Map<String, Object> convertPaymentRecordChangeToXML(PaymentHead payHead,List<PaymentDetail> payList) {
 		System.out.println("=================开始处理接收的JSonList生成XML文件===============================");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		String messageID=payHead.getOrgMessageID();
@@ -169,7 +168,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		elements.addContent(new Element("MessageType").setText(GZEportCode.MESSAGE_TYPE_PAY));
 		elements.addContent(new Element("Sender").setText(GZEportCode.SENDER_PAY));
 		elements.addContent(new Element("Receiver").setText(GZEportCode.RECEIVER));
-		elements.addContent(new Element("SendTime").setText(time));
+		elements.addContent(new Element("SendTime").setText(payHead.getDeclTime()));
 		elements.addContent(new Element("FunctionCode").setText(GZEportCode.FUNCTION_CODE_CIQ));
 		elements.addContent(new Element("SignerInfo").setText(" "));
 		elements.addContent(new Element("Version").setText(GZEportCode.VERSION));
@@ -178,6 +177,9 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		List slist = new ArrayList<>();
 		slist.add("serialVersionUID");
 		slist.add("id");
+		slist.add("count");
+		slist.add("eport");
+		slist.add("status");
 		slist.add("OrgMessageID");
 		slist.add("del_flag");
 		slist.add("create_date");

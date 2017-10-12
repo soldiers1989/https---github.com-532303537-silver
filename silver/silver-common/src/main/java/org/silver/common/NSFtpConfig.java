@@ -16,8 +16,9 @@ public class NSFtpConfig {
 	/**商品备案上传或下载路径*/
 	public static final String FTP_GOODS_ROUTE_IN = "/4200.IMPBA.SWBCARGOBACK.REPORT/in/";
 	public static final String FTP_GOODS_ROUTE_OUT = "/4200.IMPBA.SWBCARGOBACK.REPORT/out/";
-	
-	
+	/**支付单上传或下载路径*/
+	public static final String FTP_PAY_ROUTE_IN ="/PAY/in/";
+	public static final String FTP_PAY_ROUTE_OUT ="/PAY/out/";
 
 	/** 银盛支付智检账号*/
 	public static final String FTP_USER_NAME_YS = "yszffw";
