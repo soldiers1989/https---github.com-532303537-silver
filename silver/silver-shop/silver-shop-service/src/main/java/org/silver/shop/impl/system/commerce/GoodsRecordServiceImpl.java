@@ -82,18 +82,18 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		Calendar cal = Calendar.getInstance();
 		// 获取当前年份
 		int year = cal.get(Calendar.YEAR);
-		// 查询当前年份最后一条商品基本信息的ID
-		String lastOneGoodsId = goodsRecordDao.findGoodsYearLastId(GoodsContent.class, year);
+		// 查询数据库字段名
+		String property = "goodsId";
+		// 根据年份查询,当前年份下的id数量
+		long goodsIdCount = goodsRecordDao.findSerialNoCount(GoodsContent.class, property, year);
 		// 当返回-1时,则查询数据库失败
-		if ("-1".equals(lastOneGoodsId)) {
+		if (goodsIdCount < 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		//流水号头
-		String topStr = "YM_";
 		// 生成商品基本信息ID
-		String goodsId = SerialNoUtils.getSerialNo(topStr, lastOneGoodsId);
+		String goodsId = SerialNoUtils.getSerialNo("YM_", year,goodsIdCount);
 
 		for (int i = 0; i < jsonList.size(); i++) {
 			params = new HashMap<>();
@@ -171,20 +171,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!reMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return reMap;
 		}
-
-		Calendar calendar = Calendar.getInstance();
-		int year = calendar.get(Calendar.YEAR);
-		String lastOneGoodsId = goodsRecordDao.findGoodsYearLastId(GoodsRecord.class, year);
-		// 当返回-1时,则查询数据库失败
-		if ("-1".equals(lastOneGoodsId)) {
-			datasMap.clear();
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return datasMap;
-		}
-
-		SerialNoUtils.getSerialNo("YM_", lastOneGoodsId);
-
+		//将备案商品信息插入数据库
+		
+		
 		datas = (List) reMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> recordMap = sendRecord(eport, ebEntNo, ebEntName, tok, datas);
 		if (!recordMap.get(BaseCode.STATUS.toString()).equals("1")) {
@@ -382,6 +371,25 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return statusMap;
 	}
 
+	//保存备案商品信息
+	private final Map<String,Object> saveRecordInfo(){
+		Map<String,Object> statusMap = new HashMap<>();
+		Calendar calendar = Calendar.getInstance();
+		int year = calendar.get(Calendar.YEAR);
+		// 查询数据库字段名
+		String property = "goodsSerialNo";
+		// 根据年份查询,当前年份下的id数量
+		long goodsSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecord.class, property, year);
+		// 当返回-1时,则查询数据库失败
+		if (goodsSerialNoCount < 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		String goodsSerialNo = SerialNoUtils.getSerialNo("YM_", year, goodsSerialNoCount);
+		
+		return null;
+	}
 	public static void main(String[] args) {
 
 		List list = new ArrayList();

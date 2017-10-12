@@ -30,16 +30,18 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		Calendar cal = Calendar.getInstance();
 		// 获取当前年份
 		int year = cal.get(Calendar.YEAR);
-		// 根据年份查询,当前年份有多少条数据
-		String lastOneGoodsId = goodsContentDao.findGoodsYearLastId(GoodsContent.class, year);
+		// 查询数据库字段名
+		String property = "goodsId";
+		// 根据年份查询,当前年份下的id数量
+		long goodsIdCount = goodsContentDao.findSerialNoCount(GoodsContent.class, property, year);
 		// 当返回-1时,则查询数据库失败
-		if ("-1".equals(lastOneGoodsId)) {
+		if (goodsIdCount < 0) {
 			datasMap.clear();
 			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return datasMap;
 		}
-		String goodsId = SerialNoUtils.getSerialNo("YM_", lastOneGoodsId);
+		String goodsId = SerialNoUtils.getSerialNo("YM_", year, goodsIdCount);
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		datasMap.put(BaseCode.DATAS.getBaseCode(), goodsId);
 		return datasMap;

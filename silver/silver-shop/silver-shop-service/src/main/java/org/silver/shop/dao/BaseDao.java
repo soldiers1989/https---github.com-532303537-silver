@@ -124,12 +124,13 @@ public interface BaseDao<T> {
 			int size);
 
 	/**
-	 * 根据年份查询,当前年份添加的最后一条商品ID
+	 * 根据年份查询当前年份下的流水号总数
 	 * @param entity
+	 * @param property
 	 * @param year
 	 * @return
 	 */
-	public String findGoodsYearLastId(Class entity, int year);
+	public long findSerialNoCount(Class entity,String property, int year);
 
 
 }

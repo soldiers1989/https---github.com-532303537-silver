@@ -115,11 +115,4 @@ public class GoodsRecordController {
 		return null;
 	}
 
-	public static void main(String[] args) {
-		// 流水号头
-		String topStr = "YM_";
-		// 生成商品基本信息ID
-		String goodsId = SerialNoUtils.getSerialNo(topStr, null);
-		System.out.println(goodsId.length());
-	}
 }

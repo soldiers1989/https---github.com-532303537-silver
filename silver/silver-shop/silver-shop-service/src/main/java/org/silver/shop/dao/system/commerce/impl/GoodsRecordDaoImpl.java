@@ -34,7 +34,7 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsReco
 	}
 	
 	@Override
-	public String findGoodsYearLastId(Class entity, int year) {
-		return super.findGoodsYearLastId(entity, year);
+	public long findSerialNoCount(Class entity, String property,int year) {
+		return super.findSerialNoCount(entity,  property,year);
 	}
 }
