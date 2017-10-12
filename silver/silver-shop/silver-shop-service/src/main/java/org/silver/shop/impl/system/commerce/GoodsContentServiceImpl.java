@@ -28,30 +28,20 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	public Map<String, Object> createGoodsId() {
 		Map<String, Object> datasMap = new HashMap<>();
 		Calendar cal = Calendar.getInstance();
-		int count = 0;
 		// 获取当前年份
 		int year = cal.get(Calendar.YEAR);
-		// 根据年份查询,当前年份有多少条数据
-		String lastOneGoodsId = goodsContentDao.findGoodsYearLastId(GoodsContent.class, year);
-		if (lastOneGoodsId == null) {
-			// 当查询无记录时为：1
-			count = 1;
-		} else if (lastOneGoodsId.equals("-1")) {
+		// 查询数据库字段名
+		String property = "goodsId";
+		// 根据年份查询,当前年份下的id数量
+		long goodsIdCount = goodsContentDao.findSerialNoCount(GoodsContent.class, property, year);
+		// 当返回-1时,则查询数据库失败
+		if (goodsIdCount < 0) {
+			datasMap.clear();
 			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			logger.debug("连接数据错误!");
 			return datasMap;
-		} else {
-			// 截取 YM_2017|00001|15058114089963091 自增部分
-			String countId = lastOneGoodsId.substring(7, 12);
-			// 商品自增ID,得出的自增数上+1
-			count = Integer.parseInt(countId) + 1;
 		}
-		// 商品基本信息编号抬头
-		String topStr = "YM_";
-		//自增数
-		String strCount = String.valueOf(count);
-		String goodsId = SerialNoUtils.getSerialNo(topStr, strCount);
+		String goodsId = SerialNoUtils.getSerialNo("YM_", year, goodsIdCount);
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		datasMap.put(BaseCode.DATAS.getBaseCode(), goodsId);
 		return datasMap;
@@ -61,7 +51,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	public boolean addGoodsBaseInfo(String goodsId, String merchantName, String goodsName, List imgList,
 			String goodsFirstType, String goodsSecondType, String goodsThirdType, String goodsDetail, String goodsBrand,
 			String goodsStyle, String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			int year, Date date,String merchantId) {
+			int year, Date date, String merchantId) {
 		boolean flag = false;
 		String goodsImage = "";
 		// 拼接多张图片字符串

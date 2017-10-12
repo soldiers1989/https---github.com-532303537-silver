@@ -51,11 +51,15 @@ public interface GoodsContentDao {
 	
 	
 	/**
-	 * 根据年份查询,当前年份有多少条数据
+	 * 根据年份查询当前年份下的流水号总数
+	 * 
 	 * @param entity
-	 * @param goodsMerchantName
-	 * @param year 格式：yyyy
-	 * @return
+	 *            实体类Class
+	 * @param property
+	 *            查询表中列销属性名
+	 * @param year
+	 *            年份
+	 * @return String
 	 */
-	public String findGoodsYearLastId(Class entity,int year);
+	public long findSerialNoCount(Class entity,String property,int year);
 }

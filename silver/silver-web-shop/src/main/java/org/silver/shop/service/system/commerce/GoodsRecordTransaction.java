@@ -49,12 +49,13 @@ public class GoodsRecordTransaction {
 		return null;
 	}
 
-	public void merchantSendGoodsRecord(String eport,String customsCode,String ciqOrgCode,String recordGoodsInfoPack) {
+	public Map<String,Object> merchantSendGoodsRecord(String eport,String customsCode,String ciqOrgCode,String recordGoodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
 		Map<String, Object> datasMap = goodsRecordService.merchantSendGoodsRecord(merchantName,merchantId,recordGoodsInfoPack,eport,customsCode,ciqOrgCode);
+		return datasMap;
 	}
 }

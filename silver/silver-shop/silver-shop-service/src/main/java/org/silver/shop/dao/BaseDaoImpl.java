@@ -10,7 +10,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.organization.Member;
 
 /**
@@ -120,7 +122,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-
 
 	@Override
 	public List<Object> findAll(Class entity, int page, int size) {
@@ -305,26 +306,25 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public String findGoodsYearLastId(Class entity, int year) {
+	public long findSerialNoCount(Class entity, String property, int year) {
 		Session session = null;
 		try {
 			String entName = entity.getSimpleName();
-			String hql = "select model.goodsId from " + entName + " model  WHERE model.createDate >='" + year
-					+ "-01-01 00:00:00'" + "and model.createDate <= '" + year + "-12-31 23:59:59' "
-					+ " order by model.goodsId desc";
+			String hql = "select count(model." + property + ") from " + entName + " model  WHERE model.createDate >='"
+					+ year + "-01-01 00:00:00'" + "and model.createDate <= '" + year + "-12-31 23:59:59' ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			// 设置查询结果分页
-			query.setFirstResult(0).setMaxResults(1);
-			if (query.uniqueResult() == null) {
-				return null;
-			}
-			String str = query.uniqueResult() + "";
+			// query.setFirstResult(0).setMaxResults(1);
+			// if (query.uniqueResult() == null) {
+			// return null;
+			// }
+			long count = (long) query.uniqueResult();
 			session.close();
-			return str;
+			return count;
 		} catch (Exception re) {
 			re.printStackTrace();
-			return "-1";
+			return (long) -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
@@ -336,7 +336,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		System.out.println(bd.findGoodsYearLastId(GoodsContent.class,2017));
+		String str = "goodsSerialNo";
+		System.out.println(bd.findSerialNoCount(GoodsRecord.class, str, 2016));
 	}
 
 }
