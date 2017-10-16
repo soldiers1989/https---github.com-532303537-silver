@@ -18,7 +18,7 @@ public class CustomsPort implements Serializable {
 	private String provinceCode;// 省份编码
 	private String city;// 城市名称
 	private String cityCode;// 城市编码
-	private String customsPort;// 海关口岸 1-广州电子口岸 ,2-广东智检
+	private int customsPort;// 海关口岸 1-广州电子口岸 ,2-广东智检
 	private String customsPortName;// 海关口岸名称
 	private String customsCode;// 主管海关代码(同仓库编码)
 	private String customsName;// 主管海关代码名称
@@ -50,10 +50,11 @@ public class CustomsPort implements Serializable {
 	public void setCity(String city) {
 		this.city = city;
 	}
-	public String getCustomsPort() {
+	
+	public int getCustomsPort() {
 		return customsPort;
 	}
-	public void setCustomsPort(String customsPort) {
+	public void setCustomsPort(int customsPort) {
 		this.customsPort = customsPort;
 	}
 	public String getCustomsCode() {

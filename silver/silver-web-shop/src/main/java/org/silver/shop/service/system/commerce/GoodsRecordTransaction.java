@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.commerce;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
+import net.sf.json.JSONObject;
 
 /**
  * 商品备案Transaction
@@ -23,7 +23,7 @@ public class GoodsRecordTransaction {
 	@Reference
 	private GoodsRecordService goodsRecordService;
 
-	//查询商户下商品基本信息
+	// 查询商户下商品基本信息
 	public List<Object> findMerchantGoodsBaseInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -36,26 +36,28 @@ public class GoodsRecordTransaction {
 		return null;
 	}
 
-	//商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
+	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	public List<Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
-		Map<String, Object> datasMap = goodsRecordService.getGoodsRecordInfo(merchantName,goodsInfoPack);
+		Map<String, Object> datasMap = goodsRecordService.getGoodsRecordInfo(merchantName, goodsInfoPack);
 		if (datasMap != null && datasMap.size() > 0) {
-			return (List<Object>)datasMap.get(BaseCode.DATAS.toString());
+			return (List<Object>) datasMap.get(BaseCode.DATAS.toString());
 		}
 		return null;
 	}
 
-	public Map<String,Object> merchantSendGoodsRecord(String eport,String customsCode,String ciqOrgCode,String recordGoodsInfoPack) {
+	public Map<String, Object> merchantSendGoodsRecord(String customsPort, String customsCode, String ciqOrgCode,
+			String recordGoodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		Map<String, Object> datasMap = goodsRecordService.merchantSendGoodsRecord(merchantName,merchantId,recordGoodsInfoPack,eport,customsCode,ciqOrgCode);
-		return datasMap;
+		return goodsRecordService.merchantSendGoodsRecord(merchantName, merchantId, customsPort, customsCode,
+				ciqOrgCode, recordGoodsInfoPack);
 	}
+	
 }

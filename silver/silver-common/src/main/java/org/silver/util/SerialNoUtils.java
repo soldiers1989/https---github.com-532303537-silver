@@ -1,6 +1,5 @@
 package org.silver.util;
 
-
 /**
  * 商城流水号生成工具类
  */
@@ -16,15 +15,12 @@ public class SerialNoUtils {
 	 *            自编抬头
 	 * @param year
 	 *            年份
-	 * @param serialNoCount 流水号数目
+	 * @param serialNoCount
+	 *            流水号数目
 	 * @return String
 	 */
 	public static final String getSerialNo(String topStr, int year, long serialNoCount) {
-		int count = 0;
-		if (serialNoCount == 0) {
-			// 当查询数据库无记录时为：1
-			count = 1;
-		}
+		long count = serialNoCount + 1;
 		String strCount = String.valueOf(count);
 		while (strCount.length() < 5) {
 			strCount = "0" + strCount;

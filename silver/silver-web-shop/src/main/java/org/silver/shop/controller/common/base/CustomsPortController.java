@@ -75,16 +75,17 @@ public class CustomsPortController {
 	@ApiOperation("添加已开通的海关及智检")
 	public String addCustomsPort(@RequestParam("provinceName") String provinceName,
 			@RequestParam("provinceCode") String provinceCode, @RequestParam("cityName") String cityName,
-			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") String customsPort,
+			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsCode") String customsCode,
 			@RequestParam("customsName") String customsName, @RequestParam("ciqOrgCode") String ciqOrgCode,
 			@RequestParam("ciqOrgName") String ciqOrgName) {
-		Map<String,Object> statusMap = new HashMap<>();
+		Map<String,Object> statusMap = null;
 		statusMap = customsPortTransaction.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
 				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);
 		if(statusMap!=null && statusMap.size()>0){
 			return JSONObject.fromObject(statusMap).toString();
 		}else{
+			statusMap = new HashMap<>();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 		}

@@ -3,8 +3,6 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
-import org.silver.shop.model.system.commerce.GoodsContent;
-
 public interface GoodsRecordDao {
 
 	/**
@@ -73,4 +71,43 @@ public interface GoodsRecordDao {
 	 * @return String
 	 */
 	public long findSerialNoCount(Class entity, String property, int year);
+
+	/**
+	 * 将实体类实例化
+	 * 
+	 * @param entity
+	 *            实体类名
+	 * @return
+	 */
+	public boolean add(Object entity);
+
+	/**
+	 * 根据实体类删除信息
+	 * 
+	 * @param entity
+	 *            实体类名
+	 * @return
+	 */
+	public boolean delete(Object entity);
+
+	/**
+	 * 根据实体类更新数据库信息
+	 * 
+	 * @param entity
+	 *            实体类名
+	 * @return
+	 */
+	public boolean update(Object entity);
+
+	/**
+	 * 更新商品备案信息状态
+	 * @param tableName 更新表名
+	 * @param merchantIdColumnName 商户ID表中的列名
+	 * @param merchantId 商户ID
+	 * @param goodsSerialNo 商城商品流水号
+	 * @param status 状态码：
+	 * @return boolean
+	 */
+	public boolean updateGoodsRecordStatus(String tableName,String merchantIdColumnName  , String merchantId, String goodsSerialNo, int status);
+
 }

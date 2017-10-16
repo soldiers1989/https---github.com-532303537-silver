@@ -23,10 +23,10 @@ public class CustomsPortTransaction {
 
 	//添加口岸下已开通的 海关及国检名称与编码
 	public Map<String, Object> addCustomsPort(String provinceName, String provinceCode, String cityName,
-			String cityCode, String customsPort, String customsPortName, String customsCode, String customsName,
+			String cityCode, int customsPort, String customsPortName, String customsCode, String customsName,
 			String ciqOrgCode, String ciqOrgName) {
 		Map<String,Object> reMap = new HashMap<>();
-		
+		System.out.println("----》"+customsPort);
 		reMap = customsPortService.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
 				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);
 		if(reMap!=null && reMap.size()>0){

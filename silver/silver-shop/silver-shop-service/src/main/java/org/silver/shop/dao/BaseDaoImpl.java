@@ -10,6 +10,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.dao.system.commerce.impl.GoodsRecordDaoImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
@@ -332,12 +333,35 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	public boolean updateGoodsRecordStatus(String tableName, String merchantId, String goodsSerialNo, int status) {
+		Session session = null;
+		try {
+			String sql = "update "+tableName+" t1 set t1.status ="+status+" where t1.goodsSerialNo = ? and t1.merchantId =?";
+			session = getSession();
+			Query query = session.createSQLQuery(sql);
+			System.out.println("goodsSerialNo----->"+goodsSerialNo);
+			query.setString(0,goodsSerialNo.trim());
+			query.setString(1,merchantId.trim());
+			query.executeUpdate();
+			session.close();
+			return true;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return false;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
 		String str = "goodsSerialNo";
-		System.out.println(bd.findSerialNoCount(GoodsRecord.class, str, 2016));
+		System.out.println(bd.updateGoodsRecordStatus("ym_shop_goods_record", "MerchantId_00030", "GR_20170001715081192015841446", 3));
+
 	}
 
 }

@@ -1,6 +1,5 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +8,6 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
-import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
-import javassist.compiler.ast.Symbol;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -103,13 +99,12 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("商戶发起商品备案")
 	@RequiresRoles("Merchant")
-	public String merchantSendGoodsRecord(@RequestParam("eport") String eport,
+	public String merchantSendGoodsRecord(@RequestParam("customsPort") String customsPort,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgCode") String ciqOrgCode,
 			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (eport != null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
-			statusMap = goodsRecordTransaction.merchantSendGoodsRecord(eport, customsCode, ciqOrgCode,
-					recordGoodsInfoPack);
+		if (customsPort !=null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
+			statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode, recordGoodsInfoPack);
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		return null;

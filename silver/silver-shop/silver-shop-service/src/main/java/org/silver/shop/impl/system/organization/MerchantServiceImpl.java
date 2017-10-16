@@ -101,7 +101,7 @@ public class MerchantServiceImpl implements MerchantService {
 		if (type.equals("1")) {// 银盟自己商户备案信息插入
 			for (int x = 0; x < list.size(); x++) {
 				Map<String, Object> listMap = list.get(x);
-				entity.setEport((int) listMap.get(EPORT));
+				entity.setCustomsPort(Integer.valueOf(listMap.get(EPORT)+"") );
 				entity.setEbEntNo(listMap.get(EBENTNO) + "");
 				entity.setEbEntName(listMap.get(EBENTNAME) + "");
 				entity.setEbpEntNo(listMap.get(EBPENTNO) + "");
@@ -176,14 +176,14 @@ public class MerchantServiceImpl implements MerchantService {
 				// 取出前台打包好的商户备案信息
 				for (int x = 0; x < jsonList.size(); x++) {
 					Map<String, Object> packMap = (Map) jsonList.get(x);
-					String eport = packMap.get(EPORT) + "";
+					int eport =Integer.valueOf(packMap.get(EPORT) + "") ;
 					String ebEntNo = packMap.get(EBENTNO) + "";
 					String ebEntName = packMap.get(EBENTNAME) + "";
 					String ebpEntNo = packMap.get(EBPENTNO) + "";
 					String ebpEntName = packMap.get(EBPENTNAME) + "";
 					recordInfo.setMerchantId(merchantId);
-					recordInfo.setEport(Integer.valueOf(eport));// 1-广州电子口岸
-																// 2-南沙智检
+					// 1-广州电子口岸2-南沙智检
+					recordInfo.setCustomsPort(eport);
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
 					recordInfo.setEbpEntNo(ebpEntNo);
@@ -194,13 +194,14 @@ public class MerchantServiceImpl implements MerchantService {
 					// 保存商户对应的电商平台名称(及编码)
 					recordFlag = addMerchantRecordInfo(recordInfo, "2");
 					if (!recordFlag) {
-						if (Integer.valueOf(eport) == 1) {
-							eport = "电子口岸";
-						} else if (Integer.valueOf(eport) == 2) {
-							eport = "南沙智检";
+						String errorPort= "";
+						if (eport == 1) {
+							errorPort = "电子口岸";
+						} else if (eport == 2) {
+							errorPort = "南沙智检";
 						}
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), eport + "商户备案信息错误,保存失败！");
+						statusMap.put(BaseCode.MSG.getBaseCode(), errorPort + "商户备案信息错误,保存失败！");
 						return statusMap;
 					}
 				}

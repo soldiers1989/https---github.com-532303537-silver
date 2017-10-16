@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class EPort implements Serializable{
 
 	private long id ;
-	private String customsPort;//海关口岸代码
+	private int customsPort;//海关口岸 1-广州电子口岸 ,2-广东智检
 	private String customsPortName;//海关口岸名称
 	private String cityCode;//市级代码
 	private String cityName;//市级中文名
@@ -20,10 +20,11 @@ public class EPort implements Serializable{
 	public void setId(long id) {
 		this.id = id;
 	}
-	public String getCustomsPort() {
+
+	public int getCustomsPort() {
 		return customsPort;
 	}
-	public void setCustomsPort(String customsPort) {
+	public void setCustomsPort(int customsPort) {
 		this.customsPort = customsPort;
 	}
 	public String getCustomsPortName() {

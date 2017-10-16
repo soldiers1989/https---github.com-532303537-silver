@@ -18,7 +18,7 @@
 		<property name="goodsSerialNo" type="java.lang.String">
 			<column name="goodsSerialNo" />
 		</property>
-		<property name="customsPort" type="java.lang.String">
+		<property name="customsPort" type="int">
 			<column name="customsPort" />
 		</property>
 		<property name="customsPortName" type="java.lang.String">
@@ -72,6 +72,9 @@
 		<property name="deleteDate" type="java.util.Date">
 			<column name="deleteDate" />
 		</property>
-
+	
+		<property name="reSerialNo" type="java.lang.String">
+			<column name="reSerialNo"/>
+		</property>
 	</class>
 </hibernate-mapping>

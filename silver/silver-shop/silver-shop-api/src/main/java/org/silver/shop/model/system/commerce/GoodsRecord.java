@@ -18,7 +18,7 @@ public class GoodsRecord implements Serializable {
 	private String merchantId;// 商户ID
 	private String merchantName;// 商户名称
 	private String goodsSerialNo;// 备案流水号
-	private String customsPort;// 海关口岸代码 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+	private int customsPort;// 海关口岸代码 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 	private String customsPortName;// 海关口岸名称 
 	private String customsCode;// 主管海关代码
 	private String customsName;// 主管海关代码名称
@@ -31,12 +31,14 @@ public class GoodsRecord implements Serializable {
 	private String status;// 备案信息接受状态：1-成功,2-失败
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
-	private String updateBy;// 修改人
-	private Date updateDate;// 修改时间
+	private String updateBy;// 更新人
+	private Date updateDate;// 更新时间
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 
+	private String reSerialNo;//商品备案信息接受后返回流水号
+	
 	public long getId() {
 		return id;
 	}
@@ -61,20 +63,12 @@ public class GoodsRecord implements Serializable {
 		this.goodsSerialNo = goodsSerialNo;
 	}
 
-	public String getCustomsPort() {
+	public int getCustomsPort() {
 		return customsPort;
 	}
 
-	public void setCustomsPort(String customsPort) {
+	public void setCustomsPort(int customsPort) {
 		this.customsPort = customsPort;
-	}
-
-	public String getCustomsPortName() {
-		return customsPortName;
-	}
-
-	public void setCustomsPortName(String customsPortName) {
-		this.customsPortName = customsPortName;
 	}
 
 	public String getCustomsCode() {
@@ -213,4 +207,21 @@ public class GoodsRecord implements Serializable {
 		this.merchantName = merchantName;
 	}
 
+	public String getReSerialNo() {
+		return reSerialNo;
+	}
+
+	public void setReSerialNo(String reSerialNo) {
+		this.reSerialNo = reSerialNo;
+	}
+
+	public String getCustomsPortName() {
+		return customsPortName;
+	}
+
+	public void setCustomsPortName(String customsPortName) {
+		this.customsPortName = customsPortName;
+	}
+
+	
 }

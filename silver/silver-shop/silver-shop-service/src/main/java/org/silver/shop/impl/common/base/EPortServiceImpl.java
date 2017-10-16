@@ -48,7 +48,7 @@ public class EPortServiceImpl implements EPortService {
 		paramsMap.clear();
 		if (reList != null && reList.size() > 0) {
 			EPort portEntity = new EPort();
-			portEntity.setCustomsPort(customsPort);
+			portEntity.setCustomsPort(Integer.valueOf(customsPort));
 			portEntity.setCustomsPortName(customsPortName);
 			portEntity.setCityCode(cityCode);
 			portEntity.setCityName(cityName);
@@ -88,7 +88,7 @@ public class EPortServiceImpl implements EPortService {
 		paramsMap.clear();
 		if (reList != null && reList.size() > 0) {
 			EPort eportInfo = (EPort) reList.get(0);
-			eportInfo.setCustomsPort(customsPort.trim());
+			eportInfo.setCustomsPort(Integer.valueOf(customsPort.trim()));
 			eportInfo.setCustomsPortName(customsPortName);
 			eportInfo.setCityCode(cityCode);
 			eportInfo.setCityName(cityName);

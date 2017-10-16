@@ -125,5 +125,9 @@
         <property name="goodsMerchantId" type="java.lang.String">
         	<column name="goodsMerchantId"/>
         </property>
+        
+        <property name="reSerialNo" type="java.lang.String">
+        	<column name="reSerialNo"></column>
+        </property>
     </class>
 </hibernate-mapping>

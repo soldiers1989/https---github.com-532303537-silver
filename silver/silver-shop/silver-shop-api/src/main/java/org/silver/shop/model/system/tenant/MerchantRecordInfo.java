@@ -15,7 +15,8 @@ public class MerchantRecordInfo implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private int eport;//口岸:1-广州电子口岸,2-广东智检
+	private int customsPort;// 海关口岸代码 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+	private String customsPortName;// 海关口岸名称 
 	private String ebEntNo;// 电商企业编号
 	private String ebEntName;// 电商企业名称
 	private String ebpEntNo;// 电商平台企业编号
@@ -46,12 +47,20 @@ public class MerchantRecordInfo implements Serializable {
 		this.merchantId = merchantId;
 	}
 
-	public int getEport() {
-		return eport;
+	public int getCustomsPort() {
+		return customsPort;
 	}
 
-	public void setEport(int eport) {
-		this.eport = eport;
+	public void setCustomsPort(int customsPort) {
+		this.customsPort = customsPort;
+	}
+
+	public String getCustomsPortName() {
+		return customsPortName;
+	}
+
+	public void setCustomsPortName(String customsPortName) {
+		this.customsPortName = customsPortName;
 	}
 
 	public String getEbEntNo() {

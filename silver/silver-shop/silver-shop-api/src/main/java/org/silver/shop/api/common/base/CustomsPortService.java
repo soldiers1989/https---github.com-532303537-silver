@@ -29,7 +29,7 @@ public interface CustomsPortService {
 	 *            检验检疫机构名称
 	 * @return
 	 */
-	public Map<String,Object> addCustomsPort(String provinceName, String provinceCode, String cityName, String cityCode, String customsPort, String customsPortName, String customsCode, String customsName, String ciqOrgCode, String ciqOrgName);
+	public Map<String,Object> addCustomsPort(String provinceName, String provinceCode, String cityName, String cityCode, int customsPort, String customsPortName, String customsCode, String customsName, String ciqOrgCode, String ciqOrgName);
 
 	/**
 	 * 查询所有口岸下已开通的 海关及国检名称与编码
