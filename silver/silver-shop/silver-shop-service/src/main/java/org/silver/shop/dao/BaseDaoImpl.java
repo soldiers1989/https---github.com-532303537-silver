@@ -1,5 +1,6 @@
 package org.silver.shop.dao;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,12 +10,15 @@ import java.util.Map;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.dao.system.commerce.impl.GoodsRecordDaoImpl;
-import org.silver.shop.model.common.base.CustomsPort;
-import org.silver.shop.model.system.commerce.GoodsContent;
-import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.organization.Member;
+
+import com.justep.baas.data.DataUtils;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -333,21 +337,30 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public boolean updateGoodsRecordStatus(String tableName, String merchantId, String goodsSerialNo, int status) {
+	public Table getWarehousGoodsInfo(String merchantId,String warehouseCode, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "update "+tableName+" t1 set t1.status ="+status+" where t1.goodsSerialNo = ? and t1.merchantId =?";
+			String queryString = "SELECT t1.customsCode,t2.* from ym_shop_goods_record t1 LEFT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo "
+					+ "WHERE t1.customsCode = ? AND t1.merchantId = ?";
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add(warehouseCode);
+			sqlParams.add(merchantId);
 			session = getSession();
-			Query query = session.createSQLQuery(sql);
-			System.out.println("goodsSerialNo----->"+goodsSerialNo);
-			query.setString(0,goodsSerialNo.trim());
-			query.setString(1,merchantId.trim());
-			query.executeUpdate();
+			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
+			Connection conn = cp.getConnection();
+			Table l = null;
+			if (page > 0 && size > 0) {
+				page = page - 1;
+				l = DataUtils.queryData(conn, queryString, sqlParams, null, page * size, size);
+			} else {
+				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
+			}
 			session.close();
-			return true;
-		} catch (Exception re) {
+			// Transform.tableToJson(l);
+			return l;
+		} catch (Exception  re) {
 			re.printStackTrace();
-			return false;
+			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
@@ -359,9 +372,14 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		String str = "goodsSerialNo";
-		System.out.println(bd.updateGoodsRecordStatus("ym_shop_goods_record", "MerchantId_00030", "GR_20170001715081192015841446", 3));
-
+		paramMap.put("warehouseCode", "123");
+		Table reTable = bd.getWarehousGoodsInfo("MerchantId_00030", "5218", 0, 0);
+		System.out.println(Transform.tableToJson(reTable));
+		List<Row> lr = 	reTable.getRows();
+		for(Row rows : lr){
+			System.out.println("當結果爲0時");
+		}
+		System.out.println("---------");
 	}
 
 }

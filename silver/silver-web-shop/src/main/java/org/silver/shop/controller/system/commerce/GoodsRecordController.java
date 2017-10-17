@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 商品备案信息Controller,商品备案的操作
+ * 商品备案信息Controller
  *
  */
 @RequestMapping("/goodsRecord")
@@ -43,17 +43,8 @@ public class GoodsRecordController {
 	@ApiOperation("查询商户下商品基本信息")
 	@RequiresRoles("Merchant")
 	public String findMerchantGoodsBaseInfo(@RequestParam("page") int page, @RequestParam("size") int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		List datasList = goodsRecordTransaction.findMerchantGoodsBaseInfo(page, size);
-		if (datasList != null && datasList.size() > 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), datasList);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		Map<String,Object> datasMap = goodsRecordTransaction.findMerchantGoodsBaseInfo(page, size);
+		return JSONObject.fromObject(datasMap).toString();
 	}
 
 	/**
@@ -83,17 +74,12 @@ public class GoodsRecordController {
 	}
 
 	/**
-	 * 商户商品批量备案
-	 * 
-	 * @param eport
-	 *            口岸
-	 * @param customsCode
-	 *            检验检疫机构代码
-	 * @param ciqOrgCode
-	 *            主管海关代码
-	 * @param recordGoodsInfoPack
-	 *            备案商品信息
-	 * @return
+	 * 商戶发起备案
+	 * @param customsPort 口岸编码
+	 * @param customsCode 主管海关代码
+	 * @param ciqOrgCode 检验检疫编码
+	 * @param recordGoodsInfoPack 备案商品信息包
+	 * @return String 
 	 */
 	@RequestMapping(value = "/merchantSendGoodsRecord", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -109,5 +95,14 @@ public class GoodsRecordController {
 		}
 		return null;
 	}
-
+	
+	@RequestMapping(value = "/findMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商戶查询商品备案信息")
+	@RequiresRoles("Merchant")
+	public String findMerchantGoodsRecordInfo(@RequestParam("goodsId")String goodsId,@RequestParam("page") int page, @RequestParam("size") int size){
+		 Map<String,Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId,page,size);
+		 return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }

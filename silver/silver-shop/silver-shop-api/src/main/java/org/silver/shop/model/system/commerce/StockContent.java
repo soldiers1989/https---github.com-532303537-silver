@@ -34,6 +34,10 @@ public class StockContent implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	
+	private String merchantName;//商户名称
+	private int sellFlag;//上下架标识：1-上架,2-下架
+	private String goodsName;// 商品名称
 	public long getId() {
 		return id;
 	}
@@ -161,6 +165,24 @@ public class StockContent implements Serializable {
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getMerchantName() {
+		return merchantName;
+	}
+	public void setMerchantName(String merchantName) {
+		this.merchantName = merchantName;
+	}
+	public int getSellFlag() {
+		return sellFlag;
+	}
+	public void setSellFlag(int sellFlag) {
+		this.sellFlag = sellFlag;
+	}
+	public String getGoodsName() {
+		return goodsName;
+	}
+	public void setGoodsName(String goodsName) {
+		this.goodsName = goodsName;
 	}
 
 	

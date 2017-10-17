@@ -15,28 +15,28 @@
             <column name="goodsId" not-null="true"/>
         </property>
         <property name="totalStock" type="int">
-            <column name="totalStock" not-null="true"/>
+            <column name="totalStock" />
         </property>
         <property name="sellCount" type="int">
-            <column name="sellCount" not-null="true"/>
+            <column name="sellCount" />
         </property>
         <property name="paymentCount" type="int">
-            <column name="paymentCount" not-null="true"/>
+            <column name="paymentCount"/>
         </property>
         <property name="paidCount" type="int">
-            <column name="paidCount" not-null="true"/>
+            <column name="paidCount" />
         </property>
         <property name="shippedCount" type="int">
-            <column name="shippedCount" not-null="true"/>
+            <column name="shippedCount" />
         </property>
         <property name="doneCount" type="int">
-            <column name="doneCount" not-null="true"/>
+            <column name="doneCount" />
         </property>
         <property name="regPrice" type="java.lang.Double">
-            <column name="regPrice" not-null="true"/>
+            <column name="regPrice" />
         </property>
         <property name="freePrice" type="java.lang.Double">
-            <column name="freePrice" not-null="true"/>
+            <column name="freePrice" />
         </property>
         <property name="freight" type="java.lang.Double">
             <column name="freight" />
@@ -67,6 +67,17 @@
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
+        </property>
+        
+        <property name="merchantName" type="java.lang.String">
+        	<column name="merchantName" />
+        </property>
+        
+        <property name="sellFlag" type="int">
+        	<column name="sellFlag"/>
+        </property>
+        <property name="goodsName" type="java.lang.String">
+        	<column name="goodsName"/>
         </property>
     </class>
 </hibernate-mapping>

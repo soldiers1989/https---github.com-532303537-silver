@@ -35,19 +35,20 @@ public class CustomsPortController {
 	@ResponseBody
 	@ApiOperation("查询已开通的海关及智检")
 	public String findAllCustomsPort() {
-		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> statusMap = null;
 		statusMap = customsPortTransaction.findAllCustomsPort();
-		if(statusMap!=null && statusMap.size()>0){
-			return JSONObject.fromObject(statusMap).toString();
-		}else{
+		if (statusMap == null && statusMap.size() <= 0) {
+			statusMap = new HashMap<>();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
 	 * 添加口岸下已开通的 海关及国检名称与编码
+	 * 
 	 * @param provinceName
 	 *            省份名称
 	 * @param provinceCode
@@ -79,12 +80,12 @@ public class CustomsPortController {
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsCode") String customsCode,
 			@RequestParam("customsName") String customsName, @RequestParam("ciqOrgCode") String ciqOrgCode,
 			@RequestParam("ciqOrgName") String ciqOrgName) {
-		Map<String,Object> statusMap = null;
+		Map<String, Object> statusMap = null;
 		statusMap = customsPortTransaction.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
 				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);
-		if(statusMap!=null && statusMap.size()>0){
+		if (statusMap != null && statusMap.size() > 0) {
 			return JSONObject.fromObject(statusMap).toString();
-		}else{
+		} else {
 			statusMap = new HashMap<>();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

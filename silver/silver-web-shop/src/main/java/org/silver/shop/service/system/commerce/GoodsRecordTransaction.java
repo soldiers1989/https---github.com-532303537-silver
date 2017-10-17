@@ -24,16 +24,13 @@ public class GoodsRecordTransaction {
 	private GoodsRecordService goodsRecordService;
 
 	// 查询商户下商品基本信息
-	public List<Object> findMerchantGoodsBaseInfo(int page, int size) {
+	public Map<String, Object> findMerchantGoodsBaseInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
-		List<Object> datasList = goodsRecordService.findGoodsBaseInfo(merchantName, page, size);
-		if (datasList != null && datasList.size() > 0) {
-			return datasList;
-		}
-		return null;
+		Map<String, Object> statusMap = goodsRecordService.findGoodsBaseInfo(merchantName, page, size);
+		return statusMap;
 	}
 
 	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
@@ -59,5 +56,13 @@ public class GoodsRecordTransaction {
 		return goodsRecordService.merchantSendGoodsRecord(merchantName, merchantId, customsPort, customsCode,
 				ciqOrgCode, recordGoodsInfoPack);
 	}
-	
+
+	public Map<String,Object> findMerchantGoodsRecordInfo(String goodsId, int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		return goodsRecordService.findAllGoodsRecordInfo(merchantId,goodsId,page, size);
+	}
+
 }

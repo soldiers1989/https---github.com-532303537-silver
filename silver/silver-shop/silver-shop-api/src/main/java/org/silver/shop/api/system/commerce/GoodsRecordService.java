@@ -1,6 +1,5 @@
 package org.silver.shop.api.system.commerce;
 
-import java.util.List;
 import java.util.Map;
 
 public interface GoodsRecordService {
@@ -16,7 +15,7 @@ public interface GoodsRecordService {
 	 *            数据条数
 	 * @return List
 	 */
-	public List<Object> findGoodsBaseInfo(String merchantName, int page, int size);
+	public Map<String, Object> findGoodsBaseInfo(String merchantName, int page, int size);
 
 	/**
 	 * 根据商户名称及商户ID、商品名称查询商户下商品备案信息,如未备案商品则查询商品基本信息
@@ -42,4 +41,14 @@ public interface GoodsRecordService {
 	 */
 	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String customsPort,
 			String customsCode, String ciqOrgCode, String recordGoodsInfoPack);
+
+	/**
+	 * 查询所有商品备案信息
+	 * @param goodsId 
+	 * @param merchantId 
+	 * @param page 页数
+	 * @param size 数目
+	 * @return 
+	 */
+	public Map<String, Object> findAllGoodsRecordInfo(String merchantId, String goodsId, int page, int size);
 }
