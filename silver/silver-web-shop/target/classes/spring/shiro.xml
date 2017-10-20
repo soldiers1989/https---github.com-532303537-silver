@@ -16,10 +16,10 @@
 		check="false" /> <dubbo:reference id="sysAuthorizeProvider" interface="org.cloudx.provider.sys.SysAuthorizeProvider" 
 		check="false" /> -->
 	
+   <dubbo:reference id="MemberService" interface="org.silver.shop.api.system.organization.MemberService" check="false" />	
    <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
 	<!-- 配置Realm -->
-	
-	<bean id="userRealm" class="org.silver.shop.shiro.UserRealm" />
+	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" /> 
 	<bean id="adminRealm" class="org.silver.shop.shiro.AdminRealm" />
     <bean id="merchantRealm" class="org.silver.shop.shiro.MerchantRealm" />
     
@@ -28,7 +28,7 @@
 		<property name="authenticator" ref="authenticator"></property>
 		<property name="realms">
 			<list>
-				<ref bean="userRealm" />
+				<ref bean="memberRealm" />
 				<ref bean="adminRealm" />
 				<ref bean="merchantRealm" />
 			</list>
@@ -65,6 +65,7 @@
 				/servlet/validateCodeServlet=anon
 				/regin=anon 
 				/login=anon
+				/member/*=anon
 				/merchantBank/*=anon
 				/provinceCityArea/*=anon
 				/merchant/*=anon
@@ -80,7 +81,7 @@
 				/logout=anon
 				/*.ico=anon
 				/upload/*=anon
-				/merchantGoods/*=anon
+				/goods/*=anon
 				/resource/*=anon
 				/res/*=anon
 				/unauthorized=anon

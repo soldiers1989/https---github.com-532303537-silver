@@ -34,13 +34,4 @@ public class WarehousController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
-	public static void main(String[] args) {
-		JSONArray jsonList = new JSONArray();
-		Map<String,Object> data = new HashMap<>();
-		data.put("entGoodsNo", "YM_20170000115075204310625696");
-		data.put("goodsName", "测试商品名称");
-		data.put("stockCount", 50);
-		jsonList.add(data);
-		System.out.println(jsonList.toString());
-	}
 }

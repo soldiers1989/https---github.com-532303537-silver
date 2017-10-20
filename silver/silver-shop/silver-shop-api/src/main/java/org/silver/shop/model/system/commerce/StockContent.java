@@ -15,7 +15,7 @@ public class StockContent implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private String goodsId;// 商品ID
+	private String goodsId;// 商品基本信息ID
 	private int totalStock;// 现有存库数量
 	private int sellCount;// 上架数量
 	private int paymentCount;// 待支付数量
@@ -38,6 +38,7 @@ public class StockContent implements Serializable {
 	private String merchantName;//商户名称
 	private int sellFlag;//上下架标识：1-上架,2-下架
 	private String goodsName;// 商品名称
+	private String entGoodsNo;//商品备案ID
 	public long getId() {
 		return id;
 	}
@@ -183,6 +184,12 @@ public class StockContent implements Serializable {
 	}
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goodsName;
+	}
+	public String getEntGoodsNo() {
+		return entGoodsNo;
+	}
+	public void setEntGoodsNo(String entGoodsNo) {
+		this.entGoodsNo = entGoodsNo;
 	}
 
 	

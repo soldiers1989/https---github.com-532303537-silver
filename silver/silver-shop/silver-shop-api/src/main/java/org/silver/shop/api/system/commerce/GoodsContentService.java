@@ -8,30 +8,15 @@ public interface GoodsContentService {
 
 	/**
 	 * 添加商品基本信息
-	 * 
-	 * @param goodsId 商品ID
-	 * @param goodsName 商品名称
-	 * @param merchantId 商户ID
-	 * @param merchantName 商户名称
-	 * @param imgList 图片地址List
-	 * @param goodsFirstType 商品第一类型ID
-	 * @param goodsSecondType 商品第二类型ID
-	 * @param goodsThirdType 商品第三类型ID
-	 * @param goodsDetail 商品详情
-	 * @param goodsBrand 商品品牌
-	 * @param goodsStyle 规格
-	 * @param goodsUnit 申报计量单位
-	 * @param goodsRegPrice 商品单价
-	 * @param goodsOriginCountry 原产国
-	 * @param goodsBarCode 商品条形码
-	 * @param year 年份
-	 * @param date 日期
+	 * @param date 
+	 * @param goodsYear 
+	 * @param imgList 
+	 * @param params 
+	 * @param merchantName 
+	 * @param merchantId 
 	 * @return
 	 */
-	public boolean addGoodsBaseInfo(String goodsId, String merchantName, String goodsName, List imgList,
-			String goodsFirstType, String goodsSecondType, String goodsThirdType, String goodsDetail, String goodsBrand,
-			String goodsStyle, String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			int year, Date date,String merchantId);
+	public boolean addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date);
 
 	/**
 	 * 创建自编商品ID 获取商品基本信息的自增ID后,不足5位则前面补0
@@ -57,8 +42,8 @@ public interface GoodsContentService {
 	 * @param size
 	 * @param page
 	 */
-	public List<Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName, String startTime,
-			String endTime, String ymYear, int page, int size);
+	public Map<String, Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName, String startTime,
+			String endTime, String ymYear, int page, int size,String merchantId);
 
 	/**
 	 * 商户修改商品基本信息
@@ -94,5 +79,19 @@ public interface GoodsContentService {
 	 * @return boolean
 	 */
 	public boolean deleteBaseInfo(String merchantName, String goodsId);
+
+	/**
+	 * 根据商品ID,查询商户下已备案的商品基本信息
+	 * @param merchantId 商户ID
+	 * @return 
+	 */
+	public Map<String,Object> getShowGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size);
+
+	/**
+	 * 根据商品ID单独查询商品基本信息
+	 * @param goodsId
+	 * @return
+	 */
+	public Map<String, Object> goodsContentService(String goodsId);
 
 }

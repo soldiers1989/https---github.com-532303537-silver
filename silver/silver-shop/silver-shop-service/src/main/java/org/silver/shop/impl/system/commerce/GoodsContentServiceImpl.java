@@ -17,6 +17,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {
@@ -48,10 +51,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public boolean addGoodsBaseInfo(String goodsId, String merchantName, String goodsName, List imgList,
-			String goodsFirstType, String goodsSecondType, String goodsThirdType, String goodsDetail, String goodsBrand,
-			String goodsStyle, String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			int year, Date date, String merchantId) {
+	public boolean addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date) {
 		boolean flag = false;
 		String goodsImage = "";
 		// 拼接多张图片字符串
@@ -64,21 +64,27 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			}
 		}
 		GoodsContent goodsInfo = new GoodsContent();
-		goodsInfo.setGoodsId(goodsId);
-		goodsInfo.setGoodsName(goodsName);
+		goodsInfo.setGoodsId(params.get("goodsId")+"");
+		goodsInfo.setGoodsName(params.get("goodsName")+"");
 		goodsInfo.setGoodsMerchantName(merchantName);
 		goodsInfo.setGoodsImage(goodsImage);
-		goodsInfo.setGoodsFirstType(goodsFirstType);
-		goodsInfo.setGoodsSecondType(goodsSecondType);
-		goodsInfo.setGoodsThirdType(goodsThirdType);
-		goodsInfo.setGoodsDetail(goodsDetail);
-		goodsInfo.setGoodsBrand(goodsBrand);
-		goodsInfo.setGoodsStyle(goodsStyle);
-		goodsInfo.setGoodsUnit(goodsUnit);
-		goodsInfo.setGoodsRegPrice(Double.valueOf((goodsRegPrice)));
-		goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
-		goodsInfo.setGoodsBarCode(goodsBarCode);
-		goodsInfo.setGoodsYear(year + "");
+		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId")+"");
+		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName")+"");
+		
+		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId")+"");
+		goodsInfo.setGoodsSecondTypeName(params.get("goodsSecondTypeName")+"");
+		
+		goodsInfo.setGoodsThirdTypeId(params.get("goodsThirdTypeId")+"");
+		goodsInfo.setGoodsThirdTypeName(params.get("goodsThirdTypeName")+"");
+		
+		goodsInfo.setGoodsDetail(params.get("goodsDetail")+"");
+		goodsInfo.setGoodsBrand(params.get("goodsBrand")+"");
+		goodsInfo.setGoodsStyle(params.get("goodsStyle")+"");
+		goodsInfo.setGoodsUnit(params.get("goodsUnit")+"");
+		goodsInfo.setGoodsRegPrice(Double.valueOf((params.get("goodsRegPrice")+"")));
+		goodsInfo.setGoodsOriginCountry(params.get("goodsOriginCountry")+"");
+		goodsInfo.setGoodsBarCode(params.get("goodsBarCode")+"");
+		goodsInfo.setGoodsYear(String.valueOf(goodsYear));
 		goodsInfo.setCreateDate(date);
 		goodsInfo.setCreateBy(merchantName);
 		goodsInfo.setDeleteFlag(0);
@@ -88,28 +94,37 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public List<Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName, String startTime,
-			String endTime, String ymYear, int page, int size) {
-		// key=数据库列名,value=查询参数
+	public Map<String, Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName,
+			String startTime, String endTime, String ymYear, int page, int size, String merchantId) {
+		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		if (goodsId != null && !"".equals(goodsId.trim())) {
-			params.put("goodsId", goodsId);
-			page = 0;
-			size = 0;
-		} else {
-			if (merchantName != null && !"".equals(merchantName.trim())) {
-				params.put("goodsMerchantName", merchantName);
-			}
-			if (startTime != null && !"".equals(startTime.trim())) {
-				params.put("goodsName", goodsName);
-			}
-			if (ymYear != null && !"".equals(ymYear.trim())) {
-				params.put("ymYear", ymYear);
-			}
-		}
+		/*
+		 * if (goodsId != null && !"".equals(goodsId.trim())) {
+		 * params.put("goodsId", goodsId); page = 0; size = 0; } else { if
+		 * (merchantName != null && !"".equals(merchantName.trim())) {
+		 * params.put("goodsMerchantName", merchantName); } if (startTime !=
+		 * null && !"".equals(startTime.trim())) { params.put("goodsName",
+		 * goodsName); } if (ymYear != null && !"".equals(ymYear.trim())) {
+		 * params.put("goodsYear", ymYear); } }
+		 */
+		// key=数据库列名,value=查询参数
+		params.put("goodsMerchantId", merchantId);
 		// 删除标识:0-未删除,1-已删除
 		params.put("deleteFlag", 0);
-		return goodsContentDao.findBlurryProperty(GoodsContent.class, params, startTime, endTime, page, size);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, page, size);
+		long total = goodsContentDao.findByPropertyCount(GoodsContent.class, params);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (reList.size() > 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), total);
+			return statusMap;
+		}
+		return null;
 	}
 
 	@Override
@@ -138,9 +153,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			goodsInfo.setGoodsName(goodsName);
 			goodsInfo.setGoodsImage(goodsImage);
-			goodsInfo.setGoodsFirstType(goodsFirstType);
-			goodsInfo.setGoodsSecondType(goodsSecondType);
-			goodsInfo.setGoodsThirdType(goodsThirdType);
+			goodsInfo.setGoodsFirstTypeId(goodsFirstType);
+			goodsInfo.setGoodsSecondTypeId(goodsSecondType);
+			goodsInfo.setGoodsThirdTypeId(goodsThirdType);
 			goodsInfo.setGoodsDetail(goodsDetail);
 			goodsInfo.setGoodsBrand(goodsBrand);
 			goodsInfo.setGoodsStyle(goodsStyle);
@@ -175,6 +190,45 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			flag = goodsContentDao.update(goodsInfo);
 		}
 		return flag;
+	}
+
+	@Override
+	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType,secndType,thirdType, page, size);
+		if (t == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(t));
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> goodsContentService(String goodsId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String,Object> params = new HashMap<>();
+		params.put("goodsId", goodsId);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
+		if(reList ==null){
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}else if(reList.size()>0){
+			GoodsContent goods = (GoodsContent) reList.get(0);
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), goods);
+			return statusMap;
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
 	}
 
 }

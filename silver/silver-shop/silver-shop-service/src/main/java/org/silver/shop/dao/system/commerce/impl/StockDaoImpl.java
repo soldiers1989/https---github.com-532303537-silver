@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.dao.BaseDaoImpl;
@@ -23,8 +24,8 @@ public class StockDaoImpl extends BaseDaoImpl<Object> implements StockDao {
 	public Table getWarehousGoodsInfo(String merchantId,String warehouseCode, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "SELECT t1.customsCode,t2.goodsName,t2.entGoodsNo,t2.brand,t2.gUnit,t2.goodsStyle,t2.entGoodsNo from ym_shop_goods_record t1 LEFT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo "
-					+ "WHERE t1.customsCode = ? AND t1.merchantId = ? AND t1.deleteFlag = 0";			
+			String queryString = "SELECT t1.customsCode,t2.goodsName,t2.entGoodsNo,t2.brand,t2.gUnit,t2.goodsStyle,t2.entGoodsNo,t2.goodsDateilId from ym_shop_goods_record t1 LEFT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo "
+					+ "WHERE t1.customsCode = ? AND t1.merchantId = ? AND t1.deleteFlag = 0 AND t2.status = 2";			
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(warehouseCode);
 			sqlParams.add(merchantId);
@@ -60,4 +61,8 @@ public class StockDaoImpl extends BaseDaoImpl<Object> implements StockDao {
 		return super.add(entity);
 	}
 
+	@Override
+	public boolean update(Object entity) {
+		return super.update(entity);
+	}
 }

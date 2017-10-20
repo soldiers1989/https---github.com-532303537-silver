@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.silver.shop.model.system.commerce.GoodsContent;
 
+import com.justep.baas.data.Table;
+
 public interface GoodsContentDao {
 
 	/**
@@ -19,7 +21,7 @@ public interface GoodsContentDao {
 	 * @param goods
 	 * @return
 	 */
-	public boolean add(GoodsContent goods);
+	public boolean add(Object entiy);
 
 	/**
 	 * 根据实体,及Map键值对查询数据 key=(表中列名称),value=(查询参数)
@@ -62,4 +64,23 @@ public interface GoodsContentDao {
 	 * @return String
 	 */
 	public long findSerialNoCount(Class entity,String property,int year);
+
+	
+	/**
+	 *
+	 * @param merchantId 
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table getAlreadyRecordGoodsBaseInfo( int firstType, int  secndType,int thirdType,int page, int size);
+	
+	
+	/**
+	 * 模糊查询总数
+	 * @param entity 类
+	 * @param params 查询参数
+	 * @return
+	 */
+	public long findByPropertyCount(Class entity,Map<String,Object> params);
 }

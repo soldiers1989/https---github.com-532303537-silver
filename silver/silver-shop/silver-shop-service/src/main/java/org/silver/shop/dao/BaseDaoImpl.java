@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
 
 import com.justep.baas.data.DataUtils;
@@ -337,49 +338,56 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public Table getWarehousGoodsInfo(String merchantId,String warehouseCode, int page, int size) {
+	@Override
+	public long findByPropertyCount(Class entity, Map params) {
 		Session session = null;
 		try {
-			String queryString = "SELECT t1.customsCode,t2.* from ym_shop_goods_record t1 LEFT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo "
-					+ "WHERE t1.customsCode = ? AND t1.merchantId = ?";
-			List<Object> sqlParams = new ArrayList<>();
-			sqlParams.add(warehouseCode);
-			sqlParams.add(merchantId);
-			session = getSession();
-			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			Connection conn = cp.getConnection();
-			Table l = null;
-			if (page > 0 && size > 0) {
-				page = page - 1;
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, page * size, size);
-			} else {
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
+			String entityName = entity.getSimpleName();
+			String hql = "select count(model) from " + entityName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += "where ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + "=" + "?" + " and ";
+					list.add(params.get(property));
+				}
+				hql += " 1=1 ";
 			}
+			session = getSession();
+			Query query = session.createQuery(hql);
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			Long count = (Long) query.uniqueResult();
 			session.close();
-			// Transform.tableToJson(l);
-			return l;
-		} catch (Exception  re) {
-			re.printStackTrace();
-			return null;
+			return count;
+		} catch (Exception re) {
+			return (long) 0;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
 	}
+
+	
 	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("warehouseCode", "123");
-		Table reTable = bd.getWarehousGoodsInfo("MerchantId_00030", "5218", 0, 0);
-		System.out.println(Transform.tableToJson(reTable));
-		List<Row> lr = 	reTable.getRows();
-		for(Row rows : lr){
-			System.out.println("當結果爲0時");
-		}
-		System.out.println("---------");
+		paramMap.put("deleteFlag", 0);
+		paramMap.put("goodsMerchantId", "MerchantId_00030");
+		long t= bd.findByPropertyCount(GoodsContent.class,paramMap);
+		
+		System.out.println(t);
 	}
+
+	
 
 }

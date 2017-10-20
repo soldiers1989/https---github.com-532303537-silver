@@ -26,4 +26,14 @@ public interface StockService {
 	public Map<String,Object> addGoodsStockCount(String merchantId, String merchantName, String warehousCode, String warehousName,
 			String goodsInfoPack);
 
+
+	/**
+	 * 添加商品上架数量
+	 * @param merchantId
+	 * @param merchantName
+	 * @param goodsId
+	 * @param sellCount
+	 */
+	public Map<String,Object> addGoodsSellCount(String merchantId, String merchantName, String goodsId, int sellCount);
+
 }

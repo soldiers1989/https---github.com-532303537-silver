@@ -33,4 +33,14 @@ public interface StockDao {
 	 * @return
 	 */
 	public boolean add(Object entity);
+	
+	
+	/**
+	 * 根据实体类更新数据库信息
+	 * 
+	 * @param entity
+	 *            实体类名
+	 * @return
+	 */
+	public boolean update(Object entity);
 }

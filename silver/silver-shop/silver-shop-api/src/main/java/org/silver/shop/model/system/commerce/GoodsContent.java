@@ -16,9 +16,9 @@ public class GoodsContent implements Serializable {
 	private String goodsId;// 商品ID(兼商品自编号)
 	private String goodsMerchantName;//商品归属商戶名
 	private String goodsName;// 商品名称
-	private String goodsFirstType;// 商品类型第一级
-	private String goodsSecondType;// 商品类型第二级
-	private String goodsThirdType;// 商品类型第三级
+	private String goodsFirstTypeId;// 商品类型第一级
+	private String goodsSecondTypeId;// 商品类型第二级
+	private String goodsThirdTypeId;// 商品类型第三级
 	private String goodsImage;// 商品展示图片
 	private String goodsDetail;// 商品详情
 	private String goodsBrand;// 商品品牌
@@ -37,6 +37,10 @@ public class GoodsContent implements Serializable {
 	private Date deleteDate;//删除时间
 	
 	private String goodsMerchantId;//商品归属商戶id
+	
+	private String goodsFirstTypeName;//商品类型第一级名称
+	private String goodsSecondTypeName;// 商品类型第二级名称
+	private String goodsThirdTypeName;// 商品类型第三级名称
 	public long getId() {
 		return id;
 	}
@@ -61,24 +65,7 @@ public class GoodsContent implements Serializable {
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goodsName;
 	}
-	public String getGoodsFirstType() {
-		return goodsFirstType;
-	}
-	public void setGoodsFirstType(String goodsFirstType) {
-		this.goodsFirstType = goodsFirstType;
-	}
-	public String getGoodsSecondType() {
-		return goodsSecondType;
-	}
-	public void setGoodsSecondType(String goodsSecondType) {
-		this.goodsSecondType = goodsSecondType;
-	}
-	public String getGoodsThirdType() {
-		return goodsThirdType;
-	}
-	public void setGoodsThirdType(String goodsThirdType) {
-		this.goodsThirdType = goodsThirdType;
-	}
+	
 	public String getGoodsImage() {
 		return goodsImage;
 	}
@@ -184,6 +171,42 @@ public class GoodsContent implements Serializable {
 	}
 	public void setGoodsMerchantId(String goodsMerchantId) {
 		this.goodsMerchantId = goodsMerchantId;
+	}
+	public String getGoodsFirstTypeId() {
+		return goodsFirstTypeId;
+	}
+	public void setGoodsFirstTypeId(String goodsFirstTypeId) {
+		this.goodsFirstTypeId = goodsFirstTypeId;
+	}
+	public String getGoodsSecondTypeId() {
+		return goodsSecondTypeId;
+	}
+	public void setGoodsSecondTypeId(String goodsSecondTypeId) {
+		this.goodsSecondTypeId = goodsSecondTypeId;
+	}
+	public String getGoodsThirdTypeId() {
+		return goodsThirdTypeId;
+	}
+	public void setGoodsThirdTypeId(String goodsThirdTypeId) {
+		this.goodsThirdTypeId = goodsThirdTypeId;
+	}
+	public String getGoodsFirstTypeName() {
+		return goodsFirstTypeName;
+	}
+	public void setGoodsFirstTypeName(String goodsFirstTypeName) {
+		this.goodsFirstTypeName = goodsFirstTypeName;
+	}
+	public String getGoodsSecondTypeName() {
+		return goodsSecondTypeName;
+	}
+	public void setGoodsSecondTypeName(String goodsSecondTypeName) {
+		this.goodsSecondTypeName = goodsSecondTypeName;
+	}
+	public String getGoodsThirdTypeName() {
+		return goodsThirdTypeName;
+	}
+	public void setGoodsThirdTypeName(String goodsThirdTypeName) {
+		this.goodsThirdTypeName = goodsThirdTypeName;
 	}
 	
 	

@@ -34,16 +34,12 @@ public class GoodsRecordTransaction {
 	}
 
 	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
-	public List<Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
+	public Map<String,Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
-		Map<String, Object> datasMap = goodsRecordService.getGoodsRecordInfo(merchantName, goodsInfoPack);
-		if (datasMap != null && datasMap.size() > 0) {
-			return (List<Object>) datasMap.get(BaseCode.DATAS.toString());
-		}
-		return null;
+		return goodsRecordService.getGoodsRecordInfo(merchantName, goodsInfoPack);
 	}
 
 	public Map<String, Object> merchantSendGoodsRecord(String customsPort, String customsCode, String ciqOrgCode,

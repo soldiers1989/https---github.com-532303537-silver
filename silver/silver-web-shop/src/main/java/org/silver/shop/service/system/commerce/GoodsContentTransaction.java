@@ -18,6 +18,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
@@ -47,24 +48,26 @@ public class GoodsContentTransaction {
 			Map<String, Object> reMap = goodsContentService.createGoodsId();
 			String idStatus = reMap.get(BaseCode.STATUS.toString()) + "";
 			if (idStatus.equals("1")) {//自增ID查询成功
+				Map<String,Object> params = new HashMap<>();
 				Calendar cl = Calendar.getInstance();
-				int year = cl.get(Calendar.YEAR) ;
-				String goodsId = reMap.get(BaseCode.DATAS.toString()) + "";
+				int goodsYear = cl.get(Calendar.YEAR) ;
 				List<Object> imgList = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-				String goodsName = req.getParameter("goodsName");
-				String goodsFirstType = req.getParameter("goodsFirstType");
-				String goodsSecondType = req.getParameter("goodsSecondType");
-				String goodsThirdType = req.getParameter("goodsThirdType");
-				String goodsDetail = req.getParameter("goodsDetail");
-				String goodsBrand = req.getParameter("goodsBrand");
-				String goodsStyle = req.getParameter("goodsStyle");
-				String goodsUnit = req.getParameter("goodsUnit");
-				String goodsRegPrice = req.getParameter("goodsRegPrice");
-				String goodsOriginCountry = req.getParameter("goodsOriginCountry");
-				String goodsBarCode = req.getParameter("goodsBarCode");
-				flag = goodsContentService.addGoodsBaseInfo(goodsId, merchantName, goodsName, imgList, goodsFirstType,
-						goodsSecondType, goodsThirdType, goodsDetail, goodsBrand, goodsStyle, goodsUnit, goodsRegPrice,
-						goodsOriginCountry, goodsBarCode, year, date,merchantId);
+				params.put("goodsId",reMap.get(BaseCode.DATAS.toString()) + "");
+				params.put("goodsName", req.getParameter("goodsName"));
+				params.put("goodsFirstTypeId", req.getParameter("goodsFirstTypeId"));
+				params.put("goodsFirstTypeName", req.getParameter("goodsFirstTypeName"));
+				params.put("goodsSecondTypeId", req.getParameter("goodsSecondTypeId"));
+				params.put("goodsSecondTypeName", req.getParameter("goodsSecondTypeName"));
+				params.put("goodsThirdTypeId", req.getParameter("goodsThirdTypeId"));
+				params.put("goodsThirdTypeName", req.getParameter("goodsThirdTypeName"));
+				params.put("goodsDetail", req.getParameter("goodsDetail"));
+				params.put("goodsBrand", req.getParameter("goodsBrand"));
+				params.put("goodsStyle", req.getParameter("goodsStyle"));
+				params.put("goodsUnit", req.getParameter("goodsUnit"));
+				params.put("goodsRegPrice", req.getParameter("goodsRegPrice"));
+				params.put("goodsOriginCountry", req.getParameter("goodsOriginCountry"));
+				params.put("goodsBarCode", req.getParameter("goodsBarCode"));
+				flag = goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,imgList, goodsYear, date);
 			}
 		}
 		return flag;
@@ -79,19 +82,9 @@ public class GoodsContentTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
-		if (merchantName != null && !"".equals(merchantName.trim())) {
-			List<Object> datasList = goodsContentService.blurryFindGoodsInfo(goodsId, merchantName, goodsName,
-					startTime, endTime, ymYear, page, size);
-			if (datasList != null && !datasList.isEmpty()) {
-				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-				datasMap.put(BaseCode.DATAS.getBaseCode(), datasList);
-				datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			}
-		} else {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.PERMISSION_DENIED.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.PERMISSION_DENIED.getMsg());
-		}
-		return datasMap;
+		String merchantId= merchantInfo.getMerchantId();
+		return goodsContentService.blurryFindGoodsInfo(goodsId, merchantName, goodsName,startTime, endTime, ymYear, page, size,merchantId);
+		
 	}
 
 	
@@ -142,6 +135,16 @@ public class GoodsContentTransaction {
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 		}
 		return datasMap;
+	}
+
+
+	public Map<String,Object> getShowGoodsBaseInfo(int firstType, int secndType,int thirdType,int page,int size) {
+		return goodsContentService.getShowGoodsBaseInfo(firstType,secndType,thirdType,page,size);
+	}
+
+
+	public Map<String,Object> getOneGoodsBaseInfo(String goodsId) {
+		return goodsContentService.goodsContentService(goodsId);
 	}
 
 }

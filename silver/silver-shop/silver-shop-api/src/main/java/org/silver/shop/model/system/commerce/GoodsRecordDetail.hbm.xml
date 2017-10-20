@@ -129,5 +129,9 @@
         <property name="reSerialNo" type="java.lang.String">
         	<column name="reSerialNo"></column>
         </property>
+        
+        <property name="goodsDateilId" type="java.lang.String" >
+        	<column name="goodsDateilId" not-null="true"></column>
+        </property>
     </class>
 </hibernate-mapping>

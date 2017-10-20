@@ -11,7 +11,11 @@ public enum BaseCode {
 	/**
 	 * 信息
 	 */
-	MSG("msg"), 
+	MSG("msg"),
+	/**
+	 * 总数
+	 */
+	TOTALCOUNT("totalCount"),
 	/**
 	 * 数据
 	 */

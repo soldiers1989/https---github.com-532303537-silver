@@ -44,12 +44,12 @@ public class FileUpLoadService {
  */
 	public Map<String, Object> universalDoUpload(HttpServletRequest req,String storePath,String fType,boolean compress,int width,int height,String sign){
 		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(req.getSession().getServletContext());
-		Map<String, Object> reqMap = new HashMap<String, Object>();
+		Map<String, Object> reqMap = new HashMap<>();
 		if (multipartResolver.isMultipart(req)) {
 			MultipartHttpServletRequest multiRequest = (MultipartHttpServletRequest) req;
 			Iterator<String> iter = multiRequest.getFileNames();
 			String imgName="";
-			List<String> strl = new ArrayList<String>();
+			List<String> strl = new ArrayList<>();
 			while (iter.hasNext()) {
 				MultipartFile file = multiRequest.getFile(iter.next());
 				if (file != null) {

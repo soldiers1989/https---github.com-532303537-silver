@@ -104,7 +104,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		// 生成商品基本信息ID
 		String goodsId = SerialNoUtils.getSerialNo("YM_", year, goodsIdCount);
-
 		for (int i = 0; i < jsonList.size(); i++) {
 			params = new HashMap<>();
 			// 获取传递过来的商品ID
@@ -113,17 +112,24 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			String mapGoodsName = goodsMap.get("goodsName") + "";
 			String descParam = "createDate";
 			// key=数据库列名,value=查询参数
+			//params.put("entGoodsNo", mapGoodsId);
 			params.put("goodsName", mapGoodsName);
 			params.put("goodsMerchantName", merchantName);
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
 			// 根据商品名,扫描商品备案信息表
-			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecord.class, params, descParam, 1, 1);
-			if (goodsRecordList != null && goodsRecordList.size() > 0) {
+			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecordDetail.class, params, descParam, 1, 1);
+			if(goodsRecordList == null){
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}else if(goodsRecordList.size() > 0){//取出商品备案信息最近一条记录
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
+				//重新生成的商品备案ID
 				goodsRecordInfo.setEntGoodsNo(goodsId);
+				goodsRecordInfo.setGoodsDateilId(mapGoodsId);
 				goodsBaseList.add(goodsRecordInfo);
-			} else {// 如果该商品在商品备案信息表中没有数据,则根据商品名称商品ID扫描商品基本信息表
+			}else{// 如果该商品在商品备案信息表中没有数据,则根据商品名称商品ID扫描商品基本信息表
 				params.clear();
 				// key=数据库列名,value=查询参数
 				params.put("goodsId", mapGoodsId);
@@ -132,12 +138,15 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				params.put("deleteFlag", 0);
 				List<Object> goodsList = goodsRecordDao.findByProperty(GoodsContent.class, params, 1, 1);
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
-				goodsInfo.setGoodsId(goodsId);
+				//旧商品基本信息Id+重新生成的商品备案ID
+				goodsInfo.setGoodsId(goodsInfo.getGoodsId()+"#"+goodsId);
 				goodsBaseList.add(goodsInfo);
 			}
 		}
-		params.put(BaseCode.DATAS.toString(), goodsBaseList);
-		return params;
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.DATAS.toString(), goodsBaseList);
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
 	}
 
 	//商戶发起备案
@@ -407,9 +416,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		params.put("currCode", CURRCODE);
 		params.put("inputDate", inputDate);
 		// 电商企业编号
-		params.put("eBEntNo", ebEntNo);
+		params.put("ebEntNo", ebEntNo);
 		// 电商企业名称
-		params.put("eBEntName", ebEntName);
+		params.put("ebEntName", ebEntName);
 		params.put("appkey", YmMallConfig.APPKEY);
 		params.put("clientsign", clientsign);
 		params.put("timestamp", timestamp);
@@ -423,7 +432,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return JSONObject.fromObject(resultStr);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), "服务器接受备案信息错误,服务器繁忙！");
 		}
 		return statusMap;
 	}
@@ -527,6 +536,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			// 删除标识:0-未删除,1-已删除
 			goodRecordInfo.setDeleteFlag(0);
 			goodRecordInfo.setGoodsSerialNo(goodsSerialNo);
+			goodRecordInfo.setGoodsDateilId(goodsInfo.get("GoodsDateilId")+"");
 			flag = goodsRecordDao.add(goodRecordInfo);
 			if (!flag) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -575,7 +585,13 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return statusMap;
 	}
 
-	//创建商品仓库
+	/**
+	 * 创建商品仓库
+	 * @param merchantId 商户ID
+	 * @param merchantName 商户名称
+	 * @param portInfo 口岸管理实体类
+	 * @return Map
+	 */
 	private final Map<String, Object> createWarehous(String merchantId, String merchantName, CustomsPort portInfo) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();

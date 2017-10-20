@@ -133,4 +133,11 @@ public interface BaseDao<T> {
 	public long findSerialNoCount(Class entity,String property, int year);
 
 
+	/**
+	 * 模糊查询总数
+	 * @param entity 类
+	 * @param params 查询参数
+	 * @return
+	 */
+	public long findByPropertyCount(Class entity,Map<String,Object> params);
 }

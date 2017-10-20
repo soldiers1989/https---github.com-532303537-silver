@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 订单商品详情实体类
  */
-public class OrderDetail implements Serializable{
+public class OrderGoodsDetail implements Serializable{
 
 	/**
 	 * 
@@ -16,13 +16,14 @@ public class OrderDetail implements Serializable{
 	private long id;
 	private String merchantId;//商户ID
 	private String merchantName;//商户名称
-	private String userId;//用户ID
+	private String memberId;//用户ID
+	private String memberName;//用户名称
 	private String entOrderNo;//订单编号
 	private String goodsId;//商品ID
 	private String goodsName;//商品名称
 	private Double goodsPrice;//商品价格
 	private long goodsCount;//商品数量
-	private Double goodsTotal;//订单商品总价格
+	private Double goodsTotalPrice;//订单商品总价格
 	private String goodsImage;//商品图片
 	private Double Tax;//税费
 	private Double logisticsCosts;//物流费
@@ -51,11 +52,18 @@ public class OrderDetail implements Serializable{
 	public void setMerchantName(String merchantName) {
 		this.merchantName = merchantName;
 	}
-	public String getUserId() {
-		return userId;
+	
+	public String getMemberId() {
+		return memberId;
 	}
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setMemberId(String memberId) {
+		this.memberId = memberId;
+	}
+	public String getMemberName() {
+		return memberName;
+	}
+	public void setMemberName(String memberName) {
+		this.memberName = memberName;
 	}
 	public String getEntOrderNo() {
 		return entOrderNo;
@@ -88,12 +96,14 @@ public class OrderDetail implements Serializable{
 	public void setGoodsCount(long goodsCount) {
 		this.goodsCount = goodsCount;
 	}
-	public Double getGoodsTotal() {
-		return goodsTotal;
+	
+	public Double getGoodsTotalPrice() {
+		return goodsTotalPrice;
 	}
-	public void setGoodsTotal(Double goodsTotal) {
-		this.goodsTotal = goodsTotal;
+	public void setGoodsTotalPrice(Double goodsTotalPrice) {
+		this.goodsTotalPrice = goodsTotalPrice;
 	}
+	
 	public String getGoodsImage() {
 		return goodsImage;
 	}

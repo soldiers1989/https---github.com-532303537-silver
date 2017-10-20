@@ -11,9 +11,17 @@
         <property name="merchantId" type="java.lang.String">
             <column name="merchantId" not-null="true"/>
         </property>
-        <property name="userId" type="java.lang.String">
-            <column name="userId" not-null="true"/>
+         <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" not-null="true"/>
         </property>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" not-null="true"/>
+        </property>
+        
+         <property name="memberName" type="java.lang.String">
+            <column name="memberName" not-null="true"/>
+        </property>
+        
         <property name="entOrderNo" type="java.lang.String">
             <column name="entOrderNo" not-null="true"/>
         </property>

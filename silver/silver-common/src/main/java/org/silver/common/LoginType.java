@@ -4,7 +4,7 @@ public enum LoginType {
 	/**
 	 * 用户
 	 */
-	USER("User"),  
+	MEMBER("Member"),  
 	/**
 	 * 管理员
 	 */
@@ -16,8 +16,12 @@ public enum LoginType {
 	/**
 	 * 商户的info
 	 */
-	MERCHANTINFO(MERCHANT+"_info");
-
+	MERCHANTINFO(MERCHANT+"_info"),
+	/**
+	 * 用户的info
+	 */
+	MEMBERINFO(MEMBER+"_info");
+	
     private String type;
 
     private LoginType(String type) {

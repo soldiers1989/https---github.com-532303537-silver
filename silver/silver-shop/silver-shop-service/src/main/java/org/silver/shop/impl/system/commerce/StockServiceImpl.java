@@ -16,7 +16,6 @@ import org.silver.shop.model.system.commerce.StockContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
-import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
@@ -51,6 +50,7 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
+	//添加库存数量
 	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehousCode,
 			String warehousName, String goodsInfoPack) {
 		Date date = new Date();
@@ -73,32 +73,80 @@ public class StockServiceImpl implements StockService {
 			params.put("deleteFlag", 0);
 			params.put("entGoodsNo", datasMap.get("entGoodsNo"));
 			params.put("goodsName", datasMap.get("goodsName"));
-			//备案状态：1-备案中，2-备案成功，3-备案失败
+			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
 			List<Object> reList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
-			if (reList != null && reList.size() >= 0) {
+			if(reList == null){
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(),StatusCode.WARN.getMsg());
+				return statusMap;
+			}else if( reList.size() > 0){
+				
 				StockContent stock = new StockContent();
 				stock.setMerchantId(merchantId);
 				stock.setMerchantName(merchantName);
 				stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
-				stock.setGoodsName(datasMap.get("goodsName")+"");
-				stock.setGoodsId(datasMap.get("entGoodsNo")+"");
+				stock.setGoodsName(datasMap.get("goodsName") + "");
+				stock.setGoodsId(datasMap.get("goodsDateilId") + "");
 				stock.setRegPrice(0.0);
 				stock.setFreePrice(0.0);
 				stock.setFreight(0.0);
 				stock.setWarehousCode(warehousCode);
 				stock.setWarehousName(warehousName);
 				stock.setCreateDate(date);
-				//上下架标识：1-上架,2-下架
+				stock.setCreateBy(merchantName);
+				// 上下架标识：1-上架,2-下架
 				stock.setSellFlag(2);
-				if(!stockDao.add(stock)){
+				stock.setEntGoodsNo(datasMap.get("goodsDateilId") + "");
+				if (!stockDao.add(stock)) {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "保存 "+datasMap.get("goodsName")+" 商品错误!");
+					statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
 					return statusMap;
 				}
 			}else{
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), ""+datasMap.get("goodsName")+" 该商品不存在!");
+				statusMap.put(BaseCode.MSG.toString(), "" + datasMap.get("goodsName") + " 该商品不存在!");
+				return statusMap;
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
+
+	@Override
+	//添加商品上架数量
+	public Map<String, Object> addGoodsSellCount(String merchantId, String merchantName, String goodsId,
+			int sellCount) {
+		Date date = new Date();
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("goodsId", goodsId);
+		List<Object> reList = stockDao.findByProperty(StockContent.class, params, 1, 1);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else {
+			StockContent stock = (StockContent) reList.get(0);
+			String reGoodsId = stock.getGoodsId();
+			int stockCount = stock.getTotalStock();
+			int oldSellCount = stock.getSellCount();
+			if (reGoodsId.equals(goodsId) && sellCount <= stockCount) {
+				stock.setSellCount(sellCount+oldSellCount);
+				//上下架标识：1-上架,2-下架
+				stock.setSellFlag(1);
+				stock.setUpdateDate(date);
+				stock.setUpdateBy(merchantName);
+				if (!stockDao.update(stock)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品上架数量失败!");
+					return statusMap;
+				}
+			}else{
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "上架数量大于库存数量!");
 				return statusMap;
 			}
 		}

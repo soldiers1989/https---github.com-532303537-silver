@@ -1,12 +1,20 @@
 package org.silver.shop.dao.system.commerce.impl;
 
+import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.springframework.stereotype.Repository;
+
+import com.justep.baas.data.DataUtils;
+import com.justep.baas.data.Table;
 
 @Repository("goodsContentDao")
 public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsContentDao {
@@ -17,8 +25,8 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	}
 
 	@Override
-	public boolean add(GoodsContent goods) {
-		return super.add(goods);
+	public boolean add(Object entity) {
+		return super.add(entity);
 	}
 
 	@Override
@@ -41,4 +49,53 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	public long findSerialNoCount(Class entity,String property,int year){
 		return super.findSerialNoCount(entity,  property,year);
 	}
+
+	@Override
+	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
+		Session session = null;
+		String queryString = null;
+		try {
+			queryString = "SELECT t1.*,t2.sellCount from ym_shop_goods_content t1  LEFT JOIN ym_shop_stock_content t2 on t1.goodsId = t2.entGoodsNo "
+					+ "WHERE t2.sellFlag = 1  ";			
+			List<Object> sqlParams = new ArrayList<>();
+			if(firstType >0 && secndType > 0 && thirdType > 0){
+				sqlParams.add(firstType);
+				sqlParams.add(secndType);
+				sqlParams.add(thirdType);
+				queryString = queryString  +" and t1.goodsFirstTypeId = ?  and t1.goodsSecondTypeId = ? and t1.goodsThirdTypeId = ? ";
+			}else if(firstType >0 && secndType > 0){
+				sqlParams.add(firstType);
+				sqlParams.add(secndType);
+				queryString = queryString  +" and t1.goodsFirstTypeId = ? and t1.goodsSecondTypeId = ? ";
+			}else if(firstType > 0){
+				sqlParams.add(firstType);
+				queryString = queryString  +" and t1.goodsFirstTypeId = ? ";
+			}
+			session = getSession();
+			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
+			Connection conn = cp.getConnection();
+			Table l = null;
+			if (page > 0 && size > 0) {
+				page = page - 1;
+				l = DataUtils.queryData(conn, queryString, sqlParams, null, page * size, size);
+			} else {
+				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
+			}
+			session.close();
+			// Transform.tableToJson(l);
+			return l;
+		} catch (Exception  re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+	
+	public long findByPropertyCount(Class entity,Map params){		
+		return super.findByPropertyCount(entity, params);
+	}
+	
 }

@@ -31,12 +31,18 @@ public interface GoodsRecordService {
 	/**
 	 * 商戶发起商品备案
 	 * 
-	 * @param merchantName 商户名称
-	 * @param merchantId 商户ID
-	 * @param customsPort 口岸编码
-	 * @param customsCode 海关代码
-	 * @param ciqOrgCode 国检代码
-	 * @param recordGoodsInfoPack 备案商品信息
+	 * @param merchantName
+	 *            商户名称
+	 * @param merchantId
+	 *            商户ID
+	 * @param customsPort
+	 *            口岸编码
+	 * @param customsCode
+	 *            海关代码
+	 * @param ciqOrgCode
+	 *            国检代码
+	 * @param recordGoodsInfoPack
+	 *            备案商品信息
 	 * @return
 	 */
 	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String customsPort,
@@ -44,11 +50,16 @@ public interface GoodsRecordService {
 
 	/**
 	 * 查询所有商品备案信息
-	 * @param goodsId 
-	 * @param merchantId 
-	 * @param page 页数
-	 * @param size 数目
-	 * @return 
+	 * 
+	 * @param goodsId
+	 *            商品ID
+	 * @param merchantId
+	 *            商户ID
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return
 	 */
 	public Map<String, Object> findAllGoodsRecordInfo(String merchantId, String goodsId, int page, int size);
 }

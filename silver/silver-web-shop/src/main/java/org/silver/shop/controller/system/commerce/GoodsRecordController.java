@@ -1,8 +1,12 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
@@ -37,6 +41,7 @@ public class GoodsRecordController {
 	 * @param size
 	 *            数据条数
 	 * @return String
+	 * 与GoodsContentController的findMerchantGoodsInfo重复了
 	 */
 	@RequestMapping(value = "/findMerchantGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -57,18 +62,23 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")
 	@RequiresRoles("Merchant")
-	public String getMerchantGoodsRecordInfo(@RequestParam("goodsIdPack") String goodsInfoPack) {
+	public String getMerchantGoodsRecordInfo( String goodsInfoPack,HttpServletRequest req,HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		if (goodsInfoPack != null) {
-			List<Object> datasList = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsInfoPack);
-			if (datasList != null && datasList.isEmpty()) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.DATAS.toString(), datasList);
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			}
+			statusMap = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsInfoPack);
+			return JSONObject.fromObject(statusMap).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
@@ -100,7 +110,16 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("商戶查询商品备案信息")
 	@RequiresRoles("Merchant")
-	public String findMerchantGoodsRecordInfo(@RequestParam("goodsId")String goodsId,@RequestParam("page") int page, @RequestParam("size") int size){
+	public String findMerchantGoodsRecordInfo(HttpServletRequest req,HttpServletResponse response ,String goodsId,@RequestParam("page") int page, @RequestParam("size") int size){
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		 Map<String,Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId,page,size);
 		 return JSONObject.fromObject(statusMap).toString();
 	}

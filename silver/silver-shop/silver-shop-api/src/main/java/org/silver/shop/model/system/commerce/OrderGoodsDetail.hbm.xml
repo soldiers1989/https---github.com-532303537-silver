@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+                                   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-8-31 9:31:39 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+	<class name="org.silver.shop.model.system.commerce.OrderGoodsDetail"
+		table="ym_shop_order_goods_detail">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="merchantId" type="java.lang.String">
+			<column name="merchantId" not-null="true" />
+		</property>
+		<property name="merchantName" type="java.lang.String">
+			<column name="merchantName" not-null="true" />
+		</property>
+		<property name="memberId" type="java.lang.String">
+			<column name="memberId" not-null="true" />
+		</property>
+		<property name="memberName" type="java.lang.String">
+			<column name="memberName" not-null="true" />
+		</property>
+		<property name="entOrderNo" type="java.lang.String">
+			<column name="entOrderNo" not-null="true" />
+		</property>
+		<property name="goodsId" type="java.lang.String">
+			<column name="goodsId" not-null="true" />
+		</property>
+		<property name="goodsName" type="java.lang.String">
+			<column name="goodsName" not-null="true" />
+		</property>
+		<property name="goodsPrice" type="java.lang.Double">
+			<column name="goodsPrice" not-null="true" />
+		</property>
+		<property name="goodsCount" type="java.lang.Double">
+			<column name="goodsCount" not-null="true" />
+		</property>
+		<property name="goodsTotalPrice" type="java.lang.Double">
+			<column name="goodsTotalPrice" not-null="true" />
+		</property>
+		<property name="goodsImage" type="java.lang.String">
+			<column name="goodsImage" />
+		</property>
+		<property name="Tax" type="java.lang.Double">
+			<column name="Tax"  />
+		</property>
+		<property name="logisticsCosts" type="java.lang.Double">
+			<column name="logisticsCosts" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+	</class>
+</hibernate-mapping>

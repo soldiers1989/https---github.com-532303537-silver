@@ -18,14 +18,14 @@
         <property name="goodsName" type="java.lang.String">
             <column name="goodsName" not-null="true"/>
         </property>
-        <property name="goodsFirstType" type="java.lang.String">
-            <column name="goodsFirstType" />
+        <property name="goodsFirstTypeId" type="java.lang.String">
+            <column name="goodsFirstTypeId" />
         </property>
-        <property name="goodsSecondType" type="java.lang.String">
-            <column name="goodsSecondType" />
+        <property name="goodsSecondTypeId" type="java.lang.String">
+            <column name="goodsSecondTypeId" />
         </property>
-        <property name="goodsThirdType" type="java.lang.String">
-            <column name="goodsThirdType" />
+        <property name="goodsThirdTypeId" type="java.lang.String">
+            <column name="goodsThirdTypeId" />
         </property>
         <property name="goodsImage" type="java.lang.String">
             <column name="goodsImage" />
@@ -78,6 +78,16 @@
         <property name="goodsMerchantId" type="java.lang.String">
             <column name="goodsMerchantId" />
         </property>
+          <property name="goodsFirstTypeName" type="java.lang.String">
+            <column name="goodsFirstTypeName" />
+        </property>
+        <property name="goodsSecondTypeName" type="java.lang.String">
+            <column name="goodsSecondTypeName" />
+        </property>
+        <property name="goodsThirdTypeName" type="java.lang.String">
+            <column name="goodsThirdTypeName" />
+        </property>
+        
         
     </class>
 </hibernate-mapping>

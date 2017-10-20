@@ -5,7 +5,6 @@ import java.util.Date;
 
 /**
  * 订单报文实体
- * 所有金额默认存储以"分钱"为单位,如：100(分钱)=1(块钱)
  */
 public class OrderContent implements Serializable {
 
@@ -16,7 +15,9 @@ public class OrderContent implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private String userId;// 用户ID
+	private String merchantName;//商户名称
+	private String memberId;// 用户ID
+	private String memberName;//用户名称
 	private String entOrderNo;// 电商平台的原始订单编号
 	private int orderStatus;// 电子订单状态0-订单确认,1-订单完成,2-订单取消
 	private int payStatus;// 支付状态0-已付款,1-未付款(待支付) 2：支付失败，3：支付超时
@@ -49,7 +50,7 @@ public class OrderContent implements Serializable {
 	private Date invoiceDate;// 开票日期
 	private String notes;// 备注
 	private Date payTime;// 付款时间
-	private String orderRecordStatus;// 订单备案状态：0-未备案，1-备案中，2-备案成功，3-备案失败
+	private String orderRecordStatus;// 订单备案状态：1-备案中，2-备案成功，3-备案失败
 	private int ehsStatus;// 物流状态：0-未发货 1-待出仓2-已发货3-已签收
 	private String wbEhsentName;// 物流公司名称
 	private String wbEhsentNo;// 物流公司备案号
@@ -61,6 +62,8 @@ public class OrderContent implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	
+	private String orderSerialNo;// 订单所属商品流水号
 	public long getId() {
 		return id;
 	}
@@ -73,12 +76,7 @@ public class OrderContent implements Serializable {
 	public void setMerchantId(String merchantId) {
 		this.merchantId = merchantId;
 	}
-	public String getUserId() {
-		return userId;
-	}
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+	
 	public String getEntOrderNo() {
 		return entOrderNo;
 	}
@@ -344,6 +342,30 @@ public class OrderContent implements Serializable {
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getMerchantName() {
+		return merchantName;
+	}
+	public void setMerchantName(String merchantName) {
+		this.merchantName = merchantName;
+	}
+	public String getMemberId() {
+		return memberId;
+	}
+	public void setMemberId(String memberId) {
+		this.memberId = memberId;
+	}
+	public String getMemberName() {
+		return memberName;
+	}
+	public void setMemberName(String memberName) {
+		this.memberName = memberName;
+	}
+	public String getOrderSerialNo() {
+		return orderSerialNo;
+	}
+	public void setOrderSerialNo(String orderSerialNo) {
+		this.orderSerialNo = orderSerialNo;
 	}
 
 	

@@ -79,5 +79,9 @@
         <property name="goodsName" type="java.lang.String">
         	<column name="goodsName"/>
         </property>
+        
+        <property name="entGoodsNo" type="java.lang.String">
+        	<column name="entGoodsNo" not-null="true"/>
+        </property>
     </class>
 </hibernate-mapping>

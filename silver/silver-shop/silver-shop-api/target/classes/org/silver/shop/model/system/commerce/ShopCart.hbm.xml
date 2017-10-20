@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-10-18 18:07:32 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.ShopCart" table="ym_shop_member_shop_cart">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" not-null="true"/>
+        </property>
+        <property name="memberName" type="java.lang.String">
+            <column name="memberName" not-null="true"/>
+        </property>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" />
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" />
+        </property>
+        <property name="goodsBaseId" type="java.lang.String">
+            <column name="goodsBaseId" not-null="true"/>
+        </property>
+        <property name="goodsName" type="java.lang.String">
+            <column name="goodsName" />
+        </property>
+        <property name="goodsImage" type="java.lang.String">
+            <column name="goodsImage" />
+        </property>
+        <property name="goodsStyle" type="java.lang.String">
+            <column name="goodsStyle" />
+        </property>
+        <property name="count" type="int">
+            <column name="count" />
+        </property>
+        <property name="regPrice" type="double">
+            <column name="regPrice" />
+        </property>
+        <property name="totalPrice" type="double">
+            <column name="totalPrice" />
+        </property>
+        <property name="goodsRecordId" type="java.lang.String">
+            <column name="goodsRecordId" />
+        </property>
+    </class>
+</hibernate-mapping>
