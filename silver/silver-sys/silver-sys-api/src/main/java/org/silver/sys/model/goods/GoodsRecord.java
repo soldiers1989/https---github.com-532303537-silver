@@ -11,38 +11,39 @@ public class GoodsRecord implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	private long id;
-	private String DeclEntNo; // 申报企业编号
-	private String DeclEntName; // 申报企业名称
-	private String EBEntNo; // 电商企业编号
-	private String EBEntName; // 电商企业名称
-	private String OpType; // 操作方式 A-新增；M-修改；D-取消备案；
-	private String CustomsCode; // 主管海关代码
-	private String CIQOrgCode; // 检验检疫机构代码
-	private String EBPEntNo; // 电商平台企业编号
-	private String EBPEntName; // 电商平台名称
-	private String CurrCode; // 币制代码
-	private String BusinessType; // 跨境业务类型 1-特殊监管区域BBC保税进口 2-保税仓库BBC保税进口；
-	private String InputDate; // 录入日期 YYYYMMDDhhmmss
-	private String DeclTime; // 申请备案时间 YYYYMMDDhhmmss
-	private String IeFlag; // 进出境标志 I-进，E-出
-	private String Notes;//备注
-	private String app_key;//appKey  关联的各个电商平台企业备案号
-	private int eport;                  //口岸：1 电子口岸 2 南沙智检
-	private String filePath;            //报文存储路径
-	private String url;    //回调的URL
-	private String OrgMessageID; //原始报文编号
-	private String ciqNotes;// 国检审核备注
-	private String ciqStatus;// 国检审核状态
-	private String cusNotes;// 海关审核备注
-	private String cusStatus;// 海关审核状态
-	private int status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
-	private int count;//重发计数      重发次数不能超过5次
-	private int del_flag;// 0正常 1删除
-	private Date create_date; // 创建时间
-	private String create_by; // 创建人
-	private Date update_date; // 更新时间
-	private String update_by;// 更新人
-	private String remarks;// 备注
+	private String DeclEntNo;   //申报企业编号
+	private String DeclEntName; //申报企业名称
+	private String EBEntNo;     //电商企业编号
+	private String EBEntName;   //电商企业名称
+	private String OpType;      //操作方式 A-新增；M-修改；D-取消备案；
+	private String CustomsCode; //主管海关代码
+	private String CIQOrgCode;  //检验检疫机构代码
+	private String EBPEntNo;    //电商平台企业编号
+	private String EBPEntName;  //电商平台名称
+	private String CurrCode;    //币制代码
+	private String BusinessType;//跨境业务类型 1-特殊监管区域BBC保税进口 2-保税仓库BBC保税进口；
+	private String InputDate;   //录入日期 YYYYMMDDhhmmss
+	private String DeclTime;    //申请备案时间 YYYYMMDDhhmmss
+	private String IeFlag;      //进出境标志 I-进，E-出
+	private String Notes;       //备注
+	private String tenantNo;    //电商平台企业与银盟合作所分配的唯一编号
+	private String serialNo;    //第三方   流水号 
+	private int eport;          //口岸：1 电子口岸 2 南沙智检
+	private String filePath;    //报文存储路径
+	private String url;         //回调的URL
+	private String OrgMessageID;//原始报文编号
+	private String ciqNotes;    //国检审核备注
+	private String ciqStatus;   //国检审核状态
+	private String cusNotes;    //海关审核备注
+	private String cusStatus;   //海关审核状态
+	private int status;//发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
+	private int count;          //重发计数      重发次数不能超过5次
+	private int del_flag;       //0正常 1删除
+	private Date create_date;   //创建时间
+	private String create_by;   //创建人
+	private Date update_date;   //更新时间
+	private String update_by;   //更新人
+	private String remarks;     //备注
 	
 	public String getNotes() {
 		return Notes;
@@ -231,17 +232,24 @@ public class GoodsRecord implements Serializable{
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
-	public String getApp_key() {
-		return app_key;
+	
+	public String getTenantNo() {
+		return tenantNo;
 	}
-	public void setApp_key(String app_key) {
-		this.app_key = app_key;
+	public void setTenantNo(String tenantNo) {
+		this.tenantNo = tenantNo;
 	}
 	public String getUrl() {
 		return url;
 	}
 	public void setUrl(String url) {
 		this.url = url;
+	}
+	public String getSerialNo() {
+		return serialNo;
+	}
+	public void setSerialNo(String serialNo) {
+		this.serialNo = serialNo;
 	}
 	
 

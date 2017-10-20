@@ -153,7 +153,7 @@ public class GZEportServiceImpl implements GZEportService {
 		goodsRecord.setDeclTime(time);// 备案申请时间
 		goodsRecord.setIeFlag(ieFlag);// 进出口标识
 		goodsRecord.setOrgMessageID(messageID);
-		goodsRecord.setApp_key(appkey);
+		goodsRecord.setTenantNo(appkey);
 		goodsRecord.setUrl(notifyurl);//回调URL
 		goodsRecord.setEport(1);//口岸    1  电子口岸 2 智检
 		goodsRecord.setCiqStatus("0");
