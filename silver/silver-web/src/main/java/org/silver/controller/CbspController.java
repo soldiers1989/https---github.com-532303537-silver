@@ -67,8 +67,12 @@ public class CbspController {
 			        	return JSONObject.fromObject(statusMap).toString();
 			        }
 			    	if(ebEntNo!=null&&ebEntName!=null){
-			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode,appkey);
+			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode,dataMap.get("tenantNo")+"");
 //			    		System.out.println("电商企业平台：------》"+dataMap.get("no")+""+dataMap.get("name")+"");
+			    	}else{
+			    		statusMap.put("status", -8);
+			        	statusMap.put("msg", "请提供电商企业信息：ebEntNo，ebEntName");
+			        	return JSONObject.fromObject(statusMap).toString();
 			    	}
 			   }
 			    return JSONObject.fromObject(statusMap).toString();

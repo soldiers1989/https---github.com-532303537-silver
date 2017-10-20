@@ -11,6 +11,7 @@ public class EBPentRecord  implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private long id;
 	private String app_key;// 关联的开发key
+	private String tenantNo;//关联商户编号
 	private int eport;// 在哪个口岸的备案号 1黄埔 2 南沙 （详细参考已对接口岸字典）
 	private String EBPEntNo;// 电商平台企业备案号
 	private String EBPEntName;// 电商平台企业名称
@@ -92,6 +93,12 @@ public class EBPentRecord  implements Serializable{
 	}
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
+	}
+	public String getTenantNo() {
+		return tenantNo;
+	}
+	public void setTenantNo(String tenantNo) {
+		this.tenantNo = tenantNo;
 	}
 	
 	

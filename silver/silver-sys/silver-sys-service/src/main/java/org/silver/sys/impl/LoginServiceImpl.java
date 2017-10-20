@@ -32,7 +32,7 @@ public class LoginServiceImpl implements LoginService {
 		}
 		params.put("account", username);
 		params.put("password", password);
-		params.put("del_flag", 1);
+		params.put("del_flag", 0);
 		List<User> list=userDao.findByProperty(params, 1, 1);
 		if(null!=list&&list.size()>0){
 			reqMap.put("status", 1);

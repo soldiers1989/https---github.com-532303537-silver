@@ -32,7 +32,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 		String url="";
 		if("KJ881101".equals(orgMessageType)){//商品备案回执
 			params.put("OrgMessageID", messageID);
-			params.put("del_flag", 1);
+			params.put("del_flag", 0);
 			List<GoodsRecord> listGoods=goodsRecordDao.findByProperty(params, 1, 1);
 			if(null!=listGoods&&listGoods.size()>0){
 				goodsRecord=listGoods.get(0);
@@ -42,7 +42,7 @@ public class ReceiptServiceImpl implements ReceiptService {
 			}
 		}else if("KJ881111".equals(orgMessageType)){//订单回执
 			params.put("OrgMessageID", messageID);
-			params.put("del_flag", 1);
+			params.put("del_flag", 0);
 			List<OrderHead> orderHeadList=orderHeadDao.findByProperty(params, 1, 1);
 			if(null!=orderHeadList&&orderHeadList.size()>0){
 				orderHead=orderHeadList.get(0);

@@ -57,7 +57,9 @@
               <column name="remarks" />
             </property>
         
-        
+           <property name="tenantNo">
+              <column name="tenantNo" />
+            </property>
         
           </class>
           

@@ -20,6 +20,8 @@ public class PaymentHead implements Serializable {
 	private String OpType;              //操作方式
 	private String CustomsCode;         //主管海关代码 
 	private String CIQOrgCode;          //检验检疫机构代码
+	private String url;                 //回调地址
+	private String tenantNo;            //商户编号    商户的唯一标示ID
 	
 	private int eport;               //口岸
 	private int status;// 发送状态  0未发送  1已发送   2发送失败   3已被接收成功   4（已接收回执）完成
@@ -152,6 +154,18 @@ public class PaymentHead implements Serializable {
 	}
 	public void setEport(int eport) {
 		this.eport = eport;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	public String getTenantNo() {
+		return tenantNo;
+	}
+	public void setTenantNo(String tenantNo) {
+		this.tenantNo = tenantNo;
 	}
 	
 	
