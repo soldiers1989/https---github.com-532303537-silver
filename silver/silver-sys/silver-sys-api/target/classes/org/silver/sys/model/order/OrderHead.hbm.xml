@@ -105,8 +105,8 @@
               <column name="remarks" />
             </property>
         
-         <property name="app_key">
-          <column name="app_key" not-null="true" />
+         <property name="tenantNo">
+          <column name="tenantNo" not-null="true" />
         </property>
         
          <property name="url">

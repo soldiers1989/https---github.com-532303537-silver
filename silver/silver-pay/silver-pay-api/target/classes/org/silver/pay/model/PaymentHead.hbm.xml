@@ -89,7 +89,13 @@
               <column name="remarks" />
             </property>
         
-        
+         <property name="url">
+              <column name="url" not-null="true"/>
+            </property>
+            
+             <property name="tenantNo">
+              <column name="tenantNo" not-null="true"/>
+            </property>
         
           </class>
           

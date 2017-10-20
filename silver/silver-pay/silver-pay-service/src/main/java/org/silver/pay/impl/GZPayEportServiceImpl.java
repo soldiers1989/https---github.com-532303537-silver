@@ -41,7 +41,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 	private PaymentDetailDao paymentDetailDao;
 	
 	@Override
-	public Map<String, Object> payRecord(Object records,String opType,String customsCode,String ciqOrgCode) {
+	public Map<String, Object> payRecord(Object records,String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl) {
 		Map<String, Object> checkMap = new HashMap<String, Object>();
 		JSONArray jList = JSONArray.fromObject(records);
 		List<String> noNullKeys = new ArrayList<>();
@@ -61,11 +61,11 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 			return checkMap;
 		}
 		JSONArray list = JSONArray.fromObject(checkMap.get("datas"));
-		checkMap = createPay(list, opType, customsCode, ciqOrgCode);
+		checkMap = createPay(list, opType, customsCode, ciqOrgCode,tenantNo,notifyurl);
 		return checkMap;
 	}
 
-	private PaymentHead savePaymentHead(String messageID,String time,Date now,String opType,String customsCode,String ciqOrgCode){
+	private PaymentHead savePaymentHead(String messageID,String time,Date now,String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl){
 		PaymentHead paymentHead = new PaymentHead();
 		paymentHead.setDeclEntNo(GZEportCode.PAY_ENT_NO);// 申报企业编号
 		paymentHead.setDeclEntName(GZEportCode.PAY_ENT_NAME);// 申报企业名称
@@ -76,6 +76,8 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		paymentHead.setCustomsCode(customsCode);// 主管海关代码
 		paymentHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		paymentHead.setOrgMessageID(messageID);
+		paymentHead.setUrl(notifyurl);
+		paymentHead.setTenantNo(tenantNo);
 		paymentHead.setEport(1);
 		paymentHead.setCreate_date(now);
 		paymentHead.setDel_flag(0);
@@ -138,7 +140,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 	}
 	
 	@Override
-	public Map<String, Object> createPay(JSONArray list,String opType,String customsCode,String ciqOrgCode) {
+	public Map<String, Object> createPay(JSONArray list,String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl) {
 		System.out.println("=================开始处理接收的JSonList生成XML文件===============================");
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		List<PaymentDetail> paymentList =new ArrayList<>();
@@ -147,7 +149,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
 		String messageID = "KJ881112_YINMENG_" + remitSerialNumber;
 		//生成支付报文头
-		PaymentHead paymentHead=savePaymentHead(messageID,time,now,opType,customsCode,ciqOrgCode);
+		PaymentHead paymentHead=savePaymentHead(messageID,time,now,opType,customsCode,ciqOrgCode,tenantNo,notifyurl);
 		if(paymentHead!=null){//存储支付信息
 			paymentList =savePaymentDetail(list, messageID, now);
 		}

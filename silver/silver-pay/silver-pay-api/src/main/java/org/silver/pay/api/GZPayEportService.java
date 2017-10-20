@@ -5,7 +5,7 @@ import java.util.Map;
 import net.sf.json.JSONArray;
 /**
  * 广州电子口岸支付报文接口
- * @author Administrator
+ * @author Administrator 
  *
  */
 public interface GZPayEportService {
@@ -16,7 +16,7 @@ public interface GZPayEportService {
 	 * @param opType
 	 * @return
 	 */
-	public Map<String,Object> payRecord(Object records, String opType,String customsCode,String ciqOrgCode);
+	public Map<String,Object> payRecord(Object records, String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl);
 	/**
 	 * 
 	 * @param list
@@ -24,6 +24,6 @@ public interface GZPayEportService {
 	 * @param opType
 	 * @return
 	 */
-	public Map<String, Object> createPay(JSONArray list, String opType,String customsCode,String ciqOrgCode);
+	public Map<String, Object> createPay(JSONArray list, String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl);
 
 }
