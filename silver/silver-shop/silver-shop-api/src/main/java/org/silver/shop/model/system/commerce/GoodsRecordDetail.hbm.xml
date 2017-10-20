@@ -92,8 +92,8 @@
         <property name="status" type="int">
             <column name="status" />
         </property>
-        <property name="recordFalg" type="int">
-            <column name="recordFalg" />
+        <property name="recordFlag" type="int">
+            <column name="recordFlag" />
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />

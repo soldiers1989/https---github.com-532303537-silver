@@ -44,10 +44,38 @@ public interface MemberService {
 
 	/**
 	 * 用户添加商品至购物车
+	 * 
+	 * @param memberId 用户ID
+	 * @param memberName 用户名称
+	 * @param goodsId 商品名称
+	 * @param count 数量
+	 */
+	public Map<String, Object> addGoodsToShopCart(String memberId, String memberName, String goodsId, int count);
+
+	/**
+	 * 用户查询购物车
+	 * @param memberId 用户ID
+	 * @param memberName 用户名称
+	 * @return
+	 */
+	public Map<String, Object> getGoodsToShopCartInfo(String memberId, String memberName);
+
+	/**
+	 * 删除信息
+	 * @param goodsId
 	 * @param memberId
 	 * @param memberName
-	 * @param goodsId
-	 * @param count
+	 * @return
 	 */
-	public Map<String,Object> addGoodsToShopCart(String memberId, String memberName, String goodsId, int count);
+	public Map<String,Object> deleteShopCartGoodsInfo(String goodsId, String memberId, String memberName);
+
+	/**
+	 * 用户确认订单时设置购物车标识
+	 * @param goodsId
+	 * @param memberId
+	 * @param memberName
+	 * @param flag  用户选中标识1-为选择,2-已选择
+	 * @return
+	 */
+	public Map<String, Object> editShopCartGoodsFlag(String goodsId, String memberId, String memberName, int flag);
 }

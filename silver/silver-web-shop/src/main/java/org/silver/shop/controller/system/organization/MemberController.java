@@ -18,9 +18,11 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
+import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -65,10 +67,10 @@ public class MemberController {
 	 * @return
 	 * @throws IOException
 	 */
-	@RequestMapping(value = "/memberlogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/memberLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户--登录")
-	public String memberlogin(@RequestParam("account") String account,
+	public String memberLogin(@RequestParam("account") String account,
 			@RequestParam("loginPassword") String loginPassword, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
@@ -110,18 +112,163 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation(value = "获取用户信息")
 	@RequiresRoles("Member")
-	public String getMemberInfo() {
+	public String getMemberInfo(HttpServletRequest req , HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		Map<String, Object> statusMap = memberTransaction.getMemberInfo();
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/addGoodsToshopcart", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/addGoodsToShopCart", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用戶添加商品至购物车")
 	@RequiresRoles("Member")
-	public String addGoodsToShopCart(@RequestParam("goodsId") String goodsId, @RequestParam("count") int count) {
+	public String addGoodsToShopCart(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId, @RequestParam("count") int count) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		Map<String, Object> statusMap = memberTransaction.addGoodsToShopCart(goodsId, count);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	
+	@RequestMapping(value = "/getGoodsToShopCartInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户查询购物车信息")
+	@RequiresRoles("Member")
+	public String getGoodsToShopCartInfo(HttpServletRequest req , HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = memberTransaction.getGoodsToShopCartInfo();
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	/**
+	 * 检查用户登录
+	 */
+	@RequestMapping(value = "/checkMemberLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("检查用户登录")
+	// @RequiresRoles("Merchant")
+	public String checkMemberLogin(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		if (currentUser != null && currentUser.isAuthenticated()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "用户已登陆！");
+
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	/**
+	 * 注销用户信息
+	 */
+	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户注销")
+	// @RequiresRoles("Merchant")
+	public String logout(HttpServletRequest req,HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		if (currentUser != null) {
+			try {
+				currentUser.logout();
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "用户注销成功,请重新登陆！");
+			} catch (Exception e) {
+				e.printStackTrace();
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
+			}
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	@RequestMapping(value = "/deleteShopCartGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户删除购物车信息")
+	@RequiresRoles("Member")
+	public String deleteShopCartGoodsInfo(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = memberTransaction.deleteShopCartGoodsInfo(goodsId);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	
+	/**
+	 * 用户设置购物车商品标识
+	 * @param req
+	 * @param response
+	 * @param goodsId
+	 * @param flag 用户商品选中标识1-为选择,2-已选择
+	 * @return
+	 */
+	@RequestMapping(value = "/editShopCartGoodsFlag", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户设置购物车商品标识")
+	@RequiresRoles("Member")
+	public String editShopCartGoodsFlag(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId,@RequestParam("flag")int flag) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = memberTransaction.editShopCartGoodsFlag(goodsId,flag);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }

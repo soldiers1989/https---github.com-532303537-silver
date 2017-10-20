@@ -48,5 +48,12 @@ public interface MemberDao {
 	 * @return String
 	 */
 	public long findSerialNoCount(Class entity,String property,int year);
-
+	/**
+	 * 根据实体类删除信息
+	 * 
+	 * @param entity
+	 *            实体类名
+	 * @return
+	 */
+	public boolean delete(Object entity);
 }

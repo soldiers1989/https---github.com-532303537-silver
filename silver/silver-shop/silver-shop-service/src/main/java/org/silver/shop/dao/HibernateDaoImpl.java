@@ -8,7 +8,7 @@ public class HibernateDaoImpl {
 	
 
 	public Session getSession() {
-		return ChooseDatasourceHandler.hibernateDaoImpl.session;
+		return SessionFactory.getSession();
 	}
 	public void setSession(Session session) {
 		this.session = session;
