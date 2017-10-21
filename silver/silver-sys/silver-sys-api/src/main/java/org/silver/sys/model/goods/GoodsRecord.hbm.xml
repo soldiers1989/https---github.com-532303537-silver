@@ -137,9 +137,7 @@
               <column name="url" not-null="true" />
          </property>
         
-         <property name="serialNo">
-              <column name="serialNo" not-null="true" />
-         </property>
+        
         
           </class>
           
