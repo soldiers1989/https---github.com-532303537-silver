@@ -2,8 +2,6 @@ package org.silver.shop.component;
 
 import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.hibernate.Session;
 import org.silver.shop.dao.HibernateDaoImpl;
 import org.silver.shop.dao.SessionFactory;
 import org.silver.shop.dao.SessionFactory2;
@@ -11,8 +9,8 @@ import org.silver.shop.dao.SessionFactory2;
 public class ChooseDatasourceHandler {
 	
 	
-	public static final HibernateDaoImpl hibernateDaoImpl = new HibernateDaoImpl();
-
+	public  final static HibernateDaoImpl hibernateDaoImpl = new HibernateDaoImpl();
+ 
 	public void methodBefore(JoinPoint joinPoint) {
 		Class<?> targetClass = joinPoint.getTarget().getClass();
 		String methodName = joinPoint.getSignature().getName();

@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-10-18 18:07:32 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.commerce.ShopCart" table="ym_shop_member_shop_cart">
+    <class name="org.silver.shop.model.system.commerce.ShopCartContent" table="ym_shop_member_shop_cart">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -43,6 +43,9 @@
         </property>
         <property name="goodsRecordId" type="java.lang.String">
             <column name="goodsRecordId" />
+        </property>
+        <property name="flag" type="int">
+        	<column name="flag"/>
         </property>
     </class>
 </hibernate-mapping>

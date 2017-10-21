@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 购物车实体
  */
-public class ShopCart implements Serializable{
+public class ShopCartContent implements Serializable{
 	/**
 	 * 
 	 */
@@ -24,7 +24,8 @@ public class ShopCart implements Serializable{
 	private double totalPrice;//总价
 	
 	private String goodsRecordId;//商品备案流水ID
-
+	private int sellCount;//库存(上架)数量
+	private int flag;//用户选中标识1-为选择,2-已选择
 	public long getId() {
 		return id;
 	}
@@ -128,7 +129,20 @@ public class ShopCart implements Serializable{
 	public void setGoodsRecordId(String goodsRecordId) {
 		this.goodsRecordId = goodsRecordId;
 	}
-	
+
+	public int getSellCount() {
+		return sellCount;
+	}
+
+	public void setSellCount(int sellCount) {
+		this.sellCount = sellCount;
+	}
+	public int getFlag() {
+		return flag;
+	}
+	public void setFlag(int flag) {
+		this.flag = flag;
+	}
 	
 	
 }

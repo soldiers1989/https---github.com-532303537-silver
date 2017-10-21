@@ -3,13 +3,16 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-31 9:51:23 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.ReceiptInfo" table="ym_shop_receipt_info">
+    <class name="org.silver.shop.model.system.tenant.ReceiptContent" table="ym_shop_receipt_content">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="userId" type="java.lang.String">
-            <column name="userId" not-null="true"/>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" not-null="true"/>
+        </property>
+        <property name="memberName" type="java.lang.String">
+        	<column name="meberName"/>
         </property>
         <property name="recipientName" type="java.lang.String">
             <column name="recipientName" not-null="true"/>

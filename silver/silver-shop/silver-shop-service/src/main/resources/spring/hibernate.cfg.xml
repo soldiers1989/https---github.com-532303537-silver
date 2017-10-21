@@ -30,7 +30,7 @@
 		</property>
 		<property name="c3p0.min_size">10</property>
 		<property name="c3p0.max_size">200</property>
-		<property name="c3p0.time_out">60</property>
+		<property name="c3p0.time_out">300</property>
 		<property name="c3p0.max_statement">0</property>
 		<property name="c3p0.idle_test_period">100</property>
 		<property name="c3p0.validate">true</property>
@@ -58,7 +58,7 @@
 		<mapping resource="org/silver/shop/model/system/commerce/OrderGoodsDetail.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/StockContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/cross/PaymentContent.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/tenant/ReceiptInfo.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/tenant/ReceiptContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/CustomsPort.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/Warehous.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/organization/Manager.hbm.xml"/>
@@ -67,7 +67,7 @@
 		<mapping resource="org/silver/shop/model/common/base/CCIQ.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/GAC.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/ShopCart.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/ShopCartContent.hbm.xml"/>
 		
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>

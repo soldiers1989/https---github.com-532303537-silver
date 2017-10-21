@@ -79,17 +79,44 @@ public class MemberTransaction {
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return memberService.getMemberInfo(memberId,memberName);
+		return memberService.getMemberInfo(memberId, memberName);
 	}
 
-	//用户添加商品至购物车
-	public Map<String,Object> addGoodsToShopCart(String goodsId, int count) {
+	// 用户添加商品至购物车
+	public Map<String, Object> addGoodsToShopCart(String goodsId, int count) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return memberService.addGoodsToShopCart(memberId,memberName,goodsId,count);
+		return memberService.addGoodsToShopCart(memberId, memberName, goodsId, count);
+	}
+
+	public Map<String, Object> getGoodsToShopCartInfo() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return memberService.getGoodsToShopCartInfo(memberId, memberName);
+	}
+
+	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return memberService.deleteShopCartGoodsInfo(  goodsId, memberId, memberName);
+	}
+
+	public Map<String, Object> editShopCartGoodsFlag(String goodsId, int flag) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return memberService.editShopCartGoodsFlag(  goodsId, memberId, memberName,flag);
 	}
 
 }

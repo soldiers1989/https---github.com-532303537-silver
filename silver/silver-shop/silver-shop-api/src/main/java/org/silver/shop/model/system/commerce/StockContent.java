@@ -191,6 +191,7 @@ public class StockContent implements Serializable {
 	public void setEntGoodsNo(String entGoodsNo) {
 		this.entGoodsNo = entGoodsNo;
 	}
+	
 
 	
 }

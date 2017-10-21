@@ -33,4 +33,9 @@ public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
 	public long findSerialNoCount(Class entity,String property,int year){
 		return super.findSerialNoCount(entity,  property,year);
 	}
+	
+	@Override
+	public boolean delete(Object entity){
+		return super.delete(entity);
+	}
 }

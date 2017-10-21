@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 收货地址信息实体类
  */
-public class ReceiptInfo implements Serializable{
+public class ReceiptContent implements Serializable{
 
 	/**
 	 * 
@@ -14,7 +14,8 @@ public class ReceiptInfo implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private long id;
-	private String userId;//用户ID
+	private String memberId;//用户ID
+	private String memberName;//用户名称
 	private String recipientName;//收货人姓名
 	private String recipientCardId;//收货人身份证号码
 	private String recipientTel;//收货人电话
@@ -23,7 +24,7 @@ public class ReceiptInfo implements Serializable{
 	private String recCityCode;//收货人城市代码
 	private String recArea;//收货人城市区代码
 	private String recipientAddr;//收货人详细地址
-	private  String notes;//
+	private  String notes;//备注
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
@@ -31,17 +32,25 @@ public class ReceiptInfo implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
+	private String receiptId;//收货地址ID
 	public long getId() {
 		return id;
 	}
 	public void setId(long id) {
 		this.id = id;
 	}
-	public String getUserId() {
-		return userId;
+	
+	public String getMemberId() {
+		return memberId;
 	}
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setMemberId(String memberId) {
+		this.memberId = memberId;
+	}
+	public String getMemberName() {
+		return memberName;
+	}
+	public void setMemberName(String memberName) {
+		this.memberName = memberName;
 	}
 	public String getRecipientName() {
 		return recipientName;
