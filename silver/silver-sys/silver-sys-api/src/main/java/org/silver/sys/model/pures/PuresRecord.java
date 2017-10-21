@@ -1,20 +1,23 @@
 package org.silver.sys.model.pures;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class PuresRecord {
+public class PuresRecord implements Serializable  {
 
 	private static final long serialVersionUID = 1L;
 	private long id;
-	private String walletNo;   //原始报文编号
-	private String tenantNo;   //相关的商户编号
-	private String serialNo;   //流水号
+	private String walletNo;    //钱包编号
+	private String tenantNo;    //相关的商户编号
+	private String serialNo;    //流水号
 	private String acceptanceNo;//支付企业受理号 
-	private double amount;     //总金额
-	private double balance;    //可用余额
-	private double frozenFund; //冻结金额
-	private int type;    //业务类型  1 充值  2 提现
-	private double money;//业务金额
+	private double amount;      //总金额
+	private double balance;     //可用余额
+	private double frozenFund;  //冻结金额
+	private int type;           //业务类型  1 充值  2 提现
+	private double money;       //业务金额
+	private int Status;         //业务状态
+	
 	private int delFlag;//0正常   1删除
 	private Date createDate; //创建时间
 	private String createBy; //创建人
@@ -116,6 +119,12 @@ public class PuresRecord {
 	}
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
+	}
+	public int getStatus() {
+		return Status;
+	}
+	public void setStatus(int status) {
+		Status = status;
 	}
 	
 }

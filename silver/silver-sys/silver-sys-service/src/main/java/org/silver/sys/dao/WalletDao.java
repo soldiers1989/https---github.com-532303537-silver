@@ -9,13 +9,13 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.sys.component.ChooseDatasourceHandler;
-import org.silver.sys.model.order.OrderRecord;
+import org.silver.sys.model.pures.Wallet;
 import org.springframework.stereotype.Repository;
 
-@Repository("orderRecordDao")
-public class OrderRecordDao extends HibernateDaoImpl{
+@Repository("walletDao")
+public class WalletDao extends HibernateDaoImpl {
 
-	public boolean add(OrderRecord entity) {
+	public boolean add(Wallet entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -36,7 +36,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean delete(OrderRecord entity) {
+	public boolean delete(Wallet entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -57,7 +57,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean update(OrderRecord entity) {
+	public boolean update(Wallet entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -77,12 +77,12 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public OrderRecord findbyId(long id) {
+	public Wallet findbyId(long id) {
 
 		Session session = null;
 		try {
 			session = getSession();
-			OrderRecord instance = (OrderRecord) session.get(OrderRecord.class, id);
+			Wallet instance = (Wallet) session.get(Wallet.class, id);
 			session.close();
 			return instance;
 		} catch (Exception re) {
@@ -97,7 +97,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	public Long findAllCount() {
 		Session session = null;
 		try {
-			String hql = "select count(model) from OrderRecord model ";
+			String hql = "select count(model) from Wallet model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			Long count = (Long) query.uniqueResult();
@@ -112,16 +112,16 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<OrderRecord> findAll(int page, int size) {
+	public List<Wallet> findAll(int page, int size) {
 		Session session = null;
 		try {
-			String hql = "from OrderRecord model ";
+			String hql = "from Wallet model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<OrderRecord> list = query.list();
+			List<Wallet> list = query.list();
 			session.close();
 			return list;
 		} catch (Exception re) {
@@ -141,7 +141,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	public List findByProperty(String propertyName, Object value, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "from OrderRecord as model where model." + propertyName + "= ?";
+			String queryString = "from Wallet as model where model." + propertyName + "= ?";
 			session = getSession();
 			Query queryObject = session.createQuery(queryString);
 			queryObject.setParameter(0, value);
@@ -161,11 +161,11 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<OrderRecord> findByProperty(Map<String, Object> params, int page, int size) {
+	public List<Wallet> findByProperty(Map<String, Object> params, int page, int size) {
 		Session session = null;
 		try {
 			session = getSession();
-			String hql = "from OrderRecord model ";
+			String hql = "from Wallet model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -187,7 +187,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<OrderRecord> results = query.list();
+			List<Wallet> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -200,12 +200,10 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-
-	
 	public Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
-			String hql = "select count(model) from OrderRecord model ";
+			String hql = "select count(model) from Wallet model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -236,14 +234,11 @@ public class OrderRecordDao extends HibernateDaoImpl{
 			}
 		}
 	}
-	
-	
+
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		OrderRecordDao ed = new OrderRecordDao();
+		WalletDao ed = new WalletDao();
 		System.out.println(ed.findAllCount());
 	}
-	
-	
-	
+
 }

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.silver.sys.model.pures">
+
+	<class name="PuresRecord" table="ym_cbsp_pures_record">
+
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity">
+
+			</generator>
+		</id>
+
+		<property name="walletNo">
+			<column name="walletNo" unique="true" not-null="true" />
+		</property>
+
+		<property name="tenantNo">
+			<column name="tenantNo" not-null="true" />
+		</property>
+
+		<property name="serialNo">
+			<column name="serialNo" not-null="true" />
+		</property>
+
+		<property name="acceptanceNo">
+			<column name="acceptanceNo" not-null="true" />
+		</property>
+
+		<property name="amount" type="java.lang.Double">
+			<column name="amount" />
+		</property>
+
+		<property name="balance" type="java.lang.Double">
+			<column name="balance" />
+		</property>
+
+
+		<property name="frozenFund" type="java.lang.Double">
+			<column name="frozenFund" />
+		</property>
+
+		<property name="type" type="java.lang.Integer">
+			<column name="type" not-null="true" />
+		</property>
+
+		<property name="money" type="java.lang.Double">
+			<column name="money" />
+		</property>
+		
+		<property name="status" type="java.lang.Integer">
+			<column name="status" not-null="true" />
+		</property>
+
+
+		<property name="delFlag" type="java.lang.Integer">
+			<column name="delFlag" not-null="true" />
+		</property>
+
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" not-null="true" />
+		</property>
+
+		<property name="createBy">
+			<column name="createBy" />
+		</property>
+
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+
+		<property name="updateBy">
+			<column name="updateBy" />
+		</property>
+
+		<property name="remarks">
+			<column name="remarks" />
+		</property>
+
+
+
+	</class>
+
+</hibernate-mapping>

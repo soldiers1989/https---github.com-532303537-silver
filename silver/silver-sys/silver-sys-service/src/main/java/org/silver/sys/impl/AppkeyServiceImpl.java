@@ -116,7 +116,6 @@ public class AppkeyServiceImpl implements AppkeyService {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println(tureSign+"---->");
     		if(tureSign.equals(clientsign)){
     			statusMap.put("status", 1);
     			statusMap.put("msg", "accept");
