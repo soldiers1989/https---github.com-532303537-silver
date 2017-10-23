@@ -9,13 +9,13 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.sys.component.ChooseDatasourceHandler;
-import org.silver.sys.model.order.OrderRecord;
+import org.silver.sys.model.repeat.Audit;
 import org.springframework.stereotype.Repository;
 
-@Repository("orderRecordDao")
-public class OrderRecordDao extends HibernateDaoImpl{
+@Repository("auditDao")
+public class AuditDao extends HibernateDaoImpl {
 
-	public boolean add(OrderRecord entity) {
+	public boolean add(Audit entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -36,7 +36,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean delete(OrderRecord entity) {
+	public boolean delete(Audit entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -57,7 +57,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public boolean update(OrderRecord entity) {
+	public boolean update(Audit entity) {
 		Session session = null;
 		try {
 			session = getSession();
@@ -77,12 +77,12 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public OrderRecord findbyId(long id) {
+	public Audit findbyId(long id) {
 
 		Session session = null;
 		try {
 			session = getSession();
-			OrderRecord instance = (OrderRecord) session.get(OrderRecord.class, id);
+			Audit instance = (Audit) session.get(Audit.class, id);
 			session.close();
 			return instance;
 		} catch (Exception re) {
@@ -97,7 +97,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	public Long findAllCount() {
 		Session session = null;
 		try {
-			String hql = "select count(model) from OrderRecord model ";
+			String hql = "select count(model) from Audit model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			Long count = (Long) query.uniqueResult();
@@ -112,16 +112,16 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<OrderRecord> findAll(int page, int size) {
+	public List<Audit> findAll(int page, int size) {
 		Session session = null;
 		try {
-			String hql = "from OrderRecord model ";
+			String hql = "from Audit model ";
 			session = getSession();
 			Query query = session.createQuery(hql);
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<OrderRecord> list = query.list();
+			List<Audit> list = query.list();
 			session.close();
 			return list;
 		} catch (Exception re) {
@@ -141,7 +141,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	public List findByProperty(String propertyName, Object value, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "from OrderRecord as model where model." + propertyName + "= ?";
+			String queryString = "from Audit as model where model." + propertyName + "= ?";
 			session = getSession();
 			Query queryObject = session.createQuery(queryString);
 			queryObject.setParameter(0, value);
@@ -161,11 +161,11 @@ public class OrderRecordDao extends HibernateDaoImpl{
 		}
 	}
 
-	public List<OrderRecord> findByProperty(Map<String, Object> params, int page, int size) {
+	public List<Audit> findByProperty(Map<String, Object> params, int page, int size) {
 		Session session = null;
 		try {
 			session = getSession();
-			String hql = "from OrderRecord model ";
+			String hql = "from Audit model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -187,7 +187,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<OrderRecord> results = query.list();
+			List<Audit> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -205,7 +205,7 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	public Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
-			String hql = "select count(model) from OrderRecord model ";
+			String hql = "select count(model) from Audit model ";
 			List<Object> list = new ArrayList<Object>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
@@ -240,10 +240,9 @@ public class OrderRecordDao extends HibernateDaoImpl{
 	
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		OrderRecordDao ed = new OrderRecordDao();
+		AuditDao ed = new AuditDao();
 		System.out.println(ed.findAllCount());
 	}
-	
 	
 	
 }

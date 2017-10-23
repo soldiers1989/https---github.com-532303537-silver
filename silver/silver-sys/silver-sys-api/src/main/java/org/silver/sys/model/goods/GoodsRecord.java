@@ -27,7 +27,7 @@ public class GoodsRecord implements Serializable{
 	private String IeFlag;      //进出境标志 I-进，E-出
 	private String Notes;       //备注
 	private String tenantNo;    //电商平台企业与银盟合作所分配的唯一编号
-	private String serialNo;    //第三方   流水号 
+	//private String serialNo;    //第三方   流水号 
 	private int eport;          //口岸：1 电子口岸 2 南沙智检
 	private String filePath;    //报文存储路径
 	private String url;         //回调的URL
@@ -245,13 +245,7 @@ public class GoodsRecord implements Serializable{
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	public String getSerialNo() {
-		return serialNo;
-	}
-	public void setSerialNo(String serialNo) {
-		this.serialNo = serialNo;
-	}
-	
+
 
 	
 	

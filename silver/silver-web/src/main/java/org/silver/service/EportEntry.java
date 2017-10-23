@@ -45,7 +45,6 @@ public class EportEntry {
 						return	reqMap;
 					case 1://订单备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
-							System.out.println("JSON数据："+jsonstr.toString());
 							reqMap=gZEportService.orderRecord(jsonstr,opType,ieFlag,internetDomainName,ebpentNo,ebpentName,ebEntNo,ebEntName,customsCode,ciqOrgCode,tenantNo,notifyurl);
 							return reqMap;	
 						}
@@ -54,7 +53,6 @@ public class EportEntry {
 						return	reqMap;
 					case 2://支付单
 						if(("A".equals(opType)||"M".equals(opType))){
-							System.out.println("JSON数据："+jsonstr.toString());
 							reqMap=gZPayEportService.payRecord(jsonstr, opType, customsCode, ciqOrgCode,tenantNo,notifyurl);
 							return reqMap;	
 						}
@@ -72,7 +70,7 @@ public class EportEntry {
 					switch(type){
 					case 0://商品备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&("1".equals(businessType)||"2".equals(businessType)||"3".equals(businessType))){
-							reqMap=zJEportService.zjCreateGoodsRecord(jsonstr, "", opType, businessType, ieFlag,ebEntNo,ebEntName);
+							reqMap=zJEportService.zjCreateGoodsRecord(jsonstr, "", opType, businessType, ieFlag,ebEntNo,ebEntName,tenantNo,notifyurl);
 							return reqMap;
 						}
 						reqMap.put("status", -5);
@@ -81,8 +79,7 @@ public class EportEntry {
 						return	reqMap;
 					case 1://订单备案
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))&&internetDomainName!=null&&!"".equals(internetDomainName.trim())){
-							System.out.println("JSON数据："+jsonstr.toString());
-							reqMap=zJEportService.zjCreateOrderRecord(jsonstr, "", opType, ieFlag, ebEntNo, ebEntName, ebpentNo, ebpentName, internetDomainName);
+							reqMap=zJEportService.zjCreateOrderRecord(jsonstr, "", opType, ieFlag, ebEntNo, ebEntName, ebpentNo, ebpentName, internetDomainName,tenantNo,notifyurl);
 							return reqMap;	
 						}
 						reqMap.put("status", -6);
@@ -90,8 +87,7 @@ public class EportEntry {
 						return	reqMap;
 					case 2://支付单
 						if(("I".equals(ieFlag)||"E".equals(ieFlag))){
-							System.out.println("JSON数据："+jsonstr.toString());
-							reqMap=zJPayEportService.zjCreatePayRecord(jsonstr, "", opType,customsCode, ciqOrgCode);
+							reqMap=zJPayEportService.zjCreatePayRecord(jsonstr, "", opType,customsCode, ciqOrgCode,tenantNo,notifyurl);
 							return reqMap;	
 						}
 						reqMap.put("status", -6);

@@ -156,6 +156,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		if(paymentHead!=null&& paymentList.size()>0){//生成XML报文
 			statusMap=convertPaymentRecordChangeToXML(paymentHead, paymentList);
 		}
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 	
@@ -218,7 +219,7 @@ public class GZPayEportServiceImpl implements GZPayEportService {
 		System.out.println(("生成的路径为： " + ePath));
 		if (createLocalXMLFile(Doc, ePath)) {
 			statusMap.put("status", 1);
-			statusMap.put("msg", "本地存储成功");
+			statusMap.put("msg", "受理成功");
 			statusMap.put("path", outPath);
 			return statusMap;
 		}

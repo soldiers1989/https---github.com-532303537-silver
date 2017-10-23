@@ -55,7 +55,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 	
 	private GoodsRecord saveRecord(String messageID, String time, Date now, String opType, String businessType,
 			String ieFlag, String ebEntNo, String ebEntName, String currCode, String customsCode, String ciqOrgCode,
-			String ebpentNo, String ebpentName) {
+			String ebpentNo, String ebpentName,String tenantNo,String notifyurl) {
 		GoodsRecord goodsRecord = new GoodsRecord();
 		goodsRecord.setDeclEntNo(NSEportCode.ENT_RECORD_CODE);// 申报企业编号
 		goodsRecord.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
@@ -72,6 +72,8 @@ public class ZJEportServiceImpl implements ZJEportService {
 		goodsRecord.setDeclTime(time);// 备案申请时间
 		goodsRecord.setIeFlag(ieFlag);// 进出口标识
 		goodsRecord.setOrgMessageID(messageID);
+		goodsRecord.setTenantNo(tenantNo);
+		goodsRecord.setUrl(notifyurl);
 		goodsRecord.setEport(2);//口岸    1  电子口岸 2 智检
 		goodsRecord.setCiqStatus("0");
 		goodsRecord.setCusStatus("0");
@@ -110,7 +112,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 
 	@Override
 	public Map<String, Object> zjCreateGoodsRecord(Object obj, String path, String opType, String businessType,
-			String ieFlag,String ebEntNo,String ebEntName ) {
+			String ieFlag,String ebEntNo,String ebEntName,String tenantNo,String notifyurl ) {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
@@ -120,7 +122,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 		List<GoodsInfo> goodsLilt =new ArrayList<>();
 		// 5165 南沙保税   443400 南沙局本部
 		GoodsRecord goodsRecord=saveRecord(messageID, time, now, opType, businessType, ieFlag, ebEntNo, ebEntName, 
-				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME);
+				                "142", "5165", "443400", GZEportCode.DECL_ENT_NO, GZEportCode.DECL_ENT_NAME,tenantNo,notifyurl);
 		if(goodsRecord!=null){
 			JSONArray list = JSONArray.fromObject(obj);
 			goodsLilt = saveGoods(list, messageID);
@@ -128,7 +130,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 		if(goodsRecord!=null&&goodsLilt.size()>0){
 			statusMap=zjCreateGoodsRecordXML(goodsRecord,goodsLilt, opType);
 		}
-	
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 	
@@ -200,7 +202,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 		File file1 = new File(ePath);
 		if(createLocalXMLFile(Doc, ePath)){
 			statusMap.put("status", 1);
-			statusMap.put("msg", "存储成功 ");
+			statusMap.put("msg", "受理成功 ");
 			statusMap.put("path", ePath);
 			return statusMap;
 		}
@@ -222,7 +224,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 	}
 	private OrderHead saveOrderHead(String messageID, String time, Date now, String opType, String ieFlag,
 			String ebEntNo, String ebEntName, String customsCode, String ciqOrgCode, String ebpentNo, String ebpentName,
-			String internetDomainName) {
+			String internetDomainName,String tenantNo,String notifyurl) {
 		OrderHead orderHead = new OrderHead();
 		orderHead.setDeclEntNo(GZEportCode.DECL_ENT_NO);// 申报企业编号
 		orderHead.setDeclEntName(GZEportCode.DECL_ENT_NAME);// 申报企业名称
@@ -237,6 +239,8 @@ public class ZJEportServiceImpl implements ZJEportService {
 		orderHead.setCustomsCode(customsCode);// 主管海关代码
 		orderHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		orderHead.setOrgMessageID(messageID);
+		orderHead.setTenantNo(tenantNo);
+		orderHead.setUrl(notifyurl);
 		orderHead.setEport(1);//口岸   1 电子口岸 2 智检
 		orderHead.setCreate_date(now);
 		orderHead.setDel_flag(0);
@@ -269,13 +273,13 @@ public class ZJEportServiceImpl implements ZJEportService {
 	}
 
 	@Override
-	public Map<String, Object> zjCreateOrderRecord(Object obj, String path, String opType, String ieFlag,String ebEntNo,String ebEntName,String ebpentNo,String ebpentName,String internetDomainName) {
+	public Map<String, Object> zjCreateOrderRecord(Object obj, String path, String opType, String ieFlag,String ebEntNo,String ebEntName,String ebpentNo,String ebpentName,String internetDomainName,String tenantNo,String notifyurl) {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
 		String messageID ="YINMENG_"+remitSerialNumber;
 		Date now = new Date();
-		OrderHead orderHead=saveOrderHead(messageID, time, now, opType, ieFlag, ebEntNo, ebEntName, "5165", "443400", ebpentNo, ebpentName, internetDomainName);
+		OrderHead orderHead=saveOrderHead(messageID, time, now, opType, ieFlag, ebEntNo, ebEntName, "5165", "443400", ebpentNo, ebpentName, internetDomainName,tenantNo,notifyurl);
 		JSONArray list = JSONArray.fromObject(obj);
 		List<OrderRecord> orderRecordList = new ArrayList<>();
 		List<OrderGoods> orderGoodsLists = new ArrayList<>();
@@ -306,8 +310,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 		if (orderHead != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
 			statusMap = zjCreateOrderRecordXML(orderHead, orderRecordList, orderGoodsLists);
 		}
-
-
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 
@@ -394,7 +397,7 @@ public class ZJEportServiceImpl implements ZJEportService {
 			File file1 = new File(ePath);
 			if (createLocalXMLFile(Doc, ePath)) {
 				statusMap.put("status", 1);
-				statusMap.put("msg", "存储成功 ");
+				statusMap.put("msg", "受理成功 ");
 				statusMap.put("path", ePath);
 				return statusMap;
 			}

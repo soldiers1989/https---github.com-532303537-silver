@@ -44,6 +44,9 @@
 		<mapping resource="org/silver/sys/model/order/OrderRecord.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/order/OrderGoods.hbm.xml"/>
 		<mapping resource="org/silver/sys/model/User.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/repeat/Audit.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/pures/Wallet.hbm.xml"/>
+		<mapping resource="org/silver/sys/model/pures/PuresRecord.hbm.xml"/>
 		
 	</session-factory>
 </hibernate-configuration>

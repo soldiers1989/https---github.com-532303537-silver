@@ -40,7 +40,7 @@ public class ZJPayEportServiceImpl implements ZJPayEportService {
 	@Resource
 	private PaymentDetailDao paymentDetailDao;
 	
-	private PaymentHead savePaymentHead(String messageID,String time,Date now,String opType,String customsCode,String ciqOrgCode){
+	private PaymentHead savePaymentHead(String messageID,String time,Date now,String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl){
 		PaymentHead paymentHead = new PaymentHead();
 		paymentHead.setDeclEntNo(GZEportCode.PAY_ENT_NO);// 申报企业编号
 		paymentHead.setDeclEntName(GZEportCode.PAY_ENT_NAME);// 申报企业名称
@@ -51,6 +51,8 @@ public class ZJPayEportServiceImpl implements ZJPayEportService {
 		paymentHead.setCustomsCode(customsCode);// 主管海关代码
 		paymentHead.setCIQOrgCode(ciqOrgCode);// 检验检疫机构代码
 		paymentHead.setOrgMessageID(messageID);
+		paymentHead.setTenantNo(tenantNo);
+		paymentHead.setUrl(notifyurl);
 		paymentHead.setEport(2);
 		paymentHead.setCreate_date(now);
 		paymentHead.setDel_flag(0);
@@ -80,7 +82,7 @@ public class ZJPayEportServiceImpl implements ZJPayEportService {
 	}
 
 	@Override
-	public Map<String, Object> zjCreatePayRecord(Object obj, String path, String opType,String customsCode,String ciqOrgCode) {
+	public Map<String, Object> zjCreatePayRecord(Object obj, String path, String opType,String customsCode,String ciqOrgCode,String tenantNo,String notifyurl) {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		JSONArray jList = JSONArray.fromObject(obj);
@@ -88,13 +90,14 @@ public class ZJPayEportServiceImpl implements ZJPayEportService {
 		Date now = new Date();
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmssSSS") + (int) (Math.random() * 9000 + 1000);// 自动生成交易编码：当前时间+四位随机码
 		String messageID = "YINMENG_" + remitSerialNumber;
-		PaymentHead paymentHead=savePaymentHead(messageID, time, now, opType, customsCode, ciqOrgCode);
+		PaymentHead paymentHead=savePaymentHead(messageID, time, now, opType, customsCode, ciqOrgCode,tenantNo,notifyurl);
 		if(paymentHead!=null){
 			paymentList =savePaymentDetail(jList, messageID, now);
 		}
 		if(paymentHead!=null&& paymentList.size()>0){//生成XML报文
 			statusMap=createPayRecordChangeToXML(paymentHead, paymentList);
 		}
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 	
@@ -159,7 +162,7 @@ public class ZJPayEportServiceImpl implements ZJPayEportService {
 		File file1 = new File(ePath);
 		if(createLocalXMLFile(Doc, ePath)){
 			statusMap.put("status", 1);
-			statusMap.put("msg", "存储成功 ");
+			statusMap.put("msg", "受理成功 ");
 			statusMap.put("path", ePath);
 			return statusMap;
 		}

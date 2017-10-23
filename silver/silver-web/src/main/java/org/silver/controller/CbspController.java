@@ -56,9 +56,14 @@ public class CbspController {
 		   if(currCode==null){
 			   currCode="142";
 		   }
-		   if(appkey!=null&&clientsign!=null&&timestamp!=null&&datas!=null&&opType!=null){
+		   if(eport==1){
+			   customsCode="5208";
+			   ciqOrgCode="442300";
+		   }
+		   if(appkey!=null&&clientsign!=null&&timestamp!=null&&datas!=null){
 			    statusMap =oauthService.checkSign(appkey, clientsign,datas,notifyurl, timestamp); //eportService.checkDatas(req);
 			    if((int)statusMap.get("status")==1){
+			    	System.out.println("appkey====>"+appkey);
 			    	Map<String,Object> dataMap =  eportEntry.getInternetDomainName(eport, appkey);
 			    	System.out.println(dataMap);
 			    	if(dataMap.size()<1){
@@ -68,7 +73,9 @@ public class CbspController {
 			        }
 			    	if(ebEntNo!=null&&ebEntName!=null){
 			    		statusMap=eportEntry.uploadDatas(eport,type,opType,ieFlag,businessType,datas,notifyurl,dataMap.get("internetDomainName")+"",dataMap.get("no")+"",dataMap.get("name")+"",ebEntNo,ebEntName,currCode,customsCode, ciqOrgCode,dataMap.get("tenantNo")+"");
-//			    		System.out.println("电商企业平台：------》"+dataMap.get("no")+""+dataMap.get("name")+"");
+			    		if((int)statusMap.get("status")==1){
+			    			statusMap.remove("path");
+			    		}
 			    	}else{
 			    		statusMap.put("status", -8);
 			        	statusMap.put("msg", "请提供电商企业信息：ebEntNo，ebEntName");

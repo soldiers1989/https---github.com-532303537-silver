@@ -21,7 +21,7 @@ public interface ZJEportService {
      * @return
      */
 	public Map<String, Object> zjCreateGoodsRecord(Object obj, String path, String opType, String businessType,
-			String ieFlag,String ebEntNo  ,String ebEntName);
+			String ieFlag,String ebEntNo  ,String ebEntName,String tenantNo,String notifyurl);
 	
 	/**
 	 * 智检平台订单备案
@@ -31,5 +31,5 @@ public interface ZJEportService {
 	 * @param ieFlag
 	 * @return
 	 */
-	public Map<String, Object> zjCreateOrderRecord(Object obj, String path, String opType, String ieFlag,String ebEntNo,String ebEntName,String ebpentNo,String ebpentName,String internetDomainName );
+	public Map<String, Object> zjCreateOrderRecord(Object obj, String path, String opType, String ieFlag,String ebEntNo,String ebEntName,String ebpentNo,String ebpentName,String internetDomainName ,String tenantNo,String notifyurl);
 }

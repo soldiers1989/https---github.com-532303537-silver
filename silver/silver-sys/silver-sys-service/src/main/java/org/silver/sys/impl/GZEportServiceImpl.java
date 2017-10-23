@@ -202,6 +202,7 @@ public class GZEportServiceImpl implements GZEportService {
 		String time = sdf.format(now);
 		String messageID = createRemitSerialNumber("KJ881101_YINMENG_", time);
 		// 保存商品备案头，并返回
+		System.out.println("444444444"+tenantNo);
 		GoodsRecord goodsRecord = saveRecord(messageID, time, now, opType, businessType, ieFlag, ebEntNo, ebEntName,
 				currCode, customsCode, ciqOrgCode, ebpentNo, ebpentName,tenantNo,notifyurl);
 		if (goodsRecord != null) {
@@ -286,12 +287,12 @@ public class GZEportServiceImpl implements GZEportService {
 		if (createLocalXMLFile(Doc, ePath)) {
 			System.out.println("====="+ePath);
 			statusMap.put("status", 1);
-			statusMap.put("msg", "本地存储成功");
+			statusMap.put("msg", "受理成功");
 			statusMap.put("path", ePath);
 			return statusMap;
 		}
 		statusMap.put("status", -1);
-		statusMap.put("msg", "本地存储失败");
+		statusMap.put("msg", "接收失败");
 		return statusMap;
 	}
     /**
@@ -455,8 +456,6 @@ public class GZEportServiceImpl implements GZEportService {
 		Map<String, Object> statusMap = new HashMap<String, Object>();
 		List<OrderRecord> orderRecordList = new ArrayList<>();
 		List<OrderGoods> orderGoodsLists = new ArrayList<>();
-		statusMap.put("status", 1);
-		statusMap.put("msg", "报文发送成功 ");
 		String time = DateUtil.getDate("yyyyMMddHHmmss");
 		String remitSerialNumber = DateUtil.getDate("yyyyMMddHHmmss") + (int) (Math.random() * 9000 + 10000);// 自动生成交易编码：当前时间+五位随机码
 		String messageID = "KJ881111_YINMENG_" + remitSerialNumber;
@@ -489,6 +488,7 @@ public class GZEportServiceImpl implements GZEportService {
 		if (orderHeadEnt != null && orderRecordList.size() > 0 && orderGoodsLists.size() > 0) {
 			statusMap = convertOrderRecordIntoXML(orderHeadEnt, orderRecordList, orderGoodsLists);
 		}
+		statusMap.put("messageID", messageID);
 		return statusMap;
 	}
 
@@ -572,12 +572,12 @@ public class GZEportServiceImpl implements GZEportService {
 		ePath = uploadFile.getPath() + "\\" + fileName;
 		if (createLocalXMLFile(Doc, ePath)) {
 			statusMap.put("status", 1);
-			statusMap.put("msg", "本地存储成功");
+			statusMap.put("msg", "受理成功");
 			statusMap.put("path", ePath);
 			return statusMap;
 		}
 		statusMap.put("status", -1);
-		statusMap.put("msg", "本地存储失败");
+		statusMap.put("msg", "受理失败");
 		return statusMap;
 	}
 
