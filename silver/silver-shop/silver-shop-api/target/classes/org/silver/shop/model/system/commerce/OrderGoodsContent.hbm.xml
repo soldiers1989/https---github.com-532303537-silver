@@ -3,7 +3,7 @@
                                    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-31 9:31:39 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-	<class name="org.silver.shop.model.system.commerce.OrderGoodsDetail"
+	<class name="org.silver.shop.model.system.commerce.OrderGoodsContent"
 		table="ym_shop_order_goods_detail">
 		<id name="id" type="long">
 			<column name="id" />
@@ -33,7 +33,7 @@
 		<property name="goodsPrice" type="java.lang.Double">
 			<column name="goodsPrice" not-null="true" />
 		</property>
-		<property name="goodsCount" type="java.lang.Double">
+		<property name="goodsCount" type="long">
 			<column name="goodsCount" not-null="true" />
 		</property>
 		<property name="goodsTotalPrice" type="java.lang.Double">
@@ -69,5 +69,6 @@
 		<property name="deleteDate" type="java.util.Date">
 			<column name="deleteDate" />
 		</property>
+		
 	</class>
 </hibernate-mapping>

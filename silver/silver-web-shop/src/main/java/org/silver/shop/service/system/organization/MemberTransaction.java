@@ -29,9 +29,7 @@ public class MemberTransaction {
 	// 用户注册
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard) {
-		Map<String, Object> datasMap = new HashMap<>();
-
-		datasMap = memberService.createMemberId();
+		Map<String, Object> datasMap = memberService.createMemberId();
 		if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return datasMap;
 		}
@@ -107,16 +105,37 @@ public class MemberTransaction {
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return memberService.deleteShopCartGoodsInfo(  goodsId, memberId, memberName);
+		return memberService.deleteShopCartGoodsInfo(goodsId, memberId, memberName);
 	}
 
-	public Map<String, Object> editShopCartGoodsFlag(String goodsId, int flag) {
+	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return memberService.editShopCartGoodsFlag(  goodsId, memberId, memberName,flag);
+		return memberService.editShopCartGoodsFlag(goodsInfoPack, memberId, memberName);
 	}
 
+	public Map<String, Object> getMemberOrderInfo(int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+
+		return memberService.getMemberOrderInfo(memberId, memberName,page,size);
+	}
+
+	public Map<String, Object> getMemberWalletInfo() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+
+		return memberService.getMemberWalletInfo(memberId, memberName);
+	}
+
+	
 }

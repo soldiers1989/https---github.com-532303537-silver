@@ -90,9 +90,11 @@ public class GoodsContentController {
 		System.out.println(WebUtil.getSession().getId());
 		Map<String, Object> datasMap = goodsContentTransaction.findAllGoodsInfo(goodsId, goodsName, starDate, endDate,
 				ymYear, page, size);
-		String status = datasMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if (status.equals("1")) {
-			return JSONObject.fromObject(datasMap).toString();
+		if (datasMap != null && datasMap.size() > 0) {
+			String status = datasMap.get(BaseCode.STATUS.getBaseCode()) + "";
+			if ("1".equals(status)) {
+				return JSONObject.fromObject(datasMap).toString();
+			}
 		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());

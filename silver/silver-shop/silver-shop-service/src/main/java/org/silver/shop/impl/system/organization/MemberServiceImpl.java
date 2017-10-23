@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.organization;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,14 +12,21 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.dao.system.organization.MemberDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.ShopCartContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.util.MD5;
 import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MemberService.class)
 public class MemberServiceImpl implements MemberService {
@@ -41,6 +49,15 @@ public class MemberServiceImpl implements MemberService {
 		member.setCreateBy(account);
 		member.setCreateDate(date);
 		if (!memberDao.add(member)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		MemberWalletContent wallet = new MemberWalletContent();
+		wallet.setMemberId(memberId);
+		wallet.setMemberName(account);
+		wallet.setBalance(0.0);
+		if (!memberDao.add(wallet)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
@@ -121,6 +138,7 @@ public class MemberServiceImpl implements MemberService {
 			ShopCartContent shopCart = new ShopCartContent();
 			params.put("goodsBaseId", goodsId);
 			params.put("memberId", memberId);
+			params.put("flag", 1);
 			// 查询当前用户购物车中是否有该商品
 			List<Object> reShopCart = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
 			if (reShopCart == null) {
@@ -153,7 +171,7 @@ public class MemberServiceImpl implements MemberService {
 			shopCart.setGoodsImage(goods.getGoodsImage());
 			shopCart.setGoodsStyle(goods.getGoodsStyle());
 			shopCart.setCount(count);
-			shopCart.setFlag(0);
+			shopCart.setFlag(1);
 			Double price = goods.getGoodsRegPrice();
 			shopCart.setRegPrice(price);
 			Double totalPrice = price * count;
@@ -179,27 +197,31 @@ public class MemberServiceImpl implements MemberService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
-		List<Object> cartList = memberDao.findByProperty(ShopCartContent.class, params, 0, 0);
-		if (cartList == null) {
+		params.put("flag", 1);
+		List<Object> cartList1 = memberDao.findByProperty(ShopCartContent.class, params, 0, 0);
+		params.put("flag", 2);
+		List<Object> cartList2 = memberDao.findByProperty(ShopCartContent.class, params, 0, 0);
+		cartList1.addAll(cartList2);
+		if (cartList1 == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (cartList.size() > 0) {
-			for (int i = 0; i < cartList.size(); i++) {
-				ShopCartContent cart = (ShopCartContent) cartList.get(i);
+		} else if (cartList1.size() > 0) {
+			for (int i = 0; i < cartList1.size(); i++) {
+				ShopCartContent cart = (ShopCartContent) cartList1.get(i);
 				String goodsId = cart.getGoodsBaseId();
 				params.clear();
 				params.put("goodsId", goodsId);
 				// 根据商品ID查询库存中上架数量
 				List<Object> stockList = memberDao.findByProperty(StockContent.class, params, 1, 1);
-				if(stockList == null){
+				if (stockList == null) {
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 					return statusMap;
-				}else if(stockList.size() >0){
+				} else if (stockList.size() > 0) {
 					StockContent stock = (StockContent) stockList.get(0);
 					cart.setSellCount(stock.getSellCount());
-				}else{
+				} else {
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 					return statusMap;
@@ -207,7 +229,7 @@ public class MemberServiceImpl implements MemberService {
 			}
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), cartList);
+			statusMap.put(BaseCode.DATAS.getBaseCode(), cartList1);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
@@ -218,18 +240,18 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId, String memberId, String memberName) {
-		Map<String,Object> statusMap = new HashMap<>();
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("goodsBaseId", goodsId);
 		params.put("memberId", memberId);
-		List<Object> reList= memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
-		if(reList == null){
+		List<Object> reList = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
+		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if(reList.size() > 0){
-			ShopCartContent cart  = (ShopCartContent) reList.get(0);
-			if(!memberDao.delete(cart)){
+		} else if (reList.size() > 0) {
+			ShopCartContent cart = (ShopCartContent) reList.get(0);
+			if (!memberDao.delete(cart)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 				return statusMap;
@@ -237,7 +259,7 @@ public class MemberServiceImpl implements MemberService {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			return statusMap;
-		}else {
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
@@ -245,28 +267,162 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Map<String, Object> editShopCartGoodsFlag(String goodsId, String memberId, String memberName,int flag) {
-		Map<String,Object> statusMap = new HashMap<>();
-		Map<String,Object> params = new HashMap<>();
-		params.put("goodsId", goodsId);
-		params.put("memberId", memberId);
-		List<Object> reList= memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
-		if(reList == null){
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+	// 临时使用
+	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack, String memberId, String memberName) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(goodsInfoPack);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// 将所有标识为2的购物车中的商品,修改为1
+		params.put("flag", 2);
+		List<Object> re = memberDao.findByProperty(ShopCartContent.class, params, 0, 0);
+		if (re == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if(reList.size() > 0){
-			ShopCartContent cart  = (ShopCartContent) reList.get(0);
-			cart.setFlag(flag);
-			if(!memberDao.update(cart)){
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+		} else if (re.size() > 0) {
+			for (int i = 0; i < re.size(); i++) {
+				ShopCartContent cart = (ShopCartContent) re.get(i);
+				cart.setFlag(1);
+				if (!memberDao.update(cart)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			}
+		}
+
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> reMap = (Map<String, Object>) jsonList.get(i);
+			params.clear();
+			params.put("goodsBaseId", reMap.get("goodsId"));
+			List<Object> reList = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
+			if (reList == null) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			} else if (reList.size() > 0) {
+				ShopCartContent cart = (ShopCartContent) reList.get(0);
+				cart.setCount(Integer.parseInt(reMap.get("count") + ""));
+				cart.setFlag(2);
+				if (!memberDao.update(cart)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 				return statusMap;
 			}
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberId", memberId);
+		params.put("memberName", memberName);
+		// List<Object> orderList =
+		// memberDao.findByProperty(OrderBaseContent.class, params, page, size);
+		long totalCount = memberDao.findByPropertyCount(OrderContent.class, params);
+		Table table = memberDao.findOrderInfo(page,size);
+		
+		if (table != null && table.getRows().size() > 0) {
+			Map<String, List<Map<String, Object>>> orderMap = new HashMap<>();
+
+			List<Object> orderInfo = new ArrayList<>();
+			List<Row> lr = table.getRows();
+			for (int i = 0; i < lr.size(); i++) {
+				String orderId = lr.get(i).getValue("entOrderNo") + "";
+				String goodsId = lr.get(i).getValue("goodsId") + "";
+				String goodsName = lr.get(i).getValue("goodsName") + "";
+				String goodsImage = lr.get(i).getValue("goodsImage") + "";
+				String goodsPrice = lr.get(i).getValue("goodsPrice") + "";
+				String goodsCount = lr.get(i).getValue("goodsCount") + "";
+				String goodsTotalPrice = lr.get(i).getValue("goodsTotalPrice") + "";
+				String merchantId = lr.get(i).getValue("merchantId") + "";
+				String merchantName = lr.get(i).getValue("merchantName") + "";
+				String reMemberId = lr.get(i).getValue("memberId") + "";
+				String reMemberName = lr.get(i).getValue("memberName") + "";
+				String status = lr.get(i).getValue("status") + "";
+				String createDate = lr.get(i).getValue("createDate") + "";
+				if (orderMap != null && orderMap.get(orderId) != null) {					
+					Map<String, Object> goodsMap = new HashMap<>();
+					
+					goodsMap.put("goodsId", goodsId);
+					goodsMap.put("goodsName", goodsName);
+					goodsMap.put("goodsImage", goodsImage);
+					goodsMap.put("goodsPrice", goodsPrice);
+					goodsMap.put("goodsCount", goodsCount);
+					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
+					goodsMap.put("merchantId", merchantId);
+					goodsMap.put("merchantName", merchantName);
+					goodsMap.put("MemberId", reMemberId);
+					goodsMap.put("MemberName", reMemberName);
+					goodsMap.put("merchantName", merchantName);
+					goodsMap.put("createDate", createDate);
+					goodsMap.put("status", status);
+					orderMap.get(orderId).add(goodsMap);
+				} else {
+					Map<String, Object> goodsMap = new HashMap<>();
+					goodsMap.put("goodsId", goodsId);
+					goodsMap.put("goodsName", goodsName);
+					goodsMap.put("goodsImage", goodsImage);
+					goodsMap.put("goodsPrice", goodsPrice);
+					goodsMap.put("goodsCount", goodsCount);
+					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
+					goodsMap.put("merchantId", merchantId);
+					goodsMap.put("merchantName", merchantName);
+					goodsMap.put("reMemberId", reMemberId);
+					goodsMap.put("reMemberName", reMemberName);
+					goodsMap.put("merchantName", merchantName);
+					goodsMap.put("createDate", createDate);
+					goodsMap.put("status", status);
+					List<Map<String, Object>> list = new ArrayList<>();
+					list.add(goodsMap);
+					orderMap.put(orderId, list);
+					
+				}
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), orderMap);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 			return statusMap;
-		}else {
+
+		}
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberId", memberId);
+		params.put("memberName", memberName);
+		List<Object> reList = memberDao.findByProperty(MemberWalletContent.class, params, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (reList.size() > 0) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;

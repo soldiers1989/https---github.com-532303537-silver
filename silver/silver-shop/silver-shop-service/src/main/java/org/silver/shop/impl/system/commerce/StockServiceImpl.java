@@ -13,6 +13,7 @@ import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.dao.system.commerce.StockDao;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -76,19 +77,16 @@ public class StockServiceImpl implements StockService {
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
 			List<Object> reList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
-			if(reList == null){
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(),StatusCode.WARN.getMsg());
-				return statusMap;
-			}else if( reList.size() > 0){
-				
+			if(reList != null && reList.size() > 0){
+				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) reList.get(0);
 				StockContent stock = new StockContent();
 				stock.setMerchantId(merchantId);
 				stock.setMerchantName(merchantName);
 				stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
 				stock.setGoodsName(datasMap.get("goodsName") + "");
 				stock.setGoodsId(datasMap.get("goodsDateilId") + "");
-				stock.setRegPrice(0.0);
+				//库存商品价格暂时设置为备案时单价
+				stock.setRegPrice(goodsRecord.getRegPrice());
 				stock.setFreePrice(0.0);
 				stock.setFreight(0.0);
 				stock.setWarehousCode(warehousCode);
@@ -153,5 +151,29 @@ public class StockServiceImpl implements StockService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("merchantName", merchantName);
+		List<Object> reList = stockDao.findByProperty(StockContent.class, params, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (reList.size() > 0) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
 	}
 }

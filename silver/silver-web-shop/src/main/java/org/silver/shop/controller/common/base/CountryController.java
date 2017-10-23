@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.common.base.CountryTransaction;
@@ -29,7 +31,10 @@ public class CountryController {
 	@RequestMapping(value = "/findAllCountry", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询所有国家")
-	public String findAllCountry() {
+	public String findAllCountry(HttpServletResponse response) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
 		List datasList = countryTransaction.findAllCountry();
 		if (datasList != null && datasList.size() > 0) {

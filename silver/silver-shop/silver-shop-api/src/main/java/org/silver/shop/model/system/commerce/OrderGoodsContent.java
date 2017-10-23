@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 订单商品详情实体类
  */
-public class OrderGoodsDetail implements Serializable{
+public class OrderGoodsContent implements Serializable{
 
 	/**
 	 * 
@@ -23,7 +23,7 @@ public class OrderGoodsDetail implements Serializable{
 	private String goodsName;//商品名称
 	private Double goodsPrice;//商品价格
 	private long goodsCount;//商品数量
-	private Double goodsTotalPrice;//订单商品总价格
+	private Double goodsTotalPrice;//商品总价格
 	private String goodsImage;//商品图片
 	private Double Tax;//税费
 	private Double logisticsCosts;//物流费
@@ -34,6 +34,8 @@ public class OrderGoodsDetail implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	private String reMark;
+	
 	public long getId() {
 		return id;
 	}
@@ -164,6 +166,12 @@ public class OrderGoodsDetail implements Serializable{
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getReMark() {
+		return reMark;
+	}
+	public void setReMark(String reMark) {
+		this.reMark = reMark;
 	}
 	
 	

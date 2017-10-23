@@ -203,7 +203,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		
 		// 发起商品备案
 		Map<String, Object> recordMap = sendRecord(Integer.valueOf(customsPort), merchantInfoMap, tok, datas,
-				goodsSerialNo);
+				goodsSerialNo,portInfo);
 		String reStatus = recordMap.get(BaseCode.STATUS.toString()) + "";
 		if (!reStatus.equals("1")) {
 			// 对方接受商品备案信息失败后,修改商品备案状态
@@ -375,7 +375,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private final Map<String, Object> sendRecord(int eport, Map<String, Object> merchantInfoMap, String tok,
-			List<Object> datas, String goodsSerialNo) {
+			List<Object> datas, String goodsSerialNo,CustomsPort portInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		// 电商企业编号
@@ -420,6 +420,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		// 电商企业名称
 		params.put("ebEntName", ebEntName);
 		params.put("appkey", YmMallConfig.APPKEY);
+		params.put("ciqOrgCode", portInfo.getCiqOrgCode());
+		params.put("customsCode", portInfo.getCustomsCode());
 		params.put("clientsign", clientsign);
 		params.put("timestamp", timestamp);
 		params.put("datas", datas.toString());
@@ -427,7 +429,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		params.put("note", note);
 		// 商城商品备案流水号
 		// params.put("goodsSerialNo", "goodsSerialNo");
-		String resultStr = YmHttpUtil.HttpPost("http://localhost:8166/silver-web/Eport/Report", params);
+		String resultStr = YmHttpUtil.HttpPost("http:/ym.191ec.com/silver-web/Eport/Report", params);
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		} else {
@@ -650,7 +652,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	public static void main(String[] args) {
-		List list = new ArrayList();
+		System.out.println(	YmMallConfig.APPKEY);
+		/*List list = new ArrayList();
 		Map<String, Object> datasMap = null;
 		for (int i = 0; i < 2; i++) {
 			datasMap = new HashMap<>();
@@ -681,6 +684,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			datasMap.put("Notes", "");
 			list.add(datasMap);
 		}
-		System.out.println(JSONArray.fromObject(list).toString());
+		System.out.println(JSONArray.fromObject(list).toString());*/
 	}
+	
+	
 }

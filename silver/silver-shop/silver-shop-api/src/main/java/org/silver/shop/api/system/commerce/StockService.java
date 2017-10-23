@@ -36,4 +36,7 @@ public interface StockService {
 	 */
 	public Map<String,Object> addGoodsSellCount(String merchantId, String merchantName, String goodsId, int sellCount);
 
+
+	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size);
+
 }

@@ -149,6 +149,12 @@ public class ReceiptContent implements Serializable{
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
 	}
+	public String getReceiptId() {
+		return receiptId;
+	}
+	public void setReceiptId(String receiptId) {
+		this.receiptId = receiptId;
+	}
 	
 	
 }

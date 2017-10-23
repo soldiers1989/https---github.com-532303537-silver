@@ -7,7 +7,7 @@ import java.util.Date;
  * 订单备案头信息
  *
  */
-public class OrderHeadContent implements Serializable{
+public class OrderRecord implements Serializable{
 	/**
 	 * 
 	 */

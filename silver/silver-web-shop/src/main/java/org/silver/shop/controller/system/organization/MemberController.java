@@ -46,7 +46,11 @@ public class MemberController {
 	@ApiOperation("用户--注册")
 	public String memberRegister(@RequestParam("account") String account, @RequestParam("loginPass") String loginPass,
 			@RequestParam("memberIdCardName") String memberIdCardName,
-			@RequestParam("memberIdCard") String memberIdCard) {
+			@RequestParam("memberIdCard") String memberIdCard, HttpServletRequest req, HttpServletResponse response) {
+
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPass != null && memberIdCardName != null && memberIdCard != null) {
 			statusMap = memberTransaction.memberRegister(account, loginPass, memberIdCardName, memberIdCard);
@@ -54,6 +58,7 @@ public class MemberController {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.FORMAT_ERR.getMsg());
 		}
+
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -112,7 +117,7 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation(value = "获取用户信息")
 	@RequiresRoles("Member")
-	public String getMemberInfo(HttpServletRequest req , HttpServletResponse response) {
+	public String getMemberInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -130,7 +135,8 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation(value = "用戶添加商品至购物车")
 	@RequiresRoles("Member")
-	public String addGoodsToShopCart(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId, @RequestParam("count") int count) {
+	public String addGoodsToShopCart(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsId") String goodsId, @RequestParam("count") int count) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -144,12 +150,11 @@ public class MemberController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	
-	@RequestMapping(value = "/getGoodsToShopCartInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getGoodsShopCartInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户查询购物车信息")
 	@RequiresRoles("Member")
-	public String getGoodsToShopCartInfo(HttpServletRequest req , HttpServletResponse response) {
+	public String getGoodsShopCartInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -162,6 +167,7 @@ public class MemberController {
 		Map<String, Object> statusMap = memberTransaction.getGoodsToShopCartInfo();
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
 	/**
 	 * 检查用户登录
 	 */
@@ -183,7 +189,7 @@ public class MemberController {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		if (currentUser != null && currentUser.isAuthenticated()) {
+		if (memberInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "用户已登陆！");
 
@@ -193,7 +199,7 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 注销用户信息
 	 */
@@ -201,7 +207,7 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation("用户注销")
 	// @RequiresRoles("Merchant")
-	public String logout(HttpServletRequest req,HttpServletResponse response) {
+	public String logout(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -226,11 +232,13 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
 	@RequestMapping(value = "/deleteShopCartGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户删除购物车信息")
 	@RequiresRoles("Member")
-	public String deleteShopCartGoodsInfo(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId) {
+	public String deleteShopCartGoodsInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsId") String goodsId) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -243,21 +251,23 @@ public class MemberController {
 		Map<String, Object> statusMap = memberTransaction.deleteShopCartGoodsInfo(goodsId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	/**
-	 * 用户设置购物车商品标识
+	 * 用户设置购物车商品标识(暂定)
+	 * 
 	 * @param req
 	 * @param response
 	 * @param goodsId
-	 * @param flag 用户商品选中标识1-为选择,2-已选择
+	 * @param flag
+	 *            用户商品选中标识1-为选择,2-已选择
 	 * @return
 	 */
 	@RequestMapping(value = "/editShopCartGoodsFlag", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户设置购物车商品标识")
 	@RequiresRoles("Member")
-	public String editShopCartGoodsFlag(HttpServletRequest req , HttpServletResponse response,@RequestParam("goodsId") String goodsId,@RequestParam("flag")int flag) {
+	public String editShopCartGoodsFlag(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsInfoPack") String goodsInfoPack) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -267,8 +277,45 @@ public class MemberController {
 			response.setHeader("Access-Control-Allow-Credentials", "true");
 			response.setHeader("Access-Control-Allow-Origin", originHeader);
 		}
-		Map<String, Object> statusMap = memberTransaction.editShopCartGoodsFlag(goodsId,flag);
+		Map<String, Object> statusMap = memberTransaction.editShopCartGoodsFlag(goodsInfoPack);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
+	
+	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户获取订单信息")
+	@RequiresRoles("Member")
+	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("page")int page , @RequestParam("size")int size) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = memberTransaction.getMemberOrderInfo(page,size);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	
+	@RequestMapping(value = "/getMemberWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户获取钱包信息")
+	@RequiresRoles("Member")
+	public String getMemberWalletInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
+		Map<String, Object> statusMap = memberTransaction.getMemberWalletInfo();
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

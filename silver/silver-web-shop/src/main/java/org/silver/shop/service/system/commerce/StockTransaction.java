@@ -46,4 +46,13 @@ public class StockTransaction {
 		return stockService.addGoodsSellCount(merchantId,merchantName,goodsId,sellCount);
 	}
 
+	public Map<String, Object> getGoodsStockInfo(int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return stockService.getGoodsStockInfo(merchantId,merchantName,page,size);
+	}
+
 }

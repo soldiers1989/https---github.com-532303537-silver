@@ -5,27 +5,28 @@ import java.io.Serializable;
 /**
  * 购物车实体
  */
-public class ShopCartContent implements Serializable{
+public class ShopCartContent implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5044519365949043508L;
 	private long id;
-	private String memberId;//用户ID
-	private String memberName;//用户名称
-	private String merchantId;//商户ID
-	private String merchantName;//商户名称
-	private String goodsBaseId;//商品基本信息ID
-	private String goodsName;//商品名称
+	private String memberId;// 用户ID
+	private String memberName;// 用户名称
+	private String merchantId;// 商户ID
+	private String merchantName;// 商户名称
+	private String goodsBaseId;// 商品基本信息ID
+	private String goodsName;// 商品名称
 	private String goodsImage;// 商品展示图片
-	private String goodsStyle;//商品规格
-	private int count;//商品数量
-	private double regPrice;//单价
-	private double totalPrice;//总价
-	
-	private String goodsRecordId;//商品备案流水ID
-	private int sellCount;//库存(上架)数量
-	private int flag;//用户选中标识1-为选择,2-已选择
+	private String goodsStyle;// 商品规格
+	private int count;// 商品数量
+	private double regPrice;// 单价
+	private double totalPrice;// 总价
+
+	private String goodsRecordId;// 商品备案流水ID
+	private int sellCount;// 库存(上架)数量
+	private int flag;// 用户选中标识1-未选择,2-已选择
+
 	public long getId() {
 		return id;
 	}
@@ -137,12 +138,13 @@ public class ShopCartContent implements Serializable{
 	public void setSellCount(int sellCount) {
 		this.sellCount = sellCount;
 	}
+
 	public int getFlag() {
 		return flag;
 	}
+
 	public void setFlag(int flag) {
 		this.flag = flag;
 	}
-	
-	
+
 }

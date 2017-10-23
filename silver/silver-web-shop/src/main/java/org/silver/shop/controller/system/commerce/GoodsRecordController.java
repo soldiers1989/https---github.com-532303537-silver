@@ -97,7 +97,16 @@ public class GoodsRecordController {
 	@RequiresRoles("Merchant")
 	public String merchantSendGoodsRecord(@RequestParam("customsPort") String customsPort,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgCode") String ciqOrgCode,
-			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack) {
+			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack,HttpServletRequest req,HttpServletResponse response ) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		if (customsPort !=null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
 			statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode, recordGoodsInfoPack);

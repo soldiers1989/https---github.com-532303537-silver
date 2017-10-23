@@ -77,5 +77,15 @@ public interface MemberService {
 	 * @param flag  用户选中标识1-为选择,2-已选择
 	 * @return
 	 */
-	public Map<String, Object> editShopCartGoodsFlag(String goodsId, String memberId, String memberName, int flag);
+	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack, String memberId, String memberName);
+
+	/**
+	 * 用户查询订单信息
+	 * @param memberId
+	 * @param memberName
+	 * @return
+	 */
+	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName,int page,int size);
+
+	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName);
 }

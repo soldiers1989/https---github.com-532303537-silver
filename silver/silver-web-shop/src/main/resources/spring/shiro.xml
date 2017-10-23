@@ -68,6 +68,7 @@
 				/member/*=anon
 				/merchantBank/*=anon
 				/provinceCityArea/*=anon
+				/order/*=anon
 				/merchant/*=anon
 				/stock/*=anon
 				/goodsRecord/*=anon

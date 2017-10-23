@@ -36,7 +36,7 @@
 		<property name="c3p0.validate">true</property>
 		<property name="show_sql">false</property>
 		<property name="hbm2ddl.auto">update</property>
-		<property name="hibernate.c3p0.testConnectionOnCheckout">true</property>  
+		<!-- <property name="hibernate.c3p0.testConnectionOnCheckout">true</property>  --> 
 		
 		
 		<mapping resource="org/silver/shop/model/system/organization/Merchant.hbm.xml" />
@@ -54,8 +54,10 @@
 		<mapping resource="org/silver/shop/model/common/base/Country.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/Currency.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/Metering.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/OrderRecord.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/OrderContent.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/OrderGoodsDetail.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/OrderGoodsContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/StockContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/cross/PaymentContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/ReceiptContent.hbm.xml"/>
@@ -68,7 +70,7 @@
 		<mapping resource="org/silver/shop/model/common/base/GAC.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/ShopCartContent.hbm.xml"/>
-		
+		<mapping resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml"/>
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

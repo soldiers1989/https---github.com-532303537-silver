@@ -123,8 +123,11 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), total);
 			return statusMap;
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
 		}
-		return null;
 	}
 
 	@Override
@@ -214,11 +217,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		Map<String,Object> params = new HashMap<>();
 		params.put("goodsId", goodsId);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
-		if(reList ==null){
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}else if(reList.size()>0){
+		if(reList!=null&&reList.size()>0){
 			GoodsContent goods = (GoodsContent) reList.get(0);
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
@@ -229,6 +228,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
+		
 	}
 
 }

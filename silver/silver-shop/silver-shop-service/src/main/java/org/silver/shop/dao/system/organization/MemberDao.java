@@ -3,6 +3,8 @@ package org.silver.shop.dao.system.organization;
 import java.util.List;
 import java.util.Map;
 
+import com.justep.baas.data.Table;
+
 public interface MemberDao {
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
@@ -56,4 +58,15 @@ public interface MemberDao {
 	 * @return
 	 */
 	public boolean delete(Object entity);
+	
+	/**
+	 * 模糊查询总数
+	 * @param entity 类
+	 * @param params 查询参数
+	 * @return
+	 */
+	public long findByPropertyCount(Class entity,Map params);
+	
+	
+	public Table findOrderInfo(int page,int size);
 }
