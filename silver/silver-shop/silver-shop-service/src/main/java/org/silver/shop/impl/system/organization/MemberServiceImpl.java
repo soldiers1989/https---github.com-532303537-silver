@@ -127,26 +127,31 @@ public class MemberServiceImpl implements MemberService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("goodsId", goodsId);
-		List<Object> reList = memberDao.findByProperty(GoodsContent.class, params, 1, 1);
+		// 根据前台传递的商品ID查询商品是否存在
+		List<Object> goodsList = memberDao.findByProperty(GoodsContent.class, params, 1, 1);
+		// 在查询库存中上架(售卖数量是够足够)
+		List<Object> stockList = memberDao.findByProperty(StockContent.class, params, 1, 1);
 		params.clear();
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+		StockContent stock = (StockContent) stockList.get(0);
+		int reSellCount = stock.getSellCount();
+		if (count > reSellCount) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "库存不足,请重新输入");
 			return statusMap;
-		} else if (reList.size() > 0) {
-			GoodsContent goods = (GoodsContent) reList.get(0);
+		}
+		if (goodsList != null && goodsList.size() > 0) {
+			GoodsContent goods = (GoodsContent) goodsList.get(0);
 			ShopCartContent shopCart = new ShopCartContent();
 			params.put("goodsBaseId", goodsId);
 			params.put("memberId", memberId);
 			params.put("flag", 1);
 			// 查询当前用户购物车中是否有该商品
-			List<Object> reShopCart = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
-			if (reShopCart == null) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-				return statusMap;
-			} else if (reShopCart.size() > 0) {
-				ShopCartContent oldShopCart = (ShopCartContent) reShopCart.get(0);
+			List<Object> reShopCart1 = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
+			params.put("flag", 2);
+			List<Object> reShopCart2 = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
+			reShopCart1.addAll(reShopCart2);
+			if (reShopCart1 != null && reShopCart1.size() > 0) {
+				ShopCartContent oldShopCart = (ShopCartContent) reShopCart1.get(0);
 				int oldCount = oldShopCart.getCount();
 				int newCount = oldCount + count;
 				oldShopCart.setCount(newCount);
@@ -334,12 +339,10 @@ public class MemberServiceImpl implements MemberService {
 		// List<Object> orderList =
 		// memberDao.findByProperty(OrderBaseContent.class, params, page, size);
 		long totalCount = memberDao.findByPropertyCount(OrderContent.class, params);
-		Table table = memberDao.findOrderInfo(page,size);
-		
+		Table table = memberDao.findOrderInfo(page, size);
+
 		if (table != null && table.getRows().size() > 0) {
 			Map<String, List<Map<String, Object>>> orderMap = new HashMap<>();
-
-			List<Object> orderInfo = new ArrayList<>();
 			List<Row> lr = table.getRows();
 			for (int i = 0; i < lr.size(); i++) {
 				String orderId = lr.get(i).getValue("entOrderNo") + "";
@@ -355,9 +358,9 @@ public class MemberServiceImpl implements MemberService {
 				String reMemberName = lr.get(i).getValue("memberName") + "";
 				String status = lr.get(i).getValue("status") + "";
 				String createDate = lr.get(i).getValue("createDate") + "";
-				if (orderMap != null && orderMap.get(orderId) != null) {					
+				if (orderMap != null && orderMap.get(orderId) != null) {
 					Map<String, Object> goodsMap = new HashMap<>();
-					
+
 					goodsMap.put("goodsId", goodsId);
 					goodsMap.put("goodsName", goodsName);
 					goodsMap.put("goodsImage", goodsImage);
@@ -390,7 +393,7 @@ public class MemberServiceImpl implements MemberService {
 					List<Map<String, Object>> list = new ArrayList<>();
 					list.add(goodsMap);
 					orderMap.put(orderId, list);
-					
+
 				}
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

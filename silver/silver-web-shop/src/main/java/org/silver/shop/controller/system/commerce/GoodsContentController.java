@@ -42,12 +42,20 @@ public class GoodsContentController {
 	@RequestMapping(value = "/addMerchantGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	public String addMerchantGoodsBaseInfo(HttpServletRequest req, HttpServletResponse resp) {
+	public String addMerchantGoodsBaseInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		}
 		Map<String, Object> statusMap = new HashMap<>();
-		boolean flag = goodsContentTransaction.addMerchantGoodsBaseInfo(req);
-		if (flag) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+		statusMap = goodsContentTransaction.addMerchantGoodsBaseInfo(req);
+		if (statusMap!=null ) {
+			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());

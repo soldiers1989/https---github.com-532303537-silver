@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = OrderService.class)
 public class OrderServiceImpl implements OrderService {
@@ -53,6 +54,11 @@ public class OrderServiceImpl implements OrderService {
 		String orderId = orderIdMap.get(BaseCode.DATAS.toString()) + "";
 		// 创建订单
 		Map<String, Object> reMap = createOrder(orderId, jsonList, memberName, memberId);
+		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+			return reMap;
+		}
+		System.out.println(JSONObject.fromObject(reMap).toString());
+		//1-余额支付,2-跳转至银盛
 		if (type == 1) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("memberId", memberId);
@@ -101,6 +107,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web/yspay/dopay");
 			return statusMap;
 		}
+		
 		return reMap;
 	}
 
@@ -136,11 +143,7 @@ public class OrderServiceImpl implements OrderService {
 			params.put("goodsId", goodsId);
 			// 根据商品ID查询存库中商品信息
 			List<Object> stockList = orderDao.findByProperty(StockContent.class, params, 1, 1);
-			if (stockList == null) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
-			} else if (stockList.size() > 0) {
+			 if (stockList!=null && stockList.size() > 0) {
 				StockContent stock = (StockContent) stockList.get(0);
 				if (cacheList.contains(stock.getMerchantName())) {
 					cacheList.add(stock.getMerchantName());
@@ -266,6 +269,7 @@ public class OrderServiceImpl implements OrderService {
 			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put("orderId", orderId);
 		return statusMap;
 	}
 }

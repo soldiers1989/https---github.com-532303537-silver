@@ -57,7 +57,7 @@ public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
 		Session session = null;
 		try {
 			String sql = "SELECT t2.entOrderNo,t2.goodsId,t2.goodsName,t2.goodsImage,t2.goodsPrice,t2.goodsCount,t2.goodsTotalPrice,	t2.merchantId,t2.merchantName,t2.memberId,t2.memberName,t1.status,t2.createDate "
-					+ "FROM ym_shop_order_base_content t1 LEFT JOIN ym_shop_order_goods_detail t2 "
+					+ "FROM ym_shop_order_content t1 LEFT JOIN ym_shop_order_goods_content t2 "
 					+ "ON t1.orderId = t2.entOrderNo "
 					+ "WHERE t2.deleteFlag = 0 ";
 			session = getSession();
@@ -65,6 +65,7 @@ public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
 			Connection c = cp.getConnection();
 			Table t = null;
 			if(page >0 && size >0){
+				page = page -1;
 				 t = DataUtils.queryData(c, sql, null, null, page *size, size);
 			}else {
 				 t = DataUtils.queryData(c, sql, null, null, null, null);

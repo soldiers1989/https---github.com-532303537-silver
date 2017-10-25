@@ -51,7 +51,7 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
-	//添加库存数量
+	// 添加库存数量
 	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehousCode,
 			String warehousName, String goodsInfoPack) {
 		Date date = new Date();
@@ -76,32 +76,50 @@ public class StockServiceImpl implements StockService {
 			params.put("goodsName", datasMap.get("goodsName"));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
-			List<Object> reList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
-			if(reList != null && reList.size() > 0){
-				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) reList.get(0);
-				StockContent stock = new StockContent();
-				stock.setMerchantId(merchantId);
-				stock.setMerchantName(merchantName);
-				stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
-				stock.setGoodsName(datasMap.get("goodsName") + "");
-				stock.setGoodsId(datasMap.get("goodsDateilId") + "");
-				//库存商品价格暂时设置为备案时单价
-				stock.setRegPrice(goodsRecord.getRegPrice());
-				stock.setFreePrice(0.0);
-				stock.setFreight(0.0);
-				stock.setWarehousCode(warehousCode);
-				stock.setWarehousName(warehousName);
-				stock.setCreateDate(date);
-				stock.setCreateBy(merchantName);
-				// 上下架标识：1-上架,2-下架
-				stock.setSellFlag(2);
-				stock.setEntGoodsNo(datasMap.get("goodsDateilId") + "");
-				if (!stockDao.add(stock)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
-					return statusMap;
+			List<Object> goodsList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+			if (goodsList != null && goodsList.size() > 0) {
+				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsList.get(0);
+				params.clear();
+				params.put("goodsId", datasMap.get("goodsDateilId"));
+				List<Object> stockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
+				// 如果数据库已有商品
+				if (stockList != null && stockList.size() > 0) {
+					StockContent reStock = (StockContent) stockList.get(0);
+					int reStockCount = Integer.parseInt(datasMap.get("stockCount") + "");
+					// 商品原有库存
+					int reTotalStock = reStock.getTotalStock();
+					reStock.setTotalStock(reStockCount + reTotalStock);
+					if (!stockDao.update(reStock)) {
+						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+						statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
+						return statusMap;
+					}
+				} else {
+					StockContent stock = new StockContent();
+					stock.setMerchantId(merchantId);
+					stock.setMerchantName(merchantName);
+					stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
+					stock.setGoodsName(datasMap.get("goodsName") + "");
+					//商品库存里ID为备案商品的ID
+					stock.setGoodsId(datasMap.get("entGoodsNo") + "");
+					// 库存商品价格暂时设置为备案时单价
+					stock.setRegPrice(goodsRecord.getRegPrice());
+					stock.setFreePrice(0.0);
+					stock.setFreight(0.0);
+					stock.setWarehousCode(warehousCode);
+					stock.setWarehousName(warehousName);
+					stock.setCreateDate(date);
+					stock.setCreateBy(merchantName);
+					// 上下架标识：1-上架,2-下架
+					stock.setSellFlag(2);
+					stock.setEntGoodsNo(datasMap.get("goodsDetailId") + "");
+					if (!stockDao.add(stock)) {
+						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+						statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
+						return statusMap;
+					}
 				}
-			}else{
+			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "" + datasMap.get("goodsName") + " 该商品不存在!");
 				return statusMap;
@@ -113,7 +131,7 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
-	//添加商品上架数量
+	// 添加商品上架数量
 	public Map<String, Object> addGoodsSellCount(String merchantId, String merchantName, String goodsId,
 			int sellCount) {
 		Date date = new Date();
@@ -132,8 +150,8 @@ public class StockServiceImpl implements StockService {
 			int stockCount = stock.getTotalStock();
 			int oldSellCount = stock.getSellCount();
 			if (reGoodsId.equals(goodsId) && sellCount <= stockCount) {
-				stock.setSellCount(sellCount+oldSellCount);
-				//上下架标识：1-上架,2-下架
+				stock.setSellCount(sellCount + oldSellCount);
+				// 上下架标识：1-上架,2-下架
 				stock.setSellFlag(1);
 				stock.setUpdateDate(date);
 				stock.setUpdateBy(merchantName);
@@ -142,7 +160,7 @@ public class StockServiceImpl implements StockService {
 					statusMap.put(BaseCode.MSG.toString(), "修改商品上架数量失败!");
 					return statusMap;
 				}
-			}else{
+			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "上架数量大于库存数量!");
 				return statusMap;

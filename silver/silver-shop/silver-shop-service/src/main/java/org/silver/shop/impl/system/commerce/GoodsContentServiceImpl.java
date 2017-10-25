@@ -51,17 +51,15 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public boolean addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date) {
-		boolean flag = false;
+	public Map<String,Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date) {
+		Map<String,Object> statusMap  =new HashMap<>();
 		String goodsImage = "";
 		// 拼接多张图片字符串
 		for (int i = 0; i < imgList.size(); i++) {
 			String imgStr = imgList.get(i) + "";
 			if (imgStr != null && !"".equals(imgStr.trim())) {
 				goodsImage = goodsImage + imgStr + ";";
-			} else {
-				return false;
-			}
+			} 
 		}
 		GoodsContent goodsInfo = new GoodsContent();
 		goodsInfo.setGoodsId(params.get("goodsId")+"");
@@ -89,8 +87,14 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		goodsInfo.setCreateBy(merchantName);
 		goodsInfo.setDeleteFlag(0);
 		goodsInfo.setGoodsMerchantId(merchantId);
-		flag = goodsContentDao.add(goodsInfo);
-		return flag;
+		if(!goodsContentDao.add(goodsInfo)){
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品基本信息错误!服务器繁忙！");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
 	}
 
 	@Override

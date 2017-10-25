@@ -27,14 +27,12 @@ public class StockTransaction {
 	}
 
 	public Map<String,Object> addGoodsStockCount(String warehousCode, String warehousName, String goodsInfoPack) {
-		Map<String,Object> dataMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		Map<String,Object> datasMap = stockService.addGoodsStockCount(merchantId,merchantName,warehousCode,warehousName,goodsInfoPack);
-		return datasMap;
+		return stockService.addGoodsStockCount(merchantId,merchantName,warehousCode,warehousName,goodsInfoPack);
 	}
 
 	public Map<String,Object> addGoodsSellCount(String goodsId, int sellCount) {

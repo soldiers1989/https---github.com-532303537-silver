@@ -38,8 +38,8 @@ public class OrderRecordContent implements Serializable {
 	private String orderDocAcount;// 下单人账号(用户名)
 	private String orderDocName;// 下单人姓名
 	private int orderDocType;// 下单人证件类型-购买者证件号码类型01:身份证、02:护照、04:其他
-	private String OrderDocId;// 下单人证件号默认为身份证号
-	private String OrderDocTel;// 下单人电话购买者联系电话号码
+	private String orderDocId;// 下单人证件号默认为身份证号
+	private String orderDocTel;// 下单人电话购买者联系电话号码
 	private String batchNumbers;// 商品批次号
 	private int invoiceType;// 发票类型1- 电子发票2- 普通发票（纸质）3- 专用发票（纸质）0- 其它
 	private String invoiceNo;// 发票编号国税发票编号
@@ -198,17 +198,18 @@ public class OrderRecordContent implements Serializable {
 	public void setOrderDocType(int orderDocType) {
 		this.orderDocType = orderDocType;
 	}
+	
 	public String getOrderDocId() {
-		return OrderDocId;
+		return orderDocId;
 	}
 	public void setOrderDocId(String orderDocId) {
-		OrderDocId = orderDocId;
+		this.orderDocId = orderDocId;
 	}
 	public String getOrderDocTel() {
-		return OrderDocTel;
+		return orderDocTel;
 	}
 	public void setOrderDocTel(String orderDocTel) {
-		OrderDocTel = orderDocTel;
+		this.orderDocTel = orderDocTel;
 	}
 	public String getBatchNumbers() {
 		return batchNumbers;

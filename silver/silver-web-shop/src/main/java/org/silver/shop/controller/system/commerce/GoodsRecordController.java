@@ -62,7 +62,7 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")
 	@RequiresRoles("Merchant")
-	public String getMerchantGoodsRecordInfo( String goodsInfoPack,HttpServletRequest req,HttpServletResponse response) {
+	public String getMerchantGoodsRecordInfo(@RequestParam("goodsInfoPack")String goodsInfoPack,HttpServletRequest req,HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };

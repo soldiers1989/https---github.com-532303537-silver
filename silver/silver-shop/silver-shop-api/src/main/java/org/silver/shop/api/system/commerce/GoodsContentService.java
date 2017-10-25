@@ -16,7 +16,7 @@ public interface GoodsContentService {
 	 * @param merchantId 
 	 * @return
 	 */
-	public boolean addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date);
+	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date);
 
 	/**
 	 * 创建自编商品ID 获取商品基本信息的自增ID后,不足5位则前面补0

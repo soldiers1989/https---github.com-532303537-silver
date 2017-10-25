@@ -33,7 +33,7 @@ public class WarehousServiceImpl implements WarehousService {
 		}else{
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		}
 		return statusMap;
 	}

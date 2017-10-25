@@ -89,47 +89,42 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), "前端传递基本信息参数错误！");
 			return statusMap;
 		}
-		Calendar cal = Calendar.getInstance();
-		// 获取当前年份
-		int year = cal.get(Calendar.YEAR);
-		// 查询数据库字段名
-		String property = "goodsId";
-		// 根据年份查询,当前年份下的id数量
-		long goodsIdCount = goodsRecordDao.findSerialNoCount(GoodsContent.class, property, year);
-		// 当返回-1时,则查询数据库失败
-		if (goodsIdCount < 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}
-		// 生成商品基本信息ID
-		String goodsId = SerialNoUtils.getSerialNo("YM_", year, goodsIdCount);
 		for (int i = 0; i < jsonList.size(); i++) {
+			/*
+			 * Calendar cal = Calendar.getInstance(); // 获取当前年份 int year =
+			 * cal.get(Calendar.YEAR); // 查询数据库字段名 String entGoodsNo =
+			 * "entGoodsNo"; // 根据年份查询,当前年份下的id数量 long goodsIdCount =
+			 * goodsRecordDao.findSerialNoCount(GoodsRecordDetail.class,
+			 * entGoodsNo, year); // 当返回-1时,则查询数据库失败 if (goodsIdCount < 0) {
+			 * statusMap.put(BaseCode.STATUS.getBaseCode(),
+			 * StatusCode.WARN.getStatus());
+			 * statusMap.put(BaseCode.MSG.getBaseCode(),
+			 * StatusCode.WARN.getMsg()); return statusMap; } // 生成商品基本信息ID
+			 * String goodsId = SerialNoUtils.getSerialNo("YM_", year,
+			 * goodsIdCount+i);
+			 */
 			params = new HashMap<>();
-			// 获取传递过来的商品ID
 			Map<String, Object> goodsMap = (Map) jsonList.get(i);
+			// 获取传递过来的商品ID
 			String mapGoodsId = goodsMap.get("goodsId") + "";
 			String mapGoodsName = goodsMap.get("goodsName") + "";
 			String descParam = "createDate";
 			// key=数据库列名,value=查询参数
-			//params.put("entGoodsNo", mapGoodsId);
+			// params.put("entGoodsNo", mapGoodsId);
 			params.put("goodsName", mapGoodsName);
 			params.put("goodsMerchantName", merchantName);
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
 			// 根据商品名,扫描商品备案信息表
-			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecordDetail.class, params, descParam, 1, 1);
-			if(goodsRecordList == null){
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-				return statusMap;
-			}else if(goodsRecordList.size() > 0){//取出商品备案信息最近一条记录
+			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecordDetail.class, params, descParam,
+					1, 1);
+			if (goodsRecordList != null && goodsRecordList.size() > 0) {// 取出商品备案信息最近一条记录
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
-				//重新生成的商品备案ID
-				goodsRecordInfo.setEntGoodsNo(goodsId);
-				goodsRecordInfo.setGoodsDateilId(mapGoodsId);
+				// 重新生成的商品备案ID
+				/* goodsRecordInfo.setEntGoodsNo(goodsId); */
+				goodsRecordInfo.setGoodsDetailId(mapGoodsId);
 				goodsBaseList.add(goodsRecordInfo);
-			}else{// 如果该商品在商品备案信息表中没有数据,则根据商品名称商品ID扫描商品基本信息表
+			} else {// 如果该商品在商品备案信息表中没有数据,则根据商品名称商品ID扫描商品基本信息表
 				params.clear();
 				// key=数据库列名,value=查询参数
 				params.put("goodsId", mapGoodsId);
@@ -138,8 +133,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				params.put("deleteFlag", 0);
 				List<Object> goodsList = goodsRecordDao.findByProperty(GoodsContent.class, params, 1, 1);
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
-				//旧商品基本信息Id+重新生成的商品备案ID
-				goodsInfo.setGoodsId(goodsInfo.getGoodsId()+"#"+goodsId);
+				// 旧商品基本信息Id+重新生成的商品备案ID
+				goodsInfo.setGoodsId(goodsInfo.getGoodsId());
 				goodsBaseList.add(goodsInfo);
 			}
 		}
@@ -149,7 +144,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return statusMap;
 	}
 
-	//商戶发起备案
+	// 商戶发起备案
 	@Override
 	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String customsPort,
 			String customsCode, String ciqOrgCode, String recordGoodsInfoPack) {
@@ -193,17 +188,17 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!reGoodsMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return reGoodsMap;
 		}
-		//获取商品备案流水号
+		// 获取商品备案流水号
 		String goodsSerialNo = reGoodsMap.get(BaseCode.DATAS.toString()) + "";
 		// 创建商品仓库
 		Map<String, Object> warehousMap = createWarehous(merchantId, merchantName, portInfo);
-		if(!warehousMap.get(BaseCode.STATUS.toString()).equals("1")){
+		if (!warehousMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return warehousMap;
 		}
-		
+
 		// 发起商品备案
 		Map<String, Object> recordMap = sendRecord(Integer.valueOf(customsPort), merchantInfoMap, tok, datas,
-				goodsSerialNo,portInfo);
+				goodsSerialNo, portInfo);
 		String reStatus = recordMap.get(BaseCode.STATUS.toString()) + "";
 		if (!reStatus.equals("1")) {
 			// 对方接受商品备案信息失败后,修改商品备案状态
@@ -331,7 +326,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 *            1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 	 * @return Map
 	 */
-	private final Map<String, Object> getMerchantInfo(String merchantId, int eport) {
+	public final Map<String, Object> getMerchantInfo(String merchantId, int eport) {
 		Map<String, Object> params = new HashMap<>();
 		// key=表中列名,value=查询参数
 		params.put("merchantId", merchantId);
@@ -375,7 +370,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private final Map<String, Object> sendRecord(int eport, Map<String, Object> merchantInfoMap, String tok,
-			List<Object> datas, String goodsSerialNo,CustomsPort portInfo) {
+			List<Object> datas, String goodsSerialNo, CustomsPort portInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		// 电商企业编号
@@ -471,6 +466,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
+		// 生成备案商品流水号
 		String goodsSerialNo = SerialNoUtils.getSerialNo("GR_", year, goodsSerialNoCount);
 		GoodsRecord recordInfo = new GoodsRecord();
 		recordInfo.setMerchantId(merchantId);
@@ -497,14 +493,37 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!flag) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "保存商品备案流水信息错误,服务器繁忙!");
-			goodsRecordDao.delete(recordInfo);
+			
 			return statusMap;
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> params = new HashMap<>();
+			// 查询数据库字段名
+			String property2 = "entGoodsNo";
+			// 根据年份查询,当前年份下的id数量
+			long goodsRecordSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecordDetail.class, property2, year);
+			// 当返回-1时,则查询数据库失败
+			if (goodsRecordSerialNoCount < 0) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}
+			String goodsRecordSerialNo = SerialNoUtils.getSerialNo("GR_", year, goodsRecordSerialNoCount );
 			GoodsRecordDetail goodRecordInfo = new GoodsRecordDetail();
 			Map<String, Object> goodsInfo = (Map<String, Object>) jsonList.get(i);
+			String goodsDatesId = goodsInfo.get("GoodsDetailId") + "";
+			params.put("goodsId", goodsDatesId);
+			params.put("goodsMerchantId", merchantId);
+			params.put("goodsMerchantName", merchantName);
+			List reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, params, 1, 1);
+			if (reGoodsList == null && reGoodsList.size() < 0) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}
+			GoodsContent goods = (GoodsContent) reGoodsList.get(0);
 			goodRecordInfo.setSeq(i + 1);
-			goodRecordInfo.setEntGoodsNo(goodsInfo.get("EntGoodsNo") + "");
+			goodRecordInfo.setEntGoodsNo(goodsRecordSerialNo);
 			goodRecordInfo.setEportGoodsNo(goodsInfo.get("EPortGoodsNo") + "");
 			goodRecordInfo.setCiqGoodsNo(goodsInfo.get("CIQGoodsNo") + "");
 			goodRecordInfo.setCusGoodsNo(goodsInfo.get("CusGoodsNo") + "");
@@ -538,11 +557,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			// 删除标识:0-未删除,1-已删除
 			goodRecordInfo.setDeleteFlag(0);
 			goodRecordInfo.setGoodsSerialNo(goodsSerialNo);
-			goodRecordInfo.setGoodsDateilId(goodsInfo.get("GoodsDateilId")+"");
+			goodRecordInfo.setGoodsDetailId(goods.getGoodsId());
 			flag = goodsRecordDao.add(goodRecordInfo);
 			if (!flag) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "保存商品备案信息错误,服务器繁忙!");
+				goodsRecordDao.delete(recordInfo);
 				return statusMap;
 			}
 		}
@@ -589,9 +609,13 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 	/**
 	 * 创建商品仓库
-	 * @param merchantId 商户ID
-	 * @param merchantName 商户名称
-	 * @param portInfo 口岸管理实体类
+	 * 
+	 * @param merchantId
+	 *            商户ID
+	 * @param merchantName
+	 *            商户名称
+	 * @param portInfo
+	 *            口岸管理实体类
 	 * @return Map
 	 */
 	private final Map<String, Object> createWarehous(String merchantId, String merchantName, CustomsPort portInfo) {
@@ -599,7 +623,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		// 主管海关代码(同仓库编码)
-		String code = merchantId +"_"+ portInfo.getCustomsCode();
+		String code = merchantId + "_" + portInfo.getCustomsCode();
 		// key=数据库列名,value=查询参数
 		paramsMap.put("warehouseCode", code);
 		List<Object> reList = goodsRecordDao.findByProperty(Warehous.class, paramsMap, 0, 0);
@@ -608,7 +632,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (reList.size() == 0) {//当没有仓库时
+		} else if (reList.size() == 0) {// 当没有仓库时
 			Warehous warehous = new Warehous();
 			warehous.setMerchantId(merchantId);
 			warehous.setMerchantName(merchantName);
@@ -652,40 +676,25 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(	YmMallConfig.APPKEY);
-		/*List list = new ArrayList();
-		Map<String, Object> datasMap = null;
-		for (int i = 0; i < 2; i++) {
-			datasMap = new HashMap<>();
-			datasMap.put("EntGoodsNo", "测试商品编码");
-			datasMap.put("EPortGoodsNo", "1");
-			datasMap.put("CIQGoodsNo", "2");
-			datasMap.put("CusGoodsNo", "2");
-			datasMap.put("EmsNo", "3");
-			datasMap.put("ItemNo", "4");
-			datasMap.put("ShelfGName", "测试商品上架名称");
-			datasMap.put("NcadCode", "5");
-			datasMap.put("HSCode", "6");
-			datasMap.put("BarCode", "7");
-			datasMap.put("GoodsName", "测试商品名称");
-			datasMap.put("GoodsStyle", "900/罐");
-			datasMap.put("Brand", "8");
-			datasMap.put("GUnit", "9");
-			datasMap.put("StdUnit", "10");
-			datasMap.put("SecUnit", "11");
-			datasMap.put("RegPrice", "12");
-			datasMap.put("GiftFlag", "13");
-			datasMap.put("OriginCountry", "14");
-			datasMap.put("Quality", "15");
-			datasMap.put("QualityCertify", "16");
-			datasMap.put("Manufactory", "17");
-			datasMap.put("NetWt", "18");
-			datasMap.put("GrossWt", "19");
-			datasMap.put("Notes", "");
-			list.add(datasMap);
-		}
-		System.out.println(JSONArray.fromObject(list).toString());*/
+		System.out.println(YmMallConfig.APPKEY);
+		/*
+		 * List list = new ArrayList(); Map<String, Object> datasMap = null; for
+		 * (int i = 0; i < 2; i++) { datasMap = new HashMap<>();
+		 * datasMap.put("EntGoodsNo", "测试商品编码"); datasMap.put("EPortGoodsNo",
+		 * "1"); datasMap.put("CIQGoodsNo", "2"); datasMap.put("CusGoodsNo",
+		 * "2"); datasMap.put("EmsNo", "3"); datasMap.put("ItemNo", "4");
+		 * datasMap.put("ShelfGName", "测试商品上架名称"); datasMap.put("NcadCode",
+		 * "5"); datasMap.put("HSCode", "6"); datasMap.put("BarCode", "7");
+		 * datasMap.put("GoodsName", "测试商品名称"); datasMap.put("GoodsStyle",
+		 * "900/罐"); datasMap.put("Brand", "8"); datasMap.put("GUnit", "9");
+		 * datasMap.put("StdUnit", "10"); datasMap.put("SecUnit", "11");
+		 * datasMap.put("RegPrice", "12"); datasMap.put("GiftFlag", "13");
+		 * datasMap.put("OriginCountry", "14"); datasMap.put("Quality", "15");
+		 * datasMap.put("QualityCertify", "16"); datasMap.put("Manufactory",
+		 * "17"); datasMap.put("NetWt", "18"); datasMap.put("GrossWt", "19");
+		 * datasMap.put("Notes", ""); list.add(datasMap); }
+		 * System.out.println(JSONArray.fromObject(list).toString());
+		 */
 	}
-	
-	
+
 }

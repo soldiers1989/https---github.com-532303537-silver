@@ -30,8 +30,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/oauth/token", params);
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			JSONObject json = JSONObject.fromObject(resultStr);
-			int status = Integer.valueOf(json.get(BaseCode.STATUS.toString()) + "");
-			if (status == 1) {
+			String status = json.get(BaseCode.STATUS.toString()) + "";
+			if ("1".equals(status) ) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				statusMap.put(BaseCode.DATAS.toString(), json.getString("accessToken"));
 			} else {

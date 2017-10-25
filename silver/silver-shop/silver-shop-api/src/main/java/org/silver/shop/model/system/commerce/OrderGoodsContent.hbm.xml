@@ -4,7 +4,7 @@
 <!-- Generated 2017-8-31 9:31:39 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
 	<class name="org.silver.shop.model.system.commerce.OrderGoodsContent"
-		table="ym_shop_order_goods_detail">
+		table="ym_shop_order_goods_content">
 		<id name="id" type="long">
 			<column name="id" />
 			<generator class="identity" />
@@ -42,8 +42,8 @@
 		<property name="goodsImage" type="java.lang.String">
 			<column name="goodsImage" />
 		</property>
-		<property name="Tax" type="java.lang.Double">
-			<column name="Tax"  />
+		<property name="tax" type="java.lang.Double">
+			<column name="tax"  />
 		</property>
 		<property name="logisticsCosts" type="java.lang.Double">
 			<column name="logisticsCosts" />

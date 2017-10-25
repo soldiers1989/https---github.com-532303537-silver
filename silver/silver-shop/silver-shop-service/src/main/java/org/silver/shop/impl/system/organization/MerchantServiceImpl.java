@@ -21,7 +21,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
 
-@Service(interfaceClass = MerchantService.class)
+//@Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -217,6 +217,7 @@ public class MerchantServiceImpl implements MerchantService {
 	public List<Object> findMerchantBy(String account) {
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("merchantName", account);
+		System.out.println(merchantDao+"---->merchantDao");
 		return merchantDao.findByProperty(Merchant.class, paramsMap, 0, 0);
 	}
 

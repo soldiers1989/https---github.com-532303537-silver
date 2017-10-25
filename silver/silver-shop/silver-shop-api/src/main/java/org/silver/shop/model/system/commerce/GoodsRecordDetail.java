@@ -55,7 +55,7 @@ public class GoodsRecordDetail implements Serializable {
 	private String goodsMerchantId;//归属商户ID
 	
 	private String reSerialNo;//商品备案信息接受后返回流水号
-	private String goodsDateilId;//商品基本信息ID
+	private String goodsDetailId;//商品基本信息ID
 	
 	public long getId() {
 		return id;
@@ -307,12 +307,13 @@ public class GoodsRecordDetail implements Serializable {
 	public void setReSerialNo(String reSerialNo) {
 		this.reSerialNo = reSerialNo;
 	}
-	public String getGoodsDateilId() {
-		return goodsDateilId;
+	public String getGoodsDetailId() {
+		return goodsDetailId;
 	}
-	public void setGoodsDateilId(String goodsDateilId) {
-		this.goodsDateilId = goodsDateilId;
+	public void setGoodsDetailId(String goodsDetailId) {
+		this.goodsDetailId = goodsDetailId;
 	}
+
 	
 	
 }

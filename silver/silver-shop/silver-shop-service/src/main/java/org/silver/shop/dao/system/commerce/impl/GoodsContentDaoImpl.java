@@ -1,6 +1,7 @@
 package org.silver.shop.dao.system.commerce.impl;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +55,10 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
 		Session session = null;
 		String queryString = null;
+		Connection conn = null;
 		try {
-			queryString = "SELECT t1.*,t2.sellCount from ym_shop_goods_content t1  LEFT JOIN ym_shop_stock_content t2 on t1.goodsId = t2.entGoodsNo "
-					+ "WHERE t2.sellFlag = 1  ";			
+			queryString = "SELECT t1.*,t2.sellCount from ym_shop_goods_content t1  LEFT JOIN ym_shop_stock_content t2 "
+					+ "on t1.goodsId = t2.goodsId WHERE t2.sellFlag = 1  ";			
 			List<Object> sqlParams = new ArrayList<>();
 			if(firstType >0 && secndType > 0 && thirdType > 0){
 				sqlParams.add(firstType);
@@ -73,7 +75,7 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			}
 			session = getSession();
 			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			Connection conn = cp.getConnection();
+			 conn = cp.getConnection();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
@@ -81,6 +83,7 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			} else {
 				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
 			}
+			conn.close();
 			session.close();
 			// Transform.tableToJson(l);
 			return l;
@@ -89,6 +92,13 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
+				if(conn!=null){
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
 				session.close();
 			}
 		}

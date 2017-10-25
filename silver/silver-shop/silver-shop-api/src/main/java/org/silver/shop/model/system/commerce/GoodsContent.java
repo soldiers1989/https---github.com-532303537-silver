@@ -14,6 +14,7 @@ public class GoodsContent implements Serializable {
 
 	private long id;
 	private String goodsId;// 商品ID(兼商品自编号)
+	private String goodsMerchantId;//商品归属商戶id
 	private String goodsMerchantName;//商品归属商戶名
 	private String goodsName;// 商品名称
 	private String goodsFirstTypeId;// 商品类型第一级
@@ -36,7 +37,6 @@ public class GoodsContent implements Serializable {
 	private String deleteBy;//删除人
 	private Date deleteDate;//删除时间
 	
-	private String goodsMerchantId;//商品归属商戶id
 	
 	private String goodsFirstTypeName;//商品类型第一级名称
 	private String goodsSecondTypeName;// 商品类型第二级名称

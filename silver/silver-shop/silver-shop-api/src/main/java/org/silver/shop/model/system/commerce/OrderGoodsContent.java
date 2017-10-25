@@ -25,7 +25,7 @@ public class OrderGoodsContent implements Serializable{
 	private long goodsCount;//商品数量
 	private Double goodsTotalPrice;//商品总价格
 	private String goodsImage;//商品图片
-	private Double Tax;//税费
+	private Double tax;//税费
 	private Double logisticsCosts;//物流费
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
@@ -112,11 +112,12 @@ public class OrderGoodsContent implements Serializable{
 	public void setGoodsImage(String goodsImage) {
 		this.goodsImage = goodsImage;
 	}
+	
 	public Double getTax() {
-		return Tax;
+		return tax;
 	}
 	public void setTax(Double tax) {
-		Tax = tax;
+		this.tax = tax;
 	}
 	public Double getLogisticsCosts() {
 		return logisticsCosts;

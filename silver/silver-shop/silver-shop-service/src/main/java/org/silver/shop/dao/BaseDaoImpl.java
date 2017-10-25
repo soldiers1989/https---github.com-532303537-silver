@@ -15,6 +15,7 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Merchant;
 
 import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Row;
@@ -362,7 +363,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
 				}
-			}
+			}			
 			Long count = (Long) query.uniqueResult();
 			session.close();
 			return count;
@@ -381,9 +382,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("deleteFlag", 0);
-		paramMap.put("goodsMerchantId", "MerchantId_00030");
-		long t= bd.findByPropertyCount(GoodsContent.class,paramMap);
+		paramMap.put("merchantName", "hoz");
+		//paramMap.put("goodsMerchantId", "MerchantId_00030");
+		List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);
 		
 		System.out.println(t);
 	}

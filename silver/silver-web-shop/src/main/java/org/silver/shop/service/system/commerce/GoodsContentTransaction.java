@@ -31,7 +31,7 @@ public class GoodsContentTransaction {
 	private FileUpLoadService fileUpLoadService;
 
 	//商户添加商品基本信息
-	public boolean addMerchantGoodsBaseInfo(HttpServletRequest req) {
+	public Map<String,Object> addMerchantGoodsBaseInfo(HttpServletRequest req) {
 		boolean flag = false;
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -67,10 +67,10 @@ public class GoodsContentTransaction {
 				params.put("goodsRegPrice", req.getParameter("goodsRegPrice"));
 				params.put("goodsOriginCountry", req.getParameter("goodsOriginCountry"));
 				params.put("goodsBarCode", req.getParameter("goodsBarCode"));
-				flag = goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,imgList, goodsYear, date);
+				return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,imgList, goodsYear, date);
 			}
 		}
-		return flag;
+		return null;
 	}
 
 

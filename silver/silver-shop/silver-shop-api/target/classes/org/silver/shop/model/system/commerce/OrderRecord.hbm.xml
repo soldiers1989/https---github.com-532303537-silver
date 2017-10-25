@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-10-23 9:06:31 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.commerce.OrderRecord" table="ym_shop_order_head_content">
+    <class name="org.silver.shop.model.system.commerce.OrderRecord" table="ym_shop_order_record">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />

@@ -1,6 +1,7 @@
 package org.silver.shop.dao.common.base.impl;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,13 +24,14 @@ public class ProvinceCityAreaDaoImpl extends BaseDaoImpl implements ProvinceCity
 
 	@Override
 	public Table findAllProvinceCityArea() {
+		Connection c = null;
 		Session session = null;
 		try {
 			String sql = "SELECT m.*,t3.provinceName,t3.provinceCode  FROM(SELECT t1.areaCode,t1.areaName,t2.cityCode,t2.cityName,t2.provinceCode as Pcode FROM ym_shop_base_area t1 LEFT JOIN ym_shop_base_city t2 ON (t1.cityCode = t2.cityCode)) m "
 					+ " RIGHT JOIN ym_shop_base_province t3 on(m.Pcode=t3.provinceCode) ";
 			session = getSession();
 			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			Connection c = cp.getConnection();
+			c = cp.getConnection();
 			Table t = DataUtils.queryData(c, sql, null, null, null, null);
 			c.close();
 			session.close();
@@ -40,6 +42,13 @@ public class ProvinceCityAreaDaoImpl extends BaseDaoImpl implements ProvinceCity
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
+				if(c !=null){
+					try {
+						c.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
 				session.close();
 			}
 		}

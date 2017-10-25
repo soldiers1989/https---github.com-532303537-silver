@@ -61,4 +61,6 @@ public class GoodsRecordTransaction {
 		return goodsRecordService.findAllGoodsRecordInfo(merchantId,goodsId,page, size);
 	}
 
+	
+	
 }

@@ -106,11 +106,11 @@ public class StockController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/addGoodstotalStock", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/addGoodSellCount", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商品上架及上架数量")
 	@RequiresRoles("Merchant")
-	public String addGoodstotalStock(@RequestParam("goodsId") String goodsId,
+	public String addGoodSellCount(@RequestParam("goodsId") String goodsId,
 			@RequestParam("sellCount") int sellCount,HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",

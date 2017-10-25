@@ -66,6 +66,7 @@
 				/regin=anon 
 				/login=anon
 				/member/*=anon
+				/yspay/*=anon
 				/merchantBank/*=anon
 				/provinceCityArea/*=anon
 				/order/*=anon
