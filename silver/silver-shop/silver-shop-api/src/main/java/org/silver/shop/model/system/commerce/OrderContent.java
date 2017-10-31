@@ -17,13 +17,7 @@ public class OrderContent implements Serializable{
 	private String memberId;//用户ID
 	private String memberName;//用户名称
 	private String orderId;//订单ID
-	private String goodsId;//商品ID
-	private String goodsName;//商品名称
-	private int count;//数量
-	private double regPrice;//单价
-	private double totalPrice;//商品总价
 	private double freight;//运费
-	private double consolidatedTax;//综合税
 	private double orderTotalPrice;//订单总金额 
 	private int status;//订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时;
 	private String createBy;// 创建人
@@ -33,8 +27,21 @@ public class OrderContent implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	private String receiptId;//用户收货地址信息ID
+	private String recipientName;//收货人姓名
+	private String recipientCardId;//收货人身份证号码
+	private String recipientTel;//收货人电话
+	private String recipientCountryCode;// 收货人所在国-国家代码
+	private String recProvincesCode;//收货人省份代码
+	private String recCityCode;//收货人城市代码
+	private String recAreaCode;//收货人城市区代码
+	private String recipientAddr;//收货人详细地址
 	
-	private String receiptId;//收货人地址ID
+	private int ehsStatus;// 物流状态：0-未发货 1-待出仓2-已发货3-已签收
+	private String wbEhsentName;// 物流公司名称
+	private String wbEhsentNo;// 物流公司备案号
+	
+	private String entOrderNo;//对接海关订单总编号
 	private String reMark;//
 	public long getId() {
 		return id;
@@ -72,49 +79,14 @@ public class OrderContent implements Serializable{
 	public void setOrderId(String orderId) {
 		this.orderId = orderId;
 	}
-	public String getGoodsId() {
-		return goodsId;
-	}
-	public void setGoodsId(String goodsId) {
-		this.goodsId = goodsId;
-	}
-	public String getGoodsName() {
-		return goodsName;
-	}
-	public void setGoodsName(String goodsName) {
-		this.goodsName = goodsName;
-	}
 	
-	public int getCount() {
-		return count;
-	}
-	public void setCount(int count) {
-		this.count = count;
-	}
-	public double getRegPrice() {
-		return regPrice;
-	}
-	public void setRegPrice(double regPrice) {
-		this.regPrice = regPrice;
-	}
-	public double getTotalPrice() {
-		return totalPrice;
-	}
-	public void setTotalPrice(double totalPrice) {
-		this.totalPrice = totalPrice;
-	}
 	public double getFreight() {
 		return freight;
 	}
 	public void setFreight(double freight) {
 		this.freight = freight;
 	}
-	public double getConsolidatedTax() {
-		return consolidatedTax;
-	}
-	public void setConsolidatedTax(double consolidatedTax) {
-		this.consolidatedTax = consolidatedTax;
-	}
+	
 	public double getOrderTotalPrice() {
 		return orderTotalPrice;
 	}
@@ -169,17 +141,90 @@ public class OrderContent implements Serializable{
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
 	}
+
+	public String getReMark() {
+		return reMark;
+	}
+	public void setReMark(String reMark) {
+		this.reMark = reMark;
+	}
+	public String getRecipientName() {
+		return recipientName;
+	}
+	public void setRecipientName(String recipientName) {
+		this.recipientName = recipientName;
+	}
+	public String getRecipientCardId() {
+		return recipientCardId;
+	}
+	public void setRecipientCardId(String recipientCardId) {
+		this.recipientCardId = recipientCardId;
+	}
+	public String getRecipientTel() {
+		return recipientTel;
+	}
+	public void setRecipientTel(String recipientTel) {
+		this.recipientTel = recipientTel;
+	}
+	public String getRecipientCountryCode() {
+		return recipientCountryCode;
+	}
+	public void setRecipientCountryCode(String recipientCountryCode) {
+		this.recipientCountryCode = recipientCountryCode;
+	}
+	public String getRecProvincesCode() {
+		return recProvincesCode;
+	}
+	public void setRecProvincesCode(String recProvincesCode) {
+		this.recProvincesCode = recProvincesCode;
+	}
+	public String getRecCityCode() {
+		return recCityCode;
+	}
+	public void setRecCityCode(String recCityCode) {
+		this.recCityCode = recCityCode;
+	}
+	public String getRecAreaCode() {
+		return recAreaCode;
+	}
+	public void setRecAreaCode(String recAreaCode) {
+		this.recAreaCode = recAreaCode;
+	}
+	public String getRecipientAddr() {
+		return recipientAddr;
+	}
+	public void setRecipientAddr(String recipientAddr) {
+		this.recipientAddr = recipientAddr;
+	}
+	public int getEhsStatus() {
+		return ehsStatus;
+	}
+	public void setEhsStatus(int ehsStatus) {
+		this.ehsStatus = ehsStatus;
+	}
+	public String getWbEhsentName() {
+		return wbEhsentName;
+	}
+	public void setWbEhsentName(String wbEhsentName) {
+		this.wbEhsentName = wbEhsentName;
+	}
+	public String getWbEhsentNo() {
+		return wbEhsentNo;
+	}
+	public void setWbEhsentNo(String wbEhsentNo) {
+		this.wbEhsentNo = wbEhsentNo;
+	}
 	public String getReceiptId() {
 		return receiptId;
 	}
 	public void setReceiptId(String receiptId) {
 		this.receiptId = receiptId;
 	}
-	public String getReMark() {
-		return reMark;
+	public String getEntOrderNo() {
+		return entOrderNo;
 	}
-	public void setReMark(String reMark) {
-		this.reMark = reMark;
+	public void setEntOrderNo(String entOrderNo) {
+		this.entOrderNo = entOrderNo;
 	}
 	
 	

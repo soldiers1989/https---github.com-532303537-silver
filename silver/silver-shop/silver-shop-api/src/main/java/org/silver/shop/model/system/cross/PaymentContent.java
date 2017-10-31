@@ -14,8 +14,10 @@ public class PaymentContent implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private long  id;//
-	private String userId;//用户ID
+	private String memberId;//用户ID
+	private String memberName;//用户名称
 	private String merchantId;//商户ID
+	private String merchantName;//商户ID
 	private String entPayNo;// 支付交易编号
 	private String payStatus;//D-代扣(款项由消费者账户转至第三方支付企业账户)S-实扣(款项由消费者账户转至收款方账户)C-取消(退款)
 	private Double payAmount;// 支付企业的订单交易金额
@@ -27,8 +29,8 @@ public class PaymentContent implements Serializable{
 	private String payerPhoneNumber;// 支付人手机号
 	private String entOrderNo;//电子订单编号
 	private String notes;//备注
-	private int payRecord;// 支付备案状态：0-未备案，1-备案中，2-备案成功，3-备案失败
-	private int PayFalg;// 支付方式0:在线支付，1:货到付款
+	private int payRecord;// 支付备案状态：1-备案中，2-备案成功，3-备案失败
+	private int payFalg;// 支付方式0:在线支付，1:货到付款
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -36,17 +38,32 @@ public class PaymentContent implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	private String reNote;//回调信息
+	private String reSerialNo;//支付单接受后返回流水号
 	public long getId() {
 		return id;
 	}
 	public void setId(long id) {
 		this.id = id;
 	}
-	public String getUserId() {
-		return userId;
+	
+	public String getMemberId() {
+		return memberId;
 	}
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setMemberId(String memberId) {
+		this.memberId = memberId;
+	}
+	public String getMemberName() {
+		return memberName;
+	}
+	public void setMemberName(String memberName) {
+		this.memberName = memberName;
+	}
+	public String getMerchantName() {
+		return merchantName;
+	}
+	public void setMerchantName(String merchantName) {
+		this.merchantName = merchantName;
 	}
 	public String getMerchantId() {
 		return merchantId;
@@ -127,11 +144,12 @@ public class PaymentContent implements Serializable{
 	public void setPayRecord(int payRecord) {
 		this.payRecord = payRecord;
 	}
+	
 	public int getPayFalg() {
-		return PayFalg;
+		return payFalg;
 	}
 	public void setPayFalg(int payFalg) {
-		PayFalg = payFalg;
+		this.payFalg = payFalg;
 	}
 	public String getCreateBy() {
 		return createBy;
@@ -175,6 +193,18 @@ public class PaymentContent implements Serializable{
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getReNote() {
+		return reNote;
+	}
+	public void setReNote(String reNote) {
+		this.reNote = reNote;
+	}
+	public String getReSerialNo() {
+		return reSerialNo;
+	}
+	public void setReSerialNo(String reSerialNo) {
+		this.reSerialNo = reSerialNo;
 	}
 	
 	

@@ -1,14 +1,14 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.commerce.OrderTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ import net.sf.json.JSONObject;
 @Controller
 @RequestMapping("/order")
 public class OrderController {
-
+	protected static final Logger logger = LogManager.getLogger();
 	@Autowired
 	private OrderTransaction orderTransaction;
 
@@ -36,8 +36,9 @@ public class OrderController {
 	@ResponseBody
 	@RequiresRoles("Member")
 	@ApiOperation("用户创建订单")
-	public String createOrderInfo(HttpServletRequest req ,HttpServletResponse response,@RequestParam("goodsInfoPack") String goodsInfoPack,@RequestParam("type")int type
-			,@RequestParam("totalPrice")double totalPrice) {
+	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
+			@RequestParam("totalPrice") double totalPrice) {
 		String originHeader = req.getHeader("Origin");
 		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
@@ -47,26 +48,48 @@ public class OrderController {
 			response.setHeader("Access-Control-Allow-Credentials", "true");
 			response.setHeader("Access-Control-Allow-Origin", originHeader);
 		}
-		 Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack,type,totalPrice);
+		Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack, type, totalPrice);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	/*public static void main(String[] args) {
-		List<Object> list = new ArrayList<>();
-		Map<String, Object> params = null;
-		for (int i = 0; i < 2; i++) {
-			params = new HashMap<>();
-			params.put("goodsId", "YM_20170000515084016841518754");
-			params.put("count", 1);
-			list.add(params);
+	@RequestMapping(value = "/getMerchantOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户查看订单信息")
+	public String getMerchantOrderInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
+			@RequestParam("totalPrice") double totalPrice) {
+		String originHeader = req.getHeader("Origin");
+		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+				"http://ym.191ec.com:8090" };
+		if (Arrays.asList(iPs).contains(originHeader)) {
+			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+			response.setHeader("Access-Control-Allow-Origin", originHeader);
 		}
-		System.out.println(JSONObject.fromObject(params).toString());
-
-	}*/
-	public static void main(String[] args) {
-		List<Object> ListS = new ArrayList<>();
-		ListS.add("aaaa");
-		System.out.println(ListS.contains("aaaa"));
-
+		Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack, type, totalPrice);
+		return JSONObject.fromObject(statusMap).toString();
 	}
+
+	/**
+	 * 备案网关异步回馈订单备案信息
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/reNotifyMsg",  produces = "application/json; charset=utf-8")
+	public String reNotifyMsg(HttpServletRequest req,HttpServletResponse response){
+		logger.info("-----备案网关异步回馈订单备案信息---");
+		Map<String,Object> datasMap = new HashMap<>();
+		datasMap.put("status", req.getParameter("status") + "");
+		datasMap.put("errMsg", req.getParameter("errMsg") + "");
+		datasMap.put("messageID", req.getParameter("messageID") + "");
+		datasMap.put("entOrderNo", req.getParameter("entOrderNo") + "");
+		Map<String,Object> statusMap =  orderTransaction.updateOrderRecordInfo(datasMap);
+		logger.info(JSONObject.fromObject(statusMap).toString());
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }
+

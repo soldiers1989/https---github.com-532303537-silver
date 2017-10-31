@@ -21,22 +21,25 @@ public class YsPayServiceImple implements YsPayService {
 	private OrderDao orderDao;
 
 	@Override
-	public Map<String, Object> checkOrderInfo(String memberId, String orderId) {
+	public Map<String, Object> checkOrderInfo(String memberId, String entOrderNo) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
-		params.put("orderId", orderId);
-		List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
+		params.put("entOrderNo", entOrderNo);
+		List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 0, 0);
+		//统计订单总金额
+		double orderTotalPrice = 0;
 		if(orderList!=null && orderList.size() >0){
-			OrderContent order = (OrderContent) orderList.get(0);
+			for(int i=0;i<orderList.size();i++){
+				OrderContent order = (OrderContent) orderList.get(i);
+				orderTotalPrice += order.getOrderTotalPrice();
+			}
 			params.clear();
 			params.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			params.put("orderTotalPrice", order.getTotalPrice());
-			params.put("orderId", order.getOrderId());
+			params.put("orderTotalPrice", orderTotalPrice);
 			return params;
 		}
 		params.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 		params.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		return params;
 	}
-
 }

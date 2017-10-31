@@ -40,9 +40,9 @@ public class YsPayController {
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();*/
-		String orderId = req.getParameter("orderId");
+		String entOrderNo = req.getParameter("entOrderNo");
 		String memberId = req.getParameter("memberId");
-		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(memberId, orderId);
+		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(memberId, entOrderNo);
 		String orderTotalPrice = null;
 		// 当订单ID查询信息无误
 		if ("1".equals(reMap.get(BaseCode.STATUS.toString()))) {
@@ -61,7 +61,7 @@ public class YsPayController {
 		req.setAttribute("notify_url", "http://ym.191ec.com/silver-web-pay/pro/yspay-receive");
 		req.setAttribute("return_url", "http://ym.191ec.com");
 		req.setAttribute("version", DirectPayConfig.VERSION);
-		req.setAttribute("out_trade_no", orderId);// 商户订单号
+		req.setAttribute("out_trade_no", entOrderNo);// 商品交易订单号
 		req.setAttribute("subject", "即时到账");
 		req.setAttribute("total_amount", orderTotalPrice);// 支付总金额
 		req.setAttribute("seller_id", DirectPayConfig.PLATFORM_PARTNER_NO);

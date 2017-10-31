@@ -102,12 +102,16 @@
 		</dependency>
     
 <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
-<dependency>
+<!-- <dependency>
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-core</artifactId>
     <version>4.1.0.Final</version>
+</dependency> -->
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate</artifactId>
+    <version>3.2.6.ga</version>
 </dependency>
-
    
   <!-- https://mvnrepository.com/artifact/oracle/ojdbc14 -->
 <dependency>

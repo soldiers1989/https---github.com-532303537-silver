@@ -1,32 +1,26 @@
 package org.silver.shop.dao;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.organization.Merchant;
 
-import com.justep.baas.data.DataUtils;
-import com.justep.baas.data.Row;
-import com.justep.baas.data.Table;
-import com.justep.baas.data.Transform;
 
 /**
  * 提供数据访问层共用DAO方法
  */
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
-
+	protected static final Logger logger = LogManager.getLogger();
 	@Override
 	public boolean add(Object entity) {
 		Session session = null;
@@ -382,11 +376,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("merchantName", "hoz");
+		/*paramMap.put("merchantName", "hoz");*/
 		//paramMap.put("goodsMerchantId", "MerchantId_00030");
-		List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);
+	/*	List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);*/
 		
-		System.out.println(t);
+		System.out.println("--------------->>"+bd.findAllCount(GoodsContent.class));
 	}
 
 	

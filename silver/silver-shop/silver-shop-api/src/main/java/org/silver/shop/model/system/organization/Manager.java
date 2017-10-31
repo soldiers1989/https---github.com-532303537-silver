@@ -13,6 +13,7 @@ public class Manager implements Serializable{
 	private long id ;
 	private String managerId;//管理员ID
 	private String managerName;//管理员名称
+	private String loginPassword;//登陆密码
 	private int managerMarks;//管理员表示1-超级管理员2-运营管理员
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
@@ -21,6 +22,7 @@ public class Manager implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
+	
 	public long getId() {
 		return id;
 	}
@@ -87,6 +89,12 @@ public class Manager implements Serializable{
 	}
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
+	}
+	public String getLoginPassword() {
+		return loginPassword;
+	}
+	public void setLoginPassword(String loginPassword) {
+		this.loginPassword = loginPassword;
 	}
 
 	

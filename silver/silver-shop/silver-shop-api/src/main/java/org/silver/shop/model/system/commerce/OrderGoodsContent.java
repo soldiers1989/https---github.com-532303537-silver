@@ -18,8 +18,8 @@ public class OrderGoodsContent implements Serializable{
 	private String merchantName;//商户名称
 	private String memberId;//用户ID
 	private String memberName;//用户名称
-	private String entOrderNo;//订单编号
-	private String goodsId;//商品ID
+	private String orderId;//关联订单ID
+	private String goodsId;//商品基本信息ID
 	private String goodsName;//商品名称
 	private Double goodsPrice;//商品价格
 	private long goodsCount;//商品数量
@@ -36,6 +36,8 @@ public class OrderGoodsContent implements Serializable{
 	private Date deleteDate;// 删除时间
 	private String reMark;
 	
+	private String entGoodsNo;//商品备案信息ID
+	private String entOrderNo;//对接海关订单总编号
 	public long getId() {
 		return id;
 	}
@@ -67,11 +69,12 @@ public class OrderGoodsContent implements Serializable{
 	public void setMemberName(String memberName) {
 		this.memberName = memberName;
 	}
-	public String getEntOrderNo() {
-		return entOrderNo;
+	
+	public String getOrderId() {
+		return orderId;
 	}
-	public void setEntOrderNo(String entOrderNo) {
-		this.entOrderNo = entOrderNo;
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
 	}
 	public String getGoodsId() {
 		return goodsId;
@@ -173,6 +176,18 @@ public class OrderGoodsContent implements Serializable{
 	}
 	public void setReMark(String reMark) {
 		this.reMark = reMark;
+	}
+	public String getEntGoodsNo() {
+		return entGoodsNo;
+	}
+	public void setEntGoodsNo(String entGoodsNo) {
+		this.entGoodsNo = entGoodsNo;
+	}
+	public String getEntOrderNo() {
+		return entOrderNo;
+	}
+	public void setEntOrderNo(String entOrderNo) {
+		this.entOrderNo = entOrderNo;
 	}
 	
 	

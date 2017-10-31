@@ -1,12 +1,11 @@
 package org.silver.shop.dao.system.organization.impl;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.organization.MemberDao;
 import org.silver.shop.model.system.organization.Merchant;
@@ -18,7 +17,7 @@ import com.justep.baas.data.Table;
 @Repository("memberDao")
 public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
 	@Override
-	public long findLastId() {
+	public long findLastId() { 
 		return this.findLastId(Merchant.class);
 	}
 
@@ -53,24 +52,26 @@ public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
 	}
 
 	@Override
-	public Table findOrderInfo(int page,int size) {
+	public Table findOrderInfo(String memberId, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "SELECT t2.entOrderNo,t2.goodsId,t2.goodsName,t2.goodsImage,t2.goodsPrice,t2.goodsCount,t2.goodsTotalPrice,	t2.merchantId,t2.merchantName,t2.memberId,t2.memberName,t1.status,t2.createDate "
+			String sql = "SELECT t2.orderId,t2.goodsId,t2.goodsName,t2.goodsImage,t2.goodsPrice,t2.goodsCount,t2.goodsTotalPrice,	t2.merchantId,t2.merchantName,t2.memberId,t2.memberName,t1.status,t2.createDate "
 					+ "FROM ym_shop_order_content t1 LEFT JOIN ym_shop_order_goods_content t2 "
-					+ "ON t1.orderId = t2.entOrderNo "
-					+ "WHERE t2.deleteFlag = 0 ";
+					+ "ON t1.orderId = t2.orderId " + "WHERE t2.deleteFlag = 0 " 
+					+ "AND t1.memberId = ? ";
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add(memberId);
 			session = getSession();
-			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			Connection c = cp.getConnection();
+			//ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
+			//Connection c = cp.getConnection();
 			Table t = null;
-			if(page >0 && size >0){
-				page = page -1;
-				 t = DataUtils.queryData(c, sql, null, null, page *size, size);
-			}else {
-				 t = DataUtils.queryData(c, sql, null, null, null, null);
+			if (page > 0 && size > 0) {
+				page = page - 1;
+				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, page * size, size);
+			} else {
+				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
 			}
-			c.close();
+			session.connection().close();
 			session.close();
 			return t;
 		} catch (Exception re) {

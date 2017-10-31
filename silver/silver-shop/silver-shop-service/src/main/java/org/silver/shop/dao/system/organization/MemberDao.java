@@ -68,5 +68,12 @@ public interface MemberDao {
 	public long findByPropertyCount(Class entity,Map params);
 	
 	
-	public Table findOrderInfo(int page,int size);
+	/**
+	 * 关联表查询当前用户下订单及商品
+	 * @param memberId
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table findOrderInfo(String memberId, int page,int size);
 }

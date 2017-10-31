@@ -18,6 +18,7 @@ public class OrderRecordContent implements Serializable {
 	private String merchantName;//商户名称
 	private String memberId;// 用户ID
 	private String memberName;//用户名称
+	private String entPayNo;// 支付交易编号
 	private String entOrderNo;// 电商平台的原始订单编号
 	private int orderStatus;// 电子订单状态0-订单确认,1-订单完成,2-订单取消
 	private int payStatus;// 支付状态0-已付款,1-未付款(待支付) 2：支付失败，3：支付超时
@@ -26,7 +27,7 @@ public class OrderRecordContent implements Serializable {
 	private Double freight;// 运费：运杂费，无则填“0”
 	private Double tax;// 税款-按照货款金额计算的税款，无则填“0”
 	private Double otherPayment;// 抵付金额优惠减免金额，无则填“0”
-	private Double otherPayNotes;// 抵付说明抵付情况说明。如果填写抵付金额时，此项必填。
+	private String otherPayNotes;// 抵付说明抵付情况说明。如果填写抵付金额时，此项必填。
 	private Double otherCharges;// 其它费用无则填“0”
 	private Double actualAmountPaid;// 实际支付金额 货款+运费+税款-优惠金额，与支付保持一致
 	private String recipientName;// 收货人姓名,同运单
@@ -50,11 +51,8 @@ public class OrderRecordContent implements Serializable {
 	private Date invoiceDate;// 开票日期
 	private String notes;// 备注
 	private Date payTime;// 付款时间
-	private String orderRecordStatus;// 订单备案状态：1-备案中，2-备案成功，3-备案失败
-	private int ehsStatus;// 物流状态：0-未发货 1-待出仓2-已发货3-已签收
-	private String wbEhsentName;// 物流公司名称
-	private String wbEhsentNo;// 物流公司备案号
-	private String entPayNo;// 支付交易编号
+	private int orderRecordStatus;// 订单备案状态：1-备案中，2-备案成功，3-备案失败
+	
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -64,6 +62,9 @@ public class OrderRecordContent implements Serializable {
 	private Date deleteDate;// 删除时间
 	
 	private String orderSerialNo;// 订单所属商品流水号
+	
+	private String reOrderSerialNo;//订单备案信息接受后返回流水号
+	private String reNote;//返回信息
 	public long getId() {
 		return id;
 	}
@@ -126,10 +127,11 @@ public class OrderRecordContent implements Serializable {
 	public void setOtherPayment(Double otherPayment) {
 		this.otherPayment = otherPayment;
 	}
-	public Double getOtherPayNotes() {
+	
+	public String getOtherPayNotes() {
 		return otherPayNotes;
 	}
-	public void setOtherPayNotes(Double otherPayNotes) {
+	public void setOtherPayNotes(String otherPayNotes) {
 		this.otherPayNotes = otherPayNotes;
 	}
 	public Double getOtherCharges() {
@@ -271,29 +273,13 @@ public class OrderRecordContent implements Serializable {
 	public void setPayTime(Date payTime) {
 		this.payTime = payTime;
 	}
-	public String getOrderRecordStatus() {
+	
+
+	public int getOrderRecordStatus() {
 		return orderRecordStatus;
 	}
-	public void setOrderRecordStatus(String orderRecordStatus) {
+	public void setOrderRecordStatus(int orderRecordStatus) {
 		this.orderRecordStatus = orderRecordStatus;
-	}
-	public int getEhsStatus() {
-		return ehsStatus;
-	}
-	public void setEhsStatus(int ehsStatus) {
-		this.ehsStatus = ehsStatus;
-	}
-	public String getWbEhsentName() {
-		return wbEhsentName;
-	}
-	public void setWbEhsentName(String wbEhsentName) {
-		this.wbEhsentName = wbEhsentName;
-	}
-	public String getWbEhsentNo() {
-		return wbEhsentNo;
-	}
-	public void setWbEhsentNo(String wbEhsentNo) {
-		this.wbEhsentNo = wbEhsentNo;
 	}
 	public String getEntPayNo() {
 		return entPayNo;
@@ -368,7 +354,16 @@ public class OrderRecordContent implements Serializable {
 	public void setOrderSerialNo(String orderSerialNo) {
 		this.orderSerialNo = orderSerialNo;
 	}
-
-	
-
+	public String getReOrderSerialNo() {
+		return reOrderSerialNo;
+	}
+	public void setReOrderSerialNo(String reOrderSerialNo) {
+		this.reOrderSerialNo = reOrderSerialNo;
+	}
+	public String getReNote() {
+		return reNote;
+	}
+	public void setReNote(String reNote) {
+		this.reNote = reNote;
+	}
 }

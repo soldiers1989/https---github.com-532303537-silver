@@ -50,13 +50,13 @@ public class GoodsRecordDetail implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
+	private String goodsMerchantId;//归属商户ID
 	private String goodsMerchantName;//商品归属商戶名
 	private String goodsSerialNo;// 备案所属商品流水号
-	private String goodsMerchantId;//归属商户ID
-	
 	private String reSerialNo;//商品备案信息接受后返回流水号
-	private String goodsDetailId;//商品基本信息ID
 	
+	private String goodsDetailId;//商品基本信息ID
+	private String reNote;//备案商品返回信息
 	public long getId() {
 		return id;
 	}
@@ -313,7 +313,10 @@ public class GoodsRecordDetail implements Serializable {
 	public void setGoodsDetailId(String goodsDetailId) {
 		this.goodsDetailId = goodsDetailId;
 	}
-
-	
-	
+	public String getReNote() {
+		return reNote;
+	}
+	public void setReNote(String reNote) {
+		this.reNote = reNote;
+	}
 }

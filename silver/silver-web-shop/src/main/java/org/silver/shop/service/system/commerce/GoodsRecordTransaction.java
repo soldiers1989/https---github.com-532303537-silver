@@ -61,6 +61,11 @@ public class GoodsRecordTransaction {
 		return goodsRecordService.findAllGoodsRecordInfo(merchantId,goodsId,page, size);
 	}
 
+	//处理网关异步回调信息
+	public Map<String, Object> updateGoodsRecordInfo(Map<String, Object> datasMap) {
+		return goodsRecordService.updateGoodsRecordInfo(datasMap);
+	}
+
 	
 	
 }

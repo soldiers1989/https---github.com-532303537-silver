@@ -9,6 +9,7 @@
 		<property name="OUTPUT_LOG_LEVEL">DEBUG</property><!-- 日志输出级别 -->
 	</properties>
 	<appenders>
+	<param name="Encoding" value="UTF-8" />
 		<Console name="Console" target="SYSTEM_OUT">
 			<ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY" />
 			<PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %level [%file] - %msg%n" />

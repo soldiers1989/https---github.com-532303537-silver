@@ -87,7 +87,6 @@
         <property name="goodsThirdTypeName" type="java.lang.String">
             <column name="goodsThirdTypeName" />
         </property>
-        
-        
+       
     </class>
 </hibernate-mapping>

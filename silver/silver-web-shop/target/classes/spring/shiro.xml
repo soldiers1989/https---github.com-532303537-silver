@@ -15,12 +15,13 @@
 		check="false" /> <dubbo:reference id="sysSessionProvider" interface="org.cloudx.provider.sys.SysSessionProvider" 
 		check="false" /> <dubbo:reference id="sysAuthorizeProvider" interface="org.cloudx.provider.sys.SysAuthorizeProvider" 
 		check="false" /> -->
-	
-   <dubbo:reference id="MemberService" interface="org.silver.shop.api.system.organization.MemberService" check="false" />	
-   <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
+		
+	<dubbo:reference id="managerService" interface="org.silver.shop.api.system.organization.ManagerService" check="false" />
+    <dubbo:reference id="memberService" interface="org.silver.shop.api.system.organization.MemberService" check="false" />	
+    <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
 	<!-- 配置Realm -->
 	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" /> 
-	<bean id="adminRealm" class="org.silver.shop.shiro.AdminRealm" />
+	<bean id="managerRealm" class="org.silver.shop.shiro.ManagerRealm" />
     <bean id="merchantRealm" class="org.silver.shop.shiro.MerchantRealm" />
     
  	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
@@ -29,7 +30,7 @@
 		<property name="realms">
 			<list>
 				<ref bean="memberRealm" />
-				<ref bean="adminRealm" />
+				<ref bean="managerRealm" />
 				<ref bean="merchantRealm" />
 			</list>
 		</property>
@@ -66,8 +67,12 @@
 				/regin=anon 
 				/login=anon
 				/member/*=anon
+				/yspay-receive/*=anon
 				/yspay/*=anon
+				/recipient/*=anon
+				/manager/*=anon
 				/merchantBank/*=anon
+				/payment/*=anon
 				/provinceCityArea/*=anon
 				/order/*=anon
 				/merchant/*=anon
@@ -79,6 +84,7 @@
 				/country/*=anon
 				/metering/*=anon
 				/tests/a=anon
+				/test/*=anon
 				/manage/manageLoginController/*=anon
 				/logout=anon
 				/*.ico=anon

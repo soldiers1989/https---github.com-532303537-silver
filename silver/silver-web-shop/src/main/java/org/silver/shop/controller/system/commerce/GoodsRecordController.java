@@ -1,13 +1,13 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -29,7 +29,7 @@ import net.sf.json.JSONObject;
 @RequestMapping("/goodsRecord")
 @Controller
 public class GoodsRecordController {
-
+	protected static final Logger logger = LogManager.getLogger();
 	@Autowired
 	private GoodsRecordTransaction goodsRecordTransaction;
 
@@ -40,15 +40,14 @@ public class GoodsRecordController {
 	 *            页数
 	 * @param size
 	 *            数据条数
-	 * @return String
-	 * 与GoodsContentController的findMerchantGoodsInfo重复了
+	 * @return String 与GoodsContentController的findMerchantGoodsInfo重复了
 	 */
 	@RequestMapping(value = "/findMerchantGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询商户下商品基本信息")
 	@RequiresRoles("Merchant")
 	public String findMerchantGoodsBaseInfo(@RequestParam("page") int page, @RequestParam("size") int size) {
-		Map<String,Object> datasMap = goodsRecordTransaction.findMerchantGoodsBaseInfo(page, size);
+		Map<String, Object> datasMap = goodsRecordTransaction.findMerchantGoodsBaseInfo(page, size);
 		return JSONObject.fromObject(datasMap).toString();
 	}
 
@@ -62,16 +61,13 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("读取已备案的商品信息")
 	@RequiresRoles("Merchant")
-	public String getMerchantGoodsRecordInfo(@RequestParam("goodsInfoPack")String goodsInfoPack,HttpServletRequest req,HttpServletResponse response) {
+	public String getMerchantGoodsRecordInfo(@RequestParam("goodsInfoPack") String goodsInfoPack,
+			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		}
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (goodsInfoPack != null) {
 			statusMap = goodsRecordTransaction.getMerchantGoodsRecordInfo(goodsInfoPack);
@@ -85,11 +81,16 @@ public class GoodsRecordController {
 
 	/**
 	 * 商戶发起备案
-	 * @param customsPort 口岸编码
-	 * @param customsCode 主管海关代码
-	 * @param ciqOrgCode 检验检疫编码
-	 * @param recordGoodsInfoPack 备案商品信息包
-	 * @return String 
+	 * 
+	 * @param customsPort
+	 *            口岸编码
+	 * @param customsCode
+	 *            主管海关代码
+	 * @param ciqOrgCode
+	 *            检验检疫编码
+	 * @param recordGoodsInfoPack
+	 *            备案商品信息包
+	 * @return String
 	 */
 	@RequestMapping(value = "/merchantSendGoodsRecord", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -97,40 +98,57 @@ public class GoodsRecordController {
 	@RequiresRoles("Merchant")
 	public String merchantSendGoodsRecord(@RequestParam("customsPort") String customsPort,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgCode") String ciqOrgCode,
-			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack,HttpServletRequest req,HttpServletResponse response ) {
+			@RequestParam("recordGoodsInfoPack") String recordGoodsInfoPack, HttpServletRequest req,
+			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object>  statusMap = new HashMap<>();
+		if (customsPort != null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
+			 statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode,
+					recordGoodsInfoPack);
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
-		Map<String, Object> statusMap = new HashMap<>();
-		if (customsPort !=null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
-			statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode, recordGoodsInfoPack);
-			return JSONObject.fromObject(statusMap).toString();
-		}
-		return null;
+		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/findMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商戶查询商品备案信息")
 	@RequiresRoles("Merchant")
-	public String findMerchantGoodsRecordInfo(HttpServletRequest req,HttpServletResponse response ,String goodsId,@RequestParam("page") int page, @RequestParam("size") int size){
+	public String findMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response, String goodsId,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		}
-		 Map<String,Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId,page,size);
-		 return JSONObject.fromObject(statusMap).toString();
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId, page, size);
+		return JSONObject.fromObject(statusMap).toString();
 	}
 	
+	/**
+	 * 备案网关异步回馈备案商品信息
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/reNotifyMsg",  produces = "application/json; charset=utf-8")
+	public String reNotifyMsg(HttpServletRequest req,HttpServletResponse response){
+		logger.info("-----备案网关异步回馈备案商品信息---");
+		Map<String,Object> datasMap = new HashMap<>();
+		datasMap.put("status", req.getParameter("status") + "");
+		datasMap.put("errMsg", req.getParameter("errMsg") + "");
+		datasMap.put("messageID", req.getParameter("messageID") + "");
+		datasMap.put("entGoodsNo", req.getParameter("entGoodsNo") + "");
+		datasMap.put("CIQGoodsNo", req.getParameter("CIQGoodsNo") + "");
+		datasMap.put("EPortGoodsNo ", req.getParameter("EPortGoodsNo ") + "");
+		Map<String,Object> statusMap =  goodsRecordTransaction.updateGoodsRecordInfo(datasMap);
+		logger.info(JSONObject.fromObject(statusMap).toString());
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

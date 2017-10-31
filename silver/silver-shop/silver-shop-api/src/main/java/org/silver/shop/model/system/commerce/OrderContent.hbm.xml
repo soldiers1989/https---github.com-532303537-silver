@@ -23,27 +23,11 @@
         <property name="orderId" type="java.lang.String">
             <column name="orderId" />
         </property>
-        <property name="goodsId" type="java.lang.String">
-            <column name="goodsId" />
-        </property>
-        <property name="goodsName" type="java.lang.String">
-            <column name="goodsName" />
-        </property>
-        <property name="count" type="int">
-            <column name="count" />
-        </property>
-        <property name="regPrice" type="double">
-            <column name="regPrice" />
-        </property>
-        <property name="totalPrice" type="double">
-            <column name="totalPrice" />
-        </property>
+        
         <property name="freight" type="double">
             <column name="freight" />
         </property>
-        <property name="consolidatedTax" type="double">
-            <column name="consolidatedTax" />
-        </property>
+       
         <property name="orderTotalPrice" type="double">
             <column name="orderTotalPrice" />
         </property>
@@ -71,8 +55,50 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-        <property name="receiptId" type="java.lang.String">
+      
+      
+      
+       <property name="recipientName" type="java.lang.String">
+            <column name="recipientName" />
+        </property>
+        <property name="recipientCardId" type="java.lang.String">
+            <column name="recipientCardId" />
+        </property>
+        <property name="recipientTel" type="java.lang.String">
+            <column name="recipientTel" />
+        </property>
+        <property name="recipientCountryCode" type="java.lang.String">
+            <column name="recipientCountryCode" />
+        </property>
+        <property name="recProvincesCode" type="java.lang.String">
+            <column name="recProvincesCode" />
+        </property>
+        <property name="recCityCode" type="java.lang.String">
+            <column name="recCityCode" />
+        </property>
+        <property name="recAreaCode" type="java.lang.String">
+            <column name="recAreaCode" />
+        </property>
+        <property name="recipientAddr" type="java.lang.String">
+            <column name="recipientAddr" />
+        </property>
+        
+        <property name="ehsStatus" type="int">
+            <column name="ehsStatus" />
+        </property>
+        <property name="wbEhsentName" type="java.lang.String">
+            <column name="wbEhsentName" />
+        </property>
+        <property name="wbEhsentNo" type="java.lang.String">
+            <column name="wbEhsentNo" />
+        </property>
+        
+         <property name="receiptId" type="java.lang.String">
             <column name="receiptId" />
+        </property>
+        
+        <property name="entOrderNo" type="java.lang.String">
+        	<column name="entOrderNo"/>
         </property>
     </class>
 </hibernate-mapping>

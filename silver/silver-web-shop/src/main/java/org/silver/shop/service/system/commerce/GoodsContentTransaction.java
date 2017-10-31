@@ -32,7 +32,7 @@ public class GoodsContentTransaction {
 
 	//商户添加商品基本信息
 	public Map<String,Object> addMerchantGoodsBaseInfo(HttpServletRequest req) {
-		boolean flag = false;
+		Map<String,Object> statusMap=new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -70,7 +70,9 @@ public class GoodsContentTransaction {
 				return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,imgList, goodsYear, date);
 			}
 		}
-		return null;
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+		return statusMap;
 	}
 
 

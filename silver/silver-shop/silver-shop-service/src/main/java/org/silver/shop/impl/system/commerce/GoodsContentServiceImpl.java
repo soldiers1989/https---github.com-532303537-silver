@@ -102,15 +102,6 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			String startTime, String endTime, String ymYear, int page, int size, String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		/*
-		 * if (goodsId != null && !"".equals(goodsId.trim())) {
-		 * params.put("goodsId", goodsId); page = 0; size = 0; } else { if
-		 * (merchantName != null && !"".equals(merchantName.trim())) {
-		 * params.put("goodsMerchantName", merchantName); } if (startTime !=
-		 * null && !"".equals(startTime.trim())) { params.put("goodsName",
-		 * goodsName); } if (ymYear != null && !"".equals(ymYear.trim())) {
-		 * params.put("goodsYear", ymYear); } }
-		 */
 		// key=数据库列名,value=查询参数
 		params.put("goodsMerchantId", merchantId);
 		// 删除标识:0-未删除,1-已删除

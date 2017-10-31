@@ -21,7 +21,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
 
-//@Service(interfaceClass = MerchantService.class)
+@Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());

@@ -26,4 +26,9 @@ public class OrderTransaction {
 		return orderService.createOrderInfo(memberId, memberName ,goodsInfoPack,type,totalPrice);
 	}
 
+	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap) {
+		
+		return orderService.updateOrderRecordInfo(datasMap);
+	}
+
 }

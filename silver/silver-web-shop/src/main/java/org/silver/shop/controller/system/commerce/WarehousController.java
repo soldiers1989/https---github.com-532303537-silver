@@ -28,23 +28,19 @@ import net.sf.json.JSONObject;
 public class WarehousController {
 	@Autowired
 	private WarehousTransaction warehousTransaction;
-	
+
 	@RequestMapping(value = "/getWarehousInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询商户下仓库")
 	@RequiresRoles("Merchant")
-	public String getWarehousInfo(HttpServletRequest req, HttpServletResponse response){
+	public String getWarehousInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		"http://ym.191ec.com:8090" };
-if (Arrays.asList(iPs).contains(originHeader)) {
-	response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-	response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-	response.setHeader("Access-Control-Allow-Credentials", "true");
-	response.setHeader("Access-Control-Allow-Origin", originHeader);
-}
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = warehousTransaction.getWarehousInfo();
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 }

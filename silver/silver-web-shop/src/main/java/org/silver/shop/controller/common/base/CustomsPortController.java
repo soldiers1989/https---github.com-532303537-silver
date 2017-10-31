@@ -40,14 +40,14 @@ public class CustomsPortController {
 	@ApiOperation("查询已开通的海关及智检")
 	public String findAllCustomsPort(HttpServletRequest req , HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+	/*	String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
 				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
+		if (Arrays.asList(iPs).contains(originHeader)) {*/
 			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 			response.setHeader("Access-Control-Allow-Credentials", "true");
 			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		}
+	/*	}*/
 		Map<String, Object> statusMap = null;
 		statusMap = customsPortTransaction.findAllCustomsPort();
 		if (statusMap == null && statusMap.size() <= 0) {

@@ -43,4 +43,15 @@ public interface StockDao {
 	 * @return
 	 */
 	public boolean update(Object entity);
+	
+	/**
+	 * 模糊查询总数
+	 * 
+	 * @param entity
+	 *            类
+	 * @param params
+	 *            查询参数
+	 * @return
+	 */
+	public long findByPropertyCount(Class entity, Map<String, Object> params);
 }

@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.sys.component.ChooseDatasourceHandler;
 import org.springframework.stereotype.Repository;
 
@@ -27,15 +25,10 @@ public class AreaDao extends HibernateDaoImpl{
 		
 			List<Object> params = new ArrayList<>();
 			params.add(areaId);
-			ConnectionProvider cp = ((SessionFactoryImplementor)session.getSessionFactory()).getConnectionProvider();
+			//ConnectionProvider cp = ((SessionFactoryImplementor)session.getSessionFactory()).getConnectionProvider();
 			
 			Table t=null;
-			try {
-				t = DataUtils.queryData(cp.getConnection(), sqlString, params, null, null, null);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			t = DataUtils.queryData(session.connection(), sqlString, params, null, null, null);
 			
 		
 			session.close();

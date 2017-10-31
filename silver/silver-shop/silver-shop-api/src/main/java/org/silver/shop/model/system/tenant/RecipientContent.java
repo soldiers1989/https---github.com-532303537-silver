@@ -6,23 +6,25 @@ import java.util.Date;
 /**
  * 收货地址信息实体类
  */
-public class ReceiptContent implements Serializable{
-
+public class RecipientContent implements Serializable{
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	
 	private long id;
+	private String recipientId;//收货地址ID
 	private String memberId;//用户ID
 	private String memberName;//用户名称
 	private String recipientName;//收货人姓名
 	private String recipientCardId;//收货人身份证号码
 	private String recipientTel;//收货人电话
-	private String recipientCountry;// 收货人所在国-国家代码
+	
+	private String recipientCountryCode;// 收货人所在国-国家代码
 	private String recProvincesCode;//收货人省份代码
 	private String recCityCode;//收货人城市代码
-	private String recArea;//收货人城市区代码
+	private String recAreaCode;//收货人城市区代码
 	private String recipientAddr;//收货人详细地址
 	private  String notes;//备注
 	private String createBy;// 创建人
@@ -32,7 +34,6 @@ public class ReceiptContent implements Serializable{
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
-	private String receiptId;//收货地址ID
 	public long getId() {
 		return id;
 	}
@@ -70,12 +71,7 @@ public class ReceiptContent implements Serializable{
 	public void setRecipientTel(String recipientTel) {
 		this.recipientTel = recipientTel;
 	}
-	public String getRecipientCountry() {
-		return recipientCountry;
-	}
-	public void setRecipientCountry(String recipientCountry) {
-		this.recipientCountry = recipientCountry;
-	}
+	
 	public String getRecProvincesCode() {
 		return recProvincesCode;
 	}
@@ -88,12 +84,7 @@ public class ReceiptContent implements Serializable{
 	public void setRecCityCode(String recCityCode) {
 		this.recCityCode = recCityCode;
 	}
-	public String getRecArea() {
-		return recArea;
-	}
-	public void setRecArea(String recArea) {
-		this.recArea = recArea;
-	}
+	
 	public String getRecipientAddr() {
 		return recipientAddr;
 	}
@@ -149,11 +140,23 @@ public class ReceiptContent implements Serializable{
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
 	}
-	public String getReceiptId() {
-		return receiptId;
+	public String getRecipientId() {
+		return recipientId;
 	}
-	public void setReceiptId(String receiptId) {
-		this.receiptId = receiptId;
+	public void setRecipientId(String recipientId) {
+		this.recipientId = recipientId;
+	}
+	public String getRecipientCountryCode() {
+		return recipientCountryCode;
+	}
+	public void setRecipientCountryCode(String recipientCountryCode) {
+		this.recipientCountryCode = recipientCountryCode;
+	}
+	public String getRecAreaCode() {
+		return recAreaCode;
+	}
+	public void setRecAreaCode(String recAreaCode) {
+		this.recAreaCode = recAreaCode;
 	}
 	
 	

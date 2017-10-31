@@ -58,18 +58,13 @@ public class MerchantController {
 	@ResponseBody
 	@ApiOperation(value = "商户--登录")
 	public String login(@RequestParam("account") String account, @RequestParam("loginPassword") String loginPassword,
-			HttpServletRequest req,HttpServletResponse response) {
+			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		}
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
 			currentUser.logout();
@@ -120,7 +115,7 @@ public class MerchantController {
 			@RequestParam("loginPassword") String loginPassword,
 			@RequestParam("merchantIdCardName") String merchantIdCardName,
 			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") String type,HttpServletResponse response) {
+			@RequestParam("type") String type, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type.equals("1") && account != null && loginPassword != null && merchantIdCardName != null
@@ -148,7 +143,8 @@ public class MerchantController {
 	 */
 	@RequestMapping(value = "/checkMerchantName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String checkMerchantName(@RequestParam("account") String account) {
+	public String checkMerchantName(@RequestParam("account") String account,@RequestParam("str")String str) {
+		
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null || !"".equals(account)) {// 判断前台传递的值不为空
 			List<Object> reList = merchantTransaction.checkMerchantName(account);
@@ -175,16 +171,17 @@ public class MerchantController {
 	@RequestMapping(value = "/findMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	public String getMerchantInfo(HttpServletRequest req,HttpServletResponse response ) {
+	public String getMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		//String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		//		"http://ym.191ec.com:8090" };
-		//if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		//}
+		// String[] iPs = { "http://ym.191ec.com:9528",
+		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+		// "http://ym.191ec.com:8090" };
+		// if (Arrays.asList(iPs).contains(originHeader)) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		// }
 		Map<String, Object> reMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -230,16 +227,17 @@ public class MerchantController {
 	@ResponseBody
 	@ApiOperation("商户注销")
 	// @RequiresRoles("Merchant")
-	public String logout(HttpServletRequest req,HttpServletResponse response) {
+	public String logout(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		//String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		//		"http://ym.191ec.com:8090" };
-		//if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		//}
+		// String[] iPs = { "http://ym.191ec.com:9528",
+		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+		// "http://ym.191ec.com:8090" };
+		// if (Arrays.asList(iPs).contains(originHeader)) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		// }
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		if (currentUser != null) {
@@ -287,14 +285,15 @@ public class MerchantController {
 	// @RequiresRoles("Merchant")
 	public String checkMerchantLogin(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		//String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		//		"http://ym.191ec.com:8090" };
-		//if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		//}
+		// String[] iPs = { "http://ym.191ec.com:9528",
+		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
+		// "http://ym.191ec.com:8090" };
+		// if (Arrays.asList(iPs).contains(originHeader)) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		// }
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		if (currentUser != null && currentUser.isAuthenticated()) {

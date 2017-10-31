@@ -81,6 +81,7 @@ public class YmHttpUtil {
 				}
 				ssb=sb.toString().trim();
 			}catch(Exception e){
+				e.printStackTrace();
 				ssb=null;
 			}
 			if(ssb!=null && ssb.length()>=1){
@@ -176,6 +177,7 @@ public class YmHttpUtil {
 			osw.flush();
 			osw.close();
 		} catch (Exception e) {
+			logger.error("发送请求2",e);
 			e.printStackTrace();
 		} finally {
 			if (con != null) {

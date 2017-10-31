@@ -1,50 +1,50 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-<!-- Generated 2017-8-31 9:51:23 by Hibernate Tools 3.4.0.CR1 -->
+<!-- Generated 2017-10-26 14:45:48 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.ReceiptContent" table="ym_shop_receipt_content">
+    <class name="org.silver.shop.model.system.tenant.RecipientContent" table="ym_shop_member_recipient_content">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
         </id>
-         <property name="receiptId" type="java.lang.String">
-        	<column name="receiptId" not-null="true"/>
+        <property name="recipientId" type="java.lang.String">
+            <column name="recipientId" />
         </property>
         <property name="memberId" type="java.lang.String">
-            <column name="memberId" not-null="true"/>
+            <column name="memberId" />
         </property>
         <property name="memberName" type="java.lang.String">
-        	<column name="meberName"/>
+            <column name="memberName" />
         </property>
         <property name="recipientName" type="java.lang.String">
-            <column name="recipientName" not-null="true"/>
+            <column name="recipientName" />
         </property>
         <property name="recipientCardId" type="java.lang.String">
-            <column name="recipientCardId" not-null="true"/>
+            <column name="recipientCardId" />
         </property>
         <property name="recipientTel" type="java.lang.String">
-            <column name="recipientTel" not-null="true"/>
+            <column name="recipientTel" />
         </property>
-        <property name="recipientCountry" type="java.lang.String">
-            <column name="recipientCountry" not-null="true"/>
+        <property name="recipientCountryCode" type="java.lang.String">
+            <column name="recipientCountryCode" />
         </property>
         <property name="recProvincesCode" type="java.lang.String">
-            <column name="recProvincesCode" not-null="true"/>
+            <column name="recProvincesCode" />
         </property>
         <property name="recCityCode" type="java.lang.String">
-            <column name="recCityCode" not-null="true"/>
+            <column name="recCityCode" />
         </property>
-        <property name="recArea" type="java.lang.String">
-            <column name="recArea" not-null="true"/>
+        <property name="recAreaCode" type="java.lang.String">
+            <column name="recAreaCode" />
         </property>
         <property name="recipientAddr" type="java.lang.String">
-            <column name="recipientAddr" not-null="true"/>
+            <column name="recipientAddr" />
         </property>
         <property name="notes" type="java.lang.String">
             <column name="notes" />
         </property>
-           <property name="createBy" type="java.lang.String">
+        <property name="createBy" type="java.lang.String">
             <column name="createBy" />
         </property>
         <property name="createDate" type="java.util.Date">
@@ -57,7 +57,7 @@
             <column name="updateDate" />
         </property>
         <property name="deleteFlag" type="int">
-            <column name="deleteFlag" not-null="true"/>
+            <column name="deleteFlag" />
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />
@@ -66,6 +66,5 @@
             <column name="deleteDate" />
         </property>
         
-       
     </class>
 </hibernate-mapping>

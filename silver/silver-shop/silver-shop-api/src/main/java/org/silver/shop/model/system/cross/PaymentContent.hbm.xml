@@ -8,11 +8,17 @@
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="userId" type="java.lang.String">
-            <column name="userId" not-null="true"/>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" />
+        </property>
+         <property name="memberName" type="java.lang.String">
+            <column name="memberName" />
         </property>
         <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" not-null="true"/>
+            <column name="merchantId" />
+        </property>
+         <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" />
         </property>
         <property name="entPayNo" type="java.lang.String">
             <column name="entPayNo" not-null="true"/>
@@ -20,7 +26,7 @@
         <property name="payStatus" type="java.lang.String">
             <column name="payStatus" not-null="true"/>
         </property>
-        <property name="payAmount" type="long">
+        <property name="payAmount" type="double">
             <column name="payAmount" not-null="true"/>
         </property>
         <property name="payCurrCode" type="java.lang.String">
@@ -50,8 +56,8 @@
         <property name="payRecord" type="int">
             <column name="payRecord" />
         </property>
-        <property name="PayFalg" type="int">
-            <column name="PayFalg" />
+        <property name="payFalg" type="int">
+            <column name="payFalg" />
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />
@@ -73,6 +79,12 @@
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
+        </property>
+        <property name="reNote" type="java.lang.String">
+        	<column name="reNote" />
+        </property>
+        <property name="reSerialNo" type="java.lang.String">
+        	<column name="reSerialNo" />
         </property>
     </class>
 </hibernate-mapping>

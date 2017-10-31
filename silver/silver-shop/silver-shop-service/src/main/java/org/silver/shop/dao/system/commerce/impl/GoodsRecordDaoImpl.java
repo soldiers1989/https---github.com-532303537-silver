@@ -84,4 +84,8 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsReco
 		}
 	}
 
+	@Override 
+	public long findByPropertyCount(Class entity,Map params) {
+		return super.findByPropertyCount(entity,params);
+	}
 }

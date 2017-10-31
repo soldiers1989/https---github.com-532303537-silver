@@ -101,13 +101,30 @@ public interface GoodsRecordDao {
 
 	/**
 	 * 更新商品备案信息状态
-	 * @param tableName 更新表名
-	 * @param merchantIdColumnName 商户ID表中的列名
-	 * @param merchantId 商户ID
-	 * @param goodsSerialNo 商城商品流水号
-	 * @param status 状态码：
+	 * 
+	 * @param tableName
+	 *            更新表名
+	 * @param merchantIdColumnName
+	 *            商户ID表中的列名
+	 * @param merchantId
+	 *            商户ID
+	 * @param goodsSerialNo
+	 *            商城商品流水号
+	 * @param status
+	 *            状态码：
 	 * @return boolean
 	 */
-	public boolean updateGoodsRecordStatus(String tableName,String merchantIdColumnName  , String merchantId, String goodsSerialNo, int status);
+	public boolean updateGoodsRecordStatus(String tableName, String merchantIdColumnName, String merchantId,
+			String goodsSerialNo, int status);
 
+	/**
+	 * 模糊查询总数
+	 * 
+	 * @param entity
+	 *            类
+	 * @param params
+	 *            查询参数
+	 * @return
+	 */
+	public long findByPropertyCount(Class entity, Map<String, Object> params);
 }

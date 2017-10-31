@@ -8,7 +8,7 @@ public enum LoginType {
 	/**
 	 * 管理员
 	 */
-	ADMIN("Admin") ,
+	MANAGER("Manager") ,
 	/**
 	 * 商户
 	 */
@@ -17,6 +17,10 @@ public enum LoginType {
 	 * 商户的info
 	 */
 	MERCHANTINFO(MERCHANT+"_info"),
+	/**
+	 * 管理员的info
+	 */
+	MANAGERINFO(MANAGER+"_info"),
 	/**
 	 * 用户的info
 	 */

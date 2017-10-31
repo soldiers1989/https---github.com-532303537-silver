@@ -80,7 +80,7 @@ public class StockServiceImpl implements StockService {
 			if (goodsList != null && goodsList.size() > 0) {
 				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsList.get(0);
 				params.clear();
-				params.put("goodsId", datasMap.get("goodsDateilId"));
+				params.put("goodsId", datasMap.get("goodsDetailId"));
 				List<Object> stockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
 				// 如果数据库已有商品
 				if (stockList != null && stockList.size() > 0) {
@@ -101,7 +101,7 @@ public class StockServiceImpl implements StockService {
 					stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
 					stock.setGoodsName(datasMap.get("goodsName") + "");
 					//商品库存里ID为备案商品的ID
-					stock.setGoodsId(datasMap.get("entGoodsNo") + "");
+					stock.setGoodsId(datasMap.get("goodsDetailId") + "");
 					// 库存商品价格暂时设置为备案时单价
 					stock.setRegPrice(goodsRecord.getRegPrice());
 					stock.setFreePrice(0.0);
@@ -112,7 +112,7 @@ public class StockServiceImpl implements StockService {
 					stock.setCreateBy(merchantName);
 					// 上下架标识：1-上架,2-下架
 					stock.setSellFlag(2);
-					stock.setEntGoodsNo(datasMap.get("goodsDetailId") + "");
+					stock.setEntGoodsNo(datasMap.get("entGoodsNo") + "");
 					if (!stockDao.add(stock)) {
 						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 						statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");

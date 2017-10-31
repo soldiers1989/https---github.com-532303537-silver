@@ -57,9 +57,7 @@ public class MerchantTransaction {
 	public Map<String, Object> merchantLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
-		System.out.println(merchantService+"merchantService------->");
 		List<Object> reList =merchantService.findMerchantBy(account);
-		System.out.println(reList+"reList------->");
 		if (reList != null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
 			String name = merchant.getMerchantName();

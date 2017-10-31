@@ -5,7 +5,6 @@ import java.util.Date;
 
 /**
  * 商品备案流水信息
- *
  */
 public class GoodsRecord implements Serializable {
 

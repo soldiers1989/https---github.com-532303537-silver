@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
@@ -74,16 +72,16 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 				queryString = queryString  +" and t1.goodsFirstTypeId = ? ";
 			}
 			session = getSession();
-			ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			 conn = cp.getConnection();
+		//	ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
+		//	 conn = cp.getConnection();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, page * size, size);
+				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, page * size, size);
 			} else {
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
+				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, null, null);
 			}
-			conn.close();
+			session.connection().close();
 			session.close();
 			// Transform.tableToJson(l);
 			return l;

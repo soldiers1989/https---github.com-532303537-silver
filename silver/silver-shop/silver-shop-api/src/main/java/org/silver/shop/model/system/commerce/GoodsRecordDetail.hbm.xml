@@ -9,10 +9,10 @@
             <generator class="identity" />
         </id>
         <property name="seq" type="int">
-            <column name="seq" />
+            <column name="seq" not-null="true"/>
         </property>
         <property name="entGoodsNo" type="java.lang.String">
-            <column name="entGoodsNo" />
+            <column name="entGoodsNo" not-null="true"/>
         </property>
         <property name="entGoodsNoSKU" type="java.lang.String">
             <column name="entGoodsNoSKU" />
@@ -33,58 +33,58 @@
             <column name="itemNo" />
         </property>
         <property name="shelfGName" type="java.lang.String">
-            <column name="shelfGName" />
+            <column name="shelfGName" not-null="true"/>
         </property>
         <property name="ncadCode" type="java.lang.String">
-            <column name="ncadCode" />
+            <column name="ncadCode" not-null="true" />
         </property>
         <property name="hsCode" type="java.lang.String">
-            <column name="hsCode" />
+            <column name="hsCode" not-null="true"/>
         </property>
         <property name="barCode" type="java.lang.String">
             <column name="barCode" />
         </property>
         <property name="goodsName" type="java.lang.String">
-            <column name="goodsName" />
+            <column name="goodsName" not-null="true"/>
         </property>
         <property name="goodsStyle" type="java.lang.String">
-            <column name="goodsStyle" />
+            <column name="goodsStyle" not-null="true"/>
         </property>
         <property name="brand" type="java.lang.String">
-            <column name="brand" />
+            <column name="brand" not-null="true"/>
         </property>
         <property name="gUnit" type="java.lang.String" access="field">
-            <column name="gUnit" />
+            <column name="gUnit" not-null="true"/>
         </property>
         <property name="stdUnit" type="java.lang.String">
-            <column name="stdUnit" />
+            <column name="stdUnit" not-null="true"/>
         </property>
         <property name="secUnit" type="java.lang.String">
             <column name="secUnit" />
         </property>
         <property name="regPrice" type="java.lang.Double">
-            <column name="regPrice" />
+            <column name="regPrice" not-null="true"/>
         </property>
         <property name="giftFlag" type="java.lang.String">
-            <column name="giftFlag" />
+            <column name="giftFlag" not-null="true" />
         </property>
         <property name="originCountry" type="java.lang.String">
-            <column name="originCountry" />
+            <column name="originCountry" not-null="true"/>
         </property>
         <property name="quality" type="java.lang.String">
-            <column name="quality" />
+            <column name="quality" not-null="true"/>
         </property>
         <property name="qualityCertify" type="java.lang.String">
             <column name="qualityCertify" />
         </property>
         <property name="manufactory" type="java.lang.String">
-            <column name="manufactory" />
+            <column name="manufactory" not-null="true"/>
         </property>
         <property name="netWt" type="java.lang.Double">
-            <column name="netWt" />
+            <column name="netWt" not-null="true"/>
         </property>
         <property name="grossWt" type="java.lang.Double">
-            <column name="grossWt" />
+            <column name="grossWt" not-null="true"/>
         </property>
         <property name="notes" type="java.lang.String">
             <column name="notes" />
@@ -116,22 +116,25 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
+        <property name="goodsMerchantId" type="java.lang.String">
+        	<column name="goodsMerchantId" not-null="true"/>
+        </property>
         <property name="goodsMerchantName" type="java.lang.String">
-            <column name="goodsMerchantName" />
+            <column name="goodsMerchantName" not-null="true"/>
         </property>
         <property name="goodsSerialNo" type="java.lang.String">
         	<column name="goodsSerialNo" />
         </property>
-        <property name="goodsMerchantId" type="java.lang.String">
-        	<column name="goodsMerchantId"/>
-        </property>
         
         <property name="reSerialNo" type="java.lang.String">
-        	<column name="reSerialNo"></column>
+        	<column name="reSerialNo"/>
         </property>
         
         <property name="goodsDetailId" type="java.lang.String" >
         	<column name="goodsDetailId" not-null="true" />
+        </property>
+         <property name="reNote" type="java.lang.String">
+        	<column name="reNote" />
         </property>
     </class>
 </hibernate-mapping>

@@ -62,4 +62,10 @@ public interface GoodsRecordService {
 	 * @return
 	 */
 	public Map<String, Object> findAllGoodsRecordInfo(String merchantId, String goodsId, int page, int size);
+
+	/**
+	 * 更新商品备案信息
+	 * @param datasMap
+	 */
+	public Map<String,Object> updateGoodsRecordInfo(Map<String, Object> datasMap);
 }

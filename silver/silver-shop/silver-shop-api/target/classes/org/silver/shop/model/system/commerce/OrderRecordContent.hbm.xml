@@ -9,17 +9,17 @@
             <generator class="identity" />
         </id>
         <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" not-null="true"/>
+            <column name="merchantId" />
         </property>
          <property name="merchantName" type="java.lang.String">
-            <column name="merchantName" not-null="true"/>
+            <column name="merchantName" />
         </property>
         <property name="memberId" type="java.lang.String">
-            <column name="memberId" not-null="true"/>
+            <column name="memberId" />
         </property>
         
          <property name="memberName" type="java.lang.String">
-            <column name="memberName" not-null="true"/>
+            <column name="memberName"/>
         </property>
         
         <property name="entOrderNo" type="java.lang.String">
@@ -46,7 +46,7 @@
         <property name="otherPayment" type="java.lang.Double">
             <column name="otherPayment" />
         </property>
-        <property name="otherPayNotes" type="java.lang.Double">
+        <property name="otherPayNotes" type="java.lang.String">
             <column name="otherPayNotes" />
         </property>
         <property name="otherCharges" type="java.lang.Double">
@@ -118,18 +118,10 @@
         <property name="payTime" type="java.util.Date">
             <column name="payTime" />
         </property>
-        <property name="orderRecordStatus" type="java.lang.String">
+        <property name="orderRecordStatus" type="int">
             <column name="orderRecordStatus" />
         </property>
-        <property name="ehsStatus" type="int">
-            <column name="ehsStatus" />
-        </property>
-        <property name="wbEhsentName" type="java.lang.String">
-            <column name="wbEhsentName" />
-        </property>
-        <property name="wbEhsentNo" type="java.lang.String">
-            <column name="wbEhsentNo" />
-        </property>
+       
         <property name="entPayNo" type="java.lang.String">
             <column name="entPayNo" />
         </property>
@@ -156,6 +148,13 @@
         </property>
         <property name="orderSerialNo" type="java.lang.String">
         	<column name="orderSerialNo" not-null="true" />
+        </property>
+        
+        <property name="reOrderSerialNo" type="java.lang.String">
+        	<column name="reOrderSerialNo" />
+        </property>
+         <property name="reNote" type="java.lang.String">
+        	<column name="reNote" />
         </property>
     </class>
 </hibernate-mapping>

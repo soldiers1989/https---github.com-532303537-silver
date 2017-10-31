@@ -54,7 +54,7 @@ public class MemberTransaction {
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
-				// 获取商户登录时,shiro存入在session中的数据
+				// 获取用户登录时,shiro存入在session中的数据
 				Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 				if (memberInfo == null) {
 					WebUtil.getSession().setAttribute(LoginType.MEMBERINFO.toString(), reList.get(0));
@@ -73,7 +73,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> getMemberInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -83,7 +83,7 @@ public class MemberTransaction {
 	// 用户添加商品至购物车
 	public Map<String, Object> addGoodsToShopCart(String goodsId, int count) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -92,7 +92,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> getGoodsToShopCartInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -101,7 +101,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -110,7 +110,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -119,7 +119,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> getMemberOrderInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -129,7 +129,7 @@ public class MemberTransaction {
 
 	public Map<String, Object> getMemberWalletInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
