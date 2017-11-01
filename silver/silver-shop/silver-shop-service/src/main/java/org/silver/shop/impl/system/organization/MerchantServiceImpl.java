@@ -76,7 +76,7 @@ public class MerchantServiceImpl implements MerchantService {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 扫描获取数据库表中的商户自增长ID
 		long merchantCount = merchantDao.findLastId();
-		if (merchantCount < 1) {// 判断数据库查询出数据如果小于1,则中断程序,告诉异常
+		if (merchantCount < 0) {// 判断数据库查询出数据如果小于0,则中断程序,告诉异常
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
@@ -139,9 +139,7 @@ public class MerchantServiceImpl implements MerchantService {
 			recordInfo.setCreateBy(account);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			// 商戶基本信息实例化
-			merchantFlag = merchantDao.add(merchant);
-			if (merchantFlag) {
+			if (merchantDao.add(merchant)) {
 				// 保存商户对应的电商平台名称(及编码)
 				recordFlag = addMerchantRecordInfo(recordInfo, "1");
 				if (recordFlag) {// 数据库添加完成后,返回成功信息

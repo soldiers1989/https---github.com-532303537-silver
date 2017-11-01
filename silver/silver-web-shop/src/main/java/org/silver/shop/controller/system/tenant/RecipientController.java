@@ -49,17 +49,20 @@ public class RecipientController {
 	@RequiresRoles("Member")
 	@ResponseBody
 	public String getMemberRecipientInfo() {
-		Map<String, Object> stautsMap = new HashMap<>();
-		stautsMap = recipientTransaction.getMemberRecipientInfo();
+		Map<String, Object> stautsMap = recipientTransaction.getMemberRecipientInfo();
 		return JSONObject.fromObject(stautsMap).toString();
 	}
 
 	public static void main(String[] args) {
 		JSONArray jsonList = new JSONArray();
 		Map<String, Object> params = new HashMap<>();
-		params.put("recipientName", "收货人名称");
-		params.put("recipientCardId", "收货人身份证");
-		params.put("recipientTel", "收货人电话号码");
+		params.put("recipientName", "杨戬");
+		params.put("recipientCardId", "身份证985");
+		params.put("recipientTel", "1862001xxxx");
+		params.put("recipientCountryName", "景德镇");
+		params.put("recProvincesName", "北京市");
+		params.put("recCityName", "市辖区");
+		params.put("recAreaName", "密云区");
 		params.put("recipientCountryCode", "142");
 		params.put("recProvincesCode", "110000");
 		params.put("recCityCode", "110100");
@@ -67,7 +70,6 @@ public class RecipientController {
 		params.put("recipientAddr", "地址01");
 		params.put("notes", "收货地址测试");
 		jsonList.add(params);
-		System.out.println(jsonList.toString());
 		JSONArray jsonList2 = JSONArray.fromObject(jsonList.toString());
 		System.out.println(jsonList2);
 	}

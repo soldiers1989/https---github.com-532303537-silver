@@ -11,6 +11,6 @@ public interface YsPayService {
 	 * @param orderId
 	 * @return
 	 */
-	public Map<String,Object> checkOrderInfo(String memberId, String orderId);
+	public Map<String,Object> checkOrderInfo( String orderId);
 
 }

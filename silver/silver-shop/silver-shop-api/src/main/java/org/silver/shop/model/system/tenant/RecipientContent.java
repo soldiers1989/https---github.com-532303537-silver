@@ -14,16 +14,19 @@ public class RecipientContent implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private long id;
-	private String recipientId;//收货地址ID
+	private String recipientId;//收货地址ID (RCPT=Recipient缩写)
 	private String memberId;//用户ID
 	private String memberName;//用户名称
 	private String recipientName;//收货人姓名
 	private String recipientCardId;//收货人身份证号码
 	private String recipientTel;//收货人电话
-	
+	private String recipientCountryName;// 收货人所在国-国家名称
 	private String recipientCountryCode;// 收货人所在国-国家代码
+	private String recProvincesName;//收货人省份名称
 	private String recProvincesCode;//收货人省份代码
+	private String recCityName;//收货人城市名称
 	private String recCityCode;//收货人城市代码
+	private String recAreaName;//收货人市区名称
 	private String recAreaCode;//收货人城市区代码
 	private String recipientAddr;//收货人详细地址
 	private  String notes;//备注
@@ -157,6 +160,30 @@ public class RecipientContent implements Serializable{
 	}
 	public void setRecAreaCode(String recAreaCode) {
 		this.recAreaCode = recAreaCode;
+	}
+	public String getRecipientCountryName() {
+		return recipientCountryName;
+	}
+	public void setRecipientCountryName(String recipientCountryName) {
+		this.recipientCountryName = recipientCountryName;
+	}
+	public String getRecProvincesName() {
+		return recProvincesName;
+	}
+	public void setRecProvincesName(String recProvincesName) {
+		this.recProvincesName = recProvincesName;
+	}
+	public String getRecCityName() {
+		return recCityName;
+	}
+	public void setRecCityName(String recCityName) {
+		this.recCityName = recCityName;
+	}
+	public String getRecAreaName() {
+		return recAreaName;
+	}
+	public void setRecAreaName(String recAreaName) {
+		this.recAreaName = recAreaName;
 	}
 	
 	

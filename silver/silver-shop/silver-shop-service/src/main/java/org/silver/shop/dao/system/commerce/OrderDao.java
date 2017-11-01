@@ -3,7 +3,10 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.organization.Member;
+
+import com.justep.baas.data.Table;
 
 public interface OrderDao {
 	/**
@@ -136,4 +139,14 @@ public interface OrderDao {
 	 * @return
 	 */
 	public long findByPropertyCount(Class entity,Map<String,Object> params);
+
+	/**
+	 * 查询商户下订单信息
+	 * @param entity
+	 * @param merchantId
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table getMerchantOrderInfo( String merchantId, int page, int size);
 }

@@ -35,14 +35,8 @@ public class YsPayController {
 
 	@RequestMapping(value = "/dopay")
 	public String doPay(HttpServletRequest req, HttpServletResponse resp) {
-		/*Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();*/
 		String entOrderNo = req.getParameter("entOrderNo");
-		String memberId = req.getParameter("memberId");
-		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(memberId, entOrderNo);
+		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(entOrderNo);
 		String orderTotalPrice = null;
 		// 当订单ID查询信息无误
 		if ("1".equals(reMap.get(BaseCode.STATUS.toString()))) {

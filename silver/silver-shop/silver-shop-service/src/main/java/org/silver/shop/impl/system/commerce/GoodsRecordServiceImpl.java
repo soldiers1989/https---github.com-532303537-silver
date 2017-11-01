@@ -24,6 +24,7 @@ import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.Warehous;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.SerialNoUtils;
@@ -165,8 +166,14 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return tokMap;
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		//验证前台传值
+		Map<String,Object> reDataMap =checkData(jsonList);
+		if(!"1".equals(reDataMap.get(BaseCode.STATUS.toString())+"")){
+			return reDataMap;
+		}
+		JSONArray reJSONObject = JSONArray.fromObject(reDataMap.get(BaseCode.DATAS.toString()));
 		// 将备案商品头部及商品详情信息插入数据库
-		Map<String, Object> reGoodsMap = saveRecordInfo(merchantId, merchantName, merchantInfoMap, portInfo, jsonList);
+		Map<String, Object> reGoodsMap = saveRecordInfo(merchantId, merchantName, merchantInfoMap, portInfo, reJSONObject);
 		if (!reGoodsMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return reGoodsMap;
 		}
@@ -206,6 +213,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return reUpdateMsg;
 		}
 	}
+
+	
 
 	/**
 	 * 检查口岸,海关代码是否正确
@@ -447,7 +456,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private final Map<String, Object> saveRecordInfo(String merchantId, String merchantName,
-			Map<String, Object> merchantInfoMap, CustomsPort portInfo, List<Object> jsonList) {
+			Map<String, Object> merchantInfoMap, CustomsPort portInfo, JSONArray jsonList) {
 		Map<String, Object> statusMap = new HashMap<>();
 		boolean flag = false;
 		Date date = new Date();
@@ -485,7 +494,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		recordInfo.setCreateBy(merchantName);
 		recordInfo.setCreateDate(date);
 		recordInfo.setDeleteFlag(0);
-		// recordInfo.setReSerialNo(reSerialNo);
 		flag = goodsRecordDao.add(recordInfo);
 		if (!flag) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -521,11 +529,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			GoodsContent goods = (GoodsContent) reGoodsList.get(0);
 			goodRecordInfo.setSeq(i + 1);
 			goodRecordInfo.setEntGoodsNo(goodsRecordSerialNo);
-			goodRecordInfo.setEportGoodsNo(goodsInfo.get("EPortGoodsNo") + "");
-			goodRecordInfo.setCiqGoodsNo(goodsInfo.get("CIQGoodsNo") + "");
-			goodRecordInfo.setCusGoodsNo(goodsInfo.get("CusGoodsNo") + "");
-			goodRecordInfo.setEmsNo(goodsInfo.get("EmsNo") + "");
-			goodRecordInfo.setItemNo(goodsInfo.get("ItemNo") + "");
+			goodRecordInfo.setEportGoodsNo(String.valueOf(goodsInfo.get("EPortGoodsNo")) );
+			goodRecordInfo.setCiqGoodsNo(String.valueOf(goodsInfo.get("CIQGoodsNo")));
+			goodRecordInfo.setCusGoodsNo(String.valueOf(goodsInfo.get("CusGoodsNo")));
+			goodRecordInfo.setEmsNo(String.valueOf(goodsInfo.get("EmsNo")));
+			goodRecordInfo.setItemNo(String.valueOf(goodsInfo.get("ItemNo")));
 			goodRecordInfo.setShelfGName(goodsInfo.get("ShelfGName") + "");
 			goodRecordInfo.setNcadCode(goodsInfo.get("NcadCode") + "");
 			goodRecordInfo.setHsCode(goodsInfo.get("HSCode") + "");
@@ -538,13 +546,13 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			goodRecordInfo.setSecUnit(goodsInfo.get("SecUnit") + "");
 			goodRecordInfo.setRegPrice(Double.valueOf(goodsInfo.get("RegPrice") + ""));
 			goodRecordInfo.setGiftFlag(goodsInfo.get("GiftFlag") + "");
-			goodRecordInfo.setOriginCountry(goodsInfo.get("OriginCountry") + "");
+			goodRecordInfo.setOriginCountry(String.valueOf(goodsInfo.get("OriginCountry")));
 			goodRecordInfo.setQuality(goodsInfo.get("Quality") + "");
 			goodRecordInfo.setQualityCertify(goodsInfo.get("QualityCertify") + "");
 			goodRecordInfo.setManufactory(goodsInfo.get("Manufactory") + "");
 			goodRecordInfo.setNetWt(Double.valueOf(goodsInfo.get("NetWt") + ""));
 			goodRecordInfo.setGrossWt(Double.valueOf(goodsInfo.get("GrossWt") + ""));
-			goodRecordInfo.setNotes(goodsInfo.get("Notes") + "");
+			goodRecordInfo.setNotes(String.valueOf(goodsInfo.get("Notes")));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			goodRecordInfo.setStatus(1);
 			goodRecordInfo.setGoodsMerchantId(merchantId);
@@ -736,5 +744,27 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
+	}
+	
+	private Map<String,Object> checkData(JSONArray jsonList) {
+		List<String> noNullKeys = new ArrayList<>();
+		noNullKeys.add("GoodsDetailId");
+		noNullKeys.add("ShelfGName");
+		noNullKeys.add("NcadCode");
+		noNullKeys.add("HSCode");
+		noNullKeys.add("GoodsName");
+		noNullKeys.add("GoodsStyle");
+		noNullKeys.add("Brand");
+		noNullKeys.add("GUnit");
+		noNullKeys.add("StdUnit");
+		noNullKeys.add("RegPrice");
+		noNullKeys.add("GiftFlag");
+		noNullKeys.add("OriginCountry");
+		noNullKeys.add("Quality");
+		noNullKeys.add("Manufactory");
+		noNullKeys.add("NetWt");
+		noNullKeys.add("GrossWt");
+		noNullKeys.add("Notes");
+		return CheckDatasUtil.checkData(jsonList, noNullKeys);
 	}
 }

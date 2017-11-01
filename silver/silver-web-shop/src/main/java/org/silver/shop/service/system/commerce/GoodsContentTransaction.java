@@ -38,11 +38,10 @@ public class GoodsContentTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg",
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/"+merchantId+"/goods/", ".jpg",
 				false, 800, 800, null);
 		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
 		if (status.equals("1")) {// 商品展示图片上传成功后
-			//System.out.println("商品展示图片上传成功后");
 			Date date = new Date();
 			// 获取商品基本信息的自增ID
 			Map<String, Object> reMap = goodsContentService.createGoodsId();

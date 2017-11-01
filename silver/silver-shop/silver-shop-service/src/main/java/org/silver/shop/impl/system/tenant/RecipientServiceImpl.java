@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.tenant;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import org.silver.shop.api.system.tenant.RecipientService;
 import org.silver.shop.dao.system.tenant.RecipientDao;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.RecipientContent;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,19 +35,61 @@ public class RecipientServiceImpl implements RecipientService {
 	public Map<String, Object> addRecipientInfo(String memberId, String memberName, String recipientInfo) {
 		JSONArray jsonList = null;
 		Map<String, Object> statusMap = new HashMap<>();
+		List<Object> cacheList = new ArrayList<>();
 		Date date = new Date();
 		try {
 			jsonList = JSONArray.fromObject(recipientInfo);
 		} catch (Exception e) {
-			LOGGER.error("----前台传值错误-----");
-			e.printStackTrace();
+			LOGGER.error("----前台传递用户收货地址信息错误-----");
+			LOGGER.error("context", e);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
 		}
 		if (jsonList != null && jsonList.size() > 0) {
 			for (int i = 0; i < jsonList.size(); i++) {
+				//校验数据
+				List<String> noNullKeys = new ArrayList<>();
+				noNullKeys.add("recipientName");
+				noNullKeys.add("recipientCardId");
+				noNullKeys.add("recipientTel");
+				noNullKeys.add("recipientCountryName");
+				noNullKeys.add("recipientCountryCode");
+				noNullKeys.add("recProvincesName");
+				noNullKeys.add("recProvincesCode");
+				noNullKeys.add("recCityName");
+				noNullKeys.add("recCityCode");
+				noNullKeys.add("recAreaName");
+				noNullKeys.add("recAreaCode");
+				noNullKeys.add("recipientAddr");
+				Map<String,Object> reDateMap = CheckDatasUtil.checkData(jsonList, noNullKeys);
+				if(!"1".equals(reDateMap.get(BaseCode.STATUS.toString())+"")){
+					return reDateMap;
+				}
 				Map<String, Object> recipientMap = (Map<String, Object>) jsonList.get(i);
 				RecipientContent recipient = new RecipientContent();
+				recipient.setMemberId(memberId);
+				recipient.setMemberName(memberName);
+				recipient.setRecipientName(recipientMap.get("recipientName") + "");
+				recipient.setRecipientCardId(recipientMap.get("recipientCardId") + "");				
+				recipient.setRecipientTel(recipientMap.get("recipientTel") + "");
+				recipient.setRecipientCountryName(recipientMap.get("recipientCountryName") + "");
+				recipient.setRecipientCountryCode(recipientMap.get("recipientCountryCode") + "");
+				recipient.setRecProvincesName(recipientMap.get("recProvincesName") + "");
+				recipient.setRecProvincesCode(recipientMap.get("recProvincesCode") + "");
+				recipient.setRecCityName(recipientMap.get("recCityName") + "");
+				recipient.setRecCityCode(recipientMap.get("recCityCode") + "");
+				recipient.setRecAreaName(recipientMap.get("recAreaName") + "");
+				recipient.setRecAreaCode(recipientMap.get("recAreaCode") + "");
+				recipient.setRecipientAddr(recipientMap.get("recipientAddr") + "");
+				recipient.setNotes(recipientMap.get("notes") + "");
+				recipient.setCreateBy(memberName);
+				recipient.setCreateDate(date);
+				recipient.setDeleteFlag(0);
+				// 将收货信息实体放入缓存中
+				cacheList.add(recipient);
+			}
+			for (int x = 0; x < cacheList.size(); x++) {
+				RecipientContent recipient = (RecipientContent) cacheList.get(x);
 				Calendar cal = Calendar.getInstance();
 				// 获取当前年份
 				int year = cal.get(Calendar.YEAR);
@@ -60,22 +104,9 @@ public class RecipientServiceImpl implements RecipientService {
 					return statusMap;
 				}
 				// 生成用户收获地址ID
-				String recipientId = SerialNoUtils.getSerialNotTimestamp("Member_", year, recipientIdCount);
+				// RCPT=Recipient缩写
+				String recipientId = SerialNoUtils.getSerialNotTimestamp("RCPT_", year, recipientIdCount);
 				recipient.setRecipientId(recipientId);
-				recipient.setMemberId(memberId);
-				recipient.setMemberName(memberName);
-				recipient.setRecipientName(recipientMap.get("recipientName") + "");
-				recipient.setRecipientCardId(recipientMap.get("recipientCardId") + "");
-				recipient.setRecipientTel(recipientMap.get("recipientTel") + "");
-				recipient.setRecipientCountryCode(recipientMap.get("recipientCountryCode") + "");
-				recipient.setRecProvincesCode(recipientMap.get("recProvincesCode") + "");
-				recipient.setRecCityCode(recipientMap.get("recCityCode") + "");
-				recipient.setRecAreaCode(recipientMap.get("recAreaCode") + "");
-				recipient.setRecipientAddr(recipientMap.get("recipientAddr") + "");
-				recipient.setNotes(recipientMap.get("notes") + "");
-				recipient.setCreateBy(memberName);
-				recipient.setCreateDate(date);
-				recipient.setDeleteFlag(0);
 				if (!recipientDao.add(recipient)) {
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.getBaseCode(), "添加地址失败,服务器繁忙!");
@@ -104,7 +135,7 @@ public class RecipientServiceImpl implements RecipientService {
 			statusMap.put(BaseCode.DATAS.getBaseCode(), reLsit);
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			return statusMap;
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;

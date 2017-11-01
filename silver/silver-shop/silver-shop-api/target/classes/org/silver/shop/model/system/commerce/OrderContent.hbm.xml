@@ -9,19 +9,19 @@
             <generator class="identity" />
         </id>
         <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" />
+            <column name="merchantId" not-null="true"/>
         </property>
         <property name="merchantName" type="java.lang.String">
-            <column name="merchantName" />
+            <column name="merchantName" not-null="true"/>
         </property>
         <property name="memberId" type="java.lang.String">
-            <column name="memberId" />
+            <column name="memberId" not-null="true"/>
         </property>
         <property name="memberName" type="java.lang.String">
-            <column name="memberName" />
+            <column name="memberName" not-null="true"/>
         </property>
         <property name="orderId" type="java.lang.String">
-            <column name="orderId" />
+            <column name="orderId" not-null="true"/>
         </property>
         
         <property name="freight" type="double">
@@ -32,7 +32,7 @@
             <column name="orderTotalPrice" />
         </property>
         <property name="status" type="int">
-            <column name="status" />
+            <column name="status" not-null="true"/>
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />
@@ -55,34 +55,42 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-      
-      
-      
        <property name="recipientName" type="java.lang.String">
-            <column name="recipientName" />
+            <column name="recipientName" not-null="true"/>
         </property>
         <property name="recipientCardId" type="java.lang.String">
-            <column name="recipientCardId" />
+            <column name="recipientCardId" not-null="true"/>
         </property>
         <property name="recipientTel" type="java.lang.String">
-            <column name="recipientTel" />
+            <column name="recipientTel" not-null="true"/>
+        </property>
+        <property name="recipientCountryName" type="java.lang.String">
+            <column name="recipientCountryName" not-null="true"/>
+        </property>
+        <property name="recProvincesName" type="java.lang.String">
+            <column name="recProvincesName" not-null="true"/>
+        </property>
+        <property name="recCityName" type="java.lang.String">
+            <column name="recCityName" not-null="true"/>
+        </property>
+        <property name="recAreaName" type="java.lang.String">
+            <column name="recAreaName" not-null="true"/>
         </property>
         <property name="recipientCountryCode" type="java.lang.String">
-            <column name="recipientCountryCode" />
+            <column name="recipientCountryCode" not-null="true"/>
         </property>
         <property name="recProvincesCode" type="java.lang.String">
-            <column name="recProvincesCode" />
+            <column name="recProvincesCode" not-null="true"/>
         </property>
         <property name="recCityCode" type="java.lang.String">
-            <column name="recCityCode" />
+            <column name="recCityCode" not-null="true"/>
         </property>
         <property name="recAreaCode" type="java.lang.String">
-            <column name="recAreaCode" />
+            <column name="recAreaCode" not-null="true"/>
         </property>
         <property name="recipientAddr" type="java.lang.String">
-            <column name="recipientAddr" />
+            <column name="recipientAddr" not-null="true"/>
         </property>
-        
         <property name="ehsStatus" type="int">
             <column name="ehsStatus" />
         </property>

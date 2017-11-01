@@ -1,7 +1,6 @@
 package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,6 @@ import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.MerchantTransaction;
-import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -118,12 +116,12 @@ public class MerchantController {
 			@RequestParam("type") String type, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
-		if (type.equals("1") && account != null && loginPassword != null && merchantIdCardName != null
+		if ("1".equals(type) && account != null && loginPassword != null && merchantIdCardName != null
 				&& merchantIdCard != null) {// 1-银盟商户注册
 			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
 					recordInfoPack, type);
 			return JSONObject.fromObject(statusMap).toString();
-		} else if (type.equals("2") && recordInfoPack != null && account != null && loginPassword != null
+		} else if ("2".equals(type) && recordInfoPack != null && account != null && loginPassword != null
 				&& merchantIdCardName != null && merchantIdCard != null) {// 2-第三方商户注册
 			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
 					recordInfoPack, type);
@@ -144,9 +142,8 @@ public class MerchantController {
 	@RequestMapping(value = "/checkMerchantName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String checkMerchantName(@RequestParam("account") String account,@RequestParam("str")String str) {
-		
 		Map<String, Object> statusMap = new HashMap<>();
-		if (account != null || !"".equals(account)) {// 判断前台传递的值不为空
+		if (account != null && !"".equals(account)) {// 判断前台传递的值不为空
 			List<Object> reList = merchantTransaction.checkMerchantName(account);
 			if (reList.isEmpty()) {// 查询出来的数据为空
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
@@ -173,15 +170,10 @@ public class MerchantController {
 	@RequiresRoles("Merchant")
 	public String getMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		// String[] iPs = { "http://ym.191ec.com:9528",
-		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		// "http://ym.191ec.com:8090" };
-		// if (Arrays.asList(iPs).contains(originHeader)) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		// }
 		Map<String, Object> reMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -229,15 +221,10 @@ public class MerchantController {
 	// @RequiresRoles("Merchant")
 	public String logout(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		// String[] iPs = { "http://ym.191ec.com:9528",
-		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		// "http://ym.191ec.com:8090" };
-		// if (Arrays.asList(iPs).contains(originHeader)) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		// }
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		if (currentUser != null) {

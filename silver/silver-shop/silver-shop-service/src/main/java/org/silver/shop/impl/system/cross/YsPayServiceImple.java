@@ -21,9 +21,9 @@ public class YsPayServiceImple implements YsPayService {
 	private OrderDao orderDao;
 
 	@Override
-	public Map<String, Object> checkOrderInfo(String memberId, String entOrderNo) {
+	public Map<String, Object> checkOrderInfo( String entOrderNo) {
 		Map<String, Object> params = new HashMap<>();
-		params.put("memberId", memberId);
+	
 		params.put("entOrderNo", entOrderNo);
 		List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 0, 0);
 		//统计订单总金额

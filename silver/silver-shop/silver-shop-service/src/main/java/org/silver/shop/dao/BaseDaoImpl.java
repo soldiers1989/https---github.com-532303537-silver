@@ -202,7 +202,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			// 设置查询结果分页
 			query.setFirstResult(0).setMaxResults(1);
 			if (query.uniqueResult() == null) {
-				return (int) 0;
+				return (long) 0;
 			}
 			long count = (long) query.uniqueResult();
 			session.close();

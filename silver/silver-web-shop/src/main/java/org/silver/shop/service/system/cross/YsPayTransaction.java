@@ -13,7 +13,7 @@ public class YsPayTransaction {
 	@Reference
 	private YsPayService ysPayService;
 	
-	public Map<String,Object> checkOrderInfo(String memberId, String entOrderNo){
-		return ysPayService.checkOrderInfo(memberId,entOrderNo);
+	public Map<String,Object> checkOrderInfo( String entOrderNo){
+		return ysPayService.checkOrderInfo(entOrderNo);
 	}
 }
