@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.silver.common.BaseCode;
 import org.silver.shop.service.system.cross.YsPayReceiveTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -47,7 +48,10 @@ public class YsPayReceiveController {
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
 		//}
 		logger.error("--------支付回调验证sign不通过------");
-		
-		return JSONObject.fromObject(statusMap).toString();
+		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
+			logger.error("------推送订单与支付信息错误------");
+			logger.error(statusMap.toString());
+		}
+		return "success";
 	}
 }

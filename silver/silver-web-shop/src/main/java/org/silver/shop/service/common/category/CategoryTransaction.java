@@ -32,17 +32,17 @@ public class CategoryTransaction {
 		Map<String, Object> datasMap = null;
 		// 获取在redis中的所有商品类型
 		String redisList = JedisUtil.get("Shop_Nav_AllGoodsCategory");
-		if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
+		//if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
 			datasMap = categoryService.findGoodsType();
-			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-			if (status.equals("1")) {
+			String  status= datasMap.get(BaseCode.STATUS.toString()) + "";
+			if ("1".equals(status)) {
 				datasList = (List) datasMap.get(BaseCode.DATAS.getBaseCode());
 				// 将已查询出来的商品类型存入redis,有效期为1小时
 				JedisUtil.setListDatas("Shop_Nav_AllGoodsCategory", 3600, datasList);
 			}
-		} else {// redis缓存中已有数据,直接返回数据
-			return JSONArray.fromObject(redisList);
-		}
+		//} else {// redis缓存中已有数据,直接返回数据
+		//	return JSONArray.fromObject(redisList);
+		//}
 		return datasList;
 	} 
 }

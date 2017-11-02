@@ -1,6 +1,5 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +55,6 @@ public class StockController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-
 		Map<String, Object> statusMap = new HashMap<>();
 		if (warehousCode != null && warehousName != null && goodsInfoPack != null) {
 			statusMap = stockTransaction.addGoodsStockCount(warehousCode, warehousName, goodsInfoPack);
@@ -86,17 +84,10 @@ public class StockController {
 			@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		/*
-		 * String[] iPs = { "http://ym.191ec.com:9528",
-		 * "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		 * "http://ym.191ec.com:8090" }; if
-		 * (Arrays.asList(iPs).contains(originHeader)) {
-		 */
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		/* } */
 		Map<String, Object> statusMap = new HashMap<>();
 		if (warehouseCode != null) {
 			statusMap = stockTransaction.searchAlreadyRecordGoodsDetails(warehouseCode, page, size);
@@ -115,17 +106,10 @@ public class StockController {
 	public String addGoodSellCount(@RequestParam("goodsId") String goodsId, @RequestParam("sellCount") int sellCount,
 			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		/*
-		 * String[] iPs = { "http://ym.191ec.com:9528",
-		 * "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		 * "http://ym.191ec.com:8090" }; if
-		 * (Arrays.asList(iPs).contains(originHeader)) {
-		 */
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		/* } */
 		Map<String, Object> statusMap = new HashMap<>();
 		if (goodsId != null) {
 			statusMap = stockTransaction.addGoodsSellCount(goodsId, sellCount);
@@ -155,19 +139,11 @@ public class StockController {
 	public String getGoodsStockInfo(@RequestParam("page") int page, @RequestParam("size") int size,
 			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		/*
-		 * String[] iPs = { "http://ym.191ec.com:9528",
-		 * "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		 * "http://ym.191ec.com:8090" }; if
-		 * (Arrays.asList(iPs).contains(originHeader)) {
-		 */
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		/* } */
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap = stockTransaction.getGoodsStockInfo(page, size);
+		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size);
 		return JSONObject.fromObject(statusMap).toString();
 
 	}

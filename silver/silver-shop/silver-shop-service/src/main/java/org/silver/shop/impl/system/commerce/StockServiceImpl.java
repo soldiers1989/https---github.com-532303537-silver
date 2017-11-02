@@ -13,7 +13,6 @@ import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.dao.system.commerce.StockDao;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
-import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -46,6 +45,7 @@ public class StockServiceImpl implements StockService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reTable));
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), reTable.getRows().size() + 1);
 		}
 		return statusMap;
 	}
@@ -100,7 +100,7 @@ public class StockServiceImpl implements StockService {
 					stock.setMerchantName(merchantName);
 					stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
 					stock.setGoodsName(datasMap.get("goodsName") + "");
-					//商品库存里ID为备案商品的ID
+					// 商品库存里ID为备案商品的ID
 					stock.setGoodsId(datasMap.get("goodsDetailId") + "");
 					// 库存商品价格暂时设置为备案时单价
 					stock.setRegPrice(goodsRecord.getRegPrice());
@@ -178,16 +178,13 @@ public class StockServiceImpl implements StockService {
 		params.put("merchantId", merchantId);
 		params.put("merchantName", merchantName);
 		List<Object> reList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (reList.size() > 0) {
+		long totalCount = stockDao.findByPropertyCount(StockContent.class, params);
+		if (reList != null && reList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 			return statusMap;
-
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());

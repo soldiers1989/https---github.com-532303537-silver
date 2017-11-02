@@ -3,6 +3,9 @@ package org.silver.shop.controller.system.tenant;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -33,7 +36,12 @@ public class RecipientController {
 	@ApiOperation("用户添加收货地址信息")
 	@RequiresRoles("Member")
 	@ResponseBody
-	public String addRecipientInfo(@RequestParam("recipientInfo") String recipientInfo) {
+	public String addRecipientInfo(@RequestParam("recipientInfo") String recipientInfo,HttpServletRequest req,HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> stautsMap = new HashMap<>();
 		if (recipientInfo != null) {
 			stautsMap = recipientTransaction.addRecipientInfo(recipientInfo);
@@ -48,7 +56,12 @@ public class RecipientController {
 	@ApiOperation("用户查询收货地址信息")
 	@RequiresRoles("Member")
 	@ResponseBody
-	public String getMemberRecipientInfo() {
+	public String getMemberRecipientInfo(HttpServletRequest req,HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> stautsMap = recipientTransaction.getMemberRecipientInfo();
 		return JSONObject.fromObject(stautsMap).toString();
 	}

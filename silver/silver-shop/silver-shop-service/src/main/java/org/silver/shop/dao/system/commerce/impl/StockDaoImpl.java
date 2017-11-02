@@ -1,13 +1,10 @@
 package org.silver.shop.dao.system.commerce.impl;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.StockDao;
 import org.springframework.stereotype.Repository;
@@ -28,8 +25,6 @@ public class StockDaoImpl extends BaseDaoImpl<Object> implements StockDao {
 			sqlParams.add(warehouseCode);
 			sqlParams.add(merchantId);
 			session = getSession();
-			//ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			//Connection conn = cp.getConnection();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
@@ -38,7 +33,6 @@ public class StockDaoImpl extends BaseDaoImpl<Object> implements StockDao {
 				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, null, null);
 			}
 			session.close();
-			// Transform.tableToJson(l);
 			return l;
 		} catch (Exception  re) {
 			re.printStackTrace();

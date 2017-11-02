@@ -1,29 +1,17 @@
 package org.silver.shop.dao.common.category;
 
 
-import java.util.List;
 
 import org.silver.shop.dao.BaseDao;
+
+import com.justep.baas.data.Table;
 
 public interface CategoryDao<T> extends BaseDao<T>{
 	
 	/**
-	 * 查询商品所有第一类型
+	 * 查询商品所有类型
 	 * @return list
 	 */
-	public List<Object> findAllfirstType();
-	
-	/**
-	 * 查询商品所有第二类型
-	 * @return list
-	 */
-	public List<Object> findAllSecondType();
-	
-	/**
-	 *  查询商品所有第三类型
-	 * @return list
-	 */
-	public List<Object> findAllThirdType();
-	
+	public Table findAllCategory();
 	
 }

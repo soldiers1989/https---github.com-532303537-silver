@@ -11,6 +11,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.util.SerialNoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,43 +52,44 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String,Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date) {
-		Map<String,Object> statusMap  =new HashMap<>();
+	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params,
+			List<Object> imgList, int goodsYear, Date date) {
+		Map<String, Object> statusMap = new HashMap<>();
 		String goodsImage = "";
 		// 拼接多张图片字符串
 		for (int i = 0; i < imgList.size(); i++) {
 			String imgStr = imgList.get(i) + "";
 			if (imgStr != null && !"".equals(imgStr.trim())) {
 				goodsImage = goodsImage + imgStr + ";";
-			} 
+			}
 		}
 		GoodsContent goodsInfo = new GoodsContent();
-		goodsInfo.setGoodsId(params.get("goodsId")+"");
-		goodsInfo.setGoodsName(params.get("goodsName")+"");
+		goodsInfo.setGoodsId(params.get("goodsId") + "");
+		goodsInfo.setGoodsName(params.get("goodsName") + "");
 		goodsInfo.setGoodsMerchantName(merchantName);
 		goodsInfo.setGoodsImage(goodsImage);
-		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId")+"");
-		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName")+"");
-		
-		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId")+"");
-		goodsInfo.setGoodsSecondTypeName(params.get("goodsSecondTypeName")+"");
-		
-		goodsInfo.setGoodsThirdTypeId(params.get("goodsThirdTypeId")+"");
-		goodsInfo.setGoodsThirdTypeName(params.get("goodsThirdTypeName")+"");
-		
-		goodsInfo.setGoodsDetail(params.get("goodsDetail")+"");
-		goodsInfo.setGoodsBrand(params.get("goodsBrand")+"");
-		goodsInfo.setGoodsStyle(params.get("goodsStyle")+"");
-		goodsInfo.setGoodsUnit(params.get("goodsUnit")+"");
-		goodsInfo.setGoodsRegPrice(Double.valueOf((params.get("goodsRegPrice")+"")));
-		goodsInfo.setGoodsOriginCountry(params.get("goodsOriginCountry")+"");
-		goodsInfo.setGoodsBarCode(params.get("goodsBarCode")+"");
+		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId") + "");
+		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName") + "");
+
+		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId") + "");
+		goodsInfo.setGoodsSecondTypeName(params.get("goodsSecondTypeName") + "");
+
+		goodsInfo.setGoodsThirdTypeId(params.get("goodsThirdTypeId") + "");
+		goodsInfo.setGoodsThirdTypeName(params.get("goodsThirdTypeName") + "");
+
+		goodsInfo.setGoodsDetail(params.get("goodsDetail") + "");
+		goodsInfo.setGoodsBrand(params.get("goodsBrand") + "");
+		goodsInfo.setGoodsStyle(params.get("goodsStyle") + "");
+		goodsInfo.setGoodsUnit(params.get("goodsUnit") + "");
+		goodsInfo.setGoodsRegPrice(Double.valueOf((params.get("goodsRegPrice") + "")));
+		goodsInfo.setGoodsOriginCountry(params.get("goodsOriginCountry") + "");
+		goodsInfo.setGoodsBarCode(params.get("goodsBarCode") + "");
 		goodsInfo.setGoodsYear(String.valueOf(goodsYear));
 		goodsInfo.setCreateDate(date);
 		goodsInfo.setCreateBy(merchantName);
 		goodsInfo.setDeleteFlag(0);
 		goodsInfo.setGoodsMerchantId(merchantId);
-		if(!goodsContentDao.add(goodsInfo)){
+		if (!goodsContentDao.add(goodsInfo)) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品基本信息错误!服务器繁忙！");
 			return statusMap;
@@ -118,7 +120,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), total);
 			return statusMap;
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
@@ -191,9 +193,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
+	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType,secndType,thirdType, page, size);
+		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType, secndType, thirdType, page, size);
 		if (t == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
@@ -209,21 +211,24 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	@Override
 	public Map<String, Object> goodsContentService(String goodsId) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("goodsId", goodsId);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
-		if(reList!=null&&reList.size()>0){
+		List<Object> reStockList = goodsContentDao.findByProperty(StockContent.class, params, 1, 1);
+		if (reList != null && reList.size() > 0 && reStockList!=null && reStockList.size()>0) {
 			GoodsContent goods = (GoodsContent) reList.get(0);
+			StockContent stockInfo = (StockContent) reStockList.get(0);
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), goods);
+			statusMap.put("stockCount", stockInfo.getTotalStock());
 			return statusMap;
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
-		
+
 	}
 
 }

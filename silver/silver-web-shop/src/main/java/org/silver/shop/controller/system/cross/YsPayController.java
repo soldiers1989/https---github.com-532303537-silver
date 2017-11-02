@@ -52,7 +52,7 @@ public class YsPayController {
 		req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
 		// request.setAttribute("sign", userName);
 		// 生成商户订单 out_trade_no total_amount
-		req.setAttribute("notify_url", "http://ym.191ec.com/silver-web-pay/pro/yspay-receive");
+		req.setAttribute("notify_url", "http://ym.191ec.com/silver-web-shop/yspay-receive/ysPayReceive");
 		req.setAttribute("return_url", "http://ym.191ec.com");
 		req.setAttribute("version", DirectPayConfig.VERSION);
 		req.setAttribute("out_trade_no", entOrderNo);// 商品交易订单号

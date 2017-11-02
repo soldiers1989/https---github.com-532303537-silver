@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ibatis.annotations.Case;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
@@ -47,19 +46,32 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
-			logger.error("用户提交订单传递参数格式错误!",e);
+			logger.error("用户提交订单传递参数格式错误!", e);
 			e.printStackTrace();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
 			return statusMap;
 		}
+		// 校验前台传递的收货人ID查询信息
+		Map<String, Object> reRecMap = checkRecipient(recipientId);
+		if (!"1".equals(reRecMap.get(BaseCode.STATUS.toString()) + "")) {
+			return reRecMap;
+		}
+		RecipientContent recInfo = (RecipientContent) reRecMap.get(BaseCode.DATAS.toString());
+		int gacOrderTypeId = 2;
+		// 生成对应海关订单ID
+		Map<String, Object> entOrderNoMap = createOrderId(gacOrderTypeId);
+		if (!"1".equals(entOrderNoMap.get(BaseCode.STATUS.toString()))) {
+			return entOrderNoMap;
+		}
+		String entOrderNo = entOrderNoMap.get(BaseCode.DATAS.toString()) + "";
 		// 创建订单
-		Map<String, Object> reMap = createOrder(jsonList, memberName, memberId, recipientId);
+		Map<String, Object> reMap = createOrder(jsonList, memberName, memberId, recInfo, entOrderNo);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
 		Map<String, Object> reOrderMap = (Map<String, Object>) reMap.get("orderIdMap");
-		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice")+"");
+		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice") + "");
 		// 更新订单状态与删除购物车商品信息
 		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reOrderMap);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
@@ -99,28 +111,15 @@ public class OrderServiceImpl implements OrderService {
 
 	// 生成订单
 	private final Map<String, Object> createOrder(List<Object> jsonList, String memberName, String memberId,
-			String recipientId) {
+			RecipientContent recInfo, String entOrderNo) {
 		Double goodsTotalPrice = 0.0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> warehouseMap = new HashMap<>();
-		int gacOrderId = 2;
-		// 生成对应海关订单ID
-		Map<String, Object> entOrderNoMap = createOrderId(gacOrderId);
-		if (!"1".equals(entOrderNoMap.get(BaseCode.STATUS.toString()))) {
-			return entOrderNoMap;
-		}
-		String entOrderNo = entOrderNoMap.get(BaseCode.DATAS.toString()) + "";
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
 			String goodsId = paramsMap.get("goodsId") + "";
 			int count = Integer.parseInt(paramsMap.get("count") + "");
-			// 根据收货人地址信息ID查询信息
-			Map<String, Object> reRecMap = checkRecipient(recipientId);
-			if (!"1".equals(reRecMap.get(BaseCode.STATUS.toString()) + "")) {
-				return reRecMap;
-			}
-			RecipientContent recInfo = (RecipientContent) reRecMap.get(BaseCode.DATAS.toString());
 			params.put("goodsId", goodsId);
 			// 根据商品ID查询存库中商品信息
 			List<Object> stockList = orderDao.findByProperty(StockContent.class, params, 1, 1);
@@ -147,10 +146,9 @@ public class OrderServiceImpl implements OrderService {
 					return statusMap;
 				}
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
-				//根据前台传递的商品数量获取单价,得出商品总价
+				// 根据前台传递的商品数量获取单价,得出商品总价
 				goodsTotalPrice += count * goodsInfo.getGoodsRegPrice();
-				if (warehouseMap.get(stock.getWarehousCode()) != null
-						&& !"".equals(warehouseMap.get(stock.getWarehousCode()))) {
+				if (warehouseMap.get(stock.getWarehousCode()) != null && !"".equals(warehouseMap.get(stock.getWarehousCode()))) {
 					String orderId = warehouseMap.get(stock.getWarehousCode()) + "";
 					Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, orderId, count,
 							goodsInfo, stock, entOrderNo);
@@ -440,7 +438,6 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	// 检查收货人信息
-
 	private Map<String, Object> checkRecipient(String recipientId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> param = new HashMap<>();
