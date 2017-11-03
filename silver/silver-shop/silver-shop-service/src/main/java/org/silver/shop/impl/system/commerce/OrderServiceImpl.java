@@ -14,7 +14,12 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.dao.system.commerce.OrderDao;
+import org.silver.shop.model.common.category.GoodsFirstType;
+import org.silver.shop.model.common.category.GoodsThirdType;
+import org.silver.shop.model.common.category.HsCode;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecord;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
@@ -65,8 +70,8 @@ public class OrderServiceImpl implements OrderService {
 			return entOrderNoMap;
 		}
 		String entOrderNo = entOrderNoMap.get(BaseCode.DATAS.toString()) + "";
-		// 创建订单
-		Map<String, Object> reMap = createOrder(jsonList, memberName, memberId, recInfo, entOrderNo);
+		// 校验订单商品信息
+		Map<String, Object> reMap = checkOrderGoodsInfo(jsonList, memberName, memberId, recInfo, entOrderNo);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
@@ -77,6 +82,7 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
 			return reStatusMap;
 		}
+		// 返回海关订单编号
 		reStatusMap.put("entOrderNo", reMap.get("entOrderNo"));
 		return reStatusMap;
 	}
@@ -109,26 +115,36 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
-	// 生成订单
-	private final Map<String, Object> createOrder(List<Object> jsonList, String memberName, String memberId,
+	// 校验前台传递订单商品信息
+	private final Map<String, Object> checkOrderGoodsInfo(List<Object> jsonList, String memberName, String memberId,
 			RecipientContent recInfo, String entOrderNo) {
-		Double goodsTotalPrice = 0.0;
+		double goodsTotalPrice = 0.0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> warehouseMap = new HashMap<>();
+		int orderId = 1;
+		// 生成订单ID
+		Map<String, Object> newOrderIdMap = createOrderId(orderId);
+		if (!"1".equals(newOrderIdMap.get(BaseCode.STATUS.toString()))) {
+			return newOrderIdMap;
+		}
+		String newOrderId = newOrderIdMap.get(BaseCode.DATAS.toString()) + "";
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
 			String goodsId = paramsMap.get("goodsId") + "";
 			int count = Integer.parseInt(paramsMap.get("count") + "");
+			String entGoodsNo = paramsMap.get("entGoodsNo") + "";
+			params.clear();
 			params.put("goodsId", goodsId);
 			// 根据商品ID查询存库中商品信息
 			List<Object> stockList = orderDao.findByProperty(StockContent.class, params, 1, 1);
 			if (stockList != null && stockList.size() > 0) {
 				StockContent stock = (StockContent) stockList.get(0);
-				if (warehouseMap != null && warehouseMap.get(stock.getWarehousCode()) == null) {
-					// 将仓库编号放入缓存中
-					warehouseMap.put(stock.getWarehousCode(), "");
-				}
+				/*
+				 * if (warehouseMap != null &&
+				 * warehouseMap.get(stock.getWarehousCode()) == null) { //
+				 * 将仓库编号放入缓存中 warehouseMap.put(stock.getWarehousCode(), ""); }
+				 */
 				// 商品上架数量
 				int sellCount = stock.getSellCount();
 				if (count > sellCount) {
@@ -146,40 +162,39 @@ public class OrderServiceImpl implements OrderService {
 					return statusMap;
 				}
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
-				// 根据前台传递的商品数量获取单价,得出商品总价
-				goodsTotalPrice += count * goodsInfo.getGoodsRegPrice();
-				if (warehouseMap.get(stock.getWarehousCode()) != null && !"".equals(warehouseMap.get(stock.getWarehousCode()))) {
-					String orderId = warehouseMap.get(stock.getWarehousCode()) + "";
-					Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, orderId, count,
-							goodsInfo, stock, entOrderNo);
-					if (!reGoodsMap.get(BaseCode.STATUS.toString()).equals("1")) {
-						return reGoodsMap;
-					}
-				} else {// 订单商户(仓库)不同时,创建新的订单基本信息
-					int orderId = 1;
-					// 生成订单ID
-					Map<String, Object> newOrderIdMap = createOrderId(orderId);
-					if (!"1".equals(newOrderIdMap.get(BaseCode.STATUS.toString()))) {
-						return newOrderIdMap;
-					}
-					String newOrderId = newOrderIdMap.get(BaseCode.DATAS.toString()) + "";
-					warehouseMap.put(stock.getWarehousCode(), newOrderId);
-					Map<String, Object> reMap = createOrderBaseInfo(memberId, memberName, newOrderId, count, stock,
-							entOrderNo, recInfo);
-					if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-						return reMap;
-					}
-					Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count,
-							goodsInfo, stock, entOrderNo);
-					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
-						return reGoodsMap;
-					}
+				//获取库存中商品上架的单价
+				double regPrice = stock.getRegPrice();
+				// 计算税费
+				Map<String, Object> reRepiceMap = calculationTaxesFees(goodsId, count, entGoodsNo,regPrice);
+				if(!"1".equals(reRepiceMap.get(BaseCode.STATUS.toString())+"")){
+					return reRepiceMap;
 				}
-			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "商品不存在,请核对信息！");
-				return statusMap;
+				 goodsTotalPrice = Double.parseDouble(reRepiceMap.get(BaseCode.DATAS.toString())+"");
+				/*
+				 * if (warehouseMap.get(stock.getWarehousCode()) != null &&
+				 * !"".equals(warehouseMap.get(stock.getWarehousCode()))) {
+				 * String orderId = warehouseMap.get(stock.getWarehousCode()) +
+				 * ""; Map<String, Object> reGoodsMap =
+				 * createOrderGoodsInfo(memberId, memberName, orderId, count,
+				 * goodsInfo, stock, entOrderNo); if
+				 * (!reGoodsMap.get(BaseCode.STATUS.toString()).equals("1")) {
+				 * return reGoodsMap; } // 订单商户(仓库)不同时,创建新的订单基本信息 } else {
+				 * warehouseMap.put(stock.getWarehousCode(), newOrderId);
+				 */
+				// 开始创建订单
+				Map<String, Object> reOrderMap = createOrder(newOrderId, memberId, memberName, count, goodsInfo, stock,
+						entOrderNo, goodsTotalPrice, recInfo);
+				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
+					return reOrderMap;
+				}
+				
 			}
+			/*
+			 * } else { statusMap.put(BaseCode.STATUS.toString(),
+			 * StatusCode.NO_DATAS.getStatus());
+			 * statusMap.put(BaseCode.MSG.toString(), "商品不存在,请核对信息！"); return
+			 * statusMap; }
+			 */
 		}
 		statusMap.put("entOrderNo", entOrderNo);
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -189,8 +204,8 @@ public class OrderServiceImpl implements OrderService {
 		return statusMap;
 	}
 
-	// 创建订单基本信息
-	private final Map<String, Object> createOrderBaseInfo(String memberId, String memberName, String orderId, int count,
+	// 创建订单头信息
+	private final Map<String, Object> createOrderHeadInfo(String memberId, String memberName, String orderId, int count,
 			StockContent stock, String entOrderNo, RecipientContent recInfo) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -233,7 +248,7 @@ public class OrderServiceImpl implements OrderService {
 
 	// 创建订单商品信息
 	private final Map<String, Object> createOrderGoodsInfo(String memberId, String memberName, String orderId,
-			int count, GoodsContent goodsInfo, StockContent stock, String entOrderNo) {
+			int count, GoodsContent goodsInfo, StockContent stock, String entOrderNo, double goodsTotalPrice) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
@@ -248,8 +263,7 @@ public class OrderServiceImpl implements OrderService {
 		// 查询订单头,更新订单商品总价格
 		if (reList != null && reList.size() > 0) {
 			OrderContent orderInfo = (OrderContent) reList.get(0);
-			double reTotalPirce = orderInfo.getOrderTotalPrice();
-			orderInfo.setOrderTotalPrice(reTotalPirce + (count * stock.getRegPrice()));
+			orderInfo.setOrderTotalPrice(goodsTotalPrice);
 			if (!orderDao.update(orderInfo)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), stock.getGoodsName() + "更新订单头商品总价格失败,请重试！");
@@ -309,7 +323,7 @@ public class OrderServiceImpl implements OrderService {
 			return updateOrderInfo2(memberId, jsonList, reOrderMap);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web/yspay/dopay");
+			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web-shop/yspay/dopay");
 			return statusMap;
 		}
 
@@ -491,6 +505,141 @@ public class OrderServiceImpl implements OrderService {
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
+
+	// 创建订单及订单关联的商品信息
+	private Map<String, Object> createOrder(String newOrderId, String memberId, String memberName, int count,
+			GoodsContent goodsInfo, StockContent stock, String entOrderNo, double goodsTotalPrice,
+			RecipientContent recInfo) {
+		Map<String, Object> params = new HashMap<>();
+		params.clear();
+		params.put("orderId", newOrderId);
+		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
+		if (reOrderList != null && reOrderList.size() > 0) {
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsInfo,
+					stock, entOrderNo, goodsTotalPrice);
+			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
+				return reGoodsMap;
+			}
+			return reGoodsMap;
+		} else {
+			Map<String, Object> reMap = createOrderHeadInfo(memberId, memberName, newOrderId, count, stock, entOrderNo,
+					recInfo);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsInfo,
+					stock, entOrderNo, goodsTotalPrice);
+			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
+				return reGoodsMap;
+			}
+			return reMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Object> cacheList = new ArrayList<>();
+		Map<String, Object> param = new HashMap<>();
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(orderGoodsInfoPack);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (jsonList != null && jsonList.size() > 0) {
+			for (int i = 0; i < jsonList.size(); i++) {
+				Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
+				String entGoodsNo = paramsMap.get("entGoodsNo") + "";
+				param.clear();
+				param.put("entGoodsNo", entGoodsNo);
+				List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);
+				if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
+					GoodsRecordDetail goodsInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
+					param.clear();
+					param.put("goodsSerialNo", goodsInfo.getGoodsSerialNo());
+					List<Object> reGoodsRecordInfo = orderDao.findByProperty(GoodsRecord.class, param, 1, 1);
+					GoodsRecord goodsRecord = (GoodsRecord) reGoodsRecordInfo.get(0);
+					if (cacheList != null && cacheList.size() == 0) {
+						cacheList.add(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode());
+					} else if (!cacheList.contains(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode())) {
+						statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+						statusMap.put(BaseCode.MSG.toString(), "不同海关不能一并下单,请分开下单！");
+						return statusMap;
+					}
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
+		}
+	}
+
+	private Map<String, Object> calculationTaxesFees(String goodsId, int count, String entGoodsNo, double regPrice) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("entGoodsNo", entGoodsNo);
+		List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, paramsMap, 1, 1);
+		paramsMap.clear();
+		if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
+			GoodsRecordDetail goodsRecord = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
+			String reHsCode = goodsRecord.getHsCode();
+			paramsMap.put("hsCode", reHsCode);
+			List<Object> reHsCodeList = orderDao.findByProperty(HsCode.class, paramsMap, 1, 1);
+			paramsMap.clear();
+			if (reHsCodeList != null && reHsCodeList.size() > 0) {
+				HsCode hsCodeInfo = (HsCode) reHsCodeList.get(0);
+				if (hsCodeInfo.getVat() > 0 && hsCodeInfo.getConsolidatedTax() > 0) {
+
+				} else {
+					return findTaxesFees(goodsId,count,regPrice);
+				}
+			} else {
+				return findTaxesFees(goodsId,count,regPrice);
+			}
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "查询商品备案详情失败,服务器繁忙！");
+			return statusMap;
+		}
+		return null;
+	}
+	
+	private Map<String,Object> findTaxesFees(String goodsId, int count, double regPrice){
+		double total = 0;
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("goodsId", goodsId);
+		List<Object> reGoodsContent = orderDao.findByProperty(GoodsContent.class, paramsMap, 1, 1);
+		paramsMap.clear();
+		if (reGoodsContent != null && reGoodsContent.size() > 0) {
+			GoodsContent goodsInfo = (GoodsContent) reGoodsContent.get(0);
+			long thirdId = Long.parseLong(goodsInfo.getGoodsThirdTypeId());
+			paramsMap.put("id", thirdId);
+			List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
+			if (reGoodsThirdList != null && reGoodsThirdList.size() > 0) {
+				GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
+				// 税费 = 购买单价 × 件数 × 跨境电商综合税率
+				double consolidatedTax = thirdInfo.getConsolidatedTax();
+				// Double d= 0.03*5*(119/100d)
+				total += regPrice * count * (consolidatedTax / 100d);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.DATAS.toString(), total);
+				return statusMap;
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
 		return statusMap;
 	}
 }

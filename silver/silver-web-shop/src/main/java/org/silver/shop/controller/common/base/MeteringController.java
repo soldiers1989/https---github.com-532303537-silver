@@ -37,7 +37,7 @@ public class MeteringController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String,Object> statusMap = new HashMap<>();
-		List datasList= meteringTransaction.findMetering();
+		List<Object> datasList= meteringTransaction.findMetering();
 		if (datasList != null && datasList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(),StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), datasList);

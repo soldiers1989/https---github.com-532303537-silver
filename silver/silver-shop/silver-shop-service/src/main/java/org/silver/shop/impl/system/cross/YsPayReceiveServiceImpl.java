@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.cross;
 
+
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,6 +16,7 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
+import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
@@ -23,7 +25,9 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
+import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.logging.log4j.LogManager;
@@ -465,10 +469,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		paymentMap.put("notifyurl", YmMallConfig.PAYMENTNOTIFYURL);
 		paymentMap.put("note", "");
 		// 商城支付单备案流水号
-		// String resultStr =
-		// YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report",
-		// paymentMap);
-		String resultStr = YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", paymentMap);
+		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		} else {
@@ -573,8 +574,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		}
 		// 0:商品备案 1:订单推送 2:支付单推送
 		orderMap.put("type", 1);
-		orderMap.put("eport", goodsRecordInfo.getCustomsPort());
-		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+
 		// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
 		String businessType = "";
 		if (goodsRecordInfo.getCustomsPort() == 1) {
@@ -590,23 +590,65 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 商品发起备案(录入)日期
 		String inputDate = sdf.format(date);
 		orderMap.put("inputDate", inputDate);
+
+		Map<String, Object> paramsMap = new HashMap<>();
+
+		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+		orderMap.put("eport", goodsRecordInfo.getCustomsPort());
 		// 电商企业编号
 		orderMap.put("ebEntNo", goodsRecordInfo.getEbEntNo());
 		// 电商企业名称
 		orderMap.put("ebEntName", goodsRecordInfo.getEbEntName());
-		orderMap.put("appkey", YmMallConfig.APPKEY);
+		// 国检代码
 		orderMap.put("ciqOrgCode", goodsRecordInfo.getCiqOrgCode());
+		// 海关代码
 		orderMap.put("customsCode", goodsRecordInfo.getCustomsCode());
+		orderMap.put("appkey", YmMallConfig.APPKEY);
 		orderMap.put("clientsign", clientsign);
 		orderMap.put("timestamp", timestamp);
 		orderMap.put("datas", orderJsonList.toString());
 		orderMap.put("notifyurl", YmMallConfig.ORDERNOTIFYURL);
 		orderMap.put("note", "");
-		String resultStr = YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", orderMap);
-		// 商城商品备案流水号
-		// String resultStr =
-		// YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report",
-		// orderMap);
+		// 发起订单备案
+		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+
+		if (goodsRecordInfo.getCustomsPort() == 2) {
+			paramsMap.put("customsPort", 1);
+			List<Object> reCustomsPortList = ysPayReceiveDao.findByProperty(CustomsPort.class, paramsMap, 1, 1);
+			if (reCustomsPortList != null && reCustomsPortList.size() > 0) {
+				CustomsPort portInfo = (CustomsPort) reCustomsPortList.get(0);
+				String merchantId = goodsRecordInfo.getMerchantId();
+				paramsMap.clear();
+				paramsMap.put("customsPort", 1);
+				paramsMap.put("merchantId", merchantId);
+				List<Object> reMerchantList = ysPayReceiveDao.findByProperty(MerchantRecordInfo.class, paramsMap, 0, 0);
+				MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
+				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+				orderMap.put("eport", 1);
+				// 电商企业编号
+				orderMap.put("ebEntNo", merchantRecordInfo.getEbEntNo());
+				// 电商企业名称
+				orderMap.put("ebEntName", merchantRecordInfo.getEbEntName());
+				// 国检代码
+				orderMap.put("ciqOrgCode", portInfo.getCiqOrgCode());
+				// 海关代码
+				orderMap.put("customsCode", portInfo.getCustomsCode());
+				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+				if(StringEmptyUtils.isNotEmpty(resultStr2)){
+					JSONObject.fromObject(resultStr);
+				}else{
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");
+					return statusMap;
+				}
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "第二次发起订单查询信息时失败,服务器繁忙！");
+				return statusMap;
+			}
+		}
+		
+		
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		} else {
@@ -616,7 +658,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		}
 	}
 
-	//更新支付单返回信息
+	// 更新支付单返回信息
 	private Map<String, Object> updatePaymentInfo(PaymentContent paymentInfo, String rePayMessageID) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("entPayNo", paymentInfo.getEntPayNo());
@@ -643,7 +685,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	}
 
-	//更新订单返回信息
+	// 更新订单返回信息
 	private Map<String, Object> updateOrderInfo(OrderRecordContent orderRecordInfo, String reOrderMessageID) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("entOrderNo", orderRecordInfo.getEntOrderNo());

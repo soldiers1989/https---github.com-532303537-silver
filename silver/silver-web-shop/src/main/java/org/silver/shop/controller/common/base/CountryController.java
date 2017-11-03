@@ -36,14 +36,14 @@ public class CountryController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
-		List datasList = countryTransaction.findAllCountry();
+		List<Object> datasList = countryTransaction.findAllCountry();
 		if (datasList != null && datasList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(),StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), datasList);
 			statusMap.put(BaseCode.MSG.getBaseCode(),StatusCode.SUCCESS.getMsg());
 		}else{
-			statusMap.put(BaseCode.STATUS.getBaseCode(),StatusCode.UNKNOWN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(),StatusCode.UNKNOWN.getMsg());
+			statusMap.put(BaseCode.STATUS.getBaseCode(),StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(),StatusCode.WARN.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}

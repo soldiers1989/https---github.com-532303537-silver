@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
+
+import net.sf.json.JSONArray;
 
 @Service(interfaceClass = CategoryService.class)
 public class CategoryServiceImpl implements CategoryService {
@@ -23,9 +26,8 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public Map<String, Object> findGoodsType() {
-		List<Object> totalList = new ArrayList<>();
 		Map<String, Object> datasMap = new HashMap<>();
-		Map<String, Map<String, List<Map<String, Object>>>> firstMap = null;
+		Map<String, Map<String, List<Map<String, Object>>>> firstMap = new HashMap<>();
 		Map<String, List<Map<String, Object>>> secondMap = null;
 		Map<String, Object> thirdMap = null;
 		Table t = categoryDao.findAllCategory();
@@ -45,7 +47,6 @@ public class CategoryServiceImpl implements CategoryService {
 				String consumptionTax = lr.get(i).getValue("consumptionTax") + "";
 				// 综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 				String consolidatedTax = lr.get(i).getValue("consolidatedTax") + "";
-
 				if (firstMap != null && firstMap.get(firstId + "_" + firstName) != null) {
 					if (secondMap != null && secondMap.get(secId + "_" + secName) != null) {
 						thirdMap = new HashMap<>();
@@ -69,7 +70,6 @@ public class CategoryServiceImpl implements CategoryService {
 						firstMap.get(firstId + "_" + firstName).put(secId + "_" + secName, thirdList);
 					}
 				} else {
-					firstMap = new HashMap<>();
 					secondMap = new HashMap<>();
 					thirdMap = new HashMap<>();
 					thirdMap.put("thirdId", thirdId);
@@ -80,15 +80,16 @@ public class CategoryServiceImpl implements CategoryService {
 					List<Map<String,Object>> thirdList = new ArrayList<>();
 					thirdList.add(thirdMap);
 					secondMap.put(secId + "_" + secName, thirdList);
-					
 					firstMap.put(firstId + "_" + firstName, secondMap);
-					totalList.add(firstMap);
 				}
 			}
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			datasMap.put(BaseCode.DATAS.toString(),firstMap);
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		}else{
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
-		datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		datasMap.put(BaseCode.DATAS.toString(),totalList);
-		datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return datasMap;
 	}
 }

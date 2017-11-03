@@ -38,12 +38,8 @@ public class CategoryController {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		Map<String, Object> statusMap = new HashMap<>();
-		List<Object> datasList = categoryTransaction.findAllCategory();
-		if (datasList != null && datasList.size() > 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), datasList);
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+		Map<String, Object>  statusMap = categoryTransaction.findAllCategory();
+		if (statusMap != null && statusMap.size() > 0) {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());

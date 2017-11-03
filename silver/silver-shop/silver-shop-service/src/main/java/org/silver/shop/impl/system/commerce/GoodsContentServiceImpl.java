@@ -218,6 +218,8 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		if (reList != null && reList.size() > 0 && reStockList!=null && reStockList.size()>0) {
 			GoodsContent goods = (GoodsContent) reList.get(0);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
+			//将商品的单价替换为库存时设置的售卖价格
+			goods.setGoodsRegPrice(stockInfo.getRegPrice());
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), goods);

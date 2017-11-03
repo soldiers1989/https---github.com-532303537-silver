@@ -30,4 +30,11 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getMerchantOrderInfo(String merchantId, String merchantName,int page,int size);
 
+	/**
+	 * 检查订单商品是否都属于一个海关口岸
+	 * @param orderGoodsInfoPack
+	 * @return
+	 */
+	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack);
+
 }

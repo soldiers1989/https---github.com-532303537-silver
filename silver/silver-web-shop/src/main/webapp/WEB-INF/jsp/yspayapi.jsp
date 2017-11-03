@@ -52,7 +52,7 @@
 			//商品的标题/交易标题/订单标题/订单关键字等
 			String subject = (String)request.getAttribute("subject");
 			//该笔订单的资金总额
-			String total_amount = (String)request.getAttribute("total_amount");
+			String total_amount = request.getAttribute("total_amount")+"";
 			//收款方银盛支付用户号
 			String seller_id = (String)request.getAttribute("seller_id");
 			//收款方银盛支付客户名

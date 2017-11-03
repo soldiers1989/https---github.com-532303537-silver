@@ -8,20 +8,13 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
-import org.silver.common.LoginType;
-import org.silver.shop.api.system.commerce.OrderService;
-import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.cross.YsPayTransaction;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.alibaba.dubbo.config.annotation.Reference;
 
 import net.sf.json.JSONObject;
 
@@ -37,12 +30,19 @@ public class YsPayController {
 	public String doPay(HttpServletRequest req, HttpServletResponse resp) {
 		String entOrderNo = req.getParameter("entOrderNo");
 		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(entOrderNo);
-		String orderTotalPrice = null;
+		float  orderTotalPrice = 0;
 		// 当订单ID查询信息无误
-		if ("1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			orderTotalPrice = reMap.get("orderTotalPrice") + "";
-		}else{
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return "error";
+		} else {
+			String totalPrice = reMap.get("orderTotalPrice") + "";
+			orderTotalPrice = Float.parseFloat(totalPrice + "");
+			int a = (int) (orderTotalPrice * 1000);
+			if (a % 10 > 0) {
+				orderTotalPrice = (a - a % 10 + 10 * 1.0f) / 1000.0f;
+			} else {
+				orderTotalPrice= a * 1.0f / 1000.0f;
+			}
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		req.setAttribute("method", "ysepay.online.directpay.createbyuser");

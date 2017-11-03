@@ -18,7 +18,7 @@ public class OrderTransaction {
 	@Reference
 	private OrderService orderService;
 	
-	//创建但订单
+	//创建订单
 	public Map<String,Object> createOrderInfo(String goodsInfoPack,int type,String recipientId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -42,5 +42,10 @@ public class OrderTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		
 		return orderService.getMerchantOrderInfo(merchantId,merchantName,page,size);
+	}
+
+	//检查订单商品是否都属于一个海关口岸
+	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
+		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack);
 	}
 }

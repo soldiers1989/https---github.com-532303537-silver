@@ -23,10 +23,10 @@ public class ShopCartContent implements Serializable {
 	private double regPrice;// 单价
 	private double totalPrice;// 总价
 
-	private String goodsRecordId;// 商品备案流水ID
+	private String goodsSerialNo;// 商品备案流水ID
 	private int sellCount;// 库存(上架)数量
 	private int flag;// 用户选中标识1-未选择,2-已选择
-
+	private String entGoodsNo;//商品(海关备案返回)ID
 	public long getId() {
 		return id;
 	}
@@ -123,12 +123,14 @@ public class ShopCartContent implements Serializable {
 		this.totalPrice = totalPrice;
 	}
 
-	public String getGoodsRecordId() {
-		return goodsRecordId;
+	
+
+	public String getGoodsSerialNo() {
+		return goodsSerialNo;
 	}
 
-	public void setGoodsRecordId(String goodsRecordId) {
-		this.goodsRecordId = goodsRecordId;
+	public void setGoodsSerialNo(String goodsSerialNo) {
+		this.goodsSerialNo = goodsSerialNo;
 	}
 
 	public int getSellCount() {
@@ -145,6 +147,14 @@ public class ShopCartContent implements Serializable {
 
 	public void setFlag(int flag) {
 		this.flag = flag;
+	}
+
+	public String getEntGoodsNo() {
+		return entGoodsNo;
+	}
+
+	public void setEntGoodsNo(String entGoodsNo) {
+		this.entGoodsNo = entGoodsNo;
 	}
 
 }

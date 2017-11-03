@@ -173,11 +173,10 @@ public class MemberServiceImpl implements MemberService {
 			shopCart.setGoodsStyle(goods.getGoodsStyle());
 			shopCart.setCount(count);
 			shopCart.setFlag(1);
-			Double price = goods.getGoodsRegPrice();
-			shopCart.setRegPrice(price);
-			Double totalPrice = price * count;
+			shopCart.setRegPrice(stock.getRegPrice());
+			Double totalPrice = stock.getRegPrice() * count;
 			shopCart.setTotalPrice(totalPrice);
-			
+			shopCart.setEntGoodsNo(stock.getEntGoodsNo());
 			if (!memberDao.add(shopCart)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

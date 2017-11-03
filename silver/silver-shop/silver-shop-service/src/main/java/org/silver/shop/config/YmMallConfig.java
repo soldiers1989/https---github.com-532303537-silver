@@ -5,6 +5,7 @@ package org.silver.shop.config;
  */
 public class YmMallConfig {
 	public static final String  TOPSTR = "http://192.168.1.116:8080";
+	public static final String  YM = "http://ym.191ec.com";
 	//
 	public static final String  APPKEY = "4a5de70025a7425dabeef6e8ea752976";
 	//
@@ -12,14 +13,14 @@ public class YmMallConfig {
 	/**
 	 * 商品备案异步回调URL
 	 */
-	public static final String GOODSRECORDNOTIFYURL = TOPSTR+"/silver-web-shop/goodsRecord/reNotifyMsg";
+	public static final String GOODSRECORDNOTIFYURL = YM+"/silver-web-shop/goodsRecord/reNotifyMsg";
 	/**
 	 * 订单备案异步回调URL
 	 */
-	public static final String ORDERNOTIFYURL = TOPSTR+"/silver-web-shop/order/reNotifyMsg";
+	public static final String ORDERNOTIFYURL = YM+"/silver-web-shop/order/reNotifyMsg";
 	
 	/**
 	 * 支付单备案异步回调URL
 	 */
-	public static final String PAYMENTNOTIFYURL = TOPSTR+"/silver-web-shop/payment/reNotifyMsg";
+	public static final String PAYMENTNOTIFYURL = YM+"/silver-web-shop/payment/reNotifyMsg";
 }
