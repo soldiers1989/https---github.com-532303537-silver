@@ -28,13 +28,13 @@ public class MemberTransaction {
 
 	// 用户注册
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
-			String memberIdCard) {
+			String memberIdCard,String memberTel) {
 		Map<String, Object> datasMap = memberService.createMemberId();
 		if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return datasMap;
 		}
 		String memberId = datasMap.get(BaseCode.DATAS.toString()) + "";
-		return memberService.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberId);
+		return memberService.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberId,memberTel);
 	}
 
 	// 用户登录

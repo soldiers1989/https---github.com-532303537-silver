@@ -36,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
-			String memberIdCard, String memberId) {
+			String memberIdCard, String memberId,String memberTel) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		MD5 md = new MD5();
@@ -47,6 +47,7 @@ public class MemberServiceImpl implements MemberService {
 		member.setMemberIdCard(memberIdCard);
 		member.setMemberIdCardName(memberIdCardName);
 		member.setCreateBy(account);
+		member.setMemberTel(memberTel);
 		member.setCreateDate(date);
 		if (!memberDao.add(member)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());

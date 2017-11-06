@@ -16,7 +16,7 @@ public interface MemberService {
 	 * @return
 	 */
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
-			String memberIdCard, String memberId);
+			String memberIdCard, String memberId,String memberTel);
 
 	/**
 	 * 根据用户名查询商户数据

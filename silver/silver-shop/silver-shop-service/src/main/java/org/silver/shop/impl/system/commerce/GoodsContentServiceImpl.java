@@ -110,11 +110,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		params.put("deleteFlag", 0);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, page, size);
 		long total = goodsContentDao.findByPropertyCount(GoodsContent.class, params);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (reList.size() > 0) {
+		 if (reList!=null && reList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());

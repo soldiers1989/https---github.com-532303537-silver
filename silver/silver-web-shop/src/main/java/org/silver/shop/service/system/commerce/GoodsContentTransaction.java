@@ -78,14 +78,12 @@ public class GoodsContentTransaction {
 	//商户查询商品基本信息
 	public Map<String, Object> findAllGoodsInfo(String goodsId, String goodsName, String startTime, String endTime,
 			String ymYear, int page, int size) {
-		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId= merchantInfo.getMerchantId();
 		return goodsContentService.blurryFindGoodsInfo(goodsId, merchantName, goodsName,startTime, endTime, ymYear, page, size,merchantId);
-		
 	}
 
 	

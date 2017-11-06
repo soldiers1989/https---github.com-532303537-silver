@@ -88,30 +88,14 @@ public class GoodsContentController {
 			String ymYear, @RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		/*
-		 * String[] iPs = { "http://ym.191ec.com:9528",
-		 * "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		 * "http://ym.191ec.com:8090" }; if
-		 * (Arrays.asList(iPs).contains(originHeader)) {
-		 */
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		/* } */
-		Map<String, Object> statusMap = new HashMap<>();
 		System.out.println(WebUtil.getSession().getId());
 		Map<String, Object> datasMap = goodsContentTransaction.findAllGoodsInfo(goodsId, goodsName, starDate, endDate,
-				ymYear, page, size);
-		if (datasMap != null && datasMap.size() > 0) {
-			String status = datasMap.get(BaseCode.STATUS.getBaseCode()) + "";
-			if ("1".equals(status)) {
-				return JSONObject.fromObject(datasMap).toString();
-			}
-		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		return JSONObject.fromObject(statusMap).toString();
+				ymYear, page, size);	
+		return JSONObject.fromObject(datasMap).toString();
 	}
 
 	/**
