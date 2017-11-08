@@ -36,5 +36,13 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack);
+	
+	/**
+	 * 用户查询订单信息
+	 * @param memberId
+	 * @param memberName
+	 * @return
+	 */
+	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName,int page,int size);
 
 }

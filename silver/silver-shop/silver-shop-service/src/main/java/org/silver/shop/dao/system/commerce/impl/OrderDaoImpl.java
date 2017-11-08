@@ -25,7 +25,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
+	public List findByProperty(Class entity, Map params, int page, int size) {
 		return super.findByProperty(entity, params, page, size);
 	}
 
@@ -76,8 +76,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public Table getMerchantOrderInfo( String merchantId, int page, int size) {
-
+	public Table getMerchantOrderInfo(String merchantId, int page, int size) {
 		Session session = null;
 		try {
 			String sql = "SELECT t1.*, t2.orderId,t2.entOrderNo,t2.freight,t2.consolidatedTax,t2.orderTotalPrice,t2.recipientName,t2.recipientCardId,t2.recipientTel,t2.recipientAddr,t2.recipientCountryCode,t2.recProvincesCode,t2.recCityCode, t2.recAreaCode "

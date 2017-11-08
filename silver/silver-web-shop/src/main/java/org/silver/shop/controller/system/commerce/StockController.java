@@ -91,7 +91,6 @@ public class StockController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (warehouseCode != null) {
 			statusMap = stockTransaction.searchAlreadyRecordGoodsDetails(warehouseCode, page, size);
-			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
@@ -103,6 +102,7 @@ public class StockController {
 	@ResponseBody
 	@ApiOperation("商品上架及上架数量")
 	@RequiresRoles("Merchant")
+	// 单个商品,后续删除
 	public String addGoodSellCount(@RequestParam("goodsId") String goodsId, @RequestParam("sellCount") int sellCount,
 			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
@@ -113,7 +113,6 @@ public class StockController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (goodsId != null) {
 			statusMap = stockTransaction.addGoodsSellCount(goodsId, sellCount);
-			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
@@ -145,16 +144,59 @@ public class StockController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size);
 		return JSONObject.fromObject(statusMap).toString();
+	}
 
+	@RequestMapping(value = "/merchantSetGoodsSellAndStopSelling", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户批量与单个商品上/下架状态修改")
+	@RequiresRoles("Merchant")
+	public String merchantSetGoodsSellAndStopSelling(@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
+			HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (goodsInfoPack != null && goodsInfoPack.length() > 0 && type == 1 || type == 2) {
+			statusMap = stockTransaction.merchantSetGoodsSellAndStopSelling(goodsInfoPack, type);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/merchantSetGoodsStorageAndSellCount", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户批量与单个商品入库与上架")
+	@RequiresRoles("Merchant")
+	public String merchantSetGoodsStorageAndSellCount(@RequestParam("goodsInfoPack") String goodsInfoPack,
+			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (goodsInfoPack != null && goodsInfoPack.length() > 0 && type == 1 || type == 2) {
+			statusMap = stockTransaction.merchantSetGoodsStorageAndSellCount(goodsInfoPack, type);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	public static void main(String[] args) {
 		// 模拟商品数据
 		JSONArray jsonList = new JSONArray();
 		Map<String, Object> data = new HashMap<>();
-		data.put("entGoodsNo", "YM_20170000115075204310625696");
-		data.put("goodsName", "测试商品名称");
-		data.put("stockCount", 50);
+		/*
+		 * data.put("entGoodsNo", "YM_20170000115075204310625696");
+		 * data.put("goodsName", "测试商品名称"); data.put("stockCount", 50);
+		 */
+		data.put("goodsId", "YM_20170000215082908696099795");
 		jsonList.add(data);
 		System.out.println(jsonList.toString());
 	}

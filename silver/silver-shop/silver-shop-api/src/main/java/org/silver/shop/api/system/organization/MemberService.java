@@ -79,13 +79,19 @@ public interface MemberService {
 	 */
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack, String memberId, String memberName);
 
+
 	/**
-	 * 用户查询订单信息
+	 * 获取用户钱包信息
 	 * @param memberId
 	 * @param memberName
 	 * @return
 	 */
-	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName,int page,int size);
-
 	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName);
+
+	/**
+	 * 检查用户名称是否存在
+	 * @param account
+	 * @return
+	 */
+	public Map<String, Object> checkMerchantName(String account);
 }

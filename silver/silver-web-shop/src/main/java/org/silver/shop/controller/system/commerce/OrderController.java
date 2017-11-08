@@ -1,6 +1,5 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -112,8 +111,24 @@ public class OrderController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
+	
+	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户获取订单信息")
+	@RequiresRoles("Member")
+	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = orderTransaction.getMemberOrderInfo(page, size);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 	public static void main(String[] args) {
-		Double d= 0.06*1*(119/100d);
+		/*Double d= 0.06*1*(119/100d);
 		BigDecimal b = new BigDecimal(d); 
 		double f1 = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 		System.out.println("---------->>"+d);
@@ -126,6 +141,8 @@ public class OrderController {
 		    f = (a - a % 10 + 10 * 1.0f) / 1000.0f;
 		else
 		    f = a * 1.0f / 1000.0f;
-		System.out.println(f);
+		System.out.println(f);*/
+		String s ="GACNO_20170000415099596709394549";
+		System.out.println(s.length());
 	}
 }

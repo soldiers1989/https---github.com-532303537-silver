@@ -31,7 +31,7 @@ public interface OrderDao {
 	 * @param size
 	 * @return List
 	 */
-	public List<Object> findByProperty(Class entity, Map<String, Object> params, int page, int size);
+	public List findByProperty(Class entity, Map<String, Object> params, int page, int size);
 
 	/**
 	 * 将实体类实例化

@@ -36,7 +36,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
-			String memberIdCard, String memberId,String memberTel) {
+			String memberIdCard, String memberId, String memberTel) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		MD5 md = new MD5();
@@ -274,7 +274,7 @@ public class MemberServiceImpl implements MemberService {
 		// 将所有标识为2的购物车中的商品,修改为1
 		params.put("flag", 2);
 		List<Object> re = memberDao.findByProperty(ShopCartContent.class, params, 0, 0);
-		 if (re !=null && re.size() > 0) {
+		if (re != null && re.size() > 0) {
 			for (int i = 0; i < re.size(); i++) {
 				ShopCartContent cart = (ShopCartContent) re.get(i);
 				cart.setFlag(1);
@@ -313,81 +313,6 @@ public class MemberServiceImpl implements MemberService {
 		return statusMap;
 	}
 
-	@Override
-	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
-		params.put("memberId", memberId);
-		params.put("memberName", memberName);
-		long totalCount = memberDao.findByPropertyCount(OrderContent.class, params);
-		Table table = memberDao.findOrderInfo(memberId, page, size);
-
-		if (table != null && table.getRows().size() > 0) {
-			Map<String, List<Map<String, Object>>> orderMap = new HashMap<>();
-			List<Row> lr = table.getRows();
-			for (int i = 0; i < lr.size(); i++) {
-				String orderId = lr.get(i).getValue("orderId") + "";
-				String goodsId = lr.get(i).getValue("goodsId") + "";
-				String goodsName = lr.get(i).getValue("goodsName") + "";
-				String goodsImage = lr.get(i).getValue("goodsImage") + "";
-				String goodsPrice = lr.get(i).getValue("goodsPrice") + "";
-				String goodsCount = lr.get(i).getValue("goodsCount") + "";
-				String goodsTotalPrice = lr.get(i).getValue("goodsTotalPrice") + "";
-				String merchantId = lr.get(i).getValue("merchantId") + "";
-				String merchantName = lr.get(i).getValue("merchantName") + "";
-				String reMemberId = lr.get(i).getValue("memberId") + "";
-				String reMemberName = lr.get(i).getValue("memberName") + "";
-				String status = lr.get(i).getValue("status") + "";
-				String createDate = lr.get(i).getValue("createDate") + "";
-				if (orderMap != null && orderMap.get(orderId) != null) {
-					Map<String, Object> goodsMap = new HashMap<>();
-
-					goodsMap.put("goodsId", goodsId);
-					goodsMap.put("goodsName", goodsName);
-					goodsMap.put("goodsImage", goodsImage);
-					goodsMap.put("goodsPrice", goodsPrice);
-					goodsMap.put("goodsCount", goodsCount);
-					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
-					goodsMap.put("merchantId", merchantId);
-					goodsMap.put("merchantName", merchantName);
-					goodsMap.put("MemberId", reMemberId);
-					goodsMap.put("MemberName", reMemberName);
-					goodsMap.put("merchantName", merchantName);
-					goodsMap.put("createDate", createDate);
-					goodsMap.put("status", status);
-					orderMap.get(orderId).add(goodsMap);
-				} else {
-					Map<String, Object> goodsMap = new HashMap<>();
-					goodsMap.put("goodsId", goodsId);
-					goodsMap.put("goodsName", goodsName);
-					goodsMap.put("goodsImage", goodsImage);
-					goodsMap.put("goodsPrice", goodsPrice);
-					goodsMap.put("goodsCount", goodsCount);
-					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
-					goodsMap.put("merchantId", merchantId);
-					goodsMap.put("merchantName", merchantName);
-					goodsMap.put("reMemberId", reMemberId);
-					goodsMap.put("reMemberName", reMemberName);
-					goodsMap.put("merchantName", merchantName);
-					goodsMap.put("createDate", createDate);
-					goodsMap.put("status", status);
-					List<Map<String, Object>> list = new ArrayList<>();
-					list.add(goodsMap);
-					orderMap.put(orderId, list);
-
-				}
-			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), orderMap);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			return statusMap;
-
-		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-		return statusMap;
-	}
 
 	@Override
 	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName) {
@@ -404,6 +329,27 @@ public class MemberServiceImpl implements MemberService {
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> checkMerchantName(String account) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("memberName", account);
+		List<Object> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (reList.size() == 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(),"用户名可以使用!");
+			return statusMap;
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), "用户名已存在!");
 			return statusMap;
 		}
 	}

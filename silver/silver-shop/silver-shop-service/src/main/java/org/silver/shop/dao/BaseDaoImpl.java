@@ -376,11 +376,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		/*paramMap.put("merchantName", "hoz");*/
+		paramMap.put("merchantName", "hoz");
 		//paramMap.put("goodsMerchantId", "MerchantId_00030");
 	/*	List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);*/
 		
-		System.out.println("--------------->>"+bd.findAllCount(GoodsContent.class));
+		System.out.println("--------------->>"+bd.findByPropertyCount(GoodsContent.class,paramMap));
 	}
 
 	

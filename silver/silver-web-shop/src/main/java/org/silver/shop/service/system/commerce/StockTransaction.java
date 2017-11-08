@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.commerce;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.shiro.SecurityUtils;
@@ -35,6 +34,7 @@ public class StockTransaction {
 		return stockService.addGoodsStockCount(merchantId,merchantName,warehousCode,warehousName,goodsInfoPack);
 	}
 
+	//
 	public Map<String,Object> addGoodsSellCount(String goodsId, int sellCount) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -44,6 +44,7 @@ public class StockTransaction {
 		return stockService.addGoodsSellCount(merchantId,merchantName,goodsId,sellCount);
 	}
 
+	//获取商品所有库存信息
 	public Map<String, Object> getGoodsStockInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -52,5 +53,26 @@ public class StockTransaction {
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.getGoodsStockInfo(merchantId,merchantName,page,size);
 	}
+
+	//商户批量与单个商品上/下架状态修改
+	public Map<String, Object> merchantSetGoodsSellAndStopSelling(String goodsInfoPack,int type) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return stockService.setGoodsSellAndStopSelling(merchantId,merchantName,goodsInfoPack,type);
+	}
+
+	//商户批量与单个商品入库与上架
+	public Map<String, Object> merchantSetGoodsStorageAndSellCount(String goodsInfoPack, int type) { 
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return stockService.setGoodsStorageAndSellCount(merchantId,merchantName,goodsInfoPack,type);
+	}
+
 
 }

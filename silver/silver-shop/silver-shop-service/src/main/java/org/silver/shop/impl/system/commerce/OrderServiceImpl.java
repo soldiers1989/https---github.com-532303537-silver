@@ -10,11 +10,11 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Order;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.dao.system.commerce.OrderDao;
-import org.silver.shop.model.common.category.GoodsFirstType;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.common.category.HsCode;
 import org.silver.shop.model.system.commerce.GoodsContent;
@@ -99,7 +99,7 @@ public class OrderServiceImpl implements OrderService {
 			property = "orderId";
 		} else {
 			// 用于发往支付与海关的总订单头
-			topStr = "GACNO_";
+			topStr = "GAC_";
 			property = "entOrderNo";
 		}
 		long orderIdCount = orderDao.findSerialNoCount(OrderContent.class, property, year);
@@ -162,14 +162,14 @@ public class OrderServiceImpl implements OrderService {
 					return statusMap;
 				}
 				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
-				//获取库存中商品上架的单价
+				// 获取库存中商品上架的单价
 				double regPrice = stock.getRegPrice();
 				// 计算税费
-				Map<String, Object> reRepiceMap = calculationTaxesFees(goodsId, count, entGoodsNo,regPrice);
-				if(!"1".equals(reRepiceMap.get(BaseCode.STATUS.toString())+"")){
+				Map<String, Object> reRepiceMap = calculationTaxesFees(goodsId, count, entGoodsNo, regPrice);
+				if (!"1".equals(reRepiceMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reRepiceMap;
 				}
-				 goodsTotalPrice = Double.parseDouble(reRepiceMap.get(BaseCode.DATAS.toString())+"");
+				goodsTotalPrice = Double.parseDouble(reRepiceMap.get(BaseCode.DATAS.toString()) + "");
 				/*
 				 * if (warehouseMap.get(stock.getWarehousCode()) != null &&
 				 * !"".equals(warehouseMap.get(stock.getWarehousCode()))) {
@@ -187,7 +187,7 @@ public class OrderServiceImpl implements OrderService {
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reOrderMap;
 				}
-				
+
 			}
 			/*
 			 * } else { statusMap.put(BaseCode.STATUS.toString(),
@@ -370,84 +370,30 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Object> getMerchantOrderInfo(String merchantId, String merchantName, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Map<String, Object>> orderMap = new HashMap<>();
-		Map<String, Object> orderHeadMap = null;
-		List<Object> reDataList = new ArrayList<>();
-		Table reTable = orderDao.getMerchantOrderInfo(merchantId, page, size);
 		paramMap.put("merchantId", merchantId);
+		List<OrderContent> reOrderList = orderDao.findByProperty(OrderContent.class, paramMap, page, size);
 		long totalCount = orderDao.findByPropertyCount(OrderContent.class, paramMap);
-		if (reTable.getRows() != null && reTable.getRows().size() > 0) {
-			List<Row> lr = reTable.getRows();
-			for (int i = 0; i < lr.size(); i++) {
-				String orderId = lr.get(i).getValue("orderId") + "";
-				String goodsId = lr.get(i).getValue("goodsId") + "";
-				String goodsName = lr.get(i).getValue("goodsName") + "";
-				String goodsImage = lr.get(i).getValue("goodsImage") + "";
-				String goodsPrice = lr.get(i).getValue("goodsPrice") + "";
-				String goodsCount = lr.get(i).getValue("goodsCount") + "";
-				String goodsTotalPrice = lr.get(i).getValue("goodsTotalPrice") + "";
-				String remerchantId = lr.get(i).getValue("merchantId") + "";
-				String remerchantName = lr.get(i).getValue("merchantName") + "";
-				String reMemberId = lr.get(i).getValue("memberId") + "";
-				String reMemberName = lr.get(i).getValue("memberName") + "";
-				String freight = lr.get(i).getValue("freight") + "";
-				String consolidatedTax = lr.get(i).getValue("consolidatedTax") + "";
-				String logisticsCosts = lr.get(i).getValue("logisticsCosts") + "";
-				String recipientName = lr.get(i).getValue("recipientName") + "";
-				String recipientCardId = lr.get(i).getValue("recipientCardId") + "";
-				String recipientTel = lr.get(i).getValue("recipientTel") + "";
-				String recProvincesCode = lr.get(i).getValue("recProvincesCode") + "";
-				String recCityCode = lr.get(i).getValue("recCityCode") + "";
-				String recAreaCode = lr.get(i).getValue("recAreaCode") + "";
-				String recipientAddr = lr.get(i).getValue("recipientAddr") + "";
-				if (orderMap != null && orderMap.get(orderId + "_head") != null) {
-					Map<String, Object> goodsMap = new HashMap<>();
-					goodsMap.put("orderId", orderId);
-					goodsMap.put("goodsId", goodsId);
-					goodsMap.put("goodsName", goodsName);
-					goodsMap.put("goodsImage", goodsImage);
-					goodsMap.put("goodsPrice", goodsPrice);
-					goodsMap.put("goodsCount", goodsCount);
-					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
-					goodsMap.put("logisticsCosts", logisticsCosts);
-					orderMap.get(orderId + "_head").put(goodsId + "_content", goodsMap);
-				} else {
-					orderHeadMap = new HashMap<>();
-					orderHeadMap.put("orderId", orderId);
-					orderHeadMap.put("remerchantId", remerchantId);
-					orderHeadMap.put("remerchantName", remerchantName);
-					orderHeadMap.put("remerchantName", remerchantName);
-					orderHeadMap.put("reMemberId", reMemberId);
-					orderHeadMap.put("reMemberName", reMemberName);
-					orderHeadMap.put("freight", freight);
-					orderHeadMap.put("consolidatedTax", consolidatedTax);
-					orderHeadMap.put("recipientName", recipientName);
-					orderHeadMap.put("recipientCardId", recipientCardId);
-					orderHeadMap.put("recipientTel", recipientTel);
-					orderHeadMap.put("recProvincesCode", recProvincesCode);
-					orderHeadMap.put("recProvincesCode", recProvincesCode);
-					orderHeadMap.put("recCityCode", recCityCode);
-					orderHeadMap.put("recAreaCode", recAreaCode);
-					orderHeadMap.put("recipientAddr", recipientAddr);
-					orderMap.put(orderId + "_head", orderHeadMap);
-					Map<String, Object> goodsMap = new HashMap<>();
-					goodsMap.put("orderId", orderId);
-					goodsMap.put("goodsId", goodsId);
-					goodsMap.put("goodsName", goodsName);
-					goodsMap.put("goodsImage", goodsImage);
-					goodsMap.put("goodsPrice", goodsPrice);
-					goodsMap.put("goodsCount", goodsCount);
-					goodsMap.put("goodsTotalPrice", goodsTotalPrice);
-					goodsMap.put("logisticsCosts", logisticsCosts);
-					orderHeadMap.put(goodsId + "_content", goodsMap);
-					reDataList.add(orderHeadMap);
-				}
+		List<Map<String, Object>> listMap = new ArrayList<>();
+		if (reOrderList != null && reOrderList.size() > 0) {
+			for (OrderContent order : reOrderList) {
+				paramMap.clear();
+				String orderId = order.getOrderId();
+				paramMap.put("merchantId", merchantId);
+				paramMap.put("orderId", orderId);
+				List<OrderGoodsContent> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, paramMap, 0,
+						0);
+				Map<String, Object> orderMap2 = new HashMap<>();
+				orderMap2.put("order", order);
+				orderMap2.put("orderGoods", reOrderGoodsList);
+				listMap.add(orderMap2);
 			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), listMap);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.DATAS.toString(), reDataList);
-		statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 		return statusMap;
 	}
 
@@ -602,10 +548,10 @@ public class OrderServiceImpl implements OrderService {
 				if (hsCodeInfo.getVat() > 0 && hsCodeInfo.getConsolidatedTax() > 0) {
 
 				} else {
-					return findTaxesFees(goodsId,count,regPrice);
+					return findTaxesFees(goodsId, count, regPrice);
 				}
 			} else {
-				return findTaxesFees(goodsId,count,regPrice);
+				return findTaxesFees(goodsId, count, regPrice);
 			}
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
@@ -614,8 +560,8 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return null;
 	}
-	
-	private Map<String,Object> findTaxesFees(String goodsId, int count, double regPrice){
+
+	private Map<String, Object> findTaxesFees(String goodsId, int count, double regPrice) {
 		double total = 0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
@@ -641,5 +587,36 @@ public class OrderServiceImpl implements OrderService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		List<Map<String, Object>> lMap = new ArrayList<>();
+		params.put("memberId", memberId);
+		List<OrderContent> reOrderList = orderDao.findByProperty(OrderContent.class, params, page, size);
+		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
+		if (reOrderList != null && reOrderList.size() > 0) {
+			for (OrderContent orderInfo : reOrderList) {
+				String orderId = orderInfo.getOrderId();
+				params.put("orderId", orderId);
+				params.put("memberId", memberId);
+				List<OrderContent> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
+				Map<String, Object> item = new HashMap<>();
+				item.put("order", orderInfo);
+				item.put("orderGoods", reOrderGoodsList);
+				lMap.add(item);
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), lMap);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), orderTotalCount);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
 	}
 }

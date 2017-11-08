@@ -48,4 +48,13 @@ public class OrderTransaction {
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
 		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack);
 	}
+	
+	public Map<String, Object> getMemberOrderInfo(int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return orderService.getMemberOrderInfo(memberId, memberName,page,size);
+	}
 }

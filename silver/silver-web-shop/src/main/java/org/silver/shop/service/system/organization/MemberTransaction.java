@@ -117,24 +117,18 @@ public class MemberTransaction {
 		return memberService.editShopCartGoodsFlag(goodsInfoPack, memberId, memberName);
 	}
 
-	public Map<String, Object> getMemberOrderInfo(int page, int size) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-
-		return memberService.getMemberOrderInfo(memberId, memberName,page,size);
-	}
-
 	public Map<String, Object> getMemberWalletInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-
 		return memberService.getMemberWalletInfo(memberId, memberName);
+	}
+
+	
+	public Map<String,Object> checkMerchantName(String account) {
+		return memberService.checkMerchantName(account);
 	}
 
 	

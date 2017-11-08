@@ -21,7 +21,6 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -251,20 +250,7 @@ public class MemberController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation(value = "用户获取订单信息")
-	@RequiresRoles("Member")
-	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.getMemberOrderInfo(page, size);
-		return JSONObject.fromObject(statusMap).toString();
-	}
+	
 
 	@RequestMapping(value = "/getMemberWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -272,16 +258,29 @@ public class MemberController {
 	@RequiresRoles("Member")
 	public String getMemberWalletInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		// String[] iPs = { "http://ym.191ec.com:9528",
-		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		// "http://ym.191ec.com:8090" };
-		// if (Arrays.asList(iPs).contains(originHeader)) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		// }
 		Map<String, Object> statusMap = memberTransaction.getMemberWalletInfo();
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 检查用户账号名是否重复
+	 * 
+	 * @param account
+	 *            用户账号
+	 * @return Map
+	 */
+	@RequestMapping(value = "/checkMemberName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String checkMemberName(@RequestParam("account") String account, HttpServletRequest req,
+			HttpServletResponse response) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		Map<String, Object> statusMap = memberTransaction.checkMerchantName(account);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 }

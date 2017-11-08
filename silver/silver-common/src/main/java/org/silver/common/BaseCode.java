@@ -19,6 +19,10 @@ public enum BaseCode {
 	 */
 	TOTALCOUNT("totalCount"),
 	/**
+	 * 错误
+	 */
+	ERROR("error"),
+	/**
 	 * 数据
 	 */
 	DATAS("datas");

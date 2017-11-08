@@ -192,7 +192,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!warehousMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return warehousMap;
 		}
-
 		// 发起商品备案
 		Map<String, Object> recordMap = sendRecord(Integer.valueOf(customsPort), merchantInfoMap, tok, datas,
 				goodsSerialNo, portInfo);
@@ -494,8 +493,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		recordInfo.setCreateBy(merchantName);
 		recordInfo.setCreateDate(date);
 		recordInfo.setDeleteFlag(0);
-		flag = goodsRecordDao.add(recordInfo);
-		if (!flag) {
+		if (!goodsRecordDao.add(recordInfo)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "保存商品备案流水信息错误,服务器繁忙!");
 			return statusMap;

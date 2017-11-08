@@ -176,13 +176,12 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		params.put("goodsMerchantName", merchantName);
 		params.put("goodsId", goodsId);
 		// 根据商户名与商品ID查询商品,确认商品是否存在
-		List reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
 		if (reList != null && reList.size() > 0) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			// 删除标识:0-未删除,1-已删除
 			goodsInfo.setDeleteFlag(1);
 			goodsInfo.setGoodsMerchantName(merchantName);
-			;
 			flag = goodsContentDao.update(goodsInfo);
 		}
 		return flag;
@@ -219,7 +218,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), goods);
-			statusMap.put("stockCount", stockInfo.getTotalStock());
+			statusMap.put("stockCount", stockInfo.getSellCount());
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
