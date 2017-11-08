@@ -13,4 +13,19 @@ public class WarehousDaoImpl extends BaseDaoImpl<Object> implements WarehousDao 
 	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
 		return super.findByProperty(entity, params, page, size);
 	}
+	
+	@Override
+	public boolean add(Object entity) {
+		return super.add(entity);
+	}
+
+	@Override
+	public boolean update(Object entity) {
+		return super.update(entity);
+	}
+	
+	@Override 
+	public long findByPropertyCount(Class entity,Map params) {
+		return super.findByPropertyCount(entity,params);
+	}
 }

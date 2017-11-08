@@ -52,18 +52,18 @@ public class OrderController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/getMerchantOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getMerchantOrderDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	@ApiOperation("商户查看订单信息")
-	public String getMerchantOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page")int page,@RequestParam("size")int size) {
+	@ApiOperation("商户查看订单详情")
+	public String getMerchantOrderDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("orderId")String orderId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.getMerchantOrderInfo(page,size);
+		Map<String, Object> statusMap = orderTransaction.getMerchantOrderDetail(orderId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -75,6 +75,7 @@ public class OrderController {
 	 * @return
 	 */
 	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
+	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -114,7 +115,7 @@ public class OrderController {
 	
 	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation(value = "用户获取订单信息")
+	@ApiOperation(value = "获取用户订单信息")
 	@RequiresRoles("Member")
 	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
@@ -124,6 +125,21 @@ public class OrderController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = orderTransaction.getMemberOrderInfo(page, size);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	@RequestMapping(value = "/getMerchantOrderRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户查看备案订单信息")
+	public String getMerchantOrderRecordInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page")int page,@RequestParam("size")int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = orderTransaction.getMerchantOrderRecordInfo(page,size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	

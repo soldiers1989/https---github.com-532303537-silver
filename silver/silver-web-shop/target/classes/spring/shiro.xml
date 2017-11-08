@@ -71,6 +71,7 @@
 				/yspay/*=anon
 				/recipient/*=anon
 				/manager/*=anon
+				/warehous/*=anon
 				/merchantBank/*=anon
 				/payment/*=anon
 				/provinceCityArea/*=anon

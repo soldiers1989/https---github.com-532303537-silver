@@ -27,6 +27,8 @@ public class MerchantServiceImpl implements MerchantService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
+	//口岸名称
+	private static final String PORTNAME = "customsPortName";
 	// 电商企业编号
 	private static final String EBENTNO = "ebEntNo";
 	// 电商企业名称
@@ -37,7 +39,7 @@ public class MerchantServiceImpl implements MerchantService {
 	private static final String EBPENTNAME = "EBPEntName";
 	
 	//
-	static List<Map> list = null;
+	static List<Map<String,Object>> list = null;
 	static {
 		// 银盟商城备案信息 1-广州电子口岸(目前只支持BC业务)
 		final String ebEntNo = "C010000000537118";
@@ -51,11 +53,13 @@ public class MerchantServiceImpl implements MerchantService {
 		Map<String, Object> record1 = new HashMap<>();
 		Map<String, Object> record2 = new HashMap<>();
 		record1.put(EPORT, 1);// 1-广州电子口岸(目前只支持BC业务)
+		record1.put(PORTNAME, "广州电子口岸");
 		record1.put(EBENTNO, ebEntNo);
 		record1.put(EBENTNAME, ebEntName);
 		record1.put(EBPENTNO, ebEntNo);
 		record1.put(EBPENTNAME, ebEntName);
 		record2.put(EPORT, 2);// 2-南沙智检(支持BBC业务)
+		record2.put(PORTNAME, "南沙智检");
 		record2.put(EBENTNO, ebEntNo2);
 		record2.put(EBENTNAME, ebEntName);
 		record2.put(EBPENTNO, ebEntNo2);
@@ -102,6 +106,7 @@ public class MerchantServiceImpl implements MerchantService {
 			for (int x = 0; x < list.size(); x++) {
 				Map<String, Object> listMap = list.get(x);
 				entity.setCustomsPort(Integer.valueOf(listMap.get(EPORT)+"") );
+				entity.setCustomsPortName(listMap.get(PORTNAME)+"");
 				entity.setEbEntNo(listMap.get(EBENTNO) + "");
 				entity.setEbEntName(listMap.get(EBENTNAME) + "");
 				entity.setEbpEntNo(listMap.get(EBPENTNO) + "");
@@ -174,7 +179,8 @@ public class MerchantServiceImpl implements MerchantService {
 				// 取出前台打包好的商户备案信息
 				for (int x = 0; x < jsonList.size(); x++) {
 					Map<String, Object> packMap = (Map) jsonList.get(x);
-					int eport =Integer.valueOf(packMap.get(EPORT) + "") ;
+					int eport =Integer.parseInt((packMap.get(EPORT) + ""));
+					String customsPortName =  packMap.get(PORTNAME) + "";
 					String ebEntNo = packMap.get(EBENTNO) + "";
 					String ebEntName = packMap.get(EBENTNAME) + "";
 					String ebpEntNo = packMap.get(EBPENTNO) + "";
@@ -182,6 +188,7 @@ public class MerchantServiceImpl implements MerchantService {
 					recordInfo.setMerchantId(merchantId);
 					// 1-广州电子口岸2-南沙智检
 					recordInfo.setCustomsPort(eport);
+					recordInfo.setCustomsPortName(customsPortName);
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
 					recordInfo.setEbpEntNo(ebpEntNo);
@@ -215,7 +222,6 @@ public class MerchantServiceImpl implements MerchantService {
 	public List<Object> findMerchantBy(String account) {
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("merchantName", account);
-		System.out.println(merchantDao+"---->merchantDao");
 		return merchantDao.findByProperty(Merchant.class, paramsMap, 0, 0);
 	}
 

@@ -33,21 +33,21 @@ public class OrderTransaction {
 		return orderService.updateOrderRecordInfo(datasMap);
 	}
 
-	//商户查看所有订单信息
-	public Map<String, Object> getMerchantOrderInfo(int page,int size) {
+	//商户查看备案订单信息
+	public Map<String, Object> getMerchantOrderRecordInfo(int page,int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		
-		return orderService.getMerchantOrderInfo(merchantId,merchantName,page,size);
+		return orderService.getMerchantOrderRecordInfo(merchantId,merchantName,page,size);
 	}
 
 	//检查订单商品是否都属于一个海关口岸
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
 		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack);
 	}
+	
 	
 	public Map<String, Object> getMemberOrderInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -56,5 +56,15 @@ public class OrderTransaction {
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return orderService.getMemberOrderInfo(memberId, memberName,page,size);
+	}
+
+	//商户查看订单详情
+	public Map<String, Object> getMerchantOrderDetail(String orderId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return orderService.getMerchantOrderDetail(merchantId,merchantName,orderId);
 	}
 }

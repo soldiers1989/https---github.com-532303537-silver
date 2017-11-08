@@ -41,11 +41,11 @@
         <property name="freight" type="java.lang.Double">
             <column name="freight" />
         </property>
-        <property name="warehousCode" type="java.lang.String">
-            <column name="warehousCode" not-null="true"/>
+        <property name="warehouseCode" type="java.lang.String">
+            <column name="warehouseCode" not-null="true"/>
         </property>
-        <property name="warehousName" type="java.lang.String">
-            <column name="warehousName" not-null="true"/>
+        <property name="warehouseName" type="java.lang.String">
+            <column name="warehouseName" not-null="true"/>
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />

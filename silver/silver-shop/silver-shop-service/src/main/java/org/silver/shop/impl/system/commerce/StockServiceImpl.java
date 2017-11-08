@@ -53,8 +53,8 @@ public class StockServiceImpl implements StockService {
 
 	@Override
 	// 添加库存数量
-	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehousCode,
-			String warehousName, String goodsInfoPack) {
+	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehouseCode,
+			String warehouseName, String goodsInfoPack) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = null;
@@ -107,8 +107,8 @@ public class StockServiceImpl implements StockService {
 					stock.setRegPrice(goodsRecord.getRegPrice());
 					stock.setFreePrice(0.0);
 					stock.setFreight(0.0);
-					stock.setWarehousCode(warehousCode);
-					stock.setWarehousName(warehousName);
+					stock.setWarehouseCode(warehouseCode);
+					stock.setWarehouseName(warehouseName);
 					stock.setCreateDate(date);
 					stock.setCreateBy(merchantName);
 					// 上下架标识：1-上架,2-下架
@@ -173,12 +173,12 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
-	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size) {
+	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size,String warehouseCode) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
-		params.put("merchantName", merchantName);
-		List<Object> reList = stockDao.findByProperty(StockContent.class, params, 0, 0);
+		params.put("warehouseCode", warehouseCode);
+		List<Object> reList = stockDao.findByProperty(StockContent.class, params, page, size);
 		long totalCount = stockDao.findByPropertyCount(StockContent.class, params);
 		if (reList != null && reList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

@@ -180,7 +180,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentInfo.setPayStatus("D");
 			// 默认为142-人名币
 			paymentInfo.setPayCurrCode("142");
-			paymentInfo.setPayTime(date);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			Date reInvoiceDate = null;
+			try {
+				reInvoiceDate = sdf.parse(datasMap.get("notify_time") + "");
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			paymentInfo.setPayTime(reInvoiceDate);
 			paymentInfo.setPayerName(memberInfo.getMemberIdCardName());
 			// 支付人证件类型01:身份证02:护照04:其他
 			paymentInfo.setPayerDocumentType(01);
@@ -224,12 +231,10 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			statusMap.put(BaseCode.DATAS.toString(), orderRecordInfo);
 			return statusMap;
 		} else {
-			/*
-			 * orderRecordInfo.setMerchantId(orderInfo.getMerchantId());
-			 * orderRecordInfo.setMerchantName(orderInfo.getMerchantName());
-			 * orderRecordInfo.setMemberId(orderInfo.getMemberId());
-			 * orderRecordInfo.setMemberName(orderInfo.getMemberName());
-			 */
+			orderRecordInfo.setMerchantId(orderInfo.getMerchantId());
+			orderRecordInfo.setMerchantName(orderInfo.getMerchantName());
+			orderRecordInfo.setMemberId(orderInfo.getMemberId());
+			orderRecordInfo.setMemberName(orderInfo.getMemberName());
 			orderRecordInfo.setEntOrderNo(orderInfo.getEntOrderNo());
 			// 电子订单状态0-订单确认,1-订单完成,2-订单取消
 			orderRecordInfo.setOrderStatus(1);
@@ -281,13 +286,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-			orderRecordInfo.setInvoiceDate(reInvoiceDate);
+			orderRecordInfo.setPayTime(reInvoiceDate);
+			orderRecordInfo.setEntPayNo(datasMap.get("trade_no") + "");
 			//// 订单备案状态：1-备案中，2-备案成功，3-备案失败
 			orderRecordInfo.setOrderRecordStatus(1);
 			orderRecordInfo.setCreateBy(orderInfo.getMemberName());
 			orderRecordInfo.setCreateDate(date);
 			orderRecordInfo.setDeleteFlag(0);
-			orderRecordInfo.setOrderSerialNo("aaaa");
+			orderRecordInfo.setOrderSerialNo("");
 			if (!ysPayReceiveDao.add(orderRecordInfo)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "保存备案订单信息失败,服务器繁忙!");
@@ -476,12 +482,13 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		paymentMap.put("datas", paymentList.toString());
 		paymentMap.put("notifyurl", YmMallConfig.PAYMENTNOTIFYURL);
 		paymentMap.put("note", "");
-//		String resultStr =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
+		// String resultStr
+		// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
 		// 商城支付单备案流水号
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (goodsRecordInfo.getCustomsPort() == 2) {
-			Map<String,Object> paramsMap = new HashMap<>();
+			Map<String, Object> paramsMap = new HashMap<>();
 			paramsMap.put("customsPort", 1);
 			List<Object> reCustomsPortList = ysPayReceiveDao.findByProperty(CustomsPort.class, paramsMap, 1, 1);
 			if (reCustomsPortList != null && reCustomsPortList.size() > 0) {
@@ -500,7 +507,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paymentMap.put("ciqOrgCode", portInfo.getCiqOrgCode());
 				// 海关代码
 				paymentMap.put("customsCode", portInfo.getCustomsCode());
-				//String resultStr2 =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
+				// String resultStr2
+				// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
 				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					JSONObject.fromObject(resultStr2);
@@ -604,6 +612,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		orderJson.element("OrderDocId", orderRecordInfo.getOrderDocId());
 		orderJson.element("OrderDocTel", orderRecordInfo.getOrderDocTel());
 		orderJson.element("OrderDate", orderRecordInfo.getCreateDate());
+		orderJson.element("entPayNo", orderRecordInfo.getEntPayNo());
 		orderJsonList.add(orderJson);
 		// 客戶端签名
 		String clientsign = "";
@@ -651,7 +660,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		orderMap.put("datas", orderJsonList.toString());
 		orderMap.put("notifyurl", YmMallConfig.ORDERNOTIFYURL);
 		orderMap.put("note", "");
-		// String resultStr =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", orderMap);
+		// String resultStr
+		// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+		// orderMap);
 
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
@@ -677,7 +688,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				orderMap.put("ciqOrgCode", portInfo.getCiqOrgCode());
 				// 海关代码
 				orderMap.put("customsCode", portInfo.getCustomsCode());
-				//String resultStr2 =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", orderMap);
+				// String resultStr2
+				// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+				// orderMap);
 				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					JSONObject.fromObject(resultStr);
@@ -770,9 +783,12 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paramMap.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = ysPayReceiveDao.findByProperty(StockContent.class, paramMap, 1, 1);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
-			int sellCount = stockInfo.getSellCount();
-			stockInfo.setPaidCount(goodsCount);
-			stockInfo.setSellCount(sellCount - goodsCount);
+			int paymentCount = stockInfo.getPaymentCount();
+			// 更新待支付数量
+			stockInfo.setPaymentCount(paymentCount - goodsCount);
+			int oaudCount = stockInfo.getPaidCount();
+			// 更新已支付数量
+			stockInfo.setPaidCount(oaudCount + goodsCount);
 			stockInfo.setUpdateDate(date);
 			stockInfo.setUpdateBy("system");
 			if (!ysPayReceiveDao.update(stockInfo)) {

@@ -22,7 +22,7 @@ import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
-import org.silver.shop.model.system.commerce.Warehous;
+import org.silver.shop.model.system.commerce.WarehouseContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.JedisUtil;
@@ -630,14 +630,14 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		String code = merchantId + "_" + portInfo.getCustomsCode();
 		// key=数据库列名,value=查询参数
 		paramsMap.put("warehouseCode", code);
-		List<Object> reList = goodsRecordDao.findByProperty(Warehous.class, paramsMap, 0, 0);
+		List<Object> reList = goodsRecordDao.findByProperty(WarehouseContent.class, paramsMap, 0, 0);
 		// 数据库查询错误
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
 		} else if (reList.size() == 0) {// 当没有仓库时
-			Warehous warehous = new Warehous();
+			WarehouseContent warehous = new WarehouseContent();
 			warehous.setMerchantId(merchantId);
 			warehous.setMerchantName(merchantName);
 			warehous.setWarehouseCode(code);
@@ -738,9 +738,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				statusMap.put(BaseCode.MSG.toString(), "异步更新备案商品信息错误!");
 				return paramMap;
 			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		}else{
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}
 	

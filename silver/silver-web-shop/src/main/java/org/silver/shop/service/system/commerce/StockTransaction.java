@@ -25,13 +25,13 @@ public class StockTransaction {
 		return stockService.searchAlreadyRecordGoodsDetails(merchantId,warehouseCode,page,size);
 	}
 
-	public Map<String,Object> addGoodsStockCount(String warehousCode, String warehousName, String goodsInfoPack) {
+	public Map<String,Object> addGoodsStockCount(String warehouseCode, String warehouseName, String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return stockService.addGoodsStockCount(merchantId,merchantName,warehousCode,warehousName,goodsInfoPack);
+		return stockService.addGoodsStockCount(merchantId,merchantName,warehouseCode,warehouseName,goodsInfoPack);
 	}
 
 	//
@@ -45,13 +45,13 @@ public class StockTransaction {
 	}
 
 	//获取商品所有库存信息
-	public Map<String, Object> getGoodsStockInfo(int page, int size) {
+	public Map<String, Object> getGoodsStockInfo(int page, int size,String warehouseCode) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return stockService.getGoodsStockInfo(merchantId,merchantName,page,size);
+		return stockService.getGoodsStockInfo(merchantId,merchantName,page,size,warehouseCode);
 	}
 
 	//商户批量与单个商品上/下架状态修改

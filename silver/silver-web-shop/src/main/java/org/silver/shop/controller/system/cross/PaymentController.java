@@ -12,6 +12,7 @@ import org.silver.shop.service.system.cross.PaymentTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import net.sf.json.JSONObject;
 
@@ -34,6 +35,7 @@ public class PaymentController {
 	 * @return
 	 */
 	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
+	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
 		logger.info("-----备案网关异步回馈支付单信息---");
 		Map<String, Object> datasMap = new HashMap<>();

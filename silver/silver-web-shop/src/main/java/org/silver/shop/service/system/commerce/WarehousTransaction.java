@@ -17,11 +17,12 @@ public class WarehousTransaction {
 	@Reference
 	public WarehousService warehousService;
 	
-	public Map<String,Object> getWarehousInfo() {
+	public Map<String,Object> getWarehousInfo(int page,int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		return warehousService.getWarehousInfo(merchantId);
+		String merchantName = merchantInfo.getMerchantName();
+		return warehousService.getWarehousInfo(merchantId,merchantName,page,size);
 	}
 }	

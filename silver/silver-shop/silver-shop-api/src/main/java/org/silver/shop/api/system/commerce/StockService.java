@@ -23,7 +23,7 @@ public interface StockService {
 	 * @param warehousName 仓库名称
 	 * @param goodsId 商品ID
 	 */
-	public Map<String,Object> addGoodsStockCount(String merchantId, String merchantName, String warehousCode, String warehousName,
+	public Map<String,Object> addGoodsStockCount(String merchantId, String merchantName, String warehouseCode, String warehousName,
 			String goodsInfoPack);
 
 
@@ -45,7 +45,7 @@ public interface StockService {
 	 * @param size 数目
 	 * @return Map
 	 */
-	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size);
+	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size,String warehouseCode);
 
 
 	/**

@@ -44,13 +44,13 @@ public class YsPayReceiveController {
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
 		Map<String, Object> statusMap=null;
-		//if(ApipaySubmit.verifySign(req, datasMap)){
+		if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
-		//}
-		logger.error("--------支付回调验证sign不通过------");
+		}
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
-			logger.error("------推送订单与支付信息错误------");
+			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());
+			return null;
 		}
 		return "success";
 	}

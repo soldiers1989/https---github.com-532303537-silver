@@ -23,12 +23,12 @@ public interface OrderService {
 	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap);
 
 	/**
-	 * 商户查看所有订单信息
+	 * 商户查看备案订单信息
 	 * @param merchantId 商户Id
 	 * @param merchantName 商户名称
 	 * @return 
 	 */
-	public Map<String, Object> getMerchantOrderInfo(String merchantId, String merchantName,int page,int size);
+	public Map<String, Object> getMerchantOrderRecordInfo(String merchantId, String merchantName,int page,int size);
 
 	/**
 	 * 检查订单商品是否都属于一个海关口岸
@@ -44,5 +44,14 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName,int page,int size);
+
+	/**
+	 * 商户查看订单详情
+	 * @param merchantId 商户ID
+	 * @param merchantName 商户名称
+	 * @param orderId 订单id
+	 * @return
+	 */
+	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String orderId);
 
 }

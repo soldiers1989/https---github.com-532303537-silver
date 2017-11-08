@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 仓库实体类
  */
-public class Warehous implements Serializable {
+public class WarehouseContent implements Serializable {
 
 	/**
 	 * 
@@ -26,6 +26,7 @@ public class Warehous implements Serializable {
 	private Date deleteDate;// 删除时间
 	
 	private String merchantName;//商户名称
+	private String reMark;//
 	public long getId() {
 		return id;
 	}
@@ -98,6 +99,12 @@ public class Warehous implements Serializable {
 	}
 	public void setMerchantName(String merchantName) {
 		this.merchantName = merchantName;
+	}
+	public String getReMark() {
+		return reMark;
+	}
+	public void setReMark(String reMark) {
+		this.reMark = reMark;
 	}
 	
 	

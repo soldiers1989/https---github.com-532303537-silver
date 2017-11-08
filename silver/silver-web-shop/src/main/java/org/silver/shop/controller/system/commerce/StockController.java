@@ -47,8 +47,8 @@ public class StockController {
 	@ResponseBody
 	@ApiOperation("添加商品库存")
 	@RequiresRoles("Merchant")
-	public String addGoodsStockCount(@RequestParam("warehousCode") String warehousCode,
-			@RequestParam("warehousName") String warehousName, @RequestParam("goodsInfoPack") String goodsInfoPack,
+	public String addGoodsStockCount(@RequestParam("warehouseCode") String warehouseCode,
+			@RequestParam("warehouseName") String warehouseName, @RequestParam("goodsInfoPack") String goodsInfoPack,
 			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -56,8 +56,8 @@ public class StockController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (warehousCode != null && warehousName != null && goodsInfoPack != null) {
-			statusMap = stockTransaction.addGoodsStockCount(warehousCode, warehousName, goodsInfoPack);
+		if (warehouseCode != null && warehouseName != null && goodsInfoPack != null) {
+			statusMap = stockTransaction.addGoodsStockCount(warehouseCode, warehouseName, goodsInfoPack);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
@@ -121,7 +121,7 @@ public class StockController {
 	}
 
 	/**
-	 * 搜索该仓库下已经备案成功的备案商品信息
+	 * 商户查询当前仓库下商品库存信息
 	 * 
 	 * @param warehouseCode
 	 *            仓库编码
@@ -131,18 +131,18 @@ public class StockController {
 	 *            数目
 	 * @return
 	 */
-	@RequestMapping(value = "/getGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getMerchantGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("查询当前商户所有商品库存信息")
+	@ApiOperation("商户查询当前仓库下商品库存信息")
 	@RequiresRoles("Merchant")
-	public String getGoodsStockInfo(@RequestParam("page") int page, @RequestParam("size") int size,
-			HttpServletRequest req, HttpServletResponse response) {
+	public String getMerchantGoodsStockInfo(@RequestParam("page") int page, @RequestParam("size") int size,
+			@RequestParam("warehouseCode")String warehouseCode,HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size);
+		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size,warehouseCode);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 

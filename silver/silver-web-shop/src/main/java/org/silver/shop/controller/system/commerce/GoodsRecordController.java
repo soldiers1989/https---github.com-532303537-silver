@@ -138,6 +138,7 @@ public class GoodsRecordController {
 	 * @return
 	 */
 	@RequestMapping(value = "/reNotifyMsg",  produces = "application/json; charset=utf-8")
+	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req,HttpServletResponse response){
 		logger.info("-----备案网关异步回馈备案商品信息---");
 		Map<String,Object> datasMap = new HashMap<>();

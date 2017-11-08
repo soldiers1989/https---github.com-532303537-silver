@@ -9,7 +9,7 @@ public interface WarehousService {
 	 * @param merchantId
 	 * @return
 	 */
-	public Map<String,Object> getWarehousInfo(String merchantId);
+	public Map<String,Object> getWarehousInfo(String merchantId,String merchantName,int page,int size);
 
 
 }

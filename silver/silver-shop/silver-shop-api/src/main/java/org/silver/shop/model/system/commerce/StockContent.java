@@ -25,8 +25,8 @@ public class StockContent implements Serializable {
 	private Double regPrice; // 单价
 	private Double freePrice;// 特价
 	private Double freight;// 运杂费
-	private String warehousCode;// 仓库编码 
-	private String warehousName;// 仓库名称
+	private String warehouseCode;// 仓库编码 
+	private String warehouseName;// 仓库名称
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -112,17 +112,18 @@ public class StockContent implements Serializable {
 	public void setFreight(Double freight) {
 		this.freight = freight;
 	}
-	public String getWarehousCode() {
-		return warehousCode;
+	
+	public String getWarehouseCode() {
+		return warehouseCode;
 	}
-	public void setWarehousCode(String warehousCode) {
-		this.warehousCode = warehousCode;
+	public void setWarehouseCode(String warehouseCode) {
+		this.warehouseCode = warehouseCode;
 	}
-	public String getWarehousName() {
-		return warehousName;
+	public String getWarehouseName() {
+		return warehouseName;
 	}
-	public void setWarehousName(String warehousName) {
-		this.warehousName = warehousName;
+	public void setWarehouseName(String warehouseName) {
+		this.warehouseName = warehouseName;
 	}
 	public String getCreateBy() {
 		return createBy;
