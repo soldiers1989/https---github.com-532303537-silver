@@ -143,13 +143,27 @@ public class GoodsRecordController {
 		logger.info("-----备案网关异步回馈备案商品信息---");
 		Map<String,Object> datasMap = new HashMap<>();
 		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("errMsg", req.getParameter("errMsg") + "");
+		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entGoodsNo", req.getParameter("entGoodsNo") + "");
 		datasMap.put("CIQGoodsNo", req.getParameter("CIQGoodsNo") + "");
-		datasMap.put("EPortGoodsNo ", req.getParameter("EPortGoodsNo ") + "");
 		Map<String,Object> statusMap =  goodsRecordTransaction.updateGoodsRecordInfo(datasMap);
 		logger.info(JSONObject.fromObject(statusMap).toString());
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/getMerchantGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商戶查询单个商品备案详情")
+	@RequiresRoles("Merchant")
+	public String getMerchantGoodsRecordDetail(HttpServletRequest req, HttpServletResponse response, @RequestParam("entGoodsNo")String entGoodsNo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.getMerchantGoodsRecordDetail(entGoodsNo);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }

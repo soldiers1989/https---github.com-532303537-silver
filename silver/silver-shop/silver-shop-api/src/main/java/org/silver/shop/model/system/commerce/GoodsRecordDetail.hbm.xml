@@ -3,138 +3,183 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-9-30 17:07:39 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.commerce.GoodsRecordDetail" table="ym_shop_goods_record_detail">
-        <id name="id" type="long">
-            <column name="id" />
-            <generator class="identity" />
-        </id>
-        <property name="seq" type="int">
-            <column name="seq" not-null="true"/>
-        </property>
-        <property name="entGoodsNo" type="java.lang.String">
-            <column name="entGoodsNo" not-null="true"/>
-        </property>
-        <property name="entGoodsNoSKU" type="java.lang.String">
-            <column name="entGoodsNoSKU" />
-        </property>
-        <property name="eportGoodsNo" type="java.lang.String">
-            <column name="eportGoodsNo" />
-        </property>
-        <property name="ciqGoodsNo" type="java.lang.String">
-            <column name="ciqGoodsNo" />
-        </property>
-        <property name="cusGoodsNo" type="java.lang.String">
-            <column name="cusGoodsNo" />
-        </property>
-        <property name="emsNo" type="java.lang.String">
-            <column name="emsNo" />
-        </property>
-        <property name="itemNo" type="java.lang.String">
-            <column name="itemNo" />
-        </property>
-        <property name="shelfGName" type="java.lang.String">
-            <column name="shelfGName" not-null="true"/>
-        </property>
-        <property name="ncadCode" type="java.lang.String">
-            <column name="ncadCode" not-null="true" />
-        </property>
-        <property name="hsCode" type="java.lang.String">
-            <column name="hsCode" not-null="true"/>
-        </property>
-        <property name="barCode" type="java.lang.String">
-            <column name="barCode" />
-        </property>
-        <property name="goodsName" type="java.lang.String">
-            <column name="goodsName" not-null="true"/>
-        </property>
-        <property name="goodsStyle" type="java.lang.String">
-            <column name="goodsStyle" not-null="true"/>
-        </property>
-        <property name="brand" type="java.lang.String">
-            <column name="brand" not-null="true"/>
-        </property>
-        <property name="gUnit" type="java.lang.String" access="field">
-            <column name="gUnit" not-null="true"/>
-        </property>
-        <property name="stdUnit" type="java.lang.String">
-            <column name="stdUnit" not-null="true"/>
-        </property>
-        <property name="secUnit" type="java.lang.String">
-            <column name="secUnit" />
-        </property>
-        <property name="regPrice" type="java.lang.Double">
-            <column name="regPrice" not-null="true"/>
-        </property>
-        <property name="giftFlag" type="java.lang.String">
-            <column name="giftFlag" not-null="true" />
-        </property>
-        <property name="originCountry" type="java.lang.String">
-            <column name="originCountry" not-null="true"/>
-        </property>
-        <property name="quality" type="java.lang.String">
-            <column name="quality" not-null="true"/>
-        </property>
-        <property name="qualityCertify" type="java.lang.String">
-            <column name="qualityCertify" />
-        </property>
-        <property name="manufactory" type="java.lang.String">
-            <column name="manufactory" not-null="true"/>
-        </property>
-        <property name="netWt" type="java.lang.Double">
-            <column name="netWt" not-null="true"/>
-        </property>
-        <property name="grossWt" type="java.lang.Double">
-            <column name="grossWt" not-null="true"/>
-        </property>
-        <property name="notes" type="java.lang.String">
-            <column name="notes" />
-        </property>
-        <property name="status" type="int">
-            <column name="status" />
-        </property>
-        <property name="recordFlag" type="int">
-            <column name="recordFlag" />
-        </property>
-        <property name="createBy" type="java.lang.String">
-            <column name="createBy" />
-        </property>
-        <property name="createDate" type="java.util.Date">
-            <column name="createDate" />
-        </property>
-        <property name="updateBy" type="java.lang.String">
-            <column name="updateBy" />
-        </property>
-        <property name="updateDate" type="java.util.Date">
-            <column name="updateDate" />
-        </property>
-        <property name="deleteFlag" type="int">
-            <column name="deleteFlag" />
-        </property>
-        <property name="deleteBy" type="java.lang.String">
-            <column name="deleteBy" />
-        </property>
-        <property name="deleteDate" type="java.util.Date">
-            <column name="deleteDate" />
-        </property>
-        <property name="goodsMerchantId" type="java.lang.String">
-        	<column name="goodsMerchantId" not-null="true"/>
-        </property>
-        <property name="goodsMerchantName" type="java.lang.String">
-            <column name="goodsMerchantName" not-null="true"/>
-        </property>
-        <property name="goodsSerialNo" type="java.lang.String">
-        	<column name="goodsSerialNo" />
-        </property>
-        
-        <property name="reSerialNo" type="java.lang.String">
-        	<column name="reSerialNo"/>
-        </property>
-        
-        <property name="goodsDetailId" type="java.lang.String" >
-        	<column name="goodsDetailId" not-null="true" />
-        </property>
-         <property name="reNote" type="java.lang.String">
-        	<column name="reNote" />
-        </property>
-    </class>
+	<class name="org.silver.shop.model.system.commerce.GoodsRecordDetail"
+		table="ym_shop_goods_record_detail">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="seq" type="int">
+			<column name="seq" not-null="true" />
+		</property>
+		<property name="entGoodsNo" type="java.lang.String">
+			<column name="entGoodsNo" not-null="true" />
+		</property>
+		<property name="entGoodsNoSKU" type="java.lang.String">
+			<column name="entGoodsNoSKU" />
+		</property>
+		<property name="eportGoodsNo" type="java.lang.String">
+			<column name="eportGoodsNo" />
+		</property>
+		<property name="ciqGoodsNo" type="java.lang.String">
+			<column name="ciqGoodsNo" />
+		</property>
+		<property name="cusGoodsNo" type="java.lang.String">
+			<column name="cusGoodsNo" />
+		</property>
+		<property name="emsNo" type="java.lang.String">
+			<column name="emsNo" />
+		</property>
+		<property name="itemNo" type="java.lang.String">
+			<column name="itemNo" />
+		</property>
+		<property name="shelfGName" type="java.lang.String">
+			<column name="shelfGName" not-null="true" />
+		</property>
+		<property name="ncadCode" type="java.lang.String">
+			<column name="ncadCode" not-null="true" />
+		</property>
+		<property name="hsCode" type="java.lang.String">
+			<column name="hsCode" not-null="true" />
+		</property>
+		<property name="barCode" type="java.lang.String">
+			<column name="barCode" />
+		</property>
+		<property name="goodsName" type="java.lang.String">
+			<column name="goodsName" not-null="true" />
+		</property>
+		<property name="goodsStyle" type="java.lang.String">
+			<column name="goodsStyle" not-null="true" />
+		</property>
+		<property name="brand" type="java.lang.String">
+			<column name="brand" not-null="true" />
+		</property>
+		<property name="gUnit" type="java.lang.String" access="field">
+			<column name="gUnit" not-null="true" />
+		</property>
+		<property name="stdUnit" type="java.lang.String">
+			<column name="stdUnit" not-null="true" />
+		</property>
+		<property name="secUnit" type="java.lang.String">
+			<column name="secUnit" />
+		</property>
+		<property name="regPrice" type="java.lang.Double">
+			<column name="regPrice" not-null="true" />
+		</property>
+		<property name="giftFlag" type="java.lang.String">
+			<column name="giftFlag" not-null="true" />
+		</property>
+		<property name="originCountry" type="java.lang.String">
+			<column name="originCountry" not-null="true" />
+		</property>
+		<property name="quality" type="java.lang.String">
+			<column name="quality" not-null="true" />
+		</property>
+		<property name="qualityCertify" type="java.lang.String">
+			<column name="qualityCertify" />
+		</property>
+		<property name="manufactory" type="java.lang.String">
+			<column name="manufactory" not-null="true" />
+		</property>
+		<property name="netWt" type="java.lang.Double">
+			<column name="netWt" not-null="true" />
+		</property>
+		<property name="grossWt" type="java.lang.Double">
+			<column name="grossWt" not-null="true" />
+		</property>
+		<property name="notes" type="java.lang.String">
+			<column name="notes" />
+		</property>
+		<property name="status" type="int">
+			<column name="status" not-null="true" />
+		</property>
+		<property name="recordFlag" type="int">
+			<column name="recordFlag" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+		<property name="goodsMerchantId" type="java.lang.String">
+			<column name="goodsMerchantId" not-null="true" />
+		</property>
+		<property name="goodsMerchantName" type="java.lang.String">
+			<column name="goodsMerchantName" not-null="true" />
+		</property>
+		<property name="goodsSerialNo" type="java.lang.String">
+			<column name="goodsSerialNo" />
+		</property>
+
+		<property name="reSerialNo" type="java.lang.String">
+			<column name="reSerialNo" />
+		</property>
+
+		<property name="goodsDetailId" type="java.lang.String">
+			<column name="goodsDetailId" not-null="true" />
+		</property>
+		<property name="reNote" type="java.lang.String">
+			<column name="reNote" />
+		</property>
+
+		<property name="spareGoodsName" type="java.lang.String">
+			<column name="spareGoodsName" />
+		</property>
+		<property name="spareGoodsFirstTypeId" type="java.lang.String">
+			<column name="spareGoodsFirstTypeId" />
+		</property>
+		<property name="spareGoodsFirstTypeName" type="java.lang.String">
+			<column name="spareGoodsFirstTypeName" />
+		</property>
+		<property name="spareGoodsSecondTypeId" type="java.lang.String">
+			<column name="spareGoodsSecondTypeId" />
+		</property>
+		<property name="spareGoodsSecondTypeName" type="java.lang.String">
+			<column name="spareGoodsSecondTypeName" />
+		</property>
+		<property name="spareGoodsThirdTypeId" type="java.lang.String">
+			<column name="spareGoodsThirdTypeId" />
+		</property>
+		<property name="spareGoodsThirdTypeName" type="java.lang.String">
+			<column name="spareGoodsThirdTypeName" />
+		</property>
+		
+		<property name="spareGoodsImage" type="java.lang.String">
+			<column name="spareGoodsImage" />
+		</property>
+		<property name="spareGoodsDetail" type="java.lang.String">
+			<column name="spareGoodsDetail" />
+		</property>
+		<property name="spareGoodsBrand" type="java.lang.String">
+			<column name="spareGoodsBrand" />
+		</property>
+		<property name="spareGoodsStyle" type="java.lang.String">
+			<column name="spareGoodsStyle" />
+		</property>
+		<property name="spareGoodsUnit" type="java.lang.String">
+			<column name="spareGoodsUnit" />
+		</property>
+		<property name="spareGoodsOriginCountry" type="java.lang.String">
+			<column name="spareGoodsOriginCountry" />
+		</property>
+			<property name="spareGoodsBarCode" type="java.lang.String">
+			<column name="spareGoodsBarCode" />
+		</property>
+	</class>
 </hibernate-mapping>

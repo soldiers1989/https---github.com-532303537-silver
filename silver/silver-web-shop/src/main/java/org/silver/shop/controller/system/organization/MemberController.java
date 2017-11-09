@@ -39,6 +39,17 @@ public class MemberController {
 	@Autowired
 	private MemberTransaction memberTransaction;
 
+	/**
+	 * 用户注册
+	 * @param account 账号
+	 * @param loginPass 登录密码
+	 * @param memberIdCardName 身份证名称
+	 * @param memberIdCard 身份证号码
+	 * @param memberTel 手机号码
+	 * @param req 
+	 * @param response
+	 * @return String
+	 */
 	@RequestMapping(value = "/memberRegister", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("用户--注册")
@@ -46,7 +57,6 @@ public class MemberController {
 			@RequestParam("memberIdCardName") String memberIdCardName,
 			@RequestParam("memberIdCard") String memberIdCard, @RequestParam("memberTel") String memberTel,
 			HttpServletRequest req, HttpServletResponse response) {
-
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
@@ -58,7 +68,6 @@ public class MemberController {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.FORMAT_ERR.getMsg());
 		}
-
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -82,7 +91,6 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();

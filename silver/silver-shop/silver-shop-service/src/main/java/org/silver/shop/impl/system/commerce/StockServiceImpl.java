@@ -105,7 +105,6 @@ public class StockServiceImpl implements StockService {
 					stock.setGoodsId(datasMap.get("goodsDetailId") + "");
 					// 库存商品价格暂时设置为备案时单价
 					stock.setRegPrice(goodsRecord.getRegPrice());
-					stock.setFreePrice(0.0);
 					stock.setFreight(0.0);
 					stock.setWarehouseCode(warehouseCode);
 					stock.setWarehouseName(warehouseName);
@@ -173,14 +172,19 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
-	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size,String warehouseCode) {
+	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size,
+			String warehouseCode) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		params.put("warehouseCode", warehouseCode);
 		List<Object> reList = stockDao.findByProperty(StockContent.class, params, page, size);
 		long totalCount = stockDao.findByPropertyCount(StockContent.class, params);
-		if (reList != null && reList.size() > 0) {
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
@@ -222,7 +226,7 @@ public class StockServiceImpl implements StockService {
 				if (!stockDao.update(stockInfo)) {
 					Map<String, Object> errorMap = new HashMap<>();
 					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "商品上/下架状态修改失败,服务器繁忙！");
-					errorList.add(errorMap);					
+					errorList.add(errorMap);
 				}
 			} else {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());

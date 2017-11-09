@@ -59,12 +59,12 @@ public class OrderTransaction {
 	}
 
 	//商户查看订单详情
-	public Map<String, Object> getMerchantOrderDetail(String orderId) {
+	public Map<String, Object> getMerchantOrderDetail(String entOrderNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return orderService.getMerchantOrderDetail(merchantId,merchantName,orderId);
+		return orderService.getMerchantOrderDetail(merchantId,merchantName,entOrderNo);
 	}
 }

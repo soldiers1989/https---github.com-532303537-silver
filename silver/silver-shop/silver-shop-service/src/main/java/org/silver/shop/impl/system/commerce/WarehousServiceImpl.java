@@ -29,9 +29,12 @@ public class WarehousServiceImpl implements WarehousService {
 		params.put("merchantId", merchantId);
 		params.put("deleteFlag", 0);
 		List<Object> reList = warehousDao.findByProperty(WarehouseContent.class, params, page, size);
-		
 		long totalCount = warehousDao.findByPropertyCount(WarehouseContent.class, params);
-		if (reList != null && reList.size() > 0) {
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
 				WarehouseContent warehouse = (WarehouseContent) reList.get(i);
 				params.put("warehouseCode", warehouse.getWarehouseCode());
@@ -45,8 +48,8 @@ public class WarehousServiceImpl implements WarehousService {
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
 	}

@@ -54,9 +54,24 @@ public class GoodsRecordDetail implements Serializable {
 	private String goodsMerchantName;//商品归属商戶名
 	private String goodsSerialNo;// 备案所属商品流水号
 	private String reSerialNo;//商品备案信息接受后返回流水号
-	
 	private String goodsDetailId;//商品基本信息ID
 	private String reNote;//备案商品返回信息
+	
+	private String spareGoodsName;// (备用字段,可修改)商品名称
+	private String spareGoodsFirstTypeId;// (备用字段,可修改)商品类型第一级Id
+	private String spareGoodsFirstTypeName;//(备用字段,可修改)商品类型第一级名称
+	private String spareGoodsSecondTypeId;// (备用字段,可修改)商品类型第二级Id
+	private String spareGoodsSecondTypeName;// (备用字段,可修改)商品类型第二级名称
+	private String spareGoodsThirdTypeId;// (备用字段,可修改)商品类型第三级Id
+	private String spareGoodsThirdTypeName;// (备用字段,可修改)商品类型第三级名称
+	private String spareGoodsImage;// (备用字段,可修改)商品展示图片
+	private String spareGoodsDetail;// (备用字段,可修改)商品详情
+	private String spareGoodsBrand;// (备用字段,可修改)商品品牌
+	private String spareGoodsStyle;// (备用字段,可修改)商品规格
+	private String spareGoodsUnit;// (备用字段,可修改)申报计量单位
+	private String spareGoodsOriginCountry;// (备用字段,可修改)商品原厂国
+	private String spareGoodsBarCode;// (备用字段,可修改)商品货号(条形码)
+	
 	public long getId() {
 		return id;
 	}
@@ -319,4 +334,89 @@ public class GoodsRecordDetail implements Serializable {
 	public void setReNote(String reNote) {
 		this.reNote = reNote;
 	}
+	public String getSpareGoodsName() {
+		return spareGoodsName;
+	}
+	public void setSpareGoodsName(String spareGoodsName) {
+		this.spareGoodsName = spareGoodsName;
+	}
+	public String getSpareGoodsFirstTypeId() {
+		return spareGoodsFirstTypeId;
+	}
+	public void setSpareGoodsFirstTypeId(String spareGoodsFirstTypeId) {
+		this.spareGoodsFirstTypeId = spareGoodsFirstTypeId;
+	}
+	public String getSpareGoodsFirstTypeName() {
+		return spareGoodsFirstTypeName;
+	}
+	public void setSpareGoodsFirstTypeName(String spareGoodsFirstTypeName) {
+		this.spareGoodsFirstTypeName = spareGoodsFirstTypeName;
+	}
+	public String getSpareGoodsSecondTypeId() {
+		return spareGoodsSecondTypeId;
+	}
+	public void setSpareGoodsSecondTypeId(String spareGoodsSecondTypeId) {
+		this.spareGoodsSecondTypeId = spareGoodsSecondTypeId;
+	}
+	public String getSpareGoodsSecondTypeName() {
+		return spareGoodsSecondTypeName;
+	}
+	public void setSpareGoodsSecondTypeName(String spareGoodsSecondTypeName) {
+		this.spareGoodsSecondTypeName = spareGoodsSecondTypeName;
+	}
+	public String getSpareGoodsThirdTypeId() {
+		return spareGoodsThirdTypeId;
+	}
+	public void setSpareGoodsThirdTypeId(String spareGoodsThirdTypeId) {
+		this.spareGoodsThirdTypeId = spareGoodsThirdTypeId;
+	}
+	public String getSpareGoodsThirdTypeName() {
+		return spareGoodsThirdTypeName;
+	}
+	public void setSpareGoodsThirdTypeName(String spareGoodsThirdTypeName) {
+		this.spareGoodsThirdTypeName = spareGoodsThirdTypeName;
+	}
+	public String getSpareGoodsImage() {
+		return spareGoodsImage;
+	}
+	public void setSpareGoodsImage(String spareGoodsImage) {
+		this.spareGoodsImage = spareGoodsImage;
+	}
+	public String getSpareGoodsDetail() {
+		return spareGoodsDetail;
+	}
+	public void setSpareGoodsDetail(String spareGoodsDetail) {
+		this.spareGoodsDetail = spareGoodsDetail;
+	}
+	public String getSpareGoodsBrand() {
+		return spareGoodsBrand;
+	}
+	public void setSpareGoodsBrand(String spareGoodsBrand) {
+		this.spareGoodsBrand = spareGoodsBrand;
+	}
+	public String getSpareGoodsStyle() {
+		return spareGoodsStyle;
+	}
+	public void setSpareGoodsStyle(String spareGoodsStyle) {
+		this.spareGoodsStyle = spareGoodsStyle;
+	}
+	public String getSpareGoodsUnit() {
+		return spareGoodsUnit;
+	}
+	public void setSpareGoodsUnit(String spareGoodsUnit) {
+		this.spareGoodsUnit = spareGoodsUnit;
+	}
+	
+	public String getSpareGoodsOriginCountry() {
+		return spareGoodsOriginCountry;
+	}
+	public void setSpareGoodsOriginCountry(String spareGoodsOriginCountry) {
+		this.spareGoodsOriginCountry = spareGoodsOriginCountry;
+	}
+	public String getSpareGoodsBarCode() {
+		return spareGoodsBarCode;
+	}
+	public void setSpareGoodsBarCode(String spareGoodsBarCode) {
+		this.spareGoodsBarCode = spareGoodsBarCode;
+	}		
 }

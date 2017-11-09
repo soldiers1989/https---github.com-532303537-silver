@@ -49,9 +49,9 @@ public interface OrderService {
 	 * 商户查看订单详情
 	 * @param merchantId 商户ID
 	 * @param merchantName 商户名称
-	 * @param orderId 订单id
+	 * @param entOrderNo 订单id
 	 * @return
 	 */
-	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String orderId);
+	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String entOrderNo);
 
 }

@@ -22,6 +22,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.commerce.ShopCartContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -288,7 +289,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.MSG.toString(), stock.getGoodsName() + "保存商品信息失败,请重试！");
 			return statusMap;
 		}
-		//修改上架商品数量
+		// 修改上架商品数量
 		int sellCount = stock.getSellCount();
 		stock.setSellCount(sellCount - count);
 		int paymentCount = stock.getPaymentCount();
@@ -362,7 +363,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
@@ -376,14 +377,17 @@ public class OrderServiceImpl implements OrderService {
 		paramMap.put("merchantId", merchantId);
 		List<OrderRecordContent> reOrderList = orderDao.findByProperty(OrderRecordContent.class, paramMap, page, size);
 		long totalCount = orderDao.findByPropertyCount(OrderRecordContent.class, paramMap);
-		if (reOrderList != null && reOrderList.size() > 0) {
+		if(reOrderList == null){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+		}else if (!reOrderList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), reOrderList);
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
 		return statusMap;
 	}
@@ -486,40 +490,34 @@ public class OrderServiceImpl implements OrderService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (jsonList != null && jsonList.size() > 0) {
-			for (int i = 0; i < jsonList.size(); i++) {
-				Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
-				String entGoodsNo = paramsMap.get("entGoodsNo") + "";
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
+			String entGoodsNo = paramsMap.get("entGoodsNo") + "";
+			param.clear();
+			param.put("entGoodsNo", entGoodsNo);
+			List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);
+			if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
+				GoodsRecordDetail goodsInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
 				param.clear();
-				param.put("entGoodsNo", entGoodsNo);
-				List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);
-				if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
-					GoodsRecordDetail goodsInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
-					param.clear();
-					param.put("goodsSerialNo", goodsInfo.getGoodsSerialNo());
-					List<Object> reGoodsRecordInfo = orderDao.findByProperty(GoodsRecord.class, param, 1, 1);
-					GoodsRecord goodsRecord = (GoodsRecord) reGoodsRecordInfo.get(0);
-					if (cacheList != null && cacheList.size() == 0) {
-						cacheList.add(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode());
-					} else if (!cacheList.contains(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode())) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), "不同海关不能一并下单,请分开下单！");
-						return statusMap;
-					}
-				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				param.put("goodsSerialNo", goodsInfo.getGoodsSerialNo());
+				List<Object> reGoodsRecordInfo = orderDao.findByProperty(GoodsRecord.class, param, 1, 1);
+				GoodsRecord goodsRecord = (GoodsRecord) reGoodsRecordInfo.get(0);
+				if (cacheList != null && cacheList.size() == 0) {
+					cacheList.add(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode());
+				} else if (!cacheList.contains(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode())) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "不同海关不能一并下单,请分开下单！");
 					return statusMap;
 				}
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
 		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
 	}
 
 	private Map<String, Object> calculationTaxesFees(String goodsId, int count, String entGoodsNo, double regPrice) {
@@ -612,15 +610,15 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String orderId) {
+	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String entOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String,Object>> lm =new  ArrayList<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
 		paramMap.put("merchantId", merchantId);
-		paramMap.put("orderId", orderId);
-		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, paramMap, 1, 1);
+		paramMap.put("entOrderNo", entOrderNo);
+		List<Object> reOrderList = orderDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
 		if (reOrderList != null && reOrderList.size() > 0) {
-			Map<String,Object> item = new HashMap<>();
+			Map<String, Object> item = new HashMap<>();
 			List<Object> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, paramMap, 0, 0);
 			item.put("order", reOrderList);
 			item.put("orderGoods", reOrderGoodsList);
@@ -629,10 +627,10 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), lm);
 			return statusMap;
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;			
+			return statusMap;
 		}
 	}
 }

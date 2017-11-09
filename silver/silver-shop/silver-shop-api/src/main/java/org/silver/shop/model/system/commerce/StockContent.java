@@ -22,9 +22,8 @@ public class StockContent implements Serializable {
 	private int paidCount;// 已支付待发货数量
 	private int shippedCount;// 已发货数量
 	private int doneCount;// 成交完成数量
-	private Double regPrice; // 单价
-	private Double freePrice;// 特价
-	private Double freight;// 运杂费
+	private double regPrice; // 单价(售卖)价格
+	private double freight;// 运杂费
 	private String warehouseCode;// 仓库编码 
 	private String warehouseName;// 仓库名称
 	private String createBy;// 创建人
@@ -33,12 +32,16 @@ public class StockContent implements Serializable {
 	private Date updateDate;// 更新时间
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
-	private Date deleteDate;// 删除时间
-	
+	private Date deleteDate;// 删除时间	
 	private String merchantName;//商户名称
 	private int sellFlag;//上下架标识：1-上架,2-下架
 	private String goodsName;// 商品名称
 	private String entGoodsNo;//商品备案ID
+	
+	private double originalPrice;//商品(入库)价格
+	private double marketPrice;//商品(市场)价格
+	private double salePrice;//商品(特卖)价格
+	private double memberPrice;//商品(会员)价格
 	public long getId() {
 		return id;
 	}
@@ -100,12 +103,7 @@ public class StockContent implements Serializable {
 	public void setRegPrice(Double regPrice) {
 		this.regPrice = regPrice;
 	}
-	public Double getFreePrice() {
-		return freePrice;
-	}
-	public void setFreePrice(Double freePrice) {
-		this.freePrice = freePrice;
-	}
+	
 	public Double getFreight() {
 		return freight;
 	}
@@ -192,7 +190,35 @@ public class StockContent implements Serializable {
 	public void setEntGoodsNo(String entGoodsNo) {
 		this.entGoodsNo = entGoodsNo;
 	}
-	
-
+	public double getOriginalPrice() {
+		return originalPrice;
+	}
+	public void setOriginalPrice(double originalPrice) {
+		this.originalPrice = originalPrice;
+	}
+	public double getMarketPrice() {
+		return marketPrice;
+	}
+	public void setMarketPrice(double marketPrice) {
+		this.marketPrice = marketPrice;
+	}
+	public double getSalePrice() {
+		return salePrice;
+	}
+	public void setSalePrice(double salePrice) {
+		this.salePrice = salePrice;
+	}
+	public double getMemberPrice() {
+		return memberPrice;
+	}
+	public void setMemberPrice(double memberPrice) {
+		this.memberPrice = memberPrice;
+	}
+	public void setRegPrice(double regPrice) {
+		this.regPrice = regPrice;
+	}
+	public void setFreight(double freight) {
+		this.freight = freight;
+	}	
 	
 }

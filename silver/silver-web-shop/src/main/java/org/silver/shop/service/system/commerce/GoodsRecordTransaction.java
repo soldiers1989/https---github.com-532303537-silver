@@ -66,6 +66,13 @@ public class GoodsRecordTransaction {
 		return goodsRecordService.updateGoodsRecordInfo(datasMap);
 	}
 
-	
-	
+	//商戶查询单个商品备案详情
+	public Map<String, Object> getMerchantGoodsRecordDetail(String entGoodsNo) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantName = merchantInfo.getMerchantName();
+		String merchantId = merchantInfo.getMerchantId();
+		return goodsRecordService.getMerchantGoodsRecordDetail(merchantId,merchantName,entGoodsNo);
+	}
 }

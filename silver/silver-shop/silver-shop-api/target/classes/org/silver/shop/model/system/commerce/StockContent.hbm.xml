@@ -35,9 +35,7 @@
         <property name="regPrice" type="java.lang.Double">
             <column name="regPrice" />
         </property>
-        <property name="freePrice" type="java.lang.Double">
-            <column name="freePrice" />
-        </property>
+      
         <property name="freight" type="java.lang.Double">
             <column name="freight" />
         </property>
@@ -71,17 +69,28 @@
         
         <property name="merchantName" type="java.lang.String">
         	<column name="merchantName" />
-        </property>
-        
+        </property>        
         <property name="sellFlag" type="int">
         	<column name="sellFlag"/>
         </property>
         <property name="goodsName" type="java.lang.String">
         	<column name="goodsName"/>
-        </property>
-        
+        </property>        
         <property name="entGoodsNo" type="java.lang.String">
         	<column name="entGoodsNo" not-null="true"/>
-        </property>
+        </property>        
+        <property name="originalPrice" type="double">
+			<column name="originalPrice" />
+		</property>
+		<property name="marketPrice" type="double">
+			<column name="marketPrice" />
+		</property>
+		<property name="salePrice" type="double">
+			<column name="salePrice" />
+		</property>
+		<property name="memberPrice" type="double">
+			<column name="memberPrice" />
+		</property>
+        
     </class>
 </hibernate-mapping>

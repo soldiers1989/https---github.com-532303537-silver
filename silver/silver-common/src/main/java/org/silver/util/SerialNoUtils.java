@@ -21,17 +21,19 @@ public class SerialNoUtils {
 	 */
 	public static final String getSerialNo(String topStr, int year, long serialNoCount) {
 		long count = serialNoCount + 1;
+		// 默认随机数为4位
+		int randomNumber = 4;
 		String strCount = String.valueOf(count);
 		while (strCount.length() < 5) {
 			strCount = "0" + strCount;
-		}
-		if(strCount.length() > 5){
-			
+		}		
+		if (strCount.length() > 5) {
+			randomNumber = 3;
 		}
 		// 获取到当前时间戳
 		Long timestamp = System.currentTimeMillis();
-		// 随机4位数
-		int ramCount = RandomUtils.getRandom(4);
+		// 生成随机数
+		int ramCount = RandomUtils.getRandom(randomNumber);
 		return topStr + year + strCount + timestamp + ramCount;
 	}
 
@@ -59,8 +61,6 @@ public class SerialNoUtils {
 
 	public static void main(String[] args) {
 		String s = getSerialNo("tes_", 2017, 100000);
-		System.out.println("------->>>>>"+s);
-		s = s.substring(0,s.length()-1);
-		System.out.println(s);
+		System.out.println("------->>>>>" + s.length());
 	}
 }
