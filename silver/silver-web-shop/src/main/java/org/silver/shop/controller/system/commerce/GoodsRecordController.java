@@ -34,24 +34,6 @@ public class GoodsRecordController {
 	private GoodsRecordTransaction goodsRecordTransaction;
 
 	/**
-	 * 查询商户下商品基本信息
-	 * 
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数据条数
-	 * @return String 与GoodsContentController的findMerchantGoodsInfo重复了
-	 */
-	@RequestMapping(value = "/findMerchantGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("查询商户下商品基本信息")
-	@RequiresRoles("Merchant")
-	public String findMerchantGoodsBaseInfo(@RequestParam("page") int page, @RequestParam("size") int size) {
-		Map<String, Object> datasMap = goodsRecordTransaction.findMerchantGoodsBaseInfo(page, size);
-		return JSONObject.fromObject(datasMap).toString();
-	}
-
-	/**
 	 * 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	 * 
 	 * @param goodsInfoPack
@@ -105,11 +87,11 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object>  statusMap = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
 		if (customsPort != null && customsCode != null && ciqOrgCode != null && recordGoodsInfoPack != null) {
-			 statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode,
+			statusMap = goodsRecordTransaction.merchantSendGoodsRecord(customsPort, customsCode, ciqOrgCode,
 					recordGoodsInfoPack);
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
@@ -130,33 +112,34 @@ public class GoodsRecordController {
 		Map<String, Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 备案网关异步回馈备案商品信息
+	 * 
 	 * @param req
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/reNotifyMsg",  produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String reNotifyMsg(HttpServletRequest req,HttpServletResponse response){
+	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
 		logger.info("-----备案网关异步回馈备案商品信息---");
-		Map<String,Object> datasMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		datasMap.put("status", req.getParameter("status") + "");
 		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entGoodsNo", req.getParameter("entGoodsNo") + "");
 		datasMap.put("CIQGoodsNo", req.getParameter("CIQGoodsNo") + "");
-		Map<String,Object> statusMap =  goodsRecordTransaction.updateGoodsRecordInfo(datasMap);
-		logger.info(JSONObject.fromObject(statusMap).toString());
+		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(datasMap);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/getMerchantGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商戶查询单个商品备案详情")
 	@RequiresRoles("Merchant")
-	public String getMerchantGoodsRecordDetail(HttpServletRequest req, HttpServletResponse response, @RequestParam("entGoodsNo")String entGoodsNo) {
+	public String getMerchantGoodsRecordDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("entGoodsNo") String entGoodsNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -165,5 +148,33 @@ public class GoodsRecordController {
 		Map<String, Object> statusMap = goodsRecordTransaction.getMerchantGoodsRecordDetail(entGoodsNo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
+	/**
+	 * 商户修改备案商品中的商品基本信息
+	 * 
+	 * @param req
+	 * @param resp
+	 * @return
+	 */
+	@RequestMapping(value = "/editMerchantRecordGoodsDetailInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户修改备案商品中的商品基本信息")
+	@RequiresRoles("Merchant")
+	public String editMerchantRecordGoodsDetailInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		//type 1-全部修改,2-修改商品信息(价格除外),3-只修改商品价格(商品基本信息不修改)
+		int type = Integer.parseInt(req.getParameter("type"));
+		Map<String, Object> statusMap = new HashMap<>();
+		if (type == 1 || type == 2 || type == 3) {
+			statusMap = goodsRecordTransaction.editMerchantRecordGoodsDetailInfo(req,type);
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

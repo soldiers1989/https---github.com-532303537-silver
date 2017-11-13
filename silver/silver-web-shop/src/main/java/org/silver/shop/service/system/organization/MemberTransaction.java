@@ -81,15 +81,16 @@ public class MemberTransaction {
 	}
 
 	// 用户添加商品至购物车
-	public Map<String, Object> addGoodsToShopCart(String goodsId, int count) {
+	public Map<String, Object> addGoodsToShopCart(String entGoodsNo, int count) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return memberService.addGoodsToShopCart(memberId, memberName, goodsId, count);
+		return memberService.addGoodsToShopCart(memberId, memberName, entGoodsNo, count);
 	}
 
+	//用户查询购物车信息
 	public Map<String, Object> getGoodsToShopCartInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据

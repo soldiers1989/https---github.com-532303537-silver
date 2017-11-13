@@ -30,20 +30,21 @@ public class YsPayController {
 	public String doPay(HttpServletRequest req, HttpServletResponse resp) {
 		String entOrderNo = req.getParameter("entOrderNo");
 		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(entOrderNo);
-		float  orderTotalPrice = 0;
+		float orderTotalPrice = 0;
 		// 当订单ID查询信息无误
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return "error";
-		} else {
-			String totalPrice = reMap.get("orderTotalPrice") + "";
-			orderTotalPrice = Float.parseFloat(totalPrice + "");
-			int a = (int) (orderTotalPrice * 1000);
-			if (a % 10 > 0) {
-				orderTotalPrice = (a - a % 10 + 10 * 1.0f) / 1000.0f;
-			} else {
-				orderTotalPrice= a * 1.0f / 1000.0f;
-			}
 		}
+		//获取订单价格,如有小数点后三位则直接进位,而非四舍五入
+		String totalPrice = reMap.get("orderTotalPrice") + "";
+		orderTotalPrice = Float.parseFloat(totalPrice + "");
+		int a = (int) (orderTotalPrice * 1000);
+		if (a % 10 > 0) {
+			orderTotalPrice = (a - a % 10 + 10 * 1.0f) / 1000.0f;
+		} else {
+			orderTotalPrice = a * 1.0f / 1000.0f;
+		}
+
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		req.setAttribute("method", "ysepay.online.directpay.createbyuser");
 		req.setAttribute("partner_id", DirectPayConfig.PLATFORM_PARTNER_NO);

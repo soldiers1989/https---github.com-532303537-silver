@@ -164,7 +164,6 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			goodsInfo.setDeleteFlag(0);
 			flag = goodsContentDao.update(goodsInfo);
 		}
-
 		return flag;
 	}
 

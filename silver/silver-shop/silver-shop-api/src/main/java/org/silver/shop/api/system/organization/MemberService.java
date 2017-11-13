@@ -47,10 +47,10 @@ public interface MemberService {
 	 * 
 	 * @param memberId 用户ID
 	 * @param memberName 用户名称
-	 * @param goodsId 商品名称
+	 * @param entGoodsNo 商品备案Id
 	 * @param count 数量
 	 */
-	public Map<String, Object> addGoodsToShopCart(String memberId, String memberName, String goodsId, int count);
+	public Map<String, Object> addGoodsToShopCart(String memberId, String memberName, String entGoodsNo, int count);
 
 	/**
 	 * 用户查询购物车

@@ -5,19 +5,6 @@ import java.util.Map;
 public interface GoodsRecordService {
 
 	/**
-	 * 根据商户名查询所有商品基本信息
-	 * 
-	 * @param merchantName
-	 *            商户名称
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数据条数
-	 * @return List
-	 */
-	public Map<String, Object> findGoodsBaseInfo(String merchantName, int page, int size);
-
-	/**
 	 * 根据商户名称及商户ID、商品名称查询商户下商品备案信息,如未备案商品则查询商品基本信息
 	 * 
 	 * @param merchantName
@@ -77,4 +64,15 @@ public interface GoodsRecordService {
 	 * @return
 	 */
 	public Map<String, Object> getMerchantGoodsRecordDetail(String merchantId, String merchantName, String entGoodsNo);
+
+	/**
+	 * 商户修改备案商品中的商品基本信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param paramMap 参数
+	 * @param type 
+	 * @return Map
+	 */
+	public Map<String, Object> editMerchantRecordGoodsDetailInfo(String merchantId, String merchantName,
+			Map<String, Object> paramMap, int type);
 }

@@ -22,7 +22,6 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
-import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.commerce.ShopCartContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -31,9 +30,6 @@ import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
-import com.justep.baas.data.Row;
-import com.justep.baas.data.Table;
-
 import net.sf.json.JSONArray;
 
 @Service(interfaceClass = OrderService.class)
@@ -165,7 +161,7 @@ public class OrderServiceImpl implements OrderService {
 				// 获取库存中商品上架的单价
 				double regPrice = stock.getRegPrice();
 				// 计算税费
-				Map<String, Object> reRepiceMap = calculationTaxesFees(goodsId, count, entGoodsNo, regPrice);
+				Map<String, Object> reRepiceMap = calculationTaxesFees(count, entGoodsNo, regPrice);
 				if (!"1".equals(reRepiceMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reRepiceMap;
 				}
@@ -377,10 +373,10 @@ public class OrderServiceImpl implements OrderService {
 		paramMap.put("merchantId", merchantId);
 		List<OrderRecordContent> reOrderList = orderDao.findByProperty(OrderRecordContent.class, paramMap, page, size);
 		long totalCount = orderDao.findByPropertyCount(OrderRecordContent.class, paramMap);
-		if(reOrderList == null){
+		if (reOrderList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-		}else if (!reOrderList.isEmpty()) {
+		} else if (!reOrderList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), reOrderList);
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
@@ -520,13 +516,28 @@ public class OrderServiceImpl implements OrderService {
 		return statusMap;
 	}
 
-	private Map<String, Object> calculationTaxesFees(String goodsId, int count, String entGoodsNo, double regPrice) {
+	/**
+	 * 根据商品基本信息Id,备案商品Id,查询HS编码或大小类别计算税费
+	 * @param count
+	 *            商品数量
+	 * @param entGoodsNo
+	 *            商品备案Id
+	 * @param regPrice
+	 *            单价
+	 * @return Map
+	 */
+	public Map<String, Object> calculationTaxesFees( int count, String entGoodsNo, double regPrice) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("entGoodsNo", entGoodsNo);
 		List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, paramsMap, 1, 1);
 		paramsMap.clear();
-		if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
+		if (reGoodsRecordDetailList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reGoodsRecordDetailList.isEmpty()) {
+			// 查询备案商品信息
 			GoodsRecordDetail goodsRecord = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
 			String reHsCode = goodsRecord.getHsCode();
 			paramsMap.put("hsCode", reHsCode);
@@ -534,47 +545,48 @@ public class OrderServiceImpl implements OrderService {
 			paramsMap.clear();
 			if (reHsCodeList != null && reHsCodeList.size() > 0) {
 				HsCode hsCodeInfo = (HsCode) reHsCodeList.get(0);
+				// 先判断Hs编码是否有税率
 				if (hsCodeInfo.getVat() > 0 && hsCodeInfo.getConsolidatedTax() > 0) {
-
-				} else {
-					return findTaxesFees(goodsId, count, regPrice);
+					return findTaxesFees(goodsRecord, count, regPrice);
+				} else {// 其次以商品类型中的税率来计算
+					return findTaxesFees(goodsRecord, count, regPrice);
 				}
 			} else {
-				return findTaxesFees(goodsId, count, regPrice);
+				return findTaxesFees(goodsRecord, count, regPrice);
 			}
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "查询商品备案详情失败,服务器繁忙！");
 			return statusMap;
 		}
-		return null;
 	}
 
-	private Map<String, Object> findTaxesFees(String goodsId, int count, double regPrice) {
+	private Map<String, Object> findTaxesFees(GoodsRecordDetail goodsRecord, int count, double regPrice) {
 		double total = 0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		paramsMap.put("goodsId", goodsId);
-		List<Object> reGoodsContent = orderDao.findByProperty(GoodsContent.class, paramsMap, 1, 1);
-		paramsMap.clear();
-		if (reGoodsContent != null && reGoodsContent.size() > 0) {
-			GoodsContent goodsInfo = (GoodsContent) reGoodsContent.get(0);
-			long thirdId = Long.parseLong(goodsInfo.getGoodsThirdTypeId());
-			paramsMap.put("id", thirdId);
-			List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
-			if (reGoodsThirdList != null && reGoodsThirdList.size() > 0) {
-				GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
-				// 税费 = 购买单价 × 件数 × 跨境电商综合税率
-				double consolidatedTax = thirdInfo.getConsolidatedTax();
-				// Double d= 0.03*5*(119/100d)
-				total += regPrice * count * (consolidatedTax / 100d);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.DATAS.toString(), total);
-				return statusMap;
-			}
+		// paramsMap.put("goodsId", goodsRecord);
+		// List<Object> reGoodsContent =
+		// orderDao.findByProperty(GoodsContent.class, paramsMap, 1, 1);
+		// GoodsContent goodsInfo = (GoodsContent) reGoodsContent.get(0);
+		long thirdId = Long.parseLong(goodsRecord.getSpareGoodsThirdTypeId());
+		paramsMap.put("id", thirdId);
+		List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
+		if(reGoodsThirdList == null ){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
+		}else if(!reGoodsThirdList.isEmpty()) {
+			GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
+			// 税费 = 购买单价 × 件数 × 跨境电商综合税率
+			double consolidatedTax = thirdInfo.getConsolidatedTax();
+			// Double d= 0.03*5*(119/100d)
+			total += regPrice * count * (consolidatedTax / 100d);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), total);
+		}else{
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "查询商品税率无数据,服务器繁忙！");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
 		return statusMap;
 	}
 

@@ -23,7 +23,7 @@ public class StockContent implements Serializable {
 	private int shippedCount;// 已发货数量
 	private int doneCount;// 成交完成数量
 	private double regPrice; // 单价(售卖)价格
-	private double freight;// 运杂费
+	private double freight;// (国内快递)运费
 	private String warehouseCode;// 仓库编码 
 	private String warehouseName;// 仓库名称
 	private String createBy;// 创建人
@@ -213,9 +213,6 @@ public class StockContent implements Serializable {
 	}
 	public void setMemberPrice(double memberPrice) {
 		this.memberPrice = memberPrice;
-	}
-	public void setRegPrice(double regPrice) {
-		this.regPrice = regPrice;
 	}
 	public void setFreight(double freight) {
 		this.freight = freight;

@@ -55,9 +55,10 @@ public class StockServiceImpl implements StockService {
 	// 添加库存数量
 	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehouseCode,
 			String warehouseName, String goodsInfoPack) {
-		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = null;
+		Map<String,Object> errorMap = new HashMap<>();
+		List<Map<String, Object>> listMap = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
@@ -74,60 +75,72 @@ public class StockServiceImpl implements StockService {
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
 			params.put("entGoodsNo", datasMap.get("entGoodsNo"));
-			params.put("goodsName", datasMap.get("goodsName"));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
 			List<Object> goodsList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
-			if (goodsList != null && goodsList.size() > 0) {
-				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsList.get(0);
-				params.clear();
-				params.put("goodsId", datasMap.get("goodsDetailId"));
-				List<Object> stockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
-				// 如果数据库已有商品
-				if (stockList != null && stockList.size() > 0) {
-					StockContent reStock = (StockContent) stockList.get(0);
-					int reStockCount = Integer.parseInt(datasMap.get("stockCount") + "");
-					// 商品原有库存
-					int reTotalStock = reStock.getTotalStock();
-					reStock.setTotalStock(reStockCount + reTotalStock);
-					if (!stockDao.update(reStock)) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
-						return statusMap;
-					}
-				} else {
-					StockContent stock = new StockContent();
-					stock.setMerchantId(merchantId);
-					stock.setMerchantName(merchantName);
-					stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
-					stock.setGoodsName(datasMap.get("goodsName") + "");
-					// 商品库存里ID为备案商品的ID
-					stock.setGoodsId(datasMap.get("goodsDetailId") + "");
-					// 库存商品价格暂时设置为备案时单价
-					stock.setRegPrice(goodsRecord.getRegPrice());
-					stock.setFreight(0.0);
-					stock.setWarehouseCode(warehouseCode);
-					stock.setWarehouseName(warehouseName);
-					stock.setCreateDate(date);
-					stock.setCreateBy(merchantName);
-					// 上下架标识：1-上架,2-下架
-					stock.setSellFlag(2);
-					stock.setEntGoodsNo(datasMap.get("entGoodsNo") + "");
-					if (!stockDao.add(stock)) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), "保存 " + datasMap.get("goodsName") + " 商品错误!");
-						return statusMap;
-					}
-				}
-			} else {
+			if (goodsList == null) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "" + datasMap.get("goodsName") + " 该商品不存在!");
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 				return statusMap;
+			} else if (!goodsList.isEmpty()) {
+				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsList.get(0);
+				//
+				saveStockInfo(datasMap, goodsRecord, merchantId, merchantName, warehouseCode, warehouseName, listMap);
+			} else {
+				statusMap.put(BaseCode.MSG.toString(), "编号为：" + datasMap.get("entGoodsNo") + ",商品不存在!");
+				listMap.add(errorMap);
 			}
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.ERROR.toString(), listMap);
 		return statusMap;
+	}
+
+	private void saveStockInfo(Map<String, Object> datasMap, GoodsRecordDetail goodsRecord, String merchantId,
+			String merchantName, String warehouseCode, String warehouseName, List<Map<String, Object>> lm) {
+		Date date = new Date();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> errorMap = new HashMap<>();
+		paramMap.put("entGoodsNo", datasMap.get("entGoodsNo"));
+		List<Object> stockList = stockDao.findByProperty(StockContent.class, paramMap, 1, 1);
+		if (stockList == null) {
+			errorMap.put(BaseCode.MSG.toString(), "查询" + goodsRecord.getGoodsName() + "失败,服务器繁忙！");
+			lm.add(errorMap);
+		} else if (!stockList.isEmpty()) {//当商品在库存中存在时
+			StockContent reStock = (StockContent) stockList.get(0);
+			int reStockCount = Integer.parseInt(datasMap.get("stockCount") + "");
+			// 商品原有库存
+			int reTotalStock = reStock.getTotalStock();
+			reStock.setTotalStock(reStockCount + reTotalStock);
+			if (!stockDao.update(reStock)) {
+				errorMap.put(BaseCode.MSG.toString(), "保存 " + reStock.getGoodsName() + " 商品错误!");
+				lm.add(errorMap);
+			}
+		} else {// 库存中不存在商品,新添加一个商品
+			StockContent stock = new StockContent();
+			stock.setMerchantId(merchantId);
+			stock.setMerchantName(merchantName);
+			stock.setTotalStock(Integer.valueOf(datasMap.get("stockCount") + ""));
+			stock.setGoodsName(goodsRecord.getGoodsName());
+			// 库存中商品Id为商品基本信息Id
+			stock.setGoodsId(goodsRecord.getGoodsDetailId());
+			// 库存商品价格暂时设置为备案时单价
+			stock.setRegPrice(goodsRecord.getRegPrice());
+			stock.setFreight(0.0);
+			stock.setWarehouseCode(warehouseCode);
+			stock.setWarehouseName(warehouseName);
+			stock.setCreateDate(date);
+			stock.setCreateBy(merchantName);
+			// 上下架标识：1-上架,2-下架
+			stock.setSellFlag(2);
+			// 商品备案Id
+			stock.setEntGoodsNo(goodsRecord.getEntGoodsNo());
+			if (!stockDao.add(stock)) {
+				errorMap.put(BaseCode.MSG.toString(), "保存 " + goodsRecord.getGoodsName() + " 商品错误!");
+				lm.add(errorMap);
+			}
+		}
 	}
 
 	@Override
@@ -209,14 +222,21 @@ public class StockServiceImpl implements StockService {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
 			logger.error("--------商品上下架传递信息错误------");
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> stockMap = (Map<String, Object>) jsonList.get(i);
 			String entGoodsNo = stockMap.get("entGoodsNo") + "";
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-			if (reStockList != null && reStockList.size() > 0) {
+			if(reStockList == null){
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号："+entGoodsNo+"商品失败,服务器繁忙！");
+				errorList.add(errorMap);
+			}else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = (StockContent) reStockList.get(0);
 				if (type == 1 || type == 2) {
 					stockInfo.setSellFlag(type);
@@ -224,14 +244,12 @@ public class StockServiceImpl implements StockService {
 				stockInfo.setCreateBy(merchantName);
 				stockInfo.setCreateDate(date);
 				if (!stockDao.update(stockInfo)) {
-					Map<String, Object> errorMap = new HashMap<>();
 					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "商品上/下架状态修改失败,服务器繁忙！");
 					errorList.add(errorMap);
 				}
 			} else {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-				return statusMap;
+				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为："+entGoodsNo+"商品,服务器繁忙！");
+				errorList.add(errorMap);
 			}
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -251,16 +269,23 @@ public class StockServiceImpl implements StockService {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
 			logger.error("--------商品入库或上架传递信息错误------");
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> params = new HashMap<>();
+			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> stockMap = (Map<String, Object>) jsonList.get(i);
 			String entGoodsNo = stockMap.get("entGoodsNo") + "";
 			int count = Integer.parseInt(stockMap.get("count") + "");
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-			if (reStockList != null && reStockList.size() > 0) {
+			if(reStockList == null ){
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号："+entGoodsNo+"商品失败,服务器繁忙！");
+				errorMsgList.add(errorMap);
+			}else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = (StockContent) reStockList.get(0);
 				// 1-库存,2-上架
 				if (type == 1) {
@@ -268,7 +293,6 @@ public class StockServiceImpl implements StockService {
 				} else if (type == 2) {
 					int oldTotalCount = stockInfo.getTotalStock();
 					if (count > oldTotalCount) {
-						Map<String, Object> errorMap = new HashMap<>();
 						errorMap.put(BaseCode.MSG.toString(), stockInfo.getGoodsName() + "上架数量不能大于库存数量！");
 						errorMsgList.add(errorMap);
 						continue;
@@ -278,14 +302,12 @@ public class StockServiceImpl implements StockService {
 				stockInfo.setUpdateBy(merchantName);
 				stockInfo.setUpdateDate(date);
 				if (!stockDao.update(stockInfo)) {
-					Map<String, Object> errorMap = new HashMap<>();
 					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "修改库存/上架失败,服务器繁忙！");
 					errorMsgList.add(errorMap);
 				}
 			} else {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-				return statusMap;
+				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为："+entGoodsNo+"商品,服务器繁忙！");
+				errorMsgList.add(errorMap);
 			}
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

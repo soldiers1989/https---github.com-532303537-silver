@@ -15,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import net.sf.json.JSONObject;
 
 /**
  * 支付完成后,回调信息处理Controller
@@ -32,7 +31,7 @@ public class YsPayReceiveController {
 	@ResponseBody
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
 		logger.error("--------支付回调信息------");
-		Map datasMap = new HashMap<>();
+		Map<String,Object> datasMap = new HashMap<>();
 		datasMap.put("notify_type", req.getParameter("notify_type") + "");
 		datasMap.put("notify_time", req.getParameter("notify_time") + "");
 		datasMap.put("out_trade_no", req.getParameter("out_trade_no") + "");
@@ -44,9 +43,9 @@ public class YsPayReceiveController {
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
 		Map<String, Object> statusMap=null;
-		if(ApipaySubmit.verifySign(req, datasMap)){
+		//if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
-		}
+		//}
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());

@@ -181,5 +181,11 @@
 			<property name="spareGoodsBarCode" type="java.lang.String">
 			<column name="spareGoodsBarCode" />
 		</property>
+		<property name="taxFlag" type="int">
+			<column name="taxFlag" />
+		</property>
+		<property name="freightFlag" type="int">
+			<column name="freightFlag" />
+		</property>
 	</class>
 </hibernate-mapping>

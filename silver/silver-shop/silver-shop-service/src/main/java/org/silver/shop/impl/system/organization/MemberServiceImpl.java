@@ -12,6 +12,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.dao.system.organization.MemberDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.ShopCartContent;
 import org.silver.shop.model.system.commerce.StockContent;
@@ -120,35 +121,39 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Map<String, Object> addGoodsToShopCart(String memberId, String memberName, String goodsId, int count) {
+	public Map<String, Object> addGoodsToShopCart(String memberId, String memberName, String entGoodsNo, int count) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		params.put("goodsId", goodsId);
+		params.put("entGoodsNo", entGoodsNo);
 		// 根据前台传递的商品ID查询商品是否存在
-		List<Object> goodsList = memberDao.findByProperty(GoodsContent.class, params, 1, 1);
+		List<Object> goodsRecordList = memberDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 		// 在查询库存中上架(售卖数量是够足够)
 		List<Object> stockList = memberDao.findByProperty(StockContent.class, params, 1, 1);
 		params.clear();
-		StockContent stock = (StockContent) stockList.get(0);
-		int reSellCount = stock.getSellCount();
-		if (count > reSellCount) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "库存不足,请重新输入");
+		params.put("memberId", memberId);
+		params.put("entGoodsNo", entGoodsNo);
+		List<Object> reShopCart = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
+		if (goodsRecordList == null || stockList == null || reShopCart == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		if (goodsList != null && goodsList.size() > 0) {
-			GoodsContent goods = (GoodsContent) goodsList.get(0);
+		if (!goodsRecordList.isEmpty() && !stockList.isEmpty()) {
+			//获取库存信息
+			StockContent stock = (StockContent) stockList.get(0);
+			int reSellCount = stock.getSellCount();
+			//判断是否有足够的库存
+			if (count > reSellCount) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "库存不足,请重新输入");
+				return statusMap;
+			}
+			
+			GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsRecordList.get(0);
 			ShopCartContent shopCart = new ShopCartContent();
-			params.put("goodsBaseId", goodsId);
-			params.put("memberId", memberId);
-			params.put("flag", 1);
 			// 查询当前用户购物车中是否有该商品
-			List<Object> reShopCart1 = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
-			params.put("flag", 2);
-			List<Object> reShopCart2 = memberDao.findByProperty(ShopCartContent.class, params, 1, 1);
-			reShopCart1.addAll(reShopCart2);
-			if (reShopCart1 != null && reShopCart1.size() > 0) {
-				ShopCartContent oldShopCart = (ShopCartContent) reShopCart1.get(0);
+			if (!reShopCart.isEmpty()) {
+				ShopCartContent oldShopCart = (ShopCartContent) reShopCart.get(0);
 				int oldCount = oldShopCart.getCount();
 				int newCount = oldCount + count;
 				oldShopCart.setCount(newCount);
@@ -166,13 +171,14 @@ public class MemberServiceImpl implements MemberService {
 			}
 			shopCart.setMemberId(memberId);
 			shopCart.setMemberName(memberName);
-			shopCart.setMerchantId(goods.getGoodsMerchantId());
-			shopCart.setMerchantName(goods.getGoodsMerchantName());
-			shopCart.setGoodsBaseId(goods.getGoodsId());
-			shopCart.setGoodsName(goods.getGoodsName());
-			shopCart.setGoodsImage(goods.getGoodsImage());
-			shopCart.setGoodsStyle(goods.getGoodsStyle());
+			shopCart.setMerchantId(goodsRecord.getGoodsMerchantId());
+			shopCart.setMerchantName(goodsRecord.getGoodsMerchantName());
+			shopCart.setGoodsBaseId(goodsRecord.getGoodsDetailId());
+			shopCart.setGoodsName(goodsRecord.getSpareGoodsName());
+			shopCart.setGoodsImage(goodsRecord.getSpareGoodsImage());
+			shopCart.setGoodsStyle(goodsRecord.getSpareGoodsStyle());
 			shopCart.setCount(count);
+			//
 			shopCart.setFlag(1);
 			shopCart.setRegPrice(stock.getRegPrice());
 			Double totalPrice = stock.getRegPrice() * count;
@@ -313,7 +319,6 @@ public class MemberServiceImpl implements MemberService {
 		return statusMap;
 	}
 
-
 	@Override
 	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -345,9 +350,9 @@ public class MemberServiceImpl implements MemberService {
 			return statusMap;
 		} else if (reList.size() == 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(),"用户名可以使用!");
+			statusMap.put(BaseCode.MSG.getBaseCode(), "用户名可以使用!");
 			return statusMap;
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), "用户名已存在!");
 			return statusMap;

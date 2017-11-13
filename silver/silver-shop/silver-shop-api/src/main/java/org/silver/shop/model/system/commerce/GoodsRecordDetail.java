@@ -72,6 +72,8 @@ public class GoodsRecordDetail implements Serializable {
 	private String spareGoodsOriginCountry;// (备用字段,可修改)商品原厂国
 	private String spareGoodsBarCode;// (备用字段,可修改)商品货号(条形码)
 	
+	private int taxFlag;//计算税费标识：1-计算税费,2-不计税费;默认为：1
+	private int freightFlag;//计算(国内快递)物流费标识：1-无运费,2-手动设置运费;默认为：1
 	public long getId() {
 		return id;
 	}
@@ -418,5 +420,18 @@ public class GoodsRecordDetail implements Serializable {
 	}
 	public void setSpareGoodsBarCode(String spareGoodsBarCode) {
 		this.spareGoodsBarCode = spareGoodsBarCode;
-	}		
+	}
+	public int getTaxFlag() {
+		return taxFlag;
+	}
+	public void setTaxFlag(int taxFlag) {
+		this.taxFlag = taxFlag;
+	}
+	public int getFreightFlag() {
+		return freightFlag;
+	}
+	public void setFreightFlag(int freightFlag) {
+		this.freightFlag = freightFlag;
+	}
+	
 }

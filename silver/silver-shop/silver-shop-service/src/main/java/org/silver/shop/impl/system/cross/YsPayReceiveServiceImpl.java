@@ -15,6 +15,7 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
+import org.silver.shop.impl.system.commerce.OrderServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -62,7 +63,12 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 根据订单ID查询订单是否存在
 		params.put("entOrderNo", reEntOrderNo);
 		List<Object> orderList = ysPayReceiveDao.findByProperty(OrderContent.class, params, 0, 0);
-		if (orderList != null && orderList.size() > 0) {
+		List<Object> orderGoodsList = ysPayReceiveDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
+		if (orderList == null || orderGoodsList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "查询订单失败,服务器繁忙!");
+			return statusMap;
+		} else if (!orderList.isEmpty() && !orderGoodsList.isEmpty()) {
 			OrderContent orderInfo = (OrderContent) orderList.get(0);
 			params.clear();
 			// 根据用户ID查询用户是否存在
@@ -78,14 +84,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				// 获取返回的实体
 				PaymentContent paymentInfo = (PaymentContent) rePaymentMap.get(BaseCode.DATAS.toString());
 				// 保存备案订单信息
-				Map<String, Object> reOrderRecordMap = addOrderRecordInfo(orderInfo, datasMap, memberInfo, orderList);
+				Map<String, Object> reOrderRecordMap = addOrderRecordInfo(orderInfo, datasMap, memberInfo, orderList,
+						orderGoodsList);
 				if (!"1".equals(reOrderRecordMap.get(BaseCode.STATUS.toString()))) {
 					return reOrderRecordMap;
 				}
 				// 获取返回的订单备案实体实体
 				OrderRecordContent orderRecordInfo = (OrderRecordContent) reOrderRecordMap
 						.get(BaseCode.DATAS.toString());
-
 				String orderId = orderInfo.getEntOrderNo();
 				// 获取订单商品信息及备案头与备案商品信息
 				Map<String, Object> reMap = findOrderAndGoodsRecordInfo(orderId);
@@ -146,7 +152,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			}
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询订单信息失败,参数不正确!");
+			statusMap.put(BaseCode.MSG.toString(), "查询订单不存在,参数不正确!");
 			return statusMap;
 		}
 	}
@@ -214,23 +220,27 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	// 保存订单备案信息
 	private final Map<String, Object> addOrderRecordInfo(OrderContent orderInfo, Map<String, Object> datasMap,
-			Member memberInfo, List<Object> orderList) {
+			Member memberInfo, List<Object> orderList, List<Object> orderGoodsList) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		OrderRecordContent orderRecordInfo = new OrderRecordContent();
-		paramMap.put("entOrderNo", orderInfo.getEntOrderNo());
+		String entOrderNo = orderInfo.getEntOrderNo();
+		paramMap.put("entOrderNo", entOrderNo);
 		List<Object> reOrderList = ysPayReceiveDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
 		if (reOrderList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "查询备案订单信息是否存在时错误,请重试!");
 			return statusMap;
-		} else if (reOrderList.size() > 0) {
+		} else if (!reOrderList.isEmpty()) {
 			orderRecordInfo = (OrderRecordContent) reOrderList.get(0);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), orderRecordInfo);
 			return statusMap;
 		} else {
+			paramMap.clear();
+			paramMap.put("entOrderNo", entOrderNo);
+
 			orderRecordInfo.setMerchantId(orderInfo.getMerchantId());
 			orderRecordInfo.setMerchantName(orderInfo.getMerchantName());
 			orderRecordInfo.setMemberId(orderInfo.getMemberId());
@@ -239,17 +249,31 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			// 电子订单状态0-订单确认,1-订单完成,2-订单取消
 			orderRecordInfo.setOrderStatus(1);
 			orderRecordInfo.setPayStatus(0);
-			double totalPrice = 0;
+			// 商城订单总价
+			double orderTotal = 0;
+			// 订单商品总额
+			double orderGoodTotal = 0;
+			// 税费
+			double tax = 0;
+			orderInfo.getOrderTotalPrice();
+			// 计算多个(商城基本)订单信息商品总价
 			for (int i = 0; i < orderList.size(); i++) {
 				OrderContent order = (OrderContent) orderList.get(i);
-				totalPrice += order.getOrderTotalPrice();
+				orderTotal += order.getOrderTotalPrice();
 			}
-			orderRecordInfo.setOrderGoodTotal(totalPrice);
+			// 根据订单金额减掉商品总价格得出(总)订单备案信息中税费
+			for (int y = 0; y < orderGoodsList.size(); y++) {
+				OrderGoodsContent orderGoodsInfo = (OrderGoodsContent) orderGoodsList.get(y);
+				double goodstotalPrice = orderGoodsInfo.getGoodsTotalPrice();
+				orderGoodTotal += goodstotalPrice;
+				tax = orderTotal - goodstotalPrice;
+			}
+			orderRecordInfo.setOrderGoodTotal(orderGoodTotal);
 			// 人民币
 			orderRecordInfo.setOrderGoodTotalCurr("142");
 			// 暂时填0
 			orderRecordInfo.setFreight(0.0);
-			orderRecordInfo.setTax(0.0);
+			orderRecordInfo.setTax(tax);
 			orderRecordInfo.setOtherPayment(0.0);
 			// 抵付说明抵付情况说明。如果填写抵付金额时，此项必填。
 			orderRecordInfo.setOtherPayNotes("");
@@ -311,15 +335,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			List<Object> reOrderGoodsList) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
+		String entOrderNo = "";
 		Date date = new Date();
 		OrderGoodsContent orderInfo = null;
 		for (int y = 0; y < reOrderGoodsList.size(); y++) {
 			orderInfo = (OrderGoodsContent) reOrderGoodsList.get(y);
+			entOrderNo = orderInfo.getEntOrderNo();
 			// 根据商品备案编号,保存订单商品数量及商品单价
 			paramMap.put(orderInfo.getEntGoodsNo(), orderInfo.getGoodsCount() + "#" + orderInfo.getGoodsPrice());
 		}
 		Map<String, Object> paramMap2 = new HashMap<>();
-		paramMap2.put("entOrderNo", orderInfo.getEntOrderNo());
+		paramMap2.put("entOrderNo", entOrderNo);
 		List<Object> reOrderRecordGoodsList = ysPayReceiveDao.findByProperty(OrderRecordGoodsContent.class, paramMap2,
 				0, 0);
 		if (reOrderRecordGoodsList != null && reOrderRecordGoodsList.size() > 0) {

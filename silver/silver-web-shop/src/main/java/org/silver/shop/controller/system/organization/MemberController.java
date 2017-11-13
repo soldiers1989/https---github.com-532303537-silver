@@ -137,13 +137,13 @@ public class MemberController {
 	@ApiOperation(value = "用戶添加商品至购物车")
 	@RequiresRoles("Member")
 	public String addGoodsToShopCart(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("goodsId") String goodsId, @RequestParam("count") int count) {
+			@RequestParam("entGoodsNo") String entGoodsNo, @RequestParam("count") int count) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.addGoodsToShopCart(goodsId, count);
+		Map<String, Object> statusMap = memberTransaction.addGoodsToShopCart(entGoodsNo, count);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 

@@ -196,8 +196,13 @@ public class StockController {
 		 * data.put("entGoodsNo", "YM_20170000115075204310625696");
 		 * data.put("goodsName", "测试商品名称"); data.put("stockCount", 50);
 		 */
-		data.put("goodsId", "YM_20170000215082908696099795");
-		jsonList.add(data);
-		System.out.println(jsonList.toString());
+		/*data.put("goodsId", "YM_20170000215082908696099795");
+		jsonList.add(data);*/
+		String str = "[{}]";
+		
+		System.out.println("--->>>"+str.length());
+		jsonList = jsonList.fromObject(str);
+		Map<String,Object> kmap= (Map<String, Object>) jsonList.get(0);
+		System.out.println(kmap.size());
 	}
 }
