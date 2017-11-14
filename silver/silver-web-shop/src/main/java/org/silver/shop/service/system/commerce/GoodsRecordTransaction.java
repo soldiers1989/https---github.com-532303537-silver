@@ -111,7 +111,9 @@ public class GoodsRecordTransaction {
 		paramMap.put("goodsBarCode", req.getParameter("spareGoodsBarCode"));
 		paramMap.put("regPrice", req.getParameter("regPrice"));
 		paramMap.put("marketPrice", req.getParameter("marketPrice"));
-		paramMap.put("freightPrice", req.getParameter("freightPrice"));
+		paramMap.put("taxFlag", req.getParameter("taxFlag"));
+		paramMap.put("freightFlag", req.getParameter("freightFlag"));
+		paramMap.put("courierFee", req.getParameter("courierFee"));
 		return goodsRecordService.editMerchantRecordGoodsDetailInfo(merchantId, merchantName, paramMap, type);
 	}
 }

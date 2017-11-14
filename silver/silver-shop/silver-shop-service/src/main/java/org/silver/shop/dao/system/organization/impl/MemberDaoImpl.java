@@ -1,6 +1,5 @@
 package org.silver.shop.dao.system.organization.impl;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

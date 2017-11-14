@@ -11,7 +11,6 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.MD5;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,35 +79,6 @@ public class MemberTransaction {
 		return memberService.getMemberInfo(memberId, memberName);
 	}
 
-	// 用户添加商品至购物车
-	public Map<String, Object> addGoodsToShopCart(String entGoodsNo, int count) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-		return memberService.addGoodsToShopCart(memberId, memberName, entGoodsNo, count);
-	}
-
-	//用户查询购物车信息
-	public Map<String, Object> getGoodsToShopCartInfo() {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-		return memberService.getGoodsToShopCartInfo(memberId, memberName);
-	}
-
-	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
-		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-		return memberService.deleteShopCartGoodsInfo(goodsId, memberId, memberName);
-	}
-
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
@@ -126,7 +96,6 @@ public class MemberTransaction {
 		String memberName = memberInfo.getMemberName();
 		return memberService.getMemberWalletInfo(memberId, memberName);
 	}
-
 	
 	public Map<String,Object> checkMerchantName(String account) {
 		return memberService.checkMerchantName(account);

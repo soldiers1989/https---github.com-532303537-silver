@@ -70,7 +70,7 @@
 		<mapping resource="org/silver/shop/model/common/base/CCIQ.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/GAC.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/ShopCartContent.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/ShopCarContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordGoodsContent.hbm.xml"/>
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->

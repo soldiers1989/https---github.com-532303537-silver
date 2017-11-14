@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 购物车实体
  */
-public class ShopCartContent implements Serializable {
+public class ShopCarContent implements Serializable {
 	/**
 	 * 
 	 */
@@ -23,10 +23,14 @@ public class ShopCartContent implements Serializable {
 	private double regPrice;// 单价
 	private double totalPrice;// 总价
 
-	private String goodsSerialNo;// 商品备案流水ID
 	private int sellCount;// 库存(上架)数量
-	private int flag;// 用户选中标识1-未选择,2-已选择
+	private int flag;// 购物车商品选中标识：1-选中,2-未选中
 	private String entGoodsNo;//商品(海关备案返回)ID
+	private double vat;//增值税 
+	private double consumptionTax;//消费税 
+	private double consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+	private double tariff;//关税税率暂设为0%
+	private double courierFee;// (国内快递)运费
 	public long getId() {
 		return id;
 	}
@@ -121,18 +125,7 @@ public class ShopCartContent implements Serializable {
 
 	public void setTotalPrice(double totalPrice) {
 		this.totalPrice = totalPrice;
-	}
-
-	
-
-	public String getGoodsSerialNo() {
-		return goodsSerialNo;
-	}
-
-	public void setGoodsSerialNo(String goodsSerialNo) {
-		this.goodsSerialNo = goodsSerialNo;
-	}
-
+	}	
 	public int getSellCount() {
 		return sellCount;
 	}
@@ -157,4 +150,45 @@ public class ShopCartContent implements Serializable {
 		this.entGoodsNo = entGoodsNo;
 	}
 
+	public double getVat() {
+		return vat;
+	}
+
+	public void setVat(double vat) {
+		this.vat = vat;
+	}
+
+	public double getConsumptionTax() {
+		return consumptionTax;
+	}
+
+	public void setConsumptionTax(double consumptionTax) {
+		this.consumptionTax = consumptionTax;
+	}
+
+	public double getConsolidatedTax() {
+		return consolidatedTax;
+	}
+
+	public void setConsolidatedTax(double consolidatedTax) {
+		this.consolidatedTax = consolidatedTax;
+	}
+
+	public double getTariff() {
+		return tariff;
+	}
+
+	public void setTariff(double tariff) {
+		this.tariff = tariff;
+	}
+
+	public double getCourierFee() {
+		return courierFee;
+	}
+
+	public void setCourierFee(double courierFee) {
+		this.courierFee = courierFee;
+	}
+
+	
 }

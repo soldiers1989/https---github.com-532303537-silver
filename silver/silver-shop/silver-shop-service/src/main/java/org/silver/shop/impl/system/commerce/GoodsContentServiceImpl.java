@@ -70,10 +70,8 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		goodsInfo.setGoodsImage(goodsImage);
 		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId") + "");
 		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName") + "");
-
 		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId") + "");
 		goodsInfo.setGoodsSecondTypeName(params.get("goodsSecondTypeName") + "");
-
 		goodsInfo.setGoodsThirdTypeId(params.get("goodsThirdTypeId") + "");
 		goodsInfo.setGoodsThirdTypeName(params.get("goodsThirdTypeName") + "");
 
@@ -81,7 +79,15 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		goodsInfo.setGoodsBrand(params.get("goodsBrand") + "");
 		goodsInfo.setGoodsStyle(params.get("goodsStyle") + "");
 		goodsInfo.setGoodsUnit(params.get("goodsUnit") + "");
-		goodsInfo.setGoodsRegPrice(Double.valueOf((params.get("goodsRegPrice") + "")));
+		double goodsRegPrice = 0;
+		try {
+			goodsRegPrice = Double.valueOf((params.get("goodsRegPrice") + ""));
+		} catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), "价格不正确,请重新输入!");
+			return statusMap;
+		}
+		goodsInfo.setGoodsRegPrice(goodsRegPrice);
 		goodsInfo.setGoodsOriginCountry(params.get("goodsOriginCountry") + "");
 		goodsInfo.setGoodsBarCode(params.get("goodsBarCode") + "");
 		goodsInfo.setGoodsYear(String.valueOf(goodsYear));

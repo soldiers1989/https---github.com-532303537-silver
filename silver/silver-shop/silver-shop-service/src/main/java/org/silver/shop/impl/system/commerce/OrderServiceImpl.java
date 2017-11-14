@@ -22,7 +22,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
-import org.silver.shop.model.system.commerce.ShopCartContent;
+import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
@@ -432,8 +432,8 @@ public class OrderServiceImpl implements OrderService {
 			params.put("goodsBaseId", goodsId);
 			params.put("memberId", memberId);
 			// 根据商品ID查询购物车中商品
-			List<Object> cartList = orderDao.findByProperty(ShopCartContent.class, params, 1, 1);
-			ShopCartContent cart = (ShopCartContent) cartList.get(0);
+			List<Object> cartList = orderDao.findByProperty(ShopCarContent.class, params, 1, 1);
+			ShopCarContent cart = (ShopCarContent) cartList.get(0);
 			if (!orderDao.delete(cart)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "更新购物车状态失败,请重试！");

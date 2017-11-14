@@ -891,9 +891,17 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		int freightFlag = Integer.parseInt(paramMap.get("freightFlag") + "");
 		double regPrice = Double.parseDouble(String.valueOf(paramMap.get("regPrice")));
 		double marketPrice = Double.parseDouble(String.valueOf(paramMap.get("marketPrice")));
-		double freightPrice = 0;
+		double courierFee = 0;
+		//计算(国内快递)物流费标识：1-无运费,2-手动设置运费
 		if (freightFlag == 2) {
-			freightPrice = Double.parseDouble(String.valueOf(paramMap.get("freightPrice")));
+			try {
+				courierFee = Double.parseDouble(String.valueOf(paramMap.get("courierFee")));
+			} catch (Exception e) {
+				logger.error("----------错误信息-----",e.getMessage());
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "运费价格错误,请重新输入");
+				return statusMap;
+			}
 		}
 		params.put("entGoodsNo", paramMap.get("entGoodsNo"));
 		params.put("goodsMerchantId", merchantId);
@@ -932,15 +940,17 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				goodsRecordInfo.setUpdateBy(merchantName);
 				stockInfo.setRegPrice(regPrice);
 				stockInfo.setMarketPrice(marketPrice);
-				stockInfo.setFreight(freightPrice);
+				stockInfo.setCourierFee(courierFee);
 				stockInfo.setUpdateDate(date);
 				stockInfo.setUpdateBy(merchantName);
-				if (!goodsRecordDao.update(goodsRecordInfo) && goodsRecordDao.update(stockInfo)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "修改备案商品中基本信息或库存价格错误！");
+				if (goodsRecordDao.update(goodsRecordInfo) && goodsRecordDao.update(stockInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					return statusMap;
 				}
-				break;
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "修改备案商品中基本信息或库存价格错误！");
+				return statusMap;
 			case 2:
 				goodsRecordInfo.setSpareGoodsName(goodsName);
 				goodsRecordInfo.setSpareGoodsImage(goodsImage);
@@ -970,7 +980,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				stockInfo = (StockContent) reStockList.get(0);
 				stockInfo.setRegPrice(regPrice);
 				stockInfo.setMarketPrice(marketPrice);
-				stockInfo.setFreight(freightPrice);
+				stockInfo.setCourierFee(courierFee);
 				stockInfo.setUpdateDate(date);
 				stockInfo.setUpdateBy(merchantName);
 				if (!goodsRecordDao.update(stockInfo)) {

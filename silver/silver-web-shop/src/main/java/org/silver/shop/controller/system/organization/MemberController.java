@@ -132,35 +132,6 @@ public class MemberController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/addGoodsToShopCart", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation(value = "用戶添加商品至购物车")
-	@RequiresRoles("Member")
-	public String addGoodsToShopCart(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entGoodsNo") String entGoodsNo, @RequestParam("count") int count) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.addGoodsToShopCart(entGoodsNo, count);
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
-	@RequestMapping(value = "/getGoodsShopCartInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation(value = "用户查询购物车信息")
-	@RequiresRoles("Member")
-	public String getGoodsShopCartInfo(HttpServletRequest req, HttpServletResponse response) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.getGoodsToShopCartInfo();
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
 	/**
 	 * 检查用户登录
 	 */
@@ -218,20 +189,7 @@ public class MemberController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/deleteShopCartGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation(value = "用户删除购物车信息")
-	@RequiresRoles("Member")
-	public String deleteShopCartGoodsInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("goodsId") String goodsId) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.deleteShopCartGoodsInfo(goodsId);
-		return JSONObject.fromObject(statusMap).toString();
-	}
+	
 
 	/**
 	 * 用户设置购物车商品标识(暂定)

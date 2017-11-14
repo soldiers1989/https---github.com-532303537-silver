@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-10-18 18:07:32 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.commerce.ShopCartContent" table="ym_shop_member_shop_cart">
+    <class name="org.silver.shop.model.system.commerce.ShopCarContent" table="ym_shop_member_shop_car">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -41,14 +41,12 @@
         <property name="totalPrice" type="double">
             <column name="totalPrice" />
         </property>
-        <property name="goodsSerialNo" type="java.lang.String">
-            <column name="goodsSerialNo" />
-        </property>
         <property name="flag" type="int">
         	<column name="flag"/>
         </property>
         <property name="entGoodsNo" type="java.lang.String">
         	<column name="entGoodsNo" not-null="true"/>
         </property>
+        
     </class>
 </hibernate-mapping>
