@@ -31,7 +31,7 @@ public class YsPayReceiveController {
 	@ResponseBody
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
 		logger.error("--------支付回调信息------");
-		Map<String,Object> datasMap = new HashMap<>();
+		Map datasMap = new HashMap<>();
 		datasMap.put("notify_type", req.getParameter("notify_type") + "");
 		datasMap.put("notify_time", req.getParameter("notify_time") + "");
 		datasMap.put("out_trade_no", req.getParameter("out_trade_no") + "");
@@ -42,10 +42,10 @@ public class YsPayReceiveController {
 		datasMap.put("trade_no", req.getParameter("trade_no") + "");
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
-		Map<String, Object> statusMap=null;
-		//if(ApipaySubmit.verifySign(req, datasMap)){
+		Map<String, Object> statusMap=null; 
+		if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
-		//}
+		}
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());

@@ -11,6 +11,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.util.SerialNoUtils;
 import org.slf4j.Logger;
@@ -116,7 +117,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		params.put("deleteFlag", 0);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, page, size);
 		long total = goodsContentDao.findByPropertyCount(GoodsContent.class, params);
-		 if (reList!=null && reList.size() > 0) {
+		if (reList != null && reList.size() > 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
@@ -150,7 +151,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		params.put("goodsId", goodsId);
 		params.put("goodsMerchantName", merchantName);
 		// 根据商品ID查询商品基本信息
-		List reList = goodsContentDao.findByProperty(GoodsContent.class, params, 0, 0);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 0, 0);
 		if (reList != null && !reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			goodsInfo.setGoodsName(goodsName);
@@ -215,10 +216,10 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		params.put("goodsId", goodsId);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
 		List<Object> reStockList = goodsContentDao.findByProperty(StockContent.class, params, 1, 1);
-		if (reList != null && reList.size() > 0 && reStockList!=null && reStockList.size()>0) {
+		if (reList != null && reList.size() > 0 && reStockList != null && reStockList.size() > 0) {
 			GoodsContent goods = (GoodsContent) reList.get(0);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
-			//将商品的单价替换为库存时设置的售卖价格
+			// 将商品的单价替换为库存时设置的售卖价格
 			goods.setGoodsRegPrice(stockInfo.getRegPrice());
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
@@ -233,4 +234,64 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	}
 
+	@Override
+	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, int page,
+			int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		if (firstType != null && firstType > 0) {
+			paramMap.put("spareGoodsFirstTypeId", firstType + "");
+		} else if (secndType != null && secndType > 0) {
+			paramMap.put("spareGoodsSecondTypeId", secndType + "");
+		} else if (thirdType != null && thirdType > 0) {
+			paramMap.put("spareGoodsThirdTypeId", thirdType + "");
+		}
+		paramMap.put("deleteFlag", 0);
+		paramMap.put("status", 2);
+		List<Object> reGoodsRecordList = goodsContentDao.findByProperty(GoodsRecordDetail.class, paramMap, page, size);
+		long reGoodsRecordCount = goodsContentDao.findByPropertyCount(GoodsRecordDetail.class, paramMap);
+		if (reGoodsRecordList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reGoodsRecordList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), reGoodsRecordList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), reGoodsRecordCount);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String,Object> blullyMap = new HashMap<>();
+		blullyMap.put("spareGoodsName", "%" + goodsName + "%");
+		paramMap.put("deleteFlag", 0);
+		paramMap.put("status", 2);
+		List<Object> reGoodsRecordList = goodsContentDao.findByPropertyLike(GoodsRecordDetail.class, paramMap,blullyMap, page,
+				size);
+		long reGoodsRecordCount = goodsContentDao.findByPropertyLikeCount(GoodsRecordDetail.class, paramMap,blullyMap);
+		if (reGoodsRecordList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reGoodsRecordList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), reGoodsRecordList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), reGoodsRecordCount);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
 }

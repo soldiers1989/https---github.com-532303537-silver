@@ -83,4 +83,25 @@ public interface GoodsContentDao {
 	 * @return
 	 */
 	public long findByPropertyCount(Class entity,Map<String,Object> params);
+	
+	/**
+	 * 根据实体、列(名)、值模糊查询数据
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params
+	 *            属性
+	 * @param page 页数
+	 * @param size 数目
+	 * @return List 
+	 */
+	public List<Object> findByPropertyLike(Class entity, Map<String, Object> params,Map blullyMap, int page, int size);
+	
+	/**
+	 * 模糊查询总数
+	 * @param entity 类
+	 * @param params 查询参数
+	 * @return
+	 */
+	long findByPropertyLikeCount(Class entity, Map params,Map blullyMap);
 }

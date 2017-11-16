@@ -16,7 +16,7 @@ public class TimerStartUp implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		System.out.println("start--timer------");
 		//timedTask.reminder();
-
+		
 	}
 
 }

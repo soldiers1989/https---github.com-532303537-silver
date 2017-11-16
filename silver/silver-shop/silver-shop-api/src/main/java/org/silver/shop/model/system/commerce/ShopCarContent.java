@@ -31,6 +31,9 @@ public class ShopCarContent implements Serializable {
 	private double consolidatedTax;//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 	private double tariff;//关税税率暂设为0%
 	private double courierFee;// (国内快递)运费
+	private int taxFlag;//计算税费标识：1-计算税费,2-不计税费
+	private int courierFeeFlag;//计算(国内快递)物流费标识：1-无运费,2-手动设置运费
+	private String reMark;//备用字段 
 	public long getId() {
 		return id;
 	}
@@ -190,5 +193,28 @@ public class ShopCarContent implements Serializable {
 		this.courierFee = courierFee;
 	}
 
+	public String getReMark() {
+		return reMark;
+	}
+
+	public void setReMark(String reMark) {
+		this.reMark = reMark;
+	}
+
+	public int getTaxFlag() {
+		return taxFlag;
+	}
+
+	public void setTaxFlag(int taxFlag) {
+		this.taxFlag = taxFlag;
+	}
+
+	public int getCourierFeeFlag() {
+		return courierFeeFlag;
+	}
+
+	public void setCourierFeeFlag(int courierFeeFlag) {
+		this.courierFeeFlag = courierFeeFlag;
+	}
 	
 }

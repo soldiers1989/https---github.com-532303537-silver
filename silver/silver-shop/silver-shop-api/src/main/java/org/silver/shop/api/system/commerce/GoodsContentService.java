@@ -48,7 +48,7 @@ public interface GoodsContentService {
 	/**
 	 * 商户修改商品基本信息
 	 * 
-	 * @param goodsId
+	 * @param goodsId 
 	 * @param goodsName
 	 * @param goodsFirstType
 	 * @param goodsSecondType
@@ -93,5 +93,25 @@ public interface GoodsContentService {
 	 * @return
 	 */
 	public Map<String, Object> goodsContentService(String goodsId);
+
+	/**
+	 * 商城根据商品类型搜索商品
+	 * @param firstType
+	 * @param secndType
+	 * @param thirdType
+	 * @param page 
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, int page, int size);
+
+	/**
+	 * 根据商品名搜索商品
+	 * @param goodsName
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size);
 
 }

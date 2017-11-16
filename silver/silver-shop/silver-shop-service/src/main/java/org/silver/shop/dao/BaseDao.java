@@ -28,9 +28,9 @@ public interface BaseDao<T> {
 	 *            实体名
 	 * @param params
 	 *            属性
-	 * @param page
-	 * @param size
-	 * @return List
+	 * @param page 页数
+	 * @param size 数目
+	 * @return List 
 	 */
 	public List<Object> findByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
 
@@ -134,10 +134,32 @@ public interface BaseDao<T> {
 
 
 	/**
-	 * 模糊查询总数
+	 * 查询总数
 	 * @param entity 类
 	 * @param params 查询参数
 	 * @return
 	 */
 	public long findByPropertyCount(Class entity,Map<String,Object> params);
+	
+	/**
+	 * 根据实体、列(名)、值模糊查询数据
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params 主参数
+	 * @param blurryMap 模糊查询参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return List 
+	 */
+	public List<Object> findByPropertyLike(Class<T> entity, Map<String, Object> params,Map blurryMap ,int page, int size);
+
+	/**
+	 * 模糊查询总数
+	 * @param entity 类
+	 * @param params 主参数
+	 * @param blurryMap 模糊查询参数 
+	 * @return
+	 */
+	long findByPropertyLikeCount(Class entity, Map params,Map blurryMap);
 }

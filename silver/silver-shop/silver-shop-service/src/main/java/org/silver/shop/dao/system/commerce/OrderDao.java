@@ -3,7 +3,6 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
-import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.organization.Member;
 
 import com.justep.baas.data.Table;
@@ -149,4 +148,12 @@ public interface OrderDao {
 	 * @return
 	 */
 	public Table getMerchantOrderInfo( String merchantId, int page, int size);
+
+	/**
+	 * 查询超时订单
+	 * @param time 时间
+	 */
+	public List<Object> searchTimOutOrder(Class entity, Map params,String time);
+	
+	
 }

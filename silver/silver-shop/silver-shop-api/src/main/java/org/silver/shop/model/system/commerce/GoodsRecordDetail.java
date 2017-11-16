@@ -73,7 +73,7 @@ public class GoodsRecordDetail implements Serializable {
 	private String spareGoodsBarCode;// (备用字段,可修改)商品货号(条形码)
 	
 	private int taxFlag;//计算税费标识：1-计算税费,2-不计税费;默认为：1
-	private int freightFlag;//计算(国内快递)物流费标识：1-无运费,2-手动设置运费;默认为：1
+	private int freightFlag;//计算(国内快递)物流费标识：1-无运费,2-计算运费;默认为：1
 	public long getId() {
 		return id;
 	}

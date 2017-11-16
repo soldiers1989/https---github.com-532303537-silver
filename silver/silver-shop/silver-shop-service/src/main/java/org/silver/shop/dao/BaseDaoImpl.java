@@ -370,8 +370,101 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
+	public List findByPropertyLike(Class entity, Map params,Map blurryMap, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = "from " + entName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += "where ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " LIKE " + "?" + " and ";
+					list.add(params.get(property));
+				}
+			}
+			if(blurryMap !=null && !blurryMap.isEmpty()){
+				String property;
+				Iterator<String> is = blurryMap.keySet().iterator();
+				while (is.hasNext()) {
+					property =  is.next();
+					hql = hql+"model." + property + " LIKE " + "?" + " and ";
+					list.add(blurryMap.get(property));
+				}
+			}
+			hql += " 1=1 ";
+			Query query = session.createQuery(hql);
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<Object> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
 	
-	
+	@Override
+	public long findByPropertyLikeCount(Class entity, Map params,Map blurryMap) {
+		Session session = null;
+		try {
+			String entityName = entity.getSimpleName();
+			String hql = "select count(model) from " + entityName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += "where ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " = " + "?" + " and ";
+					list.add(params.get(property));
+				}
+			}
+			if(blurryMap !=null && !blurryMap.isEmpty()){
+				String property;
+				Iterator<String> is = blurryMap.keySet().iterator();
+				while (is.hasNext()) {
+					property =  is.next();
+					hql = hql+"model." + property + " LIKE " + "?" + " and ";
+					list.add(blurryMap.get(property));
+				}
+			}
+			hql += " 1=1 ";
+			session = getSession();
+			Query query = session.createQuery(hql);
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}			
+			Long count = (Long) query.uniqueResult();
+			session.close();
+			return count;
+		} catch (Exception re) {
+			return (long) 0;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
@@ -382,7 +475,5 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		
 		System.out.println("--------------->>"+bd.findByPropertyCount(GoodsContent.class,paramMap));
 	}
-
 	
-
 }

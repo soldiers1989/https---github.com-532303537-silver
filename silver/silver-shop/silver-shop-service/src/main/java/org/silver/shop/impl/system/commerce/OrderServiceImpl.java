@@ -66,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
 			return entOrderNoMap;
 		}
 		String entOrderNo = entOrderNoMap.get(BaseCode.DATAS.toString()) + "";
-		// 校验订单商品信息
+		// 校验订单商品信息及创建订单
 		Map<String, Object> reMap = checkOrderGoodsInfo(jsonList, memberName, memberId, recInfo, entOrderNo);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
@@ -212,7 +212,9 @@ public class OrderServiceImpl implements OrderService {
 		order.setMemberId(memberId);
 		order.setMemberName(memberName);
 		order.setOrderId(orderId);
+		
 		order.setFreight(0);
+		
 		order.setReceiptId(recInfo.getRecipientId());
 		order.setRecipientName(recInfo.getRecipientName());
 		order.setRecipientTel(recInfo.getRecipientTel());
@@ -453,7 +455,7 @@ public class OrderServiceImpl implements OrderService {
 		params.clear();
 		params.put("orderId", newOrderId);
 		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
-		if (reOrderList != null && reOrderList.size() > 0) {
+		if (reOrderList != null && !reOrderList.isEmpty()) {
 			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsInfo,
 					stock, entOrderNo, goodsTotalPrice);
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
