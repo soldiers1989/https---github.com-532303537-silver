@@ -54,4 +54,13 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String entOrderNo);
 
+	/**
+	 * 用户查看订单详情
+	 * @param entOrderNo 
+	 * @param memberId
+	 * @param memberName
+	 * @return
+	 */
+	public Map<String, Object> getMemberOrderDetail(String memberId, String memberName,String entOrderNo);
+
 }

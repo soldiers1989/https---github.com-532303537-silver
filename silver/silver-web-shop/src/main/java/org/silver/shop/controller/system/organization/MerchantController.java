@@ -272,18 +272,15 @@ public class MerchantController {
 	// @RequiresRoles("Merchant")
 	public String checkMerchantLogin(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-		// String[] iPs = { "http://ym.191ec.com:9528",
-		// "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-		// "http://ym.191ec.com:8090" };
-		// if (Arrays.asList(iPs).contains(originHeader)) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		// }
-		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
-		if (currentUser != null && currentUser.isAuthenticated()) {
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Map<String, Object> statusMap = new HashMap<>();
+		if (merchantInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "商户已登陆！");
 

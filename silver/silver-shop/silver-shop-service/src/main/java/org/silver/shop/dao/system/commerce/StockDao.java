@@ -54,4 +54,17 @@ public interface StockDao {
 	 * @return
 	 */
 	public long findByPropertyCount(Class entity, Map<String, Object> params);
+	
+	/**
+	 * 根据实体、列(名)、值模糊查询数据
+	 * @param entity
+	 *            实体名
+	 * @param params 主参数
+	 * @param OrMap Or条件查询参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return List 
+	 */
+	public List<Object> findByPropertyOr(Class entity, Map<String, Object> params,Map<String,List<Object>> orMap ,int page, int size);
+
 }

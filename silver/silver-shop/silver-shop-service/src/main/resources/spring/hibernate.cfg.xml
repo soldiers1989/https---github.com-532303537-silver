@@ -55,10 +55,11 @@
 		<mapping resource="org/silver/shop/model/common/base/Country.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/Currency.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/common/base/Metering.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/OrderRecord.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordContent.hbm.xml"/>
+	
 		<mapping resource="org/silver/shop/model/system/commerce/OrderContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/OrderGoodsContent.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordContent.hbm.xml"/>
+		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordGoodsContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/StockContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/cross/PaymentContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/RecipientContent.hbm.xml"/>
@@ -72,7 +73,6 @@
 		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/commerce/ShopCarContent.hbm.xml"/>
 		<mapping resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml"/>
-		<mapping resource="org/silver/shop/model/system/commerce/OrderRecordGoodsContent.hbm.xml"/>
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

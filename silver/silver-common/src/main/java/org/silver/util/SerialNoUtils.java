@@ -61,6 +61,7 @@ public class SerialNoUtils {
 
 	public static void main(String[] args) {
 		String s = getSerialNo("tes_", 2017, 100000);
-		System.out.println("------->>>>>" + s.length());
+		String s2 = getSerialNotTimestamp("tes_", 2017, 100000);
+		System.out.println("------->>>>>" + s2.length());
 	}
 }

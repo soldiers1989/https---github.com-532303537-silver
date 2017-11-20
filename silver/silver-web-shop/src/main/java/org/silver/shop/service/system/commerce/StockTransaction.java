@@ -64,7 +64,7 @@ public class StockTransaction {
 		return stockService.setGoodsSellAndStopSelling(merchantId,merchantName,goodsInfoPack,type);
 	}
 
-	//商户批量与单个商品入库与上架
+	//商户批量与单个修改商品库存与上架数量
 	public Map<String, Object> merchantSetGoodsStorageAndSellCount(String goodsInfoPack, int type) { 
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据

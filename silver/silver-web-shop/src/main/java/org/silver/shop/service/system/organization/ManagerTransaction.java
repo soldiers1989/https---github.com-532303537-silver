@@ -11,13 +11,11 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.model.system.organization.Manager;
-import org.silver.shop.model.system.organization.Member;
 import org.silver.util.MD5;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.dubbo.config.annotation.Reference;
 
 @Service("managerTransaction")
 public class ManagerTransaction {
@@ -29,7 +27,7 @@ public class ManagerTransaction {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Object> reList = managerService.findManagerBy(account);
-		if (reList != null && reList.size() > 0) {
+		if (reList != null && !reList.isEmpty()) {
 			Manager manager = (Manager) reList.get(0);
 			String name = manager.getManagerName();
 			String loginpas = manager.getLoginPassword();
@@ -38,20 +36,21 @@ public class ManagerTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+				Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 				if (managerInfo == null) {
-					WebUtil.getSession().setAttribute(LoginType.MEMBERINFO.toString(), reList.get(0));
+					WebUtil.getSession().setAttribute(LoginType.MANAGERINFO.toString(), reList.get(0));
 				}
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
 				return datasMap;
 			}
-		} else {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), "用户不存在");
-			return null;
-		}
+		} 
 		return null;
+	}
+
+	//管理员查询所有用户信息
+	public Map<String,Object> findAllmemberInfo() {
+		return managerService.findAllmemberInfo();
 	}
 
 }

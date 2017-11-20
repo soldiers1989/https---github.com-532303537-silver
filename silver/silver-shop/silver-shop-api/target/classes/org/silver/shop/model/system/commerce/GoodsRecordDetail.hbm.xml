@@ -13,7 +13,7 @@
 			<column name="seq" not-null="true" />
 		</property>
 		<property name="entGoodsNo" type="java.lang.String">
-			<column name="entGoodsNo" not-null="true" />
+			<column name="entGoodsNo" not-null="true" unique="true"/>
 		</property>
 		<property name="entGoodsNoSKU" type="java.lang.String">
 			<column name="entGoodsNoSKU" />
@@ -132,7 +132,7 @@
 		</property>
 
 		<property name="goodsDetailId" type="java.lang.String">
-			<column name="goodsDetailId" not-null="true" />
+			<column name="goodsDetailId"  />
 		</property>
 		<property name="reNote" type="java.lang.String">
 			<column name="reNote" />

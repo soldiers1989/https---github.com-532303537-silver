@@ -146,6 +146,14 @@ public class StockController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 商户批量与单个商品上/下架状态修改
+	 * @param goodsInfoPack  商品信息包
+	 * @param type 上下架标识：1-上架,2-下架
+	 * @param req
+	 * @param response
+	 * @return 
+	 */
 	@RequestMapping(value = "/merchantSetGoodsSellAndStopSelling", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户批量与单个商品上/下架状态修改")
@@ -167,9 +175,17 @@ public class StockController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 商户批量与单个修改商品库存与上架数量
+	 * @param goodsInfoPack
+	 * @param type
+	 * @param req
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "/merchantSetGoodsStorageAndSellCount", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商户批量与单个商品入库与上架")
+	@ApiOperation("商户批量与单个修改商品库存与上架数量")
 	@RequiresRoles("Merchant")
 	public String merchantSetGoodsStorageAndSellCount(@RequestParam("goodsInfoPack") String goodsInfoPack,
 			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {

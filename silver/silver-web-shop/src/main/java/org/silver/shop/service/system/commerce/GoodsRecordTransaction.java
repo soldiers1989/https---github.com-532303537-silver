@@ -1,5 +1,6 @@
 package org.silver.shop.service.system.commerce;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -94,26 +95,30 @@ public class GoodsRecordTransaction {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), "上传图片失败,请重试!");
 		}
-		paramMap.put("entGoodsNo", req.getParameter("entGoodsNo"));
-		paramMap.put("goodsName", req.getParameter("spareGoodsName"));
-		paramMap.put("goodsFirstTypeId", req.getParameter("spareGoodsFirstTypeId"));
-		paramMap.put("goodsFirstTypeName", req.getParameter("spareGoodsFirstTypeName"));
-		paramMap.put("goodsSecondTypeId", req.getParameter("spareGoodsSecondTypeId"));
-		paramMap.put("goodsSecondTypeName", req.getParameter("spareGoodsSecondTypeName"));
-		paramMap.put("goodsThirdTypeId", req.getParameter("spareGoodsThirdTypeId"));
-		paramMap.put("goodsThirdTypeName", req.getParameter("spareGoodsThirdTypeName"));
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			paramMap.put(key, value);
+		}	
 		paramMap.put("imgList", imgMap.get(BaseCode.DATAS.getBaseCode()));
-		paramMap.put("goodsDetail", req.getParameter("spareGoodsDetail"));
-		paramMap.put("goodsBrand", req.getParameter("spareGoodsBrand"));
-		paramMap.put("goodsStyle", req.getParameter("spareGoodsStyle"));
-		paramMap.put("goodsUnit", req.getParameter("spareGoodsUnit"));
-		paramMap.put("goodsOriginCountry", req.getParameter("spareGoodsOriginCountry"));
-		paramMap.put("goodsBarCode", req.getParameter("spareGoodsBarCode"));
-		paramMap.put("regPrice", req.getParameter("regPrice"));
-		paramMap.put("marketPrice", req.getParameter("marketPrice"));
-		paramMap.put("taxFlag", req.getParameter("taxFlag"));
-		paramMap.put("freightFlag", req.getParameter("freightFlag"));
-		paramMap.put("courierFee", req.getParameter("courierFee"));
 		return goodsRecordService.editMerchantRecordGoodsDetailInfo(merchantId, merchantName, paramMap, type);
+	}
+
+	// 商户添加已备案商品信息
+	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(HttpServletRequest req) {
+		Map<String, Object> paramMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			paramMap.put(key, value);
+		}
+		return goodsRecordService.merchantAddAlreadyRecordGoodsInfo(merchantId, merchantName, paramMap);
 	}
 }

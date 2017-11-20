@@ -13,14 +13,15 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Member;
-
 
 /**
  * 提供数据访问层共用DAO方法
  */
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	protected static final Logger logger = LogManager.getLogger();
+
 	@Override
 	public boolean add(Object entity) {
 		Session session = null;
@@ -357,7 +358,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
 				}
-			}			
+			}
 			Long count = (Long) query.uniqueResult();
 			session.close();
 			return count;
@@ -371,7 +372,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List findByPropertyLike(Class entity, Map params,Map blurryMap, int page, int size) {
+	public List findByPropertyLike(Class entity, Map params, Map blurryMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -384,16 +385,16 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " LIKE " + "?" + " and ";
+					hql = hql + "model." + property + " = " + "?" + " and ";
 					list.add(params.get(property));
 				}
 			}
-			if(blurryMap !=null && !blurryMap.isEmpty()){
+			if (blurryMap != null && !blurryMap.isEmpty()) {
 				String property;
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
-					property =  is.next();
-					hql = hql+"model." + property + " LIKE " + "?" + " and ";
+					property = is.next();
+					hql = hql + "model." + property + " LIKE " + "?" + " and ";
 					list.add(blurryMap.get(property));
 				}
 			}
@@ -419,9 +420,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-	
+
 	@Override
-	public long findByPropertyLikeCount(Class entity, Map params,Map blurryMap) {
+	public long findByPropertyLikeCount(Class entity, Map params, Map blurryMap) {
 		Session session = null;
 		try {
 			String entityName = entity.getSimpleName();
@@ -437,12 +438,12 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 					list.add(params.get(property));
 				}
 			}
-			if(blurryMap !=null && !blurryMap.isEmpty()){
+			if (blurryMap != null && !blurryMap.isEmpty()) {
 				String property;
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
-					property =  is.next();
-					hql = hql+"model." + property + " LIKE " + "?" + " and ";
+					property = is.next();
+					hql = hql + "model." + property + " LIKE " + "?" + " and ";
 					list.add(blurryMap.get(property));
 				}
 			}
@@ -453,7 +454,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
 				}
-			}			
+			}
 			Long count = (Long) query.uniqueResult();
 			session.close();
 			return count;
@@ -465,15 +466,91 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
+
+	@Override
+	public List<Object> findByPropertyOr(Class entity, Map params, Map orMap, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = "from " + entName + " model ";
+			String orHql = "";
+			List<Object> list = new ArrayList<>();
+			hql += " where ";
+			if (params != null && params.size() > 0) {
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " = " + "?" + " and ";
+					list.add(params.get(property));
+				}
+			}
+			if (orMap != null && orMap.size() > 0) {
+				String property2;
+				Iterator<String> isKey = orMap.keySet().iterator();
+				orHql = " ( ";
+				while (isKey.hasNext()) {
+					property2 = isKey.next();
+					List<Object> lt = (List<Object>) orMap.get(property2);
+					for (int y = 0; y < lt.size(); y++) {
+						orHql = orHql + "model." + property2 + " = " + " ? " + " or ";
+						list.add(lt.get(y));
+					}
+				}
+				//截取掉最后的 or 防止出错
+				orHql = orHql.substring(0, orHql.length() - 3);
+				orHql += " ) ";
+			} else {
+				hql += " 1=1 ";
+			}
+			//合并两个sql语句
+			hql += orHql;
+			Query query = session.createQuery(hql);
+			if (!list.isEmpty()) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<Object> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("merchantName", "hoz");
-		//paramMap.put("goodsMerchantId", "MerchantId_00030");
-	/*	List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);*/
+		paramMap.put("status", 2);
+		paramMap.put("deleteFlag", 0);
 		
-		System.out.println("--------------->>"+bd.findByPropertyCount(GoodsContent.class,paramMap));
+		List<Object> lt = new ArrayList<>();
+		List<Object> lt2 = new ArrayList<>();
+		lt.add(2);
+		lt.add(3);
+		lt2.add(0);
+		orMap.put("recordFlag", lt);
+		// paramMap.put("goodsMerchantId", "MerchantId_00030");
+		// List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);
+		List reList = bd.findByPropertyOr(GoodsRecordDetail.class, paramMap, orMap, 0, 0);
+		System.out.println("--------------->>" + reList.size());
+		/*
+		 * String ss="model.recordFlag =  ?  or model.recordFlag =  ?  or ";
+		 * System.out.println(ss.length()); int index=ss.lastIndexOf("or") ;
+		 * System.out.println(ss.substring(0, ss.length()-3));
+		 */
 	}
-	
+
 }

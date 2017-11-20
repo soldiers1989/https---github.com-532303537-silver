@@ -127,11 +127,11 @@ public class OrderServiceImpl implements OrderService {
 		String newOrderId = newOrderIdMap.get(BaseCode.DATAS.toString()) + "";
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
-			String goodsId = paramsMap.get("goodsId") + "";
+			//String goodsId = paramsMap.get("goodsId") + "";
 			int count = Integer.parseInt(paramsMap.get("count") + "");
 			String entGoodsNo = paramsMap.get("entGoodsNo") + "";
 			params.clear();
-			params.put("goodsId", goodsId);
+			params.put("entGoodsNo", entGoodsNo);
 			// 根据商品ID查询存库中商品信息
 			List<Object> stockList = orderDao.findByProperty(StockContent.class, params, 1, 1);
 			if (stockList != null && stockList.size() > 0) {
@@ -147,17 +147,15 @@ public class OrderServiceImpl implements OrderService {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), stock.getGoodsName() + "库存不足,请重新输入购买数量!");
 					return statusMap;
-				}
-				params.clear();
-				params.put("goodsId", goodsId);
+				}		
 				// 根据商品ID查询商品基本信息
-				List<Object> goodsList = orderDao.findByProperty(GoodsContent.class, params, 1, 1);
-				if (goodsList == null || goodsList.size() <= 0) {
+				List<Object> goodsRecordList = orderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+				if (goodsRecordList == null || goodsRecordList.size() <= 0) {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), "查询商品基本信息失败,服务器繁忙!");
 					return statusMap;
 				}
-				GoodsContent goodsInfo = (GoodsContent) goodsList.get(0);
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
 				// 获取库存中商品上架的单价
 				double regPrice = stock.getRegPrice();
 				// 计算税费
@@ -178,12 +176,11 @@ public class OrderServiceImpl implements OrderService {
 				 * warehouseMap.put(stock.getWarehousCode(), newOrderId);
 				 */
 				// 开始创建订单
-				Map<String, Object> reOrderMap = createOrder(newOrderId, memberId, memberName, count, goodsInfo, stock,
+				Map<String, Object> reOrderMap = createOrder(newOrderId, memberId, memberName, count, goodsRecordInfo, stock,
 						entOrderNo, goodsTotalPrice, recInfo);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reOrderMap;
 				}
-
 			}
 			/*
 			 * } else { statusMap.put(BaseCode.STATUS.toString(),
@@ -246,13 +243,13 @@ public class OrderServiceImpl implements OrderService {
 
 	// 创建订单商品信息
 	private final Map<String, Object> createOrderGoodsInfo(String memberId, String memberName, String orderId,
-			int count, GoodsContent goodsInfo, StockContent stock, String entOrderNo, double goodsTotalPrice) {
+			int count, GoodsRecordDetail goodsRecordInfo, StockContent stock, String entOrderNo, double goodsTotalPrice) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		OrderGoodsContent orderGoods = new OrderGoodsContent();
-		orderGoods.setMerchantId(stock.getMerchantId());
-		orderGoods.setMerchantName(stock.getMerchantName());
+		orderGoods.setMerchantId(goodsRecordInfo.getGoodsMerchantId());
+		orderGoods.setMerchantName(goodsRecordInfo.getGoodsMerchantName());
 		orderGoods.setMemberId(memberId);
 		orderGoods.setMemberName(memberName);
 		orderGoods.setOrderId(orderId);
@@ -270,11 +267,11 @@ public class OrderServiceImpl implements OrderService {
 		}
 		orderGoods.setGoodsId(stock.getGoodsId());
 		orderGoods.setEntGoodsNo(stock.getEntGoodsNo());
-		orderGoods.setGoodsName(stock.getGoodsName());
+		orderGoods.setGoodsName(goodsRecordInfo.getSpareGoodsName());
 		orderGoods.setGoodsPrice(stock.getRegPrice());
 		orderGoods.setGoodsCount(count);
 		orderGoods.setGoodsTotalPrice(count * stock.getRegPrice());
-		orderGoods.setGoodsImage(goodsInfo.getGoodsImage());
+		orderGoods.setGoodsImage(goodsRecordInfo.getSpareGoodsImage());
 		// 待定,暂时未0
 		orderGoods.setTax(0.0);
 		orderGoods.setLogisticsCosts(0.0);
@@ -449,14 +446,14 @@ public class OrderServiceImpl implements OrderService {
 
 	// 创建订单及订单关联的商品信息
 	private Map<String, Object> createOrder(String newOrderId, String memberId, String memberName, int count,
-			GoodsContent goodsInfo, StockContent stock, String entOrderNo, double goodsTotalPrice,
+			GoodsRecordDetail goodsRecordInfo, StockContent stock, String entOrderNo, double goodsTotalPrice,
 			RecipientContent recInfo) {
 		Map<String, Object> params = new HashMap<>();
 		params.clear();
 		params.put("orderId", newOrderId);
 		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 		if (reOrderList != null && !reOrderList.isEmpty()) {
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsInfo,
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo,
 					stock, entOrderNo, goodsTotalPrice);
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
 				return reGoodsMap;
@@ -468,7 +465,7 @@ public class OrderServiceImpl implements OrderService {
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsInfo,
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo,
 					stock, entOrderNo, goodsTotalPrice);
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
 				return reGoodsMap;
@@ -631,6 +628,31 @@ public class OrderServiceImpl implements OrderService {
 		paramMap.put("merchantId", merchantId);
 		paramMap.put("entOrderNo", entOrderNo);
 		List<Object> reOrderList = orderDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
+		if (reOrderList != null && reOrderList.size() > 0) {
+			Map<String, Object> item = new HashMap<>();
+			List<Object> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, paramMap, 0, 0);
+			item.put("order", reOrderList);
+			item.put("orderGoods", reOrderGoodsList);
+			lm.add(item);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), lm);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> getMemberOrderDetail(String memberId, String memberName, String entOrderNo) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		paramMap.put("memberId", memberId);
+		paramMap.put("entOrderNo", entOrderNo);
+		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, paramMap, 1, 1);
 		if (reOrderList != null && reOrderList.size() > 0) {
 			Map<String, Object> item = new HashMap<>();
 			List<Object> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, paramMap, 0, 0);

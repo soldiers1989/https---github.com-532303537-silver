@@ -1,5 +1,7 @@
 package org.silver.shop.shiro;
 
+import java.io.Serializable;
+
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -11,12 +13,11 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.silver.common.LoginType;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Manager;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.ManagerTransaction;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class ManagerRealm extends AuthorizingRealm{
+public class ManagerRealm extends AuthorizingRealm {
 
 	@Autowired
 	private ManagerTransaction managerTransaction;

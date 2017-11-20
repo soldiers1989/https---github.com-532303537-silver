@@ -143,6 +143,21 @@ public class OrderController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
+	@RequestMapping(value = "/getMemberOrderDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Member")
+	@ApiOperation("用户查看订单详情")
+	public String getMemberOrderDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("entOrderNo")String entOrderNo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = orderTransaction.getMemberOrderDetail(entOrderNo);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 	public static void main(String[] args) {
 		/*Double d= 0.06*1*(119/100d);
 		BigDecimal b = new BigDecimal(d); 
@@ -158,7 +173,7 @@ public class OrderController {
 		else
 		    f = a * 1.0f / 1000.0f;
 		System.out.println(f);*/
-		String s ="GACNO_20170000415099596709394549";
+		String s ="KJDS-I171120-150958934763904";
 		System.out.println(s.length());
 	}
 }

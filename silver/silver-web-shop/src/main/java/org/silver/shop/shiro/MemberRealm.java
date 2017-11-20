@@ -11,23 +11,17 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.silver.common.LoginType;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.MemberTransaction;
-import org.silver.shop.service.system.organization.MerchantTransaction;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class MemberRealm extends AuthorizingRealm{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -2900919279652771749L;
+	
 	@Autowired
 	private MemberTransaction memberTransaction;
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		
 		Member member = (Member) WebUtil.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		SimpleAuthorizationInfo info = null;
 		if (member != null) { 

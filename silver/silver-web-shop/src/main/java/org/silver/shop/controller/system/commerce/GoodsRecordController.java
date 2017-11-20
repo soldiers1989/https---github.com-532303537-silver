@@ -177,7 +177,7 @@ public class GoodsRecordController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		// type 1-全部修改,2-修改商品信息(价格除外),3-只修改商品价格(商品基本信息不修改)
-		if ( type == 1 || type == 2 || type == 3) {
+		if (type == 1 || type == 2 || type == 3) {
 			statusMap = goodsRecordTransaction.editMerchantRecordGoodsDetailInfo(req, type);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -185,4 +185,24 @@ public class GoodsRecordController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
+	@RequestMapping(value = "/addAlreadyRecordGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户添加已备案商品信息")
+	@RequiresRoles("Merchant")
+	public String merchantAddAlreadyRecordGoodsInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		/*Enumeration<String> itkeys = req.getParameterNames();
+		while (itkeys.hasMoreElements()) {
+			String key = itkeys.nextElement();
+			String value = req.getParameter(key);
+		}*/
+		Map<String, Object> statusMap = goodsRecordTransaction.merchantAddAlreadyRecordGoodsInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }

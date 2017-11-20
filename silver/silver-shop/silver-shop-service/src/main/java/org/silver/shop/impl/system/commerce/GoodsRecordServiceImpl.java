@@ -368,12 +368,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		String ebEntName = merchantInfoMap.get("ebEntName") + "";
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
-		String businessType = "";
-		if (eport == 1) {
-			businessType = "3";
-		} else if (eport == 2) {
-			businessType = "2";
-		}
+		String businessType = eport == 1 ? "3" : "2";
 		// 客戶端签名
 		String clientsign = "";
 		// 备注
@@ -561,6 +556,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			goodRecordInfo.setNotes(String.valueOf(goodsInfo.get("Notes")));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			goodRecordInfo.setStatus(1);
+			//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+			goodRecordInfo.setRecordFlag(2);
 			goodRecordInfo.setGoodsMerchantId(merchantId);
 			goodRecordInfo.setGoodsMerchantName(merchantName);
 			goodRecordInfo.setCreateBy(merchantName);
@@ -874,23 +871,33 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			String imgStr = imgList.get(i) + "";
 			goodsImage = goodsImage + imgStr + ";";
 		}
-		String goodsName = String.valueOf(paramMap.get("goodsName"));
-		String goodsFirstTypeId = String.valueOf(paramMap.get("goodsFirstTypeId"));
-		String goodsFirstTypeName = String.valueOf(paramMap.get("goodsFirstTypeName"));
-		String goodsSecondTypeId = String.valueOf(paramMap.get("goodsSecondTypeId"));
-		String goodsSecondTypeName = String.valueOf(paramMap.get("goodsSecondTypeName"));
-		String goodsThirdTypeId = String.valueOf(paramMap.get("goodsThirdTypeId"));
-		String goodsThirdTypeName = String.valueOf(paramMap.get("goodsThirdTypeName"));
-		String goodsDetail = String.valueOf(paramMap.get("goodsDetail"));
-		String goodsBrand = String.valueOf(paramMap.get("goodsBrand"));
-		String goodsStyle = String.valueOf(paramMap.get("goodsStyle"));
-		String goodsUnit = String.valueOf(paramMap.get("goodsUnit"));
-		String goodsOriginCountry = String.valueOf(paramMap.get("goodsOriginCountry"));
-		String goodsBarCode = String.valueOf(paramMap.get("goodsBarCode"));
-		int taxFlag = Integer.parseInt(paramMap.get("taxFlag") + "");
-		int freightFlag = Integer.parseInt(paramMap.get("freightFlag") + "");
-		double regPrice = Double.parseDouble(String.valueOf(paramMap.get("regPrice")));
-		double marketPrice = Double.parseDouble(String.valueOf(paramMap.get("marketPrice")));
+		String goodsName = String.valueOf(paramMap.get("spareGoodsName"));
+		String goodsFirstTypeId = String.valueOf(paramMap.get("spareGoodsFirstTypeId"));
+		String goodsFirstTypeName = String.valueOf(paramMap.get("spareGoodsFirstTypeName"));
+		String goodsSecondTypeId = String.valueOf(paramMap.get("spareGoodsSecondTypeId"));
+		String goodsSecondTypeName = String.valueOf(paramMap.get("spareGoodsSecondTypeName"));
+		String goodsThirdTypeId = String.valueOf(paramMap.get("spareGoodsThirdTypeId"));
+		String goodsThirdTypeName = String.valueOf(paramMap.get("spareGoodsThirdTypeName"));
+		String goodsDetail = String.valueOf(paramMap.get("spareGoodsDetail"));
+		String goodsBrand = String.valueOf(paramMap.get("spareGoodsBrand"));
+		String goodsStyle = String.valueOf(paramMap.get("spareGoodsStyle"));
+		String goodsUnit = String.valueOf(paramMap.get("spareGoodsUnit"));
+		String goodsOriginCountry = String.valueOf(paramMap.get("spareGoodsOriginCountry"));
+		String goodsBarCode = String.valueOf(paramMap.get("spareGoodsBarCode"));
+		int taxFlag;
+		int freightFlag;
+		double regPrice;
+		double marketPrice;
+		try{
+			 taxFlag = Integer.parseInt(paramMap.get("taxFlag") + "");
+			 freightFlag = Integer.parseInt(paramMap.get("freightFlag") + "");
+			 regPrice = Double.parseDouble(String.valueOf(paramMap.get("regPrice")));
+			 marketPrice = Double.parseDouble(String.valueOf(paramMap.get("marketPrice")));
+		}catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "字段错误,请重新输入！");
+			return statusMap;
+		}
 		params.put("entGoodsNo", paramMap.get("entGoodsNo"));
 		params.put("goodsMerchantId", merchantId);
 		// 根据商品ID查询商品基本信息
@@ -983,6 +990,71 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
+			Map<String, Object> paramMap) {
+		Date date = new Date();
+		Calendar calendar = Calendar.getInstance();
+		int year = calendar.get(Calendar.YEAR);
+		Map<String, Object> statusMap = new HashMap<>();
+		GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
+		// 查询数据库字段名
+		String property = "entGoodsNo";
+		// 根据年份查询,当前年份下的id数量
+		long goodsRecordSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecordDetail.class, property, year);
+		// 当返回-1时,则查询数据库失败
+		if (goodsRecordSerialNoCount < 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		String goodsRecordSerialNo = SerialNoUtils.getSerialNotTimestamp("GR_", year, goodsRecordSerialNoCount);
+		goodsRecordDetail.setSeq(1);
+		goodsRecordDetail.setEntGoodsNo(goodsRecordSerialNo);
+		goodsRecordDetail.setEportGoodsNo(String.valueOf(paramMap.get("EPortGoodsNo")));
+		goodsRecordDetail.setCiqGoodsNo(String.valueOf(paramMap.get("CIQGoodsNo")));
+		goodsRecordDetail.setCusGoodsNo(String.valueOf(paramMap.get("CusGoodsNo")));
+		goodsRecordDetail.setEmsNo(String.valueOf(paramMap.get("EmsNo")));
+		goodsRecordDetail.setItemNo(String.valueOf(paramMap.get("ItemNo")));
+		goodsRecordDetail.setShelfGName(paramMap.get("ShelfGName") + "");
+		goodsRecordDetail.setNcadCode(paramMap.get("NcadCode") + "");
+		goodsRecordDetail.setHsCode(paramMap.get("HSCode") + "");
+		goodsRecordDetail.setBarCode(paramMap.get("BarCode") + "");
+		goodsRecordDetail.setGoodsName(paramMap.get("GoodsName") + "");
+		goodsRecordDetail.setGoodsStyle(paramMap.get("GoodsStyle") + "");
+		goodsRecordDetail.setBrand(paramMap.get("Brand") + "");
+		goodsRecordDetail.setgUnit(paramMap.get("GUnit") + "");
+		goodsRecordDetail.setStdUnit(paramMap.get("StdUnit") + "");
+		goodsRecordDetail.setSecUnit(paramMap.get("SecUnit") + "");
+		goodsRecordDetail.setRegPrice(Double.valueOf(paramMap.get("RegPrice") + ""));
+		goodsRecordDetail.setGiftFlag(paramMap.get("GiftFlag") + "");
+		goodsRecordDetail.setOriginCountry(String.valueOf(paramMap.get("OriginCountry")));
+		goodsRecordDetail.setQuality(paramMap.get("Quality") + "");
+		goodsRecordDetail.setQualityCertify(paramMap.get("QualityCertify") + "");
+		goodsRecordDetail.setManufactory(paramMap.get("Manufactory") + "");
+		goodsRecordDetail.setNetWt(Double.valueOf(paramMap.get("NetWt") + ""));
+		goodsRecordDetail.setGrossWt(Double.valueOf(paramMap.get("GrossWt") + ""));
+		goodsRecordDetail.setNotes(String.valueOf(paramMap.get("Notes")));
+		// 备案状态：1-备案中，2-备案成功，3-备案失败
+		goodsRecordDetail.setStatus(1);
+		//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+		goodsRecordDetail.setRecordFlag(0);
+		goodsRecordDetail.setGoodsMerchantId(merchantId);
+		goodsRecordDetail.setGoodsMerchantName(merchantName);
+		goodsRecordDetail.setCreateBy(merchantName);
+		goodsRecordDetail.setCreateDate(date);
+		// 删除标识:0-未删除,1-已删除
+		goodsRecordDetail.setDeleteFlag(0);
+		if(!goodsRecordDao.add(goodsRecordDetail)){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "保存商品备案信息错误,服务器繁忙!");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}	
 }

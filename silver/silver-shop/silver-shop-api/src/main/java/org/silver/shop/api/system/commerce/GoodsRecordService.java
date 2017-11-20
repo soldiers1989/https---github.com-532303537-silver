@@ -75,4 +75,14 @@ public interface GoodsRecordService {
 	 */
 	public Map<String, Object> editMerchantRecordGoodsDetailInfo(String merchantId, String merchantName,
 			Map<String, Object> paramMap, int type);
+
+	/**
+	 * 商户添加已备案商品信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param paramMap 参数
+	 * @return
+	 */
+	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
+			Map<String, Object> paramMap);
 }

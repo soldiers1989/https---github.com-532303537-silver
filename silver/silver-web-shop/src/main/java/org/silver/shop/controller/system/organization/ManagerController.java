@@ -10,6 +10,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
@@ -68,4 +69,20 @@ public class ManagerController {
 		statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/findAllmemberInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8" )
+	@ApiOperation("管理员查询所有用户信息")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String findAllmemberInfo(HttpServletRequest req ,HttpServletResponse response){
+		System.out.println("_________________--------------------------------------");
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> statusMap = managerTransaction.findAllmemberInfo();
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 }
