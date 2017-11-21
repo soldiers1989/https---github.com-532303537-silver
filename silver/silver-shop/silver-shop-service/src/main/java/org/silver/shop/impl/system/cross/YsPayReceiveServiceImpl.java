@@ -743,6 +743,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	// 更新支付单返回信息
 	private Map<String, Object> updatePaymentInfo(PaymentContent paymentInfo, String rePayMessageID) {
+		Date date = new Date();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("entPayNo", paymentInfo.getEntPayNo());
 		List<Object> reList = ysPayReceiveDao.findByProperty(PaymentContent.class, paramMap, 0, 0);
@@ -751,6 +752,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			for (int i = 0; i < reList.size(); i++) {
 				PaymentContent payment = (PaymentContent) reList.get(i);
 				payment.setReSerialNo(rePayMessageID);
+				payment.setUpdateBy("system");
+				payment.setUpdateDate(date);
 				if (!ysPayReceiveDao.update(payment)) {
 					paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					paramMap.put(BaseCode.MSG.toString(), "更新服务器返回messageID错误!");
@@ -770,6 +773,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	// 更新订单返回信息
 	private Map<String, Object> updateOrderInfo(OrderRecordContent orderRecordInfo, String reOrderMessageID) {
+		Date date = new Date();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("entOrderNo", orderRecordInfo.getEntOrderNo());
 		List<Object> reList = ysPayReceiveDao.findByProperty(OrderRecordContent.class, paramMap, 0, 0);
@@ -778,6 +782,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			for (int i = 0; i < reList.size(); i++) {
 				OrderRecordContent order = (OrderRecordContent) reList.get(i);
 				order.setReOrderSerialNo(reOrderMessageID);
+				order.setUpdateBy("system");
+				order.setUpdateDate(date);
 				if (!ysPayReceiveDao.update(order)) {
 					paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					paramMap.put(BaseCode.MSG.toString(), "更新服务器返回订单messageID错误!");

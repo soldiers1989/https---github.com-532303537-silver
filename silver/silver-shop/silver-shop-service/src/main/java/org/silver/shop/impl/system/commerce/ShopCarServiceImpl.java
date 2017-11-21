@@ -109,8 +109,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}
-		if (!carList.isEmpty()) {
+		}else if (!carList.isEmpty()) {
 			for (int i = 0; i < carList.size(); i++) {
 				ShopCarContent cart = (ShopCarContent) carList.get(i);
 				String entGoodsNo = cart.getEntGoodsNo();

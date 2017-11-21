@@ -161,14 +161,14 @@ public class GoodsContentController {
 	@RequestMapping(value = "/getOneGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("前台根据商品ID查询商品基本信息")
-	public String getOneGoodsBaseInfo(@RequestParam("goodsId") String goodsId, HttpServletRequest req,
+	public String getOneGoodsBaseInfo(@RequestParam("entGoodsNo") String entGoodsNo, HttpServletRequest req,
 			HttpServletResponse response) {
 		Map<String, Object> statusMap = new HashMap<>();
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		if (goodsId != null) {
-			statusMap = goodsContentTransaction.getOneGoodsBaseInfo(goodsId);
+		if (entGoodsNo != null) {
+			statusMap = goodsContentTransaction.getOneGoodsBaseInfo(entGoodsNo);
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());

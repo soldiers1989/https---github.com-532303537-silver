@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.commerce;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
-import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
@@ -210,28 +210,29 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> goodsContentService(String goodsId) {
+	public Map<String, Object> goodsContentService(String entGoodsNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		params.put("goodsId", goodsId);
-		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
+		params.put("entGoodsNo", entGoodsNo);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 		List<Object> reStockList = goodsContentDao.findByProperty(StockContent.class, params, 1, 1);
 		if (reList != null && reList.size() > 0 && reStockList != null && reStockList.size() > 0) {
-			GoodsContent goods = (GoodsContent) reList.get(0);
+			Map<String,Object> datas = new HashMap<>();
+			List<Map<String,Object>> lm = new ArrayList<>();
+			GoodsRecordDetail goods = (GoodsRecordDetail) reList.get(0);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
-			// 将商品的单价替换为库存时设置的售卖价格
-			goods.setGoodsRegPrice(stockInfo.getRegPrice());
+			datas.put("goods", goods);
+			datas.put("stock", stockInfo);
+			lm.add(datas);
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), goods);
-			statusMap.put("stockCount", stockInfo.getSellCount());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), lm);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
-
 	}
 
 	@Override

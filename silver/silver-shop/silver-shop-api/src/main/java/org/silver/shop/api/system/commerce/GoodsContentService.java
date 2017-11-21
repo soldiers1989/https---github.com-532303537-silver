@@ -89,10 +89,10 @@ public interface GoodsContentService {
 
 	/**
 	 * 根据商品ID单独查询商品基本信息
-	 * @param goodsId
+	 * @param entGoodsNo
 	 * @return
 	 */
-	public Map<String, Object> goodsContentService(String goodsId);
+	public Map<String, Object> goodsContentService(String entGoodsNo);
 
 	/**
 	 * 商城根据商品类型搜索商品

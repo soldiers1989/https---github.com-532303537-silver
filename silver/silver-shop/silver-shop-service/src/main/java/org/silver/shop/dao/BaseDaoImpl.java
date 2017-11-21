@@ -312,8 +312,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Session session = null;
 		try {
 			String entName = entity.getSimpleName();
-			String hql = "select count(model." + property + ") from " + entName + " model  WHERE model.createDate >='"
-					+ year + "-01-01 00:00:00'" + "and model.createDate <= '" + year + "-12-31 23:59:59' ";
+			String hql = "select count(model." + property + ") from " + entName + " model  ";
+			if (year > 0) {
+				hql += "WHERE model.createDate >='" + year + "-01-01 00:00:00'" + "and model.createDate <= '" + year
+						+ "-12-31 23:59:59' ";
+			}
 			session = getSession();
 			Query query = session.createQuery(hql);
 			// 设置查询结果分页
@@ -498,13 +501,13 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 						list.add(lt.get(y));
 					}
 				}
-				//截取掉最后的 or 防止出错
+				// 截取掉最后的 or 防止出错
 				orHql = orHql.substring(0, orHql.length() - 3);
 				orHql += " ) ";
 			} else {
 				hql += " 1=1 ";
 			}
-			//合并两个sql语句
+			// 合并两个sql语句
 			hql += orHql;
 			Query query = session.createQuery(hql);
 			if (!list.isEmpty()) {
@@ -533,24 +536,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("status", 2);
-		paramMap.put("deleteFlag", 0);
-		
-		List<Object> lt = new ArrayList<>();
-		List<Object> lt2 = new ArrayList<>();
-		lt.add(2);
-		lt.add(3);
-		lt2.add(0);
-		orMap.put("recordFlag", lt);
-		// paramMap.put("goodsMerchantId", "MerchantId_00030");
-		// List t= bd.findByProperty(Merchant.class, paramMap, 1, 1);
-		List reList = bd.findByPropertyOr(GoodsRecordDetail.class, paramMap, orMap, 0, 0);
-		System.out.println("--------------->>" + reList.size());
-		/*
-		 * String ss="model.recordFlag =  ?  or model.recordFlag =  ?  or ";
-		 * System.out.println(ss.length()); int index=ss.lastIndexOf("or") ;
-		 * System.out.println(ss.substring(0, ss.length()-3));
-		 */
+		String property = "memberId";
+		long count = bd.findSerialNoCount(Member.class, property, 2018);
+		System.out.println("-------------------->>>>>>>"+count);
 	}
 
 }

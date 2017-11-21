@@ -53,4 +53,36 @@ public class ManagerTransaction {
 		return managerService.findAllmemberInfo();
 	}
 
+	//创建管理员
+	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String reManagerName = managerInfo.getManagerName();
+		return managerService.createManager(managerName,loginPassword,managerMarks,reManagerName);
+	}
+
+	//管理员查询所有商户信息
+	public Map<String, Object> findAllMerchantInfo() {		
+		return managerService.findAllMerchantInfo();
+	}
+
+	//管理员查询商户详情
+	public Map<String, Object> findMerchantDetail(String merchantId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerName = managerInfo.getManagerName();
+		return managerService.findMerchantDetail(managerName,merchantId);
+	}
+
+	//
+	public Map<String, Object> updateManagerPassword(String oldLoginPassword,String newLoginPassword) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return managerService.updateManagerPassword(managerId ,managerName,oldLoginPassword,newLoginPassword);
+	}
 }

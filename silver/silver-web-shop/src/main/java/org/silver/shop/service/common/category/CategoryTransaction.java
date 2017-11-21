@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.common.category.CategoryService;
 import org.silver.util.JedisUtil;
 import org.silver.util.StringEmptyUtils;
@@ -42,7 +43,10 @@ public class CategoryTransaction {
 				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600,datasMap);
 			}
 		} else {// redis缓存中已有数据,直接返回数据
-			return JSONObject.fromObject(redisList);
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			datasMap.put(BaseCode.DATAS.toString(),JSONObject.fromObject(redisList));
+			return datasMap;
 		}
 		return datasMap;
 	} 

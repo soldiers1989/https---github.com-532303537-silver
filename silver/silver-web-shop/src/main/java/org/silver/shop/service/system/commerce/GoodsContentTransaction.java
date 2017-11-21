@@ -141,8 +141,8 @@ public class GoodsContentTransaction {
 	}
 
 	//前台根据商品ID查询商品基本信息
-	public Map<String,Object> getOneGoodsBaseInfo(String goodsId) {
-		return goodsContentService.goodsContentService(goodsId);
+	public Map<String,Object> getOneGoodsBaseInfo(String entGoodsNo) {
+		return goodsContentService.goodsContentService(entGoodsNo);
 	}
 
 
