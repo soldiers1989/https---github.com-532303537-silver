@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alibaba.druid.support.spring.stat.annotation.Stat;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
@@ -157,7 +159,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			goodsInfo.setGoodsName(goodsName);
 			goodsInfo.setGoodsImage(goodsImage);
 			goodsInfo.setGoodsFirstTypeId(goodsFirstType);
-			goodsInfo.setGoodsSecondTypeId(goodsSecondType);
+			goodsInfo.setGoodsSecondTypeId(goodsSecondType); 
 			goodsInfo.setGoodsThirdTypeId(goodsThirdType);
 			goodsInfo.setGoodsDetail(goodsDetail);
 			goodsInfo.setGoodsBrand(goodsBrand);
@@ -292,6 +294,71 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> searchMerchantGoodsRecordInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap) {
+		Map<String,Object> statusMap = new HashMap<>();
+		Map<String,Object> blurryMap = new HashMap<>();
+		Map<String,Object> paramMap = new HashMap<>();
+		int page = 0;
+		int size = 0;
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next();
+			String value = datasMap.get(key) + "";
+			switch (key) {
+			case "goodsName":
+				blurryMap.put(key, "%" + value + "%");
+				break;			
+			case "page":
+				try{
+					page = Integer.parseInt(value);
+				}catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+					return statusMap;
+				}
+				break;
+			case "size":
+				try{
+					size = Integer.parseInt(value);
+				}catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+					return statusMap;
+				}
+				break;
+			case "startDate":
+				paramMap.put(key, value + "");
+				break;
+			case "endDate":
+				paramMap.put(key, value + "");
+				break;
+			default:
+				paramMap.put(key, value);
+				break;
+			}
+		}
+		List<Object> reList = goodsContentDao.findByPropertyLike(GoodsContent.class, paramMap, blurryMap, page,
+				size);
+		long totalCount = goodsContentDao.findByPropertyLikeCount(GoodsContent.class, paramMap, blurryMap);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
 	}

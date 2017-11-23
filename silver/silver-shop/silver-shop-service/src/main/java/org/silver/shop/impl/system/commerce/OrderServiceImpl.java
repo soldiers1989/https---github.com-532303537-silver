@@ -71,10 +71,10 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		Map<String, Object> reOrderMap = (Map<String, Object>) reMap.get("orderIdMap");
+		String reEntOrderNo =  reMap.get("entOrderNo")+"";
 		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice") + "");
 		// 更新订单状态与删除购物车商品信息
-		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reOrderMap);
+		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reEntOrderNo);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
 			return reStatusMap;
 		}
@@ -127,7 +127,6 @@ public class OrderServiceImpl implements OrderService {
 		String newOrderId = newOrderIdMap.get(BaseCode.DATAS.toString()) + "";
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
-			//String goodsId = paramsMap.get("goodsId") + "";
 			int count = Integer.parseInt(paramsMap.get("count") + "");
 			String entGoodsNo = paramsMap.get("entGoodsNo") + "";
 			params.clear();
@@ -147,7 +146,7 @@ public class OrderServiceImpl implements OrderService {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), stock.getGoodsName() + "库存不足,请重新输入购买数量!");
 					return statusMap;
-				}		
+				}
 				// 根据商品ID查询商品基本信息
 				List<Object> goodsRecordList = orderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 				if (goodsRecordList == null || goodsRecordList.size() <= 0) {
@@ -176,8 +175,8 @@ public class OrderServiceImpl implements OrderService {
 				 * warehouseMap.put(stock.getWarehousCode(), newOrderId);
 				 */
 				// 开始创建订单
-				Map<String, Object> reOrderMap = createOrder(newOrderId, memberId, memberName, count, goodsRecordInfo, stock,
-						entOrderNo, goodsTotalPrice, recInfo);
+				Map<String, Object> reOrderMap = createOrder(newOrderId, memberId, memberName, count, goodsRecordInfo,
+						stock, entOrderNo, goodsTotalPrice, recInfo);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reOrderMap;
 				}
@@ -192,7 +191,6 @@ public class OrderServiceImpl implements OrderService {
 		statusMap.put("entOrderNo", entOrderNo);
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put("orderIdMap", warehouseMap);
 		statusMap.put("goodsTotalPrice", goodsTotalPrice);
 		return statusMap;
 	}
@@ -209,9 +207,9 @@ public class OrderServiceImpl implements OrderService {
 		order.setMemberId(memberId);
 		order.setMemberName(memberName);
 		order.setOrderId(orderId);
-		
+
 		order.setFreight(0);
-		
+
 		order.setReceiptId(recInfo.getRecipientId());
 		order.setRecipientName(recInfo.getRecipientName());
 		order.setRecipientTel(recInfo.getRecipientTel());
@@ -243,7 +241,8 @@ public class OrderServiceImpl implements OrderService {
 
 	// 创建订单商品信息
 	private final Map<String, Object> createOrderGoodsInfo(String memberId, String memberName, String orderId,
-			int count, GoodsRecordDetail goodsRecordInfo, StockContent stock, String entOrderNo, double goodsTotalPrice) {
+			int count, GoodsRecordDetail goodsRecordInfo, StockContent stock, String entOrderNo,
+			double goodsTotalPrice) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
@@ -300,7 +299,7 @@ public class OrderServiceImpl implements OrderService {
 
 	// 支付完成后根据类型进行业务处理
 	private Map<String, Object> updateOrderInfo(String memberId, int type, List jsonList, double totalPrice,
-			Map<String, Object> reOrderMap) {
+			String reEntOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type == 1) {// 1-余额支付,2-跳转至银盛
 			Map<String, Object> params = new HashMap<>();
@@ -316,7 +315,7 @@ public class OrderServiceImpl implements OrderService {
 					return statusMap;
 				}
 			}
-			return updateOrderInfo2(memberId, jsonList, reOrderMap);
+			return updateOrderInfo2(memberId, jsonList, reEntOrderNo);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web-shop/yspay/dopay");
@@ -406,29 +405,35 @@ public class OrderServiceImpl implements OrderService {
 
 	// 更新订单状态及删除用户购物车数据
 	private Map<String, Object> updateOrderInfo2(String memberId, List<Object> jsonList,
-			Map<String, Object> reOrderMap) {
+			String reEntOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		// 更新订单状态
-		for (String key : reOrderMap.keySet()) {
+		if(reEntOrderNo !=null && !"null".equals(reEntOrderNo)){
 			params.clear();
 			params.put("memberId", memberId);
-			params.put("orderId", reOrderMap.get(key));
+			params.put("entOrderNo", reEntOrderNo);
 			List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 			OrderContent orderBase = (OrderContent) orderList.get(0);
+			//订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时;
 			orderBase.setStatus(2);
 			if (!orderDao.update(orderBase)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "更新订单状态失败,请重试！");
 				return statusMap;
 			}
+		}else{
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "更新订单状态失败,订单编号错误,请重试！");
+			return statusMap;
 		}
+		
 		// 遍历购物车中信息,删除已支付的商品
 		for (int i = 0; i < jsonList.size(); i++) {
 			params.clear();
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
-			String goodsId = paramsMap.get("goodsId") + "";
-			params.put("goodsBaseId", goodsId);
+			String entGoodsNo = paramsMap.get("entGoodsNo") + "";
+			params.put("entGoodsNo", entGoodsNo);
 			params.put("memberId", memberId);
 			// 根据商品ID查询购物车中商品
 			List<Object> cartList = orderDao.findByProperty(ShopCarContent.class, params, 1, 1);
@@ -453,8 +458,8 @@ public class OrderServiceImpl implements OrderService {
 		params.put("orderId", newOrderId);
 		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 		if (reOrderList != null && !reOrderList.isEmpty()) {
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo,
-					stock, entOrderNo, goodsTotalPrice);
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count,
+					goodsRecordInfo, stock, entOrderNo, goodsTotalPrice);
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
 				return reGoodsMap;
 			}
@@ -465,8 +470,8 @@ public class OrderServiceImpl implements OrderService {
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo,
-					stock, entOrderNo, goodsTotalPrice);
+			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count,
+					goodsRecordInfo, stock, entOrderNo, goodsTotalPrice);
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
 				return reGoodsMap;
 			}
@@ -517,6 +522,7 @@ public class OrderServiceImpl implements OrderService {
 
 	/**
 	 * 根据商品基本信息Id,备案商品Id,查询HS编码或大小类别计算税费
+	 * 
 	 * @param count
 	 *            商品数量
 	 * @param entGoodsNo
@@ -525,7 +531,7 @@ public class OrderServiceImpl implements OrderService {
 	 *            单价
 	 * @return Map
 	 */
-	public Map<String, Object> calculationTaxesFees( int count, String entGoodsNo, double regPrice) {
+	public Map<String, Object> calculationTaxesFees(int count, String entGoodsNo, double regPrice) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		paramsMap.put("entGoodsNo", entGoodsNo);
@@ -571,10 +577,10 @@ public class OrderServiceImpl implements OrderService {
 		long thirdId = Long.parseLong(goodsRecord.getSpareGoodsThirdTypeId());
 		paramsMap.put("id", thirdId);
 		List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
-		if(reGoodsThirdList == null ){
+		if (reGoodsThirdList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
-		}else if(!reGoodsThirdList.isEmpty()) {
+		} else if (!reGoodsThirdList.isEmpty()) {
 			GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
 			// 税费 = 购买单价 × 件数 × 跨境电商综合税率
 			double consolidatedTax = thirdInfo.getConsolidatedTax();
@@ -582,7 +588,7 @@ public class OrderServiceImpl implements OrderService {
 			total += regPrice * count * (consolidatedTax / 100d);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), total);
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "查询商品税率无数据,服务器繁忙！");
 		}
@@ -594,8 +600,10 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
+		String descParams = "createDate";
 		params.put("memberId", memberId);
-		List<OrderContent> reOrderList = orderDao.findByProperty(OrderContent.class, params, page, size);
+		List<OrderContent> reOrderList = orderDao.findByPropertyDesc(OrderContent.class, params, descParams, page,
+				size);
 		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
 		if (reOrderList != null && reOrderList.size() > 0) {
 			for (OrderContent orderInfo : reOrderList) {

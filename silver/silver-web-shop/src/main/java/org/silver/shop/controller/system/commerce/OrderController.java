@@ -38,17 +38,13 @@ public class OrderController {
 	@ApiOperation("用户创建订单")
 	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
-			@RequestParam("recipientId")String recipientId) {
+			@RequestParam("recipientId") String recipientId) {
 		String originHeader = req.getHeader("Origin");
-		String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-		}
-		Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack, type,recipientId);
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack, type, recipientId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -57,7 +53,7 @@ public class OrderController {
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户查看订单详情")
 	public String getMerchantOrderDetail(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entOrderNo")String entOrderNo) {
+			@RequestParam("entOrderNo") String entOrderNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -92,6 +88,7 @@ public class OrderController {
 		logger.info(JSONObject.fromObject(statusMap).toString());
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
 	/**
 	 * 检查订单商品是否都属于一个海关口岸
 	 * 
@@ -99,10 +96,11 @@ public class OrderController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/checkOrderGoodsCustoms", method= RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/checkOrderGoodsCustoms", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("检查订单商品是否都属于一个海关口岸")
-	public String checkOrderGoodsCustoms(HttpServletRequest req, HttpServletResponse response,@RequestParam("orderGoodsInfoPack")String orderGoodsInfoPack) {
+	public String checkOrderGoodsCustoms(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("orderGoodsInfoPack") String orderGoodsInfoPack) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -111,8 +109,7 @@ public class OrderController {
 		Map<String, Object> statusMap = orderTransaction.checkOrderGoodsCustoms(orderGoodsInfoPack);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "获取用户订单信息")
@@ -127,28 +124,28 @@ public class OrderController {
 		Map<String, Object> statusMap = orderTransaction.getMemberOrderInfo(page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/getMerchantOrderRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户查看备案订单信息")
 	public String getMerchantOrderRecordInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page")int page,@RequestParam("size")int size) {
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.getMerchantOrderRecordInfo(page,size);
+		Map<String, Object> statusMap = orderTransaction.getMerchantOrderRecordInfo(page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/getMemberOrderDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Member")
 	@ApiOperation("用户查看订单详情")
 	public String getMemberOrderDetail(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entOrderNo")String entOrderNo) {
+			@RequestParam("entOrderNo") String entOrderNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -157,23 +154,20 @@ public class OrderController {
 		Map<String, Object> statusMap = orderTransaction.getMemberOrderDetail(entOrderNo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	public static void main(String[] args) {
-		/*Double d= 0.06*1*(119/100d);
-		BigDecimal b = new BigDecimal(d); 
-		double f1 = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
-		System.out.println("---------->>"+d);
-		System.out.println("四舍五入后-------->"+f1);
-		
-		
-		float f = Float.parseFloat(d+"");
-		int a = (int) (f * 1000);
-		if (a % 10 > 0)
-		    f = (a - a % 10 + 10 * 1.0f) / 1000.0f;
-		else
-		    f = a * 1.0f / 1000.0f;
-		System.out.println(f);*/
-		String s ="KJDS-I171120-150958934763904";
+		/*
+		 * Double d= 0.06*1*(119/100d); BigDecimal b = new BigDecimal(d); double
+		 * f1 = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+		 * System.out.println("---------->>"+d);
+		 * System.out.println("四舍五入后-------->"+f1);
+		 * 
+		 * 
+		 * float f = Float.parseFloat(d+""); int a = (int) (f * 1000); if (a %
+		 * 10 > 0) f = (a - a % 10 + 10 * 1.0f) / 1000.0f; else f = a * 1.0f /
+		 * 1000.0f; System.out.println(f);
+		 */
+		String s = "KJDS-I171120-150958934763904";
 		System.out.println(s.length());
 	}
 }

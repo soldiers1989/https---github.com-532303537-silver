@@ -42,9 +42,6 @@ public class GoodsSecondType implements Serializable{
 	public void setGoodsSecondTypeName(String goodsSecondTypeName) {
 		this.goodsSecondTypeName = goodsSecondTypeName;
 	}
-	public void setFirstTypeId(long firstTypeId) {
-		this.firstTypeId = firstTypeId;
-	}
 	
 	public String getCreateBy() {
 		return createBy;

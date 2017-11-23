@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.organization;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,27 +48,24 @@ public class ManagerController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
-			currentUser.logout();
-			if (!currentUser.isAuthenticated()) {
-				CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
-				customizedToken.setRememberMe(false);
-				try {
-					currentUser.login(customizedToken);
-					statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
-					statusMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
-					return JSONObject.fromObject(statusMap).toString();
-				} catch (IncorrectCredentialsException ice) {
-					System.out.println("账号/密码不匹配！");
-				} catch (LockedAccountException lae) {
-					System.out.println("账户已被冻结！");
-				} catch (AuthenticationException ae) {
-					System.out.println(ae.getMessage());
-					ae.printStackTrace();
-				}
+			// currentUser.logout();
+			CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
+			customizedToken.setRememberMe(false);
+			try {
+				currentUser.login(customizedToken);
+				statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
+			} catch (IncorrectCredentialsException ice) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
+			} catch (LockedAccountException lae) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");
+			} catch (AuthenticationException ae) {
+				System.out.println(ae.getMessage());
+				ae.printStackTrace();
 			}
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
-		statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -85,6 +83,19 @@ public class ManagerController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 创建管理员或运营管理员
+	 * 
+	 * @param req
+	 * @param response
+	 * @param managerName
+	 *            账号名称
+	 * @param loginPassword
+	 *            登录密码
+	 * @param managerMarks
+	 *            管理员标识1-超级管理员2-运营管理员
+	 * @return
+	 */
 	@RequestMapping(value = "/createManager", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -135,34 +146,80 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (merchantId != null) {
-			 statusMap = managerTransaction.findMerchantDetail(merchantId);
-			 return JSONObject.fromObject(statusMap).toString();
-		}else{
+			statusMap = managerTransaction.findMerchantDetail(merchantId);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
-	
+
 	@RequestMapping(value = "/updateManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("修改管理员密码")
 	public String updateManagerPassword(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("oldLoginPassword")String  oldLoginPassword,@RequestParam("newLoginPassword") String newLoginPassword) {
+			@RequestParam("oldLoginPassword") String oldLoginPassword,
+			@RequestParam("newLoginPassword") String newLoginPassword) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (oldLoginPassword != null && newLoginPassword !=null ) {
-			 statusMap = managerTransaction.updateManagerPassword(oldLoginPassword,newLoginPassword);
-			 return JSONObject.fromObject(statusMap).toString();
-		}else{
+		if (oldLoginPassword != null && newLoginPassword != null) {
+			statusMap = managerTransaction.updateManagerPassword(oldLoginPassword, newLoginPassword);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
+
+	@RequestMapping(value = "/editMerchantStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("修改商户状态")
+	public String editMerchantStatus(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId, @RequestParam("status") int status) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (merchantId != null && status == 1 && status == 2) {
+			statusMap = managerTransaction.editMerchantStatus(merchantId, status);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
+
+	@RequestMapping(value = "/editGoodsRecordStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("修改备案商品状态")
+	public String editGoodsRecordStatus(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("entGoodsNo") String entGoodsNo, @RequestParam("status") int status) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (entGoodsNo != null && status == 2 || status == 3) {
+			statusMap = managerTransaction.editGoodsRecordStatus(entGoodsNo, status);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
+
 }

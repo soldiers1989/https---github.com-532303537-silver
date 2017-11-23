@@ -1,9 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -101,14 +97,5 @@ public class ShopCarController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = shopCarTransaction.editShopCarGoodsInfo(goodsInfo);
 		return JSONObject.fromObject(statusMap).toString();
-	}
-	public static void main(String[] args) {
-		List<Map<String,Object>> list = new ArrayList<>();
-		Map<String,Object> map = new HashMap();
-		map.put("entGoodsNo", "GR_20170000215088379460286258");
-		map.put("count", "2");
-		list.add(map);
-		System.out.println("--------->>>>>>>"+list.toString());
-		System.out.println(JSONArray.fromObject(list).toString());
 	}
 }

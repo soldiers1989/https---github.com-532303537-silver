@@ -114,4 +114,14 @@ public interface GoodsContentService {
 	 */
 	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size);
 
+	/**
+	 * 根据指定信息搜索商品基本信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商品名称
+	 * @param datasMap 参数
+	 * @return Map
+	 */
+	public Map<String, Object> searchMerchantGoodsRecordInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap);
+
 }

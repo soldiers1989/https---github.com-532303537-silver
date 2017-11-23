@@ -3,6 +3,7 @@ package org.silver.shop.shiro;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -39,10 +40,10 @@ public class MemberRealm extends AuthorizingRealm{
 		String pass = new String(customizedToken.getPassword());
 		if (memberTransaction.memberLogin(account, pass) != null) {
 			authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MEMBER.toString());
-			// WebUtil.getSession().setAttribute(
-			// LoginType.MERCHANT.toString()+"_info", value);
+			return authcInfo;
+		}else{
+			throw new IncorrectCredentialsException();  
 		}
-		return authcInfo;
 	}
 
 }

@@ -8,7 +8,7 @@
 	<!-- SPRING-SESSION -->
 	<bean class="org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration">
 		<description>会话有效期(秒)</description>
-        <property name="maxInactiveIntervalInSeconds" value="300000" />
+        <property name="maxInactiveIntervalInSeconds" value="600" />
         <property name="redisNamespace" value="cloudx" />
 	</bean>
 	<bean class="org.springframework.session.config.annotation.web.http.SpringHttpSessionConfiguration">

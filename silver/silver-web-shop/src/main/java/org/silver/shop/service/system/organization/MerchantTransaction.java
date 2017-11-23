@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
@@ -60,11 +61,18 @@ public class MerchantTransaction {
 		List<Object> reList =merchantService.findMerchantBy(account);
 		if (reList != null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
+			//商户状态：1-启用，2-禁用，3-审核
+			String status = merchant.getMerchantStatus();
 			String name = merchant.getMerchantName();
 			String loginpas = merchant.getLoginPassword();
 			String md5Pas = md5.getMD5ofStr(loginPassword);
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
+				// 判断帐号是否锁定  
+				if ("2".equals(status)) {
+					// 抛出 帐号锁定异常  
+					throw new LockedAccountException();  
+				}
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
 				Merchant merchantInfo = (Merchant) currentUser.getSession()

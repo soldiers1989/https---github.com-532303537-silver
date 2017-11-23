@@ -42,7 +42,7 @@ public class YsPayReceiveController {
 		datasMap.put("trade_no", req.getParameter("trade_no") + "");
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
-		Map<String, Object> statusMap=null; 
+		Map<String, Object> statusMap=new HashMap<>(); 
 		if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
 		}

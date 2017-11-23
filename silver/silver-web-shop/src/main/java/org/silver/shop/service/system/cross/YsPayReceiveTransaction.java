@@ -14,7 +14,6 @@ public class YsPayReceiveTransaction {
 	public YsPayReceiveService ysPayReceiveService;
 	
 	public Map<String,Object> ysPayReceive(Map<String,Object> datasMap){
-		
 		return ysPayReceiveService.ysPayReceive(datasMap);
 	}
 }

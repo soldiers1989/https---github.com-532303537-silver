@@ -508,6 +508,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		paymentMap.put("datas", paymentList.toString());
 		paymentMap.put("notifyurl", YmMallConfig.PAYMENTNOTIFYURL);
 		paymentMap.put("note", "");
+		
 		// String resultStr
 		// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
 		// 商城支付单备案流水号
@@ -521,8 +522,24 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				CustomsPort portInfo = (CustomsPort) reCustomsPortList.get(0);
 				String merchantId = goodsRecordInfo.getMerchantId();
 				paramsMap.put("merchantId", merchantId);
-				List<Object> reMerchantList = ysPayReceiveDao.findByProperty(MerchantRecordInfo.class, paramsMap, 0, 0);
+				List<Object> reMerchantList = ysPayReceiveDao.findByProperty(MerchantRecordInfo.class, paramsMap, 1, 1);
 				MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
+				JSONObject json2 = new JSONObject();
+				List<JSONObject> paymentList2 = new ArrayList<>();
+				json2.element("EntPayNo", paymentInfo.getEntPayNo());
+				json2.element("PayStatus", paymentInfo.getPayStatus());
+				json2.element("PayAmount", paymentInfo.getPayAmount());
+				json2.element("PayCurrCode", paymentInfo.getPayCurrCode());
+				json2.element("PayTime", paymentInfo.getPayTime());
+				json2.element("PayerName", paymentInfo.getPayerName());
+				json2.element("PayerDocumentType", paymentInfo.getPayerDocumentType());
+				json2.element("PayerDocumentNumber", paymentInfo.getPayerDocumentNumber());
+				json2.element("PayerPhoneNumber", paymentInfo.getPayerPhoneNumber());
+				json2.element("EntOrderNo", paymentInfo.getEntOrderNo());
+				json2.element("EBPEntNo", merchantRecordInfo.getEbpEntNo());
+				json2.element("EBPEntName", merchantRecordInfo.getEbpEntName());
+				json2.element("Notes", paymentInfo.getEntPayNo());
+				paymentList2.add(json2);
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				paymentMap.put("eport", 1);
 				// 电商企业编号
@@ -533,6 +550,18 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paymentMap.put("ciqOrgCode", portInfo.getCiqOrgCode());
 				// 海关代码
 				paymentMap.put("customsCode", portInfo.getCustomsCode());
+				paymentMap.put("datas", paymentList2.toString());
+				try {
+					clientsign = MD5.getMD5(
+							(YmMallConfig.APPKEY + tok + paymentList2.toString() + YmMallConfig.PAYMENTNOTIFYURL + timestamp)
+									.getBytes("UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				paymentMap.put("clientsign", clientsign.trim());
 				// String resultStr2
 				// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",paymentMap);
 				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);

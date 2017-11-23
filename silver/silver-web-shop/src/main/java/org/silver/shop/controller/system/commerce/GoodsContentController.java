@@ -201,5 +201,20 @@ public class GoodsContentController {
 		Map<String, Object> statusMap = goodsContentTransaction.searchGoodsInfo(goodsName, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/searchGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("根据指定信息搜索商品基本信息")
+	@RequiresRoles("Merchant")
+	public String searchMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+	
+		Map<String, Object> statusMap = goodsContentTransaction.searchMerchantGoodsRecordInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
 
 }

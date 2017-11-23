@@ -15,6 +15,7 @@ import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.util.StringEmptyUtils;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -167,7 +168,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 					hql = hql + "model." + property + "=" + "?" + " and ";
 					list.add(params.get(property));
 				}
-				hql += " 1=1 ";
+				hql += " 1=1 Order By id DESC";
 			}
 			Query query = session.createQuery(hql);
 			if (list.size() > 0) {
@@ -242,7 +243,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				if (endTime != null && !"".equals(endTime.trim())) {
 					hql = hql + "model.createDate <= '" + endTime + " 23:59:59'" + " and ";
 				}
-				hql += " 1=1 ";
+				hql += " 1=1 Order By id DESC";
 			}
 			Query query = session.createQuery(hql);
 			if (list.size() > 0) {
@@ -382,13 +383,19 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			session = getSession();
 			String hql = "from " + entName + " model ";
 			List<Object> list = new ArrayList<>();
+			hql += "where ";
 			if (params != null && params.size() > 0) {
-				hql += "where ";
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " = " + "?" + " and ";
+					if(property.equals("startDate")){
+						hql = hql + "model." + property + " >= " + "?" + " and ";
+					}else if("endDate".equals(property)){
+						hql = hql + "model." + property + " <= " + "?" + " and ";
+					}else{
+						hql = hql + "model." + property + " = " + "?" + " and ";
+					}
 					list.add(params.get(property));
 				}
 			}
@@ -401,7 +408,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 					list.add(blurryMap.get(property));
 				}
 			}
-			hql += " 1=1 ";
+			hql += " 1=1 Order By id DESC";
 			Query query = session.createQuery(hql);
 			if (list.size() > 0) {
 				for (int i = 0; i < list.size(); i++) {
@@ -431,13 +438,19 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			String entityName = entity.getSimpleName();
 			String hql = "select count(model) from " + entityName + " model ";
 			List<Object> list = new ArrayList<>();
+			hql += "where ";
 			if (params != null && params.size() > 0) {
-				hql += "where ";
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " = " + "?" + " and ";
+					if(property.equals("startDate")){
+						hql = hql + "model." + property + " >= " + "?" + " and ";
+					}else if("endStartDate".equals(property)){
+						hql = hql + "model." + property + " <= " + "?" + " and ";
+					}else{
+						hql = hql + "model." + property + " = " + "?" + " and ";
+					}
 					list.add(params.get(property));
 				}
 			}
@@ -503,9 +516,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				}
 				// 截取掉最后的 or 防止出错
 				orHql = orHql.substring(0, orHql.length() - 3);
-				orHql += " ) ";
+				orHql += " ) Order By id DESC";
 			} else {
-				hql += " 1=1 ";
+				hql += " 1=1 Order By id DESC";
 			}
 			// 合并两个sql语句
 			hql += orHql;

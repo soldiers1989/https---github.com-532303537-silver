@@ -1,6 +1,8 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -125,12 +127,9 @@ public class GoodsRecordController {
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
 		logger.info("-----备案网关异步回馈备案商品信息---");
 		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("msg", req.getParameter("msg") + "");
-		datasMap.put("messageID", req.getParameter("messageID") + "");
-		datasMap.put("entGoodsNo", req.getParameter("entGoodsNo") + "");
-		datasMap.put("CIQGoodsNo", req.getParameter("CIQGoodsNo") + "");
-		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(datasMap);
+	
+		
+		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -196,12 +195,22 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		/*Enumeration<String> itkeys = req.getParameterNames();
-		while (itkeys.hasMoreElements()) {
-			String key = itkeys.nextElement();
-			String value = req.getParameter(key);
-		}*/
 		Map<String, Object> statusMap = goodsRecordTransaction.merchantAddAlreadyRecordGoodsInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	@RequestMapping(value = "/searchGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("根据指定信息搜索商品信息")
+	@RequiresRoles("Merchant")
+	public String searchGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+	
+		Map<String, Object> statusMap = goodsRecordTransaction.searchGoodsRecordInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	

@@ -1,7 +1,9 @@
 package org.silver.shop.impl.common.category;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -9,14 +11,17 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.category.CategoryService;
 import org.silver.shop.dao.common.category.CategoryDao;
+import org.silver.shop.model.common.category.GoodsFirstType;
+import org.silver.shop.model.common.category.GoodsSecondType;
+import org.silver.shop.model.common.category.GoodsThirdType;
+import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
+import org.silver.util.JedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
-import com.justep.baas.data.Transform;
-
-import net.sf.json.JSONArray;
 
 @Service(interfaceClass = CategoryService.class)
 public class CategoryServiceImpl implements CategoryService {
@@ -55,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
 						thirdMap.put("vat", vat);
 						thirdMap.put("consumptionTax", consumptionTax);
 						thirdMap.put("consolidatedTax", consolidatedTax);
-						List<Map<String,Object>> thirdList = new ArrayList<>();
+						List<Map<String, Object>> thirdList = new ArrayList<>();
 						thirdList.add(thirdMap);
 						firstMap.get(firstId + "_" + firstName).get(secId + "_" + secName).addAll(thirdList);
 					} else {
@@ -65,7 +70,7 @@ public class CategoryServiceImpl implements CategoryService {
 						thirdMap.put("vat", vat);
 						thirdMap.put("consumptionTax", consumptionTax);
 						thirdMap.put("consolidatedTax", consolidatedTax);
-						List<Map<String,Object>> thirdList = new ArrayList<>();
+						List<Map<String, Object>> thirdList = new ArrayList<>();
 						thirdList.add(thirdMap);
 						firstMap.get(firstId + "_" + firstName).put(secId + "_" + secName, thirdList);
 					}
@@ -77,19 +82,352 @@ public class CategoryServiceImpl implements CategoryService {
 					thirdMap.put("vat", vat);
 					thirdMap.put("consumptionTax", consumptionTax);
 					thirdMap.put("consolidatedTax", consolidatedTax);
-					List<Map<String,Object>> thirdList = new ArrayList<>();
+					List<Map<String, Object>> thirdList = new ArrayList<>();
 					thirdList.add(thirdMap);
 					secondMap.put(secId + "_" + secName, thirdList);
 					firstMap.put(firstId + "_" + firstName, secondMap);
 				}
 			}
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.DATAS.toString(),firstMap);
+			datasMap.put(BaseCode.DATAS.toString(), firstMap);
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		}else{
+		} else {
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
 		return datasMap;
+	}
+
+	@Override
+	public Map<String, Object> addGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap) {
+		Date date = new Date();
+		Map<String, Object> statusMap = new HashMap<>();
+		int type = 0;
+		try {
+			type = Integer.parseInt(paramMap.get("type") + "");
+		} catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
+			return statusMap;
+		}
+		if (type == 1 || type == 2 || type == 3) {
+			switch (type) {
+			case 1:
+				Map<String, Object> reFirstMap = saveFirstType(paramMap, managerName, date);
+				if (!"1".equals(reFirstMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			case 2:
+				String firstTypeId = paramMap.get("firstTypeId") + "";
+				String goodsSecondTypeName = paramMap.get("goodsSecondTypeName") + "";
+				Map<String, Object> reSecondMap = saveSecondType(Long.parseLong(firstTypeId), goodsSecondTypeName,
+						managerName, date);
+				if (!"1".equals(reSecondMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			case 3:
+				Map<String, Object> reThirdMap = saveThirdType(paramMap, managerName, date);
+				if (!"1".equals(reThirdMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			default:
+				break;
+			}
+			Map<String, Object> datasMap = findGoodsType();
+			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
+			if ("1".equals(status)) {
+				datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
+				// 将已查询出来的商品类型存入redis,有效期为1小时
+				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
+			}
+			System.out.println("-重新放入缓存-------------------");
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
+		return statusMap;
+	}
+
+	/**
+	 * 保存第三级商品类型
+	 * 
+	 * @param paramMap
+	 *            参数
+	 * @param managerName
+	 *            管理员名称
+	 * @param date
+	 *            日期
+	 * @return Map
+	 */
+	private Map<String, Object> saveThirdType(Map<String, Object> paramMap, String managerName, Date date) {
+		Map<String, Object> statusMap = new HashMap<>();
+		long firstTypeId2 = 0;
+		long secondTypeId = 0;
+		double vat = 0;
+		double consumptionTax = 0;
+		double consolidatedTax = 0;
+		double tariff = 0;
+		try {
+			firstTypeId2 = Long.parseLong(paramMap.get("firstTypeId") + "");
+			secondTypeId = Long.parseLong(paramMap.get("secondTypeId") + "");
+			vat = Double.parseDouble(paramMap.get("vat") + "");
+			consumptionTax = Double.parseDouble(paramMap.get("consumptionTax") + "");
+			consolidatedTax = Double.parseDouble(paramMap.get("consolidatedTax") + "");
+			tariff = Double.parseDouble(paramMap.get("tariff") + "");
+		} catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
+			return statusMap;
+		}
+		String goodsThirdTypeName = paramMap.get("goodsThirdTypeName") + "";
+		GoodsThirdType thirdType = new GoodsThirdType();
+		thirdType.setFirstTypeId(firstTypeId2);
+		thirdType.setSecondTypeId(secondTypeId);
+		thirdType.setGoodsThirdTypeName(goodsThirdTypeName);
+		thirdType.setVat(vat);
+		thirdType.setConsumptionTax(consumptionTax);
+		thirdType.setConsolidatedTax(consolidatedTax);
+		thirdType.setTariff(tariff);
+		thirdType.setCreateBy(managerName);
+		thirdType.setCreateDate(date);
+		thirdType.setDeleteFlag(0);
+		if (!categoryDao.add(thirdType)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
+
+	/**
+	 * 保存第二级商品类型
+	 * 
+	 * @param firstTypeId
+	 *            第一级商品类型Id
+	 * @param goodsSecondTypeName
+	 *            第二级类型名称
+	 * @param managerName
+	 *            管理员名称
+	 * @param date
+	 *            日期
+	 * @return Map
+	 */
+	private Map<String, Object> saveSecondType(long firstTypeId, String goodsSecondTypeName, String managerName,
+			Date date) {
+		Map<String, Object> statusMap = new HashMap<>();
+		GoodsSecondType secondType = new GoodsSecondType();
+		secondType.setGoodsSecondTypeName(goodsSecondTypeName);
+		secondType.setFirstTypeId(firstTypeId);
+		secondType.setCreateBy(managerName);
+		secondType.setCreateDate(date);
+		secondType.setDeleteFlag(0);
+		if (!categoryDao.add(secondType)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
+
+	/**
+	 * 保存第一商品类型
+	 * 
+	 * @param paramMap
+	 *            参数
+	 * @param managerName
+	 *            管理员名称
+	 * @param date
+	 *            日期
+	 * @return Map
+	 */
+	private Map<String, Object> saveFirstType(Map<String, Object> paramMap, String managerName, Date date) {
+		Map<String, Object> statusMap = new HashMap<>();
+		GoodsFirstType firstType = new GoodsFirstType();
+		String firstTypeName = paramMap.get("firstTypeName") + "";
+		firstType.setFirstTypeName(firstTypeName);
+		firstType.setCreateBy(managerName);
+		firstType.setCreateDate(date);
+		firstType.setDeleteFlag(0);
+		if (!categoryDao.add(firstType)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> deleteGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Iterator<String> isKey = paramMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next();
+			String value = paramMap.get(key) + "";
+			switch (key) {
+			case "firstTypeId":
+				Map<String, Object> reAllCategoryMap = deleteAllCategory(value);
+				if (!"1".equals(reAllCategoryMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			case "secondTypeId":
+				Map<String, Object> reSecondCategoryMap = deleteSecondCategory(value);
+				if (!"1".equals(reSecondCategoryMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			case "thirdTypeId":
+				Map<String, Object> reThirdCategoryMap = deleteThirdCategory(value);
+				if (!"1".equals(reThirdCategoryMap.get(BaseCode.STATUS.toString()))) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+				break;
+			default:
+				break;
+			}
+			Map<String, Object> datasMap = findGoodsType();
+			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
+			if ("1".equals(status)) {
+				datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
+				// 将已查询出来的商品类型存入redis,有效期为1小时
+				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
+			}
+			System.out.println("-重新放入缓存-------------------");
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		}
+		return null;
+	}
+
+	private Map<String, Object> deleteThirdCategory(String value) {
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		params.put("goodsThirdTypeId", value);
+		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
+		params.clear();
+		params.put("spareGoodsThirdTypeId", value);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		if(reGoodsRecordDetailList == null || reGoodsContentList == null){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
+			return statusMap;
+		}else{
+			List<Object> reFirstTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
+			if(reFirstTypeList!=null && !reFirstTypeList.isEmpty()){
+				GoodsThirdType secondTypeInfo = (GoodsThirdType) reFirstTypeList.get(0);
+				if (!categoryDao.delete(secondTypeInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getMsg());
+		return  statusMap;
+	}
+
+	private Map<String, Object> deleteSecondCategory(String value) {
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		params.put("spareGoodsSecondTypeId", value);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		params.clear();
+		params.put("goodsSecondTypeId", value);
+		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
+		if(reGoodsRecordDetailList == null || reGoodsContentList == null){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
+			return statusMap;
+		}else{
+			List<Object> reFirstTypeList = categoryDao.findByProperty(GoodsSecondType.class, params, 0, 0);
+			if(reFirstTypeList!=null && !reFirstTypeList.isEmpty()){
+				GoodsSecondType secondTypeInfo = (GoodsSecondType) reFirstTypeList.get(0);
+				if (!categoryDao.delete(secondTypeInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getMsg());
+		return  statusMap;
+	}
+
+	//删除该商品大类型
+	private Map<String, Object> deleteAllCategory(String value) {
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		params.put("spareGoodsFirstTypeId", value);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		params.clear();
+		params.put("goodsFirstTypeId", value);
+		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
+		if(reGoodsRecordDetailList == null || reGoodsContentList == null){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
+			return statusMap;
+		}else{
+			params.clear();
+			params.put("id", Long.parseLong(value));
+			List<Object> reFirstTypeList = categoryDao.findByProperty(GoodsFirstType.class, params, 0, 0);
+			params.clear();
+			params.put("firstTypeId", Long.parseLong(value));
+			List<Object> reSecondTypeList = categoryDao.findByProperty(GoodsSecondType.class, params, 0, 0);
+			params.clear();
+			params.put("firstTypeId", Long.parseLong(value));
+			List<Object> reThirdTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
+			if(reFirstTypeList == null || reSecondTypeList ==null || reThirdTypeList ==null ){
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}else if( !reFirstTypeList.isEmpty()&&!reSecondTypeList.isEmpty() && !reThirdTypeList.isEmpty()){
+				GoodsFirstType firstTypeInfo = (GoodsFirstType) reFirstTypeList.get(0);
+				GoodsSecondType secondTypeInfo = (GoodsSecondType) reFirstTypeList.get(0);
+				GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
+				if (!categoryDao.delete(firstTypeInfo) || !categoryDao.delete(secondTypeInfo) ||!categoryDao.delete(thirdTypeInfo) ) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getMsg());
+		return  statusMap;
 	}
 }

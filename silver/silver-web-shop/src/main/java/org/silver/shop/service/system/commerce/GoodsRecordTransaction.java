@@ -63,7 +63,14 @@ public class GoodsRecordTransaction {
 	}
 
 	// 处理网关异步回调信息
-	public Map<String, Object> updateGoodsRecordInfo(Map<String, Object> datasMap) {
+	public Map<String, Object> updateGoodsRecordInfo(HttpServletRequest req) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			String value = req.getParameter(key)+"";
+					datasMap.put(key, value);
+		}
 		return goodsRecordService.updateGoodsRecordInfo(datasMap);
 	}
 
@@ -88,7 +95,7 @@ public class GoodsRecordTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/goods/", ".jpg", false, 800, 800,
+		imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/"+merchantId+"/goods/", ".jpg", false, 800, 800,
 				null);
 		status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
 		if (!"1".equals(status)) {
@@ -100,7 +107,7 @@ public class GoodsRecordTransaction {
 			String key = isKey.nextElement();
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
-		}	
+		}
 		paramMap.put("imgList", imgMap.get(BaseCode.DATAS.getBaseCode()));
 		return goodsRecordService.editMerchantRecordGoodsDetailInfo(merchantId, merchantName, paramMap, type);
 	}
@@ -120,5 +127,21 @@ public class GoodsRecordTransaction {
 			paramMap.put(key, value);
 		}
 		return goodsRecordService.merchantAddAlreadyRecordGoodsInfo(merchantId, merchantName, paramMap);
+	}
+
+	public Map<String, Object> searchGoodsRecordInfo(HttpServletRequest req) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		Map<String, Object> param = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			param.put(key, value);
+		}
+		return goodsRecordService.searchGoodsRecordInfo(merchantId, merchantName, param);
 	}
 }

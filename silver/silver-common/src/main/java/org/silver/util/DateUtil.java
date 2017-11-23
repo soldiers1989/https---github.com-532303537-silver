@@ -204,6 +204,76 @@ public final class DateUtil {
 		}
 		return n;
 	}
+	/**
+	 * 按照指定的格式，将日期类型对象转换成字符串，例如：yyyy-MM-dd,yyyy/MM/dd,yyyy/MM/dd hh:mm:ss
+	 * 如果传入的日期为null,则返回空值
+	 * @param date 日期类型对象
+	 * @param format 需转换的格式
+	 * @return 日期格式字符串
+	 */
+	public static String formatDate(Date date, String format) {
+		if (date == null) {
+			return "";
+		}
+		SimpleDateFormat formater = new SimpleDateFormat(format);
+		return formater.format(date);
+	}
 
+	/**
+	 * 将日期类型对象转换成yyyy-MM-dd类型字符串
+	 * 如果传入的日期为null,则返回空值
+	 * @param date 日期类型对象
+	 * @return 日期格式字符串
+	 */
+	public static String formatDate(Date date) {
+		if (date == null) {
+			return "";
+		}
+		SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+		return formater.format(date);
+	}
+	
+	/**
+	 * 将日期类型对象转换成yyyy-MM-dd HH:mm:ss类型字符串
+	 * 如果传入的日期为null,则返回空值
+	 * @param date 日期类型对象
+	 * @return 日期格式字符串
+	 */
+	public static String formatTime(Date date) {
+		if (date == null) {
+			return "";
+		}
+		SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return formater.format(date);
+	}
+
+	/**
+	 * 将字符串yyyy-MM-dd HH:mm:ss转换为yyyyMMddHHmmss
+	 * 如果传入的字符串为null,则返回空值
+	 * @param dateTime 日期格式的字符串
+	 * @return 日期格式字符串
+	 */
+	public static String toStringTime(String dateTime){
+		if(dateTime == null){
+			return "";
+		}
+		return dateTime.replaceAll("-","").replaceAll(" ","").replaceAll(":","");
+
+	}
+	
+	/**
+	 *	将字符串yyyyMMddhhmmss 转换成yyyy-MM-dd HH:mm:ss字符串格式
+	 *	如果传入的字符串为null,则返回空值
+	 *	@param date 字符串yyyyMMddhhmmss
+	 *	@return 日期格式字符串
+	 */
+	public static String toStringDate(String date){
+		if(date == null){
+			return "";
+		}
+		String reg = "(\\d{4})(\\d{2})(\\d{2})(\\d{2})(\\d{2})(\\d{2})";
+		date = 	date.replaceAll(reg, "$1-$2-$3 $4:$5:$6");
+		return date;
+	}
 
 }

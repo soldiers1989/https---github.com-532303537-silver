@@ -85,22 +85,12 @@ public class GoodsFirstType implements Serializable {
 		this.deleteDate = deleteDate;
 	}
 
-	
-
 	public int getDeleteFlag() {
 		return deleteFlag;
 	}
 
 	public void setDeleteFlag(int deleteFlag) {
 		this.deleteFlag = deleteFlag;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
-	public void setId(long id) {
-		this.id = id;
 	}
 
 }

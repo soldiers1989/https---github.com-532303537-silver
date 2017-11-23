@@ -65,27 +65,23 @@ public class MerchantController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
-			currentUser.logout();
-			if (!currentUser.isAuthenticated()) {
-				CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
-				customizedToken.setRememberMe(false);
-				try {
-					currentUser.login(customizedToken);
-					statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
-					statusMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
-					return JSONObject.fromObject(statusMap).toString();
-				} catch (IncorrectCredentialsException ice) {
-					System.out.println("账号/密码不匹配！");
-				} catch (LockedAccountException lae) {
-					System.out.println("账户已被冻结！");
-				} catch (AuthenticationException ae) {
-					System.out.println(ae.getMessage());
-					ae.printStackTrace();
-				}
+			CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
+			customizedToken.setRememberMe(false);
+			try {
+				currentUser.login(customizedToken);
+				statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
+			} catch (IncorrectCredentialsException ice) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
+			} catch (LockedAccountException lae) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
+				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");
+			} catch (AuthenticationException ae) {
+				System.out.println(ae.getMessage());
+				ae.printStackTrace();
 			}
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
-		statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -141,7 +137,13 @@ public class MerchantController {
 	 */
 	@RequestMapping(value = "/checkMerchantName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String checkMerchantName(@RequestParam("account") String account,@RequestParam("str")String str) {
+	public String checkMerchantName(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("account") String account) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && !"".equals(account)) {// 判断前台传递的值不为空
 			List<Object> reList = merchantTransaction.checkMerchantName(account);

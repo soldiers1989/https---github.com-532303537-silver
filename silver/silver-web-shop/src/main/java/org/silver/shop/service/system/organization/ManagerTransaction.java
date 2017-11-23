@@ -1,8 +1,11 @@
 package org.silver.shop.service.system.organization;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -15,6 +18,8 @@ import org.silver.util.MD5;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import net.sf.json.JSONObject;
 
 
 @Service("managerTransaction")
@@ -85,4 +90,25 @@ public class ManagerTransaction {
 		String managerName = managerInfo.getManagerName();
 		return managerService.updateManagerPassword(managerId ,managerName,oldLoginPassword,newLoginPassword);
 	}
+
+	public Map<String, Object> editMerchantStatus(String merchantId,int status) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return managerService.editMerchantStatus(merchantId,managerId,managerName,status);
+	}
+
+	//修改备案商品状态
+	public Map<String, Object> editGoodsRecordStatus(String entGoodsNo,int status) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		
+		return managerService.editGoodsRecordStatus(managerId,managerName,entGoodsNo,status);
+	}
+
 }

@@ -85,4 +85,15 @@ public interface GoodsRecordService {
 	 */
 	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
 			Map<String, Object> paramMap);
+
+	/**
+	 * 
+	 * @param merchantId
+	 * @param merchantName
+	 * @param param
+	 * @return
+	 */
+	 
+	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName, Map<String, Object> param);
+
 }

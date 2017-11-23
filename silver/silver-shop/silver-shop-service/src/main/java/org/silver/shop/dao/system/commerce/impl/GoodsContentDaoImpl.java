@@ -55,7 +55,7 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 		String queryString = null;
 		Connection conn = null;
 		try {
-			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
+			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
 					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ";			
 			List<Object> sqlParams = new ArrayList<>();
 			if(firstType >0 && secndType > 0 && thirdType > 0){

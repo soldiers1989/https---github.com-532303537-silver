@@ -118,7 +118,7 @@ public interface OrderDao {
 	 * @param size 数据条数
 	 * @return List
 	 */
-	public List<Object> findByPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
+	public List findByPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
 			int size);
 
 	/**

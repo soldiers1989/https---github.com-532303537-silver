@@ -19,7 +19,7 @@ public class MaliciousRequestInterceptor extends BaseInterceptor {
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
-		HttpSession session = request.getSession();
+		/*HttpSession session = request.getSession();
 		String preRequest = (String) session.getAttribute(Constants.PREREQUEST);
 		Long preRequestTime = (Long) session.getAttribute(Constants.PREREQUEST_TIME);
 		String url = request.getServletPath();
@@ -43,7 +43,7 @@ public class MaliciousRequestInterceptor extends BaseInterceptor {
 			}
 		}
 		session.setAttribute(Constants.PREREQUEST, url);
-		session.setAttribute(Constants.PREREQUEST_TIME, System.currentTimeMillis());
+		session.setAttribute(Constants.PREREQUEST_TIME, System.currentTimeMillis());*/
 		return super.preHandle(request, response, handler);
 	}
 
