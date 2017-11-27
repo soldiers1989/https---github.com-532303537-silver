@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.silver.shop.api.common.base.MeteringService;
 import org.silver.shop.dao.common.base.MeteringDao;
-import org.silver.util.JedisUtil;
+import org.silver.shop.model.common.base.Metering;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -18,12 +18,7 @@ public class MeteringServiceImpl implements MeteringService {
 
 	@Override
 	public List<Object> findAllMetering() {
-		List<Object> reList = meteringDao.findMetering();
-		if (reList != null && reList.size() > 0) {
-			JedisUtil.set("shop_metering_Allmetering", 3600, reList);
-			return reList;
-		}
-		return reList;
+		return meteringDao.findByProperty(Metering.class, null, 0, 0);
 	}
 
 }

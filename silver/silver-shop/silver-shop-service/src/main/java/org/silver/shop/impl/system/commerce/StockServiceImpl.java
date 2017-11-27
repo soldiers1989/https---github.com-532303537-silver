@@ -1,8 +1,10 @@
 package org.silver.shop.impl.system.commerce;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +14,11 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.dao.system.commerce.StockDao;
+import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.util.DateUtil;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -46,7 +51,7 @@ public class StockServiceImpl implements StockService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reTable));
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reTable.getRows().size() );
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), reTable.getRows().size());
 			return statusMap;
 		}
 	}
@@ -57,7 +62,7 @@ public class StockServiceImpl implements StockService {
 			String warehouseName, String goodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = null;
-		Map<String,Object> errorMap = new HashMap<>();
+		Map<String, Object> errorMap = new HashMap<>();
 		List<Map<String, Object>> listMap = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
@@ -70,7 +75,7 @@ public class StockServiceImpl implements StockService {
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			List<Object> list = new ArrayList<>();
-			Map<String,List<Object>> orMap = new HashMap<>();
+			Map<String, List<Object>> orMap = new HashMap<>();
 			params = new HashMap<>();
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			params.put("goodsMerchantId", merchantId);
@@ -79,7 +84,7 @@ public class StockServiceImpl implements StockService {
 			params.put("entGoodsNo", datasMap.get("entGoodsNo"));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
-			//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+			// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
 			list.add(1);
 			list.add(2);
 			orMap.put("recordFlag", list);
@@ -113,7 +118,7 @@ public class StockServiceImpl implements StockService {
 		if (stockList == null) {
 			errorMap.put(BaseCode.MSG.toString(), "查询" + goodsRecord.getGoodsName() + "失败,服务器繁忙！");
 			lm.add(errorMap);
-		} else if (!stockList.isEmpty()) {//当商品在库存中存在时
+		} else if (!stockList.isEmpty()) {// 当商品在库存中存在时
 			StockContent reStock = (StockContent) stockList.get(0);
 			int reStockCount = Integer.parseInt(datasMap.get("stockCount") + "");
 			// 商品原有库存
@@ -239,10 +244,10 @@ public class StockServiceImpl implements StockService {
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-			if(reStockList == null){
-				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号："+entGoodsNo+"商品失败,服务器繁忙！");
+			if (reStockList == null) {
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
 				errorList.add(errorMap);
-			}else if (!reStockList.isEmpty()) {
+			} else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = (StockContent) reStockList.get(0);
 				if (type == 1 || type == 2) {
 					stockInfo.setSellFlag(type);
@@ -254,7 +259,7 @@ public class StockServiceImpl implements StockService {
 					errorList.add(errorMap);
 				}
 			} else {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为："+entGoodsNo+"商品,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为：" + entGoodsNo + "商品,服务器繁忙！");
 				errorList.add(errorMap);
 			}
 		}
@@ -288,10 +293,10 @@ public class StockServiceImpl implements StockService {
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-			if(reStockList == null ){
-				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号："+entGoodsNo+"商品失败,服务器繁忙！");
+			if (reStockList == null) {
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
 				errorMsgList.add(errorMap);
-			}else if (!reStockList.isEmpty()) {
+			} else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = (StockContent) reStockList.get(0);
 				// 1-库存,2-上架
 				if (type == 1) {
@@ -312,13 +317,141 @@ public class StockServiceImpl implements StockService {
 					errorMsgList.add(errorMap);
 				}
 			} else {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为："+entGoodsNo+"商品,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为：" + entGoodsNo + "商品,服务器繁忙！");
 				errorMsgList.add(errorMap);
 			}
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		statusMap.put(BaseCode.ERROR.toString(), errorMsgList);
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> reDatasMap = universalSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
+		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
+		List<Object> reList = stockDao.findByPropertyLike(StockContent.class, paramMap, blurryMap, page, size);
+		long totalCount = stockDao.findByPropertyLikeCount(StockContent.class, paramMap, blurryMap);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	/**
+	 * 通用检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	protected final Map<String, Object> universalSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next();
+			String value = datasMap.get(key) + "";
+			switch (key) {
+			case "goodsName":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					blurryMap.put(key, "%" + value + "%");
+				}
+				break;
+			case "spareGoodsFirstTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "spareGoodsSecondTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "spareGoodsThirdTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "goodsFirstTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "goodsSecondTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "goodsThirdTypeId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "startDate":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(DateUtil.parseDate(value + ""));
+					Date startDate = cal.getTime();
+					paramMap.put(key, startDate);
+				}
+				break;
+			case "endDate":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(DateUtil.parseDate(value + ""));
+					cal.set(Calendar.HOUR, 23);
+					cal.set(Calendar.MINUTE, 59);
+					cal.set(Calendar.SECOND, 59);
+					cal.set(Calendar.MILLISECOND, 999);
+					Date endDate = cal.getTime();
+					paramMap.put(key, endDate);
+				}
+				break;
+			case "status":
+				try {
+					int status = Integer.parseInt(value);
+					if (status != 0) {
+						paramMap.put(key, status);
+					}
+				} catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "status参数错误,请重新输入!");
+					return statusMap;
+				}
+				break;
+			default:
+				if ("page".equals(key) || "size".equals(key)) {
+					break;
+				}
+				Map<String, Object> errorMap = new HashMap<>();
+				errorMap.put(BaseCode.MSG.toString(), key + "属性不存在!");
+				lm.add(errorMap);
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put("error", lm);
 		return statusMap;
 	}
 }

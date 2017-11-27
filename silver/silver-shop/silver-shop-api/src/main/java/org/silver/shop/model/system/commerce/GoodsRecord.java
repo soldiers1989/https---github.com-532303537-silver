@@ -27,7 +27,7 @@ public class GoodsRecord implements Serializable {
 	private String ebEntName;// 电商企业名称
 	private String ebpEntNo;// 电商平台企业编号
 	private String ebpEntName;// 电商平台名称
-	private String status;// 备案信息接受状态：1-成功,2-失败
+	private int status;// 备案信息接受状态：1-成功,2-失败
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -133,12 +133,12 @@ public class GoodsRecord implements Serializable {
 	public void setEbpEntName(String ebpEntName) {
 		this.ebpEntName = ebpEntName;
 	}
-
-	public String getStatus() {
+	
+	public int getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(int status) {
 		this.status = status;
 	}
 

@@ -1,11 +1,16 @@
 package org.silver.shop.dao;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
@@ -389,11 +394,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if(property.equals("startDate")){
-						hql = hql + "model." + property + " >= " + "?" + " and ";
-					}else if("endDate".equals(property)){
-						hql = hql + "model." + property + " <= " + "?" + " and ";
-					}else{
+					if ("startDate".equals(property)) {
+						hql = hql + "model.createDate " + " > " + "? " + " and ";
+					} else if ("endDate".equals(property)) {
+						hql = hql + "model.createDate " + " < " + "?" + " and ";
+					} else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -444,11 +449,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if(property.equals("startDate")){
-						hql = hql + "model." + property + " >= " + "?" + " and ";
-					}else if("endStartDate".equals(property)){
-						hql = hql + "model." + property + " <= " + "?" + " and ";
-					}else{
+					if (property.equals("startDate")) {
+						hql = hql + "model.createDate" + " >= " + "?" + " and ";
+					} else if ("endDate".equals(property)) {
+						hql = hql + "model.createDate" + " <= " + "?" + " and ";
+					} else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -531,6 +536,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
+
 			List<Object> results = query.list();
 			session.close();
 			return results;
@@ -544,14 +550,28 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ParseException {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
 		String property = "memberId";
-		long count = bd.findSerialNoCount(Member.class, property, 2018);
-		System.out.println("-------------------->>>>>>>"+count);
-	}
+		new Date();
+		Calendar c = Calendar.getInstance();
+		//c.setTime(parseDate(startDate));
+		System.out.println("--start--->>>>"+c.getTime());
+		Calendar cal = Calendar.getInstance();
+		//cal.setTime(parseDate(entDate));
+		cal.set(Calendar.HOUR, 23);  
+		cal.set(Calendar.MINUTE, 59);  
+		cal.set(Calendar.SECOND, 59);  
+		cal.set(Calendar.MILLISECOND, 999);  
+		System.out.println("--------ent--->>>>>>>"+cal.getTime());
+		paramMap.put("startDate", c.getTime());
+		paramMap.put("endDate", cal.getTime());
+		 List count = bd.findByPropertyLike(GoodsRecordDetail.class, paramMap, null, 0, 0);
+		 System.out.println("-------------------->>>>>>>" + count.size());
 
+	}
+	
 }

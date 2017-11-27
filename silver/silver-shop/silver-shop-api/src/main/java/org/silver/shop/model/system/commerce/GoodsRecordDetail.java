@@ -41,7 +41,7 @@ public class GoodsRecordDetail implements Serializable {
 	private Double netWt; // 净重 单位KG
 	private Double grossWt; // 毛重 单位KG
 	private String notes; // 备注
-	private int status;//备案状态：0-未备案，1-备案中，2-备案成功，3-备案失败
+	private int status;//备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
 	private int recordFlag;//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
@@ -74,6 +74,10 @@ public class GoodsRecordDetail implements Serializable {
 	
 	private int taxFlag;//计算税费标识：1-计算税费,2-不计税费;默认为：1
 	private int freightFlag;//计算(国内快递)物流费标识：1-无运费,2-计算运费;默认为：1
+	
+	private String ingredient;// 成分(商品向南沙国检备案必填)
+	private String additiveflag;//超范围使用食品添加剂
+	private String poisonflag;// 含有毒害物质
 	public long getId() {
 		return id;
 	}
@@ -432,6 +436,24 @@ public class GoodsRecordDetail implements Serializable {
 	}
 	public void setFreightFlag(int freightFlag) {
 		this.freightFlag = freightFlag;
+	}
+	public String getIngredient() {
+		return ingredient;
+	}
+	public void setIngredient(String ingredient) {
+		this.ingredient = ingredient;
+	}
+	public String getAdditiveflag() {
+		return additiveflag;
+	}
+	public void setAdditiveflag(String additiveflag) {
+		this.additiveflag = additiveflag;
+	}
+	public String getPoisonflag() {
+		return poisonflag;
+	}
+	public void setPoisonflag(String poisonflag) {
+		this.poisonflag = poisonflag;
 	}
 	
 }

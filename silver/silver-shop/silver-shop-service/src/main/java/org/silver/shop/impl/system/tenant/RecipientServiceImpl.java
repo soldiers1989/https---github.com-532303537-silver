@@ -45,7 +45,7 @@ public class RecipientServiceImpl implements RecipientService {
 		}
 		if (jsonList != null && jsonList.size() > 0) {
 			for (int i = 0; i < jsonList.size(); i++) {
-				//校验数据
+				// 校验数据
 				List<String> noNullKeys = new ArrayList<>();
 				noNullKeys.add("recipientName");
 				noNullKeys.add("recipientCardId");
@@ -59,8 +59,8 @@ public class RecipientServiceImpl implements RecipientService {
 				noNullKeys.add("recAreaName");
 				noNullKeys.add("recAreaCode");
 				noNullKeys.add("recipientAddr");
-				Map<String,Object> reDateMap = CheckDatasUtil.checkData(jsonList, noNullKeys);
-				if(!"1".equals(reDateMap.get(BaseCode.STATUS.toString())+"")){
+				Map<String, Object> reDateMap = CheckDatasUtil.checkData(jsonList, noNullKeys);
+				if (!"1".equals(reDateMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reDateMap;
 				}
 				Map<String, Object> recipientMap = (Map<String, Object>) jsonList.get(i);
@@ -68,7 +68,7 @@ public class RecipientServiceImpl implements RecipientService {
 				recipient.setMemberId(memberId);
 				recipient.setMemberName(memberName);
 				recipient.setRecipientName(recipientMap.get("recipientName") + "");
-				recipient.setRecipientCardId(recipientMap.get("recipientCardId") + "");				
+				recipient.setRecipientCardId(recipientMap.get("recipientCardId") + "");
 				recipient.setRecipientTel(recipientMap.get("recipientTel") + "");
 				recipient.setRecipientCountryName(recipientMap.get("recipientCountryName") + "");
 				recipient.setRecipientCountryCode(recipientMap.get("recipientCountryCode") + "");
@@ -126,11 +126,34 @@ public class RecipientServiceImpl implements RecipientService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
 		params.put("memberName", memberName);
-
 		List<Object> reLsit = recipientDao.findByProperty(RecipientContent.class, params, 0, 0);
 		if (reLsit != null && reLsit.size() > 0) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), reLsit);
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> deleteMemberRecipientInfo(String memberId, String memberName, String recipientId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberId", memberId);
+		params.put("recipientId", recipientId);
+		List<Object> reLsit = recipientDao.findByProperty(RecipientContent.class, params, 0, 0);
+		if (reLsit != null && reLsit.size() > 0) {
+			RecipientContent recipient = (RecipientContent) reLsit.get(0);
+			if(!recipientDao.delete(recipient)){
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			return statusMap;
 		} else {

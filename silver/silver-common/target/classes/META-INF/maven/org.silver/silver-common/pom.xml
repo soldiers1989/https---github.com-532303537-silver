@@ -95,20 +95,20 @@
 			<artifactId>springfox-swagger2</artifactId>
 			<version>2.5.0</version>
 		</dependency>
-    
-  <!-- https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor -->
-<dependency>
-    <groupId>com.drewnoakes</groupId>
-    <artifactId>metadata-extractor</artifactId>
-    <version>2.6.2</version>
-</dependency>
 
-  <dependency>
-    <groupId>net.sf.json-lib</groupId>
-    <artifactId>json-lib</artifactId>
-    <version>2.4</version>
-</dependency>
-        
-       
+		<!-- https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor -->
+		<dependency>
+			<groupId>com.drewnoakes</groupId>
+			<artifactId>metadata-extractor</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.json-lib</groupId>
+			<artifactId>json-lib</artifactId>
+			<version>2.4</version>
+		</dependency>
+		
+
 	</dependencies>
 </project>

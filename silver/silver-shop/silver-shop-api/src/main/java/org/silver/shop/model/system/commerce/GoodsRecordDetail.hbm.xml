@@ -13,7 +13,7 @@
 			<column name="seq" not-null="true" />
 		</property>
 		<property name="entGoodsNo" type="java.lang.String">
-			<column name="entGoodsNo" not-null="true" unique="true"/>
+			<column name="entGoodsNo" not-null="true" unique="true" />
 		</property>
 		<property name="entGoodsNoSKU" type="java.lang.String">
 			<column name="entGoodsNoSKU" />
@@ -132,7 +132,7 @@
 		</property>
 
 		<property name="goodsDetailId" type="java.lang.String">
-			<column name="goodsDetailId"  />
+			<column name="goodsDetailId" />
 		</property>
 		<property name="reNote" type="java.lang.String">
 			<column name="reNote" />
@@ -159,7 +159,7 @@
 		<property name="spareGoodsThirdTypeName" type="java.lang.String">
 			<column name="spareGoodsThirdTypeName" />
 		</property>
-		
+
 		<property name="spareGoodsImage" type="java.lang.String">
 			<column name="spareGoodsImage" />
 		</property>
@@ -178,7 +178,7 @@
 		<property name="spareGoodsOriginCountry" type="java.lang.String">
 			<column name="spareGoodsOriginCountry" />
 		</property>
-			<property name="spareGoodsBarCode" type="java.lang.String">
+		<property name="spareGoodsBarCode" type="java.lang.String">
 			<column name="spareGoodsBarCode" />
 		</property>
 		<property name="taxFlag" type="int">
@@ -186,6 +186,16 @@
 		</property>
 		<property name="freightFlag" type="int">
 			<column name="freightFlag" />
+		</property>
+
+		<property name="ingredient" type="java.lang.String">
+			<column name="ingredient" />
+		</property>
+		<property name="additiveflag" type="java.lang.String">
+			<column name="additiveflag" />
+		</property>
+		<property name="poisonflag" type="java.lang.String">
+			<column name="poisonflag" />
 		</property>
 	</class>
 </hibernate-mapping>

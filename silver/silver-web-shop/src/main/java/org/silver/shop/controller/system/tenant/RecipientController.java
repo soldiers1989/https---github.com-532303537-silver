@@ -66,6 +66,20 @@ public class RecipientController {
 		return JSONObject.fromObject(stautsMap).toString();
 	}
 
+	@RequestMapping(value = "/deleteMemberRecipientInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("用户删除收货地址信息")
+	@RequiresRoles("Member")
+	@ResponseBody
+	public String deleteMemberRecipientInfo(HttpServletRequest req,HttpServletResponse response,@RequestParam("recipientId")String recipientId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> stautsMap = recipientTransaction.deleteMemberRecipientInfo(recipientId);
+		return JSONObject.fromObject(stautsMap).toString();
+	}
+	
 	public static void main(String[] args) {
 		JSONArray jsonList = new JSONArray();
 		Map<String, Object> params = new HashMap<>();

@@ -4,10 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
+import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.model.common.base.CustomsPort;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
 import org.springframework.stereotype.Service;
@@ -58,5 +62,21 @@ public class CustomsPortTransaction {
 			JedisUtil.set("shop_port_AllCustomsPort".getBytes(), SerializeUtil.toBytes(customsPortList), 3600);
 			return datasMap;
 		}
+	}
+
+	//商户查询当前已备案的海关及智检信息
+	public Map<String, Object> findMerchantCustomsPort() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		
+		Map<String,Object> reAllCustomsMap= findAllCustomsPort();
+		if(!"1".equals(reAllCustomsMap.get(BaseCode.STATUS.toString()))){
+			return reAllCustomsMap;
+		}
+		
+		return customsPortService.findMerchantCustomsPort(merchantId,merchantName);
 	}
 }

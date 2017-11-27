@@ -32,9 +32,17 @@ public class RecipientTransaction {
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		
-		
 		return recipientSerivce.getMemberRecipientInfo(memberId,memberName);
+	}
+
+	//用户删除地址信息
+	public Map<String, Object> deleteMemberRecipientInfo(String recipientId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return recipientSerivce.deleteMemberRecipientInfo(memberId,memberName,recipientId);
 	}
 
 }

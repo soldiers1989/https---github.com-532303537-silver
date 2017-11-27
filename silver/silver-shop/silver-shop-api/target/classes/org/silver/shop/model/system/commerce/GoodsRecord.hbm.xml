@@ -48,7 +48,7 @@
 		<property name="ebpEntName" type="java.lang.String">
 			<column name="ebpEntName" not-null="true"/>
 		</property>
-		<property name="status" type="java.lang.String">
+		<property name="status" type="int">
 			<column name="status" not-null="true"/>
 		</property>
 		<property name="createBy" type="java.lang.String">

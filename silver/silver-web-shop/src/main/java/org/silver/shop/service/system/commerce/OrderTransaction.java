@@ -1,6 +1,10 @@
 package org.silver.shop.service.system.commerce;
 
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -75,5 +79,22 @@ public class OrderTransaction {
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return orderService.getMemberOrderDetail(memberId, memberName, entOrderNo);
+	}
+
+	//
+	public Map<String, Object> searchMerchantOrderInfo(HttpServletRequest req, int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		Map<String, Object> param = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			param.put(key, value);
+		}
+		return orderService.searchMerchantOrderInfo(merchantId, merchantName, param,page,size);
 	}
 }

@@ -65,6 +65,8 @@ public class OrderRecordContent implements Serializable {
 	
 	private String reOrderSerialNo;//订单备案信息接受后返回流水号
 	private String reNote;//返回信息
+	private String recipientCityCode;//城市编码(数据库无字段)
+	private String recipientAreaCode;//区域编码(数据库无字段)
 	public long getId() {
 		return id;
 	}
@@ -366,4 +368,17 @@ public class OrderRecordContent implements Serializable {
 	public void setReNote(String reNote) {
 		this.reNote = reNote;
 	}
+	public String getRecipientCityCode() {
+		return recipientCityCode;
+	}
+	public void setRecipientCityCode(String recipientCityCode) {
+		this.recipientCityCode = recipientCityCode;
+	}
+	public String getRecipientAreaCode() {
+		return recipientAreaCode;
+	}
+	public void setRecipientAreaCode(String recipientAreaCode) {
+		this.recipientAreaCode = recipientAreaCode;
+	}
+	
 }

@@ -8,13 +8,13 @@
 	<url>http://maven.apache.org</url>
 	<parent>
 		<groupId>org.silver</groupId>
-		<artifactId>silver</artifactId>
+		<artifactId>silver</artifactId> 
 		<version>1.0.0</version>
 	</parent>
 	<properties>
 		<server.port>8088</server.port>
 	</properties>
-	<dependencies>  
+	<dependencies>
 		<dependency>
 			<groupId>org.silver</groupId>
 			<artifactId>silver-common</artifactId>
@@ -26,9 +26,9 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-	
 
-	<dependency>
+
+		<dependency>
 			<groupId>org.silver</groupId>
 			<artifactId>silver-shop-api</artifactId>
 			<version>${project.version}</version>
@@ -39,7 +39,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<!-- Spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -57,12 +57,12 @@
 			<artifactId>shiro-spring</artifactId>
 			<version>${shiro.version}</version>
 		</dependency>
-		
+
 		<dependency>
-            <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-cas</artifactId>
-            <version>${shiro.version}</version>
-        </dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-cas</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
 		<!-- excel -->
 		<dependency>
 			<groupId>net.sourceforge.jexcelapi</groupId>
@@ -112,14 +112,26 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.5.0</version>
 		</dependency>
-		
-            <!-- https://mvnrepository.com/artifact/net.sf.json-lib/json-lib -->
-<dependency>
-    <groupId>net.sf.json-lib</groupId>
-    <artifactId>json-lib</artifactId>
-    <version>2.4</version>
-</dependency>
-        
-		
+
+		<!-- https://mvnrepository.com/artifact/net.sf.json-lib/json-lib -->
+		<dependency>
+			<groupId>net.sf.json-lib</groupId>
+			<artifactId>json-lib</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.11</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.11</version>
+		</dependency>
+
 	</dependencies>
 </project>

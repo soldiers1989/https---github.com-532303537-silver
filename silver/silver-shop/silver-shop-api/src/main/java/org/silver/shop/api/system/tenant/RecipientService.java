@@ -22,4 +22,12 @@ public interface RecipientService {
 	 */
 	public Map<String, Object> getMemberRecipientInfo(String memberId, String memberName);
 
+
+	/**
+	 * 根据用户Id删除用户收货地址信息
+	 * @param recipientId  s
+	 * @return
+	 */
+	public Map<String, Object> deleteMemberRecipientInfo(String memberId,String memberName,String recipientId);
+
 }

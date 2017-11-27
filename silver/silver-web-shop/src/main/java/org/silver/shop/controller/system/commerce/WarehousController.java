@@ -1,6 +1,7 @@
 package org.silver.shop.controller.system.commerce;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -45,4 +46,14 @@ public class WarehousController {
 		Map<String, Object> statusMap = warehousTransaction.getWarehousInfo(page,size);
 		return JSONObject.fromObject(statusMap).toString();
 	}	
+	
+	public static void main(String[] args) {
+		 Calendar todayEnd = Calendar.getInstance();  
+	        todayEnd.set(Calendar.HOUR, 23);  
+	        todayEnd.set(Calendar.MINUTE, 59);  
+	        todayEnd.set(Calendar.SECOND, 59);  
+	        todayEnd.set(Calendar.MILLISECOND, 999);  
+	        todayEnd.getTime();
+	        System.out.println("---------->>>>>>"+todayEnd.getTime());
+	}
 }

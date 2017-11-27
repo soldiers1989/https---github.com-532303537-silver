@@ -15,7 +15,9 @@ import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.util.DateUtil;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,8 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	@Autowired
 	private GoodsContentDao goodsContentDao;
 
+	@Autowired
+	private StockServiceImpl stockServiceImpl;
 	@Override
 	public Map<String, Object> createGoodsId() {
 		Map<String, Object> datasMap = new HashMap<>();
@@ -159,7 +163,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			goodsInfo.setGoodsName(goodsName);
 			goodsInfo.setGoodsImage(goodsImage);
 			goodsInfo.setGoodsFirstTypeId(goodsFirstType);
-			goodsInfo.setGoodsSecondTypeId(goodsSecondType); 
+			goodsInfo.setGoodsSecondTypeId(goodsSecondType);
 			goodsInfo.setGoodsThirdTypeId(goodsThirdType);
 			goodsInfo.setGoodsDetail(goodsDetail);
 			goodsInfo.setGoodsBrand(goodsBrand);
@@ -219,8 +223,8 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		List<Object> reList = goodsContentDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 		List<Object> reStockList = goodsContentDao.findByProperty(StockContent.class, params, 1, 1);
 		if (reList != null && reList.size() > 0 && reStockList != null && reStockList.size() > 0) {
-			Map<String,Object> datas = new HashMap<>();
-			List<Map<String,Object>> lm = new ArrayList<>();
+			Map<String, Object> datas = new HashMap<>();
+			List<Map<String, Object>> lm = new ArrayList<>();
 			GoodsRecordDetail goods = (GoodsRecordDetail) reList.get(0);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
 			datas.put("goods", goods);
@@ -273,92 +277,46 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	@Override
 	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		Map<String,Object> blullyMap = new HashMap<>();
-		blullyMap.put("spareGoodsName", "%" + goodsName + "%");
-		paramMap.put("deleteFlag", 0);
-		paramMap.put("status", 2);
-		List<Object> reGoodsRecordList = goodsContentDao.findByPropertyLike(GoodsRecordDetail.class, paramMap,blullyMap, page,
-				size);
-		long reGoodsRecordCount = goodsContentDao.findByPropertyLikeCount(GoodsRecordDetail.class, paramMap,blullyMap);
-		if (reGoodsRecordList == null) {
+		Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName,page, size);
+		if (t == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (!reGoodsRecordList.isEmpty()) {
+		} else  {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), reGoodsRecordList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reGoodsRecordCount);
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			statusMap.put(BaseCode.DATAS.getBaseCode(), Transform.tableToJson(t));
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), t.getRows().size());
 			return statusMap;
 		}
 	}
 
 	@Override
-	public Map<String, Object> searchMerchantGoodsRecordInfo(String merchantId, String merchantName,
-			Map<String, Object> datasMap) {
-		Map<String,Object> statusMap = new HashMap<>();
-		Map<String,Object> blurryMap = new HashMap<>();
-		Map<String,Object> paramMap = new HashMap<>();
-		int page = 0;
-		int size = 0;
-		Iterator<String> isKey = datasMap.keySet().iterator();
-		while (isKey.hasNext()) {
-			String key = isKey.next();
-			String value = datasMap.get(key) + "";
-			switch (key) {
-			case "goodsName":
-				blurryMap.put(key, "%" + value + "%");
-				break;			
-			case "page":
-				try{
-					page = Integer.parseInt(value);
-				}catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-					return statusMap;
-				}
-				break;
-			case "size":
-				try{
-					size = Integer.parseInt(value);
-				}catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-					return statusMap;
-				}
-				break;
-			case "startDate":
-				paramMap.put(key, value + "");
-				break;
-			case "endDate":
-				paramMap.put(key, value + "");
-				break;
-			default:
-				paramMap.put(key, value);
-				break;
-			}
-		}
-		List<Object> reList = goodsContentDao.findByPropertyLike(GoodsContent.class, paramMap, blurryMap, page,
-				size);
+	public Map<String, Object> searchMerchantGoodsDetailInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
+		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
+		List<Object> reList = goodsContentDao.findByPropertyLike(GoodsContent.class, paramMap, blurryMap, page, size);
 		long totalCount = goodsContentDao.findByPropertyLikeCount(GoodsContent.class, paramMap, blurryMap);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		}
 	}

@@ -24,31 +24,10 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	}
 
 	@Override
-	public boolean add(Object entity) {
-		return super.add(entity);
-	}
-
-	@Override
-	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
-		return super.findByProperty(entity, params, page, size);
-	}
-
-	@Override
 	public boolean update(GoodsContent entity) {
 		return super.update(entity);
 	}
-
-	@Override
-	public List<Object> findBlurryProperty(Class entity, Map params, String startTime, String endTime, int page,
-			int size) {
-		return super.findBlurryProperty(entity, params, startTime, endTime, page, size);
-	}
 	
-	@Override
-	public long findSerialNoCount(Class entity,String property,int year){
-		return super.findSerialNoCount(entity,  property,year);
-	}
-
 	@Override
 	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
 		Session session = null;
@@ -72,8 +51,6 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 				queryString = queryString  +" and t1.goodsFirstTypeId = ? ";
 			}
 			session = getSession();
-		//	ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-		//	 conn = cp.getConnection();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
@@ -101,9 +78,44 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			}
 		}
 	}
-	
-	public long findByPropertyCount(Class entity,Map params){		
-		return super.findByPropertyCount(entity, params);
+
+	@Override
+	public Table getBlurryRecordGoodsInfo( String goodsName,int page, int size) {
+		Session session = null;
+		String queryString = null;
+		Connection conn = null;
+		try {
+			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
+					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 AND t1.spareGoodsName LIKE ?";			
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add("%"+goodsName+"%");
+			session = getSession();
+			Table l = null;
+			if (page > 0 && size > 0) {
+				page = page - 1;
+				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, page * size, size);
+			} else {
+				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, null, null);
+			}
+			session.connection().close();
+			session.close();
+			// Transform.tableToJson(l);
+			return l;
+		} catch (Exception  re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				if(conn!=null){
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+				session.close();
+			}
+		}
 	}
 	
 }

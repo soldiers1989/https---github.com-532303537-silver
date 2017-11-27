@@ -36,4 +36,12 @@ public interface CustomsPortService {
 	 * @return
 	 */
 	public Map<String, Object> findAllCustomsPort();
+
+	/**
+	 * 商户查询当前已备案的海关及智检信息
+	 * @param merchantId
+	 * @param merchantName
+	 * @return
+	 */
+	public Map<String, Object> findMerchantCustomsPort(String merchantId, String merchantName);
 }

@@ -202,18 +202,24 @@ public class GoodsContentController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
-	@RequestMapping(value = "/searchGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/searchMerchantGoodsDetailInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("根据指定信息搜索商品基本信息")
 	@RequiresRoles("Merchant")
-	public String searchMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String searchMerchantGoodsDetailInfo(HttpServletRequest req, HttpServletResponse response, 
+			@RequestParam("page") int page,@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-	
-		Map<String, Object> statusMap = goodsContentTransaction.searchMerchantGoodsRecordInfo(req);
+		Map<String, Object> statusMap = new HashMap<>();
+		if(page >0 && size >0){
+			 statusMap = goodsContentTransaction.searchMerchantGoodsDetailInfo(req,page,size);
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
 

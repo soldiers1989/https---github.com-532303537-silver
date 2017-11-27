@@ -106,7 +106,7 @@ public interface GoodsContentService {
 	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, int page, int size);
 
 	/**
-	 * 根据商品名搜索商品
+	 * 商城根据商品名搜索商品
 	 * @param goodsName
 	 * @param page
 	 * @param size
@@ -119,9 +119,11 @@ public interface GoodsContentService {
 	 * @param merchantId 商户Id
 	 * @param merchantName 商品名称
 	 * @param datasMap 参数
+	 * @param page
+	 * @param size
 	 * @return Map
 	 */
-	public Map<String, Object> searchMerchantGoodsRecordInfo(String merchantId, String merchantName,
-			Map<String, Object> datasMap);
+	public Map<String, Object> searchMerchantGoodsDetailInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap,int page,int size);
 
 }

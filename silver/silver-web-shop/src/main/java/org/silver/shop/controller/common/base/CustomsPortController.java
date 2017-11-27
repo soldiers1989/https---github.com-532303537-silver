@@ -38,24 +38,13 @@ public class CustomsPortController {
 	@RequestMapping(value = "/findAllCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询已开通的海关及智检")
-	public String findAllCustomsPort(HttpServletRequest req , HttpServletResponse response) {
+	public String findAllCustomsPort(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
-	/*	String[] iPs = { "http://ym.191ec.com:9528", "http://ym.191ec.com:8080", "http://ym.191ec.com:80",
-				"http://ym.191ec.com:8090" };
-		if (Arrays.asList(iPs).contains(originHeader)) {*/
-			response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-			response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-			response.setHeader("Access-Control-Allow-Credentials", "true");
-			response.setHeader("Access-Control-Allow-Origin", originHeader);
-	/*	}*/
-		Map<String, Object> statusMap = null;
-		statusMap = customsPortTransaction.findAllCustomsPort();
-		if (statusMap == null && statusMap.size() <= 0) {
-			statusMap = new HashMap<>();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
-		}
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = customsPortTransaction.findAllCustomsPort();
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -105,4 +94,30 @@ public class CustomsPortController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
+	/**
+	 * 商户查询当前已备案的海关及智检信息
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/findMerchantCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户查询当前已备案的海关及智检信息")
+	public String findMerchantCustomsPort(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = null;
+		statusMap = customsPortTransaction.findMerchantCustomsPort();
+		if (statusMap == null && statusMap.size() <= 0) {
+			statusMap = new HashMap<>();
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
 }

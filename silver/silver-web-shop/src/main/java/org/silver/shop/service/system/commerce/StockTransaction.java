@@ -1,6 +1,10 @@
 package org.silver.shop.service.system.commerce;
 
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -72,6 +76,22 @@ public class StockTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.setGoodsStorageAndSellCount(merchantId,merchantName,goodsInfoPack,type);
+	}
+
+	public Map<String, Object> searchGoodsStockInfo(HttpServletRequest req, int page, int size) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		Enumeration<String> iskey = req.getParameterNames();
+		while (iskey.hasMoreElements()) {
+			String key = iskey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return stockService.searchGoodsStockInfo(merchantId, merchantName, datasMap,page,size);
 	}
 
 

@@ -67,7 +67,7 @@ public interface GoodsContentDao {
 
 	
 	/**
-	 *
+	 * 商品前台默认搜索商品信息
 	 * @param merchantId 
 	 * @param page
 	 * @param size
@@ -104,4 +104,15 @@ public interface GoodsContentDao {
 	 * @return
 	 */
 	long findByPropertyLikeCount(Class entity, Map params,Map blullyMap);
+	
+	
+	/**
+	 * 商品前台根据商品名称模糊搜索商品信息
+	 * @param merchantId 
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table getBlurryRecordGoodsInfo(String goodsName,int page, int size);
+	
 }

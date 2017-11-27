@@ -63,4 +63,16 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getMemberOrderDetail(String memberId, String memberName,String entOrderNo);
 
+	/**
+	 * 
+	 * @param merchantId
+	 * @param merchantName
+	 * @param param
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size);
+
 }

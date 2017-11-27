@@ -70,4 +70,17 @@ public interface StockService {
 	public Map<String, Object> setGoodsStorageAndSellCount(String merchantId, String merchantName, String goodsInfoPack,
 			int type);
 
+
+	/**
+	 * 根据指定信息搜索库存商品信息
+	 * @param merchantId
+	 * @param merchantName
+	 * @param datasMap
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size);
+
 }

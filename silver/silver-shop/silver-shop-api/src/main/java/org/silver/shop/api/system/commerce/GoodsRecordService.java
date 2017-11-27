@@ -52,9 +52,10 @@ public interface GoodsRecordService {
 
 	/**
 	 * 异步回调,更新商品备案状态
+	 * 
 	 * @param datasMap
 	 */
-	public Map<String,Object> updateGoodsRecordInfo(Map<String, Object> datasMap);
+	public Map<String, Object> updateGoodsRecordInfo(Map<String, Object> datasMap);
 
 	/**
 	 * 
@@ -67,10 +68,14 @@ public interface GoodsRecordService {
 
 	/**
 	 * 商户修改备案商品中的商品基本信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param paramMap 参数
-	 * @param type 
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param paramMap
+	 *            参数
+	 * @param type
 	 * @return Map
 	 */
 	public Map<String, Object> editMerchantRecordGoodsDetailInfo(String merchantId, String merchantName,
@@ -78,9 +83,13 @@ public interface GoodsRecordService {
 
 	/**
 	 * 商户添加已备案商品信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param paramMap 参数
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param paramMap
+	 *            参数
 	 * @return
 	 */
 	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
@@ -90,10 +99,44 @@ public interface GoodsRecordService {
 	 * 
 	 * @param merchantId
 	 * @param merchantName
-	 * @param param
+	 * @param datasMap
 	 * @return
 	 */
-	 
-	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName, Map<String, Object> param);
+
+	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size);
+
+	/**
+	 * 批量添加未备案商品
+	 * 
+	 * @param seq
+	 * @param shelfGName
+	 * @param ncadCode
+	 * @param hsCode
+	 * @param barCode
+	 * @param goodsName
+	 * @param goodsStyle
+	 * @param brand
+	 * @param gUnit
+	 * @param stdUnit
+	 * @param secUnit
+	 * @param regPrice
+	 * @param giftFlag
+	 * @param originCountry
+	 * @param quality
+	 * @param qualityCertify
+	 * @param manufactory
+	 * @param netWt
+	 * @param grossWt
+	 * @param notes
+	 * @param merchantName
+	 * @param merchantId
+	 * @return
+	 */
+	public Map<String, Object> batchCreateNotRecordGoods(int seq, String shelfGName, String ncadCode, String hsCode,
+			String barCode, String goodsName, String goodsStyle, String brand, String gUnit, String stdUnit,
+			String secUnit, Double regPrice, String giftFlag, String originCountry, String quality,
+			String qualityCertify, String manufactory, Double netWt, Double grossWt, String notes, String merchantId,
+			String merchantName, String ingredient, String additiveflag, String poisonflag);
 
 }

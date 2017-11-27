@@ -38,7 +38,9 @@ public class OrderServiceImpl implements OrderService {
 	protected static final Logger logger = LogManager.getLogger();
 	@Autowired
 	private OrderDao orderDao;
-
+	@Autowired
+	private StockServiceImpl stockServiceImpl;
+	
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
 			String recipientId) {
@@ -570,10 +572,6 @@ public class OrderServiceImpl implements OrderService {
 		double total = 0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		// paramsMap.put("goodsId", goodsRecord);
-		// List<Object> reGoodsContent =
-		// orderDao.findByProperty(GoodsContent.class, paramsMap, 1, 1);
-		// GoodsContent goodsInfo = (GoodsContent) reGoodsContent.get(0);
 		long thirdId = Long.parseLong(goodsRecord.getSpareGoodsThirdTypeId());
 		paramsMap.put("id", thirdId);
 		List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
@@ -674,6 +672,39 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
+			Map<String, Object> datasMap, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
+		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
+		paramMap.put("goodsMerchantId", merchantId);
+		paramMap.put("deleteFlag", 0);
+		List<Object> reList = orderDao.findByPropertyLike(OrderRecordContent.class, paramMap, blurryMap, page,
+				size);
+		long totalCount = orderDao.findByPropertyLikeCount(OrderRecordContent.class, paramMap, blurryMap);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		}
 	}

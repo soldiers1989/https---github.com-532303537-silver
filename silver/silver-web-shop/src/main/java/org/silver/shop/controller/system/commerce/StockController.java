@@ -203,22 +203,24 @@ public class StockController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-
-	public static void main(String[] args) {
-		// 模拟商品数据
-		JSONArray jsonList = new JSONArray();
-		Map<String, Object> data = new HashMap<>();
-		/*
-		 * data.put("entGoodsNo", "YM_20170000115075204310625696");
-		 * data.put("goodsName", "测试商品名称"); data.put("stockCount", 50);
-		 */
-		/*data.put("goodsId", "YM_20170000215082908696099795");
-		jsonList.add(data);*/
-		String str = "[{}]";
-		
-		System.out.println("--->>>"+str.length());
-		jsonList = jsonList.fromObject(str);
-		Map<String,Object> kmap= (Map<String, Object>) jsonList.get(0);
-		System.out.println(kmap.size());
+	@RequestMapping(value = "/searchGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("根据指定信息搜索库存商品信息")
+	@RequiresRoles("Merchant")
+	public String searchGoodsStockInfo(HttpServletRequest req, HttpServletResponse response, 
+			@RequestParam("page") int page,@RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if(page >0 && size >0){
+			 statusMap = stockTransaction.searchGoodsStockInfo(req,page,size);
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }

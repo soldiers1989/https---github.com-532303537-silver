@@ -32,6 +32,8 @@ public class StringEmptyUtils {
 			if (((Map) pObj).size() == 0) {
 				return true;
 			}
+		} else if((pObj+"").trim().equals("null")){
+			return true;
 		}
 		return false;
 	}

@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.io.File;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -126,9 +127,6 @@ public class GoodsRecordController {
 	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
 		logger.info("-----备案网关异步回馈备案商品信息---");
-		Map<String, Object> datasMap = new HashMap<>();
-	
-		
 		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
@@ -198,20 +196,44 @@ public class GoodsRecordController {
 		Map<String, Object> statusMap = goodsRecordTransaction.merchantAddAlreadyRecordGoodsInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/searchGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("根据指定信息搜索商品信息")
 	@RequiresRoles("Merchant")
-	public String searchGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String searchGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-	
-		Map<String, Object> statusMap = goodsRecordTransaction.searchGoodsRecordInfo(req);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (page > 0 && size > 0) {
+			statusMap = goodsRecordTransaction.searchGoodsRecordInfo(req, page, size);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
+	@RequestMapping(value = "/batchAddNotRecordGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("批量添加未备案商品信息")
+	@RequiresRoles("Merchant")
+	public String batchAddNotRecordGoodsInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.batchAddRecordGoodsInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	public static void main(String[] args) {
+		File f = new File("E:/RecordGoodsAdd-excel/530a12bfbc564d2cb588cc7abfd48ee7_1511598867178.xls");
+		System.out.println(f.delete());
+		
+	}
 }

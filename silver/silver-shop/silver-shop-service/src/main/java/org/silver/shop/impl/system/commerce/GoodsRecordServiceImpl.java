@@ -58,6 +58,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private CustomsPortService customsPortService;
 	@Autowired
 	private AccessTokenService accessTokenService;
+	@Autowired
+	private StockServiceImpl stockServiceImpl;
 
 	@Override
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsInfoPack) {
@@ -149,7 +151,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
 		// 验证前台传值
-		Map<String, Object> reDataMap = checkData(jsonList);
+		Map<String, Object> reDataMap = checkData(jsonList, Integer.valueOf(customsPort));
 		if (!"1".equals(reDataMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reDataMap;
 		}
@@ -297,6 +299,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				jsonObject.element("NetWt", goodsInfo.getNetWt());
 				jsonObject.element("GrossWt", goodsInfo.getGrossWt());
 				jsonObject.element("Notes", goodsInfo.getNotes());
+
+				jsonObject.element("Ingredient", goodsInfo.getIngredient());
+				jsonObject.element("Additiveflag", goodsInfo.getAdditiveflag());
+				jsonObject.element("Poisonflag", goodsInfo.getPoisonflag());
 				datas.add(jsonObject);
 			}
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -470,7 +476,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		recordInfo.setEbpEntNo(merchantInfoMap.get("ebpEntNo") + "");
 		recordInfo.setEbpEntName(merchantInfoMap.get("ebpEntName") + "");
 		// 备案信息接受状态：1-成功,2-失败
-		recordInfo.setStatus("1");
+		recordInfo.setStatus(1);
 		recordInfo.setCreateBy(merchantName);
 		recordInfo.setCreateDate(date);
 		recordInfo.setDeleteFlag(0);
@@ -572,6 +578,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			goodRecordInfo.setFreightFlag(1);
 			// 计算税费标识：1-计算税费,2-不计税费;默认为：1
 			goodRecordInfo.setTaxFlag(1);
+			goodRecordInfo.setIngredient(String.valueOf(goodsInfo.get("Ingredient")));
+			goodRecordInfo.setAdditiveflag(String.valueOf(goodsInfo.get("Additiveflag")));
+			goodRecordInfo.setPoisonflag(String.valueOf(goodsInfo.get("Poisonflag")));
 			if (!goodsRecordDao.add(goodRecordInfo)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "保存商品备案信息错误,服务器繁忙!");
@@ -817,7 +826,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return statusMap;
 	}
 
-	private Map<String, Object> checkData(JSONArray jsonList) {
+	private Map<String, Object> checkData(JSONArray jsonList, Integer customsPort) {
 		List<String> noNullKeys = new ArrayList<>();
 		noNullKeys.add("GoodsDetailId");
 		noNullKeys.add("ShelfGName");
@@ -835,6 +844,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		noNullKeys.add("Manufactory");
 		noNullKeys.add("NetWt");
 		noNullKeys.add("GrossWt");
+		if (customsPort == 2) {
+			noNullKeys.add("Ingredient");
+		}
 		return CheckDatasUtil.checkData(jsonList, noNullKeys);
 	}
 
@@ -1066,76 +1078,104 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	@Override
-	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName,
-			Map<String, Object> param) {
+	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName, Map<String, Object> datasMap,
+			int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
-		int page = 0;
-		int size = 0;
-		Iterator<String> isKey = param.keySet().iterator();
-		while (isKey.hasNext()) {
-			String key = isKey.next();
-			String value = param.get(key) + "";
-			switch (key) {
-			case "goodsName":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					blurryMap.put(key, "%" + value + "%");
-				}
-				break;
-			case "status":
-				paramMap.put(key, Integer.parseInt(value + ""));
-				break;
-			case "page":
-				try{
-					page = Integer.parseInt(value);
-				}catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "page参数错误,请重新输入!");
-					return statusMap;
-				}
-				break;
-			case "size":
-				try{
-					size = Integer.parseInt(value);
-				}catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "size参数错误,请重新输入!");
-					return statusMap;
-				}
-				break;
-			case "startDate":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
-				}
-				break;
-			case "endDate":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
-				}
-				break;
-			default:
-				paramMap.put(key, value);
-				break;
-			}
-		}
+		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
+		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
+		paramMap.put("goodsMerchantId", merchantId);
+		paramMap.put("deleteFlag", 0);
 		List<Object> reList = goodsRecordDao.findByPropertyLike(GoodsRecordDetail.class, paramMap, blurryMap, page,
 				size);
 		long totalCount = goodsRecordDao.findByPropertyLikeCount(GoodsRecordDetail.class, paramMap, blurryMap);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		}
+	}
+
+	@Override
+	public Map<String, Object> batchCreateNotRecordGoods(int seq,String shelfGName, String ncadCode, String hsCode,
+			String barCode, String goodsName, String goodsStyle, String brand, String gUnit, String stdUnit,
+			String secUnit, Double regPrice, String giftFlag, String originCountry, String quality,
+			String qualityCertify, String manufactory, Double netWt, Double grossWt, String notes,String merchantId ,String merchantName,String ingredient,String additiveflag,String poisonflag) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Date date = new Date();
+		Calendar calendar = Calendar.getInstance();
+		int year = calendar.get(Calendar.YEAR);
+		// 查询数据库字段名
+		String property2 = "entGoodsNo";
+		// 根据年份查询,当前年份下的id数量
+		long goodsRecordSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecordDetail.class, property2, year);
+		// 当返回-1时,则查询数据库失败
+		if (goodsRecordSerialNoCount < 0) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		String goodsRecordSerialNo = SerialNoUtils.getSerialNotTimestamp("GR_", year, goodsRecordSerialNoCount);
+		GoodsRecordDetail goodRecordInfo = new GoodsRecordDetail();
+		goodRecordInfo.setSeq(seq);
+		goodRecordInfo.setEntGoodsNo(goodsRecordSerialNo);
+		goodRecordInfo.setShelfGName(shelfGName);
+		goodRecordInfo.setNcadCode(ncadCode);
+		goodRecordInfo.setHsCode(hsCode);
+		goodRecordInfo.setBarCode(barCode);
+		goodRecordInfo.setGoodsName(goodsName);
+		goodRecordInfo.setGoodsStyle(goodsStyle);
+		goodRecordInfo.setBrand(brand);
+		goodRecordInfo.setgUnit(gUnit);
+		goodRecordInfo.setStdUnit(stdUnit);
+		goodRecordInfo.setSecUnit(secUnit);
+		goodRecordInfo.setRegPrice(regPrice);
+		goodRecordInfo.setGiftFlag(giftFlag);
+		goodRecordInfo.setOriginCountry(originCountry);
+		goodRecordInfo.setQuality(quality);
+		goodRecordInfo.setQualityCertify(qualityCertify);
+		goodRecordInfo.setManufactory(manufactory);
+		goodRecordInfo.setNetWt(netWt);
+		goodRecordInfo.setGrossWt(grossWt);
+		goodRecordInfo.setNotes(notes);
+		// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
+		goodRecordInfo.setStatus(4);
+		// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+		goodRecordInfo.setRecordFlag(2);
+		goodRecordInfo.setGoodsMerchantId(merchantId);
+		goodRecordInfo.setGoodsMerchantName(merchantName);
+		goodRecordInfo.setCreateBy(merchantName);
+		goodRecordInfo.setCreateDate(date);
+		// 删除标识:0-未删除,1-已删除
+		goodRecordInfo.setDeleteFlag(0);
+		//goodRecordInfo.setGoodsSerialNo(goodsRecordSerialNo);
+		// 计算(国内快递)物流费标识：1-无运费,2-计算运费;默认为：1
+		goodRecordInfo.setFreightFlag(1);
+		// 计算税费标识：1-计算税费,2-不计税费;默认为：1
+		goodRecordInfo.setTaxFlag(1);
+		goodRecordInfo.setIngredient(ingredient);
+		goodRecordInfo.setAdditiveflag(additiveflag);
+		goodRecordInfo.setPoisonflag(poisonflag);
+		if (!goodsRecordDao.add(goodRecordInfo)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "保存商品备案信息错误,服务器繁忙!");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
 	}
 }

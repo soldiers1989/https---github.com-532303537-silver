@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * 日期操作辅助类
  * 
@@ -275,5 +277,31 @@ public final class DateUtil {
 		date = 	date.replaceAll(reg, "$1-$2-$3 $4:$5:$6");
 		return date;
 	}
-
+	/**
+	 * 将字符串（yyyy-MM-dd）解析成日期
+	 * @param dateStr 日期格式的字符串
+	 * @return 日期类型对象
+	 */
+	public static Date parseDate(String dateStr) {
+		return parseDate(dateStr, "yyyy-MM-dd");
+	}
+	
+	/**
+	 * 按照指定的格式，将字符串解析成日期类型对象，例如：yyyy-MM-dd,yyyy/MM/dd,yyyy/MM/dd hh:mm:ss
+	 * @param dateStr 日期格式的字符串
+	 * @param format 字符串的格式
+	 * @return 日期类型对象
+	 */
+	public static Date parseDate(String dateStr, String format) {
+		if (StringUtils.isEmpty(dateStr)) {
+			return null;
+		}
+		SimpleDateFormat formater = new SimpleDateFormat(format);
+		try {
+			return formater.parse(dateStr);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }
