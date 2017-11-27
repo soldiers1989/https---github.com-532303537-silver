@@ -1,6 +1,8 @@
 package org.silver.shop.service.system.commerce;
 
+import java.beans.IntrospectionException;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -13,17 +15,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.apache.zookeeper.data.Stat;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.Metering;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.CountryTransaction;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.utils.ExcelUtil;
+import org.silver.util.ConvertUtils;
 import org.silver.util.FileUpLoadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -68,12 +71,12 @@ public class GoodsRecordTransaction {
 				ciqOrgCode, recordGoodsInfoPack);
 	}
 
-	public Map<String, Object> findMerchantGoodsRecordInfo(String goodsId, int page, int size) {
+	public Map<String, Object> findMerchantGoodsRecordInfo( int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		return goodsRecordService.findAllGoodsRecordInfo(merchantId, goodsId, page, size);
+		return goodsRecordService.findAllGoodsRecordInfo(merchantId, page, size);
 	}
 
 	// 处理网关异步回调信息
@@ -176,7 +179,7 @@ public class GoodsRecordTransaction {
 			excel.open(file);
 			batchAddNotRecordGoodsInfo(excel, errl, merchantId, merchantName);
 			excel.closeExcel();
-			if(!file.delete()){
+			if (!file.delete()) {
 				System.out.println("----------文件没有删除-----");
 			}
 			reqMap.clear();
@@ -332,9 +335,47 @@ public class GoodsRecordTransaction {
 					break;
 				}
 			}
-			Map<String, Object> item = goodsRecordService.batchCreateNotRecordGoods(r, shelfGName, ncadCode, hsCode,
-					barCode, goodsName, goodsStyle, brand, gUnit, stdUnit, secUnit, regPrice, giftFlag, originCountry,
-					quality, qualityCertify, manufactory, netWt, grossWt, notes, merchantId, merchantName,ingredient,additiveflag,poisonflag);
+			Map<String, Object> param = new HashMap<>();
+			//由于行循环是从第三行开始读取,所以SEQ要减1
+			param.put("seq", r-1);
+			param.put("shelfGName", shelfGName);
+			param.put("ncadCode", ncadCode);
+			param.put("hsCode", hsCode);
+			param.put("barCode", barCode);
+			param.put("goodsName", goodsName);
+			param.put("goodsStyle", goodsStyle);
+			param.put("brand", brand);
+			param.put("gUnit", gUnit);
+			param.put("stdUnit", stdUnit);
+			param.put("secUnit", secUnit);
+			param.put("regPrice", regPrice);
+			param.put("giftFlag", giftFlag);
+			param.put("originCountry", originCountry);
+			param.put("quality", quality);
+			param.put("qualityCertify", qualityCertify);
+			param.put("manufactory", manufactory);
+			param.put("netWt", netWt);
+			param.put("grossWt", grossWt);
+			param.put("notes", notes);
+			param.put("ingredient", ingredient);
+			param.put("additiveflag", additiveflag);
+			param.put("poisonflag", poisonflag);
+			GoodsRecordDetail goodsInfo = null;
+			try {
+				goodsInfo = (GoodsRecordDetail) ConvertUtils.convertMap(GoodsRecordDetail.class, param);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			} catch (IntrospectionException e) {
+				e.printStackTrace();
+			}
+			Map<String, Object> item = goodsRecordService.batchCreateNotRecordGoods(goodsInfo, merchantId,
+					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【订单工作表】第" + (r + 1) + "行-->" + item.get("msg"));
@@ -375,4 +416,15 @@ public class GoodsRecordTransaction {
 		}
 		return null;
 	}
+
+	//商户批量或单个商品备案
+	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return goodsRecordService.merchantBatchOrSingleGoodsRecord(goodsRecordInfo,merchantId,merchantName);
+	}
+
 }

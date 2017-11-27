@@ -684,7 +684,7 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
-		paramMap.put("goodsMerchantId", merchantId);
+		paramMap.put("merchantId", merchantId);
 		paramMap.put("deleteFlag", 0);
 		List<Object> reList = orderDao.findByPropertyLike(OrderRecordContent.class, paramMap, blurryMap, page,
 				size);

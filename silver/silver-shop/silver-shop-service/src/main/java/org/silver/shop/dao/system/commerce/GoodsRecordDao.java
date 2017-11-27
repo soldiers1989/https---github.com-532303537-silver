@@ -3,6 +3,8 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import com.justep.baas.data.Table;
+
 public interface GoodsRecordDao {
 
 	/**
@@ -149,5 +151,28 @@ public interface GoodsRecordDao {
 	 * @param blurryMap 模糊查询参数 
 	 * @return
 	 */
-	long findByPropertyLikeCount(Class entity, Map<String,Object> params,Map<String,Object> blurryMap);
+	public long findByPropertyLikeCount(Class entity, Map<String,Object> params,Map<String,Object> blurryMap);
+	
+	/**
+	 * 
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table findByRecordInfo(String merchantId ,int page,int size);
+	
+	
+	/**
+	 * 模糊商户备案信息查询数据
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params 主参数
+	 * @param blurryMap 模糊查询参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return List 
+	 */
+	public Table findByRecordInfoLike(Class entity, Map<String, Object> params,Map blurryMap ,int page, int size);
+
 }

@@ -2,6 +2,8 @@ package org.silver.shop.api.system.commerce;
 
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
+
 public interface GoodsRecordService {
 
 	/**
@@ -38,8 +40,6 @@ public interface GoodsRecordService {
 	/**
 	 * 查询所有商品备案信息
 	 * 
-	 * @param goodsId
-	 *            商品ID
 	 * @param merchantId
 	 *            商户ID
 	 * @param page
@@ -48,7 +48,7 @@ public interface GoodsRecordService {
 	 *            数目
 	 * @return
 	 */
-	public Map<String, Object> findAllGoodsRecordInfo(String merchantId, String goodsId, int page, int size);
+	public Map<String, Object> findAllGoodsRecordInfo(String merchantId,  int page, int size);
 
 	/**
 	 * 异步回调,更新商品备案状态
@@ -109,34 +109,22 @@ public interface GoodsRecordService {
 	/**
 	 * 批量添加未备案商品
 	 * 
-	 * @param seq
-	 * @param shelfGName
-	 * @param ncadCode
-	 * @param hsCode
-	 * @param barCode
-	 * @param goodsName
-	 * @param goodsStyle
-	 * @param brand
-	 * @param gUnit
-	 * @param stdUnit
-	 * @param secUnit
-	 * @param regPrice
-	 * @param giftFlag
-	 * @param originCountry
-	 * @param quality
-	 * @param qualityCertify
-	 * @param manufactory
-	 * @param netWt
-	 * @param grossWt
-	 * @param notes
 	 * @param merchantName
 	 * @param merchantId
 	 * @return
 	 */
-	public Map<String, Object> batchCreateNotRecordGoods(int seq, String shelfGName, String ncadCode, String hsCode,
-			String barCode, String goodsName, String goodsStyle, String brand, String gUnit, String stdUnit,
-			String secUnit, Double regPrice, String giftFlag, String originCountry, String quality,
-			String qualityCertify, String manufactory, Double netWt, Double grossWt, String notes, String merchantId,
-			String merchantName, String ingredient, String additiveflag, String poisonflag);
+	public Map<String, Object> batchCreateNotRecordGoods(GoodsRecordDetail goodsRecordDetail, String merchantId,
+			String merchantName);
+
+	/**
+	 * 商户批量或单个商品备案
+	 * @param goodsRecordInfo
+	 * @param merchantId
+	 * @param merchantName
+	 * @return
+	 */
+	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo, String merchantId,
+			String merchantName);
+
 
 }

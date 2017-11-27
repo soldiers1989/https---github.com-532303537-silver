@@ -1,12 +1,12 @@
 package org.silver.shop.controller.common.base;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.common.base.CustomsPortTransaction;
@@ -103,6 +103,7 @@ public class CustomsPortController {
 	@RequestMapping(value = "/findMerchantCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户查询当前已备案的海关及智检信息")
+	@RequiresRoles("Merchant")
 	public String findMerchantCustomsPort(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

@@ -70,13 +70,7 @@ public class CustomsPortTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		
-		Map<String,Object> reAllCustomsMap= findAllCustomsPort();
-		if(!"1".equals(reAllCustomsMap.get(BaseCode.STATUS.toString()))){
-			return reAllCustomsMap;
-		}
-		
+		String merchantName = merchantInfo.getMerchantName();		
 		return customsPortService.findMerchantCustomsPort(merchantId,merchantName);
 	}
 }

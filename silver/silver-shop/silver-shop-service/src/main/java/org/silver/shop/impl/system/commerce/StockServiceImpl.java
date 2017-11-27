@@ -439,6 +439,11 @@ public class StockServiceImpl implements StockService {
 					return statusMap;
 				}
 				break;
+			case "entOrderNo":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
 			default:
 				if ("page".equals(key) || "size".equals(key)) {
 					break;

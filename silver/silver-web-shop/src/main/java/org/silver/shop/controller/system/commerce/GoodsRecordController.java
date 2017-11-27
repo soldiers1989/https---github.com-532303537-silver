@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -105,14 +106,14 @@ public class GoodsRecordController {
 	@ResponseBody
 	@ApiOperation("商戶查询商品备案信息")
 	@RequiresRoles("Merchant")
-	public String findMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response, String goodsId,
+	public String findMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response, 
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(goodsId, page, size);
+		Map<String, Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo( page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -231,9 +232,30 @@ public class GoodsRecordController {
 		Map<String, Object> statusMap = goodsRecordTransaction.batchAddRecordGoodsInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/merchantSendSingleGoodsRecord", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户批量或单个商品备案")
+	@RequiresRoles("Merchant")
+	public String merchantBatchOrSingleGoodsRecord(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("goodsRecordInfo")String goodsRecordInfo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.merchantBatchOrSingleGoodsRecord(goodsRecordInfo);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 	public static void main(String[] args) {
-		File f = new File("E:/RecordGoodsAdd-excel/530a12bfbc564d2cb588cc7abfd48ee7_1511598867178.xls");
-		System.out.println(f.delete());
-		
+		JSONArray json = new JSONArray();
+		Map<String,Object> map = new HashMap<>();
+		map.put("entGoodsNo", "");
+		map.put("eport", 1);
+		map.put("customsCode", "");
+		map.put("ciqOrgCode", "");
+		json.add(map);
+		System.out.println(json.toString());
 	}
 }
