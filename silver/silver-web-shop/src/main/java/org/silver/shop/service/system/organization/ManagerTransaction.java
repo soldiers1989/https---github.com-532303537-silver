@@ -100,15 +100,6 @@ public class ManagerTransaction {
 		return managerService.editMerchantStatus(merchantId,managerId,managerName,status);
 	}
 
-	//修改备案商品状态
-	public Map<String, Object> editGoodsRecordStatus(String entGoodsNo,int status) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		String managerId = managerInfo.getManagerId();
-		String managerName = managerInfo.getManagerName();
-		
-		return managerService.editGoodsRecordStatus(managerId,managerName,entGoodsNo,status);
-	}
+
 
 }

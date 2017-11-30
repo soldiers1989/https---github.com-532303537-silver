@@ -75,15 +75,13 @@ public class GoodsContentTransaction {
 	}
 
 	// 商户查询商品基本信息
-	public Map<String, Object> findAllGoodsInfo(String goodsId, String goodsName, String startTime, String endTime,
-			String ymYear, int page, int size) {
+	public Map<String, Object> findAllGoodsInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		return goodsContentService.blurryFindGoodsInfo(goodsId, merchantName, goodsName, startTime, endTime, ymYear,
-				page, size, merchantId);
+		return goodsContentService.findAllGoodsInfo( merchantName, 	page, size, merchantId);
 	}
 
 	// 商户修改商品信息
@@ -173,6 +171,16 @@ public class GoodsContentTransaction {
 			datasMap.put(key, value);
 		}
 		return goodsContentService.searchMerchantGoodsDetailInfo(merchantId, merchantName, datasMap,page,size);
+	}
+
+	//商户查询商品基本信息详情
+	public Map<String, Object> merchantGetGoodsBaseInfo(String goodsId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return goodsContentService.merchantGetGoodsBaseInfo(merchantId,merchantName,goodsId);
 	}
 
 }

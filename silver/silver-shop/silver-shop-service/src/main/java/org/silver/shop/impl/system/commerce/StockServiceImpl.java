@@ -21,6 +21,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
@@ -244,10 +245,24 @@ public class StockServiceImpl implements StockService {
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
-			if (reStockList == null) {
+			params.clear();
+			params.put("entGoodsNo", entGoodsNo);
+			params.put("goodsMerchantId", merchantId);
+			List<Object> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+			if (reStockList == null || reGoodsRecordList == null) {
 				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
 				errorList.add(errorMap);
-			} else if (!reStockList.isEmpty()) {
+			} else if (!reStockList.isEmpty() && !reGoodsRecordList.isEmpty()) {
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordList.get(i);
+				String goodsFirstTypeId = goodsRecordInfo.getSpareGoodsFirstTypeId();
+				String goodsSecondTypeId = goodsRecordInfo.getSpareGoodsSecondTypeId();
+				String goodsThirdTypeId = goodsRecordInfo.getSpareGoodsThirdTypeId();
+				if (StringEmptyUtils.isEmpty(goodsFirstTypeId) || StringEmptyUtils.isEmpty(goodsSecondTypeId)
+						|| StringEmptyUtils.isEmpty(goodsThirdTypeId)) {
+					errorMap.put(BaseCode.MSG.getBaseCode(), goodsRecordInfo.getGoodsName() + " 上/下架状态修改失败,商品类型未设置！");
+					errorList.add(errorMap);
+					continue;
+				}
 				StockContent stockInfo = (StockContent) reStockList.get(0);
 				if (type == 1 || type == 2) {
 					stockInfo.setSellFlag(type);
@@ -331,10 +346,14 @@ public class StockServiceImpl implements StockService {
 	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
+
 		Map<String, Object> reDatasMap = universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
+		paramMap.put("merchantId", merchantId);
+		paramMap.put("warehouseCode", datasMap.get("warehouseCode") + "");
+		paramMap.put("deleteFlag", 0);
 		List<Object> reList = stockDao.findByPropertyLike(StockContent.class, paramMap, blurryMap, page, size);
 		long totalCount = stockDao.findByPropertyLikeCount(StockContent.class, paramMap, blurryMap);
 		if (reList == null) {
@@ -444,19 +463,109 @@ public class StockServiceImpl implements StockService {
 					paramMap.put(key, value + "");
 				}
 				break;
-			default:
-				if ("page".equals(key) || "size".equals(key)) {
-					break;
+			case "sellFlag":
+				int sellFlag = 0;
+				try {
+					sellFlag = Integer.parseInt(value);
+				} catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "上/下架标识参数错误,请重新输入!");
+					return statusMap;
 				}
-				Map<String, Object> errorMap = new HashMap<>();
-				errorMap.put(BaseCode.MSG.toString(), key + "属性不存在!");
-				lm.add(errorMap);
+				if (sellFlag > 0) {
+					paramMap.put(key, sellFlag);
+				}
+				break;
+
+			case "customsPort":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "customsCode":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "ciqOrgCode":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value + "");
+				}
+				break;
+			case "warehouseCode":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					int one = value.indexOf('_');
+					int two = value.indexOf('_', one + 1);
+					// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
+					String code = value.substring(two + 1);
+					paramMap.put(key, code);
+				}
+				break;
+			default:
 				break;
 			}
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
 		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
+			String goodsInfoPack,int type) {
+		Date date = new Date();
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Map<String, Object>> errorMsgList = new ArrayList<>();
+		Map<String,Object> errorMap = new HashMap<>();
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(goodsInfoPack);
+		} catch (Exception e) {
+			logger.error("--------商品入库或上架传递信息错误------");
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
+			Map<String,Object> params = new HashMap<>();
+			String entGoodsNo = datasMap.get("entGoodsNo")+"";
+			params.put("entGoodsNo", entGoodsNo);
+			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
+			if (reStockList == null) {
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
+				errorMsgList.add(errorMap);
+			} else if (!reStockList.isEmpty()) {
+				StockContent stockInfo= (StockContent) reStockList.get(0);
+				double price = 0.0;
+				try{
+					 price = Double.parseDouble(datasMap.get("price")+"");
+				}catch (Exception e){
+					errorMap.put(BaseCode.MSG.getBaseCode(), "商品价格错误,请重试！");
+					errorMsgList.add(errorMap);
+					continue;
+				}
+				//修改类型:1-市场价,2-销售价
+				if(type == 1){
+					stockInfo.setMarketPrice(price);
+				}else{
+					stockInfo.setRegPrice(price);
+				}
+				stockInfo.setUpdateBy(merchantName);
+				stockInfo.setUpdateDate(date);
+				if (!stockDao.update(stockInfo)) {
+					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "修改库存/上架失败,服务器繁忙！");
+					errorMsgList.add(errorMap);
+				}
+			} else {
+				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为：" + entGoodsNo + "商品,服务器繁忙！");
+				errorMsgList.add(errorMap);
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.ERROR.toString(), errorMsgList);
 		return statusMap;
 	}
 }

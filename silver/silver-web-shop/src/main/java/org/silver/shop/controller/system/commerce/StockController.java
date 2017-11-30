@@ -203,6 +203,8 @@ public class StockController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	
 	@RequestMapping(value = "/searchGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("根据指定信息搜索库存商品信息")
@@ -218,6 +220,36 @@ public class StockController {
 		if(page >0 && size >0){
 			 statusMap = stockTransaction.searchGoodsStockInfo(req,page,size);
 		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	
+	/**
+	 * 商户批量与单个修改商品售卖价或市场价
+	 * @param goodsInfoPack
+	 * @param type 修改类型:1-市场价,2-销售价
+	 * @param req 
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/merchantSetGoodsSalePriceAndMarketPrice", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户批量与单个修改商品售卖价或市场价")
+	@RequiresRoles("Merchant")
+	public String merchantSetGoodsSalePriceAndMarketPrice(@RequestParam("goodsInfoPack") String goodsInfoPack,
+			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (goodsInfoPack != null && goodsInfoPack.length() > 0 && type == 1 || type == 2) {
+			statusMap = stockTransaction.merchantSetGoodsSalePriceAndMarketPrice(goodsInfoPack, type);
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}

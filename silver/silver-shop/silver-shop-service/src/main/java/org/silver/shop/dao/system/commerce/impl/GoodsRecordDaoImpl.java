@@ -111,7 +111,9 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsReco
 						queryString = queryString + "t2.createDate " + " > " + "?" + " and ";
 					} else if ("endDate".equals(property)) {
 						queryString = queryString + "t2.createDate " + " < " + "?" + " and ";
-					} else {
+					} else if("customsPort".equals(property)|| "customsPortName".equals(property)||"customsCode".equals(property)||"customsName".equals(property)||"ciqOrgCode".equals(property)||"ciqOrgName".equals(property)){
+						queryString = queryString + "t1." + property + " = " + "?" + " and ";
+					}else{
 						queryString = queryString + "t2." + property + " = " + "?" + " and ";
 					}
 					sqlParams.add(params.get(property));

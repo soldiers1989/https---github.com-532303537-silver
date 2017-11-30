@@ -54,15 +54,6 @@ public class GoodsContentController {
 
 	/**
 	 * 商户查询商品基本信息
-	 * 
-	 * @param goodsName
-	 *            商品名
-	 * @param starDate
-	 *            开始时间
-	 * @param endDate
-	 *            结束时间
-	 * @param ymYear
-	 *            年份
 	 * @param page
 	 * @param size
 	 * @return
@@ -71,8 +62,7 @@ public class GoodsContentController {
 	@ResponseBody
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户查询商品基本信息")
-	public String findMerchantGoodsInfo(String goodsId, String goodsName, String starDate, String endDate,
-			String ymYear, @RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
+	public String findMerchantGoodsInfo(@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -80,8 +70,7 @@ public class GoodsContentController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		System.out.println(WebUtil.getSession().getId());
-		Map<String, Object> datasMap = goodsContentTransaction.findAllGoodsInfo(goodsId, goodsName, starDate, endDate,
-				ymYear, page, size);
+		Map<String, Object> datasMap = goodsContentTransaction.findAllGoodsInfo(page, size);
 		return JSONObject.fromObject(datasMap).toString();
 	}
 
@@ -94,7 +83,7 @@ public class GoodsContentController {
 	 */
 	@RequestMapping(value = "/editMerchantGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商户修改商品信息")
+	@ApiOperation("商户修改商品基本信息")
 	// @RequiresRoles("Merchant")
 	public String editMerchantGoodsInfo(HttpServletRequest req, HttpServletResponse resp) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -167,6 +156,7 @@ public class GoodsContentController {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
+		
 		if (entGoodsNo != null) {
 			statusMap = goodsContentTransaction.getOneGoodsBaseInfo(entGoodsNo);
 			return JSONObject.fromObject(statusMap).toString();
@@ -223,4 +213,15 @@ public class GoodsContentController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	@RequestMapping(value = "/merchantGetGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户查询商品基本信息详情")
+	@RequiresRoles("Merchant")
+	public String merchantGetGoodsBaseInfo(@RequestParam("goodsId")String goodsId, HttpServletRequest req,	HttpServletResponse response) {
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		Map<String, Object> statusMap = goodsContentTransaction.merchantGetGoodsBaseInfo(goodsId);
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

@@ -102,9 +102,6 @@ public class StockContent implements Serializable {
 	public Double getRegPrice() {
 		return regPrice;
 	}
-	public void setRegPrice(Double regPrice) {
-		this.regPrice = regPrice;
-	}
 	
 	public Double getFreight() {
 		return freight;

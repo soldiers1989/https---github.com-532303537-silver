@@ -22,6 +22,7 @@ import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.Metering;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.CountryTransaction;
 import org.silver.shop.service.common.base.MeteringTransaction;
@@ -71,7 +72,7 @@ public class GoodsRecordTransaction {
 				ciqOrgCode, recordGoodsInfoPack);
 	}
 
-	public Map<String, Object> findMerchantGoodsRecordInfo( int page, int size) {
+	public Map<String, Object> findMerchantGoodsRecordInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -336,8 +337,8 @@ public class GoodsRecordTransaction {
 				}
 			}
 			Map<String, Object> param = new HashMap<>();
-			//由于行循环是从第三行开始读取,所以SEQ要减1
-			param.put("seq", r-1);
+			// 由于行循环是从第三行开始读取,所以SEQ要减1
+			param.put("seq", r - 1);
 			param.put("shelfGName", shelfGName);
 			param.put("ncadCode", ncadCode);
 			param.put("hsCode", hsCode);
@@ -368,8 +369,6 @@ public class GoodsRecordTransaction {
 			} catch (InstantiationException e) {
 				e.printStackTrace();
 			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
 				e.printStackTrace();
 			} catch (IntrospectionException e) {
 				e.printStackTrace();
@@ -417,14 +416,38 @@ public class GoodsRecordTransaction {
 		return null;
 	}
 
-	//商户批量或单个商品备案
+	// 商户批量或单个商品备案
 	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return goodsRecordService.merchantBatchOrSingleGoodsRecord(goodsRecordInfo,merchantId,merchantName);
+		return goodsRecordService.merchantBatchOrSingleGoodsRecord(goodsRecordInfo, merchantId, merchantName);
 	}
 
+	// 修改备案商品状态
+	public Map<String, Object> editGoodsRecordStatus(String entGoodsNo, int status) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return goodsRecordService.editGoodsRecordStatus(managerId, managerName, entGoodsNo, status);
+	}
+
+	// 商户修改备案商品信息(局限于未备案与备案失败的商品)
+	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req, int length) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		String[] str = new String[length];
+		for (int i = 0; i < length; i++) {
+			String value = req.getParameter(Integer.toString(i));
+			str[i] = value.trim();
+		}
+		return goodsRecordService.merchantEditGoodsRecordInfo(managerId, managerName, str);
+	}
 }

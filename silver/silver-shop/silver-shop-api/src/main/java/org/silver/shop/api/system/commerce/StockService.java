@@ -83,4 +83,15 @@ public interface StockService {
 	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size);
 
+
+	/**
+	 * 商户批量与单个修改商品售卖价或市场价
+	 * @param merchantId
+	 * @param merchantName
+	 * @param goodsInfoPack
+	 * @return
+	 */
+	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
+			String goodsInfoPack,int type);
+
 }

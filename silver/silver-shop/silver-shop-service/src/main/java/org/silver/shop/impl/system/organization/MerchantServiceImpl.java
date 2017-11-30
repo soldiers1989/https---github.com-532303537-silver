@@ -191,9 +191,11 @@ public class MerchantServiceImpl implements MerchantService {
 					recordInfo.setCustomsPortName(customsPortName);
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
+					
 					recordInfo.setEbpEntNo(ebpEntNo);
 					recordInfo.setEbpEntName(ebpEntName);
-					recordInfo.setCreateBy(account);
+					
+					recordInfo.setCreateBy(account);					
 					recordInfo.setCreateDate(dateTime);
 					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 					// 保存商户对应的电商平台名称(及编码)

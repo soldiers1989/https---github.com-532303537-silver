@@ -12,7 +12,7 @@
             <column name="merchantId" not-null="true"/>
         </property>
         <property name="goodsId" type="java.lang.String">
-            <column name="goodsId" not-null="true"/>
+            <column name="goodsId" />
         </property>
         <property name="totalStock" type="int">
             <column name="totalStock" />

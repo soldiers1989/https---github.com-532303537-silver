@@ -92,4 +92,21 @@ public class CategoryTransaction {
 		}
 		return categoryService.deleteGoodsCategory(managerId,managerName,paramMap);
 	}
+
+	//修改商品类型
+	public Map<String, Object> editGoodsCategory(HttpServletRequest req) {
+		Map<String, Object> paramMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			paramMap.put(key, value);
+		}
+		return categoryService.editGoodsCategory(managerId,managerName,paramMap);
+	}
 }

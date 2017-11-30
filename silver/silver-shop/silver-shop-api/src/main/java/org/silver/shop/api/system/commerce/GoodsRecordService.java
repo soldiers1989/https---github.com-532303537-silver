@@ -2,6 +2,8 @@ package org.silver.shop.api.system.commerce;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 
 public interface GoodsRecordService {
@@ -126,5 +128,24 @@ public interface GoodsRecordService {
 	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo, String merchantId,
 			String merchantName);
 
+
+	/**
+	 * 修改备案商品状态
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
+	 * @param entGoodsNo 商品备案Id
+	 * @param status 0-未备案，1-备案中，2-备案成功，3-备案失败
+	 * @return Map
+	 */
+	public Map<String, Object> editGoodsRecordStatus(String managerId, String managerName, String entGoodsNo,int status);
+
+	/**
+	 * 商户修改备案商品信息(局限于未备案的商品)
+	 * @param managerId
+	 * @param managerName
+	 * @param str
+	 * @return
+	 */
+	public Map<String, Object> merchantEditGoodsRecordInfo(String managerId, String managerName, String[] str);
 
 }

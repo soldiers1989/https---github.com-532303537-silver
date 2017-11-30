@@ -1,6 +1,5 @@
 package org.silver.shop.controller.system.organization;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -119,6 +118,12 @@ public class ManagerController {
 		}
 	}
 
+	/**
+	 * 管理员查询所有商户信息
+	 * @param req
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "/findAllMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -133,6 +138,13 @@ public class ManagerController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 管理员查看商户详情
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 * @return
+	 */
 	@RequestMapping(value = "/findMerchantDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -155,6 +167,14 @@ public class ManagerController {
 		}
 	}
 
+	/**
+	 * 管理员修改密码
+	 * @param req
+	 * @param response
+	 * @param oldLoginPassword
+	 * @param newLoginPassword
+	 * @return
+	 */
 	@RequestMapping(value = "/updateManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -178,6 +198,14 @@ public class ManagerController {
 		}
 	}
 
+	/**
+	 * 管理员修改商户状态
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 * @param status
+	 * @return
+	 */
 	@RequestMapping(value = "/editMerchantStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -200,26 +228,5 @@ public class ManagerController {
 		}
 	}
 
-	@RequestMapping(value = "/editGoodsRecordStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("修改备案商品状态")
-	public String editGoodsRecordStatus(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entGoodsNo") String entGoodsNo, @RequestParam("status") int status) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (entGoodsNo != null && status == 2 || status == 3) {
-			statusMap = managerTransaction.editGoodsRecordStatus(entGoodsNo, status);
-			return JSONObject.fromObject(statusMap).toString();
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
-		}
-	}
-
+	
 }

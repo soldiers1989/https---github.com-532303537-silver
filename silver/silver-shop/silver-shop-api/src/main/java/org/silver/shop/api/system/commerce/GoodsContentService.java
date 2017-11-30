@@ -26,7 +26,7 @@ public interface GoodsContentService {
 	public Map<String, Object> createGoodsId();
 
 	/**
-	 * 商户模糊查询商品基本信息
+	 * 商户查询商品基本信息
 	 * 
 	 * @param goodsId
 	 * @param merchantName
@@ -42,8 +42,7 @@ public interface GoodsContentService {
 	 * @param size
 	 * @param page
 	 */
-	public Map<String, Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName, String startTime,
-			String endTime, String ymYear, int page, int size,String merchantId);
+	public Map<String, Object> findAllGoodsInfo(String merchantName, int page, int size,String merchantId);
 
 	/**
 	 * 商户修改商品基本信息
@@ -89,7 +88,7 @@ public interface GoodsContentService {
 
 	/**
 	 * 根据商品ID单独查询商品基本信息
-	 * @param entGoodsNo
+	 * @param entGoodsNo 商品备案编号
 	 * @return
 	 */
 	public Map<String, Object> goodsContentService(String entGoodsNo);
@@ -125,5 +124,7 @@ public interface GoodsContentService {
 	 */
 	public Map<String, Object> searchMerchantGoodsDetailInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap,int page,int size);
+
+	public Map<String, Object> merchantGetGoodsBaseInfo(String merchantId, String merchantName, String goodsId);
 
 }

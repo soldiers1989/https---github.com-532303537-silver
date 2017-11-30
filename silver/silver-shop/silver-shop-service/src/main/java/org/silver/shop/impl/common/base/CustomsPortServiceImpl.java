@@ -74,27 +74,21 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return reMap;
 		}
 		List<Object> allCustomsList = (List) reMap.get(BaseCode.DATAS.toString());
-		paramMap.put("merchantId", merchantId);
-		List<Object> reList = customsPortDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
-		if (reList != null && reList.size() > 0) {
-			for (int i = 0; i < allCustomsList.size(); i++) {
-				CustomsPort customsPort= (CustomsPort) allCustomsList.get(i);
-				MerchantRecordInfo recordInfo = (MerchantRecordInfo) reList.get(i);
-				int code1 = Integer.parseInt(customsPort.getCustomsCode());
-				int code2 = recordInfo.getCustomsPort();
-				if(code1!=code2){
-					allCustomsList.remove(allCustomsList.get(i));
-				}
+		for (int i = 0; i < allCustomsList.size(); i++) {
+			CustomsPort customsPort = (CustomsPort) allCustomsList.get(i);
+			paramMap.put("customsPort", customsPort.getCustomsPort());
+			paramMap.put("merchantId", merchantId);
+			List<Object> reList = customsPortDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+			if(reList !=null  && reList.isEmpty()){
+				allCustomsList.remove(i);
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), allCustomsList);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.DATAS.toString(), allCustomsList);
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}
 

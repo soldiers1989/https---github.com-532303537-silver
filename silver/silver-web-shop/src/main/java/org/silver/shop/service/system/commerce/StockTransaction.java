@@ -21,6 +21,7 @@ public class StockTransaction {
 	@Reference
 	private StockService stockService;
 	
+	//搜索该仓库下已经备案成功的备案商品信息
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String warehouseCode, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -92,6 +93,16 @@ public class StockTransaction {
 			datasMap.put(key, value);
 		}
 		return stockService.searchGoodsStockInfo(merchantId, merchantName, datasMap,page,size);
+	}
+
+	//商户批量与单个修改商品售卖价或市场价
+	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String goodsInfoPack, int type) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return stockService.merchantSetGoodsSalePriceAndMarketPrice(merchantId,merchantName,goodsInfoPack,type);
 	}
 
 

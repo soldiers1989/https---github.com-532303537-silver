@@ -3,6 +3,8 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.StockContent;
+
 import com.justep.baas.data.Table;
 
 public interface StockDao {
@@ -89,4 +91,5 @@ public interface StockDao {
 	 * @return
 	 */
 	long findByPropertyLikeCount(Class entity, Map<String,Object> params,Map<String,Object> blurryMap);
+
 }

@@ -27,4 +27,13 @@ public interface CategoryService {
 	 * @return
 	 */
 	public Map<String, Object> deleteGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap);
+
+	/**
+	 * 管理员修改商品类型
+	 * @param managerId
+	 * @param managerName
+	 * @param paramMap
+	 * @return
+	 */
+	public Map<String, Object> editGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap);
 }

@@ -113,10 +113,10 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> blurryFindGoodsInfo(String goodsId, String merchantName, String goodsName,
-			String startTime, String endTime, String ymYear, int page, int size, String merchantId) {
+	public Map<String, Object> findAllGoodsInfo(String merchantName,  int page, int size, String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
+		
 		// key=数据库列名,value=查询参数
 		params.put("goodsMerchantId", merchantId);
 		// 删除标识:0-未删除,1-已删除
@@ -317,6 +317,30 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			statusMap.put(BaseCode.ERROR.toString(), errorList);
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> merchantGetGoodsBaseInfo(String merchantId, String merchantName, String goodsId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> param = new HashMap<>();
+		param.put("goodsId", goodsId);
+		param.put("merchantId", merchantId);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, param, 1, 1);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());		
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), goodsInfo);	
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());			
 			return statusMap;
 		}
 	}
