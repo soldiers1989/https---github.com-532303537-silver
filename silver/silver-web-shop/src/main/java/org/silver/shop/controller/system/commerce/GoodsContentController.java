@@ -86,15 +86,7 @@ public class GoodsContentController {
 	@ApiOperation("商户修改商品基本信息")
 	// @RequiresRoles("Merchant")
 	public String editMerchantGoodsInfo(HttpServletRequest req, HttpServletResponse resp) {
-		Map<String, Object> statusMap = new HashMap<>();
-		boolean flag = goodsContentTransaction.editMerchantGoodsBaseInfo(req);
-		if (flag) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-		}
+		Map<String, Object> statusMap = goodsContentTransaction.editMerchantGoodsBaseInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -218,10 +210,16 @@ public class GoodsContentController {
 	@ApiOperation("商户查询商品基本信息详情")
 	@RequiresRoles("Merchant")
 	public String merchantGetGoodsBaseInfo(@RequestParam("goodsId")String goodsId, HttpServletRequest req,	HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = goodsContentTransaction.merchantGetGoodsBaseInfo(goodsId);
 		return JSONObject.fromObject(statusMap).toString();
+	}
+	public static void main(String[] args) {
+		int x = 'a' >>5/2;
+		System.out.println(x);
 	}
 }

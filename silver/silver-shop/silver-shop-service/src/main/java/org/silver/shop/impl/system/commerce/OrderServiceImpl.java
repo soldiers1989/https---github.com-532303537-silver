@@ -14,6 +14,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.dao.system.commerce.OrderDao;
+import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.common.category.HsCode;
 import org.silver.shop.model.system.commerce.GoodsContent;
@@ -25,6 +26,7 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,8 @@ public class OrderServiceImpl implements OrderService {
 	private OrderDao orderDao;
 	@Autowired
 	private StockServiceImpl stockServiceImpl;
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
@@ -73,10 +77,10 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		String reEntOrderNo =  reMap.get("entOrderNo")+"";
+		String reEntOrderNo = reMap.get("entOrderNo") + "";
 		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice") + "");
 		// 更新订单状态与删除购物车商品信息
-		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reEntOrderNo);
+		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reEntOrderNo,memberName);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
 			return reStatusMap;
 		}
@@ -301,22 +305,29 @@ public class OrderServiceImpl implements OrderService {
 
 	// 支付完成后根据类型进行业务处理
 	private Map<String, Object> updateOrderInfo(String memberId, int type, List jsonList, double totalPrice,
-			String reEntOrderNo) {
+			String reEntOrderNo,String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type == 1) {// 1-余额支付,2-跳转至银盛
-			Map<String, Object> params = new HashMap<>();
-			params.put("memberId", memberId);
-			List<Object> reList = orderDao.findByProperty(MemberWalletContent.class, params, 1, 1);
-			if (reList != null && reList.size() > 0) {
-				MemberWalletContent wallet = (MemberWalletContent) reList.get(0);
-				double balance = wallet.getBalance();
-				wallet.setBalance(balance - totalPrice);
-				if (!orderDao.update(wallet)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "扣款失败,请重试！");
-					return statusMap;
-				}
+			Map<String, Object> reWalletMap = merchantWalletServiceImpl.checkWallet(2, memberId, memberName);
+			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
+				statusMap.put(BaseCode.MSG.toString(), "检查钱包失败!");
+				return statusMap;
 			}
+			MemberWalletContent wallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			double balance = wallet.getBalance();
+			if (balance - totalPrice < 0) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "余额不足!");
+				return statusMap;
+			}
+			wallet.setBalance(balance - totalPrice);
+			if (!orderDao.update(wallet)) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "扣款失败,请重试！");
+				return statusMap;
+			}
+
 			return updateOrderInfo2(memberId, jsonList, reEntOrderNo);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -406,30 +417,29 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	// 更新订单状态及删除用户购物车数据
-	private Map<String, Object> updateOrderInfo2(String memberId, List<Object> jsonList,
-			String reEntOrderNo) {
+	private Map<String, Object> updateOrderInfo2(String memberId, List<Object> jsonList, String reEntOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		// 更新订单状态
-		if(reEntOrderNo !=null && !"null".equals(reEntOrderNo)){
+		if (reEntOrderNo != null && !"null".equals(reEntOrderNo)) {
 			params.clear();
 			params.put("memberId", memberId);
 			params.put("entOrderNo", reEntOrderNo);
 			List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 			OrderContent orderBase = (OrderContent) orderList.get(0);
-			//订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时;
+			// 订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时;
 			orderBase.setStatus(2);
 			if (!orderDao.update(orderBase)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "更新订单状态失败,请重试！");
 				return statusMap;
 			}
-		}else{
+		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "更新订单状态失败,订单编号错误,请重试！");
 			return statusMap;
 		}
-		
+
 		// 遍历购物车中信息,删除已支付的商品
 		for (int i = 0; i < jsonList.size(); i++) {
 			params.clear();
@@ -686,8 +696,7 @@ public class OrderServiceImpl implements OrderService {
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
 		paramMap.put("merchantId", merchantId);
 		paramMap.put("deleteFlag", 0);
-		List<Object> reList = orderDao.findByPropertyLike(OrderRecordContent.class, paramMap, blurryMap, page,
-				size);
+		List<Object> reList = orderDao.findByPropertyLike(OrderRecordContent.class, paramMap, blurryMap, page, size);
 		long totalCount = orderDao.findByPropertyLikeCount(OrderRecordContent.class, paramMap, blurryMap);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());

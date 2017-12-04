@@ -10,8 +10,10 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
+import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,7 @@ public class MerchantServiceImpl implements MerchantService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
-	//口岸名称
+	// 口岸名称
 	private static final String PORTNAME = "customsPortName";
 	// 电商企业编号
 	private static final String EBENTNO = "ebEntNo";
@@ -37,9 +39,11 @@ public class MerchantServiceImpl implements MerchantService {
 	private static final String EBPENTNO = "ebpEntNo";
 	// 电商平台名称
 	private static final String EBPENTNAME = "EBPEntName";
-	
+
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	//
-	static List<Map<String,Object>> list = null;
+	static List<Map<String, Object>> list = null;
 	static {
 		// 银盟商城备案信息 1-广州电子口岸(目前只支持BC业务)
 		final String ebEntNo = "C010000000537118";
@@ -105,8 +109,8 @@ public class MerchantServiceImpl implements MerchantService {
 		if (type.equals("1")) {// 银盟自己商户备案信息插入
 			for (int x = 0; x < list.size(); x++) {
 				Map<String, Object> listMap = list.get(x);
-				entity.setCustomsPort(Integer.valueOf(listMap.get(EPORT)+"") );
-				entity.setCustomsPortName(listMap.get(PORTNAME)+"");
+				entity.setCustomsPort(Integer.valueOf(listMap.get(EPORT) + ""));
+				entity.setCustomsPortName(listMap.get(PORTNAME) + "");
 				entity.setEbEntNo(listMap.get(EBENTNO) + "");
 				entity.setEbEntName(listMap.get(EBENTNAME) + "");
 				entity.setEbpEntNo(listMap.get(EBPENTNO) + "");
@@ -127,8 +131,6 @@ public class MerchantServiceImpl implements MerchantService {
 		Merchant merchant = new Merchant();
 		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
-		boolean merchantFlag = false;
-		boolean recordFlag = false;
 		if (type.equals("1")) {// 1-银盟商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("YM_" + merchantId);
@@ -144,15 +146,18 @@ public class MerchantServiceImpl implements MerchantService {
 			recordInfo.setCreateBy(account);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			if (merchantDao.add(merchant)) {
-				// 保存商户对应的电商平台名称(及编码)
-				recordFlag = addMerchantRecordInfo(recordInfo, "1");
-				if (recordFlag) {// 数据库添加完成后,返回成功信息
-					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
-					return statusMap;
-				}
+			if (!merchantDao.add(merchant)) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,服务器繁忙!");
+				return statusMap;
 			}
+			// 保存商户对应的电商平台名称(及编码)
+			if (!addMerchantRecordInfo(recordInfo, "1")) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品备案信息失败,服务器繁忙!");
+				return statusMap;
+			}
+			
 		} else {// 2-第三方商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("TP_" + merchantId);
@@ -165,58 +170,70 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
-			merchantFlag = merchantDao.add(merchant);
-			if (merchantFlag) {
+			if (merchantDao.add(merchant)) {
 				JSONArray jsonList = null;
 				try {
 					jsonList = JSONArray.fromObject(recordInfoPack);
 				} catch (Exception e) {
 					e.getStackTrace();
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,请检查商户备案信息是否正确！");
+					statusMap.put(BaseCode.MSG.getBaseCode(), "信息错误,请检查商户备案信息是否正确！");
 					return statusMap;
 				}
 				// 取出前台打包好的商户备案信息
 				for (int x = 0; x < jsonList.size(); x++) {
 					Map<String, Object> packMap = (Map) jsonList.get(x);
-					int eport =Integer.parseInt((packMap.get(EPORT) + ""));
-					String customsPortName =  packMap.get(PORTNAME) + "";
+					Map<String, Object> listMap = new HashMap<>();
+					int eport = 0 ;
+					try{
+						eport = Integer.parseInt((packMap.get(EPORT) + ""));
+					}catch (Exception e){
+						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+						statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,口岸参数错误！");
+						return statusMap;
+					}
+					switch (eport) {
+					case 1:
+						listMap = list.get(0);
+						recordInfo.setEbpEntNo(listMap.get(EBPENTNO) + "");
+						recordInfo.setEbpEntName(listMap.get(EBPENTNAME) + "");
+						break;
+					case 2:
+						listMap = list.get(1);
+						recordInfo.setEbpEntNo(listMap.get(EBPENTNO) + "");
+						recordInfo.setEbpEntName(listMap.get(EBPENTNAME) + "");
+						break;
+					default:
+						break;
+					}
 					String ebEntNo = packMap.get(EBENTNO) + "";
 					String ebEntName = packMap.get(EBENTNAME) + "";
-					String ebpEntNo = packMap.get(EBPENTNO) + "";
-					String ebpEntName = packMap.get(EBPENTNAME) + "";
 					recordInfo.setMerchantId(merchantId);
 					// 1-广州电子口岸2-南沙智检
 					recordInfo.setCustomsPort(eport);
-					recordInfo.setCustomsPortName(customsPortName);
+					recordInfo.setCustomsPortName(listMap.get(PORTNAME) + "");
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
-					
-					recordInfo.setEbpEntNo(ebpEntNo);
-					recordInfo.setEbpEntName(ebpEntName);
-					
-					recordInfo.setCreateBy(account);					
+					recordInfo.setCreateBy(account);
 					recordInfo.setCreateDate(dateTime);
 					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 					// 保存商户对应的电商平台名称(及编码)
-					recordFlag = addMerchantRecordInfo(recordInfo, "2");
-					if (!recordFlag) {
-						String errorPort= "";
-						if (eport == 1) {
-							errorPort = "电子口岸";
-						} else if (eport == 2) {
-							errorPort = "南沙智检";
-						}
+					if (!addMerchantRecordInfo(recordInfo, "2")) {
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), errorPort + "商户备案信息错误,保存失败！");
+						statusMap.put(BaseCode.MSG.getBaseCode(), listMap.get(PORTNAME) + "商户备案信息错误,保存失败！");
 						return statusMap;
 					}
 				}
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
-				return statusMap;
 			}
 		}
+		Map<String, Object> reWalletMap = merchantWalletServiceImpl.checkWallet(1, merchantId, account);
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
 		return statusMap;
 	}
 
@@ -276,22 +293,19 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String,Object> updateLoginPassword(Merchant merchantInfo,String newLoginPassword) {
-		Map<String,Object> reMap = new HashMap<>();
+	public Map<String, Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword) {
+		Map<String, Object> reMap = new HashMap<>();
 		MD5 md5 = new MD5();
 		merchantInfo.setLoginPassword(md5.getMD5ofStr(newLoginPassword));
 		boolean flag = merchantDao.update(merchantInfo);
-		if(flag){
+		if (flag) {
 			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
 			reMap.put(BaseCode.MSG.getBaseCode(), "修改成功");
-		}else{
+		} else {
 			reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
 			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
 		}
 		return reMap;
 	}
-	
-	public static void main(String[] args) {
-		System.out.println(JSONArray.fromObject(list).toString());
-	}
+
 }

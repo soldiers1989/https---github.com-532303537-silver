@@ -3,16 +3,19 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-10-21 19:01:57 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.MemberWalletContent" table="ym_shop_member_wallet">
+    <class name="org.silver.shop.model.system.tenant.MemberWalletContent" table="ym_shop_member_wallet_content">
         <id name="id" type="long">
             <column name="Id" />
             <generator class="identity" />
         </id>
+         <property name="walletId" type="java.lang.String">
+            <column name="walletId" not-null="true" unique="true"/>
+        </property>
         <property name="memberId" type="java.lang.String">
-            <column name="memberId" />
+            <column name="memberId" not-null="true" unique="true"/>
         </property>
         <property name="memberName" type="java.lang.String">
-            <column name="memberName" />
+            <column name="memberName" not-null="true"  unique="true"/>
         </property>
         <property name="balance" type="java.lang.Double" >
             <column name="balance" />

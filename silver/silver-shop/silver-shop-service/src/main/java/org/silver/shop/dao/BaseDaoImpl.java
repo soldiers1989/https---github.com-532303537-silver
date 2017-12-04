@@ -554,20 +554,20 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		String property = "memberId";
 		new Date();
 		Calendar c = Calendar.getInstance();
-		//c.setTime(parseDate(startDate));
-		System.out.println("--start--->>>>"+c.getTime());
+		// c.setTime(parseDate(startDate));
+		System.out.println("--start--->>>>" + c.getTime());
 		Calendar cal = Calendar.getInstance();
-		//cal.setTime(parseDate(entDate));
-		cal.set(Calendar.HOUR, 23);  
-		cal.set(Calendar.MINUTE, 59);  
-		cal.set(Calendar.SECOND, 59);  
-		cal.set(Calendar.MILLISECOND, 999);  
-		System.out.println("--------ent--->>>>>>>"+cal.getTime());
+		// cal.setTime(parseDate(entDate));
+		cal.set(Calendar.HOUR, 23);
+		cal.set(Calendar.MINUTE, 59);
+		cal.set(Calendar.SECOND, 59);
+		cal.set(Calendar.MILLISECOND, 999);
+		System.out.println("--------ent--->>>>>>>" + cal.getTime());
 		paramMap.put("startDate", c.getTime());
 		paramMap.put("endDate", cal.getTime());
-		 List count = bd.findByPropertyLike(GoodsRecordDetail.class, paramMap, null, 0, 0);
-		 System.out.println("-------------------->>>>>>>" + count.size());
+		List count = bd.findByPropertyLike(GoodsRecordDetail.class, paramMap, null, 0, 0);
+		System.out.println("-------------------->>>>>>>" + count.size());
 
 	}
-	
+
 }

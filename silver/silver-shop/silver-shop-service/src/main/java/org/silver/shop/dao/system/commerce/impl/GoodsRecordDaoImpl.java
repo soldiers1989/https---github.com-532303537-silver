@@ -17,7 +17,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("goodsRecordDao")
-public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsRecordDao {
+public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 
 	@Override
 	public List findGoodsBaseInfo(Map<String, Object> params, String descParam, int page, int size) {
@@ -27,12 +27,6 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl<Object> implements GoodsReco
 	@Override
 	public Long findLastId() {
 		return super.findLastId(GoodsRecord.class);
-	}
-
-	@Override
-	public List<Object> findPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
-			int size) {
-		return super.findByPropertyDesc(entity, params, descParams, page, size);
 	}
 
 	@Override

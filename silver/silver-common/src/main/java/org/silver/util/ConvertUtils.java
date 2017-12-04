@@ -4,10 +4,16 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 public class ConvertUtils {
 
@@ -91,4 +97,47 @@ public class ConvertUtils {
 		}
 		return returnMap;
 	}
+
+	/**
+	 * 将一个 Map 对象转化为一个 JavaBean
+	 * 
+	 * @param obj
+	 * @param map
+	 * @return
+	 */
+	public static Object mapChangeToEntity(Object bean, Map<String, Object> map) {
+		String key = "";
+		String type = "";
+		Object value = null;
+		for (Field field : bean.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				key = field.getName();
+				if (map.get(field.getName()) != null) {
+					value = map.get(key);
+					// 将属性的首字符大写，方便构造get，set方法
+					key = key.substring(0, 1).toUpperCase() + key.substring(1);
+					Method method = bean.getClass().getDeclaredMethod("set" + key, field.getType());
+					type = field.getType().getSimpleName();
+					if (type.equals("int") || type.equals("Integer")) {
+						value = Integer.parseInt(value + "");
+					} else if (type.equals("long") || type.equals("Long")) {
+						value = Long.parseLong(value + "");
+					} else if (type.equals("double") || type.equals("Double")) {
+						value = Double.parseDouble(value + "");
+					} else if (value instanceof JSONObject) {//如果value是JSON格式则进行日期转换
+						JSONObject item = (JSONObject) value;
+						long timstamp = Long.parseLong(item.get("time") + "");
+						value = DateUtil.timestampParseDate(timstamp);
+					}
+					method.invoke(bean, value);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return bean;
+
+	}
+
 }

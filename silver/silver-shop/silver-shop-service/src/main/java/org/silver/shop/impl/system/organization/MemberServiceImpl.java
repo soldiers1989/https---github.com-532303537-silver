@@ -10,9 +10,11 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.dao.system.organization.MemberDao;
+import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.util.MD5;
 import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class MemberServiceImpl implements MemberService {
 	@Autowired
 	private MemberDao memberDao;
 
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberId, String memberTel) {
@@ -47,13 +52,11 @@ public class MemberServiceImpl implements MemberService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		MemberWalletContent wallet = new MemberWalletContent();
-		wallet.setMemberId(memberId);
-		wallet.setMemberName(account);
-		wallet.setBalance(0.0);
-		if (!memberDao.add(wallet)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+		//创建用户钱包
+		Map<String,Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, account);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), "用户创建钱包失败!");
 			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

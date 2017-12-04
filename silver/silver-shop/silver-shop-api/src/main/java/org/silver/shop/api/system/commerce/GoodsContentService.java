@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.GoodsContent;
+
 public interface GoodsContentService {
 
 	/**
@@ -46,27 +48,10 @@ public interface GoodsContentService {
 
 	/**
 	 * 商户修改商品基本信息
-	 * 
-	 * @param goodsId 
-	 * @param goodsName
-	 * @param goodsFirstType
-	 * @param goodsSecondType
-	 * @param goodsThirdType
-	 * @param imgList
-	 * @param goodsDetail
-	 * @param goodsBrand
-	 * @param goodsStyle
-	 * @param goodsUnit
-	 * @param goodsRegPrice
-	 * @param goodsOriginCountry
-	 * @param goodsBarCode
-	 * @param merchantName
+	 * 	
 	 * @return
 	 */
-	public boolean editGoodsBaseInfo(String goodsId, String goodsName, String goodsFirstType, String goodsSecondType,
-			String goodsThirdType, List<Object> imgList, String goodsDetail, String goodsBrand, String goodsStyle,
-			String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			String merchantName);
+	public Map<String, Object> editGoodsBaseInfo(Map<String,Object> datasMap,List<Object> imgList,String merchantName,String merchantId);
 
 	/**
 	 * 删除商品基本信息

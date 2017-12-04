@@ -34,8 +34,8 @@
 		<property name="hibernate.c3p0.idle_test_period">100</property>
 		<property name="hibernate.c3p0.validate">true</property>
 		<property name="hibernate.show_sql">false</property>
-		<property name="hibernate.format_sql">false</property> 
-		
+		<property name="hibernate.format_sql">false</property>
+
 		<property name="hibernate.hbm2ddl.auto">update</property>
 		<!-- <property name="hibernate.c3p0.testConnectionOnCheckout">true</property> -->
 
@@ -85,6 +85,8 @@
 			resource="org/silver/shop/model/system/commerce/ShopCarContent.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml" />
+			<mapping
+			resource="org/silver/shop/model/system/tenant/MerchantWalletContent.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

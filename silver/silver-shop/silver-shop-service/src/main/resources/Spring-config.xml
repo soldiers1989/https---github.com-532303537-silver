@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
                         http://www.springframework.org/schema/beans/spring-beans-4.2.xsd  
                         http://www.springframework.org/schema/context
-                        http://www.springframework.org/schema/context/spring-context-4.2.xsd">
-    <!-- 引入属性配置文件 -->
-	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+                        http://www.springframework.org/schema/context/spring-context-4.2.xsd
+                        http://www.springframework.org/schema/aop  
+          	 			http://www.springframework.org/schema/aop/spring-aop-4.2.xsd ">
+	<!-- 引入属性配置文件 -->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="locations">
 			<list>
 				<value>classpath:config/mq.properties</value>
-				
 				<value>classpath:config/redis.properties</value>
 				<value>classpath:config/dubbo.properties</value>
 			</list>
@@ -21,17 +24,27 @@
 			</props>
 		</property>
 	</bean>
-	<bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp" lazy-init="false" destroy-method="close" />
+	<bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp"
+		lazy-init="false" destroy-method="close" />
+	<bean id="logInterceptor" class="org.silver.shop.log.LogInterceptor" />
 	<!-- 扫描注解 -->
-	<context:component-scan base-package="org.silver.">
-		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	<context:component-scan base-package="org.silver.shop">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
+<!-- 	<aop:config>
+		<aop:pointcut expression="execution(public * org.silver.shop.impl.system.tenant..*.walletRecharge(..))"
+			id="servicePointcut" />
+		<aop:aspect id="logAspect" ref="logInterceptor">
+			<aop:before method="before" pointcut-ref="servicePointcut" />
+		</aop:aspect>
+	</aop:config> -->
 	<!-- 引入SPRING配置文件 -->
-	<import resource="spring/mq.xml"/> 
+	<import resource="spring/mq.xml" />
 	<import resource="spring/dubbo.xml" />
-	<import resource="spring/redis.xml"/>
+	<import resource="spring/redis.xml" />
 	<!-- <import resource="benx.xml"/> -->
-<!--<import resource="spring/dataSource.xml"/> -->
-<!--<import resource="spring/mybatis.xml"/> -->	
-<!-- 	<import resource="spring/*.xml"/> -->
+	<!--<import resource="spring/dataSource.xml"/> -->
+	<!--<import resource="spring/mybatis.xml"/> -->
+	<!-- <import resource="spring/*.xml"/> -->
 </beans>

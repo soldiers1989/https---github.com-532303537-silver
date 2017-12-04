@@ -87,7 +87,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
 			// 根据商品名,扫描商品备案信息表
-			List<Object> goodsRecordList = goodsRecordDao.findPropertyDesc(GoodsRecordDetail.class, params, descParam,
+			List<Object> goodsRecordList = goodsRecordDao.findByPropertyDesc(GoodsRecordDetail.class, params, descParam,
 					1, 1);
 			if (goodsRecordList != null && goodsRecordList.size() > 0) {// 取出商品备案信息最近一条记录
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
@@ -1355,7 +1355,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					merchantRecordInfo = (org.silver.shop.model.system.tenant.MerchantRecordInfo) reList.get(0);
 				} else {
 					Map<String, Object> errmap = new HashMap<>();
-					errmap.put(BaseCode.MSG.toString(), "第" + i + 1 + "个商品检查商品备案信息错误,服务器繁忙!");
+					errmap.put(BaseCode.MSG.toString(), "第" + (i + 1) + "个商品检查商品备案信息错误,服务器繁忙!");
 					errorList.add(errmap);
 				}
 				// 封装备案商品信息
@@ -1363,7 +1363,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				Map<String, Object> reGoodsMap = addRecordInfo(reGoodsInfoList);
 				if (!reGoodsMap.get(BaseCode.STATUS.toString()).equals("1")) {
 					Map<String, Object> errmap = new HashMap<>();
-					errmap.put(BaseCode.MSG.toString(), "第" + i + 1 + "个商品" + reGoodsMap.get(BaseCode.MSG.toString()));
+					errmap.put(BaseCode.MSG.toString(), "第" +(i + 1) + "个商品" + reGoodsMap.get(BaseCode.MSG.toString()));
 					errorList.add(errmap);
 					continue;
 				}
@@ -1371,11 +1371,18 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				// 发起商品备案
 				Map<String, Object> recordMap = sendRecord(eport, merchantRecordInfo, tok, datas, reGoodsSerialNo,
 						ciqOrgCode, customsCode);
+				if (!"1".equals(recordMap.get(BaseCode.STATUS.toString()) + "")) {
+					Map<String, Object> errmap = new HashMap<>();
+					errmap.put(BaseCode.MSG.toString(), "第" + (i + 1) + "个商品" + recordMap.get(BaseCode.MSG.toString()));
+					errorList.add(errmap);
+					continue;
+				}
+				
 				// 服务器接收信息后更新商品备案信息
 				Map<String, Object> reUpdateMap = updateGoodsRecordInfo(recordMap, merchantId, reGoodsSerialNo);
 				if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()) + "")) {
 					Map<String, Object> errmap = new HashMap<>();
-					errmap.put(BaseCode.MSG.toString(), "第" + i + 1 + "个商品" + reUpdateMap.get(BaseCode.MSG.toString()));
+					errmap.put(BaseCode.MSG.toString(), "第" + (i + 1) + "个商品" + reUpdateMap.get(BaseCode.MSG.toString()));
 					errorList.add(errmap);
 					continue;
 				}

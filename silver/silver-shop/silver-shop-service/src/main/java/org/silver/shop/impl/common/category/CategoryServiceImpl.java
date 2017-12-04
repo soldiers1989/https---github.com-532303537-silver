@@ -111,6 +111,7 @@ public class CategoryServiceImpl implements CategoryService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
 			return statusMap;
 		}
+		// type 类型:1-第一商品类型,2-第二商品类型,3-第三商品类型
 		if (type == 1 || type == 2 || type == 3) {
 			switch (type) {
 			case 1:
@@ -143,17 +144,7 @@ public class CategoryServiceImpl implements CategoryService {
 			default:
 				break;
 			}
-			Map<String, Object> datasMap = findGoodsType();
-			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-			if ("1".equals(status)) {
-				datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
-				// 将已查询出来的商品类型存入redis,有效期为1小时
-				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
-			}
-			System.out.println("-重新放入缓存-------------------");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
+			return refreshCache();
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
@@ -188,7 +179,7 @@ public class CategoryServiceImpl implements CategoryService {
 			tariff = Double.parseDouble(paramMap.get("tariff") + "");
 		} catch (Exception e) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), "税费输入错误,请重试!");
 			return statusMap;
 		}
 		String goodsThirdTypeName = paramMap.get("goodsThirdTypeName") + "";
@@ -314,21 +305,11 @@ public class CategoryServiceImpl implements CategoryService {
 				break;
 			}
 		}
-		Map<String, Object> datasMap = findGoodsType();
-		String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-		if ("1".equals(status)) {
-			datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
-			// 将已查询出来的商品类型存入redis,有效期为1小时
-			JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
-		}
-		System.out.println("-重新放入缓存-------------------");
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
+		
 		return statusMap;
 	}
 
-	//删除第三类型
+	// 删除第三类型
 	private Map<String, Object> deleteThirdCategory(String value, List<Map<String, Object>> errorList) {
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -480,78 +461,258 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public Map<String, Object> editGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap) {
-		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
-		Iterator<String> isKey = paramMap.keySet().iterator();
 		List<Map<String, Object>> errorList = new ArrayList<>();
-		while (isKey.hasNext()) {
-			String key = isKey.next();
-			String value = paramMap.get(key) + "";
-			switch (key) {
-			case "firstTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					Map<String, Object> reAllCategoryMap = editFirstCategory(value, errorList);
-					if (!"1".equals(reAllCategoryMap.get(BaseCode.STATUS.toString()))) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-						return statusMap;
-					}
-				}
-				break;
-			case "secondTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					Map<String, Object> reSecondCategoryMap = deleteSecondCategory(value, errorList);
-					if (!"1".equals(reSecondCategoryMap.get(BaseCode.STATUS.toString()))) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-						return statusMap;
-					}
-				}
-				break;
-			case "thirdTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					Map<String, Object> reThirdCategoryMap = deleteThirdCategory(value, errorList);
-					if (!"1".equals(reThirdCategoryMap.get(BaseCode.STATUS.toString()))) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-						return statusMap;
-					}
-				}
-				break;
-			default:
-				break;
+		String type = paramMap.get("type") + "";
+		switch (type) {
+		case "1":
+			Map<String, Object> reAllCategoryMap = editFirstCategory(paramMap, errorList, managerId, managerName);
+			if (!"1".equals(reAllCategoryMap.get(BaseCode.STATUS.toString()))) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
 			}
+			break;
+		case "2":
+			Map<String, Object> reSecondCategoryMap = editSecondCategory(paramMap, errorList, managerId, managerName);
+			if (!"1".equals(reSecondCategoryMap.get(BaseCode.STATUS.toString()))) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}
+			break;
+		case "3":
+			Map<String, Object> reThirdCategoryMap = editThirdCategory(paramMap, errorList, managerId, managerName);
+			if (!"1".equals(reThirdCategoryMap.get(BaseCode.STATUS.toString()))) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			}
+			break;
+		default:
+			break;
 		}
+
 		return null;
 	}
 
 	/**
-	 * 修改商品第一类型
-	 * @param value 
+	 * 修改第三类型名称
+	 * @param paramMap
 	 * @param errorList
+	 * @param managerId
+	 * @param managerName
 	 * @return
 	 */
-	private Map<String, Object> editFirstCategory(String value, List<Map<String, Object>> errorList) {
+	private Map<String, Object> editThirdCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
+			String managerId, String managerName) {
+		Date date = new Date();
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
-		List<Object> goodsFirstList= categoryDao.findByProperty(GoodsFirstType.class, params, 0, 0);
-		params.put("spareGoodsFirstTypeId", value);
-		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		long goodsThirdTypeId = Long.parseLong(paramMap.get("goodsThirdTypeId") + "");
+		// 根据Id查询第一商品类型
+		params.put("id", goodsThirdTypeId);
+		List<Object> goodsThirdList = categoryDao.findByProperty(GoodsThirdType.class, params, 1, 1);
 		params.clear();
-		params.put("goodsFirstTypeId", value);
+		// 根据Id查询商品基本信息表中是否有商品第一类型Id存在
+		params.put("goodsThirdTypeId", goodsThirdTypeId);
 		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
-		if (reGoodsRecordDetailList == null || reGoodsContentList == null) {
+		params.clear();
+		// 根据Id查询商品备案信息表中管理的商品第一类型Id
+		params.put("spareGoodsFirstTypeId", goodsThirdTypeId);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		if (reGoodsRecordDetailList == null || reGoodsContentList == null || goodsThirdList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (!goodsFirstList.isEmpty()) {
-			GoodsFirstType goodsFirstType= (GoodsFirstType) goodsFirstList.get(0);
-			
+		} else if (!goodsThirdList.isEmpty()) {
+			String goodsThirdTypeName = paramMap.get("goodsThirdTypeName") + "";
+			GoodsThirdType goodsThirdType = (GoodsThirdType) goodsThirdList.get(0);
+			goodsThirdType.setGoodsThirdTypeName(goodsThirdTypeName);
+			goodsThirdType.setUpdateBy(managerName);
+			goodsThirdType.setUpdateDate(date);
+			if (!categoryDao.update(goodsThirdType)) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "修改商品第三类型错误,请重试！");
+				return statusMap;
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsContent goodsBaseInfo = (GoodsContent) reGoodsContentList.get(i);
+				goodsBaseInfo.setGoodsThirdTypeName(goodsThirdTypeName);
+				if (!categoryDao.update(goodsBaseInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第三类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsContentList.get(i);
+				goodsRecordInfo.setSpareGoodsThirdTypeName(goodsThirdTypeName);
+				if (!categoryDao.update(goodsRecordInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第三类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
-		return null;
+	}
+
+	/**
+	 * 修改第二类型商品
+	 * @param paramMap
+	 * @param errorList
+	 * @param managerId
+	 * @param managerName
+	 * @return
+	 */
+	private Map<String, Object> editSecondCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
+			String managerId, String managerName) {
+		Date date = new Date();
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		long goodsSecondTypeId = Long.parseLong(paramMap.get("goodsSecondTypeId") + "");
+		// 根据Id查询第一商品类型
+		params.put("id", goodsSecondTypeId);
+		List<Object> goodsSecondList = categoryDao.findByProperty(GoodsSecondType.class, params, 1, 1);
+		params.clear();
+		// 根据Id查询商品基本信息表中是否有商品第一类型Id存在
+		params.put("goodsSecondTypeId", goodsSecondTypeId);
+		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
+		params.clear();
+		// 根据Id查询商品备案信息表中管理的商品第一类型Id
+		params.put("spareGoodsFirstTypeId", goodsSecondTypeId);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		if (reGoodsRecordDetailList == null || reGoodsContentList == null || goodsSecondList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!goodsSecondList.isEmpty()) {
+			String goodsSecondTypeName = paramMap.get("goodsSecondTypeName") + "";
+			GoodsSecondType goodsSecondType = (GoodsSecondType) goodsSecondList.get(0);
+			goodsSecondType.setGoodsSecondTypeName(goodsSecondTypeName);
+			goodsSecondType.setUpdateBy(managerName);
+			goodsSecondType.setUpdateDate(date);
+			if (!categoryDao.update(goodsSecondType)) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型错误,请重试！");
+				return statusMap;
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsContent goodsBaseInfo = (GoodsContent) reGoodsContentList.get(i);
+				goodsBaseInfo.setGoodsSecondTypeName(goodsSecondTypeName);
+				if (!categoryDao.update(goodsBaseInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsContentList.get(i);
+				goodsRecordInfo.setSpareGoodsSecondTypeName(goodsSecondTypeName);
+				if (!categoryDao.update(goodsRecordInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	/**
+	 * 修改商品第一类型
+	 * 
+	 * @param paramMap
+	 * @param errorList
+	 * @return
+	 */
+	private Map<String, Object> editFirstCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
+			String managerId, String managerName) {
+		Date date = new Date();
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
+		long goodsFirstTypeId = Long.parseLong(paramMap.get("goodsFirstTypeId") + "");
+		// 根据Id查询第一商品类型
+		params.put("id", goodsFirstTypeId);
+		List<Object> goodsFirstList = categoryDao.findByProperty(GoodsFirstType.class, params, 1, 1);
+		params.clear();
+		// 根据Id查询商品基本信息表中是否有商品第一类型Id存在
+		params.put("goodsFirstTypeId", goodsFirstTypeId);
+		List<Object> reGoodsContentList = categoryDao.findByProperty(GoodsContent.class, params, 0, 0);
+		params.clear();
+		// 根据Id查询商品备案信息表中管理的商品第一类型Id
+		params.put("spareGoodsFirstTypeId", goodsFirstTypeId);
+		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		if (reGoodsRecordDetailList == null || reGoodsContentList == null || goodsFirstList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!goodsFirstList.isEmpty()) {
+			String goodsFirstTypeName = paramMap.get("goodsFirstTypeName") + "";
+			GoodsFirstType goodsFirstType = (GoodsFirstType) goodsFirstList.get(0);
+			goodsFirstType.setFirstTypeName(goodsFirstTypeName);
+			goodsFirstType.setUpdateBy(managerName);
+			goodsFirstType.setUpdateDate(date);
+			if (!categoryDao.update(goodsFirstType)) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "修改商品第一类型错误,请重试！");
+				return statusMap;
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsContent goodsBaseInfo = (GoodsContent) reGoodsContentList.get(i);
+				goodsBaseInfo.setGoodsFirstTypeName(goodsFirstTypeName);
+				if (!categoryDao.update(goodsBaseInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第一类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			for (int i = 0; i < reGoodsContentList.size(); i++) {
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsContentList.get(i);
+				goodsRecordInfo.setSpareGoodsFirstTypeName(goodsFirstTypeName);
+				if (!categoryDao.update(goodsRecordInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改商品第一类型错误,请重试！");
+					return statusMap;
+				}
+			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+	
+	/**
+	 * 查询最新的商品类型,重新放入至缓存中
+	 * @return
+	 */
+	private final Map<String,Object> refreshCache(){
+		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> datasMap = findGoodsType();
+		String status = datasMap.get(BaseCode.STATUS.toString()) + "";
+		if ("1".equals(status)) {
+			datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
+			// 将已查询出来的商品类型存入redis,有效期为1小时
+			JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
+		}
+		System.out.println("-重新放入缓存-------------------");
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
 	}
 }

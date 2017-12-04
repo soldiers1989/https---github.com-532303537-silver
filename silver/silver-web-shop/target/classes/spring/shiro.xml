@@ -80,6 +80,7 @@
 				/merchant/*=anon
 				/stock/*=anon
 				/goodsRecord/*=anon
+				/merchantWallet/*=anon
 				/category/*=anon
 				/port/*=anon
 				/customsPort/*=anon

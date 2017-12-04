@@ -59,6 +59,28 @@ public class SerialNoUtils {
 		return topStr + year + strCount + ramCount;
 	}
 
+	/**
+	 * 生成流水号(不要时间戳) 流水号为:自编抬头+(当前)年+五位增长数(当前年份下ID总数+1)+4位随机数
+	 * 格式：自编抬头_年份_五位增长数_4位随机数
+	 * @param topStr
+	 *            自编抬头
+	 * @param year
+	 *            年份
+	 * @param serialNoCount
+	 *            流水号数目
+	 * @return String
+	 */
+	public static final String getSerialNotTimestamp2(String topStr, int year, long serialNoCount) {
+		long count = serialNoCount + 1;
+		String strCount = String.valueOf(count);
+		while (strCount.length() < 5) {
+			strCount = "0" + strCount;
+		}
+		// 随机4位数
+		int ramCount = RandomUtils.getRandom(4);
+		return topStr +"_"+year+"_" + strCount + ramCount;
+	}
+	
 	public static void main(String[] args) {
 		String s = getSerialNo("tes_", 2017, 100000);
 		String s2 = getSerialNotTimestamp("tes_", 2017, 100000);

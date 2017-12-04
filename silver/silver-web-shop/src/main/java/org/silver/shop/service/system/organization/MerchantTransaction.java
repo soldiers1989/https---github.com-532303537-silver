@@ -41,7 +41,7 @@ public class MerchantTransaction {
 
 	// 商戶注册
 	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
-		String merchantIdCardName, String recordInfoPack, String type) {
+			String merchantIdCardName, String recordInfoPack, String type) {
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
 		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
@@ -49,7 +49,8 @@ public class MerchantTransaction {
 			// 获取返回来的商户ID
 			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 			// 商户注册
-			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,merchantIdCardName, recordInfoPack, type);
+			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
+					merchantIdCardName, recordInfoPack, type);
 		}
 		return reIdMap;
 	}
@@ -58,28 +59,22 @@ public class MerchantTransaction {
 	public Map<String, Object> merchantLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
-		List<Object> reList =merchantService.findMerchantBy(account);
+		List<Object> reList = merchantService.findMerchantBy(account);
 		if (reList != null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
-			//商户状态：1-启用，2-禁用，3-审核
+			// 商户状态：1-启用，2-禁用，3-审核
 			String status = merchant.getMerchantStatus();
 			String name = merchant.getMerchantName();
 			String loginpas = merchant.getLoginPassword();
 			String md5Pas = md5.getMD5ofStr(loginPassword);
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
-				// 判断帐号是否锁定  
+				// 判断帐号是否锁定
 				if ("2".equals(status)) {
-					// 抛出 帐号锁定异常  
-					throw new LockedAccountException();  
+					// 抛出 帐号锁定异常
+					throw new LockedAccountException();
 				}
-				Subject currentUser = SecurityUtils.getSubject();
-				// 获取商户登录时,shiro存入在session中的数据
-				Merchant merchantInfo = (Merchant) currentUser.getSession()
-						.getAttribute(LoginType.MERCHANTINFO.toString());
-				if (merchantInfo == null) {
-					WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reList.get(0));
-				}
+				WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reList.get(0));
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
 				return datasMap;

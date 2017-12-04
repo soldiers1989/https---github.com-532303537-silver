@@ -15,7 +15,9 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.ConvertUtils;
 import org.silver.util.FileUpLoadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -81,12 +83,13 @@ public class GoodsContentTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		return goodsContentService.findAllGoodsInfo( merchantName, 	page, size, merchantId);
+		return goodsContentService.findAllGoodsInfo(merchantName, page, size, merchantId);
 	}
 
 	// 商户修改商品信息
-	public boolean editMerchantGoodsBaseInfo(HttpServletRequest req) {
-		boolean flag = false;
+	public Map<String, Object> editMerchantGoodsBaseInfo(HttpServletRequest req) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -95,26 +98,19 @@ public class GoodsContentTransaction {
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req,
 				"/opt/www/img/merchant/" + merchantId + "/goods/", ".jpg", false, 800, 800, null);
 		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if (status.equals("1")) {
-			String goodsId = req.getParameter("goodsId");
-			String goodsName = req.getParameter("goodsName");
-			String goodsFirstType = req.getParameter("goodsFirstType");
-			String goodsSecondType = req.getParameter("goodsSecondType");
-			String goodsThirdType = req.getParameter("goodsThirdType");
+		if ("1".equals(status)) {
 			List<Object> imgList = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-			String goodsDetail = req.getParameter("goodsDetail");
-			String goodsBrand = req.getParameter("goodsBrand");
-			String goodsStyle = req.getParameter("goodsStyle");
-			String goodsUnit = req.getParameter("goodsUnit");
-			String goodsRegPrice = req.getParameter("goodsRegPrice");
-			String goodsOriginCountry = req.getParameter("goodsOriginCountry");
-			String goodsBarCode = req.getParameter("goodsBarCode");
-
-			flag = goodsContentService.editGoodsBaseInfo(goodsId, goodsName, goodsFirstType, goodsSecondType,
-					goodsThirdType, imgList, goodsDetail, goodsBrand, goodsStyle, goodsUnit, goodsRegPrice,
-					goodsOriginCountry, goodsBarCode, merchantName);
+			Enumeration<String> iskey = req.getParameterNames();
+			while (iskey.hasMoreElements()) {
+				String key = iskey.nextElement();
+				String value = req.getParameter(key);
+				datasMap.put(key, value);
+			}
+			return goodsContentService.editGoodsBaseInfo(datasMap, imgList, merchantName, merchantId);
 		}
-		return flag;
+		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+		statusMap.put(BaseCode.MSG.getBaseCode(), "上传图片失败,请重试！");
+		return statusMap;
 	}
 
 	// 删除商品基本信息
@@ -151,13 +147,13 @@ public class GoodsContentTransaction {
 		return goodsContentService.getCategoryGoods(firstType, secndType, thirdType, page, size);
 	}
 
-	//商城根据商品名搜索商品
+	// 商城根据商品名搜索商品
 	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
 		return goodsContentService.searchGoodsInfo(goodsName, page, size);
 	}
 
 	// 根据指定信息搜索商品信息
-	public Map<String, Object> searchMerchantGoodsDetailInfo(HttpServletRequest req,int page,int size) {
+	public Map<String, Object> searchMerchantGoodsDetailInfo(HttpServletRequest req, int page, int size) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -170,17 +166,17 @@ public class GoodsContentTransaction {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		return goodsContentService.searchMerchantGoodsDetailInfo(merchantId, merchantName, datasMap,page,size);
+		return goodsContentService.searchMerchantGoodsDetailInfo(merchantId, merchantName, datasMap, page, size);
 	}
 
-	//商户查询商品基本信息详情
+	// 商户查询商品基本信息详情
 	public Map<String, Object> merchantGetGoodsBaseInfo(String goodsId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return goodsContentService.merchantGetGoodsBaseInfo(merchantId,merchantName,goodsId);
+		return goodsContentService.merchantGetGoodsBaseInfo(merchantId, merchantName, goodsId);
 	}
 
 }

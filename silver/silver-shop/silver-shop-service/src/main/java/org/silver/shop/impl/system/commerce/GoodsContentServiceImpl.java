@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -15,17 +14,18 @@ import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
-import org.silver.util.DateUtil;
+import org.silver.util.ConvertUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.StringEmptyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alibaba.druid.support.spring.stat.annotation.Stat;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
+
+import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {
@@ -35,6 +35,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Autowired
 	private StockServiceImpl stockServiceImpl;
+
 	@Override
 	public Map<String, Object> createGoodsId() {
 		Map<String, Object> datasMap = new HashMap<>();
@@ -113,10 +114,10 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> findAllGoodsInfo(String merchantName,  int page, int size, String merchantId) {
+	public Map<String, Object> findAllGoodsInfo(String merchantName, int page, int size, String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		
+
 		// key=数据库列名,value=查询参数
 		params.put("goodsMerchantId", merchantId);
 		// 删除标识:0-未删除,1-已删除
@@ -137,47 +138,43 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public boolean editGoodsBaseInfo(String goodsId, String goodsName, String goodsFirstType, String goodsSecondType,
-			String goodsThirdType, List<Object> imgList, String goodsDetail, String goodsBrand, String goodsStyle,
-			String goodsUnit, String goodsRegPrice, String goodsOriginCountry, String goodsBarCode,
-			String merchantName) {
+	public Map<String, Object> editGoodsBaseInfo(Map<String, Object> datasMap, List<Object> imgList,
+			String merchantName, String merchantId) {
+		Map<String, Object> statusMap = new HashMap<>();
 		Date date = new Date();
-		boolean flag = false;
 		String goodsImage = "";
 		// 拼接多张图片字符串
 		for (int i = 0; i < imgList.size(); i++) {
 			String imgStr = imgList.get(i) + "";
-			if (imgStr != null && !"".equals(imgStr.trim())) {
-				goodsImage = goodsImage + imgStr + ";";
-			} else {
-				return false;
-			}
+			goodsImage += imgStr + ";";
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("goodsId", goodsId);
+		params.put("goodsId", datasMap.get("goodsId") + "");
 		params.put("goodsMerchantName", merchantName);
 		// 根据商品ID查询商品基本信息
-		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 0, 0);
+		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, params, 1, 1);
 		if (reList != null && !reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
-			goodsInfo.setGoodsName(goodsName);
-			goodsInfo.setGoodsImage(goodsImage);
-			goodsInfo.setGoodsFirstTypeId(goodsFirstType);
-			goodsInfo.setGoodsSecondTypeId(goodsSecondType);
-			goodsInfo.setGoodsThirdTypeId(goodsThirdType);
-			goodsInfo.setGoodsDetail(goodsDetail);
-			goodsInfo.setGoodsBrand(goodsBrand);
-			goodsInfo.setGoodsStyle(goodsStyle);
-			goodsInfo.setGoodsUnit(goodsUnit);
-			goodsInfo.setGoodsRegPrice(Double.valueOf((goodsRegPrice)));
-			goodsInfo.setGoodsOriginCountry(goodsOriginCountry);
-			goodsInfo.setGoodsBarCode(goodsBarCode);
+			goodsInfo = (GoodsContent) ConvertUtils.mapChangeToEntity(goodsInfo, datasMap);
+			if(goodsImage !=null && !"".equals(goodsImage) && !"null".equals(goodsImage)){
+				goodsInfo.setGoodsImage(goodsImage);
+			}
 			goodsInfo.setUpdateDate(date);
 			goodsInfo.setUpdateBy(merchantName);
 			goodsInfo.setDeleteFlag(0);
-			flag = goodsContentDao.update(goodsInfo);
+			if (!goodsContentDao.update(goodsInfo)) {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), "更新商品基本信息失败,请重试!");
+				return statusMap;
+			}
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
 		}
-		return flag;
 	}
 
 	@Override
@@ -277,12 +274,12 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	@Override
 	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName,page, size);
+		Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, page, size);
 		if (t == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else  {
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), Transform.tableToJson(t));
@@ -326,21 +323,21 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> param = new HashMap<>();
 		param.put("goodsId", goodsId);
-		param.put("merchantId", merchantId);
+		param.put("goodsMerchantId", merchantId);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsContent.class, param, 1, 1);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());		
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		} else if (!reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), goodsInfo);	
+			statusMap.put(BaseCode.DATAS.toString(), goodsInfo);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());			
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
 	}

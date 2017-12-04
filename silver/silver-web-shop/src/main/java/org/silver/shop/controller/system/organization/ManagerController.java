@@ -43,7 +43,11 @@ public class ManagerController {
 	@ApiOperation(value = "管理员--登录")
 	public String login(@RequestParam("account") String account, @RequestParam("loginPassword") String loginPassword,
 			HttpServletRequest req, HttpServletResponse response) {
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
@@ -73,6 +77,7 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response) {
+		
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
