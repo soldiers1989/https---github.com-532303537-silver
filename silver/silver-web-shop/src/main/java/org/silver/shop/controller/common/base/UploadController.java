@@ -2,7 +2,6 @@ package org.silver.shop.controller.common.base;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.silver.shop.service.common.base.Uploader;
+import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -39,9 +39,13 @@ public class UploadController {
 	@RequestMapping(value = "/ueImg", method = RequestMethod.POST)
 	@ResponseBody
 	public void pushMsg2(HttpServletRequest req, HttpServletResponse resp) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Date date = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
-		String fileDate = sdf.format(date);
+		String fileDate =  DateUtil.formatDate(date, "yyyyMM");
 		String path = FILEPATH + "goodsContent/" + fileDate + "/";
 		try {
 			req.setCharacterEncoding("utf-8");

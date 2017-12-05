@@ -27,9 +27,10 @@ public interface ManagerService {
 
 	/**
 	 * 管理员查询所有商户信息
+	 * @param datasMap 
 	 * @return
 	 */
-	public Map<String, Object> findAllMerchantInfo();
+	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap);
 
 	/**
 	 * 管理查询商户详情
@@ -58,6 +59,28 @@ public interface ManagerService {
 	 */
 	public Map<String, Object> editMerchantStatus(String merchantId,String managerId, String managerName, int status);
 
-	
+	/**
+	 * 查询所有管理员信息
+	 * @return
+	 */
+	public Map<String, Object> findAllManagerInfo();
+
+	/**
+	 * 超级管理员重置运营人员密码
+	 * @param managerId
+	 * @param managerName
+	 * @return
+	 */
+	public Map<String, Object> resetManagerPassword(String managerId, String managerName);
+
+	/**
+	 * 管理员修改商户信息
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
+	 * @param arrStr 参数
+	 * @param imglist 
+	 * @return Map
+	 */
+	public Map<String, Object> editMerhcnatInfo(String managerId, String managerName, String[] arrStr, List<Object> imglist);
 
 }

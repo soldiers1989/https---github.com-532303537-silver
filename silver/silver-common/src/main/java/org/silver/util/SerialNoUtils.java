@@ -1,5 +1,7 @@
 package org.silver.util;
 
+import java.util.Date;
+
 /**
  * 商城流水号生成工具类
  */
@@ -79,6 +81,30 @@ public class SerialNoUtils {
 		// 随机4位数
 		int ramCount = RandomUtils.getRandom(4);
 		return topStr +"_"+year+"_" + strCount + ramCount;
+	}
+	
+	/**
+	 * 生成流水号 流水号为:自编抬头+(时间)年月+五位增长数(当前年份下ID总数+1)+4位随机数
+	 * 
+	 * @param topStr
+	 *            自编抬头
+	 * @param year
+	 *            年份
+	 * @param serialNoCount
+	 *            流水号数目
+	 * @return String
+	 */
+	public static final String getSerialNo(String topStr, long serialNoCount) {
+		Date date = new Date();
+		long count = serialNoCount + 1;
+		String strCount = String.valueOf(count);
+		while (strCount.length() < 5) {
+			strCount = "0" + strCount;
+		}		
+		// 默认随机数为4位
+		int ramCount = RandomUtils.getRandom(4);
+		String time = DateUtil.formatDate(date, "yyyyMM");
+		return topStr + time + strCount  + ramCount;
 	}
 	
 	public static void main(String[] args) {

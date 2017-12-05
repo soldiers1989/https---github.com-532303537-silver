@@ -27,6 +27,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	
 	@Override
 	public Map<String, Object> walletRecharge(String merchantId, String merchantName, Double money) {
+		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reMap = checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
@@ -37,12 +38,12 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 		double oldBalance = wallet.getBalance();
 		wallet.setBalance(oldBalance + money);
+		wallet.setUpdateDate(date);
 		if (!merchantWalletDao.update(wallet)) {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
 			statusMap.put(BaseCode.MSG.toString(), "充值失败,服务器繁忙!");
 			return statusMap;
 		}
-		
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;

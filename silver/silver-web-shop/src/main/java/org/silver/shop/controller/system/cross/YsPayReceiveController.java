@@ -33,13 +33,17 @@ public class YsPayReceiveController {
 		logger.error("--------支付回调信息------");
 		Map datasMap = new HashMap<>();
 		datasMap.put("notify_type", req.getParameter("notify_type") + "");
-		datasMap.put("notify_time", req.getParameter("notify_time") + "");
+		
+		datasMap.put("notify_time", req.getParameter("notify_time") + "");		
 		datasMap.put("out_trade_no", req.getParameter("out_trade_no") + "");
 		datasMap.put("total_amount", req.getParameter("total_amount") + "");
+		
 		datasMap.put("account_date", req.getParameter("account_date") + "");
 		datasMap.put("trade_status", req.getParameter("trade_status") + "");
 		datasMap.put("sign", req.getParameter("sign") + "");
+		
 		datasMap.put("trade_no", req.getParameter("trade_no") + "");
+		
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
 		Map<String, Object> statusMap=new HashMap<>(); 

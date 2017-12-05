@@ -31,7 +31,7 @@ public class CheckDatasUtil {
 					value = jsonObject.get(key) + "";
 						if (("null".equals(value) || "".equals(value.trim())) && noNullKeys.contains(key)) {
 							map.put("status", -1);
-							map.put("msg", "第" + (i+1) + "条数据 " + key + "不能为空");
+							map.put("msg", "第" + (i+1) + "条数据 " + key + " 不能为空");
 							return map;
 						}
 					noNullKeys.remove(key);

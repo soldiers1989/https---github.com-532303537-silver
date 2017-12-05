@@ -24,8 +24,6 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
-import net.sf.json.JSONObject;
-import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {

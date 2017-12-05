@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,9 @@ import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +61,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	
+
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -81,7 +84,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			List<Object> memberList = ysPayReceiveDao.findByProperty(Member.class, params, 1, 1);
 			if (memberList != null && memberList.size() > 0) {
 				memberInfo = (Member) memberList.get(0);
-			
+
 				// 保存支付单信息
 				Map<String, Object> rePaymentMap = addPaymentInfo(orderList, datasMap, memberInfo);
 				if (!"1".equals(rePaymentMap.get(BaseCode.STATUS.toString()))) {
@@ -187,7 +190,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		} else {
 			paymentInfo.setMemberId(orderInfo.getMemberId());
 			paymentInfo.setMemberName(orderInfo.getMemberName());
-			//支付金额
+			// 支付金额
 			double payAmount = Double.parseDouble(datasMap.get("total_amount") + "");
 			paymentInfo.setPayAmount(payAmount);
 			// 支付流水号
@@ -232,7 +235,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			}
 			MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 			double oldBalance = wallet.getBalance();
-			//将支付金额存入到商户钱包中
+			// 将支付金额存入到商户钱包中
 			wallet.setBalance(oldBalance + payAmount);
 			if (!ysPayReceiveDao.update(wallet)) {
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
@@ -887,5 +890,44 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> balancePayReceive(Map<String, Object> datasMap) {
+		Date date = new Date();
+		// 生成支付交易编号
+		Map<String, Object> rePayNoMap = createPayNo();
+		if (!"1".equals(rePayNoMap.get(BaseCode.STATUS.toString()))) {
+			return rePayNoMap;
+		}
+		String time = DateUtil.formatTime(date);
+		String entPayNo = rePayNoMap.get(BaseCode.DATAS.toString()) + "";
+		datasMap.put("trade_no", entPayNo);
+		datasMap.put("notify_time", time);
+		return ysPayReceive(datasMap);
+	}
+
+	/**
+	 * 生成交易编号
+	 * 
+	 * @return Map
+	 */
+	private Map<String, Object> createPayNo() {
+		Map<String, Object> statusMap = new HashMap<>();
+		Calendar cl = Calendar.getInstance();
+		int year = cl.get(Calendar.YEAR);
+		String property = "entPayNo";
+		String topStr = "PayNo_";
+		long orderIdCount = ysPayReceiveDao.findSerialNoCount(PaymentContent.class, property, year);
+		if (orderIdCount < 0) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else {
+			String serialNo = SerialNoUtils.getSerialNo(topStr, orderIdCount);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), serialNo);
+			return statusMap;
+		}
 	}
 }

@@ -12,7 +12,7 @@
             <column name="managerId" not-null="true" unique="true"/>
         </property>
         <property name="managerName" type="java.lang.String">
-            <column name="managerName" not-null="true"/>
+            <column name="managerName" not-null="true" unique="true"/>
         </property>
         <property name="managerMarks" type="int">
             <column name="managerMarks" not-null="true"/>

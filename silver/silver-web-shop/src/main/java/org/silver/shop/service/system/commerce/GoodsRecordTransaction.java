@@ -450,4 +450,5 @@ public class GoodsRecordTransaction {
 		}
 		return goodsRecordService.merchantEditGoodsRecordInfo(managerId, managerName, str);
 	}
+	
 }

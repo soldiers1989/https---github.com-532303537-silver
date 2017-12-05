@@ -395,6 +395,6 @@ public class MD5 {
 	}
 	public static void main(String argv[])
 	{
-		System.out.println(MD5.getMD5("4001882380".getBytes()));
+		System.out.println(MD5.getMD5("888888".getBytes()));
 	}
 }

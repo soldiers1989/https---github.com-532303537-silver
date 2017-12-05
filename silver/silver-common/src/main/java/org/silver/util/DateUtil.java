@@ -215,7 +215,7 @@ public final class DateUtil {
 	 *            日期类型对象
 	 * @param format
 	 *            需转换的格式
-	 * @return 日期格式字符串
+	 * @return String 日期格式字符串
 	 */
 	public static String formatDate(Date date, String format) {
 		if (date == null) {
@@ -230,7 +230,7 @@ public final class DateUtil {
 	 * 
 	 * @param date
 	 *            日期类型对象
-	 * @return 日期格式字符串
+	 * @return String 日期格式字符串
 	 */
 	public static String formatDate(Date date) {
 		if (date == null) {

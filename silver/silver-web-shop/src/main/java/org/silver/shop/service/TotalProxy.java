@@ -21,8 +21,12 @@ public class TotalProxy {
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 						System.out.println("开始事务2");
+						String methodName = method.getName();
 						// 执行目标对象方法
 						System.out.println(method.getName());
+						if("".equals(methodName)){
+							
+						}
 						Parameter[] p = method.getParameters();
 						
 						System.out.println(p[0].getType().getSimpleName());

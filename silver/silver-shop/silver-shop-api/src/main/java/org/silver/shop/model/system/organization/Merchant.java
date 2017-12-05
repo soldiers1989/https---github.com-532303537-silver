@@ -15,10 +15,10 @@ public class Merchant implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private String merchantAvatar;// 商户头像
-	private String merchantCusNo;// 商户编号
 	private String merchantName;// 商户名称
+	private String merchantCusNo;// 商户编号
 	private String loginPassword;// 商户登录密码
+	private String merchantAvatar;// 商户头像
 	private String merchantPhone;// 商户手机号码
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱

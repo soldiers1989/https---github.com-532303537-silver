@@ -1,15 +1,11 @@
 package org.silver.shop.controller.common.category;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.service.common.category.CategoryTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

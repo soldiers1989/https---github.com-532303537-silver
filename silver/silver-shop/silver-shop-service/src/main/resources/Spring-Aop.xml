@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+            http://www.springframework.org/schema/beans/spring-beans-2.0.xsd  
+         	http://www.springframework.org/schema/aop  
+            http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+
+
+	<bean id="LogInterceptor" class="org.silver.shop.log.LogInterceptor" />
+	<aop:config>
+		<aop:aspect ref="LogInterceptor">
+			<aop:pointcut id="logPointcut" expression="execution(*  org.silver.shop.service..*.*(..))" />
+			<aop:before method="methodAfter" pointcut-ref="logPointcut" />
+		<!-- 	<aop:after method="methodAfter" pointcut-ref="logPointcut" /> -->
+		</aop:aspect>
+	</aop:config> 
+	
+	
+	<!-- <bean id="ChooseDatasourceHandler" class="org.silver.shop.component.ChooseDatasourceHandler" />
+	
+	<aop:config>
+		<aop:aspect ref="ChooseDatasourceHandler">
+			<aop:pointcut id="logPointcut" expression="execution(* org.silver.shop.dao..*.*(..))" />
+			<aop:before method="methodBefore" pointcut-ref="logPointcut" />
+			<aop:after method="methodAfter" pointcut-ref="logPointcut" />
+			<aop:after-throwing method="methodException"
+				pointcut-ref="logPointcut" />
+			<aop:around method="methodRound" pointcut-ref="logPointcut" />
+		</aop:aspect>
+	</aop:config> -->
+</beans>

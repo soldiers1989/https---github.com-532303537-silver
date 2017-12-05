@@ -31,7 +31,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	
+
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberId, String memberTel) {
@@ -52,8 +52,8 @@ public class MemberServiceImpl implements MemberService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		//创建用户钱包
-		Map<String,Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, account);
+		// 创建用户钱包
+		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, account);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
 			statusMap.put(BaseCode.MSG.toString(), "用户创建钱包失败!");
@@ -171,20 +171,18 @@ public class MemberServiceImpl implements MemberService {
 	@Override
 	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
-		params.put("memberId", memberId);
-		params.put("memberName", memberName);
-		List<Object> reList = memberDao.findByProperty(MemberWalletContent.class, params, 0, 0);
-		if (reList != null && reList.size() > 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, memberName);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
 			return statusMap;
 		}
+		MemberWalletContent wallet = (MemberWalletContent) reMap.get(BaseCode.DATAS.toString());
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.DATAS.toString(), wallet);
+		return statusMap;
+
 	}
 
 	@Override

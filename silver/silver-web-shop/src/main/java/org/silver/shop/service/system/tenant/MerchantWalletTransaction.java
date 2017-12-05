@@ -18,14 +18,22 @@ public class MerchantWalletTransaction {
 	@Reference
 	private MerchantWalletService merchantWalletService;
 
+/*	static Object target = null;
+	static MerchantWalletService walletService = null;
+	static {
+		target = merchantWalletService;
+		walletService = (MerchantWalletService) new TotalProxy(target).getProxyInstance();
+	}*/
+
+	// 商户钱包充值
 	public Map<String, Object> merchantWalletRecharge(Double money) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		Object target = merchantWalletService;
-		MerchantWalletService walletService = (MerchantWalletService) new TotalProxy(target).getProxyInstance();
+		Object target =merchantWalletService;
+		MerchantWalletService walletService =(MerchantWalletService) new TotalProxy(target).getProxyInstance();
 		return walletService.walletRecharge(merchantId, merchantName, money);
 	}
 

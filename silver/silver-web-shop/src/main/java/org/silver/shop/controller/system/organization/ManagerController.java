@@ -51,7 +51,6 @@ public class ManagerController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
-			// currentUser.logout();
 			CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
 			customizedToken.setRememberMe(false);
 			try {
@@ -77,7 +76,6 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response) {
-		
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -125,9 +123,10 @@ public class ManagerController {
 
 	/**
 	 * 管理员查询所有商户信息
+	 * 
 	 * @param req
 	 * @param response
-	 * @return
+	 * @return String
 	 */
 	@RequestMapping(value = "/findAllMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -139,15 +138,17 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo();
+		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
 	 * 管理员查看商户详情
+	 * 
 	 * @param req
 	 * @param response
 	 * @param merchantId
+	 *            商户Id
 	 * @return
 	 */
 	@RequestMapping(value = "/findMerchantDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -174,11 +175,14 @@ public class ManagerController {
 
 	/**
 	 * 管理员修改密码
+	 * 
 	 * @param req
 	 * @param response
 	 * @param oldLoginPassword
+	 *            旧密码
 	 * @param newLoginPassword
-	 * @return
+	 *            新密码
+	 * @return String
 	 */
 	@RequestMapping(value = "/updateManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -205,11 +209,14 @@ public class ManagerController {
 
 	/**
 	 * 管理员修改商户状态
+	 * 
 	 * @param req
 	 * @param response
 	 * @param merchantId
+	 *            商户Id
 	 * @param status
-	 * @return
+	 *            商户状态：1-启用，2-禁用，3-审核
+	 * @return String
 	 */
 	@RequestMapping(value = "/editMerchantStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -233,5 +240,67 @@ public class ManagerController {
 		}
 	}
 
-	
+	@RequestMapping(value = "/findAllManagerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("超级管理员查询所有运营人员信息")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String findAllManagerInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = managerTransaction.findAllManagerInfo();
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/resetManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("超级管理员重置运营人员密码")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String resetManagerPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("managerId") String managerId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = managerTransaction.resetManagerPassword(managerId);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/managerAddMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员添加商户")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String managerAddMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = managerTransaction.managerAddMerchantInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/editMerhcnatInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员修改商户信息")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String editMerhcnatInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("length") int length) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (length > 0) {
+			statusMap = managerTransaction.editMerhcnatInfo(req,length);
+		}else{
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

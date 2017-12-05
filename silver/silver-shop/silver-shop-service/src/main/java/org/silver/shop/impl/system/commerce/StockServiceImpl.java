@@ -381,7 +381,7 @@ public class StockServiceImpl implements StockService {
 	 *            参数Map
 	 * @return Map
 	 */
-	protected final Map<String, Object> universalSearch(Map<String, Object> datasMap) {
+	public final Map<String, Object> universalSearch(Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -398,32 +398,32 @@ public class StockServiceImpl implements StockService {
 				break;
 			case "spareGoodsFirstTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "spareGoodsSecondTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "spareGoodsThirdTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "goodsFirstTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "goodsSecondTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "goodsThirdTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "startDate":
@@ -460,7 +460,7 @@ public class StockServiceImpl implements StockService {
 				break;
 			case "entOrderNo":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "sellFlag":
@@ -479,17 +479,17 @@ public class StockServiceImpl implements StockService {
 
 			case "customsPort":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value);
 				}
 				break;
 			case "customsCode":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value );
 				}
 				break;
 			case "ciqOrgCode":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value + "");
+					paramMap.put(key, value );
 				}
 				break;
 			case "warehouseCode":
@@ -499,6 +499,11 @@ public class StockServiceImpl implements StockService {
 					// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
 					String code = value.substring(two + 1);
 					paramMap.put(key, code);
+				}
+				break;
+			case "merchantName":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
 				}
 				break;
 			default:

@@ -1,9 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.io.File;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;

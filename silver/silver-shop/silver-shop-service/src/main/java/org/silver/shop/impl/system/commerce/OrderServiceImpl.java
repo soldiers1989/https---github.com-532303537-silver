@@ -13,11 +13,11 @@ import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.OrderService;
+import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.common.category.HsCode;
-import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
@@ -26,9 +26,9 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
-import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -44,6 +44,9 @@ public class OrderServiceImpl implements OrderService {
 	private StockServiceImpl stockServiceImpl;
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+
+	@Autowired
+	private YsPayReceiveService ysPayReceiveService;
 	
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
@@ -79,8 +82,8 @@ public class OrderServiceImpl implements OrderService {
 		}
 		String reEntOrderNo = reMap.get("entOrderNo") + "";
 		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice") + "");
-		// 更新订单状态与删除购物车商品信息
-		Map<String, Object> reStatusMap = updateOrderInfo(memberId, type, jsonList, totalPrice, reEntOrderNo,memberName);
+		// 订单结算
+		Map<String, Object> reStatusMap = liquidation(memberId, type, jsonList, totalPrice, reEntOrderNo, memberName);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
 			return reStatusMap;
 		}
@@ -89,7 +92,13 @@ public class OrderServiceImpl implements OrderService {
 		return reStatusMap;
 	}
 
-	// 创建订单ID
+	/**
+	 * 创建订单ID
+	 * 
+	 * @param type
+	 *            1-商城自用订单、2-用于发往支付与海关的总订单头
+	 * @return Map
+	 */
 	private final Map<String, Object> createOrderId(int type) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Calendar cl = Calendar.getInstance();
@@ -304,9 +313,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	// 支付完成后根据类型进行业务处理
-	private Map<String, Object> updateOrderInfo(String memberId, int type, List jsonList, double totalPrice,
-			String reEntOrderNo,String memberName) {
+	private Map<String, Object> liquidation(String memberId, int type, List jsonList, double totalPrice,
+			String reEntOrderNo, String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		if (type == 1) {// 1-余额支付,2-跳转至银盛
 			Map<String, Object> reWalletMap = merchantWalletServiceImpl.checkWallet(2, memberId, memberName);
 			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
@@ -327,8 +337,13 @@ public class OrderServiceImpl implements OrderService {
 				statusMap.put(BaseCode.MSG.toString(), "扣款失败,请重试！");
 				return statusMap;
 			}
-
-			return updateOrderInfo2(memberId, jsonList, reEntOrderNo);
+			datasMap.put("out_trade_no",reEntOrderNo);
+			datasMap.put("total_amount", totalPrice);
+			Map<String,Object> rePayMap = ysPayReceiveService.balancePayReceive(datasMap);
+			if (!"1".equals(rePayMap.get(BaseCode.STATUS.toString()))) {
+				return rePayMap;
+			}
+			return updateOrderStatusAndShopCar(memberId, jsonList, reEntOrderNo);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web-shop/yspay/dopay");
@@ -417,11 +432,12 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	// 更新订单状态及删除用户购物车数据
-	private Map<String, Object> updateOrderInfo2(String memberId, List<Object> jsonList, String reEntOrderNo) {
+	private Map<String, Object> updateOrderStatusAndShopCar(String memberId, List<Object> jsonList,
+			String reEntOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		// 更新订单状态
-		if (reEntOrderNo != null && !"null".equals(reEntOrderNo)) {
+		if (StringEmptyUtils.isNotEmpty(reEntOrderNo)) {
 			params.clear();
 			params.put("memberId", memberId);
 			params.put("entOrderNo", reEntOrderNo);
@@ -452,7 +468,7 @@ public class OrderServiceImpl implements OrderService {
 			ShopCarContent cart = (ShopCarContent) cartList.get(0);
 			if (!orderDao.delete(cart)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "更新购物车状态失败,请重试！");
+				statusMap.put(BaseCode.MSG.toString(), "删除已支付的商品失败！");
 				return statusMap;
 			}
 		}
