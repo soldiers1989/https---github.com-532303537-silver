@@ -16,8 +16,8 @@ public interface MerchantService {
 	 * 
 	 * @return Map
 	 */
-	public Map<String, Object> merchantRegister(String merchantId, String account, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type);
+	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
+			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy);
 
 	/**
 	 * 检查商户名是否重复

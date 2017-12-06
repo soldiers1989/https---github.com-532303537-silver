@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -13,6 +14,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
+import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.MD5;
@@ -25,7 +27,8 @@ public class ManagerTransaction {
 
 	@Autowired
 	private ManagerService managerService;
-
+	@Autowired
+	private MerchantService merchantService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
@@ -99,16 +102,6 @@ public class ManagerTransaction {
 		return managerService.updateManagerPassword(managerId, managerName, oldLoginPassword, newLoginPassword);
 	}
 
-	// 修改商户状态
-	public Map<String, Object> editMerchantStatus(String merchantId, int status) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		String managerId = managerInfo.getManagerId();
-		String managerName = managerInfo.getManagerName();
-		return managerService.editMerchantStatus(merchantId, managerId, managerName, status);
-	}
-
 	// 查询所有管理员信息
 	public Map<String, Object> findAllManagerInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -119,28 +112,55 @@ public class ManagerTransaction {
 		return managerService.findAllManagerInfo();
 	}
 
-	// 超级管理员充值运营人员密码
+	// 超级管理员重置运营人员密码
 	public Map<String, Object> resetManagerPassword(String managerId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		// String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.resetManagerPassword(managerId, managerName);
 	}
 
 	// 管理员添加商户
-	public Map<String, Object> managerAddMerchantInfo(HttpServletRequest req) {
+	public Map<String, Object> managerAddMerchantInfo(String merchantName, String loginPassword, String merchantIdCard,
+			String merchantIdCardName, String recordInfoPack, String type,int length,HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		// String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return null;
+		// 获取商户ID
+		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
+		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
+		if (!"1".equals(status)) {
+			return reIdMap;
+		}
+		String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
+		//添加商户
+		Map<String,Object> registerMap=	merchantService.merchantRegister(merchantId, merchantName, loginPassword, merchantIdCard,
+				merchantIdCardName, recordInfoPack, type, managerName);
+		if(!"1".equals(registerMap.get(BaseCode.STATUS.toString()))){
+			return registerMap;
+		}
+		String path = "/opt/www/img/" + merchantName + "/";
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
+		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()))) {
+			return imgMap;
+		}
+		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
+		//前端有上传图片
+		if(!imglist.isEmpty()){
+			// 创建一个与前台图片数量一样长度的数组
+			int[] arrayInt = new int[length];
+			for (int i = 0; i < length; i++) {
+				arrayInt[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
+			}
+			return managerService.addMerchantBusinessInfo(merchantId,arrayInt,imglist);
+		}
+		return registerMap;
 	}
 
+	// 修改商户信息
 	public Map<String, Object> editMerhcnatInfo(HttpServletRequest req, int length) {
-		Map<String,Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
@@ -151,27 +171,28 @@ public class ManagerTransaction {
 			String value = req.getParameter(Integer.toString(i));
 			arrStr[i] = value.trim();
 		}
-		//获取商户名称
-		String merchantName = arrStr[1];
-		String path = "/opt/www/img/merchant/" + merchantName + "/goods/";
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
-		if(!"1".equals(imgMap.get(BaseCode.STATUS.toString()))){
-			return imgMap;
-		}
-		// 获取文件上传后的文件名称
-		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-		
-		
-		
-		return managerService.editMerhcnatInfo(managerId,managerName,arrStr,imglist);
+		return managerService.editMerhcnatInfo(managerId, managerName, arrStr);
 	}
 
-	public static void main(String[] args) {
-		String[] arrStr =  {"sss","aaa"};
-		for(String str : arrStr){
-			if(str.contains("sss")){
-				System.out.println(str+"-0------<<<<<<ss's");
-			}
+	// 修改商户业务(图片)信息
+	public Map<String, Object> editMerhcnatBusinessInfo(HttpServletRequest req, int length, String merchantId,
+			String merchantName) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		String path = "/opt/www/img/" + merchantName + "/";
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
+		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()))) {
+			return imgMap;
 		}
+		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
+		// 创建一个与前台图片数量一样长度的数组
+		int[] arrayInt = new int[length];
+		for (int i = 0; i < length; i++) {
+			arrayInt[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
+		}
+		return managerService.editMerhcnatBusinessInfo(managerId, managerName, imglist, arrayInt, merchantId);
 	}
 }

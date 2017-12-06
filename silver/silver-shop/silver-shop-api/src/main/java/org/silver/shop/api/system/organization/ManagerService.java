@@ -50,16 +50,6 @@ public interface ManagerService {
 	public Map<String, Object> updateManagerPassword(String managerId, String managerName, String oldLoginPassword,String newLoginPassword);
 
 	/**
-	 * 修改商户状态
-	 * @params merchantId 商户Id
-	 * @param managerId 管理员Id
-	 * @param managerName 管理员名称
-	 * @param status  商户状态：1-启用，2-禁用，3-审核
-	 * @return Map
-	 */
-	public Map<String, Object> editMerchantStatus(String merchantId,String managerId, String managerName, int status);
-
-	/**
 	 * 查询所有管理员信息
 	 * @return
 	 */
@@ -78,9 +68,29 @@ public interface ManagerService {
 	 * @param managerId 管理员Id
 	 * @param managerName 管理员名称
 	 * @param arrStr 参数
-	 * @param imglist 
 	 * @return Map
 	 */
-	public Map<String, Object> editMerhcnatInfo(String managerId, String managerName, String[] arrStr, List<Object> imglist);
+	public Map<String, Object> editMerhcnatInfo(String managerId, String managerName, String[] arrStr);
 
+	/**
+	 * 管理员修改商户业务信息
+	 * @param managerId
+	 * @param managerName
+	 * @param imglist
+	 * @param arrayInt
+	 * @return
+	 */
+	public Map<String, Object> editMerhcnatBusinessInfo(String managerId, String managerName, List<Object> imglist,
+			int[] arrayInt,String merchantId);
+
+	/**
+	 * 添加商户业务信息
+	 * @param merchantId 
+	 * @param arrayInt
+	 * @param imglist
+	 * @return
+	 */
+	public Map<String, Object> addMerchantBusinessInfo(String merchantId, int[] arrayInt, List<Object> imglist);
+
+	
 }

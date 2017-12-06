@@ -99,9 +99,7 @@ public class MerchantController {
 	 * @param recordInfoPack
 	 *            第三方商户注册备案信息包(由JSON转成String)
 	 * @param type
-	 *            1-银盟商户注册,2-第三方商户注册
-	 * @param eport
-	 *            1-广州电子口岸(目前只支持BC业务) 2-南沙智检(支持BBC业务)
+	 *            1-银盟商户注册,2-第三方商户注册	
 	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody

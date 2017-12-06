@@ -208,38 +208,11 @@ public class ManagerController {
 	}
 
 	/**
-	 * 管理员修改商户状态
-	 * 
+	 * 超级管理员查询所有运营人员信息
 	 * @param req
 	 * @param response
-	 * @param merchantId
-	 *            商户Id
-	 * @param status
-	 *            商户状态：1-启用，2-禁用，3-审核
-	 * @return String
+	 * @return JSON 
 	 */
-	@RequestMapping(value = "/editMerchantStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("修改商户状态")
-	public String editMerchantStatus(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId, @RequestParam("status") int status) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (merchantId != null && status == 1 && status == 2) {
-			statusMap = managerTransaction.editMerchantStatus(merchantId, status);
-			return JSONObject.fromObject(statusMap).toString();
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
-		}
-	}
-
 	@RequestMapping(value = "/findAllManagerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("超级管理员查询所有运营人员信息")
 	@ResponseBody
@@ -254,6 +227,13 @@ public class ManagerController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 超级管理员重置运营人员密码
+	 * @param req
+	 * @param response
+	 * @param managerId 管理员Id
+	 * @return Json
+	 */
 	@RequestMapping(value = "/resetManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("超级管理员重置运营人员密码")
 	@ResponseBody
@@ -269,20 +249,48 @@ public class ManagerController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 管理员添加商户
+	 * 
+	 * @param merchantName
+	 *            商户名称
+	 * @param loginPassword 登录密码
+	 * @param merchantIdCard 身份证号码
+	 * @param merchantIdCardName 身份证名字
+	 * @param recordInfoPack 第三方商户注册备案信息包(由JSON转成String)
+	 * @param type  1-银盟商户注册,2-第三方商户注册
+	 * @param length 图片长度
+	 * @param req
+	 * @param response
+	 * @return JSON
+	 */
 	@RequestMapping(value = "/managerAddMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员添加商户")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String managerAddMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String managerAddMerchantInfo(@RequestParam("merchantName") String merchantName,
+			@RequestParam("loginPassword") String loginPassword,
+			@RequestParam("merchantIdCardName") String merchantIdCardName,
+			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
+			@RequestParam("type") String type, @RequestParam("length") int length, HttpServletRequest req,
+			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.managerAddMerchantInfo(req);
+		Map<String, Object> statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword,
+				merchantIdCard, merchantIdCardName, recordInfoPack, type, length,req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 修改商户信息
+	 * @param req
+	 * @param response
+	 * @param length 参数长度
+	 * @return JSON
+	 */
 	@RequestMapping(value = "/editMerhcnatInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员修改商户信息")
 	@ResponseBody
@@ -296,8 +304,39 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (length > 0) {
-			statusMap = managerTransaction.editMerhcnatInfo(req,length);
-		}else{
+			statusMap = managerTransaction.editMerhcnatInfo(req, length);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 管理员修改商户业务(图片)信息
+	 * @param req
+	 * @param response
+	 * @param length 图片长度
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @return
+	 */
+	@RequestMapping(value = "/editMerhcnatBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员修改商户业务(图片)信息")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String editMerhcnatBusinessInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("length") int length, @RequestParam("merchantId") String merchantId,
+			@RequestParam("merchantName") String merchantName) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (length > 0) {
+			statusMap = managerTransaction.editMerhcnatBusinessInfo(req, length, merchantId, merchantName);
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}

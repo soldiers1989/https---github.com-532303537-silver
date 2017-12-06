@@ -47,46 +47,56 @@ public class CategoryServiceImpl implements CategoryService {
 				String firstName = lr.get(i).getValue("firstTypeName") + "";
 				String secId = lr.get(i).getValue("secId") + "";
 				String secName = lr.get(i).getValue("goodsSecondTypeName") + "";
-				String thirdId = lr.get(i).getValue("thirdId") + "";
-				String thirdName = lr.get(i).getValue("goodsThirdTypeName") + "";
+				String thirdId = String.valueOf(lr.get(i).getValue("thirdId"));
+				String thirdName = String.valueOf(lr.get(i).getValue("goodsThirdTypeName"));
 				// 增值税
-				String vat = lr.get(i).getValue("vat") + "";
+				String vat = String.valueOf(lr.get(i).getValue("vat"));
 				// 消费税
-				String consumptionTax = lr.get(i).getValue("consumptionTax") + "";
+				String consumptionTax = String.valueOf(lr.get(i).getValue("consumptionTax"));
 				// 综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
-				String consolidatedTax = lr.get(i).getValue("consolidatedTax") + "";
+				String consolidatedTax = String.valueOf(lr.get(i).getValue("consolidatedTax"));
 				if (firstMap != null && firstMap.get(firstId + "_" + firstName) != null) {
 					if (secondMap != null && secondMap.get(secId + "_" + secName) != null) {
-						thirdMap = new HashMap<>();
-						thirdMap.put("thirdId", thirdId);
-						thirdMap.put("thirdName", thirdName);
-						thirdMap.put("vat", vat);
-						thirdMap.put("consumptionTax", consumptionTax);
-						thirdMap.put("consolidatedTax", consolidatedTax);
-						List<Map<String, Object>> thirdList = new ArrayList<>();
-						thirdList.add(thirdMap);
-						firstMap.get(firstId + "_" + firstName).get(secId + "_" + secName).addAll(thirdList);
+						if (StringEmptyUtils.isNotEmpty(thirdId) && StringEmptyUtils.isNotEmpty(thirdName)
+								&& StringEmptyUtils.isNotEmpty(vat) && StringEmptyUtils.isNotEmpty(consumptionTax)
+								&& StringEmptyUtils.isNotEmpty(consolidatedTax)) {
+							thirdMap = new HashMap<>();
+							thirdMap.put("thirdId", thirdId);
+							thirdMap.put("thirdName", thirdName);
+							thirdMap.put("vat", vat);
+							thirdMap.put("consumptionTax", consumptionTax);
+							thirdMap.put("consolidatedTax", consolidatedTax);
+							List<Map<String, Object>> thirdList = new ArrayList<>();
+							thirdList.add(thirdMap);
+							firstMap.get(firstId + "_" + firstName).get(secId + "_" + secName).addAll(thirdList);
+						}
 					} else {
-						thirdMap = new HashMap<>();
-						thirdMap.put("thirdId", thirdId);
-						thirdMap.put("thirdName", thirdName);
-						thirdMap.put("vat", vat);
-						thirdMap.put("consumptionTax", consumptionTax);
-						thirdMap.put("consolidatedTax", consolidatedTax);
-						List<Map<String, Object>> thirdList = new ArrayList<>();
-						thirdList.add(thirdMap);
-						firstMap.get(firstId + "_" + firstName).put(secId + "_" + secName, thirdList);
+						if (StringEmptyUtils.isNotEmpty(thirdId) && StringEmptyUtils.isNotEmpty(thirdName)
+								&& StringEmptyUtils.isNotEmpty(vat) && StringEmptyUtils.isNotEmpty(consumptionTax)
+								&& StringEmptyUtils.isNotEmpty(consolidatedTax)) {
+							thirdMap = new HashMap<>();
+							thirdMap.put("thirdId", thirdId);
+							thirdMap.put("thirdName", thirdName);
+							thirdMap.put("vat", vat);
+							thirdMap.put("consumptionTax", consumptionTax);
+							thirdMap.put("consolidatedTax", consolidatedTax);
+							List<Map<String, Object>> thirdList = new ArrayList<>();
+							thirdList.add(thirdMap);
+							firstMap.get(firstId + "_" + firstName).put(secId + "_" + secName, thirdList);
+						}
 					}
 				} else {
 					secondMap = new HashMap<>();
+					List<Map<String, Object>> thirdList = new ArrayList<>();
+
 					thirdMap = new HashMap<>();
 					thirdMap.put("thirdId", thirdId);
 					thirdMap.put("thirdName", thirdName);
 					thirdMap.put("vat", vat);
 					thirdMap.put("consumptionTax", consumptionTax);
 					thirdMap.put("consolidatedTax", consolidatedTax);
-					List<Map<String, Object>> thirdList = new ArrayList<>();
 					thirdList.add(thirdMap);
+
 					secondMap.put(secId + "_" + secName, thirdList);
 					firstMap.put(firstId + "_" + firstName, secondMap);
 				}
@@ -266,13 +276,12 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public Map<String, Object> deleteGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Iterator<String> isKey = paramMap.keySet().iterator();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		while (isKey.hasNext()) {
 			String key = isKey.next();
-			String value = paramMap.get(key) + "";
-			switch (key) {
+			String value = String.valueOf(paramMap.get(key)).trim();
+			switch (key.trim()) {
 			case "firstTypeId":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					Map<String, Object> reAllCategoryMap = deleteAllCategory(value, errorList);
@@ -301,9 +310,7 @@ public class CategoryServiceImpl implements CategoryService {
 				break;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return refreshCache();
 	}
 
 	// 删除第三类型
@@ -315,33 +322,32 @@ public class CategoryServiceImpl implements CategoryService {
 		params.clear();
 		params.put("spareGoodsThirdTypeId", value);
 		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
-		if (reGoodsRecordDetailList == null || reGoodsContentList == null) {
+		params.clear();
+		params.put("id", Long.parseLong(value));
+		List<Object> reThirdTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
+		if (reGoodsRecordDetailList == null || reGoodsContentList == null || reThirdTypeList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+		} else if (!reGoodsRecordDetailList.isEmpty() || !reGoodsContentList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
 			return statusMap;
 		} else {
-			params.clear();
-			params.put("id", Long.parseLong(value));
-			params.put("deleteFlag", 0);
-			List<Object> reThirdTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
-			if (reThirdTypeList != null && !reThirdTypeList.isEmpty()) {
-				for (int t = 0; t < reThirdTypeList.size(); t++) {
-					GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
-					thirdTypeInfo.setDeleteFlag(1);
-					if (!categoryDao.update(thirdTypeInfo)) {
-						Map<String, Object> errorMap = new HashMap<>();
-						errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
-						errorList.add(errorMap);
-					}
+			if (!reThirdTypeList.isEmpty()) {
+				GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
+				if (!categoryDao.delete(thirdTypeInfo)) {
+					Map<String, Object> errorMap = new HashMap<>();
+					errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
+					errorList.add(errorMap);
 				}
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				return statusMap;
 			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "该类型不存在,请重试!");
+			return statusMap;
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
 	}
 
 	// 删除第二类型
@@ -357,45 +363,51 @@ public class CategoryServiceImpl implements CategoryService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+		} else if (!reGoodsRecordDetailList.isEmpty() || !reGoodsContentList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
 			return statusMap;
 		} else {
 			params.clear();
 			params.put("id", Long.parseLong(value));
-			params.put("deleteFlag", 0);
 			List<Object> reSecondTypeList = categoryDao.findByProperty(GoodsSecondType.class, params, 0, 0);
 			params.clear();
 			params.put("firstTypeId", Long.parseLong(value));
-			params.put("deleteFlag", 0);
 			List<Object> reThirdTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
-			if (reSecondTypeList != null && !reSecondTypeList.isEmpty()) {
+			if (reSecondTypeList != null) {
 				GoodsSecondType secondTypeInfo = (GoodsSecondType) reSecondTypeList.get(0);
 				// 删除标识：0-未删除,1-已删除
 				secondTypeInfo.setDeleteFlag(1);
-				if (!categoryDao.update(secondTypeInfo)) {
+				if (!categoryDao.delete(secondTypeInfo)) {
 					Map<String, Object> errorMap = new HashMap<>();
 					errorMap.put(BaseCode.MSG.toString(), secondTypeInfo.getGoodsSecondTypeName() + "删除失败,请重试!");
 					errorList.add(errorMap);
 				}
-				for (int t = 0; t < reThirdTypeList.size(); t++) {
-					GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
-					thirdTypeInfo.setDeleteFlag(1);
-					if (!categoryDao.update(thirdTypeInfo)) {
-						Map<String, Object> errorMap = new HashMap<>();
-						errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
-						errorList.add(errorMap);
+				if (!reThirdTypeList.isEmpty()) {
+					for (int t = 0; t < reThirdTypeList.size(); t++) {
+						GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
+						thirdTypeInfo.setDeleteFlag(1);
+						if (!categoryDao.delete(thirdTypeInfo)) {
+							Map<String, Object> errorMap = new HashMap<>();
+							errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
+							errorList.add(errorMap);
+						}
 					}
 				}
-
 			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			return statusMap;
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
 	}
 
-	// 删除该商品大类型
+	/**
+	 * 删除该商品大类型
+	 * 
+	 * @param value
+	 *            Id
+	 * @param errorList
+	 * @return
+	 */
 	private Map<String, Object> deleteAllCategory(String value, List<Map<String, Object>> errorList) {
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -408,58 +420,58 @@ public class CategoryServiceImpl implements CategoryService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		} else if (!reGoodsRecordDetailList.isEmpty() && !reGoodsContentList.isEmpty()) {
+		} else if (!reGoodsRecordDetailList.isEmpty() || !reGoodsContentList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "该类型已关联商品,无法进行删除");
 			return statusMap;
 		} else {
 			params.clear();
 			params.put("id", Long.parseLong(value));
-			params.put("deleteFlag", 0);
 			List<Object> reFirstTypeList = categoryDao.findByProperty(GoodsFirstType.class, params, 0, 0);
 			params.clear();
 			params.put("firstTypeId", Long.parseLong(value));
-			params.put("deleteFlag", 0);
 			List<Object> reSecondTypeList = categoryDao.findByProperty(GoodsSecondType.class, params, 0, 0);
 			params.clear();
 			params.put("firstTypeId", Long.parseLong(value));
-			params.put("deleteFlag", 0);
 			List<Object> reThirdTypeList = categoryDao.findByProperty(GoodsThirdType.class, params, 0, 0);
+
 			if (reFirstTypeList == null || reSecondTypeList == null || reThirdTypeList == null) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 				return statusMap;
-			} else if (!reFirstTypeList.isEmpty() && !reSecondTypeList.isEmpty() && !reThirdTypeList.isEmpty()) {
+			} else if (!reFirstTypeList.isEmpty()) {
+				if (!reSecondTypeList.isEmpty()) {
+					for (int s = 0; s < reSecondTypeList.size(); s++) {
+						GoodsSecondType secondTypeInfo = (GoodsSecondType) reSecondTypeList.get(s);
+						if (!categoryDao.delete(secondTypeInfo)) {
+							Map<String, Object> errorMap = new HashMap<>();
+							errorMap.put(BaseCode.MSG.toString(),
+									secondTypeInfo.getGoodsSecondTypeName() + "删除失败,请重试!");
+							errorList.add(errorMap);
+						}
+					}
+				}
+				if (!reThirdTypeList.isEmpty()) {
+					for (int t = 0; t < reThirdTypeList.size(); t++) {
+						GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
+						if (!categoryDao.delete(thirdTypeInfo)) {
+							Map<String, Object> errorMap = new HashMap<>();
+							errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
+							errorList.add(errorMap);
+						}
+					}
+				}
 				GoodsFirstType firstTypeInfo = (GoodsFirstType) reFirstTypeList.get(0);
-				for (int s = 0; s < reSecondTypeList.size(); s++) {
-					GoodsSecondType secondTypeInfo = (GoodsSecondType) reSecondTypeList.get(s);
-					secondTypeInfo.setDeleteFlag(1);
-					if (!categoryDao.update(secondTypeInfo)) {
-						Map<String, Object> errorMap = new HashMap<>();
-						errorMap.put(BaseCode.MSG.toString(), secondTypeInfo.getGoodsSecondTypeName() + "删除失败,请重试!");
-						errorList.add(errorMap);
-					}
-				}
-				for (int t = 0; t < reThirdTypeList.size(); t++) {
-					GoodsThirdType thirdTypeInfo = (GoodsThirdType) reThirdTypeList.get(0);
-					thirdTypeInfo.setDeleteFlag(1);
-					if (!categoryDao.update(thirdTypeInfo)) {
-						Map<String, Object> errorMap = new HashMap<>();
-						errorMap.put(BaseCode.MSG.toString(), thirdTypeInfo.getGoodsThirdTypeName() + "删除失败,请重试!");
-						errorList.add(errorMap);
-					}
-				}
-				// 删除标识：0-未删除,1-已删除
-				firstTypeInfo.setDeleteFlag(1);
-				if (!categoryDao.update(firstTypeInfo)) {
+				if (!categoryDao.delete(firstTypeInfo)) {
 					Map<String, Object> errorMap = new HashMap<>();
 					errorMap.put(BaseCode.MSG.toString(), firstTypeInfo.getFirstTypeName() + "删除失败,请重试");
 					errorList.add(errorMap);
 				}
 			}
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			return statusMap;
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+
 	}
 
 	@Override
@@ -467,7 +479,7 @@ public class CategoryServiceImpl implements CategoryService {
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		String type = paramMap.get("type") + "";
-		switch (type) {
+		switch (type.trim()) {
 		case "1":
 			Map<String, Object> reAllCategoryMap = editFirstCategory(paramMap, errorList, managerId, managerName);
 			if (!"1".equals(reAllCategoryMap.get(BaseCode.STATUS.toString()))) {
@@ -501,6 +513,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 	/**
 	 * 修改第三类型名称
+	 * 
 	 * @param paramMap
 	 * @param errorList
 	 * @param managerId
@@ -533,14 +546,14 @@ public class CategoryServiceImpl implements CategoryService {
 			GoodsThirdType goodsThirdType = (GoodsThirdType) goodsThirdList.get(0);
 			double vat = 0.0;
 			double consumptionTax = 0.0;
-			double consolidatedTax =0.0;
+			double consolidatedTax = 0.0;
 			double tariff = 0.0;
-			try{
-				 vat = Double.parseDouble(paramMap.get("vat") + "");
-				 consumptionTax = Double.parseDouble(paramMap.get("consumptionTax") + "");
-				 consolidatedTax =Double.parseDouble( paramMap.get("consolidatedTax") + "");
-				 tariff = Double.parseDouble(paramMap.get("tariff") + "");
-			}catch(Exception e){
+			try {
+				vat = Double.parseDouble(paramMap.get("vat") + "");
+				consumptionTax = Double.parseDouble(paramMap.get("consumptionTax") + "");
+				consolidatedTax = Double.parseDouble(paramMap.get("consolidatedTax") + "");
+				tariff = Double.parseDouble(paramMap.get("tariff") + "");
+			} catch (Exception e) {
 				logger.error("-------------");
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "税费格式错误,请重新输入");
@@ -560,7 +573,7 @@ public class CategoryServiceImpl implements CategoryService {
 			}
 			for (int i = 0; i < reGoodsContentList.size(); i++) {
 				GoodsContent goodsBaseInfo = (GoodsContent) reGoodsContentList.get(i);
-				goodsBaseInfo.setGoodsThirdTypeName(goodsThirdTypeName)	;
+				goodsBaseInfo.setGoodsThirdTypeName(goodsThirdTypeName);
 				if (!categoryDao.update(goodsBaseInfo)) {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), "修改商品第三类型错误,请重试！");
@@ -587,6 +600,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 	/**
 	 * 修改第二类型商品
+	 * 
 	 * @param paramMap
 	 * @param errorList
 	 * @param managerId
@@ -710,7 +724,7 @@ public class CategoryServiceImpl implements CategoryService {
 				}
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			
+
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
@@ -718,23 +732,95 @@ public class CategoryServiceImpl implements CategoryService {
 			return statusMap;
 		}
 	}
-	
+
 	/**
 	 * 查询最新的商品类型,重新放入至缓存中
+	 * 
 	 * @return
 	 */
-	private final Map<String,Object> refreshCache(){
-		Map<String,Object> statusMap = new HashMap<>();
+	private final Map<String, Object> refreshCache() {
+		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> datasMap = findGoodsType();
 		String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 		if ("1".equals(status)) {
 			datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
 			// 将已查询出来的商品类型存入redis,有效期为1小时
+			System.out.println("-重新放入缓存-------------------");
 			JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
 		}
-		System.out.println("-重新放入缓存-------------------");
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getCategoryInfo(int type, String id) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Class entity = null;
+		switch (type) {
+		case 1:
+			entity = GoodsFirstType.class;
+			break;
+		case 2:
+			entity = GoodsSecondType.class;
+			break;
+		case 3:
+			entity = GoodsThirdType.class;
+			break;
+		default:
+			break;
+		}
+		paramMap.put("id", Long.parseLong(id));
+		List<Object> reList= categoryDao.findByProperty(entity, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> searchCategoryInfo(int type) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Class entity = null;
+		switch (type) {
+		case 1:
+			entity = GoodsFirstType.class;
+			break;
+		case 2:
+			entity = GoodsSecondType.class;
+			break;
+		case 3:
+			entity = GoodsThirdType.class;
+			break;
+		default:
+			break;
+		}
+		List<Object> reList= categoryDao.findByProperty(entity, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
 	}
 }

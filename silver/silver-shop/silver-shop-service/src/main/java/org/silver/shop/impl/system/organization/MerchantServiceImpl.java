@@ -13,7 +13,6 @@ import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
-import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,9 @@ import net.sf.json.JSONArray;
 @Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
 
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
@@ -40,8 +42,6 @@ public class MerchantServiceImpl implements MerchantService {
 	// 电商平台名称
 	private static final String EBPENTNAME = "EBPEntName";
 
-	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	//
 	static List<Map<String, Object>> list = null;
 	static {
@@ -124,26 +124,26 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String, Object> merchantRegister(String merchantId, String account, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type) {
+	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
+			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
 		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
-		if (type.equals("1")) {// 1-银盟商户注册
+		if ("1".equals(type)) {// 1-银盟商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("YM_" + merchantId);
-			merchant.setMerchantName(account);
+			merchant.setMerchantName(merchantName);
 			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
 			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(account);
+			merchant.setCreateBy(createBy);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			recordInfo.setMerchantId(merchantId);
-			recordInfo.setCreateBy(account);
+			recordInfo.setCreateBy(createBy);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			if (!merchantDao.add(merchant)) {
@@ -157,16 +157,15 @@ public class MerchantServiceImpl implements MerchantService {
 				statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品备案信息失败,服务器繁忙!");
 				return statusMap;
 			}
-			
 		} else {// 2-第三方商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("TP_" + merchantId);
-			merchant.setMerchantName(account);
+			merchant.setMerchantName(merchantName);
 			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
 			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(account);
+			merchant.setCreateBy(createBy);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			// 商戶基本信息实例化
@@ -189,7 +188,7 @@ public class MerchantServiceImpl implements MerchantService {
 						eport = Integer.parseInt((packMap.get(EPORT) + ""));
 					}catch (Exception e){
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,口岸参数错误！");
+						statusMap.put(BaseCode.MSG.getBaseCode(), "口岸参数错误！");
 						return statusMap;
 					}
 					switch (eport) {
@@ -214,7 +213,7 @@ public class MerchantServiceImpl implements MerchantService {
 					recordInfo.setCustomsPortName(listMap.get(PORTNAME) + "");
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
-					recordInfo.setCreateBy(account);
+					recordInfo.setCreateBy(createBy);
 					recordInfo.setCreateDate(dateTime);
 					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 					// 保存商户对应的电商平台名称(及编码)
@@ -225,13 +224,7 @@ public class MerchantServiceImpl implements MerchantService {
 					}
 				}
 			}
-		}
-		Map<String, Object> reWalletMap = merchantWalletServiceImpl.checkWallet(1, merchantId, account);
-		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
+		}		
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
 		return statusMap;

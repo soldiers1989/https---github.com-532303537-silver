@@ -14,4 +14,5 @@ public interface CategoryDao<T> extends BaseDao<T>{
 	 */
 	public Table findAllCategory();
 	
+	
 }

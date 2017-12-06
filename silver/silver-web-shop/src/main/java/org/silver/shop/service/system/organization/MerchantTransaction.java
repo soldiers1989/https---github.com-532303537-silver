@@ -50,7 +50,7 @@ public class MerchantTransaction {
 			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 			// 商户注册
 			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type);
+					merchantIdCardName, recordInfoPack, type, account);
 		}
 		return reIdMap;
 	}

@@ -2,7 +2,6 @@ package org.silver.shop.service.common.category;
 
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -108,5 +107,15 @@ public class CategoryTransaction {
 			paramMap.put(key, value);
 		}
 		return categoryService.editGoodsCategory(managerId,managerName,paramMap);
+	}
+
+	//获取商品类型详情
+	public Map<String, Object> getCategoryInfo(int type, String id) {
+		return categoryService.getCategoryInfo(type,id);
+	}
+
+	//根据等级查询商品类型
+	public Map<String, Object> searchCategoryInfo(int type) {
+		return categoryService.searchCategoryInfo(type);
 	}
 }
