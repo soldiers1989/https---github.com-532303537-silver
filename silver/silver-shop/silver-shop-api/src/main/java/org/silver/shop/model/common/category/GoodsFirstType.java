@@ -16,11 +16,8 @@ public class GoodsFirstType implements Serializable {
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
-	private Date updateDate;// 更新时间
-	private int deleteFlag;// 删除标识:0-未删除,1-已删除
-	private String deleteBy;// 删除人
-	private Date deleteDate;// 删除时间
-
+	private Date updateDate;// 更新时间	
+	private int serialNo;//顺序编号
 	public Long getId() {
 		return id;
 	}
@@ -69,28 +66,12 @@ public class GoodsFirstType implements Serializable {
 		this.updateDate = updateDate;
 	}
 
-	public String getDeleteBy() {
-		return deleteBy;
+	public int getSerialNo() {
+		return serialNo;
 	}
 
-	public void setDeleteBy(String deleteBy) {
-		this.deleteBy = deleteBy;
+	public void setSerialNo(int serialNo) {
+		this.serialNo = serialNo;
 	}
-
-	public Date getDeleteDate() {
-		return deleteDate;
-	}
-
-	public void setDeleteDate(Date deleteDate) {
-		this.deleteDate = deleteDate;
-	}
-
-	public int getDeleteFlag() {
-		return deleteFlag;
-	}
-
-	public void setDeleteFlag(int deleteFlag) {
-		this.deleteFlag = deleteFlag;
-	}
-
+	
 }

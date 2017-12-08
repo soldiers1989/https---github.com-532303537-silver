@@ -1,5 +1,7 @@
 package org.silver.shop.service.system.organization;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -123,7 +125,7 @@ public class ManagerTransaction {
 
 	// 管理员添加商户
 	public Map<String, Object> managerAddMerchantInfo(String merchantName, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, String type,int length,HttpServletRequest req) {
+			String merchantIdCardName, String recordInfoPack, String type, int length, HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
@@ -135,10 +137,10 @@ public class ManagerTransaction {
 			return reIdMap;
 		}
 		String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
-		//添加商户
-		Map<String,Object> registerMap=	merchantService.merchantRegister(merchantId, merchantName, loginPassword, merchantIdCard,
-				merchantIdCardName, recordInfoPack, type, managerName);
-		if(!"1".equals(registerMap.get(BaseCode.STATUS.toString()))){
+		// 添加商户
+		Map<String, Object> registerMap = merchantService.merchantRegister(merchantId, merchantName, loginPassword,
+				merchantIdCard, merchantIdCardName, recordInfoPack, type, managerName);
+		if (!"1".equals(registerMap.get(BaseCode.STATUS.toString()))) {
 			return registerMap;
 		}
 		String path = "/opt/www/img/" + merchantName + "/";
@@ -147,14 +149,14 @@ public class ManagerTransaction {
 			return imgMap;
 		}
 		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-		//前端有上传图片
-		if(!imglist.isEmpty()){
+		// 前端有上传图片
+		if (!imglist.isEmpty()) {
 			// 创建一个与前台图片数量一样长度的数组
 			int[] arrayInt = new int[length];
 			for (int i = 0; i < length; i++) {
 				arrayInt[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
 			}
-			return managerService.addMerchantBusinessInfo(merchantId,arrayInt,imglist);
+			return managerService.addMerchantBusinessInfo(merchantId, arrayInt, imglist);
 		}
 		return registerMap;
 	}
@@ -194,5 +196,26 @@ public class ManagerTransaction {
 			arrayInt[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
 		}
 		return managerService.editMerhcnatBusinessInfo(managerId, managerName, imglist, arrayInt, merchantId);
+	}
+
+	// 查询用户详情
+	public Map<String, Object> findMemberDetail(String memberId) {
+		return managerService.findMemberDetail(memberId);
+	}
+
+	public Map<String, Object> managerEditMemberInfo(HttpServletRequest req) {
+		Map<String,Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return managerService.managerEditMemberInfo(managerId,managerName,datasMap);
 	}
 }

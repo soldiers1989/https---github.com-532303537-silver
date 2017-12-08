@@ -92,5 +92,22 @@ public interface ManagerService {
 	 */
 	public Map<String, Object> addMerchantBusinessInfo(String merchantId, int[] arrayInt, List<Object> imglist);
 
+	/**
+	 * 管理员查询用户详情
+	 * @param memberId
+	 * @return
+	 */
+	public Map<String, Object> findMemberDetail(String memberId);
+
+	/**
+	 * 管理员编辑用户信息
+	 * @param managerId
+	 * @param managerName
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> managerEditMemberInfo(String managerId, String managerName,
+			Map<String, Object> datasMap);
+
 	
 }

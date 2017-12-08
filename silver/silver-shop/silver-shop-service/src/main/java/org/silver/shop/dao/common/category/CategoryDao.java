@@ -13,6 +13,12 @@ public interface CategoryDao<T> extends BaseDao<T>{
 	 * @return list
 	 */
 	public Table findAllCategory();
+
+	/**
+	 * 查询第二级商品类型
+	 * @return
+	 */
+	public Table searchSecondCategory();
 	
 	
 }

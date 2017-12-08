@@ -25,9 +25,7 @@ public class GoodsThirdType implements Serializable{
 	private Date createDate;//创建时间
 	private String updateBy;//更新人
 	private Date updateDate;//更新时间
-	private int deleteFlag;//删除标识:0-未删除,1-已删除
-	private String deleteBy;//删除人
-	private Date deleteDate;//删除时间
+	private int serialNo;//顺序编号
 	public long getId() {
 		return id;
 	}
@@ -46,60 +44,11 @@ public class GoodsThirdType implements Serializable{
 	public void setSecondTypeId(long secondTypeId) {
 		this.secondTypeId = secondTypeId;
 	}
-	
 	public String getGoodsThirdTypeName() {
 		return goodsThirdTypeName;
 	}
 	public void setGoodsThirdTypeName(String goodsThirdTypeName) {
 		this.goodsThirdTypeName = goodsThirdTypeName;
-	}
-	
-	
-	public String getCreateBy() {
-		return createBy;
-	}
-	public void setCreateBy(String createBy) {
-		this.createBy = createBy;
-	}
-	public Date getCreateDate() {
-		return createDate;
-	}
-	public void setCreateDate(Date createDate) {
-		this.createDate = createDate;
-	}
-	public String getUpdateBy() {
-		return updateBy;
-	}
-	public void setUpdateBy(String updateBy) {
-		this.updateBy = updateBy;
-	}
-	public Date getUpdateDate() {
-		return updateDate;
-	}
-	public void setUpdateDate(Date updateDate) {
-		this.updateDate = updateDate;
-	}
-	public String getDeleteBy() {
-		return deleteBy;
-	}
-	public void setDeleteBy(String deleteBy) {
-		this.deleteBy = deleteBy;
-	}
-	public Date getDeleteDate() {
-		return deleteDate;
-	}
-	public void setDeleteDate(Date deleteDate) {
-		this.deleteDate = deleteDate;
-	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-	
-	public int getDeleteFlag() {
-		return deleteFlag;
-	}
-	public void setDeleteFlag(int deleteFlag) {
-		this.deleteFlag = deleteFlag;
 	}
 	public Double getVat() {
 		return vat;
@@ -125,7 +74,35 @@ public class GoodsThirdType implements Serializable{
 	public void setConsolidatedTax(Double consolidatedTax) {
 		this.consolidatedTax = consolidatedTax;
 	}
-	
-	
+	public String getCreateBy() {
+		return createBy;
+	}
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+	public Date getCreateDate() {
+		return createDate;
+	}
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+	public String getUpdateBy() {
+		return updateBy;
+	}
+	public void setUpdateBy(String updateBy) {
+		this.updateBy = updateBy;
+	}
+	public Date getUpdateDate() {
+		return updateDate;
+	}
+	public void setUpdateDate(Date updateDate) {
+		this.updateDate = updateDate;
+	}
+	public int getSerialNo() {
+		return serialNo;
+	}
+	public void setSerialNo(int serialNo) {
+		this.serialNo = serialNo;
+	}
 	
 }

@@ -15,6 +15,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.common.category.GoodsFirstType;
+import org.silver.shop.model.common.category.GoodsSecondType;
+import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Member;
 
@@ -546,28 +549,14 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public static void main(String[] args) throws ParseException {
+	public static void main(String[] args)  {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, List<Object>> orMap = new HashMap<>();
-		BaseDaoImpl bd = new BaseDaoImpl();
-		String property = "memberId";
-		new Date();
-		Calendar c = Calendar.getInstance();
-		// c.setTime(parseDate(startDate));
-		System.out.println("--start--->>>>" + c.getTime());
-		Calendar cal = Calendar.getInstance();
-		// cal.setTime(parseDate(entDate));
-		cal.set(Calendar.HOUR, 23);
-		cal.set(Calendar.MINUTE, 59);
-		cal.set(Calendar.SECOND, 59);
-		cal.set(Calendar.MILLISECOND, 999);
-		System.out.println("--------ent--->>>>>>>" + cal.getTime());
-		paramMap.put("startDate", c.getTime());
-		paramMap.put("endDate", cal.getTime());
-		List count = bd.findByPropertyLike(GoodsRecordDetail.class, paramMap, null, 0, 0);
-		System.out.println("-------------------->>>>>>>" + count.size());
-
+		BaseDaoImpl bd =  new BaseDaoImpl();
+		paramMap.put("firstTypeId", Long.parseLong("29"));
+		List<Object> reThirdTypeList = bd.findByProperty(GoodsThirdType.class, paramMap, 0, 0);
+		System.out.println("0----->>>>"+reThirdTypeList.size());
 	}
 
 }

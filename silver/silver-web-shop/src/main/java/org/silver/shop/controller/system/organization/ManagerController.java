@@ -16,6 +16,8 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
+import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.ManagerTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -209,9 +211,10 @@ public class ManagerController {
 
 	/**
 	 * 超级管理员查询所有运营人员信息
+	 * 
 	 * @param req
 	 * @param response
-	 * @return JSON 
+	 * @return JSON
 	 */
 	@RequestMapping(value = "/findAllManagerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("超级管理员查询所有运营人员信息")
@@ -229,9 +232,11 @@ public class ManagerController {
 
 	/**
 	 * 超级管理员重置运营人员密码
+	 * 
 	 * @param req
 	 * @param response
-	 * @param managerId 管理员Id
+	 * @param managerId
+	 *            管理员Id
 	 * @return Json
 	 */
 	@RequestMapping(value = "/resetManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -254,12 +259,18 @@ public class ManagerController {
 	 * 
 	 * @param merchantName
 	 *            商户名称
-	 * @param loginPassword 登录密码
-	 * @param merchantIdCard 身份证号码
-	 * @param merchantIdCardName 身份证名字
-	 * @param recordInfoPack 第三方商户注册备案信息包(由JSON转成String)
-	 * @param type  1-银盟商户注册,2-第三方商户注册
-	 * @param length 图片长度
+	 * @param loginPassword
+	 *            登录密码
+	 * @param merchantIdCard
+	 *            身份证号码
+	 * @param merchantIdCardName
+	 *            身份证名字
+	 * @param recordInfoPack
+	 *            第三方商户注册备案信息包(由JSON转成String)
+	 * @param type
+	 *            1-银盟商户注册,2-第三方商户注册
+	 * @param length
+	 *            图片长度
 	 * @param req
 	 * @param response
 	 * @return JSON
@@ -280,15 +291,17 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword,
-				merchantIdCard, merchantIdCardName, recordInfoPack, type, length,req);
+				merchantIdCard, merchantIdCardName, recordInfoPack, type, length, req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
 	 * 修改商户信息
+	 * 
 	 * @param req
 	 * @param response
-	 * @param length 参数长度
+	 * @param length
+	 *            参数长度
 	 * @return JSON
 	 */
 	@RequestMapping(value = "/editMerhcnatInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -314,11 +327,15 @@ public class ManagerController {
 
 	/**
 	 * 管理员修改商户业务(图片)信息
+	 * 
 	 * @param req
 	 * @param response
-	 * @param length 图片长度
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
+	 * @param length
+	 *            图片长度
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
 	 * @return
 	 */
 	@RequestMapping(value = "/editMerhcnatBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -341,5 +358,87 @@ public class ManagerController {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 管理员查看用户详情
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/findMemberDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员查询用户详情")
+	public String findMemberDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (memberId != null) {
+			statusMap = managerTransaction.findMemberDetail(memberId);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
+
+	/**
+	 * 检查管理员登录
+	 */
+	@RequestMapping(value = "/checkManagerLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("检查管理员登录")
+	// @RequiresRoles("Merchant")
+	public String checkManagerLogin(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Map<String, Object> statusMap = new HashMap<>();
+		if (managerInfo != null && currentUser.isAuthenticated()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "管理员已登陆！");
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 管理员修改用户信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/managerEditMemberInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员查询用户详情")
+	public String managerEditMemberInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = managerTransaction.managerEditMemberInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+
 	}
 }

@@ -20,9 +20,7 @@ public class GoodsSecondType implements Serializable{
 	private Date createDate;//创建时间
 	private String updateBy;//更新人
 	private Date updateDate;//更新时间
-	private int deleteFlag;//删除标识:0-未删除,1-已删除
-	private String deleteBy;//删除人
-	private Date deleteDate;//删除时间
+	private int serialNo;//顺序编号
 	public long getId() {
 		return id;
 	}
@@ -31,11 +29,10 @@ public class GoodsSecondType implements Serializable{
 	}
 	public Long getFirstTypeId() {
 		return firstTypeId;
-	}
-	public void setFirstTypeId(Long firstTypeId) {
+	}	
+	public void setFirstTypeId(long firstTypeId) {
 		this.firstTypeId = firstTypeId;
 	}
-	
 	public String getGoodsSecondTypeName() {
 		return goodsSecondTypeName;
 	}
@@ -67,27 +64,11 @@ public class GoodsSecondType implements Serializable{
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	public String getDeleteBy() {
-		return deleteBy;
+	public int getSerialNo() {
+		return serialNo;
 	}
-	public void setDeleteBy(String deleteBy) {
-		this.deleteBy = deleteBy;
-	}
-	public Date getDeleteDate() {
-		return deleteDate;
-	}
-	public void setDeleteDate(Date deleteDate) {
-		this.deleteDate = deleteDate;
-	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-	public int getDeleteFlag() {
-		return deleteFlag;
-	}
-	public void setDeleteFlag(int deleteFlag) {
-		this.deleteFlag = deleteFlag;
-	}
-	
+	public void setSerialNo(int serialNo) {
+		this.serialNo = serialNo;
+	}	
 	
 }

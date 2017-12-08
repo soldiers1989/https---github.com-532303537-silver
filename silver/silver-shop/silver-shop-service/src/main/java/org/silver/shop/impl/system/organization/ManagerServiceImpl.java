@@ -3,6 +3,7 @@ package org.silver.shop.impl.system.organization;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +28,7 @@ public class ManagerServiceImpl implements ManagerService {
 	private ManagerDao managerDao;
 	@Autowired
 	private StockServiceImpl stockServiceImpl;
-	
-	
+
 	@Override
 	public List<Object> findManagerBy(String account) {
 		Map<String, Object> params = new HashMap<>();
@@ -404,7 +404,7 @@ public class ManagerServiceImpl implements ManagerService {
 	}
 
 	@Override
-	public Map<String, Object> addMerchantBusinessInfo(String merchantId,int[] arrayInt, List<Object> imglist) {
+	public Map<String, Object> addMerchantBusinessInfo(String merchantId, int[] arrayInt, List<Object> imglist) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("merchantId", merchantId);
@@ -453,6 +453,121 @@ public class ManagerServiceImpl implements ManagerService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
+	}
+
+	@Override
+	public Map<String, Object> findMemberDetail(String memberId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("memberId", memberId);
+		List<Object> reList = managerDao.findByProperty(Member.class, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> managerEditMemberInfo(String managerId, String managerName,
+			Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Member memberInfo = null;
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next();
+			String value = datasMap.get(key) + "".trim();
+			switch (key.trim()) {
+			case "memberId":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					// 查询数据库已存在的用户信息
+					Map<String, Object> reMemberMap = findMemberDetail(value);
+					if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+						return reMemberMap;
+					}
+					List<Object> dataList = (List<Object>) reMemberMap.get(BaseCode.DATAS.toString());
+					memberInfo = (Member) dataList.get(0);
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户Id不能为空!");
+					return statusMap;
+				}
+				break;
+			case "memberTel":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setMemberTel(value);
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户手机号码不能为空!");
+					return statusMap;
+				}
+				break;
+			case "memberMail":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setMemberMail(value);
+				}
+				break;
+			case "memberIdCardName":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setMemberIdCardName(value);
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户姓名不能为空!");
+					return statusMap;
+				}
+				break;
+			case "memberIdCard":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setMemberIdCard(value);
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户身份证号码不能为空!");
+					return statusMap;
+				}
+				break;
+			case "memberStatus":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setMemberStatus(Integer.parseInt(value));
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户状态参数不能为空!");
+					return statusMap;
+				}
+				break;
+			case "deleteFlag":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					memberInfo.setDeleteFlag(Integer.parseInt(value));
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "用户删除参数不能为空!");
+					return statusMap;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		Date date = new Date();
+		memberInfo.setUpdateBy(managerName);
+		memberInfo.setUpdateDate(date);
+		if (!managerDao.update(memberInfo)) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), "服务器繁忙!");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+
 	}
 
 }
