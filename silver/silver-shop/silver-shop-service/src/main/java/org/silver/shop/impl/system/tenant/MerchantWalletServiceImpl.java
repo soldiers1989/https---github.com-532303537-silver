@@ -12,6 +12,7 @@ import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	@Autowired
 	private MerchantWalletDao merchantWalletDao;
 
-	
 	@Override
 	public Map<String, Object> walletRecharge(String merchantId, String merchantName, Double money) {
 		Date date = new Date();
@@ -151,4 +151,43 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		statusMap.put(BaseCode.DATAS.toString(), wallet);
 		return statusMap;
 	}
+
+	@Override
+	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type,int page,int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		Date endDate = new Date(); // 当前时间
+		Calendar calendar = Calendar.getInstance(); // 得到日历
+		calendar.setTime(endDate);// 把当前时间赋给日历
+		Date startDate = null;
+		//查询时间范围 1-三个月内,2-一年内
+		if(type == 1){//查询最近三个月
+			calendar.add(Calendar.MONTH, -3); // 设置为前3月
+			startDate = calendar.getTime(); // 得到前3月的时间
+		}else if(type ==2){//查询最近一年
+			calendar.add(Calendar.YEAR, -1); // 设置为前1年
+			startDate = calendar.getTime(); // 得到前1年的时间
+		}
+		params.put("merchantId", merchantId);
+		params.put("startDate", startDate);
+		params.put("endDate",endDate);
+		List<Object> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page, size);
+		long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params,null);
+		if(reList == null){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}else if(!reList.isEmpty()){
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
+			return statusMap;
+		}else{
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}	
+	
 }

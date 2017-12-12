@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -44,20 +43,19 @@ public class CategoryTransaction {
 			datasMap = categoryService.findGoodsType();
 			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
-				datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
 				// 将已查询出来的商品类型存入redis,有效期为1小时
-				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
+				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap.get(BaseCode.DATAS.getBaseCode()));
 			}
+			return datasMap;
 		} else {// redis缓存中已有数据,直接返回数据
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(redisList));
 			return datasMap;
 		}
-		return datasMap;
 	}
 
-	//添加商品类型
+	// 添加商品类型
 	public Map<String, Object> addGoodsCategory(HttpServletRequest req) {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
@@ -71,11 +69,11 @@ public class CategoryTransaction {
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
 		}
-		return categoryService.addGoodsCategory(managerId, managerName,paramMap);
+		return categoryService.addGoodsCategory(managerId, managerName, paramMap);
 
 	}
 
-	//删除商品类型
+	// 删除商品类型
 	public Map<String, Object> deleteGoodsCategory(HttpServletRequest req) {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
@@ -89,10 +87,10 @@ public class CategoryTransaction {
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
 		}
-		return categoryService.deleteGoodsCategory(managerId,managerName,paramMap);
+		return categoryService.deleteGoodsCategory(managerId, managerName, paramMap);
 	}
 
-	//修改商品类型
+	// 修改商品类型
 	public Map<String, Object> editGoodsCategory(HttpServletRequest req) {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
@@ -106,15 +104,15 @@ public class CategoryTransaction {
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
 		}
-		return categoryService.editGoodsCategory(managerId,managerName,paramMap);
+		return categoryService.editGoodsCategory(managerId, managerName, paramMap);
 	}
 
-	//获取商品类型详情
+	// 获取商品类型详情
 	public Map<String, Object> getCategoryInfo(int type, String id) {
-		return categoryService.getCategoryInfo(type,id);
+		return categoryService.getCategoryInfo(type, id);
 	}
 
-	//根据等级查询商品类型
+	// 根据等级查询商品类型
 	public Map<String, Object> searchCategoryInfo(int type) {
 		return categoryService.searchCategoryInfo(type);
 	}

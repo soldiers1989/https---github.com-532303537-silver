@@ -242,18 +242,19 @@ public class StockServiceImpl implements StockService {
 			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> stockMap = (Map<String, Object>) jsonList.get(i);
 			String entGoodsNo = stockMap.get("entGoodsNo") + "";
+			params.clear();
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
-			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
+			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
 			params.clear();
 			params.put("entGoodsNo", entGoodsNo);
 			params.put("goodsMerchantId", merchantId);
-			List<Object> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+			List<Object> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 			if (reStockList == null || reGoodsRecordList == null) {
 				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
 				errorList.add(errorMap);
 			} else if (!reStockList.isEmpty() && !reGoodsRecordList.isEmpty()) {
-				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordList.get(i);
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordList.get(0);
 				String goodsFirstTypeId = goodsRecordInfo.getSpareGoodsFirstTypeId();
 				String goodsSecondTypeId = goodsRecordInfo.getSpareGoodsSecondTypeId();
 				String goodsThirdTypeId = goodsRecordInfo.getSpareGoodsThirdTypeId();
@@ -388,8 +389,8 @@ public class StockServiceImpl implements StockService {
 		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
-			String key = isKey.next();
-			String value = datasMap.get(key) + "";
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
 			switch (key) {
 			case "goodsName":
 				if (StringEmptyUtils.isNotEmpty(value)) {
@@ -502,6 +503,11 @@ public class StockServiceImpl implements StockService {
 				}
 				break;
 			case "merchantName":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
+				}
+				break;
+			case "memberName":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value);
 				}

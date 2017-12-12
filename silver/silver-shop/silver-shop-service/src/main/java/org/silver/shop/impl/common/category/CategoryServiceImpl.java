@@ -85,7 +85,6 @@ public class CategoryServiceImpl implements CategoryService {
 				} else {
 					secondMap = new HashMap<>();
 					List<Map<String, Object>> thirdList = new ArrayList<>();
-
 					thirdMap = new LinkedMap();
 					thirdMap.put("thirdId", thirdId);
 					thirdMap.put("thirdName", thirdName);
@@ -94,7 +93,6 @@ public class CategoryServiceImpl implements CategoryService {
 					thirdMap.put("consumptionTax", consumptionTax);
 					thirdMap.put("consolidatedTax", consolidatedTax);
 					thirdList.add(thirdMap);
-
 					secondMap.put(secId + "_" + secName, thirdList);
 					firstMap.put(firstId + "_" + firstName, secondMap);
 				}

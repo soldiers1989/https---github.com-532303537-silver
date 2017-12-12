@@ -85,8 +85,10 @@
 			resource="org/silver/shop/model/system/commerce/ShopCarContent.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml" />
-			<mapping
+		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantWalletContent.hbm.xml" />
+				<mapping
+			resource="org/silver/shop/model/system/tenant/MerchantWalletLog.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

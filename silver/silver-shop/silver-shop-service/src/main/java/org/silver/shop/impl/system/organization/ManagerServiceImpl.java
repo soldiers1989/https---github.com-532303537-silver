@@ -15,11 +15,14 @@ import org.silver.shop.impl.system.commerce.StockServiceImpl;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+
+import net.sf.json.JSONArray;
 
 @Service(interfaceClass = ManagerService.class)
 public class ManagerServiceImpl implements ManagerService {
@@ -37,10 +40,11 @@ public class ManagerServiceImpl implements ManagerService {
 	}
 
 	@Override
-	public Map<String, Object> findAllmemberInfo() {
+	public Map<String, Object> findAllmemberInfo(int page, int size, Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		List<Object> reList = managerDao.findByProperty(Member.class, paramMap, 0, 0);
+		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		List<Object> reList = managerDao.findByProperty(Member.class, paramMap, page, size);
 		long totalCount = managerDao.findByPropertyCount(Member.class, null);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -104,12 +108,12 @@ public class ManagerServiceImpl implements ManagerService {
 	}
 
 	@Override
-	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap) {
+	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
-		long totalCount = managerDao.findByPropertyCount(Merchant.class, null);
+		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, page, size);
+		long totalCount = managerDao.findByPropertyCount(Merchant.class, paramMap);
 		List<Object> item = new ArrayList<>();
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -360,32 +364,36 @@ public class ManagerServiceImpl implements ManagerService {
 			return statusMap;
 		} else if (!reList.isEmpty()) {
 			Merchant merchantInfo = (Merchant) reList.get(0);
+			int imgKey = 0;
 			for (int i = 0; i < arrayInt.length; i++) {
 				int picIndex = arrayInt[i];
 				switch (picIndex) {
 				case 0:
-					merchantInfo.setMerchantAvatar(imglist.get(i) + "");
+					merchantInfo.setMerchantAvatar(imglist.get(imgKey) + "");
 					break;
 				case 1:
-					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(i) + "");
+					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(imgKey) + "");
 					break;
 				case 2:
-					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(i) + "");
+					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(imgKey) + "");
 					break;
 				case 3:
-					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(i) + "");
+					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(imgKey) + "");
 					break;
 				case 4:
-					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(i) + "");
+					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(imgKey) + "");
 					break;
 				case 5:
-					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(i) + "");
+					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(imgKey) + "");
 					break;
 				case 6:
-					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(i) + "");
+					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(imgKey) + "");
 					break;
 				default:
 					break;
+				}
+				if (picIndex >= 0) {
+					imgKey++;
 				}
 			}
 			if (!managerDao.update(merchantInfo)) {
@@ -404,40 +412,46 @@ public class ManagerServiceImpl implements ManagerService {
 	}
 
 	@Override
-	public Map<String, Object> addMerchantBusinessInfo(String merchantId, int[] arrayInt, List<Object> imglist) {
+	public Map<String, Object> addMerchantBusinessInfo(String merchantId, String[] arrayStr, List<Object> imglist) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("merchantId", merchantId);
-		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
+		List<Merchant> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
 		} else if (!reList.isEmpty()) {
-			Merchant merchantInfo = (Merchant) reList.get(0);
-			for (int i = 0; i < arrayInt.length; i++) {
-				int picIndex = arrayInt[i];
+			Merchant merchantInfo = reList.get(0);
+			// 创建图片List下标值
+			int imgIndex = 0;
+			for (int i = 0; i < arrayStr.length; i++) {
+				String picIndex = arrayStr[i];
 				switch (picIndex) {
-				case 1:
-					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(i) + "");
+				case "1":
+					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(imgIndex) + "");
 					break;
-				case 2:
-					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(i) + "");
+				case "2":
+					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(imgIndex) + "");
 					break;
-				case 3:
-					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(i) + "");
+				case "3":
+					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(imgIndex) + "");
 					break;
-				case 4:
-					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(i) + "");
+				case "4":
+					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(imgIndex) + "");
 					break;
-				case 5:
-					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(i) + "");
+				case "5":
+					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(imgIndex) + "");
 					break;
-				case 6:
-					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(i) + "");
+				case "6":
+					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(imgIndex) + "");
 					break;
 				default:
 					break;
+				}
+				// arrayStr字符串数组当前下标中的值不为空时,则代表有图片上传,index +1
+				if (StringEmptyUtils.isNotEmpty(picIndex)) {
+					imgIndex++;
 				}
 			}
 			if (!managerDao.update(merchantInfo)) {
@@ -482,9 +496,8 @@ public class ManagerServiceImpl implements ManagerService {
 			Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Member memberInfo = null;
-		Iterator<String> isKey = datasMap.keySet().iterator();
-		while (isKey.hasNext()) {
-			String key = isKey.next();
+		for (Map.Entry<String, Object> entry : datasMap.entrySet()) {
+			String key = entry.getKey();
 			String value = datasMap.get(key) + "".trim();
 			switch (key.trim()) {
 			case "memberId":
@@ -567,7 +580,73 @@ public class ManagerServiceImpl implements ManagerService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
-
 	}
 
+	@Override
+	public Map<String, Object> findMerchantRecordDetail(String merchantId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchantId", merchantId);
+		List<Object> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+
+	@Override
+	public Map<String, Object> editMerchantRecordDetail(String managerId, String managerName, String merchantId,
+			String merchantRecordInfo) {
+		Map<String, Object> statusMap = new HashMap<>();
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(merchantRecordInfo);
+		} catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "商户备案信息参数错误!");
+			return statusMap;
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
+			Map<String, Object> paramMap = new HashMap<>();
+			long id = Long.parseLong(datasMap.get("id") + "");
+			paramMap.put("id", id);
+			List<Object> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+			if (reList != null && !reList.isEmpty()) {
+				MerchantRecordInfo recordInfo = (MerchantRecordInfo) reList.get(0);
+				int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+				String ebEntNo = datasMap.get("ebEntNo") + "";
+				String ebEntName = datasMap.get("ebEntName") + "";
+				String ebpEntNo = datasMap.get("ebpEntNo") + "";
+				String ebpEntName = datasMap.get("ebpEntName") + "";
+				recordInfo.setCustomsPort(customsPort);
+				recordInfo.setEbEntNo(ebEntNo);
+				recordInfo.setEbEntName(ebEntName);
+				recordInfo.setEbpEntNo(ebpEntNo);
+				recordInfo.setEbpEntName(ebpEntName);
+				if (!managerDao.update(recordInfo)) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+					return statusMap;
+				}
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+				return statusMap;
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
 }

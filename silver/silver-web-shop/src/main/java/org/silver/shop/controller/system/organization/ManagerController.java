@@ -77,13 +77,14 @@ public class ManagerController {
 	@ApiOperation("管理员查询所有用户信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllmemberInfo();
+		Map<String, Object> statusMap = managerTransaction.findAllmemberInfo(req,page,size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -134,13 +135,14 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员查询所有商户信息")
-	public String findAllMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String findAllMerchantInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo(req);
+		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo(req,page,size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -283,16 +285,23 @@ public class ManagerController {
 			@RequestParam("loginPassword") String loginPassword,
 			@RequestParam("merchantIdCardName") String merchantIdCardName,
 			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") String type, @RequestParam("length") int length, HttpServletRequest req,
+			@RequestParam("type") int type, @RequestParam("imgLength") int imgLength, HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword,
-				merchantIdCard, merchantIdCardName, recordInfoPack, type, length, req);
-		return JSONObject.fromObject(statusMap).toString();
+		Map<String, Object> statusMap = new HashMap<>();
+		if (type == 1 || type == 2 && imgLength > 0) {
+			statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword, merchantIdCard,
+					merchantIdCardName, recordInfoPack, type, imgLength, req);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
 	}
 
 	/**
@@ -420,7 +429,6 @@ public class ManagerController {
 
 	/**
 	 * 管理员修改用户信息
-	 * 
 	 * @param req
 	 * @param response
 	 * @param merchantId
@@ -439,6 +447,69 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = managerTransaction.managerEditMemberInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	/**
+	 * 管理员查看商户备案信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/findMerchantRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员查看商户备案信息")
+	public String findMerchantRecordDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (merchantId != null) {
+			statusMap = managerTransaction.findMerchantRecordDetail(merchantId);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
+	
+	
 
+	/**
+	 * 管理员修改商户备案信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/editMerchantRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员修改商户备案信息")
+	public String editMerchantRecordDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId,@RequestParam("merchantRecordInfo")String merchantRecordInfo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (merchantId != null) {
+			statusMap = managerTransaction.editMerchantRecordDetail(merchantId,merchantRecordInfo);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
 	}
 }

@@ -1,12 +1,18 @@
-package org.silver.shop.service;
+package org.silver.shop.utils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Proxy;
 
-public class TotalProxy {
+import org.silver.shop.api.system.cross.YsPayReceiveService;
 
+import com.alibaba.dubbo.config.annotation.Reference;
+
+public class TotalProxy {
+	
+	@Reference
+	//public TotalProxyService totalProxyService; 
 	// 维护一个目标对象
 	private Object target;
 

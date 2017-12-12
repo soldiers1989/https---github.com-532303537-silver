@@ -10,9 +10,12 @@ public interface ManagerService {
 
 	/**
 	 * 管理员查询用户信息
+	 * @param size 
+	 * @param page 
+	 * @param datasMap 
 	 * @return
 	 */
-	public Map<String, Object> findAllmemberInfo();
+	public Map<String, Object> findAllmemberInfo(int page, int size, Map<String, Object> datasMap);
 
 	/**
 	 * 创建管理员
@@ -28,9 +31,11 @@ public interface ManagerService {
 	/**
 	 * 管理员查询所有商户信息
 	 * @param datasMap 
+	 * @param size 
+	 * @param page 
 	 * @return
 	 */
-	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap);
+	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap, int page, int size);
 
 	/**
 	 * 管理查询商户详情
@@ -84,13 +89,13 @@ public interface ManagerService {
 			int[] arrayInt,String merchantId);
 
 	/**
-	 * 添加商户业务信息
-	 * @param merchantId 
-	 * @param arrayInt
-	 * @param imglist
-	 * @return
+	 * 添加商户业务信息(图片)
+	 * @param merchantId  商户Id
+	 * @param arrayStr 参数下标
+	 * @param imglist 图片List
+	 * @return Map
 	 */
-	public Map<String, Object> addMerchantBusinessInfo(String merchantId, int[] arrayInt, List<Object> imglist);
+	public Map<String, Object> addMerchantBusinessInfo(String merchantId, String[] arrayInt, List<Object> imglist);
 
 	/**
 	 * 管理员查询用户详情
@@ -108,6 +113,24 @@ public interface ManagerService {
 	 */
 	public Map<String, Object> managerEditMemberInfo(String managerId, String managerName,
 			Map<String, Object> datasMap);
+
+	/**
+	 * 管理员查看商户备案信息
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	public Map<String, Object> findMerchantRecordDetail(String merchantId);
+
+	/**
+	 * 管理员修改商户备案信息
+	 * @param managerId
+	 * @param managerName
+	 * @param merchantId
+	 * @param merchantRecordInfo
+	 * @return
+	 */
+	public Map<String, Object> editMerchantRecordDetail(String managerId, String managerName, String merchantId,
+			String merchantRecordInfo);
 
 	
 }

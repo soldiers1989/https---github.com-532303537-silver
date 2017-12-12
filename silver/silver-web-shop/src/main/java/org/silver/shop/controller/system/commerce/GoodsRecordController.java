@@ -226,7 +226,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.batchAddRecordGoodsInfo(req);
+		Map<String, Object> statusMap = goodsRecordTransaction.batchAddNotRecordGoodsInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -279,7 +279,7 @@ public class GoodsRecordController {
 	}
 
 	/**
-	 * 商户修改备案商品信息(局限于未备案与备案失败的商品)
+	 * 商户修改备案商品信息(仅限于未备案与备案失败的商品)
 	 * 
 	 * @param req
 	 * @param response
@@ -298,6 +298,65 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = goodsRecordTransaction.merchantEditGoodsRecordInfo(req, length);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/managerGetGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员查询商品备案信息")
+	@RequiresRoles("Manager")
+	public String managerGetGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordInfo(page, size);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/batchAddRecordGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("批量添加已备案商品信息")
+	@RequiresRoles("Merchant")
+	public String batchAddRecordGoodsInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.batchAddRecordGoodsInfo(req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/managerGetGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员查询备案商品详情")
+	@RequiresRoles("Manager")
+	public String managerGetGoodsRecordDetail(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("entGoodsNo") String entGoodsNo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordDetail(entGoodsNo);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/merchantDeleteGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商戶删除商品备案信息")
+	@RequiresRoles("Merchant")
+	public String merchantDeleteGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("entGoodsNo") String entGoodsNo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = goodsRecordTransaction.merchantDeleteGoodsRecordInfo(entGoodsNo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 

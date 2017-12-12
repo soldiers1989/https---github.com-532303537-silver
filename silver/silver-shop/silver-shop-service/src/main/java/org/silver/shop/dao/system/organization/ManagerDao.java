@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public interface ManagerDao {
+public interface ManagerDao<T> {
 
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
@@ -29,7 +29,7 @@ public interface ManagerDao {
 	 * @param page
 	 * @param size
 	 */
-	public List<Object> findByProperty(Class entity, Map params, int page, int size);
+	public List<T> findByProperty(Class entity, Map params, int page, int size);
 
 	/**
 	 * 根据实体更新数据

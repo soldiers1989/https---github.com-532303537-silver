@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-12-11 18:28:33 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.MerchantWalletLog" table="ym_shop_sys_merchant_wallet_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="entPayNo" type="java.lang.String">
+            <column name="entPayNo" />
+        </property>
+        <property name="entPayName" type="java.lang.String">
+            <column name="entPayName" />
+        </property>
+        <property name="entOrderNo" type="java.lang.String">
+            <column name="entOrderNo" />
+        </property>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" />
+        </property>
+        <property name="memberName" type="java.lang.String">
+            <column name="memberName" />
+        </property>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" />
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" />
+        </property>
+        <property name="beforeChangingBalance" type="double">
+            <column name="beforeChangingBalance" />
+        </property>
+        <property name="afterChangeBalance" type="double">
+            <column name="afterChangeBalance" />
+        </property>
+        <property name="payAmount" type="double">
+            <column name="payAmount" />
+        </property>
+        <property name="type" type="int">
+            <column name="type" />
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="status" type="int">
+            <column name="status" />
+        </property>
+    </class>
+</hibernate-mapping>
