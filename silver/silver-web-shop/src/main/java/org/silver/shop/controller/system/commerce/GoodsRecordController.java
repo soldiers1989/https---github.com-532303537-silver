@@ -99,21 +99,6 @@ public class GoodsRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/findMerchantGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("商戶查询商品备案信息")
-	@RequiresRoles("Merchant")
-	public String findMerchantGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.findMerchantGoodsRecordInfo(page, size);
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
 	/**
 	 * 备案网关异步回馈备案商品信息
 	 * 

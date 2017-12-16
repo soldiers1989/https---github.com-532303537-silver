@@ -32,7 +32,7 @@ public interface BaseDao<T> {
 	 * @param size 数目
 	 * @return List 
 	 */
-	public List<Object> findByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
+	public List<T> findByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
 
 	/**
 	 * 将实体类实例化

@@ -12,6 +12,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
+import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.system.organization.Member;
 
@@ -549,7 +550,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd =  new BaseDaoImpl();
 		paramMap.put("firstTypeId", Long.parseLong("29"));
-		List<Object> reThirdTypeList = bd.findByProperty(GoodsThirdType.class, paramMap, 0, 0);
+		List<Object> reThirdTypeList = bd.findByProperty(CustomsPort.class, null, 0, 0);
 		System.out.println("0----->>>>"+reThirdTypeList.size());
 	}
 

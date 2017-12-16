@@ -136,11 +136,24 @@ public class MerchantTransaction {
 			String status = reMap.get(BaseCode.STATUS.getBaseCode()) + "";
 			if (status.equals("1")) {
 				datasMap = merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
-			} else {
-				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-				datasMap.put(BaseCode.MSG.getBaseCode(), "原登录密码输入错误");
-			}
+				return datasMap;
+			} 
 		}
+		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+		datasMap.put(BaseCode.MSG.getBaseCode(), "原登录密码输入错误");
 		return datasMap;
+	}
+
+	//获取商户备案信息
+	public Map<String, Object> getMerchantRecordInfo() {
+		Map<String, Object> datasMap = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		
+		return merchantService.getMerchantRecordInfo(merchantId);
 	}
 }

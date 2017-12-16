@@ -99,7 +99,7 @@ public class MerchantController {
 	 * @param recordInfoPack
 	 *            第三方商户注册备案信息包(由JSON转成String)
 	 * @param type
-	 *            1-银盟商户注册,2-第三方商户注册	
+	 *            1-银盟商户注册,2-第三方商户注册
 	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
@@ -245,8 +245,14 @@ public class MerchantController {
 	@ResponseBody
 	@ApiOperation("修改商户登录密码")
 	@RequiresRoles("Merchant")
-	public String editMerchantLoginPassword(@RequestParam("loginPassword") String oldLoginPassword,
+	public String editMerchantLoginPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("oldLoginPassword") String oldLoginPassword,
 			@RequestParam("newLoginPassword") String newLoginPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (oldLoginPassword != null && newLoginPassword != null) {
 			statusMap = merchantTransaction.editLoginPassword(oldLoginPassword, newLoginPassword);
@@ -289,5 +295,20 @@ public class MerchantController {
 			statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	@RequestMapping(value = "/getMerchantRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("获取商户备案信息")
+	@RequiresRoles("Merchant")
+	public String getMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+
+		Map<String, Object> statusMap = merchantTransaction.getMerchantRecordInfo();
+		return null;
 	}
 }

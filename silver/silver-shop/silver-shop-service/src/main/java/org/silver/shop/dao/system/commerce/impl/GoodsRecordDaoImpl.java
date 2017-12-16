@@ -89,8 +89,7 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 	}
 
 	@Override
-	public Table findByRecordInfoLike(Class entity, Map<String, Object> params, Map blurryMap, int page,
-			int size) {
+	public Table findByRecordInfoLike(Class entity, Map<String, Object> params, Map blurryMap, int page, int size) {
 		Session session = null;
 		try {
 			String queryString = "SELECT t1.customsPort, t1.customsPortName, t1.customsCode, t1.customsName, t1.ciqOrgCode, t1.ciqOrgName, t1.status as acceptFlag, t2.* FROM ym_shop_goods_record t1 RIGHT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo ";
@@ -105,9 +104,11 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 						queryString = queryString + "t2.createDate " + " > " + "?" + " and ";
 					} else if ("endDate".equals(property)) {
 						queryString = queryString + "t2.createDate " + " < " + "?" + " and ";
-					} else if("customsPort".equals(property)|| "customsPortName".equals(property)||"customsCode".equals(property)||"customsName".equals(property)||"ciqOrgCode".equals(property)||"ciqOrgName".equals(property)){
+					} else if ("customsPort".equals(property) || "customsPortName".equals(property)
+							|| "customsCode".equals(property) || "customsName".equals(property)
+							|| "ciqOrgCode".equals(property) || "ciqOrgName".equals(property)) {
 						queryString = queryString + "t1." + property + " = " + "?" + " and ";
-					}else{
+					} else {
 						queryString = queryString + "t2." + property + " = " + "?" + " and ";
 					}
 					sqlParams.add(params.get(property));

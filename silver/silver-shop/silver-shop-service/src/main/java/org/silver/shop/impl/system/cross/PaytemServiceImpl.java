@@ -29,7 +29,6 @@ public class PaytemServiceImpl implements PaymentService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("reSerialNo", datasMap.get("messageID") + "");
-		paramMap.put("entPayNo", datasMap.get("entPayNo") + "");
 		String reMsg = datasMap.get("errMsg") + "";
 		List<Object> reList = paymentDao.findByProperty(PaymentContent.class, paramMap, 1, 1);
 		if (reList != null && reList.size() > 0) {

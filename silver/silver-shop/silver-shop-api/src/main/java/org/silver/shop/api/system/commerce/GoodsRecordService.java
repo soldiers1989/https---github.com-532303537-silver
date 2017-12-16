@@ -39,18 +39,6 @@ public interface GoodsRecordService {
 	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String customsPort,
 			String customsCode, String ciqOrgCode, String recordGoodsInfoPack);
 
-	/**
-	 * 查询所有商品备案信息
-	 * 
-	 * @param merchantId
-	 *            商户ID
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数目
-	 * @return
-	 */
-	public Map<String, Object> findAllGoodsRecordInfo(String merchantId,  int page, int size);
 
 	/**
 	 * 异步回调,更新商品备案状态

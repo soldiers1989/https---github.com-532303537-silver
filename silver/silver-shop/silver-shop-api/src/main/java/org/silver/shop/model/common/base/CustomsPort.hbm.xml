@@ -15,10 +15,10 @@
             <column name="city" not-null="true"/>
         </property>
         <property name="customsPort" type="int">
-            <column name="customsPort" not-null="true" unique="true"/>
+            <column name="customsPort" not-null="true" />
         </property>
         <property name="customsPortName" type="java.lang.String">
-            <column name="customsPortName" not-null="true" unique="true"/>
+            <column name="customsPortName" not-null="true"/>
         </property>
         <property name="customsCode" type="java.lang.String">
             <column name="customsCode" not-null="true"/>

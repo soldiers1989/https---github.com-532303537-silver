@@ -67,6 +67,8 @@
 				/regin=anon 
 				/login=anon
 				/member/*=anon
+				/manual/*=anon
+				/ympay/*=anon
 				/yspay-receive/*=anon
 				/yspay/*=anon
 				/recipient/*=anon

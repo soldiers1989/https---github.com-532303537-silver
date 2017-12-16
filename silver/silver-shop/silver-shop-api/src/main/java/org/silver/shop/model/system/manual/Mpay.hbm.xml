@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.silver.shop.model.system.manual">
+
+	<class name="Mpay" table="ym_shop_manual_mpay">
+
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity">
+
+			</generator>
+		</id>
+
+		<property name="trade_no">
+			<column name="trade_no" not-null="true" unique="true" />
+		</property>
+
+		<property name="merchant_no">
+			<column name="merchant_no" not-null="true" />
+		</property>
+
+		<property name="morder_id">
+			<column name="morder_id" not-null="true" />
+		</property>
+
+
+		<property name="pay_amount" type="java.lang.Double">
+			<column name="pay_amount" not-null="true" />
+		</property>
+
+
+		<property name="trade_status">
+			<column name="trade_status" />
+		</property>
+
+		<property name="payer_name">
+			<column name="payer_name" not-null="true" />
+		</property>
+
+		<property name="payer_document_type">
+			<column name="payer_document_type" not-null="true" />
+		</property>
+
+		<property name="payer_document_number">
+			<column name="payer_document_number" not-null="true" />
+		</property>
+
+		<property name="payer_phone_number">
+			<column name="payer_phone_number" not-null="true" />
+		</property>
+
+		<property name="year">
+			<column name="year" />
+		</property>
+
+
+		<property name="del_flag" type="java.lang.Integer">
+			<column name="del_flag" not-null="true" />
+		</property>
+
+
+		<property name="create_date" type="java.util.Date">
+			<column name="create_date" not-null="true" />
+		</property>
+
+		<property name="create_by">
+			<column name="create_by" />
+		</property>
+
+		<property name="update_date" type="java.util.Date">
+			<column name="update_date" />
+		</property>
+
+		<property name="update_by">
+			<column name="update_by" />
+		</property>
+
+		<property name="remarks">
+			<column name="remarks" />
+		</property>
+		<property name="pay_status">
+			<column name="pay_status" not-null="true" />
+		</property>
+		<property name="pay_currCode">
+			<column name="pay_currCode" not-null="true" />
+		</property>
+		
+		<property name="pay_serial_no">
+			<column name="pay_serial_no"  />
+		</property>
+		<property name="pay_re_note">
+			<column name="pay_re_note"  />
+		</property>
+			<property name="pay_record_status" type = "int">
+			<column name="pay_record_status"  />
+		</property>
+	</class>
+
+</hibernate-mapping>

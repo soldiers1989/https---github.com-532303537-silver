@@ -495,26 +495,25 @@ public class ManagerServiceImpl implements ManagerService {
 	public Map<String, Object> managerEditMemberInfo(String managerId, String managerName,
 			Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Member memberInfo = null;
+		Member memberInfo =null;
+		String memberId = datasMap.get("memberId")+"";
+		if (StringEmptyUtils.isNotEmpty(memberId)) {
+			// 查询数据库已存在的用户信息
+			Map<String, Object> reMemberMap = findMemberDetail(memberId);
+			if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+				return reMemberMap;
+			}
+			List<Object> dataList = (List<Object>) reMemberMap.get(BaseCode.DATAS.toString());
+			memberInfo = (Member) dataList.get(0);
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "用户Id不能为空!");
+			return statusMap;
+		}
 		for (Map.Entry<String, Object> entry : datasMap.entrySet()) {
 			String key = entry.getKey();
 			String value = datasMap.get(key) + "".trim();
 			switch (key.trim()) {
-			case "memberId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					// 查询数据库已存在的用户信息
-					Map<String, Object> reMemberMap = findMemberDetail(value);
-					if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
-						return reMemberMap;
-					}
-					List<Object> dataList = (List<Object>) reMemberMap.get(BaseCode.DATAS.toString());
-					memberInfo = (Member) dataList.get(0);
-				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "用户Id不能为空!");
-					return statusMap;
-				}
-				break;
 			case "memberTel":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					memberInfo.setMemberTel(value);
@@ -649,4 +648,5 @@ public class ManagerServiceImpl implements ManagerService {
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}
+
 }

@@ -47,6 +47,10 @@ public class MemberServiceImpl implements MemberService {
 		member.setCreateBy(account);
 		member.setMemberTel(memberTel);
 		member.setCreateDate(date);
+		//用户状态1-审核2-启用3-禁用
+		member.setMemberStatus(1);
+		//用户实名1-未实名,2-已实名
+		member.setMemberRealName(1);
 		if (!memberDao.add(member)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

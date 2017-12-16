@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.shop.model.system.manual">
+          
+         <class name="Muser" table="ym_shop_manual_muser" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+          <property name="muser_sys_no">
+              <column name="muser_sys_no" not-null="true" unique="true"/>
+         </property>
+          
+          <property name="merchant_no">
+              <column name="merchant_no" not-null="true"/>
+         </property>
+         
+         <property name="muser_name">
+              <column name="muser_name" not-null="true"/>
+         </property>
+         
+         <property name="muser_tel" >
+              <column name="muser_tel" not-null="true"/>
+         </property>
+         
+         
+          <property name="muser_addr" >
+              <column name="muser_addr" not-null="true"/>
+         </property>
+         
+         <property name="muser_cer_type" >
+              <column name="muser_cer_type" />
+         </property>
+         
+          <property name="muser_ID" >
+              <column name="muser_ID" not-null="true"/>
+         </property>
+         
+          <property name="bank_type" >
+              <column name="bank_type"/>
+         </property>
+         
+           <property name="bank_card_no" >
+              <column name="bank_card_no" not-null="true"/>
+         </property>
+         
+         <property name="adm_area_code" >
+              <column name="adm_area_code" not-null="true"/>
+         </property>
+         
+        
+         
+         
+          <property name="del_flag" type="java.lang.Integer" >
+              <column name="del_flag" not-null="true"/>
+         </property>
+         
+         
+         <property name="create_date" type="java.util.Date" >
+              <column name="create_date" not-null="true"/>
+         </property>
+         
+         <property name="create_by"  >
+              <column name="create_by" />
+         </property>
+         
+         <property name="update_date" type="java.util.Date" >
+              <column name="update_date" />
+         </property>
+       
+       <property name="update_by"  >
+              <column name="update_by" />
+         </property>
+         
+         <property name="remarks"  >
+              <column name="remarks" />
+         </property>
+         
+         
+ 
+        
+        
+          </class>
+          
+        </hibernate-mapping>

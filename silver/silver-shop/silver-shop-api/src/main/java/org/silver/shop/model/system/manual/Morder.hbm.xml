@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.silver.shop.model.system.manual">
+
+	<class name="Morder" table="ym_shop_manual_morder">
+
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity">
+
+			</generator>
+		</id>
+
+		<property name="order_id">
+			<column name="order_id" not-null="true" unique="true" />
+		</property>
+		<property name="trade_no">
+			<column name="trade_no" unique="true" />
+		</property>
+		<property name="merchant_no">
+			<column name="merchant_no" not-null="true" />
+		</property>
+
+		<property name="Fcode">
+			<column name="Fcode" not-null="true" />
+		</property>
+
+
+		<property name="FCY" type="java.lang.Double">
+			<column name="FCY" not-null="true" />
+		</property>
+
+		<property name="Tax" type="java.lang.Double">
+			<column name="Tax" not-null="true" />
+		</property>
+
+		<property name="ActualAmountPaid" type="java.lang.Double">
+			<column name="ActualAmountPaid" not-null="true" />
+		</property>
+
+		<property name="RecipientName">
+			<column name="RecipientName" not-null="true" />
+		</property>
+
+		<property name="RecipientAddr">
+			<column name="RecipientAddr" not-null="true" />
+		</property>
+
+		<property name="RecipientID">
+			<column name="RecipientID" not-null="true" />
+		</property>
+
+		<property name="RecipientTel">
+			<column name="RecipientTel" not-null="true" />
+		</property>
+
+		<property name="RecipientProvincesCode">
+			<column name="RecipientProvincesCode" not-null="true" />
+		</property>
+
+		<property name="OrderDocAcount">
+			<column name="OrderDocAcount" not-null="true" />
+		</property>
+
+		<property name="OrderDocName">
+			<column name="OrderDocName" not-null="true" />
+		</property>
+
+		<property name="OrderDocType">
+			<column name="OrderDocType" not-null="true" />
+		</property>
+
+		<property name="OrderDocId">
+			<column name="OrderDocId" not-null="true" />
+		</property>
+
+		<property name="OrderDocTel">
+			<column name="OrderDocTel" not-null="true" />
+		</property>
+		<property name="OrderDate">
+			<column name="OrderDate" not-null="true" />
+		</property>
+		<property name="dateSign">
+			<column name="dateSign" not-null="true" />
+		</property>
+		<property name="waybill">
+			<column name="waybill" />
+		</property>
+		<property name="status" type="java.lang.Integer">
+			<column name="status" not-null="true" />
+		</property>
+		<property name="serial" type="java.lang.Integer">
+			<column name="serial" not-null="true" />
+		</property>
+		<property name="del_flag" type="java.lang.Integer">
+			<column name="del_flag" not-null="true" />
+		</property>
+		<property name="create_date" type="java.util.Date">
+			<column name="create_date" not-null="true" />
+		</property>
+		<property name="create_by">
+			<column name="create_by" />
+		</property>
+
+		<property name="update_date" type="java.util.Date">
+			<column name="update_date" />
+		</property>
+
+		<property name="update_by">
+			<column name="update_by" />
+		</property>
+
+		<property name="remarks">
+			<column name="remarks" />
+		</property>
+		<property name="order_serial_no">
+			<column name="order_serial_no" />
+		</property>
+		<property name="order_re_note">
+			<column name="order_re_note" />
+		</property>
+		<property name="order_record_status" type="int">
+			<column name="order_record_status" />
+		</property>
+
+		<property name="senderName">
+			<column name="senderName" />
+		</property>
+		<property name="senderCountry">
+			<column name="senderCountry" />
+		</property>
+		<property name="senderAreaCode">
+			<column name="senderAreaCode" />
+		</property>
+		<property name="senderAddress">
+			<column name="senderAddress" />
+		</property>
+		<property name="senderTel">
+			<column name="senderTel" />
+		</property>
+
+	</class>
+
+</hibernate-mapping>

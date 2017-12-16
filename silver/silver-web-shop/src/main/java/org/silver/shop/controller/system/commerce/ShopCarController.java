@@ -98,4 +98,9 @@ public class ShopCarController {
 		Map<String, Object> statusMap = shopCarTransaction.editShopCarGoodsInfo(goodsInfo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	public static void main(String[] args) {
+		String str ="广州";
+		System.out.println(str.length());
+	}
 }

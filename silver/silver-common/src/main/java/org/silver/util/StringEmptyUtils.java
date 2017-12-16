@@ -53,7 +53,9 @@ public class StringEmptyUtils {
 			return false;
 		} else if (pObj instanceof JSONNull) {
 			return false;
-		} else if (pObj instanceof String) {
+		}else if((pObj+"").trim().equals("null")){
+			return false;
+		}else if (pObj instanceof String) {
 			if (((String) pObj).length() == 0) {
 				return false;
 			}
@@ -65,8 +67,6 @@ public class StringEmptyUtils {
 			if (((Map) pObj).size() == 0) {
 				return false;
 			}
-		}else if((pObj+"").trim().equals("null")){
-			return false;
 		}
 		return true;
 	}

@@ -261,4 +261,6 @@ public class ManagerTransaction {
 		String managerName = managerInfo.getManagerName();
 		return managerService.editMerchantRecordDetail(managerId,managerName,merchantId,merchantRecordInfo);
 	}
+
+	
 }

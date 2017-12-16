@@ -301,4 +301,24 @@ public class MerchantServiceImpl implements MerchantService {
 		return reMap;
 	}
 
+	@Override
+	public Map<String, Object> getMerchantRecordInfo(String merchantId) {
+		Map<String, Object> params = new HashMap<>();
+		// key=表中列名,value=查询参数
+		params.put("merchantId", merchantId);
+		// 根据商户ID查询商户备案信息数据
+		List<Object> reList = merchantDao.findByProperty(MerchantRecordInfo.class, params, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			params.clear();
+			params.put(BaseCode.DATAS.toString(), reList);
+			params.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			params.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			params.clear();
+			params.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			params.put(BaseCode.MSG.toString(), "查询失败,服务器繁忙！");
+		}
+		return params;
+	}
+
 }

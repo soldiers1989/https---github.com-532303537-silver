@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.shop.model.system.manual">
+          
+         <class name="MorderSub" table="ym_shop_manual_morder_sub" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+         <property name="order_id">
+              <column name="order_id" not-null="true"/>
+         </property>
+         
+         <property name="Seq" type="java.lang.Integer">
+              <column name="Seq" not-null="true"/>
+         </property>
+         
+         <property name="EntGoodsNo">
+              <column name="EntGoodsNo" not-null="true"  />
+         </property>
+              
+         <property name="CIQGoodsNo">
+              <column name="CIQGoodsNo" not-null="true"/>
+         </property>
+        
+         <property name="CusGoodsNo">
+              <column name="CusGoodsNo" not-null="true"/>
+         </property>
+        
+        
+         
+         <property name="HSCode">
+              <column name="HSCode" not-null="true" />
+         </property>
+
+         <property name="GoodsName">
+              <column name="GoodsName" not-null="true" />
+         </property>
+        
+         <property name="GoodsStyle">
+              <column name="GoodsStyle" not-null="true"/>
+         </property>
+         
+         <property name="OriginCountry">
+              <column name="OriginCountry" not-null="true" />
+         </property>
+         
+         <property name="BarCode">
+              <column name="BarCode" />
+         </property>
+   
+         <property name="Brand">
+              <column name="Brand" not-null="true"/>
+         </property>
+         
+         <property name="Qty" type="java.lang.Integer">
+              <column name="Qty" not-null="true"/>
+         </property>
+         
+         <property name="Unit">
+              <column name="Unit" not-null="true" />
+         </property>
+         
+         <property name="Price" type="java.lang.Double">
+              <column name="Price" not-null="true"/>
+         </property>
+         
+         <property name="Total" type="java.lang.Double">
+              <column name="Total" not-null="true"/>
+         </property>    
+          <property name="create_date" type="java.util.Date">
+              <column name="create_date" not-null="true"/>
+         </property>
+     
+     
+     
+        
+          <property name="netWt"  type="java.lang.Double">
+              <column name="netWt"/>
+         </property>
+         
+         <property name="grossWt" type="java.lang.Double">
+              <column name="grossWt"  />
+         </property>
+         
+         <property name="firstLegalCount" type="java.lang.Double">
+              <column name="firstLegalCount" />
+         </property>
+   
+         <property name="secondLegalCount" type="java.lang.Double">
+              <column name="secondLegalCount" />
+         </property>
+         
+         <property name="stdUnit" >
+              <column name="stdUnit"/>
+         </property>
+         
+         <property name="numOfPackages" type="int">
+              <column name="numOfPackages"  />
+         </property>
+         
+         <property name="packageType" type="int">
+              <column name="packageType" />
+         </property>
+         
+         <property name="transportModel" >
+              <column name="transportModel" />
+         </property>
+ 
+        
+        
+          </class>
+          
+        </hibernate-mapping>

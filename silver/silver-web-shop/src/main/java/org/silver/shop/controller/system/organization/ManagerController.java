@@ -352,7 +352,7 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String editMerhcnatBusinessInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("length") int length, @RequestParam("merchantId") String merchantId,
+			@RequestParam("imgLength") int imgLength, @RequestParam("merchantId") String merchantId,
 			@RequestParam("merchantName") String merchantName) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -360,8 +360,8 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (length > 0) {
-			statusMap = managerTransaction.editMerhcnatBusinessInfo(req, length, merchantId, merchantName);
+		if (imgLength > 0) {
+			statusMap = managerTransaction.editMerhcnatBusinessInfo(req, imgLength, merchantId, merchantName);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
@@ -438,7 +438,7 @@ public class ManagerController {
 	@RequestMapping(value = "/managerEditMemberInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	@ApiOperation("管理员查询用户详情")
+	@ApiOperation("管理员修改用户信息")
 	public String managerEditMemberInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -479,9 +479,8 @@ public class ManagerController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
-	
-	
 
+	
 	/**
 	 * 管理员修改商户备案信息
 	 * 

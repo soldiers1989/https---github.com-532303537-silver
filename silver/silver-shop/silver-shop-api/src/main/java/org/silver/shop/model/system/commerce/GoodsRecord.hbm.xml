@@ -43,10 +43,10 @@
 			<column name="ebEntName" not-null="true"/>
 		</property>
 		<property name="ebpEntNo" type="java.lang.String">
-			<column name="ebpEntNo" not-null="true"/>
+			<column name="ebpEntNo" />
 		</property>
 		<property name="ebpEntName" type="java.lang.String">
-			<column name="ebpEntName" not-null="true"/>
+			<column name="ebpEntName" />
 		</property>
 		<property name="status" type="int">
 			<column name="status" not-null="true"/>

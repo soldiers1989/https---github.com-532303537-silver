@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.shop.model.system.manual">
+          
+         <class name="YMWalletLogs" table="ym_shop_e_ymwallet_logs" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+          <property name="sys_wallet_no">
+              <column name="sys_wallet_no" not-null="true" unique="true"/>
+         </property>
+          
+         <property name="merchant_no">
+              <column name="merchant_no" not-null="true"/>
+         </property>
+         
+          <property name="trade_no" >
+              <column name="trade_no" />
+         </property>
+         
+          <property name="before_trade" type="java.lang.Double">
+              <column name="before_trade" not-null="true"/>
+         </property>
+         
+         <property name="amount" type="java.lang.Double">
+              <column name="amount" not-null="true"/>
+         </property>
+         
+ 
+      <property name="after_trade" type="java.lang.Double">
+              <column name="after_trade" not-null="true"/>
+         </property>
+       
+    
+         <property name="create_date" type="java.util.Date" >
+              <column name="create_date" not-null="true"/>
+         </property>
+         
+         <property name="create_by"  >
+              <column name="create_by" />
+         </property>
+ 
+         <property name="remarks"  >
+              <column name="remarks" />
+         </property>
+         
+          </class>
+          
+        </hibernate-mapping>

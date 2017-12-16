@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.shop.model.system.manual">
+          
+         <class name="YMorder" table="ym_shop_e_ymorder" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+          <property name="order_id" type="java.lang.String">
+              <column name="order_id" not-null="true" unique="true"/>
+         </property>
+          
+         <property name="merchant_no" type="java.lang.String">
+              <column name="merchant_no" not-null="true"/>
+         </property>
+         
+         <property name="type" type="java.lang.Integer">
+              <column name="type" not-null="true"/>
+         </property>
+         
+          <property name="content" type="java.lang.String">
+              <column name="content" />
+         </property>
+         
+           <property name="out_trade_no" type="java.lang.String">
+              <column name="out_trade_no" not-null="true"/>
+         </property>
+         
+         <property name="trade_no" type="java.lang.String">
+              <column name="trade_no" />
+         </property>
+         
+          <property name="amount" type="java.lang.Double">
+              <column name="amount" not-null="true"/>
+         </property>
+         
+         <property name="order_status" type="java.lang.Integer">
+              <column name="order_status" not-null="true"/>
+         </property>
+         
+           <property name="extra_common_param" type="java.lang.String">
+              <column name="extra_common_param"/>
+         </property>
+         
+           <property name="notify_url" type="java.lang.String">
+              <column name="notify_url" not-null="true"/>
+         </property>
+         
+          
+         
+          <property name="del_flag" type="java.lang.Integer" >
+              <column name="del_flag" not-null="true"/>
+         </property>
+         
+         
+         <property name="create_date" type="java.util.Date" >
+              <column name="create_date" not-null="true"/>
+         </property>
+         
+         <property name="create_by"  type="java.lang.String">
+              <column name="create_by" />
+         </property>
+         
+         <property name="update_date" type="java.util.Date" >
+              <column name="update_date" />
+         </property>
+       
+       <property name="update_by"  type="java.lang.String">
+              <column name="update_by" />
+         </property>
+         
+         <property name="remarks" type="java.lang.String" >
+              <column name="remarks" />
+         </property>
+         
+          </class>
+          
+        </hibernate-mapping>

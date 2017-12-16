@@ -42,7 +42,7 @@ public class GoodsRecordDetail implements Serializable {
 	private Double grossWt; // 毛重 单位KG
 	private String notes; // 备注
 	private int status;//备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
-	private int recordFlag;//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+	private int recordFlag;//已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案,3-审核不通过
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 修改人

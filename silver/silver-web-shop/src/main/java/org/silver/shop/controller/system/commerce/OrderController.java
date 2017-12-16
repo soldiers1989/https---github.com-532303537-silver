@@ -1,6 +1,5 @@
 package org.silver.shop.controller.system.commerce;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,7 +84,6 @@ public class OrderController {
 		datasMap.put("status", req.getParameter("status") + "");
 		datasMap.put("errMsg", req.getParameter("errMsg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
-		datasMap.put("entOrderNo", req.getParameter("entOrderNo") + "");
 		Map<String, Object> statusMap = orderTransaction.updateOrderRecordInfo(datasMap);
 		logger.info(JSONObject.fromObject(statusMap).toString());
 		return JSONObject.fromObject(statusMap).toString();
@@ -176,23 +174,5 @@ public class OrderController {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
-	}
-	
-	public static void main(String[] args) {
-		  Double d= 0.06*1*(119/100d); 
-		  BigDecimal b = new BigDecimal(d); 
-		  double f1 = b.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
-		  System.out.println("---------->>"+d);
-		  System.out.println("四舍五入后-------->"+f1);
-		  
-		  
-		 float f = Float.parseFloat(d+""); 
-		 int a =   (int) (f * 1000); 
-		 if (a % 10 > 0) {
-			 f = (a - a % 10 + 10 * 1.0f) / 1000.0f; 
-		 }else{ 
-			 f = a * 1.0f / 1000.0f;
-		}
-		  System.out.println(f);
 	}
 }

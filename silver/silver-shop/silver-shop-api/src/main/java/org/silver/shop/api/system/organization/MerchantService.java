@@ -13,7 +13,14 @@ public interface MerchantService {
 
 	/**
 	 * 保存商戶基本信息与备案信息
-	 * 
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param loginPassword 登录密码
+	 * @param merchantIdCard 身份证号码
+	 * @param merchantIdCardName 真实姓名
+	 * @param recordInfoPack 商户备案信息包
+	 * @param type  类型：1-银盟商户注册,2-第三方商户注册	
+	 * @param createBy 创建人
 	 * @return Map
 	 */
 	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
@@ -32,7 +39,7 @@ public interface MerchantService {
 	 * 根据商户名查询商户数据
 	 * 
 	 * @param account
-	 * @return
+	 * @return List
 	 */
 	public List<Object> findMerchantBy(String account);
 
@@ -48,7 +55,7 @@ public interface MerchantService {
 	 * @param entity
 	 * @param type
 	 *            1-银盟商户注册,2-第三方商户注册
-	 * @return
+	 * @return boolean
 	 */
 	public boolean addMerchantRecordInfo(MerchantRecordInfo entity, String type);
 
@@ -68,8 +75,16 @@ public interface MerchantService {
 	 * 更新商户登录密码
 	 * @param merchantInfo  商户实体类
 	 * @param newLoginPassword 新登录密码
+	 * @param Map
 	 */
 	public Map<String,Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword);
+
+	/**
+	 * 获取商户备案信息
+	 * @param merchantId 
+	 * @return Map
+	 */
+	public Map<String, Object> getMerchantRecordInfo(String merchantId);
 
 	
 }

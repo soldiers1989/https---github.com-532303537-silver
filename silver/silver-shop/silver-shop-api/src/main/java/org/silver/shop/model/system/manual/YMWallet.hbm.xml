@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+      <hibernate-mapping package="org.silver.shop.model.system.manual">
+          
+         <class name="YMWallet" table="ym_shop_e_ymwallet" >
+          
+          <id name="id" type="long"> 
+              <column name="id" />              
+               <generator class="identity">           
+                
+            </generator>       
+          </id>
+          
+          <property name="sys_wallet_no">
+              <column name="sys_wallet_no" not-null="true" unique="true"/>
+         </property>
+          
+         <property name="merchant_no">
+              <column name="merchant_no" not-null="true"/>
+         </property>
+         
+         
+          <property name="total_fund" type="java.lang.Double">
+              <column name="total_fund" not-null="true"/>
+         </property>
+         
+      <property name="frozen_balance" type="java.lang.Double">
+              <column name="frozen_balance" not-null="true"/>
+         </property>
+         
+          <property name="available_balance"  type="java.lang.Double">
+              <column name="available_balance"  not-null="true"/>
+         </property>
+   
+           <property name="check_sign" >
+              <column name="check_sign" not-null="true"/>
+         </property>
+         
+         
+          <property name="status" type="java.lang.Integer" >
+              <column name="status" not-null="true"/>
+         </property>
+         
+         
+         <property name="create_date" type="java.util.Date" >
+              <column name="create_date" not-null="true"/>
+         </property>
+         
+         <property name="create_by"  >
+              <column name="create_by" />
+         </property>
+         
+         <property name="update_date" type="java.util.Date" >
+              <column name="update_date" />
+         </property>
+       
+       <property name="update_by"  >
+              <column name="update_by" />
+         </property>
+         
+         <property name="remarks"  >
+              <column name="remarks" />
+         </property>
+         
+          </class>
+          
+        </hibernate-mapping>

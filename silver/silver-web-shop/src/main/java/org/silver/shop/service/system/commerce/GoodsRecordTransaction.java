@@ -73,15 +73,7 @@ public class GoodsRecordTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		return goodsRecordService.merchantSendGoodsRecord(merchantName, merchantId, customsPort, customsCode,
 				ciqOrgCode, recordGoodsInfoPack);
-	}
-
-	public Map<String, Object> findMerchantGoodsRecordInfo(int page, int size) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
-		String merchantId = merchantInfo.getMerchantId();
-		return goodsRecordService.findAllGoodsRecordInfo(merchantId, page, size);
-	}
+	}	
 
 	// 处理网关异步回调信息
 	public Map<String, Object> updateGoodsRecordInfo(HttpServletRequest req) {
