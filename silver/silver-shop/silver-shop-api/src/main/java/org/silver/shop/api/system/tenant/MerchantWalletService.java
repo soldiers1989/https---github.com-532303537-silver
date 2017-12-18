@@ -28,8 +28,9 @@ public interface MerchantWalletService {
 	 * @param type 
 	 * @param size 
 	 * @param page 
+	 * @param timeLimit 
 	 * @return
 	 */
-	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page, int size);
+	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page, int size, int timeLimit);
 
 }

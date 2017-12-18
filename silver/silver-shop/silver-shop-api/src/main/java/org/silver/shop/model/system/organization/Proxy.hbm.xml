@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-12-17 13:25:47 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.organization.Proxy" table="ym_shop_proxy">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="proxyUUid" type="java.lang.String">
+            <column name="proxyUUid" />
+        </property>
+        <property name="loginAccount" type="java.lang.String">
+            <column name="loginAccount" />
+        </property>
+        <property name="loginPassword" type="java.lang.String">
+            <column name="loginPassword" />
+        </property>
+        <property name="proxyName" type="java.lang.String">
+            <column name="proxyName" />
+        </property>
+        <property name="proxyPhone" type="java.lang.String">
+            <column name="proxyPhone" />
+        </property>
+        <property name="proxyPhoto" type="java.lang.String">
+            <column name="proxyPhoto" />
+        </property>
+        <property name="proxyId" type="java.lang.String">
+            <column name="proxyId" />
+        </property>
+        <property name="idFront" type="java.lang.String">
+            <column name="idFront" />
+        </property>
+        <property name="idOpposite" type="java.lang.String">
+            <column name="idOpposite" />
+        </property>
+        <property name="proxyEmail" type="java.lang.String">
+            <column name="proxyEmail" />
+        </property>
+        <property name="type" type="int">
+            <column name="type" />
+        </property>
+        <property name="level" type="int">
+            <column name="level" />
+        </property>
+        <property name="points" type="int">
+            <column name="points" />
+        </property>
+        <property name="pointsTotal" type="int">
+            <column name="pointsTotal" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="DELETEDATE" />
+        </property>
+        <property name="remarks" type="java.lang.String">
+            <column name="remarks" />
+        </property>
+    </class>
+</hibernate-mapping>

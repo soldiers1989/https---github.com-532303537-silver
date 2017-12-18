@@ -15,6 +15,7 @@ import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Proxy;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -550,7 +551,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd =  new BaseDaoImpl();
 		paramMap.put("firstTypeId", Long.parseLong("29"));
-		List<Object> reThirdTypeList = bd.findByProperty(CustomsPort.class, null, 0, 0);
+		List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null, 0, 0);
+		
 		System.out.println("0----->>>>"+reThirdTypeList.size());
 	}
 

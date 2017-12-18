@@ -97,6 +97,11 @@
 		<mapping resource="org/silver/shop/model/system/manual/YMorder.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/YMWallet.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/YMWalletLogs.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/organization/Proxy.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/tenant/ProxyWalletContent.hbm.xml" />
+			<mapping
+			resource="org/silver/shop/model/system/tenant/ProxyWalletLog.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

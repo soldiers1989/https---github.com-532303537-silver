@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2017-12-17 14:11:52 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.ProxyWalletContent" table="ym_shop_proxy_wallet_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="walletId" type="java.lang.String">
+            <column name="walletId" />
+        </property>
+        <property name="proxyId" type="java.lang.String">
+            <column name="proxyId" />
+        </property>
+        <property name="proxyName" type="java.lang.String">
+            <column name="proxyName" />
+        </property>
+        <property name="balance" type="double">
+            <column name="balance" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+    </class>
+</hibernate-mapping>

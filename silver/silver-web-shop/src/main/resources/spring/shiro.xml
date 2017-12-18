@@ -19,10 +19,14 @@
 	<dubbo:reference id="managerService" interface="org.silver.shop.api.system.organization.ManagerService" check="false" />
     <dubbo:reference id="memberService" interface="org.silver.shop.api.system.organization.MemberService" check="false" />	
     <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
+    
+    <dubbo:reference id="proxyService" interface="org.silver.shop.api.system.organization.ProxyService" check="false" />
+    
 	<!-- 配置Realm -->
 	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" /> 
 	<bean id="managerRealm" class="org.silver.shop.shiro.ManagerRealm" />
     <bean id="merchantRealm" class="org.silver.shop.shiro.MerchantRealm" />
+    <bean id="proxyRealm" class="org.silver.shop.shiro.ProxyRealm" />
     
  	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
 		
@@ -32,6 +36,7 @@
 				<ref bean="memberRealm" />
 				<ref bean="managerRealm" />
 				<ref bean="merchantRealm" />
+				<ref bean="proxyRealm" />
 			</list>
 		</property>
 	</bean>
@@ -67,6 +72,8 @@
 				/regin=anon 
 				/login=anon
 				/member/*=anon
+				/proxy/*=anon
+				/proxyWallet/*=anon
 				/manual/*=anon
 				/ympay/*=anon
 				/yspay-receive/*=anon

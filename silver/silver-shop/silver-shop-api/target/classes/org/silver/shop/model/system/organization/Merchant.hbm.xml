@@ -105,5 +105,11 @@
          <property name="merchantIdCardName" type="java.lang.String">
             <column name="merchantIdCardName" />
         </property>
+          <property name="proxyParentId" type="java.lang.String">
+            <column name="proxyParentId" />
+        </property>
+            <property name="proxyParentName" type="java.lang.String">
+            <column name="proxyParentName" />
+        </property>
     </class>
 </hibernate-mapping>

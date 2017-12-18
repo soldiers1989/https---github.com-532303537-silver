@@ -23,12 +23,14 @@ public class MerchantWalletLog implements Serializable{
 	private double beforeChangingBalance;//变更之前钱包余额
 	private double afterChangeBalance;//变更之后钱包余额
 	private double payAmount;//交易金额
-	private int type; //分类1-购物、2-充值、3-提现、4-缴费
+	private int type; //分类1-购物、2-充值、3-提现、4-缴费、5-支付代理商佣金
 	private String note; //操作说明
 	private String createBy;//创建人
 	private Date createDate;// 创建日期
 	private int status;//状态：1-交易成功、2-交易失败、3-交易关闭
 	
+	private String proxyId ; //代理商Id
+	private String proxyName ; //代理商Id
 	public long getId() {
 		return id;
 	}
@@ -125,6 +127,18 @@ public class MerchantWalletLog implements Serializable{
 	}
 	public void setEntOrderNo(String entOrderNo) {
 		this.entOrderNo = entOrderNo;
+	}
+	public String getProxyId() {
+		return proxyId;
+	}
+	public String getProxyName() {
+		return proxyName;
+	}
+	public void setProxyId(String proxyId) {
+		this.proxyId = proxyId;
+	}
+	public void setProxyName(String proxyName) {
+		this.proxyName = proxyName;
 	}
 	
 }

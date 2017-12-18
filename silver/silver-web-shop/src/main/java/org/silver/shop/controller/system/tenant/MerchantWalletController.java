@@ -80,7 +80,7 @@ public class MerchantWalletController {
 	@ResponseBody
 	@ApiOperation("商户查看钱包记录")
 	public String getMerchantWalletLog(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("type") int type, @RequestParam("page") int page, @RequestParam("size") int size) {
+			@RequestParam("type") int type, @RequestParam("page") int page, @RequestParam("size") int size,@RequestParam("timeLimit") int timeLimit) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -88,7 +88,7 @@ public class MerchantWalletController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type == 1 || type == 2) {
-			statusMap = merchantWalletTransaction.getMerchantWalletLog(type, page, size);
+			statusMap = merchantWalletTransaction.getMerchantWalletLog(type, page, size,timeLimit);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());

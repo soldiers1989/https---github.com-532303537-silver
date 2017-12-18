@@ -53,5 +53,12 @@
         <property name="status" type="int">
             <column name="status" />
         </property>
+        
+         <property name="proxyId" type="java.lang.String">
+            <column name="proxyId" />
+        </property>
+        <property name="proxyName" type="java.lang.String">
+            <column name="proxyName" />
+        </property>
     </class>
 </hibernate-mapping>

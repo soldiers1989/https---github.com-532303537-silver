@@ -14,10 +14,12 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
 import org.silver.shop.impl.system.commerce.OrderServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
+import org.silver.shop.impl.system.tenant.WalletLogServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -63,6 +65,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 
+	@Autowired
+	private WalletLogService walletLogService;
+	
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -274,8 +279,20 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				statusMap.put(BaseCode.MSG.toString(), "交易金额存入商户钱包失败,服务器繁忙!");
 				return statusMap;
 			}
-			Map<String, Object> reWalletLogMap = addMerchantWalletLog(merchantId, merchantName, memberId, memberName,
-					entOrderNo, entPayNo, goodsName, payAmount, oldBalance);
+			JSONObject param = new JSONObject();
+			param.put("merchantId", merchantId);
+			param.put("merchantName", merchantName);
+			param.put("memberId", memberId);
+			param.put("memberName", memberName);
+			param.put("entOrderNo", entOrderNo);
+			param.put("entPayNo", entPayNo);
+			//钱包交易日志流水名称
+			param.put("entPayName", goodsName);
+			param.put("payAmount", payAmount);
+			param.put("oldBalance", oldBalance);
+			//分类:1-购物、2-充值、3-提现、4-缴费
+			param.put("type", 1);
+			Map<String,Object> reWalletLogMap = walletLogService.addWalletLog(2, param);
 			if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
 				statusMap.put(BaseCode.MSG.toString(), "交易日志记录失败,服务器繁忙!");
@@ -287,58 +304,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		}
 	}
 
-	/**
-	 * 记录钱包日志
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
-	 * @param memberId
-	 *            用户Id
-	 * @param memberName
-	 *            用户名称
-	 * @param entOrderNo
-	 *            订单(海关)编号
-	 * @param entPayNo
-	 *            支付流水
-	 * @param goodsName
-	 *            商品名称
-	 * @param payAmount
-	 *            支付金额
-	 * @param oldBalance
-	 *            原钱包余额
-	 * @return Map
-	 */
-	private Map<String, Object> addMerchantWalletLog(String merchantId, String merchantName, String memberId,
-			String memberName, String entOrderNo, String entPayNo, String goodsName, double payAmount,
-			double oldBalance) {
-		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
-		MerchantWalletLog walletLog = new MerchantWalletLog();
-		walletLog.setMemberId(memberId);
-		walletLog.setMemberName(memberName);
-		walletLog.setMerchantId(merchantId);
-		walletLog.setMerchantName(merchantName);
-		walletLog.setEntOrderNo(entOrderNo);
-		walletLog.setEntPayNo(entPayNo);
-		walletLog.setEntPayName(goodsName);
-		walletLog.setPayAmount(payAmount);
-		walletLog.setBeforeChangingBalance(oldBalance);
-		walletLog.setAfterChangeBalance(payAmount + oldBalance);
-		// 分类:1-购物、2-充值、3-提现、4-缴费
-		walletLog.setType(1);
-		// 状态：1-交易成功、2-交易失败、3-交易关闭
-		walletLog.setStatus(1);
-		walletLog.setCreateDate(date);
-		walletLog.setMemberName(memberName);
-		if (!ysPayReceiveDao.add(walletLog)) {
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
-		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
-	}
 
 	/**
 	 * 将支付金额存入到商户钱包中
@@ -690,7 +655,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				// 电商企业名称
 				paymentMap.put("ebEntName", merchantRecordInfo.getEbEntName());
 				paymentMap.put("datas", paymentList2.toString());
-				//paymentMap.put("uploadOrNot", false);
+				paymentMap.put("uploadOrNot", false);
 				try {
 					clientsign = MD5.getMD5((YmMallConfig.APPKEY + tok + paymentList2.toString()
 							+ notifyurl + timestamp).getBytes("UTF-8"));

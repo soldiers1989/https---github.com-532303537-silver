@@ -10,9 +10,11 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
+import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
+import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +55,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	 * 检查钱包
 	 * 
 	 * @param type
-	 *            1-商户钱包,2-用户钱包
+	 *            1-商户钱包,2-用户钱包,3-代理商钱包
 	 * @param id
 	 *            商户Id/用户Id
 	 * @param name
@@ -64,12 +66,21 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Class entity = null;
 		if (type > 0 && StringEmptyUtils.isNotEmpty(id) && StringEmptyUtils.isNotEmpty(name)) {
-			if (type == 1) {
+			switch (type) {
+			case 1:
 				params.put("merchantId", id);
 				entity = MerchantWalletContent.class;
-			} else {
+				break;
+			case 2:
 				params.put("memberId", id);
 				entity = MemberWalletContent.class;
+				break;
+			case 3:
+				params.put("proxyId", id);
+				entity = ProxyWalletContent.class;
+				break;
+			default:
+				break;
 			}
 			List<Object> reList = merchantWalletDao.findByProperty(entity, params, 1, 1);
 			if (reList == null) {
@@ -127,6 +138,10 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			wallet = new MemberWalletContent.Builder(serialNo).memberId(id).memberName(name).createBy(name)
 					.createDate(date).build();
 			break;
+		case 3:
+			wallet = new ProxyWalletContent.Builder(serialNo).proxyId(id).proxyName(name).createBy(name)
+					.createDate(date).build();
+			break;
 		default:
 			break;
 		}
@@ -153,41 +168,51 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type,int page,int size) {
+	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page,
+			int size, int timeLimit) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
-		Date endDate = new Date(); // 当前时间
-		Calendar calendar = Calendar.getInstance(); // 得到日历
-		calendar.setTime(endDate);// 把当前时间赋给日历
-		Date startDate = null;
-		//查询时间范围 1-三个月内,2-一年内
-		if(type == 1){//查询最近三个月
-			calendar.add(Calendar.MONTH, -3); // 设置为前3月
-			startDate = calendar.getTime(); // 得到前3月的时间
-		}else if(type ==2){//查询最近一年
-			calendar.add(Calendar.YEAR, -1); // 设置为前1年
-			startDate = calendar.getTime(); // 得到前1年的时间
+		if (page >= 0 && size >= 0 && timeLimit >= 0 && type > 0) {
+			Map<String, Object> params = new HashMap<>();
+			Date endDate = new Date(); // 当前时间
+			Calendar calendar = Calendar.getInstance(); // 得到日历
+			calendar.setTime(endDate);// 把当前时间赋给日历
+			Date startDate = null;
+			// 查询时间范围 1-三个月内,2-一年内
+			if (timeLimit == 1) {// 查询最近三个月
+				calendar.add(Calendar.MONTH, -3); // 设置为前3月
+				startDate = calendar.getTime(); // 得到前3月的时间
+			} else if (timeLimit == 2) {// 查询最近一年
+				calendar.add(Calendar.YEAR, -1); // 设置为前1年
+				startDate = calendar.getTime(); // 得到前1年的时间
+			}
+			params.put("merchantId", merchantId);
+			if (type > 0) {
+				params.put("type", type);
+			}
+			params.put("startDate", startDate);
+			params.put("endDate", endDate);
+			List<Object> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page,
+					size);
+			long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);
+			if (reList == null) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			} else if (!reList.isEmpty()) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				statusMap.put(BaseCode.DATAS.toString(), reList);
+				statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
+				return statusMap;
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+				return statusMap;
+			}
 		}
-		params.put("merchantId", merchantId);
-		params.put("startDate", startDate);
-		params.put("endDate",endDate);
-		List<Object> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page, size);
-		long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params,null);
-		if(reList == null){
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}else if(!reList.isEmpty()){
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
-			return statusMap;
-		}else{
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
-		}
-	}	
-	
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+		return statusMap;
+	}
+
 }

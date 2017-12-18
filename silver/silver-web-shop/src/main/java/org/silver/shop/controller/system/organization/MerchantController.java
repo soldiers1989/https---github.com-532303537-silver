@@ -309,6 +309,6 @@ public class MerchantController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 
 		Map<String, Object> statusMap = merchantTransaction.getMerchantRecordInfo();
-		return null;
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }

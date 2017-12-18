@@ -181,8 +181,8 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 批量导入手工订单
-	 *  暂只支持有国宗、企邦
+	 * 批量导入手工订单 暂只支持有国宗、企邦
+	 * 
 	 * @param resp
 	 * @param req
 	 * @return
@@ -282,7 +282,6 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
 		Map<String, Object> recordMap = new HashMap<>();
 		Enumeration<String> itkeys = req.getParameterNames();
 		String key = "";
@@ -291,12 +290,8 @@ public class EditRecordController {
 			String value = req.getParameter(key);
 			recordMap.put(key, value);
 		}
-		if (!recordMap.isEmpty()) {
-			return JSONObject.fromObject(mdataService.sendMorderRecord(recordMap, orderNoPack)).toString();
-		}
-		reqMap.put("status", -3);
-		reqMap.put("msg", "缺少支付流水号");
-		return JSONObject.fromObject(reqMap).toString();
+
+		return JSONObject.fromObject(mdataService.sendMorderRecord(recordMap, orderNoPack)).toString();
 	}
 
 	/**
@@ -348,14 +343,14 @@ public class EditRecordController {
 	}
 
 	public static void main(String[] args) {
-		for(int i = 0 ; i<5 ; i++){
-			for(int x = 0 ; x <5 ; x++){
-				if(x == 1){
+		for (int i = 0; i < 5; i++) {
+			for (int x = 0; x < 5; x++) {
+				if (x == 1) {
 					break;
 				}
-				System.out.println("x --->"+x);
+				System.out.println("x --->" + x);
 			}
-			System.out.println("---------------"+i);
+			System.out.println("---------------" + i);
 		}
 	}
 }

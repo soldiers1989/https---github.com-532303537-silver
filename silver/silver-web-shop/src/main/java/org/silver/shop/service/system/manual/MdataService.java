@@ -120,7 +120,10 @@ public class MdataService {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		return mpayService.sendMpayByRecord(merchantId, recordMap, tradeNoPack);
+		String merchantName = merchantInfo.getMerchantName();
+		String proxyParentId = merchantInfo.getProxyParentId();
+		String proxyParentName = merchantInfo.getProxyParentName();
+		return mpayService.sendMpayByRecord(merchantId, recordMap, tradeNoPack,proxyParentId,merchantName,proxyParentName);
 	}
 
 	public Object sendMorderRecord(Map<String, Object> recordMap, String orderNoPack) {
@@ -129,7 +132,10 @@ public class MdataService {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		return mpayService.sendMorderRecord(merchantId, recordMap, orderNoPack);
+		String merchantName = merchantInfo.getMerchantName();
+		String proxyParentId = merchantInfo.getProxyParentId();
+		String proxyParentName = merchantInfo.getProxyParentName();
+		return mpayService.sendMorderRecord(merchantId, recordMap, orderNoPack,proxyParentId,merchantName,proxyParentName);
 	}
 
 	// 更新订单信息
