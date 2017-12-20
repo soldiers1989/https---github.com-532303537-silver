@@ -13,17 +13,7 @@ public interface MpayService {
 	 */
 	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs);
 
-	/**
-	 * 根据支付单Id发起支付单备案
-	 * @param merchantId 
-	 * @param merchantId
-	 * @param proxyParentId 
-	 * @param merchantName 
-	 * @param proxyParentName 
-	 * @param tradeIDs
-	 * @return
-	 */
-	public Object sendMpayByRecord(String merchantId, Map<String,Object> recordMap, String tradeNoPack, String proxyParentId, String merchantName, String proxyParentName);
+	
 
 	/**
 	 * 根据订单Id发起订单备案
@@ -45,12 +35,7 @@ public interface MpayService {
 	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap);
 
 	
-	/**
-	 * 异步回调支付单备案信息
-	 * @param datasMap
-	 * @return
-	 */
-	public Map<String, Object> updatePayRecordInfo(Map<String, Object> datasMap);
+	
 	
 
 }

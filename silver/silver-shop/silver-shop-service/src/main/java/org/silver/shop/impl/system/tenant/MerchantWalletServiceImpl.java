@@ -171,7 +171,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page,
 			int size, int timeLimit) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (page >= 0 && size >= 0 && timeLimit >= 0 && type > 0) {
+		if (page >= 0 && size >= 0 && timeLimit >= 0 && type >= 0) {
 			Map<String, Object> params = new HashMap<>();
 			Date endDate = new Date(); // 当前时间
 			Calendar calendar = Calendar.getInstance(); // 得到日历

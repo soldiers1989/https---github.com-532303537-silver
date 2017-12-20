@@ -17,5 +17,8 @@
         <property name="cityCode" type="java.lang.String">
             <column name="cityCode" />
         </property>
+           <property name="postalName" type="java.lang.String">
+            <column name="postalName" />
+        </property>
     </class>
 </hibernate-mapping>

@@ -57,7 +57,7 @@
 		</property>
 
 		<property name="RecipientProvincesCode">
-			<column name="RecipientProvincesCode" not-null="true" />
+			<column name="RecipientProvincesCode"  />
 		</property>
 
 		<property name="OrderDocAcount">
@@ -141,6 +141,25 @@
 			<column name="senderTel" />
 		</property>
 
+		<property name="RecipientCityCode">
+			<column name="RecipientCityCode" />
+		</property>
+		<property name="RecipientAreaCode">
+			<column name="RecipientAreaCode" />
+		</property>
+		<property name="postal">
+			<column name="postal" />
+		</property>
+		
+		<property name="RecipientCityName">
+			<column name="RecipientCityName" />
+		</property>
+		<property name="RecipientAreaName">
+			<column name="RecipientAreaName" />
+		</property>
+		<property name="RecipientProvincesName">
+			<column name="RecipientProvincesName" />
+		</property>
 	</class>
 
 </hibernate-mapping>

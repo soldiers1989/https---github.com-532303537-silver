@@ -114,18 +114,6 @@ public class MdataService {
 		return mpayService.groupCreateMpay(merchantId, orderIDs);
 	}
 
-	public Object sendMpayRecord(Map<String, Object> recordMap, String tradeNoPack) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
-		// 获取登录后的商户账号
-		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		String proxyParentId = merchantInfo.getProxyParentId();
-		String proxyParentName = merchantInfo.getProxyParentName();
-		return mpayService.sendMpayByRecord(merchantId, recordMap, tradeNoPack,proxyParentId,merchantName,proxyParentName);
-	}
-
 	public Object sendMorderRecord(Map<String, Object> recordMap, String orderNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -143,7 +131,5 @@ public class MdataService {
 		return mpayService.updateOrderRecordInfo(datasMap);
 	}
 
-	public Map<String, Object> updatePayRecordInfo(Map<String, Object> datasMap) {
-		return mpayService.updatePayRecordInfo(datasMap);
-	}
+
 }

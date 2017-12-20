@@ -28,9 +28,11 @@ public interface BaseDao<T> {
 	 *            实体名
 	 * @param params
 	 *            属性
-	 * @param page 页数
-	 * @param size 数目
-	 * @return List 
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return List
 	 */
 	public List<T> findByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
 
@@ -116,8 +118,10 @@ public interface BaseDao<T> {
 	 *            属性
 	 * @param descParams
 	 *            倒序参数
-	 * @param page 页数
-	 * @param size 数据条数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数据条数
 	 * @return List
 	 */
 	public List<Object> findByPropertyDesc(Class<T> entity, Map<String, Object> params, String descParams, int page,
@@ -125,54 +129,85 @@ public interface BaseDao<T> {
 
 	/**
 	 * 根据年份查询当前年份下的流水号总数
+	 * 
 	 * @param entity
 	 * @param property
 	 * @param year
 	 * @return
 	 */
-	public long findSerialNoCount(Class<T> entity,String property, int year);
-
+	public long findSerialNoCount(Class<T> entity, String property, int year);
 
 	/**
 	 * 查询总数
-	 * @param entity 类
-	 * @param params 查询参数
+	 * 
+	 * @param entity
+	 *            类
+	 * @param params
+	 *            查询参数
 	 * @return
 	 */
-	public long findByPropertyCount(Class<T> entity,Map<String,Object> params);
-	
+	public long findByPropertyCount(Class<T> entity, Map<String, Object> params);
+
 	/**
 	 * 根据实体、列(名)、值模糊查询数据
 	 * 
 	 * @param entity
 	 *            实体名
-	 * @param params 主参数
-	 * @param blurryMap 模糊查询参数
-	 * @param page 页数
-	 * @param size 数目
-	 * @return List 
+	 * @param params
+	 *            主参数
+	 * @param blurryMap
+	 *            模糊查询参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return List
 	 */
-	public List<Object> findByPropertyLike(Class<T> entity, Map<String, Object> params,Map blurryMap ,int page, int size);
+	public List<Object> findByPropertyLike(Class<T> entity, Map<String, Object> params, Map blurryMap, int page,
+			int size);
 
 	/**
 	 * 模糊查询总数
-	 * @param entity 类
-	 * @param params 主参数
-	 * @param blurryMap 模糊查询参数 
+	 * 
+	 * @param entity
+	 *            类
+	 * @param params
+	 *            主参数
+	 * @param blurryMap
+	 *            模糊查询参数
 	 * @return
 	 */
-	long findByPropertyLikeCount(Class<T> entity, Map<String,Object> params,Map<String,Object> blurryMap);
-	
+	long findByPropertyLikeCount(Class<T> entity, Map<String, Object> params, Map<String, Object> blurryMap);
+
 	/**
 	 * 根据实体、列(名)、值模糊查询数据
+	 * 
 	 * @param entity
 	 *            实体名
-	 * @param params 主参数
-	 * @param OrMap Or条件查询参数
-	 * @param page 页数
-	 * @param size 数目
-	 * @return List 
+	 * @param params
+	 *            主参数
+	 * @param OrMap
+	 *            Or条件查询参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return List
 	 */
-	public List<Object> findByPropertyOr(Class<T> entity, Map<String, Object> params,Map<String,List<Object>> orMap ,int page, int size);
+	public List<T> findByPropertyOr(Class<T> entity, Map<String, Object> params, Map<String, List<Object>> orMap,
+			int page, int size);
+
+	/**
+	 * 单独根据实体、列(名)、值模糊查询数据
+	 * 
+	 * @param entity
+	 *            * 实体名 * @param OrMap Or条件查询参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return List
+	 */
+	public List<T> findByPropertyOr2(Class<T> entity, Map<String, List<Object>> orMap, int page, int size);
 
 }

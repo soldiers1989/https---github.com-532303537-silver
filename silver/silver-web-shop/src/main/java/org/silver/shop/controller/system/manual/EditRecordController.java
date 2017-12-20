@@ -75,14 +75,14 @@ public class EditRecordController {
 
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
-	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
+	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size ) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = new HashMap<String, Object>();
-		reqMap = manualService.loadDatas(page, size);
+		reqMap = manualService.loadDatas(page, size,req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
@@ -235,37 +235,7 @@ public class EditRecordController {
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
-	/**
-	 * 发起支付单备案
-	 * 
-	 * @param resp
-	 * @param req
-	 * @return
-	 */
-	@RequestMapping(value = "/sendMpayRecord", produces = "application/json; charset=utf-8")
-	@RequiresRoles("Merchant")
-	public String sendMpayRecord(HttpServletResponse resp, HttpServletRequest req, String tradeNoPack) {
-		String originHeader = req.getHeader("Origin");
-		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		resp.setHeader("Access-Control-Allow-Credentials", "true");
-		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
-		Map<String, Object> recordMap = new HashMap<>();
-		Enumeration<String> itkeys = req.getParameterNames();
-		String key = "";
-		while (itkeys.hasMoreElements()) {
-			key = itkeys.nextElement();
-			String value = req.getParameter(key);
-			recordMap.put(key, value);
-		}
-		if (!recordMap.isEmpty()) {
-			return JSONObject.fromObject(mdataService.sendMpayRecord(recordMap, tradeNoPack)).toString();
-		}
-		reqMap.put("status", -3);
-		reqMap.put("msg", "缺少支付流水号");
-		return JSONObject.fromObject(reqMap).toString();
-	}
+	
 
 	/**
 	 * 发起订单备案
@@ -311,46 +281,19 @@ public class EditRecordController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> datasMap = new HashMap<>();
 		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("errMsg", req.getParameter("errMsg") + "");
+		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entOrderNo", req.getParameter("entOrderNo") + "");
 		Map<String, Object> statusMap = mdataService.updateOrderRecordInfo(datasMap);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	/**
-	 * 备案网关异步回馈支付单信息
-	 * 
-	 * @param req
-	 * @param response
-	 * @return
-	 */
-	@RequestMapping(value = "/rePayNotifyMsg", produces = "application/json; charset=utf-8")
-	@ResponseBody
-	public String rePayNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("errMsg", req.getParameter("errMsg") + "");
-		datasMap.put("messageID", req.getParameter("messageID") + "");
-		datasMap.put("entPayNo", req.getParameter("entPayNo") + "");
-		Map<String, Object> statusMap = mdataService.updatePayRecordInfo(datasMap);
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
 	public static void main(String[] args) {
-		for (int i = 0; i < 5; i++) {
-			for (int x = 0; x < 5; x++) {
-				if (x == 1) {
-					break;
-				}
-				System.out.println("x --->" + x);
-			}
-			System.out.println("---------------" + i);
+		String str = "北京市丰台区开阳路开阳里八区2号楼8单元202";
+		if(str.contains("丰台区") || str.contains("区开")){
+			System.out.println("-====--=-=-=-=-");
 		}
 	}
+
+	
 }

@@ -87,7 +87,7 @@ public class MerchantWalletController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (type == 1 || type == 2) {
+		if (timeLimit == 1 || timeLimit == 2) {
 			statusMap = merchantWalletTransaction.getMerchantWalletLog(type, page, size,timeLimit);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());

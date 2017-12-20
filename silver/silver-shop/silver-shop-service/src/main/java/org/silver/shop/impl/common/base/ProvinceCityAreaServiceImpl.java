@@ -9,6 +9,10 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.dao.common.base.ProvinceCityAreaDao;
+import org.silver.shop.model.common.base.Area;
+import org.silver.shop.model.common.base.City;
+import org.silver.shop.model.common.base.CustomsPort;
+import org.silver.shop.model.common.base.Province;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -31,7 +35,6 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 		Map<String, Object> areaMap = null;
 		// 查询省市区
 		Table table = provinceCityAreaDao.findAllProvinceCityArea();
-		// System.out.println(Transform.tableToJson(table));
 		if (table != null && table.getRows().size() > 0) {
 			List<Row> lr = table.getRows();
 			for (int i = 0; i < lr.size(); i++) {
@@ -54,13 +57,13 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 						provinceMap.get(provinceName + "_" + provinceCode).put(cityName + "_" + cityCode, areaMap);
 
 					}
-				} else {//省份不存在时
+				} else {// 省份不存在时
 					provinceMap = new HashMap<>();
 					if (areaCode != null && !areaCode.trim().equals("null")) {
 						cityMap = new HashMap<>();
 						areaMap.put(areaCode, areaName);
 						cityMap.put(cityName + "_" + cityCode, areaMap);
-					} else {//当省份下没有城市时
+					} else {// 当省份下没有城市时
 						cityMap = new HashMap<>();
 						areaMap.put("", "");
 						cityMap.put("", areaMap);
@@ -75,6 +78,67 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 		}
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getProvince() {
+		Map<String, Object> reMap = new HashMap<>();
+		List<Object> dataList = provinceCityAreaDao.findAll(Province.class, 0, 0);
+		if (dataList != null && dataList.size() > 0) {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			reMap.put(BaseCode.DATAS.toString(), dataList);
+			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		}
+		return reMap;
+	}
+
+	@Override
+	public Map<String, Object> getCity() {
+		Map<String, Object> reMap = new HashMap<>();
+		List<Object> dataList = provinceCityAreaDao.findAll(City.class, 0, 0);
+		if (dataList != null && dataList.size() > 0) {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			reMap.put(BaseCode.DATAS.toString(), dataList);
+			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		}
+		return reMap;
+	}
+
+	@Override
+	public Map<String, Object> getArea() {
+		Map<String, Object> reMap = new HashMap<>();
+		List<Object> dataList = provinceCityAreaDao.findAll(Area.class, 0, 0);
+		if (dataList != null && dataList.size() > 0) {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			reMap.put(BaseCode.DATAS.toString(), dataList);
+			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		}
+		return reMap;
+	}
+
+	@Override
+	public Map<String, Object> getProvinceCityArea2() {
+		Map<String, Object> reMap = new HashMap<>();
+		// 查询省市区
+		Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
+		if (table != null && table.getRows().size() > 0) {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			reMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(table).getJSONArray("rows"));
+			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		} else {
+			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		}
+		return reMap;
 	}
 
 }

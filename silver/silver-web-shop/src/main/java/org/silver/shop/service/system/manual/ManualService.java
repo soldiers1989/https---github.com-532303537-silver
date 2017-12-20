@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +15,14 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.model.common.base.Metering;
-import org.silver.shop.model.system.commerce.GoodsRecordDetail;
-import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.common.base.Postal;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
+import org.silver.shop.service.common.base.PostalTransaction;
+import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
 import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
@@ -30,7 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
-import com.github.pagehelper.StringUtil;
+import com.alibaba.fastjson.JSONArray;
+import com.justep.baas.data.Row;
 
 import net.sf.json.JSONObject;
 
@@ -39,24 +43,35 @@ public class ManualService {
 
 	@Reference
 	private MorderService morderService;
-
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 	@Autowired
 	private MeteringTransaction meteringTransaction;
+	@Autowired
+	private PostalTransaction postalTransaction;
+	@Autowired
+	private ProvinceCityAreaTransaction provinceCityAreaTransaction;
 
 	public boolean saveDatas(String merchant_no, String[] head, int length, String[][] body) {
 
 		return morderService.saveRecord(merchant_no, head, length, body);
 	}
 
-	public Map<String, Object> loadDatas(int page, int size) {
+	public Map<String, Object> loadDatas(int page, int size, HttpServletRequest req) {
 		Map<String, Object> params = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		params.remove("page");
+		params.remove("size");
 		params.put("merchant_no", merchantId);
 		return morderService.pageFindRecords(params, page, size);
 	}
@@ -532,18 +547,29 @@ public class ManualService {
 
 	private Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
 			String merchantId) {
+		long startTime = System.currentTimeMillis(); // 获取开始时间
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
-				RecipientTel = null, RecipientProvincesCode = null, RecipientAddr = null, OrderDocAcount, OrderDocName,
-				OrderDocId, OrderDocTel, goodsName = "";
+				RecipientTel = null, RecipientAddr = null, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
+				goodsName = "";
+		String orderId = "";//
+
 		String EntGoodsNo = "";// 商品货号、条形码
 		String ciqGoodsNo = "";// 检验检疫商品备案编号
 		String cusGoodsNo = "";// 海关正式备案编号
 		String hsCode = "";// HS编码
 		String goodsStyle = "";// 规格型号
 		String originCountry = "";// 原产国
+		String RecipientProvincesCode = "";
+		String provinceCode = "";// 省份编码
+		String cityCode = "";// 城市编码
+		String areaCode = "";// 区域编码
+		String provinceName = "";// 省份名称
+		String cityName = "";// 城市名称
+		String areaName = "";// 区域名称
+
 		String unit = "";// 计量单位
 		String currCode = "";// 币制
 		double ActualAmountPaid, FCY = 0, Tax = 0;
@@ -559,7 +585,7 @@ public class ManualService {
 		int numOfPackages = 0;// 箱件数 （同一订单商品总件数，例如同一订单有6支护手霜和4瓶钙片则填写10，即6+4=10。)
 		int packageType = 0;// 包装种类
 		String transportModel = "";// 运输方式
-
+		String postal = "";// 邮编
 		String senderName = ""; // 发货人姓名
 		String senderCountry = "";// 发货人国家代码
 		String senderAreaCode = "";// 发货人区域代码 国外填 000000
@@ -571,7 +597,10 @@ public class ManualService {
 			}
 			for (int c = 0; c < excel.getColumnCount(r); c++) {
 				String value = excel.getCell(sheet, r, c);
-				if (c == 3) {
+
+				if (c == 0) {
+					orderId = value;
+				} else if (c == 3) {
 					System.out.println(value);// 运单号
 					waybill = value;
 				} else if (c == 15) {
@@ -581,8 +610,10 @@ public class ManualService {
 					System.out.println(value);// 收货人姓名
 					RecipientName = value;
 				} else if (c == 19) {
-					System.out.println(value);// 行政区域代码
-					RecipientProvincesCode = value;
+					System.out.println(value);// 邮编代码
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						postal = value;
+					}
 				} else if (c == 20) {
 					System.out.println(value);// 收货地址
 					RecipientAddr = value;
@@ -663,6 +694,22 @@ public class ManualService {
 					senderTel = value;// 发货人电话
 				}
 			}
+			Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
+			if (provinceMap != null && !provinceMap.isEmpty()) {
+				if (StringEmptyUtils.isNotEmpty(provinceMap.get("areaName"))
+						&& StringEmptyUtils.isNotEmpty(provinceMap.get("areaCode"))) {
+					areaCode = provinceMap.get("areaCode") + "";
+					areaName = provinceMap.get("areaName") + "";
+				} else {
+					areaCode = provinceMap.get("provinceCode") + "";
+					areaName = provinceMap.get("cityName") + "";
+				}
+				cityCode = provinceMap.get("cityCode") + "";
+				cityName = provinceMap.get("cityName") + "";
+				provinceCode = provinceMap.get("provinceCode") + "";
+				provinceName = provinceMap.get("provinceName") + "";
+			}
+
 			OrderDocName = RecipientName;
 			OrderDocId = RecipientID;
 			OrderDocTel = RecipientTel;
@@ -704,7 +751,8 @@ public class ManualService {
 			Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, getSerialNo("GZ"), dateSign,
 					OrderDate, FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel,
 					RecipientProvincesCode, RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
-					senderName, senderCountry, senderAreaCode, senderAddress, senderTel);
+					senderName, senderCountry, senderAreaCode, senderAddress, senderTel, areaCode, cityCode,
+					provinceCode, postal, provinceName, cityName, areaName, orderId);
 			if ((int) item.get("status") != 1) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + item.get("msg"));
@@ -719,10 +767,104 @@ public class ManualService {
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + goodsItem.get("msg"));
 				errl.add(errMap);
 			}
+
 			System.out.println("=====================================================");
 		}
+		long endTime = System.currentTimeMillis(); // 获取结束时间
+		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
 		return statusMap;
 
+	}
+
+	/**
+	 * 根据邮编查询关联的省市区编码
+	 * 
+	 * @param recipientAddr
+	 *            收货人详细地址
+	 * 
+	 */
+	private Map<String, Object> searchProvinceCityArea(String recipientAddr) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> provinceCityAreaMap = (Map<String, Object>) provinceCityAreaTransaction
+				.getProvinceCityArea();
+		if (!"1".equals(provinceCityAreaMap.get(BaseCode.STATUS.toString()))) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
+			statusMap.put(BaseCode.MSG.toString(), "查询省市区失败,请核对邮编号码!");
+			return statusMap;
+		}
+		Map<String, Object> areaMap = (Map<String, Object>) provinceCityAreaMap.get(BaseCode.DATAS.getBaseCode());
+		Map<String, Object> reCityMap = new HashMap<>();
+		// 遍历全国所有区域
+		for (Map.Entry<String, Object> entry : areaMap.entrySet()) {
+			String str = entry.getValue() + "";
+			String[] a = str.split("#");
+			String provinceCode = a[0].split("_")[0].trim();
+			String provinceName = a[0].split("_")[1].trim();
+			String cityCode = a[1].split("_")[0].trim();
+			String cityName = a[1].split("_")[1].trim();
+			String areaCode = a[2].split("_")[0].trim();
+			String areaName = a[2].split("_")[1].trim();
+			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)) {
+				statusMap.put("areaCode", areaCode);
+				statusMap.put("areaName", areaName);
+				statusMap.put("cityCode", cityCode);
+				statusMap.put("cityName", cityName);
+				statusMap.put("provinceCode", provinceCode);
+				statusMap.put("provinceName", provinceName);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+				return statusMap;
+			}
+			// 地址中区域+省份未找到则把城市编码放入缓存
+			reCityMap.put(cityCode, cityCode + "_" + cityName + "#" + provinceCode + "_" + provinceName);
+
+		}
+		Map<String, Object> reProvinceMap = new HashMap<>();
+		// 根据省份+城市查询
+		for (Map.Entry<String, Object> entry : reCityMap.entrySet()) {
+			String str = entry.getValue() + "";
+			String[] c = str.split("#");
+			String cityCode = c[0].split("_")[0];
+			String cityName = c[0].split("_")[1];
+			String provinceCode = c[1].split("_")[0];
+			String provinceName = c[1].split("_")[1];
+			// 上海市杨浦许昌路1588弄2号804室
+			if (recipientAddr.contains(provinceName)) {
+				if (recipientAddr.contains(cityName)) {
+					System.out.println("----<<<<<<<<<<<<<<<<<<<<<<-------" + cityName);
+					statusMap.put("cityCode", cityCode);
+					statusMap.put("cityName", cityName);
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+					return statusMap;
+				} else if (provinceName.contains("上海市")) {
+					statusMap.put("cityCode", "310100");
+					statusMap.put("cityName", "市辖区");
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+					return statusMap;
+				}
+				// 如果地址中省份+城市未找到则把省份编码放入缓存
+				reProvinceMap.put(provinceCode, provinceCode + "_" + provinceName);
+			}
+		}
+		// 根据省份查询
+		for (Map.Entry<String, Object> entry : reProvinceMap.entrySet()) {
+			String p = entry.getValue() + "";
+			String[] pStr = p.split("_");
+			String provinceCode = pStr[0];
+			String provinceName = pStr[1];
+			if (recipientAddr.contains(provinceName)) {
+				statusMap.put("cityCode", "");
+				statusMap.put("cityName", "");
+				statusMap.put("provinceCode", provinceCode);
+				statusMap.put("provinceName", provinceName);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+				return statusMap;
+			}
+		}
+		return null;
 	}
 
 	private String getOrderDocAcount() {
@@ -767,4 +909,5 @@ public class ManualService {
 	public static void main(String[] args) {
 		System.out.println(AppUtil.generateAppKey().substring(0, 6));
 	}
+
 }

@@ -14,6 +14,7 @@ import org.hibernate.Transaction;
 import org.silver.shop.component.ChooseDatasourceHandler;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.category.GoodsThirdType;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Proxy;
 
@@ -389,11 +390,15 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if ("startDate".equals(property)) {
-						hql = hql + "model.createDate " + " > " + "? " + " and ";
-					} else if ("endDate".equals(property)) {
-						hql = hql + "model.createDate " + " < " + "?" + " and ";
-					} else {
+					if ("startDate".equals(property)) {//驼峰写法实体
+						hql = hql + "model.createDate " + " >= " + "? " + " and ";
+					} else if ("endDate".equals(property)) {//驼峰写法实体
+						hql = hql + "model.createDate " + " <= " + "?" + " and ";
+					}else if("startTime".equals(property)){//用于兼容下划线版本实体
+						hql = hql + "model.create_date " + " >= " + "? " + " and ";
+					}else if("endTime".equals(property)){//用于兼容下划线版本实体
+						hql = hql + "model.create_date " + " <= " + "? " + " and ";
+					}else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -484,7 +489,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<Object> findByPropertyOr(Class entity, Map params, Map orMap, int page, int size) {
+	public List<T> findByPropertyOr(Class entity, Map params, Map orMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -508,7 +513,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				orHql = " ( ";
 				while (isKey.hasNext()) {
 					property2 = isKey.next();
-					List<Object> lt = (List<Object>) orMap.get(property2);
+					List<String> lt = (List<String>) orMap.get(property2);
 					for (int y = 0; y < lt.size(); y++) {
 						orHql = orHql + "model." + property2 + " = " + " ? " + " or ";
 						list.add(lt.get(y));
@@ -532,7 +537,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
 
-			List<Object> results = query.list();
+			List<T> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -545,15 +550,68 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
+	public List<T> findByPropertyOr2(Class entity,  Map orMap, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = "from " + entName + " model ";
+			String orHql = "";
+			List<Object> list = new ArrayList<>();
+			hql += " where ";
+			if (orMap != null && orMap.size() > 0) {
+				Iterator<String> isKey = orMap.keySet().iterator();
+				orHql = " ( ";
+				while (isKey.hasNext()) {
+					String property;
+					property = isKey.next();
+					orHql = orHql + "model." + property + " = " + " ? " + " or ";
+					list.add(orMap.get(property));
+				}
+				// 截取掉最后的 or 防止出错
+				orHql = orHql.substring(0, orHql.length() - 3);
+				orHql += " ) Order By id DESC";
+			} else {
+				hql += " 1=1 Order By id DESC";
+			}
+			// 合并两个sql语句
+			hql += orHql;
+			Query query = session.createQuery(hql);
+			if (!list.isEmpty()) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+
+			List<T> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+	
 	public static void main(String[] args)  {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, List<Object>> orMap = new HashMap<>();
 		BaseDaoImpl bd =  new BaseDaoImpl();
 		paramMap.put("firstTypeId", Long.parseLong("29"));
-		List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null, 0, 0);
+		//List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null, 0, 0);
+		Map<String,Object> orMap = new HashMap<>();
+		orMap.put("order_serial_no",  "222");
+		orMap.put("order_id", "65478417");
+		List<Morder> reList = bd.findByPropertyOr2(Morder.class, orMap, 0, 0);
 		
-		System.out.println("0----->>>>"+reThirdTypeList.size());
+		System.out.println("0----->>>>"+reList.size());
 	}
 
 }

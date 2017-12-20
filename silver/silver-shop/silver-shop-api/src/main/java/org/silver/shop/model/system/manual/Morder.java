@@ -20,7 +20,9 @@ public class Morder implements Serializable {
 	private String RecipientAddr;// 收货人地址
 	private String RecipientID;// 收货人身份证号
 	private String RecipientTel;// 收货人电话
-	private String RecipientProvincesCode;// 收货人行政区域编码
+	private String RecipientProvincesCode;// 收货人省份编码
+	private String RecipientCityCode;//收货人城市编码
+	private String RecipientAreaCode;//收货人区域编码
 	private String OrderDocAcount;// 下单人账号
 	private String OrderDocName;// 下单人姓名
 	private String OrderDocType;// 下单人证件类型 固定为01 01:身份证、02:护照、04:其他
@@ -47,7 +49,11 @@ public class Morder implements Serializable {
 	private String senderAreaCode;// 发货人区域代码 国外填 000000
 	private String senderAddress;// 发货人地址
 	private String senderTel;// 发货人电话
-
+	private String postal;//邮编 
+	private String RecipientProvincesName;// 收货人省份名称
+	private String RecipientCityName;//收货人城市名称
+	private String RecipientAreaName;//收货人区域名称
+	
 	public long getId() {
 		return id;
 	}
@@ -342,6 +348,54 @@ public class Morder implements Serializable {
 
 	public void setSenderTel(String senderTel) {
 		this.senderTel = senderTel;
+	}
+
+	public String getRecipientCityCode() {
+		return RecipientCityCode;
+	}
+
+	public String getRecipientAreaCode() {
+		return RecipientAreaCode;
+	}
+
+	public String getPostal() {
+		return postal;
+	}
+
+	public void setRecipientCityCode(String recipientCityCode) {
+		RecipientCityCode = recipientCityCode;
+	}
+
+	public void setRecipientAreaCode(String recipientAreaCode) {
+		RecipientAreaCode = recipientAreaCode;
+	}
+
+	public void setPostal(String postal) {
+		this.postal = postal;
+	}
+
+	public String getRecipientProvincesName() {
+		return RecipientProvincesName;
+	}
+
+	public String getRecipientCityName() {
+		return RecipientCityName;
+	}
+
+	public String getRecipientAreaName() {
+		return RecipientAreaName;
+	}
+
+	public void setRecipientProvincesName(String recipientProvincesName) {
+		RecipientProvincesName = recipientProvincesName;
+	}
+
+	public void setRecipientCityName(String recipientCityName) {
+		RecipientCityName = recipientCityName;
+	}
+
+	public void setRecipientAreaName(String recipientAreaName) {
+		RecipientAreaName = recipientAreaName;
 	}
 
 }

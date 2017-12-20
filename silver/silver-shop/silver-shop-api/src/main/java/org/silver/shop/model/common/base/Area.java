@@ -16,6 +16,7 @@ public class Area implements Serializable{
 	private String areaCode;//区域编码
 	private String areaName;//区域名称
 	private String cityCode;//关联上级城市编码
+	private String postalName;//区域邮编编码
 	public long getId() {
 		return id;
 	}
@@ -39,6 +40,12 @@ public class Area implements Serializable{
 	}
 	public void setCityCode(String cityCode) {
 		this.cityCode = cityCode;
+	}
+	public String getPostalName() {
+		return postalName;
+	}
+	public void setPostalName(String postalName) {
+		this.postalName = postalName;
 	}
 	
 	

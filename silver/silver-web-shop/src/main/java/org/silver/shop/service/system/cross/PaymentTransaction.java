@@ -1,8 +1,16 @@
 package org.silver.shop.service.system.cross;
 
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
+import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -13,8 +21,46 @@ public class PaymentTransaction {
 	@Reference
 	private PaymentService paymentService;
 
-	public  Map<String, Object> updatePaymentInfo(Map<String, Object> datasMap) {
+	//
+	public Map<String, Object> updatePaymentInfo(Map<String, Object> datasMap) {
 		return paymentService.updatePaymentStatus(datasMap);
 	}
 
+	// 发送支付单备案
+	public Object sendMpayRecord(Map<String, Object> recordMap, String tradeNoPack) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		String proxyParentId = merchantInfo.getProxyParentId();
+		String proxyParentName = merchantInfo.getProxyParentName();
+		return paymentService.sendMpayByRecord(merchantId, recordMap, tradeNoPack, proxyParentId, merchantName,
+				proxyParentName);
+	}
+
+	public Map<String, Object> updatePayRecordInfo(Map<String, Object> datasMap) {
+		return paymentService.updatePayRecordInfo(datasMap);
+	}
+
+	// 获取商户支付单备案信息
+	public Object getMpayRecordInfo(HttpServletRequest req,int page,int size) {
+		Map<String,Object> params= new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			String value = req.getParameter(key);
+				params.put(key, value);
+		}
+		params.remove("page");
+		params.remove("size");
+		return paymentService.getMpayRecordInfo(merchantId, merchantName,params,page,size);
+	}
 }
