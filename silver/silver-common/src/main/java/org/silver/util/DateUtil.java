@@ -355,4 +355,44 @@ public final class DateUtil {
 		String strTime= timestampParseTime(timestamp);
 		return parseDate2(strTime);
 	}
+	
+	 /** 
+     * 获取随机日期 
+     *  
+     * @param beginDate 
+     *            起始日期，格式为：yyyyMMdd 
+     * @param endDate 
+     *            结束日期，格式为：yyyyMMdd 
+     * @return  StringTime yyyyMMddHHddss
+     */  
+  
+    public static String randomDate(Date beginDate, Date endDate) {  
+        try {  
+            SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHddss");  
+            // getTime()表示返回自 1970 年 1 月 1 日 00:00:00 GMT 以来此 Date 对象表示的毫秒数。  
+            if (beginDate.getTime() >= endDate.getTime()) {  
+                return "";  
+            }  
+            long date = random(beginDate.getTime(), endDate.getTime()) ;  
+            return format.format(new Date(date)) ;  
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        }  
+        return "";  
+    }  
+  
+    /**
+     * 生成随机日期
+     * @param begin
+     * @param end
+     * @return
+     */
+    private static long random(long begin, long end) {  
+        long rtn = begin + (long) (Math.random() * (end - begin));  
+        // 如果返回的是开始时间和结束时间，则递归调用本函数查找随机值  
+        if (rtn == begin || rtn == end) {  
+            return random(begin, end);  
+        }  
+        return rtn;  
+    }  
 }

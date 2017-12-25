@@ -34,6 +34,18 @@ public interface MpayService {
 	 */
 	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap);
 
+
+	/**
+	 * 根据订单日期与批次号下载订单信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param topPath 下载路径头部
+	 * @param serialNo 
+	 * @param date 
+	 * @return Map
+	 */
+	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath, String date, String serialNo);
+
 	
 	
 	

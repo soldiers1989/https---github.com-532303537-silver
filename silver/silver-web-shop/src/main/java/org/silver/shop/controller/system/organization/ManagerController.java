@@ -511,4 +511,35 @@ public class ManagerController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
+	
+	/**
+	 * 管理员删除商户备案信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/managerDeleteMerchantRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员删除商户备案信息")
+	public String managerDeleteMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("idd") long id) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (id >0) {
+			statusMap = managerTransaction.deleteMerchantRecordInfo(id);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
 }

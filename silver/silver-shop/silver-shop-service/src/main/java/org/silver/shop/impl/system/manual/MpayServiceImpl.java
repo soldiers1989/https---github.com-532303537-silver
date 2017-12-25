@@ -1,8 +1,10 @@
 package org.silver.shop.impl.system.manual;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
+import org.silver.shop.impl.system.ExcelUtil;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.cross.YsPayReceiveServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
@@ -30,6 +33,7 @@ import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
+import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
@@ -37,6 +41,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.StringUtil;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -94,9 +101,21 @@ public class MpayServiceImpl implements MpayService {
 						continue;
 					}
 					String trade_no = createTradeNo("01O", (count + 1), new Date());
+
+					java.util.Random random = new java.util.Random();// 定义随机类
+					int minute = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
+					int second = random.nextInt(60);
+					String orderDate = DateUtil.toStringDate(morder.get(0).getOrderDate());
+					Date oldDate = DateUtil.parseDate2(orderDate);
+					Calendar nowTime = Calendar.getInstance();
+					nowTime.setTime(oldDate);
+					nowTime.add(Calendar.MINUTE, (minute + 1));
+					nowTime.add(Calendar.SECOND, (second + 1));
+					Date pay_time = nowTime.getTime();
 					if (addEntity(merchantId, trade_no, order_id, morder.get(0).getActualAmountPaid(),
 							morder.get(0).getOrderDocName(), morder.get(0).getOrderDocId(),
-							morder.get(0).getOrderDocTel()) && updateOrderPayNo(merchantId, order_id, trade_no)) {
+							morder.get(0).getOrderDocTel(), pay_time)
+							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
 						// 当创建完支付流水号之后
 						continue;
 					}
@@ -165,7 +184,7 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	private boolean addEntity(String merchant_no, String trade_no, String morder_id, double amount, String payer_name,
-			String payer_document_number, String payer_phone_number) {
+			String payer_document_number, String payer_phone_number, Date pay_time) {
 		Mpay entity = new Mpay();
 		entity.setMerchant_no(merchant_no);
 		entity.setTrade_no(trade_no);
@@ -181,11 +200,11 @@ public class MpayServiceImpl implements MpayService {
 		entity.setYear("year");
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
+		entity.setPay_record_status(1);
+		entity.setPay_time(pay_time);
 		return mpayDao.add(entity);
 
 	}
-
-	
 
 	/**
 	 * 查询商户钱包余额是否有足够的钱
@@ -287,7 +306,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		ProxyWalletContent proxyWallet = (ProxyWalletContent) reMap2.get(BaseCode.DATAS.toString());
 		double balance = proxyWallet.getBalance();
-		proxyWallet.setBalance(serviceFee);
+		proxyWallet.setBalance(balance + serviceFee);
 		if (!morderDao.update(proxyWallet)) {
 			statusMap.clear();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.LOSS_SESSION.getStatus());
@@ -331,10 +350,14 @@ public class MpayServiceImpl implements MpayService {
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名称
-	 * @param proxyId 代理商Id
-	 * @param proxyParentName 代理商名称
-	 * @param serialNo 流水号
-	 * @param payAmount 推送单金额
+	 * @param proxyId
+	 *            代理商Id
+	 * @param proxyParentName
+	 *            代理商名称
+	 * @param serialNo
+	 *            流水号
+	 * @param payAmount
+	 *            推送单金额
 	 * @return Map
 	 */
 	private Map<String, Object> saveMerchantWalletLog(int type, String merchantId, String merchantName, String proxyId,
@@ -386,8 +409,6 @@ public class MpayServiceImpl implements MpayService {
 		statusMap.put("serviceFee", serviceFee);
 		return statusMap;
 	}
-
-	
 
 	/**
 	 * 根据商户Id及口岸获取商户对应的备案信息
@@ -478,16 +499,18 @@ public class MpayServiceImpl implements MpayService {
 					return checkMap;
 				}
 				Map<String, Object> reOrderMap = sendOrder(merchantId, recordMap, orderSubList, tok, order);
-				System.out.println("->>>>>>>>>>>"+reOrderMap);
-				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString())+"")) {
-					Map<String,Object> errMap = new HashMap<>();
+				System.out.println("->>>>>>>>>>>" + reOrderMap);
+				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
+					Map<String, Object> errMap = new HashMap<>();
 					continue;
 				}
-				/*Map<String, Object> reUpdateWalletMap = updateWallet(2, merchantId, merchantName, orderNo,
+
+				//商户钱包扣钱进代理商钱包
+				Map<String, Object> reUpdateWalletMap = updateWallet(2, merchantId, merchantName, orderNo,
 						proxyParentId, order.getFCY(), proxyParentName);
 				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
 					return reUpdateWalletMap;
-				}*/
+				}
 				String reOrderMessageID = reOrderMap.get("messageID") + "";
 				// 更新服务器返回订单Id
 				Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
@@ -643,7 +666,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-	//orderMap.put("uploadOrNot", false);
+		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
@@ -685,9 +708,9 @@ public class MpayServiceImpl implements MpayService {
 		String defaultDate = sdf.format(date); // 格式化当前时间
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String,Object> orMap = new HashMap<>();
+		Map<String, Object> orMap = new HashMap<>();
 		orMap.put("order_serial_no", datasMap.get("messageID") + "");
-		orMap.put("order_id",datasMap.get("entOrderNo") + "");
+		orMap.put("order_id", datasMap.get("entOrderNo") + "");
 		String reMsg = datasMap.get("msg") + "";
 		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 0, 0);
 		if (reList != null && reList.size() > 0) {
@@ -720,5 +743,164 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	
+	@Override
+	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,
+			String date, String serialNo) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Table reList = morderDao.getOrderAndOrderGoodsInfo(merchantId, date, Integer.parseInt(serialNo));
+		/*
+		 * if (reList != null && !reList.getRows().isEmpty()) { File f = new
+		 * File(filePath); ExcelUtil excel = new ExcelUtil(f); excel.open();
+		 * excel.writCell(0, 1, 0, "序号*"); excel.writCell(0, 1, 1, "订单编号*");
+		 * excel.writCell(0, 1, 2, "订单日期*"); excel.writCell(0, 1, 3, "进出口日期*");
+		 * excel.writCell(0, 1, 4, "订单运费*"); excel.writCell(0, 1, 5,
+		 * "收件人所在国家*"); excel.writCell(0, 1, 6, "收件人所在省*"); excel.writCell(0, 1,
+		 * 7, "收件人所在市*"); excel.writCell(0, 1, 8, "收件人所在区"); excel.writCell(0,
+		 * 1, 9, "收件人详细地址*"); excel.writCell(0, 1, 10, "收件人姓名*");
+		 * excel.writCell(0, 1, 11, "收件人电话*"); excel.writCell(0, 1, 12, "发货人*");
+		 * excel.writCell(0, 1, 13, "发货人所在国家*"); excel.writCell(0, 1, 14,
+		 * "发货人所在省"); excel.writCell(0, 1, 15, "发货人所在市*"); excel.writCell(0, 1,
+		 * 16, "发货人所在区"); excel.writCell(0, 1, 17, "发货人地址*"); excel.writCell(0,
+		 * 1, 18, "发货人电话*"); excel.writCell(0, 1, 19, "订单人姓名*");
+		 * excel.writCell(0, 1, 20, "订单人证件类型*"); excel.writCell(0, 1, 21,
+		 * "订单人证件号码*"); excel.writCell(0, 1, 22, "订单人注册号*"); excel.writCell(0,
+		 * 1, 23, "订单人电话*"); excel.writCell(0, 1, 24, "订单人所在国家（地区）代码*");
+		 * excel.writCell(0, 1, 25, "订单人所在城市名称"); excel.writCell(0, 1, 26,
+		 * "运输方式*"); excel.writCell(0, 1, 27, "运输工具名称*"); excel.writCell(0, 1,
+		 * 28, "运输工具代码"); excel.writCell(0, 1, 29, "航班航次编号*"); excel.writCell(0,
+		 * 1, 30, "舱单号*"); excel.writCell(0, 1, 31, "启运国*"); excel.writCell(0,
+		 * 1, 32, "启运港"); excel.writCell(0, 1, 33, "集装箱号"); excel.writCell(0, 1,
+		 * 34, "集装箱尺寸"); excel.writCell(0, 1, 35, "集装箱类型"); excel.writCell(0, 1,
+		 * 36, "是否转关*"); excel.writCell(0, 1, 37, "支付企业代码*"); excel.writCell(0,
+		 * 1, 38, "支付企业名称*"); excel.writCell(0, 1, 39, "支付流水号*");
+		 * excel.writCell(0, 1, 40, "电子订单状态*"); excel.writCell(0, 1, 41,
+		 * "支付状态*"); excel.writCell(0, 1, 42, "其他费用*"); excel.writCell(0, 1, 43,
+		 * "支付交易类型"); excel.writCell(0, 1, 44, "出仓进境日期*"); excel.writCell(0, 1,
+		 * 45, "货物存放地"); excel.writCell(0, 1, 46, "路由状态"); excel.writCell(0, 1,
+		 * 47, "电子运单状态*"); excel.writCell(0, 1, 48, "运单二维码编号");
+		 * excel.writCell(0, 1, 49, "备注"); excel.writCell(0, 1, 50, "物流订单号");
+		 * excel.writCell(0, 1, 51, "运单号*"); excel.writCell(0, 1, 52,
+		 * "进/出境口岸*"); excel.writCell(0, 1, 53, "快递公司*"); excel.writCell(0, 1,
+		 * 54, "商品货号*"); excel.writCell(0, 1, 55, "品牌"); excel.writCell(0, 1,
+		 * 56, "商品信息*"); excel.writCell(0, 1, 57, "商品海关备案号*"); excel.writCell(0,
+		 * 1, 58, "商检备案号*"); excel.writCell(0, 1, 59, "规格型号*");
+		 * excel.writCell(0, 1, 60, "原产国*"); excel.writCell(0, 1, 61, "包装种类*");
+		 * excel.writCell(0, 1, 62, "计量单位*"); excel.writCell(0, 1, 63, "申报数量*");
+		 * excel.writCell(0, 1, 64, "净重*"); excel.writCell(0, 1, 65, "毛重*");
+		 * excel.writCell(0, 1, 66, "件数*"); excel.writCell(0, 1, 67, "商品单价*");
+		 * excel.writCell(0, 1, 68, "商品总价*"); excel.writCell(0, 1, 69,
+		 * "商品批次号*"); excel.writCell(0, 1, 70, "抵付金额*"); excel.writCell(0, 1,
+		 * 71, "抵付说明"); excel.writCell(0, 1, 72, "ERP订单号"); excel.writCell(0, 1,
+		 * 73, "ERP单价"); excel.writCell(0, 1, 74, "ERP总价"); excel.writCell(0, 1,
+		 * 75, "ERP商品名称"); excel.writCell(0, 1, 76, "第一数量*"); excel.writCell(0,
+		 * 1, 77, "第二数量*"); excel.writCell(0, 1, 78, "HS编码"); excel.writCell(0,
+		 * 1, 79, "行邮税号"); List<Row> lr = reList.getRows(); for (int i = 0; i <
+		 * lr.size(); i++) { String order_Id, Fcode, RecipientName,
+		 * RecipientAddr, RecipientID, RecipientTel, RecipientProvincesCode,
+		 * RecipientCityCode, RecipientAreaCode, OrderDocAcount, OrderDocName,
+		 * OrderDocType, OrderDocId, OrderDocTel, OrderDate, trade_no, dateSign,
+		 * waybill, create_date, senderName, senderCountry, senderAreaCode,
+		 * senderAddress, senderTel, postal, RecipientProvincesName,
+		 * RecipientCityName, RecipientAreaName, EntGoodsNo, HSCode, GoodsName,
+		 * CusGoodsNo, CIQGoodsNo, OriginCountry, GoodsStyle, BarCode, Brand,
+		 * Unit, stdUnit, secUnit, transportModel, exit_date; double FCY = 0.0;
+		 * double Tax = 0.0; double ActualAmountPaid = 0.0; int serial = 0; int
+		 * Qty = 0; double Price = 0.0; double Total = 0.0; double netWt = 0.0;
+		 * double grossWt = 0.0; double firstLegalCount = 0.0; double
+		 * secondLegalCount = 0.0; int numOfPackages = 0; int packageType = 0;
+		 * Row rowIndex = lr.get(i); order_Id = rowIndex.getValue("order_id") +
+		 * ""; create_date = rowIndex.getValue("create_date") + "";
+		 * RecipientProvincesName = rowIndex.getValue("RecipientProvincesName")
+		 * + ""; RecipientCityName = rowIndex.getValue("RecipientCityName") +
+		 * ""; RecipientAreaName = rowIndex.getValue("RecipientAreaName") + "";
+		 * RecipientAddr = rowIndex.getValue("RecipientAddr") + "";
+		 * RecipientName = rowIndex.getValue("RecipientName") + ""; RecipientTel
+		 * = rowIndex.getValue("RecipientTel") + ""; senderName =
+		 * rowIndex.getValue("senderName") + ""; senderCountry =
+		 * rowIndex.getValue("senderCountry") + ""; senderAreaCode =
+		 * rowIndex.getValue("senderAreaCode") + ""; senderAddress =
+		 * rowIndex.getValue("senderAddress") + ""; senderTel =
+		 * rowIndex.getValue("senderTel") + ""; OrderDocName =
+		 * rowIndex.getValue("OrderDocName") + ""; OrderDocType =
+		 * rowIndex.getValue("OrderDocType") + ""; OrderDocId =
+		 * rowIndex.getValue("OrderDocId") + ""; OrderDocTel =
+		 * rowIndex.getValue("OrderDocTel") + ""; RecipientCityName =
+		 * rowIndex.getValue("RecipientCityName") + ""; trade_no =
+		 * rowIndex.getValue("trade_no") + ""; waybill =
+		 * rowIndex.getValue("waybill") + ""; EntGoodsNo =
+		 * rowIndex.getValue("EntGoodsNo") + ""; Brand =
+		 * rowIndex.getValue("Brand") + ""; GoodsName =
+		 * rowIndex.getValue("GoodsName") + ""; CusGoodsNo =
+		 * rowIndex.getValue("CusGoodsNo") + ""; CIQGoodsNo =
+		 * rowIndex.getValue("CIQGoodsNo") + ""; GoodsStyle =
+		 * rowIndex.getValue("GoodsStyle") + ""; OriginCountry =
+		 * rowIndex.getValue("OriginCountry") + ""; Unit =
+		 * rowIndex.getValue("Unit") + ""; Qty =
+		 * Integer.parseInt(rowIndex.getValue("Qty") + ""); netWt =
+		 * Double.parseDouble(rowIndex.getValue("netWt") + ""); grossWt =
+		 * Double.parseDouble(rowIndex.getValue("grossWt") + ""); Price =
+		 * Double.parseDouble(rowIndex.getValue("Price") + ""); Total =
+		 * Double.parseDouble(rowIndex.getValue("Total") + ""); firstLegalCount
+		 * = Double.parseDouble(rowIndex.getValue("firstLegalCount") + "");
+		 * secondLegalCount =
+		 * Double.parseDouble(rowIndex.getValue("secondLegalCount") + "");
+		 * HSCode = rowIndex.getValue("HSCode") + "";
+		 * 
+		 * for (int c = 0; c < 81; c++) { if (c == 0) { excel.writCell(0, i + 2,
+		 * c, i+1); } else if (c == 1) { excel.writCell(0, i + 2, c, order_Id);
+		 * } else if (c == 2) { excel.writCell(0, i + 2, c, create_date); } else
+		 * if (c == 3) { excel.writCell(0, i + 2, c, create_date); } else if (c
+		 * == 6) { excel.writCell(0, i + 2, c, RecipientProvincesName); } else
+		 * if (c == 7) { excel.writCell(0, i + 2, c, RecipientCityName); } else
+		 * if (c == 8) { excel.writCell(0, i + 2, c, RecipientAreaName); } else
+		 * if (c == 9) { excel.writCell(0, i + 2, c, RecipientAddr); } else if
+		 * (c == 10) { excel.writCell(0, i + 2, c, RecipientName); } else if (c
+		 * == 11) { excel.writCell(0, i + 2, c, RecipientTel); } else if (c ==
+		 * 12) { excel.writCell(0, i + 2, c, senderName); } else if (c == 13) {
+		 * excel.writCell(0, i + 2, c, senderCountry); } else if (c == 15) {
+		 * excel.writCell(0, i + 2, c, senderAreaCode); } else if (c == 17) {
+		 * excel.writCell(0, i + 2, c, senderAddress); } else if (c == 18) {
+		 * excel.writCell(0, i + 2, c, senderTel); } else if (c == 19) {
+		 * excel.writCell(0, i + 2, c, OrderDocName); } else if (c == 20) {
+		 * excel.writCell(0, i + 2, c, OrderDocType); } else if (c == 21) {
+		 * excel.writCell(0, i + 2, c, OrderDocId); } else if (c == 22) {
+		 * excel.writCell(0, i + 2, c, OrderDocName); } else if (c == 23) {
+		 * excel.writCell(0, i + 2, c, OrderDocTel); } else if (c == 24) {
+		 * excel.writCell(0, i + 2, c, RecipientCityName); } else if (c == 37) {
+		 * excel.writCell(0, i + 2, c, "C000010000803304"); } else if (c == 38)
+		 * { excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司"); }else if (c == 39) {
+		 * excel.writCell(0, i + 2, c, trade_no); } else if (c == 50) { // 物流订单号
+		 * excel.writCell(0, i + 2, c, order_Id); } else if (c == 51) {
+		 * excel.writCell(0, i + 2, c, waybill); } else if (c == 54) {
+		 * excel.writCell(0, i + 2, c, EntGoodsNo); } else if (c == 56) { // 品牌
+		 * excel.writCell(0, i + 2, c, Brand); } else if (c == 55) { // 商品信息
+		 * excel.writCell(0, i + 2, c, GoodsName); } else if (c == 57) { //
+		 * 海关备案号 excel.writCell(0, i + 2, c, CusGoodsNo); } else if (c == 58) {
+		 * // 商检备案号 excel.writCell(0, i + 2, c, CIQGoodsNo); } else if (c == 59)
+		 * { excel.writCell(0, i + 2, c, GoodsStyle); } else if (c == 60) {
+		 * excel.writCell(0, i + 2, c, OriginCountry); } else if (c == 62) {
+		 * excel.writCell(0, i + 2, c, Unit); } else if (c == 63) {
+		 * excel.writCell(0, i + 2, c, Qty); } else if (c == 64) {
+		 * excel.writCell(0, i + 2, c, netWt); } else if (c == 65) {
+		 * excel.writCell(0, i + 2, c, grossWt); } else if (c == 67) {
+		 * excel.writCell(0, i + 2, c, Price); } else if (c == 68) {
+		 * excel.writCell(0, i + 2, c, Total); } else if (c == 79) {
+		 * excel.writCell(0, i + 2, c, HSCode); } } } excel.save();
+		 * excel.closeExcel(); statusMap.put("status",
+		 * StatusCode.SUCCESS.toString()); statusMap.put("filePath", filePath);
+		 * return statusMap; }
+		 */
+		if (reList != null && reList.getRows().size() > 0) {
+			statusMap.put("status", 1);
+			statusMap.put("datas", Transform.tableToJson(reList));
+			return statusMap;
+		}
+		statusMap.put("status", -3);
+		return statusMap;
+	}
+
+	public static void main(String[] args) {
+		String str = "2017-12-21 14:42:60";
+		System.out.println(str.substring(0, 10));
+	}
 }

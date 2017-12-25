@@ -3,6 +3,7 @@ package org.silver.shop.service.system.manual;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -18,7 +19,6 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.model.common.base.Metering;
-import org.silver.shop.model.common.base.Postal;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
@@ -591,13 +591,20 @@ public class ManualService {
 		String senderAreaCode = "";// 发货人区域代码 国外填 000000
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
+		int serialNo = getSerialNo("GZ");
 		for (int r = 1; r <= excel.getRowCount(sheet); r++) {
 			if (excel.getColumnCount(r) == 0) {
 				break;
 			}
 			for (int c = 0; c < excel.getColumnCount(r); c++) {
+				
 				String value = excel.getCell(sheet, r, c);
-
+				if (c == 0 && "".equals(value)) {
+					statusMap.put("status", "1");
+					statusMap.put("msg", "导入完成");
+					statusMap.put("err", errl);
+					return statusMap;
+				}
 				if (c == 0) {
 					orderId = value;
 				} else if (c == 3) {
@@ -625,7 +632,7 @@ public class ManualService {
 					RecipientID = value;
 				} else if (c == 32) {
 					System.out.println(value);// 商品货号
-					EntGoodsNo = value;
+					EntGoodsNo = value.replaceAll(" ", "");
 				} else if (c == 35) {
 					System.out.println(value);// 数量
 					total_count = Integer.parseInt(value);
@@ -640,13 +647,13 @@ public class ManualService {
 					goodsStyle = value;
 					System.out.println(value);
 				} else if (c == 38) {
-					hsCode = value;
+					hsCode = value.trim();
 					System.out.println(value);// HS编码
 				} else if (c == 33) {// 原产国
 					originCountry = value;
 					System.out.println(value);
 				} else if (c == 34) {// 计量单位
-					unit = findUnit(value);
+					unit = findUnit(value.trim());
 					System.out.println(value);
 				} else if (c == 40) {// 币制
 					currCode = value;
@@ -719,59 +726,63 @@ public class ManualService {
 			OrderDate = sdf.format(new Date());
 			dateSign = OrderDate.substring(0, 8);
 			// 根据 商品名 商品货号 查找出已备案商品信息，生成订单关联的商品数据
-			JSONObject params = new JSONObject();
-			params.put("EntGoodsNo", EntGoodsNo);
-			params.put("HSCode", hsCode);
-			params.put("Brand", goodsName);
-			params.put("BarCode", EntGoodsNo);
-			params.put("GoodsName", goodsName);
-			params.put("OriginCountry", originCountry);
+			JSONObject goodsInfo = new JSONObject();
+			goodsInfo.put("EntGoodsNo", EntGoodsNo);
+			goodsInfo.put("HSCode", hsCode);
+			goodsInfo.put("Brand", goodsName);
+			goodsInfo.put("BarCode", EntGoodsNo);
+			goodsInfo.put("GoodsName", goodsName);
+			goodsInfo.put("OriginCountry", originCountry);
 			if (StringEmptyUtils.isNotEmpty(cusGoodsNo)) {
-				params.put("CusGoodsNo", cusGoodsNo);
+				goodsInfo.put("CusGoodsNo", cusGoodsNo);
 			} else {// 当海关备案编码为空时,则默认填写*
-				params.put("CusGoodsNo", "*");
+				goodsInfo.put("CusGoodsNo", "*");
 			}
-			params.put("CIQGoodsNo", ciqGoodsNo);
-			params.put("GoodsStyle", goodsStyle);
-			params.put("Unit", unit);
-			params.put("Price", price);
-			params.put("Qty", total_count);
+			goodsInfo.put("CIQGoodsNo", ciqGoodsNo);
+			goodsInfo.put("GoodsStyle", goodsStyle);
+			goodsInfo.put("Unit", unit);
+			goodsInfo.put("Price", price);
+			goodsInfo.put("Qty", total_count);
 
-			params.put("netWt", netWt);
-			params.put("grossWt", grossWt);
-			params.put("firstLegalCount", firstLegalCount);
-			params.put("secondLegalCount", secondLegalCount);
-			params.put("stdUnit", stdUnit);
-			params.put("secUnit", secUnit);
-			params.put("numOfPackages", numOfPackages);
-			params.put("packageType", packageType);
-			params.put("transportModel", transportModel);
+			goodsInfo.put("netWt", netWt);
+			goodsInfo.put("grossWt", grossWt);
+			goodsInfo.put("firstLegalCount", firstLegalCount);
+			goodsInfo.put("secondLegalCount", secondLegalCount);
+			goodsInfo.put("stdUnit", stdUnit);
+			goodsInfo.put("secUnit", secUnit);
+			goodsInfo.put("numOfPackages", numOfPackages);
+			goodsInfo.put("packageType", packageType);
+			goodsInfo.put("transportModel", transportModel);
 
 			// 创建国宗订单
-			Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, getSerialNo("GZ"), dateSign,
-					OrderDate, FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel,
-					RecipientProvincesCode, RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
-					senderName, senderCountry, senderAreaCode, senderAddress, senderTel, areaCode, cityCode,
-					provinceCode, postal, provinceName, cityName, areaName, orderId);
-			if ((int) item.get("status") != 1) {
+			Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serialNo, dateSign, OrderDate,
+					FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel, RecipientProvincesCode,
+					RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel, senderName, senderCountry,
+					senderAreaCode, senderAddress, senderTel, areaCode, cityCode, provinceCode, postal, provinceName,
+					cityName, areaName, orderId, goodsInfo);
+			if (!"1".equals(item.get("status") + "")) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + item.get("msg"));
 				errl.add(errMap);
+				continue;
 			}
 			String order_id = item.get("order_id") + "";
-			params.put("order_id", order_id);
+			goodsInfo.put("order_id", order_id);
 			// 根据订单Id创建订单商品
-			Map<String, Object> goodsItem = morderService.createNewSub(params);
+			Map<String, Object> goodsItem = morderService.createNewSub(goodsInfo);
 			if ((int) goodsItem.get("status") != 1) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + goodsItem.get("msg"));
 				errl.add(errMap);
+				System.out.println(order_id+"break");
+				System.out.println(goodsInfo.getString("BarCode")+"------<<<<商品自编号");
+				return null;
+				//continue;
 			}
-
-			System.out.println("=====================================================");
 		}
 		long endTime = System.currentTimeMillis(); // 获取结束时间
 		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
+		System.out.println("----错误信息-->>>"+errl.toString());
 		return statusMap;
 
 	}
@@ -830,7 +841,6 @@ public class ManualService {
 			// 上海市杨浦许昌路1588弄2号804室
 			if (recipientAddr.contains(provinceName)) {
 				if (recipientAddr.contains(cityName)) {
-					System.out.println("----<<<<<<<<<<<<<<<<<<<<<<-------" + cityName);
 					statusMap.put("cityCode", cityCode);
 					statusMap.put("cityName", cityName);
 					statusMap.put("provinceCode", provinceCode);
@@ -904,10 +914,6 @@ public class ManualService {
 			}
 		}
 		return null;
-	}
-
-	public static void main(String[] args) {
-		System.out.println(AppUtil.generateAppKey().substring(0, 6));
 	}
 
 }

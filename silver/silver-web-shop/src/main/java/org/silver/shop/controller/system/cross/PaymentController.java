@@ -102,7 +102,7 @@ public class PaymentController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> datasMap = new HashMap<>();
 		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("errMsg", req.getParameter("msg") + "");
+		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entPayNo", req.getParameter("entPayNo") + "");
 		Map<String, Object> statusMap = paytemTransaction.updatePayRecordInfo(datasMap);

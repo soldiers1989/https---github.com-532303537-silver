@@ -32,6 +32,7 @@ public class Mpay implements Serializable {
 	private int pay_record_status;//备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 	private String pay_serial_no;//服务器接收成功后返回编号
 	private String pay_re_note;//服务器返回信息
+	private Date pay_time;//付款时间
 	public long getId() {
 		return id;
 	}
@@ -207,6 +208,14 @@ public class Mpay implements Serializable {
 	}
 	public void setPay_re_note(String pay_re_note) {
 		this.pay_re_note = pay_re_note;
+	}
+
+	public Date getPay_time() {
+		return pay_time;
+	}
+
+	public void setPay_time(Date pay_time) {
+		this.pay_time = pay_time;
 	}
 
 }

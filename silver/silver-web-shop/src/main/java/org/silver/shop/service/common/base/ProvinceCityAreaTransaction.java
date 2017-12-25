@@ -151,9 +151,7 @@ public class ProvinceCityAreaTransaction {
 					for (int i = 0; i < jsonObject.size(); i++) {
 						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
 						// 由于取出来是row数据,所以需要截取字符串
-						item.put(
-								provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}",
-										""),
+						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
 								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
 										"")
 										+ "_"
@@ -170,7 +168,6 @@ public class ProvinceCityAreaTransaction {
 												.replace("\"}", "")
 										+ "_" + provinceCityArea.getString("areaName").replace("{\"value\":\"", "")
 												.replace("\"}", ""));
-
 					}
 					// 将查询出来的数据放入到缓存中
 					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 3600);

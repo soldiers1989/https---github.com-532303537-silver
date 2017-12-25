@@ -246,15 +246,15 @@ public class GoodsRecordController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改备案商品状态")
 	public String managerEditGoodsRecordStatus(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entGoodsNo") String entGoodsNo, @RequestParam("status") int status) {
+			@RequestParam("goodsPack") String goodsPack) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (entGoodsNo != null && status == 2 || status == 3) {
-			statusMap = goodsRecordTransaction.editGoodsRecordStatus(entGoodsNo, status);
+		if (goodsPack != null) {
+			statusMap = goodsRecordTransaction.editGoodsRecordStatus(goodsPack);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());

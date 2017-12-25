@@ -53,7 +53,7 @@ public class Morder implements Serializable {
 	private String RecipientProvincesName;// 收货人省份名称
 	private String RecipientCityName;//收货人城市名称
 	private String RecipientAreaName;//收货人区域名称
-	
+	private String oldOrderId;//原导入表单中订单Id
 	public long getId() {
 		return id;
 	}
@@ -396,6 +396,14 @@ public class Morder implements Serializable {
 
 	public void setRecipientAreaName(String recipientAreaName) {
 		RecipientAreaName = recipientAreaName;
+	}
+
+	public String getOldOrderId() {
+		return oldOrderId;
+	}
+
+	public void setOldOrderId(String oldOrderId) {
+		this.oldOrderId = oldOrderId;
 	}
 
 }

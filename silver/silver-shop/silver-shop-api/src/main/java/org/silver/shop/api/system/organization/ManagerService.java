@@ -132,5 +132,12 @@ public interface ManagerService {
 	public Map<String, Object> editMerchantRecordDetail(String managerId, String managerName, String merchantId,
 			String merchantRecordInfo);
 
+	/**
+	 * 管理员删除商户备案信息
+	 * @param id 
+	 * @return Map
+	 */
+	public Map<String, Object> deleteMerchantRecordInfo(long id);
+
 	
 }

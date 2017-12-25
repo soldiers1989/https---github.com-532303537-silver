@@ -495,8 +495,8 @@ public class ManagerServiceImpl implements ManagerService {
 	public Map<String, Object> managerEditMemberInfo(String managerId, String managerName,
 			Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Member memberInfo =null;
-		String memberId = datasMap.get("memberId")+"";
+		Member memberInfo = null;
+		String memberId = datasMap.get("memberId") + "";
 		if (StringEmptyUtils.isNotEmpty(memberId)) {
 			// 查询数据库已存在的用户信息
 			Map<String, Object> reMemberMap = findMemberDetail(memberId);
@@ -618,31 +618,82 @@ public class ManagerServiceImpl implements ManagerService {
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			Map<String, Object> paramMap = new HashMap<>();
-			long id = Long.parseLong(datasMap.get("id") + "");
-			paramMap.put("id", id);
-			List<Object> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
-			if (reList != null && !reList.isEmpty()) {
-				MerchantRecordInfo recordInfo = (MerchantRecordInfo) reList.get(0);
+			String strId = datasMap.get("id") + "";
+			if(StringEmptyUtils.isNotEmpty(strId)){//当有商品备案Id时
+				long id = Long.parseLong(strId);
+				paramMap.put("id", id);
+				List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+				if (reList != null && !reList.isEmpty()) {
+					MerchantRecordInfo recordInfo =  reList.get(0);
+					int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+					String ebEntNo = datasMap.get("ebEntNo") + "";
+					String ebEntName = datasMap.get("ebEntName") + "";
+					String ebpEntNo = datasMap.get("ebpEntNo") + "";
+					String ebpEntName = datasMap.get("ebpEntName") + "";
+					recordInfo.setCustomsPort(customsPort);
+					recordInfo.setEbEntNo(ebEntNo);
+					recordInfo.setEbEntName(ebEntName);
+					recordInfo.setEbpEntNo(ebpEntNo);
+					recordInfo.setEbpEntName(ebpEntName);
+					if (!managerDao.update(recordInfo)) {
+						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+						statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+						return statusMap;
+					}
+				} else {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+					return statusMap;
+				}
+			}else{//当没有传Id时则为新建
+				MerchantRecordInfo recordInfo =  new MerchantRecordInfo();
 				int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 				String ebEntNo = datasMap.get("ebEntNo") + "";
 				String ebEntName = datasMap.get("ebEntName") + "";
 				String ebpEntNo = datasMap.get("ebpEntNo") + "";
 				String ebpEntName = datasMap.get("ebpEntName") + "";
+				recordInfo.setMerchantId(merchantId);
 				recordInfo.setCustomsPort(customsPort);
 				recordInfo.setEbEntNo(ebEntNo);
 				recordInfo.setEbEntName(ebEntName);
 				recordInfo.setEbpEntNo(ebpEntNo);
 				recordInfo.setEbpEntName(ebpEntName);
-				if (!managerDao.update(recordInfo)) {
+				recordInfo.setDeleteFlag(0);
+				recordInfo.setCreateBy(managerName);
+				recordInfo.setCreateDate(new Date());
+				if (!managerDao.add(recordInfo)) {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 					return statusMap;
 				}
-			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> deleteMerchantRecordInfo(long id) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("id", id);
+		List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			MerchantRecordInfo recordInfo = reList.get(0);
+			if(!managerDao.delete(recordInfo)){
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 				return statusMap;
 			}
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());

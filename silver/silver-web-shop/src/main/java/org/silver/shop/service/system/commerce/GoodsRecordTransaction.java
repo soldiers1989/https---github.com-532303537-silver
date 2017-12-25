@@ -422,13 +422,13 @@ public class GoodsRecordTransaction {
 	}
 
 	// 修改备案商品状态
-	public Map<String, Object> editGoodsRecordStatus(String entGoodsNo, int status) {
+	public Map<String, Object> editGoodsRecordStatus(String goodsPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return goodsRecordService.editGoodsRecordStatus(managerId, managerName, entGoodsNo, status);
+		return goodsRecordService.editGoodsRecordStatus(managerId, managerName, goodsPack);
 	}
 
 	// 商户修改备案商品信息(局限于未备案与备案失败的商品)

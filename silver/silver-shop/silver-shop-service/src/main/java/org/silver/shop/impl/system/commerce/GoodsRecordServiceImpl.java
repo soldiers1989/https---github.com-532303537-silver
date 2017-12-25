@@ -217,18 +217,21 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = null;
 		List<CustomsPort> customsPortList = null;
-		//byte[] redisByte = JedisUtil.get("shop_port_AllCustomsPort".getBytes(), 3600);
-		//if (redisByte != null) {
-			//customsPortList = (List<CustomsPort>) SerializeUtil.toObject(redisByte);
-		//} else {// 缓存中没有数据,重新访问数据库读取数据
-			paramsMap = customsPortService.findAllCustomsPort();
-			if (!paramsMap.get(BaseCode.STATUS.toString()).equals("1")) {
-				return paramsMap;
-			}
-			customsPortList = (List<CustomsPort>) paramsMap.get(BaseCode.DATAS.toString());
-			// 将查询出来的口岸数据放入缓存中
-			//JedisUtil.set("shop_port_AllCustomsPort".getBytes(), SerializeUtil.toBytes(customsPortList), 3600);
-		//}
+		// byte[] redisByte =
+		// JedisUtil.get("shop_port_AllCustomsPort".getBytes(), 3600);
+		// if (redisByte != null) {
+		// customsPortList = (List<CustomsPort>)
+		// SerializeUtil.toObject(redisByte);
+		// } else {// 缓存中没有数据,重新访问数据库读取数据
+		paramsMap = customsPortService.findAllCustomsPort();
+		if (!paramsMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			return paramsMap;
+		}
+		customsPortList = (List<CustomsPort>) paramsMap.get(BaseCode.DATAS.toString());
+		// 将查询出来的口岸数据放入缓存中
+		// JedisUtil.set("shop_port_AllCustomsPort".getBytes(),
+		// SerializeUtil.toBytes(customsPortList), 3600);
+		// }
 		for (int i = 0; i < customsPortList.size(); i++) {
 			CustomsPort portInfo = customsPortList.get(i);
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -405,7 +408,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		params.put("note", note);
 		// 商城商品备案流水号
 		params.put("goodsSerialNo", goodsSerialNo);
-		//是否像海关发送
+		// 是否像海关发送
 		params.put("uploadOrNot", false);
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", params);
 		if (StringUtil.isNotEmpty(resultStr)) {
@@ -688,7 +691,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}
-	
+
 	/**
 	 * 服务器接收备案商品信息成功后,更新订单返回信息Id
 	 * 
@@ -1593,41 +1596,80 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	@Override
-	public Map<String, Object> editGoodsRecordStatus(String managerId, String managerName, String entGoodsNo,
-			int status) {
+	public Map<String, Object> editGoodsRecordStatus(String managerId, String managerName, String goodsPack) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("entGoodsNo", entGoodsNo);
-		List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, paramMap, 1, 1);
-		if (reList == null) {
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(goodsPack);
+		} catch (Exception e) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			statusMap.put(BaseCode.MSG.toString(), "商品备案信息包错误,请核对!");
 			return statusMap;
-		} else if (!reList.isEmpty()) {
-			GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reList.get(0);
-			String goodsId = goodsRecordInfo.getGoodsDetailId();
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String,Object> goodsMap = (Map<String, Object>) jsonList.get(i);
+		//	int status = Integer.parseInt(goodsMap.get("status")+"");
+			paramMap.put("entGoodsNo", goodsMap.get("entGoodsNo"));
 			paramMap.clear();
-			paramMap.put("goodsId", goodsId);
-			List<Object> reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, paramMap, 1, 1);
-			if (reGoodsList != null && !reGoodsList.isEmpty()) {
-				GoodsContent goodsInfo = (GoodsContent) reGoodsList.get(0);
-				// 备案状态：0-未备案，1-备案中，2-备案成功，3-备案失败
-				if (status == 2) {
+			//paramMap.put("status", status); 
+			List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, paramMap, 1, 1);
+			if (reList == null) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+				return statusMap;
+			} else if (!reList.isEmpty()) {
+				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reList.get(0);
+				String goodsId = goodsRecordInfo.getGoodsDetailId();
+				paramMap.clear();
+				paramMap.put("goodsId", goodsId);
+				List<GoodsContent> reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, paramMap, 1, 1);
+				if (reGoodsList != null && !reGoodsList.isEmpty()) {
+					GoodsContent goodsInfo =  reGoodsList.get(0);
+					// 备案状态：0-未备案，1-备案中，2-备案成功，3-备案失败
+					//if (status == 2) {
+						int recordFlag = goodsRecordInfo.getRecordFlag();
+						// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
+						int flag = recordFlag == 0 ? 1 : 2;
+						goodsRecordInfo.setRecordFlag(flag);
+						goodsRecordInfo.setStatus(2);
+						goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
+						goodsRecordInfo.setSpareGoodsFirstTypeId(goodsInfo.getGoodsFirstTypeId());
+						goodsRecordInfo.setSpareGoodsFirstTypeName(goodsInfo.getGoodsFirstTypeName());
+						goodsRecordInfo.setSpareGoodsSecondTypeId(goodsInfo.getGoodsSecondTypeId());
+						goodsRecordInfo.setSpareGoodsSecondTypeName(goodsInfo.getGoodsSecondTypeName());
+						goodsRecordInfo.setSpareGoodsThirdTypeId(goodsInfo.getGoodsThirdTypeId());
+						goodsRecordInfo.setSpareGoodsThirdTypeName(goodsInfo.getGoodsThirdTypeName());
+						goodsRecordInfo.setSpareGoodsImage(goodsInfo.getGoodsImage());
+						goodsRecordInfo.setSpareGoodsDetail(goodsInfo.getGoodsDetail());
+						goodsRecordInfo.setSpareGoodsBrand(goodsRecordInfo.getBrand());
+						goodsRecordInfo.setSpareGoodsStyle(goodsRecordInfo.getGoodsStyle());
+						goodsRecordInfo.setSpareGoodsUnit(goodsRecordInfo.getgUnit());
+						goodsRecordInfo.setSpareGoodsOriginCountry(goodsRecordInfo.getOriginCountry());
+						goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
+						goodsRecordInfo.setUpdateBy(managerName);
+						goodsRecordInfo.setUpdateDate(date);
+						if (!goodsRecordDao.update(goodsRecordInfo)) {
+							statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+							statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
+							return statusMap;
+						}
+				//	} else if (status == 3) {
+						//goodsRecordInfo.setStatus(status);
+						//if (!goodsRecordDao.update(goodsInfo)) {
+						//	statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+						//	statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
+						//	return statusMap;
+						//}
+					//}
+				} else {// 如果找不到商品基本信息,则复制备案信息
 					int recordFlag = goodsRecordInfo.getRecordFlag();
 					// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
 					int flag = recordFlag == 0 ? 1 : 2;
 					goodsRecordInfo.setRecordFlag(flag);
-					goodsRecordInfo.setStatus(status);
-					goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
-					goodsRecordInfo.setSpareGoodsFirstTypeId(goodsInfo.getGoodsFirstTypeId());
-					goodsRecordInfo.setSpareGoodsFirstTypeName(goodsInfo.getGoodsFirstTypeName());
-					goodsRecordInfo.setSpareGoodsSecondTypeId(goodsInfo.getGoodsSecondTypeId());
-					goodsRecordInfo.setSpareGoodsSecondTypeName(goodsInfo.getGoodsSecondTypeName());
-					goodsRecordInfo.setSpareGoodsThirdTypeId(goodsInfo.getGoodsThirdTypeId());
-					goodsRecordInfo.setSpareGoodsThirdTypeName(goodsInfo.getGoodsThirdTypeName());
-					goodsRecordInfo.setSpareGoodsImage(goodsInfo.getGoodsImage());
-					goodsRecordInfo.setSpareGoodsDetail(goodsInfo.getGoodsDetail());
+					goodsRecordInfo.setStatus(2);
+					goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());				
 					goodsRecordInfo.setSpareGoodsBrand(goodsRecordInfo.getBrand());
 					goodsRecordInfo.setSpareGoodsStyle(goodsRecordInfo.getGoodsStyle());
 					goodsRecordInfo.setSpareGoodsUnit(goodsRecordInfo.getgUnit());
@@ -1635,67 +1677,26 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
 					goodsRecordInfo.setUpdateBy(managerName);
 					goodsRecordInfo.setUpdateDate(date);
+					String time = DateUtil.formatTime(date);
+					goodsRecordInfo.setReNote(time + "#" + managerName + "审核通过!;");
 					if (!goodsRecordDao.update(goodsRecordInfo)) {
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 						statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
 						return statusMap;
 					}
-				} else if (status == 3) {
-					goodsRecordInfo.setStatus(status);
-					if (!goodsRecordDao.update(goodsInfo)) {
-						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
-						return statusMap;
-					}
 				}
-			} else {// 如果找不到商品基本信息,则复制备案信息
-				int recordFlag = goodsRecordInfo.getRecordFlag();
-				// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
-				int flag = recordFlag == 0 ? 1 : 2;
-				goodsRecordInfo.setRecordFlag(flag);
-				goodsRecordInfo.setStatus(status);
-				goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
-				/*
-				 * goodsRecordInfo.setSpareGoodsFirstTypeId(goodsRecordInfo.
-				 * getGoodsFirstTypeId());
-				 * goodsRecordInfo.setSpareGoodsFirstTypeName(goodsInfo.
-				 * getGoodsFirstTypeName());
-				 * goodsRecordInfo.setSpareGoodsSecondTypeId(goodsInfo.
-				 * getGoodsSecondTypeId());
-				 * goodsRecordInfo.setSpareGoodsSecondTypeName(goodsInfo.
-				 * getGoodsSecondTypeName());
-				 * goodsRecordInfo.setSpareGoodsThirdTypeId(goodsInfo.
-				 * getGoodsThirdTypeId());
-				 * goodsRecordInfo.setSpareGoodsThirdTypeName(goodsInfo.
-				 * getGoodsThirdTypeName());
-				 * goodsRecordInfo.setSpareGoodsImage(goodsInfo.getGoodsImage())
-				 * ;
-				 * goodsRecordInfo.setSpareGoodsDetail(goodsInfo.getGoodsDetail(
-				 * ));
-				 */
-				goodsRecordInfo.setSpareGoodsBrand(goodsRecordInfo.getBrand());
-				goodsRecordInfo.setSpareGoodsStyle(goodsRecordInfo.getGoodsStyle());
-				goodsRecordInfo.setSpareGoodsUnit(goodsRecordInfo.getgUnit());
-				goodsRecordInfo.setSpareGoodsOriginCountry(goodsRecordInfo.getOriginCountry());
-				goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
-				goodsRecordInfo.setUpdateBy(managerName);
-				goodsRecordInfo.setUpdateDate(date);
-				String time = DateUtil.formatTime(date);
-				goodsRecordInfo.setReNote(time + "#" + managerName + "审核通过!;");
-				if (!goodsRecordDao.update(goodsRecordInfo)) {
-					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
-					return statusMap;
-				}
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				return statusMap;
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+				return statusMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
 		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+		return statusMap;
 	}
 
 	@Override
@@ -1824,7 +1825,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> managerGetGoodsRecordInfo(int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		
+
 		List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, null, page, size);
 		long totalCount = goodsRecordDao.findByPropertyCount(GoodsRecordDetail.class, null);
 		if (reList == null) {

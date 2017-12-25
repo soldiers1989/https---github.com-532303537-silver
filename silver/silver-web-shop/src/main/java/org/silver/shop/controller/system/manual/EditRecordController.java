@@ -1,6 +1,13 @@
 package org.silver.shop.controller.system.manual;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +19,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,14 +83,14 @@ public class EditRecordController {
 
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
-	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size ) {
+	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = new HashMap<String, Object>();
-		reqMap = manualService.loadDatas(page, size,req);
+		reqMap = manualService.loadDatas(page, size, req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
@@ -235,8 +243,6 @@ public class EditRecordController {
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
-	
-
 	/**
 	 * 发起订单备案
 	 * 
@@ -288,12 +294,95 @@ public class EditRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	public static void main(String[] args) {
-		String str = "北京市丰台区开阳路开阳里八区2号楼8单元202";
-		if(str.contains("丰台区") || str.contains("区开")){
-			System.out.println("-====--=-=-=-=-");
+	/**
+	 * 根据订单日期与批次号下载订单信息
+	 * 
+	 * @param req
+	 * @param resp
+	 * @return
+	 */
+	@RequestMapping(value = "/getOrderExcel")
+	@RequiresRoles("Merchant")
+
+	public void getOrderExcel(HttpServletRequest req, HttpServletResponse response, String date, String serialNo) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = mdataService.downOrderExcelByDateSerialNo(req, date, serialNo);
+
+		if ("1".equals(statusMap.get("status"))) {
+			String filePath = statusMap.get("filePath") + "";
+			try {
+				downLoad(filePath, response, false);
+				statusMap.put("status", 1);
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+		response.setContentType("application/x-msdownload");
+		response.setHeader("Content-Disposition", "attachment; filename=" + toUTF8("该日期与批次号数据.xls"));
+		return;
 	}
 
-	
+	public void downLoad(String filePath, HttpServletResponse response, boolean isOnLine) throws Exception {
+		File f = new File(filePath);
+		System.out.println(f.exists());
+		BufferedInputStream br = new BufferedInputStream(new FileInputStream(f));
+		byte[] buf = new byte[1024];
+		int len = 0;
+		response.reset();
+		if (isOnLine) {
+			URL u = new URL(filePath);
+			response.setContentType(u.openConnection().getContentType());
+			response.setHeader("Content-Disposition", "inline; filename=" + toUTF8(f.getName()));
+
+		}
+		// 纯下载
+		else {
+			response.setContentType("application/x-msdownload");
+			response.setHeader("Content-Disposition", "attachment; filename=" + toUTF8(f.getName()));
+		}
+		OutputStream out = response.getOutputStream();
+		while ((len = br.read(buf)) > 0)
+			out.write(buf, 0, len);
+		out.flush();
+		br.close();
+		out.close();
+		// f.delete();
+	}
+
+	public String toUTF8(String s) {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c >= 0 && c <= 255) {
+				sb.append(c);
+			} else {
+				byte[] b;
+				try {
+					b = Character.toString(c).getBytes("utf-8");
+				} catch (Exception ex) {
+					System.out.println(ex);
+					b = new byte[0];
+				}
+				for (int j = 0; j < b.length; j++) {
+					int k = b[j];
+					if (k < 0)
+						k += 256;
+					sb.append("%" + Integer.toHexString(k).toUpperCase());
+				}
+			}
+		}
+		return sb.toString();
+	}
+
+	public static void main(String[] args) {
+	String str = "= 3304200092 =";
+	System.out.println(str.replaceAll(" ", "").replaceAll("	", ""));
+		
+	}
+
 }

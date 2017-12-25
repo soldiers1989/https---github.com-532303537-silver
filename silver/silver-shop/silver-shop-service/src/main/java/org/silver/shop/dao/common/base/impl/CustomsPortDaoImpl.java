@@ -9,13 +9,4 @@ import org.springframework.stereotype.Repository;
 @Repository("customsPortDao")
 public class CustomsPortDaoImpl extends BaseDaoImpl implements CustomsPortDao{
 
-	@Override
-	public boolean add(Object entity){
-		return super.add(entity);
-	}
-
-	@Override
-	public List<Object> findAll(Class entity,int page,int size) {
-		return super.findAll(entity, page, size);
-	}
 }

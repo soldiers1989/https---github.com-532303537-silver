@@ -160,6 +160,9 @@
 		<property name="RecipientProvincesName">
 			<column name="RecipientProvincesName" />
 		</property>
+			<property name="oldOrderId">
+			<column name="oldOrderId" />
+		</property>
 	</class>
 
 </hibernate-mapping>

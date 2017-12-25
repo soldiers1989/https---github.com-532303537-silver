@@ -20,7 +20,7 @@ import com.justep.baas.data.Table;
 public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 
 	@Override
-	public List findGoodsBaseInfo(Map<String, Object> params, String descParam, int page, int size) {
+	public List findGoodsBaseInfo(Map params, String descParam, int page, int size) {
 		return super.findByPropertyDesc(GoodsContent.class, params, descParam, page, size);
 	}
 
@@ -89,7 +89,7 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 	}
 
 	@Override
-	public Table findByRecordInfoLike(Class entity, Map<String, Object> params, Map blurryMap, int page, int size) {
+	public Table findByRecordInfoLike(Class entity, Map params, Map blurryMap, int page, int size) {
 		Session session = null;
 		try {
 			String queryString = "SELECT t1.customsPort, t1.customsPortName, t1.customsCode, t1.customsName, t1.ciqOrgCode, t1.ciqOrgName, t1.status as acceptFlag, t2.* FROM ym_shop_goods_record t1 RIGHT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo ";

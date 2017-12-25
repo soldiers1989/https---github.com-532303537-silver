@@ -178,10 +178,12 @@ public class PaytemServiceImpl implements PaymentService {
 					errorList.add(errMap);
 					continue;
 				}
+			}else{
+				Map<String, Object> errorMap = new HashMap<>();
+				errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
+				errorList.add(errorMap);
+				continue;
 			}
-			Map<String, Object> errorMap = new HashMap<>();
-			errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
-			errorList.add(errorMap);
 		}
 		statusMap.clear();
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -255,8 +257,9 @@ public class PaytemServiceImpl implements PaymentService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("pay_serial_no", datasMap.get("messageID") + "");
+		paramMap.put("trade_no", datasMap.get("entPayNo") + "");
 		String reMsg = datasMap.get("msg") + "";
-		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 0, 0);
+		List<Mpay> reList = paymentDao.findByPropertyOr2(Mpay.class, paramMap, 0, 0);
 		if (reList != null && reList.size() > 0) {
 			Mpay pay = reList.get(0);
 			String status = datasMap.get("status") + "";

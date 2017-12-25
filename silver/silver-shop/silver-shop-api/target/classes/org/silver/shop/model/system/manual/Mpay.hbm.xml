@@ -96,6 +96,9 @@
 			<property name="pay_record_status" type = "int">
 			<column name="pay_record_status"  />
 		</property>
+			<property name="pay_time"  type="java.util.Date">
+			<column name="pay_time"  />
+		</property>
 	</class>
 
 </hibernate-mapping>

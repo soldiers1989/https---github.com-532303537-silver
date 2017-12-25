@@ -20,7 +20,7 @@ public interface MorderService {
 	 * @param params
 	 * @return
 	 */
-	public Map<String, Object> createNewSub(JSONObject params);
+	public Map<String, Object> createNewSub(JSONObject goodsInfo);
 
 	public Map<String, Object> deleteByOrderId(String marchant_no, String order_id);
 
@@ -40,6 +40,7 @@ public interface MorderService {
 	 * @param cityName 
 	 * @param provinceName 
 	 * @param orderId 
+	 * @param goodsInfo 
 	 * @return
 	 */
 	public Map<String, Object> guoCreateNew(String merchant_no, String waybill, int serial, String dateSign,
@@ -47,7 +48,7 @@ public interface MorderService {
 			String RecipientTel, String RecipientProvincesCode, String RecipientAddr, String OrderDocAcount,
 			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
 			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
-			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId);
+			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId, JSONObject goodsInfo);
 
 	/**
 	 * 根据商品编号及名称检查商品是否真实存在

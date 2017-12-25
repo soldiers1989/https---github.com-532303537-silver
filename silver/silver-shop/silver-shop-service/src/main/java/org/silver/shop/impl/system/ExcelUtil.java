@@ -1,4 +1,4 @@
-package org.silver.shop.utils;
+package org.silver.shop.impl.system;
 /**
  * 名称：Excel读写类
  * 功能：读取和改写已存在的Excel文件，暂不支持创建新文件。
@@ -32,6 +32,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.WorksheetDocument;
 
 
@@ -41,7 +42,7 @@ public class ExcelUtil {
 	private Workbook book=null;
 	private HSSFWorkbook wb = null;
 //	private XSSFWorkbook xb=null;
-	private Sheet sheet = null;
+	private Sheet sheet = null; 
 //	private XSSFSheet xsheet = null;
 
 	private Row row = null;
@@ -52,7 +53,7 @@ public class ExcelUtil {
 	private int RowCount = 0;
 	private int ColumnCount = 0;
 	private FileInputStream fls = null;
-	private FileOutputStream ols = null;
+	private FileOutputStream fileOut = null;
 	private File file = null;
 
 	public ExcelUtil() {
@@ -117,13 +118,12 @@ public class ExcelUtil {
 	public void setFls(FileInputStream fls) {
 		this.fls = fls;
 	}
-
-	public FileOutputStream getOls() {
-		return ols;
+	public FileOutputStream getFileOut() {
+		return fileOut;
 	}
 
-	public void setOls(FileOutputStream ols) {
-		this.ols = ols;
+	public void setFileOut(FileOutputStream fileOut) {
+		this.fileOut = fileOut;
 	}
 
 	public File getFile() {
@@ -148,8 +148,7 @@ public class ExcelUtil {
 				System.out.println("文件不存在，创建一个");
 				try {
 					HSSFWorkbook workbook = new HSSFWorkbook();
-					
-					FileOutputStream fileOut = new FileOutputStream(f.getPath());
+					fileOut = new FileOutputStream(f.getPath());
 					workbook.write(fileOut);
 					fileOut.close();
 				} catch (IOException e) {
@@ -165,15 +164,13 @@ public class ExcelUtil {
 				header.setCenter("标题");
 			} else if (f.isDirectory()) {
 				System.out.println("文件路径被占用");
-
 			} else {
 				fls = new FileInputStream(f);
 				try{
-					book = new XSSFWorkbook(f);
+					book = new XSSFWorkbook(f); 
 				}catch (Exception e){
 					//e.printStackTrace();
 					book = new HSSFWorkbook(new POIFSFileSystem(fls));
-					
 				}
 				fls.close();
 				System.out.println("文件存在，读取内容");
@@ -196,10 +193,10 @@ public class ExcelUtil {
 	public void save(File filePath) {
 		try {
 			this.file = filePath;
-			if (ols == null) {
-				ols = new FileOutputStream(filePath);
+			if (fileOut == null) {
+				fileOut = new FileOutputStream(filePath);
 			}
-			book.write(ols);
+			book.write(fileOut);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -210,11 +207,10 @@ public class ExcelUtil {
 	}
 
 	public void closeExcel() {
-		if (ols != null) {
+		if (fileOut != null) {
 			try {
-				ols.close();
+				fileOut.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -547,4 +543,6 @@ public class ExcelUtil {
 		// System.out.println(s);
 		// excel.closeExcel();
 	}
+
+
 }

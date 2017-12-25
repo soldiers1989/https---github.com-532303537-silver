@@ -198,9 +198,9 @@ public class ManagerTransaction {
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		String path = "/opt/www/img/" + merchantName + "/";
+		String path = "/opt/www/img/" + merchantId + "/";
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
-		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()))) {
+		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString())+"")) {
 			return imgMap;
 		}
 		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
@@ -249,6 +249,7 @@ public class ManagerTransaction {
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
+		
 		return managerService.findMerchantRecordDetail(merchantId);
 	}
 	
@@ -260,6 +261,16 @@ public class ManagerTransaction {
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.editMerchantRecordDetail(managerId,managerName,merchantId,merchantRecordInfo);
+	}
+
+	//管理员删除商户备案信息
+	public Map<String, Object> deleteMerchantRecordInfo(long id) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return managerService.deleteMerchantRecordInfo(id);
 	}
 
 	
