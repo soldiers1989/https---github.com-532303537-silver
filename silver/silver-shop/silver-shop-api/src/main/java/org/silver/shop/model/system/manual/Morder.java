@@ -54,6 +54,7 @@ public class Morder implements Serializable {
 	private String RecipientCityName;//收货人城市名称
 	private String RecipientAreaName;//收货人区域名称
 	private String oldOrderId;//原导入表单中订单Id
+	private int seqNo;//订单导入时序号
 	public long getId() {
 		return id;
 	}
@@ -404,6 +405,14 @@ public class Morder implements Serializable {
 
 	public void setOldOrderId(String oldOrderId) {
 		this.oldOrderId = oldOrderId;
+	}
+
+	public int getSeqNo() {
+		return seqNo;
+	}
+
+	public void setSeqNo(int seqNo) {
+		this.seqNo = seqNo;
 	}
 
 }

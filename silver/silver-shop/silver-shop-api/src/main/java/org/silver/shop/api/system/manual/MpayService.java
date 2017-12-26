@@ -55,10 +55,11 @@ public interface MpayService {
 	/**
 	 * 商户修改手工(导入)的订单
 	 * 
-	 * @param morderInfoPack
+	 * @param strArr
 	 *            订单信息包
+	 * @param flag 
 	 * @return
 	 */
-	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String morderInfoPack);
+	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr, int flag);
 
 }

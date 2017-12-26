@@ -151,11 +151,12 @@ public class MdataService {
 		String merchantName = merchantInfo.getMerchantName();
 		String filePath = req.getSession().getServletContext().getRealPath("/") + "WEB-INF/" + date.trim() + "_"
 				+ serialNo + ".xls";
-		com.alibaba.fastjson.JSONObject obj = com.alibaba.fastjson.JSONObject.parseObject(JSONObject
-				.fromObject(
-						mpayService.downOrderExcelByDateSerialNo(merchantId, merchantName, filePath, date, serialNo))
-				.get("datas") + "");
-		JSONArray jarr = JSONArray.parseArray(obj.get("rows") + "");
+		Map<String, Object> reOrderMap = mpayService.downOrderExcelByDateSerialNo(merchantId, merchantName, filePath,
+				date, serialNo);
+		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
+			return reOrderMap;
+		}
+		JSONArray jarr = JSONArray.parseArray(reOrderMap.get(BaseCode.DATAS.toString()) + "");
 		return doWrite(jarr, filePath);
 	}
 
@@ -390,12 +391,11 @@ public class MdataService {
 						excel.writCell(0, i + 2, c, OrderDocTel);
 					} else if (c == 25) {
 						excel.writCell(0, i + 2, c, RecipientCityName);
-					}else if(c == 31){
+					} else if (c == 31) {
 						excel.writCell(0, i + 2, c, senderCountry);
-					}else if(c == 32){
+					} else if (c == 32) {
 						excel.writCell(0, i + 2, c, senderCountry);
-					}			
-					else if (c == 37) {
+					} else if (c == 37) {
 						excel.writCell(0, i + 2, c, "C000010000803304");
 					} else if (c == 38) {
 						excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司");
@@ -454,23 +454,28 @@ public class MdataService {
 	}
 
 	// 商户修改手工订单信息
-	public Map<String, Object> editMorderInfo(String morderInfoPack) {
+	public Map<String, Object> editMorderInfo(JSONObject json,int length, int flag) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return mpayService.editMorderInfo(merchantId, merchantName, morderInfoPack);
+		String[] strArr = new String[length];
+		for(int i =0 ; i< length; i++){
+			String value= json.getString(Integer.toString(i));
+			strArr[i] =  value;
+		}
+		return mpayService.editMorderInfo(merchantId, merchantName, strArr,flag);
 	}
 
 	// 读取缓存中excel导入实时数据
 	public Map<String, Object> readExcelRedisInfo() {
-		Map<String,Object> datasMap = new HashMap<>();
-		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
 		byte[] redisByte = JedisUtil.get("Shop_Key_ExcelIng_Map".getBytes(), 3600);
 		if (redisByte != null && redisByte.length > 0) {
-			datasMap =  (Map<String, Object>) SerializeUtil.toObject(redisByte);
+			datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(datasMap));

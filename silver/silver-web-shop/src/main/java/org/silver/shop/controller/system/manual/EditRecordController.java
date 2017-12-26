@@ -302,43 +302,37 @@ public class EditRecordController {
 	 * @param resp
 	 * @return
 	 */
-	@RequestMapping(value = "/getOrderExcel")
+	@RequestMapping(value = "/downMOrderExcel")
 	@RequiresRoles("Merchant")
-	public void getOrderExcel(HttpServletRequest req, HttpServletResponse response, String date, String serialNo) {
+	public void downMOrderExcel(HttpServletRequest req, HttpServletResponse response, String date, String serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = mdataService.downOrderExcelByDateSerialNo(req, date, serialNo);
-
 		if ("1".equals(statusMap.get("status"))) {
 			String filePath = statusMap.get("filePath") + "";
 			try {
 				downLoad(filePath, response, false);
-				statusMap.put("status", 1);
-				return;
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		response.setContentType("application/x-msdownload");
-		response.setHeader("Content-Disposition", "attachment; filename=" + toUTF8("该日期与批次号数据.xls"));
-		return;
+
 	}
 
 	public void downLoad(String filePath, HttpServletResponse response, boolean isOnLine) throws Exception {
 		File f = new File(filePath);
-		System.out.println(f.exists());
 		BufferedInputStream br = new BufferedInputStream(new FileInputStream(f));
-		byte[] buf = new byte[1024];
+		byte[] buf = new byte[2048];
 		int len = 0;
 		response.reset();
 		if (isOnLine) {
 			URL u = new URL(filePath);
 			response.setContentType(u.openConnection().getContentType());
 			response.setHeader("Content-Disposition", "inline; filename=" + toUTF8(f.getName()));
-
 		}
 		// 纯下载
 		else {
@@ -351,7 +345,7 @@ public class EditRecordController {
 		out.flush();
 		br.close();
 		out.close();
-		// f.delete();
+		 f.delete();
 	}
 
 	public String toUTF8(String s) {
@@ -388,17 +382,19 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/editMorderInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String editMorderInfo(HttpServletRequest req, HttpServletResponse response, String morderInfoPack) {
+	public String editMorderInfo(HttpServletRequest req, HttpServletResponse response, String morderInfoPack,
+			int length, int flag) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> datasMap = new HashMap<>();
-		if (StringEmptyUtils.isNotEmpty(morderInfoPack)) {
-			Map<String, Object> statusMap = mdataService.editMorderInfo(morderInfoPack);
+		try {
+			JSONObject json = JSONObject.fromObject(morderInfoPack);
+			Map<String, Object> statusMap = mdataService.editMorderInfo(json, length, flag);
 			return JSONObject.fromObject(statusMap).toString();
-		} else {
+		} catch (Exception e) {
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			datasMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
 			return JSONObject.fromObject(datasMap).toString();
@@ -424,12 +420,5 @@ public class EditRecordController {
 		Map<String, Object> statusMap = mdataService.readExcelRedisInfo();
 		return JSONObject.fromObject(statusMap).toString();
 
-	}
-
-	public static void main(String[] args) {
-		String str = " 广东省广州市广东东莞市虎门镇大莹东方国际服装城5楼天桥5026";
-		if(str.contains("东莞市")){
-			System.out.println("---------------");
-		}
 	}
 }

@@ -163,6 +163,10 @@
 			<property name="oldOrderId">
 			<column name="oldOrderId" />
 		</property>
+		
+		<property name="seqNo" type="java.lang.Integer">
+			<column name="seqNo" not-null="true"  />
+		</property>
 	</class>
 
 </hibernate-mapping>

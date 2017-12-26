@@ -453,6 +453,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 						hql = hql + "model.createDate" + " >= " + "?" + " and ";
 					} else if ("endDate".equals(property)) {
 						hql = hql + "model.createDate" + " <= " + "?" + " and ";
+					}else if("startTime".equals(property)){//用于兼容下划线版本实体
+						hql = hql + "model.create_date " + " >= " + "? " + " and ";
+					}else if("endTime".equals(property)){//用于兼容下划线版本实体
+						hql = hql + "model.create_date " + " <= " + "? " + " and ";
 					} else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}

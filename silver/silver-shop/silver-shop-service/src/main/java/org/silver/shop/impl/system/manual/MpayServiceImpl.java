@@ -478,6 +478,8 @@ public class MpayServiceImpl implements MpayService {
 			return tokMap;
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		//累计金额
+		double cumulativeAmount = 0.0;
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> orderMap = (Map<String, Object>) jsonList.get(i);
 			String orderNo = orderMap.get("orderNo") + "";
@@ -494,7 +496,11 @@ public class MpayServiceImpl implements MpayService {
 				errorList.add(errMap);
 			} else {
 				Morder order = orderList.get(0);
-				Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, order.getFCY());
+				//订单商品总额
+				double fcy= order.getFCY();
+				//将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
+				cumulativeAmount = fcy+= cumulativeAmount;
+				Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo,cumulativeAmount);
 				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
 					return checkMap;
 				}
@@ -660,7 +666,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		// orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
@@ -756,8 +762,8 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Table reList = morderDao.getOrderAndOrderGoodsInfo(merchantId, date, Integer.parseInt(serialNo));
 		if (reList != null && reList.getRows().size() > 0) {
-			statusMap.put("status", 1);
-			statusMap.put("datas", Transform.tableToJson(reList));
+			statusMap.put(BaseCode.STATUS.toString(),StatusCode.SUCCESS.getStatus());
+			statusMap.put("datas", Transform.tableToJson(reList).getJSONArray("rows"));
 			return statusMap;
 		}
 		statusMap.put("status", -3);
@@ -765,54 +771,39 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	@Override
-	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String morderInfoPack) {
+	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr,int flag) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		JSONObject jsonMap = null;
-		try {
-			jsonMap = JSONObject.fromObject(morderInfoPack);
-		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
-		}
-		if (jsonMap != null && !jsonMap.isEmpty()) {
-			paramMap.put("order_id", jsonMap.get("orderId"));
+		
+		if (strArr != null && strArr.length >0 && flag>0) {
+			paramMap.put("order_id", strArr[0]);
 			paramMap.put("merchant_no", merchantId);
 			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, paramMap, 1, 1);
 			if (reOrderList != null && !reOrderList.isEmpty()) {
-				int falg = 0;
-				try {
-					falg = jsonMap.getInt("falg");
-				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "修改标识错误,请重新输入!");
-					return statusMap;
-				}
 				Morder order = reOrderList.get(0);
 				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
 					Map<String, Object> reOrderMap = null;
 					Map<String, Object> reOrderSubMap = null;
 					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
-					switch (falg) {
+					switch (flag) {
 					case 1:
-						reOrderMap = editMorderInfo(order, jsonMap);
+						reOrderMap = editMorderInfo(order, strArr);
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
 						break;
 					case 2:
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), jsonMap);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
 						break;
 					case 3:
-						reOrderMap = editMorderInfo(order, jsonMap);
+						reOrderMap = editMorderInfo(order, strArr);
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), jsonMap);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
@@ -822,10 +813,11 @@ public class MpayServiceImpl implements MpayService {
 						statusMap.put(BaseCode.MSG.toString(), "修改标识错误,请重新输入!");
 						return statusMap;
 					}
+				}else{
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "订单当前状态不允许修改订单及商品信息!");
+					return statusMap;
 				}
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "订单当前状态不允许修改订单及商品信息!");
-				return statusMap;
 			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "订单不存在,请核实订单信息!");
@@ -837,10 +829,10 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	private Map<String, Object> editMorderSubInfo(String order_id, Map<String, Object> orderMap) {
+	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		String entGoodsNo = orderMap.get("EntGoodsNo") + "";
+		String entGoodsNo = strArr[0];
 		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "备案商品自编号不能为空,请重新输入!");
@@ -851,29 +843,29 @@ public class MpayServiceImpl implements MpayService {
 		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			MorderSub goodsInfo = reOrderSubList.get(0);
-			goodsInfo.setSeq(Integer.parseInt(orderMap.get("seq") + ""));
+			goodsInfo.setSeq(Integer.parseInt(strArr[1]));
 			goodsInfo.setEntGoodsNo(entGoodsNo);
-			goodsInfo.setHSCode(orderMap.get("HSCode") + "");
-			goodsInfo.setGoodsName(orderMap.get("GoodsName") + "");
-			goodsInfo.setCusGoodsNo(orderMap.get("CusGoodsNo") + "");
-			goodsInfo.setCIQGoodsNo(orderMap.get("CIQGoodsNo") + "");
-			goodsInfo.setOriginCountry(orderMap.get("OriginCountry") + "");
-			goodsInfo.setGoodsStyle(orderMap.get("GoodsStyle") + "");
-			goodsInfo.setBarCode(orderMap.get("BarCode") + "");
-			goodsInfo.setBrand(orderMap.get("Brand") + "");
-			goodsInfo.setQty(Integer.parseInt(orderMap.get("qty") + ""));
-			goodsInfo.setUnit(orderMap.get("Unit") + "");
-			goodsInfo.setPrice(Double.parseDouble(orderMap.get("Price") + ""));
-			goodsInfo.setTotal(Double.parseDouble(orderMap.get("Total") + ""));
-			goodsInfo.setNetWt(Double.parseDouble(orderMap.get("netWt") + ""));
-			goodsInfo.setGrossWt(Double.parseDouble(orderMap.get("grossWt") + ""));
-			goodsInfo.setFirstLegalCount(Integer.parseInt(orderMap.get("firstLegalCount") + ""));
-			goodsInfo.setSecondLegalCount(Integer.parseInt(orderMap.get("secondLegalCount") + ""));
-			goodsInfo.setStdUnit(orderMap.get("stdUnit") + "");
-			goodsInfo.setSecUnit(orderMap.get("secUnit") + "");
-			goodsInfo.setNumOfPackages(Integer.parseInt(orderMap.get("numOfPackages") + ""));
-			goodsInfo.setPackageType(Integer.parseInt(orderMap.get("packageType") + ""));
-			goodsInfo.setTransportModel(orderMap.get("transportModel") + "");
+			goodsInfo.setHSCode(strArr[2]);
+			goodsInfo.setGoodsName(strArr[3]);
+			goodsInfo.setCusGoodsNo(strArr[4]);
+			goodsInfo.setCIQGoodsNo(strArr[5]);
+			goodsInfo.setOriginCountry(strArr[6]);
+			goodsInfo.setGoodsStyle(strArr[7]);
+			goodsInfo.setBarCode(strArr[8]);
+			goodsInfo.setBrand(strArr[9]);
+			goodsInfo.setQty(Integer.parseInt(strArr[10]));
+			goodsInfo.setUnit(strArr[11]);
+			goodsInfo.setPrice(Double.parseDouble(strArr[12]));
+			goodsInfo.setTotal(Double.parseDouble(strArr[13]));
+			goodsInfo.setNetWt(Double.parseDouble(strArr[14]));
+			goodsInfo.setGrossWt(Double.parseDouble(strArr[15]));
+			goodsInfo.setFirstLegalCount(Integer.parseInt(strArr[16]));
+			goodsInfo.setSecondLegalCount(Integer.parseInt(strArr[17]));
+			goodsInfo.setStdUnit(strArr[18]);
+			goodsInfo.setSecUnit(strArr[19]);
+			goodsInfo.setNumOfPackages(Integer.parseInt(strArr[20]));
+			goodsInfo.setPackageType(Integer.parseInt(strArr[21]));
+			goodsInfo.setTransportModel(strArr[22]);
 			if (!morderDao.update(goodsInfo)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "更新订单备案商品错误!");
@@ -888,38 +880,38 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	private Map<String, Object> editMorderInfo(Morder order, Map<String, Object> orderMap) {
+	private Map<String, Object> editMorderInfo(Morder order, String[] strArr) {
 		Map<String, Object> statusMap = new HashMap<>();
-		order.setFcode(orderMap.get("Fcode") + "");
-		order.setFCY(Double.parseDouble(orderMap.get("FCY") + ""));
-		order.setTax(Double.parseDouble(orderMap.get("Tax") + ""));
-		order.setActualAmountPaid(Double.parseDouble(orderMap.get("ActualAmountPaid") + ""));
-		order.setRecipientName(orderMap.get("RecipientName") + "");
-		order.setRecipientAddr(orderMap.get("RecipientAddr") + "");
-		order.setRecipientID(orderMap.get("RecipientID") + "");
-		order.setRecipientTel(orderMap.get("RecipientTel") + "");
-		order.setRecipientProvincesCode(orderMap.get("RecipientProvincesCode") + "");
-		order.setRecipientCityCode(orderMap.get("RecipientCityCode") + "");
-		order.setRecipientAreaCode(orderMap.get("RecipientAreaCode") + "");
-		order.setOrderDocAcount(orderMap.get("OrderDocAcount") + "");
-		order.setOrderDocName(orderMap.get("OrderDocName") + "");
-		order.setOrderDocType(orderMap.get("OrderDocType") + "");
-		order.setOrderDocTel(orderMap.get("OrderDocTel") + "");
-		order.setOrderDate(orderMap.get("OrderDate") + "");
-		order.setTrade_no(orderMap.get("trade_no") + "");
-		order.setDateSign(orderMap.get("dateSign") + "");
-		order.setWaybill(orderMap.get("waybill") + "");
+		order.setFcode(strArr[1]);
+		order.setFCY(Double.parseDouble(strArr[2]));
+		order.setTax(Double.parseDouble(strArr[3]));
+		order.setActualAmountPaid(Double.parseDouble(strArr[4]));
+		order.setRecipientName(strArr[5]);
+		order.setRecipientAddr(strArr[6]);
+		order.setRecipientID(strArr[7]);
+		order.setRecipientTel(strArr[8]);
+		order.setRecipientProvincesCode(strArr[9]);
+		order.setRecipientCityCode(strArr[10]);
+		order.setRecipientAreaCode(strArr[11]);
+		order.setOrderDocAcount(strArr[12]);
+		order.setOrderDocName(strArr[13]);
+		order.setOrderDocType(strArr[14]);
+		order.setOrderDocTel(strArr[15]);
+		order.setOrderDate(strArr[16]);
+		order.setTrade_no(strArr[17]);
+		order.setDateSign(strArr[18]);
+		order.setWaybill(strArr[19]);
 		// order.setSerial(orderMap.get(""));
 		// order.setStatus(orderMap.get(""));
-		order.setSenderName(orderMap.get("senderName") + "");
-		order.setSenderCountry(orderMap.get("senderCountry") + "");
-		order.setSenderAddress(orderMap.get("senderAddress") + "");
-		order.setSenderTel(orderMap.get("senderTel") + "");
-		order.setPostal(orderMap.get("postal") + "");
-		order.setRecipientProvincesName(orderMap.get("RecipientProvincesName") + "");
-		order.setRecipientCityName(orderMap.get("RecipientCityName") + "");
-		order.setRecipientAreaName(orderMap.get("RecipientAreaName") + "");
-		order.setOldOrderId(orderMap.get("oldOrderId") + "");
+		order.setSenderName(strArr[20]);
+		order.setSenderCountry(strArr[21]);
+		order.setSenderAddress(strArr[22]);
+		order.setSenderTel(strArr[23]);
+		order.setPostal(strArr[24]);
+		order.setRecipientProvincesName(strArr[25]);
+		order.setRecipientCityName(strArr[26]);
+		order.setRecipientAreaName(strArr[27]);
+		order.setOldOrderId(strArr[28]);
 		if (!morderDao.update(order)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "更新订单备案信息错误!");

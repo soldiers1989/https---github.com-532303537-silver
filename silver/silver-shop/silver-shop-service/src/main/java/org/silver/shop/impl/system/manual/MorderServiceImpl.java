@@ -133,8 +133,13 @@ public class MorderServiceImpl implements MorderService {
 		} else {
 			params.remove("order_record_status");
 		}
+		if(StringEmptyUtils.isNotEmpty(params.get("startTime")+"")){
+			params.put("startTime", DateUtil.parseDate2(params.get("startTime")+""));
+		}else if(StringEmptyUtils.isNotEmpty(params.get("endTime")+"")){
+			params.put("endTime", DateUtil.parseDate2(params.get("endTime")+""));
+		}
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, params, null, page, size);
-		long count = morderDao.findByPropertyCount(Morder.class, params);
+		long count = morderDao.findByPropertyLikeCount(Morder.class, params,null);
 		Map<String, Object> dataMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && mlist.size() > 0) {
@@ -365,7 +370,7 @@ public class MorderServiceImpl implements MorderService {
 			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
 			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
 			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId,
-			JSONObject goodsInfo) {
+			JSONObject goodsInfo,int seqNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.clear();
@@ -425,7 +430,6 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientProvincesCode(provinceCode);
 			morder.setRecipientCityCode(cityCode);
 			morder.setRecipientAreaCode(areaCode);
-
 			morder.setRecipientAddr(RecipientAddr);
 			// 暂时默认为下单人姓名
 			morder.setOrderDocAcount(OrderDocName);
@@ -433,7 +437,6 @@ public class MorderServiceImpl implements MorderService {
 			morder.setOrderDocType("01");// 身份证
 			morder.setOrderDocId(OrderDocId);
 			morder.setOrderDocTel(OrderDocTel);
-			morder.setDateSign(OrderDate.substring(0, 7));
 			morder.setMerchant_no(merchant_no);
 			morder.setDateSign(dateSign);
 			morder.setSerial(serial);
@@ -454,22 +457,9 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientProvincesName(provinceName);
 			morder.setRecipientCityName(cityName);
 			morder.setRecipientAreaName(areaName);
-
-			java.util.Random random = new java.util.Random();// 定义随机类
-			int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
-			Date dNow = new Date(); // 当前时间
-			Calendar calendar2 = Calendar.getInstance(); // 得到日历
-			calendar2.setTime(dNow);//将当前时间赋给日历
-			calendar2.add(Calendar.DATE, -2);
-			dNow = calendar2.getTime();//
-			Calendar calendar = Calendar.getInstance(); // 得到日历
-			calendar.setTime(dNow);// 把当前时间赋给日历
-			calendar.add(Calendar.DATE, -(result + 2));
-			calendar.setTime(calendar.getTime());
-			Date dBefore = calendar.getTime(); // 得到随机3-5天时间
-			String randomDate = DateUtil.randomDate(dBefore, dNow);
+			String randomDate = randomCreateOrderDate();
 			morder.setOrderDate(randomDate);
-
+			morder.setSeqNo(seqNo);
 			if (morderDao.add(morder)) {
 				statusMap.put("status", 1);
 				statusMap.put("order_id", morder.getOrder_id());
@@ -480,6 +470,26 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("msg", "存储失败，请稍后重试");
 			return statusMap;
 		}
+	}
+
+	/**
+	 * 随机生成一个3-5天前的日期
+	 * @return
+	 */
+	private String randomCreateOrderDate() {
+		java.util.Random random = new java.util.Random();// 定义随机类
+		int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
+		Date dNow = new Date(); // 当前时间
+		Calendar calendar2 = Calendar.getInstance(); // 得到日历
+		calendar2.setTime(dNow);//将当前时间赋给日历
+		calendar2.add(Calendar.DATE, -2);
+		dNow = calendar2.getTime();//
+		Calendar calendar = Calendar.getInstance(); // 得到日历
+		calendar.setTime(dNow);// 把当前时间赋给日历
+		calendar.add(Calendar.DATE, -(result + 2));
+		calendar.setTime(calendar.getTime());
+		Date dBefore = calendar.getTime(); // 得到随机3-5天时间
+		return DateUtil.randomDate(dBefore, dNow);
 	}
 
 	@Override

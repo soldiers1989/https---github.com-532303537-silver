@@ -3,14 +3,13 @@ package org.silver.shop.service.system.manual;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -28,7 +27,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
-import org.silver.shop.task.CallableAndFuture;
+import org.silver.shop.task.ExcelTask;
 import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
@@ -40,8 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
-import com.alibaba.fastjson.JSONArray;
-import com.justep.baas.data.Row;
 
 import net.sf.json.JSONObject;
 
@@ -54,8 +51,6 @@ public class ManualService {
 	private FileUpLoadService fileUpLoadService;
 	@Autowired
 	private MeteringTransaction meteringTransaction;
-	@Autowired
-	private PostalTransaction postalTransaction;
 	@Autowired
 	private ProvinceCityAreaTransaction provinceCityAreaTransaction;
 
@@ -366,6 +361,7 @@ public class ManualService {
 	}
 
 	public Map<String, Object> groupAddOrder(HttpServletRequest req) {
+		ExecutorService threadPool = Executors.newCachedThreadPool();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -379,13 +375,47 @@ public class ManualService {
 			File f = new File("/gadd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(f);
-
 			if (excel.getColumnCount(0, 0) == 18) { // 企邦模板表格长度
 				readQBSheet(0, excel, errl, merchantId);
 			} else {
-				futureTask(0, excel, errl, merchantId);
+				//判断当前计算机CPU线程个数
 				// 读取国宗订单工作表
-				// readGZSheet(0, excel, errl, merchantId);
+				if(Runtime.getRuntime().availableProcessors() <= 2){
+					int totalCount = excel.getRowCount(0);
+					int secondTime = ((totalCount / 2) + 1);
+					ExcelTask excelTask = new ExcelTask(0, excel, errl, merchantId, 1, (totalCount / 2), this);
+					threadPool.submit(excelTask);
+					ExcelTask excelTask2 = new ExcelTask(0, excel, errl,merchantId,secondTime,totalCount,this); threadPool.submit(excelTask2);
+				}
+				// readGZSheet(0, excel, errl, merchantId,0,0);
+				//总数
+				int totalCount = excel.getRowCount(0);
+				//计算第一次读取结束的行数
+				int firstEndCount = totalCount / 4;
+				//获取第二次开始的行数
+				int secStartCount = (firstEndCount + 1);
+				//获取第二次结束的行数
+				int secEndCount = secStartCount + (totalCount / 4);
+				//第三次开始的行数
+				int thirdStartCount= secEndCount +1;
+				//第三次结束的行数
+				int thirdEndCount = thirdStartCount + (totalCount / 4);
+				//第四开始的行数
+				int fourthStartCount = thirdEndCount +1; 
+				ExcelTask excelTask = new ExcelTask(0, excel, errl, merchantId, 1, firstEndCount, this);
+				ExcelTask excelTask2 = new ExcelTask(0, excel, errl,merchantId,secStartCount,secEndCount,this);
+				ExcelTask excelTask3 = new ExcelTask(0, excel, errl,merchantId,thirdStartCount,thirdEndCount,this);
+				ExcelTask excelTask4 = new ExcelTask(0, excel, errl,merchantId,fourthStartCount,totalCount,this);
+				threadPool.submit(excelTask);
+				threadPool.submit(excelTask2);
+				threadPool.submit(excelTask3);
+				threadPool.submit(excelTask4);
+				//14460条记录 342517ms
+				//两百条记录
+				// 四40493ms
+				// 双任务56077ms
+				//三任务42593ms
+				// 单81934ms
 			}
 			excel.closeExcel();
 			// excel.getFile().delete();
@@ -555,15 +585,32 @@ public class ManualService {
 		return null;
 	}
 
+	/**
+	 * 读取国宗订单表
+	 * 
+	 * @param sheet
+	 *            字表数
+	 * @param excel
+	 *            文件
+	 * @param errl
+	 *            错误信息List
+	 * @param merchantId
+	 *            商户Id
+	 * @param startCount
+	 *            表单开始行数
+	 * @param endCount
+	 *            表单结束行数
+	 * @return Map
+	 */
 	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId) {
-		System.out.println("-----------------开始读取表单-----------");
+			String merchantId, int startCount, int endCount) {
 		long startTime = System.currentTimeMillis(); // 获取开始时间
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
 				RecipientTel = null, RecipientAddr = null, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
 				goodsName = "";
+		int seqNo = 0;
 		String orderId = "";//
 		String EntGoodsNo = "";// 商品货号、条形码
 		String ciqGoodsNo = "";// 检验检疫商品备案编号
@@ -599,7 +646,9 @@ public class ManualService {
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
 		int serialNo = getSerialNo("GZ");
-		for (int r = 1; r <= excel.getRowCount(sheet); r++) {
+		System.out.println("开始行数----->>>"+startCount+";结束行数---->>>"+endCount);
+		 for(int r = startCount; r <= endCount; r++){
+		//for (int r = 1; r <= excel.getRowCount(sheet); r++) {
 			writeRedis("1", errl, excel.getRowCount(sheet), r);
 			if (excel.getColumnCount(r) == 0) {
 				break;
@@ -613,100 +662,105 @@ public class ManualService {
 					return statusMap;
 				}
 				if (c == 0) {
+					// 序号
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						seqNo = Integer.parseInt(value);
+					}
+				} else if (c == 1) {
 					orderId = value.trim();
-				} else if (c == 3) {
+				} else if (c == 4) {
 					System.out.println(value);// 运单号
 					waybill = value;
-				} else if (c == 15) {
+				} else if (c == 16) {
 					System.out.println(value);// 商品名
 					goodsName = value.trim();
-				} else if (c == 17) {
+				} else if (c == 18) {
 					System.out.println(value);// 收货人姓名
 					RecipientName = value;
-				} else if (c == 19) {
+				} else if (c == 20) {
 					System.out.println(value);// 邮编代码
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						postal = value;
 					}
-				} else if (c == 20) {
+				} else if (c == 21) {
 					System.out.println(value);// 收货地址
 					RecipientAddr = value.trim();
-				} else if (c == 21) {
+				} else if (c == 22) {
 					System.out.println(value);// 收货人电话
 					RecipientTel = value.trim();
-				} else if (c == 23) {
+				} else if (c == 24) {
 					System.out.println(value);// 收货人身份证
-					RecipientID = value.trim();
-				} else if (c == 32) {
+					RecipientID = value.trim().replace("x", "X");
+				} else if (c == 33) {
 					System.out.println(value);// 商品货号
 					EntGoodsNo = value.replaceAll(" ", "");
-				} else if (c == 35) {
+				} else if (c == 36) {
 					System.out.println(value);// 数量
 					total_count = Integer.parseInt(value.trim());
-				} else if (c == 39) {
+				} else if (c == 40) {
 					System.out.println(value);// 单价
 					price = Double.parseDouble(value.trim());
-				} else if (c == 55) {
+				} else if (c == 56) {
 					ciqGoodsNo = value;
 					System.out.println(value);// 商品国检备案号
-				} else if (c == 54) {
+				} else if (c == 55) {
 					// 商品规格
 					goodsStyle = value;
 					System.out.println(value);
-				} else if (c == 38) {
+				} else if (c == 39) {
 					hsCode = value.trim();
 					System.out.println(value);// HS编码
-				} else if (c == 33) {// 原产国
+				} else if (c == 34) {// 原产国
 					originCountry = value;
 					System.out.println(value);
-				} else if (c == 34) {// 计量单位
+				} else if (c == 35) {// 计量单位
 					unit = findUnit(value.trim());
 					System.out.println(value);
-				} else if (c == 40) {// 币制
+				} else if (c == 41) {// 币制
 					currCode = value;
 					System.out.println(value);
-				} else if (c == 12) {
+				} else if (c == 13) {
 					// 净重
 					netWt = Double.parseDouble(value.trim());
-				} else if (c == 13) {
+				} else if (c == 14) {
 					// 毛重
 					grossWt = Double.parseDouble(value.trim());
-				} else if (c == 50) {
+				} else if (c == 51) {
 					// 第一法定数量
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						firstLegalCount = Double.parseDouble(value.trim());
 					}
-				} else if (c == 51) {
+				} else if (c == 52) {
 					// 第一法定计量单位
 					stdUnit = value.trim();
-				} else if (c == 52) {
+				} else if (c == 53) {
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						// 第二法定数量
 						secondLegalCount = Double.parseDouble(value.trim());
 					}
-				} else if (c == 53) {
+				} else if (c == 54) {
 					// 第二法定计量单位
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						secUnit = value;
 					}
-				} else if (c == 14) {
+				} else if (c == 15) {
 					// 箱件数
 					numOfPackages = Integer.parseInt(value.trim());
-				} else if (c == 9) {
+				} else if (c == 10) {
 					// 包装种类
 					packageType = Integer.parseInt(value.trim());
-				} else if (c == 7) {
+				} else if (c == 8) {
 					// 运输方式
 					transportModel = value;
-				} else if (c == 25) {
-					senderName = value; // 发货人姓名
 				} else if (c == 26) {
-					senderCountry = value;// 发货人国家代码
+					senderName = value; // 发货人姓名
 				} else if (c == 27) {
-					senderAreaCode = value;// 发货人区域代码 国外填 000000
+					senderCountry = value;// 发货人国家代码
 				} else if (c == 28) {
-					senderAddress = value;// 发货人地址
+					senderAreaCode = value;// 发货人区域代码 国外填 000000
 				} else if (c == 29) {
+					senderAddress = value;// 发货人地址
+				} else if (c == 30) {
 					senderTel = value;// 发货人电话
 				}
 			}
@@ -766,7 +820,7 @@ public class ManualService {
 					FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel, RecipientProvincesCode,
 					RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel, senderName, senderCountry,
 					senderAreaCode, senderAddress, senderTel, areaCode, cityCode, provinceCode, postal, provinceName,
-					cityName, areaName, orderId, goodsInfo);
+					cityName, areaName, orderId, goodsInfo,seqNo);
 			if (!"1".equals(item.get("status") + "")) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + item.get("msg"));
@@ -786,7 +840,6 @@ public class ManualService {
 				System.out.println(goodsInfo.getString("BarCode") + "------<<<<商品自编号");
 				return statusMap;
 			}
-
 		}
 		long endTime = System.currentTimeMillis(); // 获取结束时间
 		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
@@ -947,37 +1000,4 @@ public class ManualService {
 		}
 		return null;
 	}
-
-
-	public final void futureTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId) {
-		final int sheet2 = sheet;
-		final ExcelUtil excel2 = excel;
-		final List<Map<String, Object>> errl2 = errl;
-		final String merchantId2 = merchantId;
-
-		ExecutorService threadPool = Executors.newCachedThreadPool();
-		FutureTask<Map<String, Object>> futureTask1 = new FutureTask<>(new Callable<Map<String, Object>>() {
-			@Override
-			public Map<String, Object> call() throws Exception {
-				// ManualService manualService = new ManualService();
-				return readGZSheet(sheet2, excel2, errl2, merchantId2);
-			}
-		});
-
-		/*
-		 * FutureTask<Integer> futureTask2 = new FutureTask<>(new
-		 * Callable<Integer>() {
-		 * 
-		 * @Override public Integer call() throws Exception { return read(20); }
-		 * });
-		 */
-
-		threadPool.submit(futureTask1);
-		// threadPool.submit(futureTask2);
-
-		// System.out.println(futureTask1.get());
-		threadPool.shutdown();
-
-	}
-
 }
