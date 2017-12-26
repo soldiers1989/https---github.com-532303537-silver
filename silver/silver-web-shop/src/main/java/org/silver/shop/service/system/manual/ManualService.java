@@ -9,6 +9,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,11 +28,13 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
+import org.silver.shop.task.CallableAndFuture;
 import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
+import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -372,18 +379,21 @@ public class ManualService {
 			File f = new File("/gadd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(f);
+
 			if (excel.getColumnCount(0, 0) == 18) { // 企邦模板表格长度
 				readQBSheet(0, excel, errl, merchantId);
 			} else {
-				readGZSheet(0, excel, errl, merchantId);// 读取国宗订单工作表
+				futureTask(0, excel, errl, merchantId);
+				// 读取国宗订单工作表
+				// readGZSheet(0, excel, errl, merchantId);
 			}
 			excel.closeExcel();
 			// excel.getFile().delete();
 			f.delete();
 			reqMap.clear();
 			reqMap.put("status", 1);
-			reqMap.put("msg", "导入完成");
-			reqMap.put("err", errl);
+			reqMap.put("msg", "执行成功,正在读取数据");
+			// reqMap.put("err", errl);
 			return reqMap;
 		}
 		return null;
@@ -545,17 +555,16 @@ public class ManualService {
 		return null;
 	}
 
-	private Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
+	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
 			String merchantId) {
+		System.out.println("-----------------开始读取表单-----------");
 		long startTime = System.currentTimeMillis(); // 获取开始时间
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
-
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
 				RecipientTel = null, RecipientAddr = null, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
 				goodsName = "";
 		String orderId = "";//
-
 		String EntGoodsNo = "";// 商品货号、条形码
 		String ciqGoodsNo = "";// 检验检疫商品备案编号
 		String cusGoodsNo = "";// 海关正式备案编号
@@ -569,13 +578,11 @@ public class ManualService {
 		String provinceName = "";// 省份名称
 		String cityName = "";// 城市名称
 		String areaName = "";// 区域名称
-
 		String unit = "";// 计量单位
 		String currCode = "";// 币制
 		double ActualAmountPaid, FCY = 0, Tax = 0;
 		int total_count = 0;// 商品数量
 		double price = 0;
-
 		double netWt = 0.0; // 净重
 		double grossWt = 0.0;// 毛重
 		double firstLegalCount = 0.0;// 第一法定数量
@@ -593,11 +600,11 @@ public class ManualService {
 		String senderTel = "";// 发货人电话
 		int serialNo = getSerialNo("GZ");
 		for (int r = 1; r <= excel.getRowCount(sheet); r++) {
+			writeRedis("1", errl, excel.getRowCount(sheet), r);
 			if (excel.getColumnCount(r) == 0) {
 				break;
 			}
 			for (int c = 0; c < excel.getColumnCount(r); c++) {
-				
 				String value = excel.getCell(sheet, r, c);
 				if (c == 0 && "".equals(value)) {
 					statusMap.put("status", "1");
@@ -606,13 +613,13 @@ public class ManualService {
 					return statusMap;
 				}
 				if (c == 0) {
-					orderId = value;
+					orderId = value.trim();
 				} else if (c == 3) {
 					System.out.println(value);// 运单号
 					waybill = value;
 				} else if (c == 15) {
 					System.out.println(value);// 商品名
-					goodsName = value;
+					goodsName = value.trim();
 				} else if (c == 17) {
 					System.out.println(value);// 收货人姓名
 					RecipientName = value;
@@ -623,22 +630,22 @@ public class ManualService {
 					}
 				} else if (c == 20) {
 					System.out.println(value);// 收货地址
-					RecipientAddr = value;
+					RecipientAddr = value.trim();
 				} else if (c == 21) {
 					System.out.println(value);// 收货人电话
-					RecipientTel = value;
+					RecipientTel = value.trim();
 				} else if (c == 23) {
 					System.out.println(value);// 收货人身份证
-					RecipientID = value;
+					RecipientID = value.trim();
 				} else if (c == 32) {
 					System.out.println(value);// 商品货号
 					EntGoodsNo = value.replaceAll(" ", "");
 				} else if (c == 35) {
 					System.out.println(value);// 数量
-					total_count = Integer.parseInt(value);
+					total_count = Integer.parseInt(value.trim());
 				} else if (c == 39) {
 					System.out.println(value);// 单价
-					price = Double.parseDouble(value);
+					price = Double.parseDouble(value.trim());
 				} else if (c == 55) {
 					ciqGoodsNo = value;
 					System.out.println(value);// 商品国检备案号
@@ -660,32 +667,34 @@ public class ManualService {
 					System.out.println(value);
 				} else if (c == 12) {
 					// 净重
-					netWt = Double.parseDouble(value);
+					netWt = Double.parseDouble(value.trim());
 				} else if (c == 13) {
 					// 毛重
-					grossWt = Double.parseDouble(value);
+					grossWt = Double.parseDouble(value.trim());
 				} else if (c == 50) {
 					// 第一法定数量
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						firstLegalCount = Double.parseDouble(value);
+						firstLegalCount = Double.parseDouble(value.trim());
 					}
 				} else if (c == 51) {
 					// 第一法定计量单位
-					stdUnit = value;
-				} else if (c == 53) {
+					stdUnit = value.trim();
+				} else if (c == 52) {
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						// 第二法定数量
-						secondLegalCount = Double.parseDouble(value);
+						secondLegalCount = Double.parseDouble(value.trim());
 					}
 				} else if (c == 53) {
 					// 第二法定计量单位
-					secUnit = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						secUnit = value;
+					}
 				} else if (c == 14) {
 					// 箱件数
-					numOfPackages = Integer.parseInt(value);
+					numOfPackages = Integer.parseInt(value.trim());
 				} else if (c == 9) {
 					// 包装种类
-					packageType = Integer.parseInt(value);
+					packageType = Integer.parseInt(value.trim());
 				} else if (c == 7) {
 					// 运输方式
 					transportModel = value;
@@ -707,16 +716,15 @@ public class ManualService {
 						&& StringEmptyUtils.isNotEmpty(provinceMap.get("areaCode"))) {
 					areaCode = provinceMap.get("areaCode") + "";
 					areaName = provinceMap.get("areaName") + "";
-				} else {
+				} else {// 如果未找到区域编码及区域名称,则沿用省份的编码
 					areaCode = provinceMap.get("provinceCode") + "";
-					areaName = provinceMap.get("cityName") + "";
+					areaName = provinceMap.get("provinceName") + "";
 				}
 				cityCode = provinceMap.get("cityCode") + "";
 				cityName = provinceMap.get("cityName") + "";
 				provinceCode = provinceMap.get("provinceCode") + "";
 				provinceName = provinceMap.get("provinceName") + "";
 			}
-
 			OrderDocName = RecipientName;
 			OrderDocId = RecipientID;
 			OrderDocTel = RecipientTel;
@@ -743,7 +751,6 @@ public class ManualService {
 			goodsInfo.put("Unit", unit);
 			goodsInfo.put("Price", price);
 			goodsInfo.put("Qty", total_count);
-
 			goodsInfo.put("netWt", netWt);
 			goodsInfo.put("grossWt", grossWt);
 			goodsInfo.put("firstLegalCount", firstLegalCount);
@@ -772,19 +779,46 @@ public class ManualService {
 			Map<String, Object> goodsItem = morderService.createNewSub(goodsInfo);
 			if ((int) goodsItem.get("status") != 1) {
 				Map<String, Object> errMap = new HashMap<>();
+				System.out.println("【表格】第" + (r + 1) + "行-->" + goodsItem.get("msg"));
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + goodsItem.get("msg"));
 				errl.add(errMap);
-				System.out.println(order_id+"break");
-				System.out.println(goodsInfo.getString("BarCode")+"------<<<<商品自编号");
-				return null;
-				//continue;
+				System.out.println(order_id + "break");
+				System.out.println(goodsInfo.getString("BarCode") + "------<<<<商品自编号");
+				return statusMap;
 			}
+
 		}
 		long endTime = System.currentTimeMillis(); // 获取结束时间
 		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
-		System.out.println("----错误信息-->>>"+errl.toString());
+		writeRedis("2", errl, excel.getRowCount(sheet), excel.getRowCount(sheet));
+		System.out.println("----错误信息-->>>" + errl.toString());
 		return statusMap;
 
+	}
+
+	/**
+	 * 将正在导入的excel表格数据更新到缓存中
+	 * 
+	 * @param status
+	 *            状态：1-进行中,2-已完成
+	 * @param errl
+	 *            错误信息
+	 * @param totalCount
+	 *            总数
+	 * @param completed
+	 *            已完成数量
+	 * 
+	 */
+	private void writeRedis(String status, List<Map<String, Object>> errl, int totalCount, int completed) {
+		Map<String, Object> datasMap = new HashMap<>();
+		System.out.println(
+				"状态-->" + status + ";----错误信息->>" + errl + ";----总计数量->>" + totalCount + ";----已完成数量>>" + completed);
+		datasMap.put("status", status);
+		datasMap.put("error", errl);
+		datasMap.put("totalCount", totalCount);
+		datasMap.put("completed", completed);
+		// 将数据放入到缓存中
+		JedisUtil.set("Shop_Key_ExcelIng_Map".getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 	}
 
 	/**
@@ -878,9 +912,7 @@ public class ManualService {
 	}
 
 	private String getOrderDocAcount() {
-
 		return AppUtil.generateAppKey().substring(0, 6);
-
 	}
 
 	private int getSerialNo(String topStr) {
@@ -914,6 +946,38 @@ public class ManualService {
 			}
 		}
 		return null;
+	}
+
+
+	public final void futureTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId) {
+		final int sheet2 = sheet;
+		final ExcelUtil excel2 = excel;
+		final List<Map<String, Object>> errl2 = errl;
+		final String merchantId2 = merchantId;
+
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		FutureTask<Map<String, Object>> futureTask1 = new FutureTask<>(new Callable<Map<String, Object>>() {
+			@Override
+			public Map<String, Object> call() throws Exception {
+				// ManualService manualService = new ManualService();
+				return readGZSheet(sheet2, excel2, errl2, merchantId2);
+			}
+		});
+
+		/*
+		 * FutureTask<Integer> futureTask2 = new FutureTask<>(new
+		 * Callable<Integer>() {
+		 * 
+		 * @Override public Integer call() throws Exception { return read(20); }
+		 * });
+		 */
+
+		threadPool.submit(futureTask1);
+		// threadPool.submit(futureTask2);
+
+		// System.out.println(futureTask1.get());
+		threadPool.shutdown();
+
 	}
 
 }

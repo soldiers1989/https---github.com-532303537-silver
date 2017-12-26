@@ -29,6 +29,7 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
@@ -197,13 +198,12 @@ public class MpayServiceImpl implements MpayService {
 		entity.setTrade_status("TRADE_SUCCESS");
 		entity.setDel_flag(0);
 		entity.setCreate_date(new Date());
-		entity.setYear("year");
+		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
 		entity.setPay_record_status(1);
 		entity.setPay_time(pay_time);
 		return mpayDao.add(entity);
-
 	}
 
 	/**
@@ -261,10 +261,10 @@ public class MpayServiceImpl implements MpayService {
 	 *            流水号
 	 * @param proxyId
 	 *            代理商Id
-	 * @param proxyParentName
-	 *            代理商名称
 	 * @param payAmount
 	 *            推送单总金额
+	 * @param proxyParentName
+	 *            代理商名称
 	 * @return Map
 	 */
 	public Map<String, Object> updateWallet(int type, String merchantId, String merchantName, String serialNo,
@@ -505,12 +505,6 @@ public class MpayServiceImpl implements MpayService {
 					continue;
 				}
 
-				//商户钱包扣钱进代理商钱包
-				Map<String, Object> reUpdateWalletMap = updateWallet(2, merchantId, merchantName, orderNo,
-						proxyParentId, order.getFCY(), proxyParentName);
-				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
-					return reUpdateWalletMap;
-				}
 				String reOrderMessageID = reOrderMap.get("messageID") + "";
 				// 更新服务器返回订单Id
 				Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
@@ -715,6 +709,13 @@ public class MpayServiceImpl implements MpayService {
 		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 0, 0);
 		if (reList != null && reList.size() > 0) {
 			Morder order = reList.get(0);
+			paramMap.clear();
+			paramMap.put("merchantId", order.getMerchant_no());
+			List<Merchant> reMerchantList = morderDao.findByProperty(Merchant.class, paramMap, 1, 1);
+			Merchant merchant = null;
+			if(reMerchantList != null && !reMerchantList.isEmpty()){
+				merchant = reMerchantList.get(0);
+			}
 			String status = datasMap.get("status") + "";
 			String note = order.getOrder_re_note();
 			if ("null".equals(note) || note == null) {
@@ -723,6 +724,12 @@ public class MpayServiceImpl implements MpayService {
 			if ("1".equals(status)) {
 				// 支付单备案状态修改为成功
 				order.setOrder_record_status(3);
+				// 商户钱包扣钱进代理商钱包
+				Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(), merchant.getMerchantName(), order.getOrder_id(),
+						merchant.getProxyParentId(), order.getFCY(), merchant.getProxyParentName());
+				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
+					return reUpdateWalletMap;
+				}
 			} else {
 				// 备案失败
 				order.setOrder_record_status(4);
@@ -732,7 +739,7 @@ public class MpayServiceImpl implements MpayService {
 			if (!morderDao.update(order)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "异步更新订单备案信息错误!");
-				return paramMap;
+				return statusMap;
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
@@ -748,148 +755,6 @@ public class MpayServiceImpl implements MpayService {
 			String date, String serialNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Table reList = morderDao.getOrderAndOrderGoodsInfo(merchantId, date, Integer.parseInt(serialNo));
-		/*
-		 * if (reList != null && !reList.getRows().isEmpty()) { File f = new
-		 * File(filePath); ExcelUtil excel = new ExcelUtil(f); excel.open();
-		 * excel.writCell(0, 1, 0, "序号*"); excel.writCell(0, 1, 1, "订单编号*");
-		 * excel.writCell(0, 1, 2, "订单日期*"); excel.writCell(0, 1, 3, "进出口日期*");
-		 * excel.writCell(0, 1, 4, "订单运费*"); excel.writCell(0, 1, 5,
-		 * "收件人所在国家*"); excel.writCell(0, 1, 6, "收件人所在省*"); excel.writCell(0, 1,
-		 * 7, "收件人所在市*"); excel.writCell(0, 1, 8, "收件人所在区"); excel.writCell(0,
-		 * 1, 9, "收件人详细地址*"); excel.writCell(0, 1, 10, "收件人姓名*");
-		 * excel.writCell(0, 1, 11, "收件人电话*"); excel.writCell(0, 1, 12, "发货人*");
-		 * excel.writCell(0, 1, 13, "发货人所在国家*"); excel.writCell(0, 1, 14,
-		 * "发货人所在省"); excel.writCell(0, 1, 15, "发货人所在市*"); excel.writCell(0, 1,
-		 * 16, "发货人所在区"); excel.writCell(0, 1, 17, "发货人地址*"); excel.writCell(0,
-		 * 1, 18, "发货人电话*"); excel.writCell(0, 1, 19, "订单人姓名*");
-		 * excel.writCell(0, 1, 20, "订单人证件类型*"); excel.writCell(0, 1, 21,
-		 * "订单人证件号码*"); excel.writCell(0, 1, 22, "订单人注册号*"); excel.writCell(0,
-		 * 1, 23, "订单人电话*"); excel.writCell(0, 1, 24, "订单人所在国家（地区）代码*");
-		 * excel.writCell(0, 1, 25, "订单人所在城市名称"); excel.writCell(0, 1, 26,
-		 * "运输方式*"); excel.writCell(0, 1, 27, "运输工具名称*"); excel.writCell(0, 1,
-		 * 28, "运输工具代码"); excel.writCell(0, 1, 29, "航班航次编号*"); excel.writCell(0,
-		 * 1, 30, "舱单号*"); excel.writCell(0, 1, 31, "启运国*"); excel.writCell(0,
-		 * 1, 32, "启运港"); excel.writCell(0, 1, 33, "集装箱号"); excel.writCell(0, 1,
-		 * 34, "集装箱尺寸"); excel.writCell(0, 1, 35, "集装箱类型"); excel.writCell(0, 1,
-		 * 36, "是否转关*"); excel.writCell(0, 1, 37, "支付企业代码*"); excel.writCell(0,
-		 * 1, 38, "支付企业名称*"); excel.writCell(0, 1, 39, "支付流水号*");
-		 * excel.writCell(0, 1, 40, "电子订单状态*"); excel.writCell(0, 1, 41,
-		 * "支付状态*"); excel.writCell(0, 1, 42, "其他费用*"); excel.writCell(0, 1, 43,
-		 * "支付交易类型"); excel.writCell(0, 1, 44, "出仓进境日期*"); excel.writCell(0, 1,
-		 * 45, "货物存放地"); excel.writCell(0, 1, 46, "路由状态"); excel.writCell(0, 1,
-		 * 47, "电子运单状态*"); excel.writCell(0, 1, 48, "运单二维码编号");
-		 * excel.writCell(0, 1, 49, "备注"); excel.writCell(0, 1, 50, "物流订单号");
-		 * excel.writCell(0, 1, 51, "运单号*"); excel.writCell(0, 1, 52,
-		 * "进/出境口岸*"); excel.writCell(0, 1, 53, "快递公司*"); excel.writCell(0, 1,
-		 * 54, "商品货号*"); excel.writCell(0, 1, 55, "品牌"); excel.writCell(0, 1,
-		 * 56, "商品信息*"); excel.writCell(0, 1, 57, "商品海关备案号*"); excel.writCell(0,
-		 * 1, 58, "商检备案号*"); excel.writCell(0, 1, 59, "规格型号*");
-		 * excel.writCell(0, 1, 60, "原产国*"); excel.writCell(0, 1, 61, "包装种类*");
-		 * excel.writCell(0, 1, 62, "计量单位*"); excel.writCell(0, 1, 63, "申报数量*");
-		 * excel.writCell(0, 1, 64, "净重*"); excel.writCell(0, 1, 65, "毛重*");
-		 * excel.writCell(0, 1, 66, "件数*"); excel.writCell(0, 1, 67, "商品单价*");
-		 * excel.writCell(0, 1, 68, "商品总价*"); excel.writCell(0, 1, 69,
-		 * "商品批次号*"); excel.writCell(0, 1, 70, "抵付金额*"); excel.writCell(0, 1,
-		 * 71, "抵付说明"); excel.writCell(0, 1, 72, "ERP订单号"); excel.writCell(0, 1,
-		 * 73, "ERP单价"); excel.writCell(0, 1, 74, "ERP总价"); excel.writCell(0, 1,
-		 * 75, "ERP商品名称"); excel.writCell(0, 1, 76, "第一数量*"); excel.writCell(0,
-		 * 1, 77, "第二数量*"); excel.writCell(0, 1, 78, "HS编码"); excel.writCell(0,
-		 * 1, 79, "行邮税号"); List<Row> lr = reList.getRows(); for (int i = 0; i <
-		 * lr.size(); i++) { String order_Id, Fcode, RecipientName,
-		 * RecipientAddr, RecipientID, RecipientTel, RecipientProvincesCode,
-		 * RecipientCityCode, RecipientAreaCode, OrderDocAcount, OrderDocName,
-		 * OrderDocType, OrderDocId, OrderDocTel, OrderDate, trade_no, dateSign,
-		 * waybill, create_date, senderName, senderCountry, senderAreaCode,
-		 * senderAddress, senderTel, postal, RecipientProvincesName,
-		 * RecipientCityName, RecipientAreaName, EntGoodsNo, HSCode, GoodsName,
-		 * CusGoodsNo, CIQGoodsNo, OriginCountry, GoodsStyle, BarCode, Brand,
-		 * Unit, stdUnit, secUnit, transportModel, exit_date; double FCY = 0.0;
-		 * double Tax = 0.0; double ActualAmountPaid = 0.0; int serial = 0; int
-		 * Qty = 0; double Price = 0.0; double Total = 0.0; double netWt = 0.0;
-		 * double grossWt = 0.0; double firstLegalCount = 0.0; double
-		 * secondLegalCount = 0.0; int numOfPackages = 0; int packageType = 0;
-		 * Row rowIndex = lr.get(i); order_Id = rowIndex.getValue("order_id") +
-		 * ""; create_date = rowIndex.getValue("create_date") + "";
-		 * RecipientProvincesName = rowIndex.getValue("RecipientProvincesName")
-		 * + ""; RecipientCityName = rowIndex.getValue("RecipientCityName") +
-		 * ""; RecipientAreaName = rowIndex.getValue("RecipientAreaName") + "";
-		 * RecipientAddr = rowIndex.getValue("RecipientAddr") + "";
-		 * RecipientName = rowIndex.getValue("RecipientName") + ""; RecipientTel
-		 * = rowIndex.getValue("RecipientTel") + ""; senderName =
-		 * rowIndex.getValue("senderName") + ""; senderCountry =
-		 * rowIndex.getValue("senderCountry") + ""; senderAreaCode =
-		 * rowIndex.getValue("senderAreaCode") + ""; senderAddress =
-		 * rowIndex.getValue("senderAddress") + ""; senderTel =
-		 * rowIndex.getValue("senderTel") + ""; OrderDocName =
-		 * rowIndex.getValue("OrderDocName") + ""; OrderDocType =
-		 * rowIndex.getValue("OrderDocType") + ""; OrderDocId =
-		 * rowIndex.getValue("OrderDocId") + ""; OrderDocTel =
-		 * rowIndex.getValue("OrderDocTel") + ""; RecipientCityName =
-		 * rowIndex.getValue("RecipientCityName") + ""; trade_no =
-		 * rowIndex.getValue("trade_no") + ""; waybill =
-		 * rowIndex.getValue("waybill") + ""; EntGoodsNo =
-		 * rowIndex.getValue("EntGoodsNo") + ""; Brand =
-		 * rowIndex.getValue("Brand") + ""; GoodsName =
-		 * rowIndex.getValue("GoodsName") + ""; CusGoodsNo =
-		 * rowIndex.getValue("CusGoodsNo") + ""; CIQGoodsNo =
-		 * rowIndex.getValue("CIQGoodsNo") + ""; GoodsStyle =
-		 * rowIndex.getValue("GoodsStyle") + ""; OriginCountry =
-		 * rowIndex.getValue("OriginCountry") + ""; Unit =
-		 * rowIndex.getValue("Unit") + ""; Qty =
-		 * Integer.parseInt(rowIndex.getValue("Qty") + ""); netWt =
-		 * Double.parseDouble(rowIndex.getValue("netWt") + ""); grossWt =
-		 * Double.parseDouble(rowIndex.getValue("grossWt") + ""); Price =
-		 * Double.parseDouble(rowIndex.getValue("Price") + ""); Total =
-		 * Double.parseDouble(rowIndex.getValue("Total") + ""); firstLegalCount
-		 * = Double.parseDouble(rowIndex.getValue("firstLegalCount") + "");
-		 * secondLegalCount =
-		 * Double.parseDouble(rowIndex.getValue("secondLegalCount") + "");
-		 * HSCode = rowIndex.getValue("HSCode") + "";
-		 * 
-		 * for (int c = 0; c < 81; c++) { if (c == 0) { excel.writCell(0, i + 2,
-		 * c, i+1); } else if (c == 1) { excel.writCell(0, i + 2, c, order_Id);
-		 * } else if (c == 2) { excel.writCell(0, i + 2, c, create_date); } else
-		 * if (c == 3) { excel.writCell(0, i + 2, c, create_date); } else if (c
-		 * == 6) { excel.writCell(0, i + 2, c, RecipientProvincesName); } else
-		 * if (c == 7) { excel.writCell(0, i + 2, c, RecipientCityName); } else
-		 * if (c == 8) { excel.writCell(0, i + 2, c, RecipientAreaName); } else
-		 * if (c == 9) { excel.writCell(0, i + 2, c, RecipientAddr); } else if
-		 * (c == 10) { excel.writCell(0, i + 2, c, RecipientName); } else if (c
-		 * == 11) { excel.writCell(0, i + 2, c, RecipientTel); } else if (c ==
-		 * 12) { excel.writCell(0, i + 2, c, senderName); } else if (c == 13) {
-		 * excel.writCell(0, i + 2, c, senderCountry); } else if (c == 15) {
-		 * excel.writCell(0, i + 2, c, senderAreaCode); } else if (c == 17) {
-		 * excel.writCell(0, i + 2, c, senderAddress); } else if (c == 18) {
-		 * excel.writCell(0, i + 2, c, senderTel); } else if (c == 19) {
-		 * excel.writCell(0, i + 2, c, OrderDocName); } else if (c == 20) {
-		 * excel.writCell(0, i + 2, c, OrderDocType); } else if (c == 21) {
-		 * excel.writCell(0, i + 2, c, OrderDocId); } else if (c == 22) {
-		 * excel.writCell(0, i + 2, c, OrderDocName); } else if (c == 23) {
-		 * excel.writCell(0, i + 2, c, OrderDocTel); } else if (c == 24) {
-		 * excel.writCell(0, i + 2, c, RecipientCityName); } else if (c == 37) {
-		 * excel.writCell(0, i + 2, c, "C000010000803304"); } else if (c == 38)
-		 * { excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司"); }else if (c == 39) {
-		 * excel.writCell(0, i + 2, c, trade_no); } else if (c == 50) { // 物流订单号
-		 * excel.writCell(0, i + 2, c, order_Id); } else if (c == 51) {
-		 * excel.writCell(0, i + 2, c, waybill); } else if (c == 54) {
-		 * excel.writCell(0, i + 2, c, EntGoodsNo); } else if (c == 56) { // 品牌
-		 * excel.writCell(0, i + 2, c, Brand); } else if (c == 55) { // 商品信息
-		 * excel.writCell(0, i + 2, c, GoodsName); } else if (c == 57) { //
-		 * 海关备案号 excel.writCell(0, i + 2, c, CusGoodsNo); } else if (c == 58) {
-		 * // 商检备案号 excel.writCell(0, i + 2, c, CIQGoodsNo); } else if (c == 59)
-		 * { excel.writCell(0, i + 2, c, GoodsStyle); } else if (c == 60) {
-		 * excel.writCell(0, i + 2, c, OriginCountry); } else if (c == 62) {
-		 * excel.writCell(0, i + 2, c, Unit); } else if (c == 63) {
-		 * excel.writCell(0, i + 2, c, Qty); } else if (c == 64) {
-		 * excel.writCell(0, i + 2, c, netWt); } else if (c == 65) {
-		 * excel.writCell(0, i + 2, c, grossWt); } else if (c == 67) {
-		 * excel.writCell(0, i + 2, c, Price); } else if (c == 68) {
-		 * excel.writCell(0, i + 2, c, Total); } else if (c == 79) {
-		 * excel.writCell(0, i + 2, c, HSCode); } } } excel.save();
-		 * excel.closeExcel(); statusMap.put("status",
-		 * StatusCode.SUCCESS.toString()); statusMap.put("filePath", filePath);
-		 * return statusMap; }
-		 */
 		if (reList != null && reList.getRows().size() > 0) {
 			statusMap.put("status", 1);
 			statusMap.put("datas", Transform.tableToJson(reList));
@@ -899,8 +764,168 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	public static void main(String[] args) {
-		String str = "2017-12-21 14:42:60";
-		System.out.println(str.substring(0, 10));
+	@Override
+	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String morderInfoPack) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		JSONObject jsonMap = null;
+		try {
+			jsonMap = JSONObject.fromObject(morderInfoPack);
+		} catch (Exception e) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
+		}
+		if (jsonMap != null && !jsonMap.isEmpty()) {
+			paramMap.put("order_id", jsonMap.get("orderId"));
+			paramMap.put("merchant_no", merchantId);
+			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, paramMap, 1, 1);
+			if (reOrderList != null && !reOrderList.isEmpty()) {
+				int falg = 0;
+				try {
+					falg = jsonMap.getInt("falg");
+				} catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "修改标识错误,请重新输入!");
+					return statusMap;
+				}
+				Morder order = reOrderList.get(0);
+				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
+					Map<String, Object> reOrderMap = null;
+					Map<String, Object> reOrderSubMap = null;
+					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
+					switch (falg) {
+					case 1:
+						reOrderMap = editMorderInfo(order, jsonMap);
+						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
+							return reOrderMap;
+						}
+						break;
+					case 2:
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), jsonMap);
+						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
+							return reOrderSubMap;
+						}
+						break;
+					case 3:
+						reOrderMap = editMorderInfo(order, jsonMap);
+						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
+							return reOrderMap;
+						}
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), jsonMap);
+						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
+							return reOrderSubMap;
+						}
+						break;
+					default:
+						statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+						statusMap.put(BaseCode.MSG.toString(), "修改标识错误,请重新输入!");
+						return statusMap;
+					}
+				}
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "订单当前状态不允许修改订单及商品信息!");
+				return statusMap;
+			} else {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "订单不存在,请核实订单信息!");
+				return statusMap;
+			}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return statusMap;
+	}
+
+	private Map<String, Object> editMorderSubInfo(String order_id, Map<String, Object> orderMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		String entGoodsNo = orderMap.get("EntGoodsNo") + "";
+		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "备案商品自编号不能为空,请重新输入!");
+			return statusMap;
+		}
+		paramMap.put("order_id", order_id);
+		paramMap.put("EntGoodsNo", entGoodsNo);
+		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
+		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
+			MorderSub goodsInfo = reOrderSubList.get(0);
+			goodsInfo.setSeq(Integer.parseInt(orderMap.get("seq") + ""));
+			goodsInfo.setEntGoodsNo(entGoodsNo);
+			goodsInfo.setHSCode(orderMap.get("HSCode") + "");
+			goodsInfo.setGoodsName(orderMap.get("GoodsName") + "");
+			goodsInfo.setCusGoodsNo(orderMap.get("CusGoodsNo") + "");
+			goodsInfo.setCIQGoodsNo(orderMap.get("CIQGoodsNo") + "");
+			goodsInfo.setOriginCountry(orderMap.get("OriginCountry") + "");
+			goodsInfo.setGoodsStyle(orderMap.get("GoodsStyle") + "");
+			goodsInfo.setBarCode(orderMap.get("BarCode") + "");
+			goodsInfo.setBrand(orderMap.get("Brand") + "");
+			goodsInfo.setQty(Integer.parseInt(orderMap.get("qty") + ""));
+			goodsInfo.setUnit(orderMap.get("Unit") + "");
+			goodsInfo.setPrice(Double.parseDouble(orderMap.get("Price") + ""));
+			goodsInfo.setTotal(Double.parseDouble(orderMap.get("Total") + ""));
+			goodsInfo.setNetWt(Double.parseDouble(orderMap.get("netWt") + ""));
+			goodsInfo.setGrossWt(Double.parseDouble(orderMap.get("grossWt") + ""));
+			goodsInfo.setFirstLegalCount(Integer.parseInt(orderMap.get("firstLegalCount") + ""));
+			goodsInfo.setSecondLegalCount(Integer.parseInt(orderMap.get("secondLegalCount") + ""));
+			goodsInfo.setStdUnit(orderMap.get("stdUnit") + "");
+			goodsInfo.setSecUnit(orderMap.get("secUnit") + "");
+			goodsInfo.setNumOfPackages(Integer.parseInt(orderMap.get("numOfPackages") + ""));
+			goodsInfo.setPackageType(Integer.parseInt(orderMap.get("packageType") + ""));
+			goodsInfo.setTransportModel(orderMap.get("transportModel") + "");
+			if (!morderDao.update(goodsInfo)) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "更新订单备案商品错误!");
+				return statusMap;
+			}
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
+
+	private Map<String, Object> editMorderInfo(Morder order, Map<String, Object> orderMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		order.setFcode(orderMap.get("Fcode") + "");
+		order.setFCY(Double.parseDouble(orderMap.get("FCY") + ""));
+		order.setTax(Double.parseDouble(orderMap.get("Tax") + ""));
+		order.setActualAmountPaid(Double.parseDouble(orderMap.get("ActualAmountPaid") + ""));
+		order.setRecipientName(orderMap.get("RecipientName") + "");
+		order.setRecipientAddr(orderMap.get("RecipientAddr") + "");
+		order.setRecipientID(orderMap.get("RecipientID") + "");
+		order.setRecipientTel(orderMap.get("RecipientTel") + "");
+		order.setRecipientProvincesCode(orderMap.get("RecipientProvincesCode") + "");
+		order.setRecipientCityCode(orderMap.get("RecipientCityCode") + "");
+		order.setRecipientAreaCode(orderMap.get("RecipientAreaCode") + "");
+		order.setOrderDocAcount(orderMap.get("OrderDocAcount") + "");
+		order.setOrderDocName(orderMap.get("OrderDocName") + "");
+		order.setOrderDocType(orderMap.get("OrderDocType") + "");
+		order.setOrderDocTel(orderMap.get("OrderDocTel") + "");
+		order.setOrderDate(orderMap.get("OrderDate") + "");
+		order.setTrade_no(orderMap.get("trade_no") + "");
+		order.setDateSign(orderMap.get("dateSign") + "");
+		order.setWaybill(orderMap.get("waybill") + "");
+		// order.setSerial(orderMap.get(""));
+		// order.setStatus(orderMap.get(""));
+		order.setSenderName(orderMap.get("senderName") + "");
+		order.setSenderCountry(orderMap.get("senderCountry") + "");
+		order.setSenderAddress(orderMap.get("senderAddress") + "");
+		order.setSenderTel(orderMap.get("senderTel") + "");
+		order.setPostal(orderMap.get("postal") + "");
+		order.setRecipientProvincesName(orderMap.get("RecipientProvincesName") + "");
+		order.setRecipientCityName(orderMap.get("RecipientCityName") + "");
+		order.setRecipientAreaName(orderMap.get("RecipientAreaName") + "");
+		order.setOldOrderId(orderMap.get("oldOrderId") + "");
+		if (!morderDao.update(order)) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "更新订单备案信息错误!");
+			return statusMap;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
 	}
 }

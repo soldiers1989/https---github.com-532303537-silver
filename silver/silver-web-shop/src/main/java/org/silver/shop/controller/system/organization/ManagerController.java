@@ -526,7 +526,7 @@ public class ManagerController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除商户备案信息")
 	public String managerDeleteMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("idd") long id) {
+			long id) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

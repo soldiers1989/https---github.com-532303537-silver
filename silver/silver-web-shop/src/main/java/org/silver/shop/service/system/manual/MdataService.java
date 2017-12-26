@@ -10,14 +10,18 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.manual.MuserService;
+import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.JedisUtil;
+import org.silver.util.SerializeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -243,208 +247,238 @@ public class MdataService {
 			excel.writCell(0, 1, 79, "行邮税号");
 
 			for (int i = 0; i < arr.size(); i++) {
-					String order_Id, Fcode, RecipientName, RecipientAddr, RecipientID, RecipientTel,
-							RecipientProvincesCode, RecipientCityCode, RecipientAreaCode, OrderDocAcount, OrderDocName,
-							OrderDocType, OrderDocId, OrderDocTel, OrderDate, trade_no, dateSign, waybill, create_date,
-							senderName, senderCountry, senderAreaCode, senderAddress, senderTel, postal,
-							RecipientProvincesName, RecipientCityName, RecipientAreaName, EntGoodsNo, HSCode, GoodsName,
-							CusGoodsNo, CIQGoodsNo, OriginCountry, GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit,
-							transportModel, exit_date;
-					double FCY = 0.0;
-					double Tax = 0.0;
-					double ActualAmountPaid = 0.0;
-					int serial = 0;
-					int Qty = 0;
-					double Price = 0.0;
-					double Total = 0.0;
-					double netWt = 0.0;
-					double grossWt = 0.0;
-					double firstLegalCount = 0.0;
-					double secondLegalCount = 0.0;
-					int numOfPackages = 0;
-					int packageType = 0;
-					// Row rowIndex = lr.get(i);
-					JSONObject rowIndex = JSONObject.fromObject(arr.get(i));
-					rowIndex.getString("senderAddress").substring(10, rowIndex.getString("senderAddress").length() - 2);
+				String order_Id, Fcode, RecipientName, RecipientAddr, RecipientID, RecipientTel, RecipientProvincesCode,
+						RecipientCityCode, RecipientAreaCode, OrderDocAcount, OrderDocName, OrderDocType, OrderDocId,
+						OrderDocTel, OrderDate, trade_no, dateSign, waybill, create_date, senderName, senderCountry,
+						senderAreaCode, senderAddress, senderTel, postal, RecipientProvincesName, RecipientCityName,
+						RecipientAreaName, EntGoodsNo, HSCode, GoodsName, CusGoodsNo, CIQGoodsNo, OriginCountry,
+						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date;
+				double FCY = 0.0;
+				double Tax = 0.0;
+				double ActualAmountPaid = 0.0;
+				int serial = 0;
+				int Qty = 0;
+				double Price = 0.0;
+				double Total = 0.0;
+				double netWt = 0.0;
+				double grossWt = 0.0;
+				double firstLegalCount = 0.0;
+				double secondLegalCount = 0.0;
+				int numOfPackages = 0;
+				int packageType = 0;
+				// Row rowIndex = lr.get(i);
+				JSONObject rowIndex = JSONObject.fromObject(arr.get(i));
+				rowIndex.getString("senderAddress").substring(10, rowIndex.getString("senderAddress").length() - 2);
 
-					order_Id = rowIndex.getString("order_id") + "";
-					order_Id = order_Id.substring(10, order_Id.length() - 2);
-																
-					create_date = rowIndex.getString("OrderDate").replace("{\"value\":\"", "").replace("\"}", "");
-					create_date = create_date.replace("T", " ");
-					create_date = DateUtil.toStringDate(create_date);
-					RecipientProvincesName = rowIndex.getString("RecipientProvincesName") + "";
-					RecipientProvincesName = RecipientProvincesName.substring(10, RecipientProvincesName.length() - 2);
-					RecipientCityName = rowIndex.getString("RecipientCityName") + "";
-					RecipientCityName = RecipientCityName.substring(10, RecipientCityName.length() - 2);
-					RecipientAreaName = rowIndex.getString("RecipientAreaName") + "";
-					RecipientAreaName = RecipientAreaName.substring(10, RecipientAreaName.length() - 2);
-					RecipientAddr = rowIndex.getString("RecipientAddr") + "";
-					RecipientAddr = RecipientAddr.substring(10, RecipientAddr.length() - 2);
-					RecipientName = rowIndex.getString("RecipientName") + "";
-					RecipientName = RecipientName.substring(10, RecipientName.length() - 2);
-					RecipientTel = rowIndex.getString("RecipientTel") + "";
-					RecipientTel = RecipientTel.substring(10, RecipientTel.length() - 2);
-					senderName = rowIndex.getString("senderName") + "";
-					senderName = senderName.substring(10, senderName.length() - 2);
-					senderCountry = rowIndex.getString("senderCountry") + "";
-					senderCountry = senderCountry.substring(10, senderCountry.length() - 2);
-					senderAreaCode = rowIndex.getString("senderAreaCode") + "";
-					senderAreaCode = senderAreaCode.substring(10, senderAreaCode.length() - 2);
-					senderAddress = rowIndex.getString("senderAddress") + "";
-					senderAddress = senderAddress.substring(10, senderAddress.length() - 2);
-					senderTel = rowIndex.getString("senderTel") + "";
-					senderTel = senderTel.substring(10, senderTel.length() - 2);
-					OrderDocName = rowIndex.getString("OrderDocName") + "";
-					OrderDocName = OrderDocName.substring(10, OrderDocName.length() - 2);
-					OrderDocType = rowIndex.getString("OrderDocType") + "";
-					OrderDocType = OrderDocType.substring(10, OrderDocType.length() - 2);
-					OrderDocId = rowIndex.getString("OrderDocId") + "";
-					OrderDocId = OrderDocId.substring(10, OrderDocId.length() - 2);
-					OrderDocTel = rowIndex.getString("OrderDocTel") + "";
-					OrderDocTel = OrderDocTel.substring(10, OrderDocTel.length() - 2);
-					RecipientCityName = rowIndex.getString("RecipientCityName") + "";
-					RecipientCityName = RecipientCityName.substring(10, RecipientCityName.length() - 2);
-					trade_no = rowIndex.getString("trade_no").replace("{\"value\":\"", "").replace("\"}", "");
-					waybill = rowIndex.getString("waybill") + "";
-					waybill = waybill.substring(10, waybill.length() - 2);
-					EntGoodsNo = rowIndex.getString("EntGoodsNo") + "";
-					EntGoodsNo = EntGoodsNo.substring(10, EntGoodsNo.length() - 2);
-					Brand = rowIndex.getString("Brand") + "";
-					Brand = Brand.substring(10, Brand.length() - 2);
-					GoodsName = rowIndex.getString("GoodsName") + "";
-					GoodsName = GoodsName.substring(10, GoodsName.length() - 2);
-					CusGoodsNo = rowIndex.getString("CusGoodsNo") + "";
-					CusGoodsNo = CusGoodsNo.substring(10, CusGoodsNo.length() - 2);
-					CIQGoodsNo = rowIndex.getString("CIQGoodsNo") + "";
-					CIQGoodsNo = CIQGoodsNo.substring(10, CIQGoodsNo.length() - 2);
-					GoodsStyle = rowIndex.getString("GoodsStyle") + "";
-					GoodsStyle = GoodsStyle.substring(10, GoodsStyle.length() - 2);
-					OriginCountry = rowIndex.getString("OriginCountry") + "";
-					OriginCountry = OriginCountry.substring(10, OriginCountry.length() - 2);
-					Unit = rowIndex.getString("Unit").replace("{\"value\":\"", "").replace("\"}", "");
-					
-					// 数量
-					String strQty = rowIndex.getString("Qty").replace("{\"value\":", "").replace("}", "");
-					Qty = Integer.parseInt(strQty);
-					String strNetWt = rowIndex.getString("netWt").replace("{\"value\":", "").replace("}", "");
-					netWt = Double.parseDouble(strNetWt);
-					String strGrossWt = rowIndex.getString("grossWt").replace("{\"value\":", "").replace("}", "");
-					grossWt = Double.parseDouble(strGrossWt);
-					String strPrice = rowIndex.getString("Price").replace("{\"value\":", "").replace("}", "");
-					Price = Double.parseDouble(strPrice);
-					String strTotal = rowIndex.getString("Total").replace("{\"value\":", "").replace("}", "");
-					Total = Double.parseDouble(strTotal);
-					String strFirstLegalCount = rowIndex.getString("firstLegalCount").replace("{\"value\":", "").replace("}", "");
-					firstLegalCount = Double.parseDouble(strFirstLegalCount);
-					String strSecondLegalCount = rowIndex.getString("secondLegalCount").replace("{\"value\":", "").replace("}", "");
-					secondLegalCount = Double.parseDouble(strSecondLegalCount);
-					HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
-					for (int c = 0; c < 81; c++) {
-						if (c == 0) {
-							excel.writCell(0, i + 2, c, i + 1);
-						} else if (c == 1) {
-							excel.writCell(0, i + 2, c, order_Id);
-						} else if (c == 2) {
-							excel.writCell(0, i + 2, c, create_date);
-						} else if (c == 3) {
-							excel.writCell(0, i + 2, c, create_date);
-						} else if (c == 6) {
-							excel.writCell(0, i + 2, c, RecipientProvincesName);
-						} else if (c == 7) {
-							excel.writCell(0, i + 2, c, RecipientCityName);
-						} else if (c == 8) {
-							excel.writCell(0, i + 2, c, RecipientAreaName);
-						} else if (c == 9) {
-							excel.writCell(0, i + 2, c, RecipientAddr);
-						} else if (c == 10) {
-							excel.writCell(0, i + 2, c, RecipientName);
-						} else if (c == 11) {
-							excel.writCell(0, i + 2, c, RecipientTel);
-						} else if (c == 12) {
-							excel.writCell(0, i + 2, c, senderName);
-						} else if (c == 13) {
-							excel.writCell(0, i + 2, c, senderCountry);
-						} else if (c == 15) {
-							excel.writCell(0, i + 2, c, senderAreaCode);
-						} else if (c == 17) {
-							excel.writCell(0, i + 2, c, senderAddress);
-						} else if (c == 18) {
-							excel.writCell(0, i + 2, c, senderTel);
-						} else if (c == 19) {
-							excel.writCell(0, i + 2, c, OrderDocName);
-						} else if (c == 20) {
-							excel.writCell(0, i + 2, c, OrderDocType);
-						} else if (c == 21) {
-							excel.writCell(0, i + 2, c, OrderDocId);
-						} else if (c == 22) {
-							excel.writCell(0, i + 2, c, OrderDocName);
-						} else if (c == 23) {
-							excel.writCell(0, i + 2, c, OrderDocTel);
-						} else if (c == 25) {
-							excel.writCell(0, i + 2, c, RecipientCityName);
-						} else if (c == 37) {
-							excel.writCell(0, i + 2, c, "C000010000803304");
-						} else if (c == 38) {
-							excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司");
-						} else if (c == 39) {
-							excel.writCell(0, i + 2, c, trade_no);
-						} else if (c == 50) {
-							// 物流订单号
-							excel.writCell(0, i + 2, c, order_Id);
-						} else if (c == 51) {
-							excel.writCell(0, i + 2, c, waybill);
-						} else if (c == 54) {
-							excel.writCell(0, i + 2, c, EntGoodsNo);
-						} else if (c == 56) {
-							// 品牌
-							excel.writCell(0, i + 2, c, Brand);
-						} else if (c == 55) {
-							// 商品信息
-							excel.writCell(0, i + 2, c, GoodsName);
-						} else if (c == 57) {
-							// 海关备案号=HS编码
-							excel.writCell(0, i + 2, c, HSCode);
-						} else if (c == 58) {
-							// 商检备案号
-							excel.writCell(0, i + 2, c, CIQGoodsNo);
-						} else if (c == 59) {
-							excel.writCell(0, i + 2, c, GoodsStyle);
-						} else if (c == 60) {
-							excel.writCell(0, i + 2, c, OriginCountry);
-						} else if (c == 62) {
-							excel.writCell(0, i + 2, c, Unit);
-						} else if (c == 63) {
-							excel.writCell(0, i + 2, c, Qty);
-						} else if (c == 64) {
-							excel.writCell(0, i + 2, c, netWt);
-						} else if (c == 65) {
-							excel.writCell(0, i + 2, c, grossWt);
-						} else if (c == 67) {
-							excel.writCell(0, i + 2, c, Price);
-						} else if (c == 68) {
-							excel.writCell(0, i + 2, c, Total);
-						} else if (c == 78) {
-							excel.writCell(0, i + 2, c, HSCode);
-						}
+				order_Id = rowIndex.getString("order_id") + "";
+				order_Id = order_Id.substring(10, order_Id.length() - 2);
+
+				create_date = rowIndex.getString("OrderDate").replace("{\"value\":\"", "").replace("\"}", "");
+				create_date = create_date.replace("T", " ");
+				create_date = DateUtil.toStringDate(create_date);
+				RecipientProvincesName = rowIndex.getString("RecipientProvincesName") + "";
+				RecipientProvincesName = RecipientProvincesName.substring(10, RecipientProvincesName.length() - 2);
+				RecipientCityName = rowIndex.getString("RecipientCityName") + "";
+				RecipientCityName = RecipientCityName.substring(10, RecipientCityName.length() - 2);
+				RecipientAreaName = rowIndex.getString("RecipientAreaName") + "";
+				RecipientAreaName = RecipientAreaName.substring(10, RecipientAreaName.length() - 2);
+				RecipientAddr = rowIndex.getString("RecipientAddr") + "";
+				RecipientAddr = RecipientAddr.substring(10, RecipientAddr.length() - 2);
+				RecipientName = rowIndex.getString("RecipientName") + "";
+				RecipientName = RecipientName.substring(10, RecipientName.length() - 2);
+				RecipientTel = rowIndex.getString("RecipientTel") + "";
+				RecipientTel = RecipientTel.substring(10, RecipientTel.length() - 2);
+				senderName = rowIndex.getString("senderName") + "";
+				senderName = senderName.substring(10, senderName.length() - 2);
+				senderCountry = rowIndex.getString("senderCountry") + "";
+				senderCountry = senderCountry.substring(10, senderCountry.length() - 2);
+				senderAreaCode = rowIndex.getString("senderAreaCode") + "";
+				senderAreaCode = senderAreaCode.substring(10, senderAreaCode.length() - 2);
+				senderAddress = rowIndex.getString("senderAddress") + "";
+				senderAddress = senderAddress.substring(10, senderAddress.length() - 2);
+				senderTel = rowIndex.getString("senderTel") + "";
+				senderTel = senderTel.substring(10, senderTel.length() - 2);
+				OrderDocName = rowIndex.getString("OrderDocName") + "";
+				OrderDocName = OrderDocName.substring(10, OrderDocName.length() - 2);
+				OrderDocType = rowIndex.getString("OrderDocType") + "";
+				OrderDocType = OrderDocType.substring(10, OrderDocType.length() - 2);
+				OrderDocId = rowIndex.getString("OrderDocId") + "";
+				OrderDocId = OrderDocId.substring(10, OrderDocId.length() - 2);
+				OrderDocTel = rowIndex.getString("OrderDocTel") + "";
+				OrderDocTel = OrderDocTel.substring(10, OrderDocTel.length() - 2);
+				RecipientCityName = rowIndex.getString("RecipientCityName") + "";
+				RecipientCityName = RecipientCityName.substring(10, RecipientCityName.length() - 2);
+				trade_no = rowIndex.getString("trade_no").replace("{\"value\":\"", "").replace("\"}", "");
+				waybill = rowIndex.getString("waybill") + "";
+				waybill = waybill.substring(10, waybill.length() - 2);
+				EntGoodsNo = rowIndex.getString("EntGoodsNo") + "";
+				EntGoodsNo = EntGoodsNo.substring(10, EntGoodsNo.length() - 2);
+				Brand = rowIndex.getString("Brand") + "";
+				Brand = Brand.substring(10, Brand.length() - 2);
+				GoodsName = rowIndex.getString("GoodsName") + "";
+				GoodsName = GoodsName.substring(10, GoodsName.length() - 2);
+				CusGoodsNo = rowIndex.getString("CusGoodsNo") + "";
+				CusGoodsNo = CusGoodsNo.substring(10, CusGoodsNo.length() - 2);
+				CIQGoodsNo = rowIndex.getString("CIQGoodsNo") + "";
+				CIQGoodsNo = CIQGoodsNo.substring(10, CIQGoodsNo.length() - 2);
+				GoodsStyle = rowIndex.getString("GoodsStyle") + "";
+				GoodsStyle = GoodsStyle.substring(10, GoodsStyle.length() - 2);
+				OriginCountry = rowIndex.getString("OriginCountry") + "";
+				OriginCountry = OriginCountry.substring(10, OriginCountry.length() - 2);
+				Unit = rowIndex.getString("Unit").replace("{\"value\":\"", "").replace("\"}", "");
+
+				// 数量
+				String strQty = rowIndex.getString("Qty").replace("{\"value\":", "").replace("}", "");
+				Qty = Integer.parseInt(strQty);
+				String strNetWt = rowIndex.getString("netWt").replace("{\"value\":", "").replace("}", "");
+				netWt = Double.parseDouble(strNetWt);
+				String strGrossWt = rowIndex.getString("grossWt").replace("{\"value\":", "").replace("}", "");
+				grossWt = Double.parseDouble(strGrossWt);
+				String strPrice = rowIndex.getString("Price").replace("{\"value\":", "").replace("}", "");
+				Price = Double.parseDouble(strPrice);
+				String strTotal = rowIndex.getString("Total").replace("{\"value\":", "").replace("}", "");
+				Total = Double.parseDouble(strTotal);
+				String strFirstLegalCount = rowIndex.getString("firstLegalCount").replace("{\"value\":", "")
+						.replace("}", "");
+				firstLegalCount = Double.parseDouble(strFirstLegalCount);
+				String strSecondLegalCount = rowIndex.getString("secondLegalCount").replace("{\"value\":", "")
+						.replace("}", "");
+				secondLegalCount = Double.parseDouble(strSecondLegalCount);
+				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
+				for (int c = 0; c < 81; c++) {
+					if (c == 0) {
+						excel.writCell(0, i + 2, c, i + 1);
+					} else if (c == 1) {
+						// 订单Id
+						excel.writCell(0, i + 2, c, order_Id);
+					} else if (c == 2) {
+						// 下单日期
+						excel.writCell(0, i + 2, c, create_date);
+					} else if (c == 3) {
+						excel.writCell(0, i + 2, c, create_date);
+					} else if (c == 6) {
+						excel.writCell(0, i + 2, c, RecipientProvincesName);
+					} else if (c == 7) {
+						excel.writCell(0, i + 2, c, RecipientCityName);
+					} else if (c == 8) {
+						excel.writCell(0, i + 2, c, RecipientAreaName);
+					} else if (c == 9) {
+						excel.writCell(0, i + 2, c, RecipientAddr);
+					} else if (c == 10) {
+						excel.writCell(0, i + 2, c, RecipientName);
+					} else if (c == 11) {
+						excel.writCell(0, i + 2, c, RecipientTel);
+					} else if (c == 12) {
+						excel.writCell(0, i + 2, c, senderName);
+					} else if (c == 13) {
+						excel.writCell(0, i + 2, c, senderCountry);
+					} else if (c == 15) {
+						excel.writCell(0, i + 2, c, senderAreaCode);
+					} else if (c == 17) {
+						excel.writCell(0, i + 2, c, senderAddress);
+					} else if (c == 18) {
+						excel.writCell(0, i + 2, c, senderTel);
+					} else if (c == 19) {
+						excel.writCell(0, i + 2, c, OrderDocName);
+					} else if (c == 20) {
+						excel.writCell(0, i + 2, c, OrderDocType);
+					} else if (c == 21) {
+						excel.writCell(0, i + 2, c, OrderDocId);
+					} else if (c == 22) {
+						excel.writCell(0, i + 2, c, OrderDocName);
+					} else if (c == 23) {
+						excel.writCell(0, i + 2, c, OrderDocTel);
+					} else if (c == 25) {
+						excel.writCell(0, i + 2, c, RecipientCityName);
+					}else if(c == 31){
+						excel.writCell(0, i + 2, c, senderCountry);
+					}else if(c == 32){
+						excel.writCell(0, i + 2, c, senderCountry);
+					}			
+					else if (c == 37) {
+						excel.writCell(0, i + 2, c, "C000010000803304");
+					} else if (c == 38) {
+						excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司");
+					} else if (c == 39) {
+						excel.writCell(0, i + 2, c, trade_no);
+					} else if (c == 44) {
+						// 出仓进境日期
+						excel.writCell(0, i + 2, c, create_date);
+					} else if (c == 50) {
+						// 物流订单号
+						excel.writCell(0, i + 2, c, order_Id);
+					} else if (c == 51) {
+						excel.writCell(0, i + 2, c, waybill);
+					} else if (c == 54) {
+						excel.writCell(0, i + 2, c, EntGoodsNo);
+					} else if (c == 56) {
+						// 品牌
+						excel.writCell(0, i + 2, c, Brand);
+					} else if (c == 55) {
+						// 商品信息
+						excel.writCell(0, i + 2, c, GoodsName);
+					} else if (c == 57) {
+						// 海关备案号=HS编码
+						excel.writCell(0, i + 2, c, HSCode);
+					} else if (c == 58) {
+						// 商检备案号
+						excel.writCell(0, i + 2, c, CIQGoodsNo);
+					} else if (c == 59) {
+						excel.writCell(0, i + 2, c, GoodsStyle);
+					} else if (c == 60) {
+						excel.writCell(0, i + 2, c, OriginCountry);
+					} else if (c == 62) {
+						excel.writCell(0, i + 2, c, Unit);
+					} else if (c == 63) {
+						excel.writCell(0, i + 2, c, Qty);
+					} else if (c == 64) {
+						excel.writCell(0, i + 2, c, netWt);
+					} else if (c == 65) {
+						excel.writCell(0, i + 2, c, grossWt);
+					} else if (c == 67) {
+						excel.writCell(0, i + 2, c, Price);
+					} else if (c == 68) {
+						excel.writCell(0, i + 2, c, Total);
+					} else if (c == 78) {
+						excel.writCell(0, i + 2, c, HSCode);
 					}
+				}
 			}
-
 			excel.closeExcel();
 			excel.save();
-
-			statusMap.put("status", StatusCode.SUCCESS.toString());
+			statusMap.put("status", StatusCode.SUCCESS.getStatus());
 			statusMap.put("filePath", filePath);
 			return statusMap;
 		}
-
 		return null;
-
 	}
 
-	public static void main(String[] args) {
-		String a = "{\"value\":0.57}";
-		System.out.println(a);
-		System.out.println(a.replace("{\"value\":", "").replace("}", ""));
+	// 商户修改手工订单信息
+	public Map<String, Object> editMorderInfo(String morderInfoPack) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return mpayService.editMorderInfo(merchantId, merchantName, morderInfoPack);
+	}
+
+	// 读取缓存中excel导入实时数据
+	public Map<String, Object> readExcelRedisInfo() {
+		Map<String,Object> datasMap = new HashMap<>();
+		Map<String,Object> statusMap = new HashMap<>();
+		byte[] redisByte = JedisUtil.get("Shop_Key_ExcelIng_Map".getBytes(), 3600);
+		if (redisByte != null && redisByte.length > 0) {
+			datasMap =  (Map<String, Object>) SerializeUtil.toObject(redisByte);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(datasMap));
+			return statusMap;
+		} else {
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
+			return datasMap;
+		}
 	}
 }

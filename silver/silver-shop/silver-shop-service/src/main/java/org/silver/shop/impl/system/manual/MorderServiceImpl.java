@@ -135,14 +135,14 @@ public class MorderServiceImpl implements MorderService {
 		}
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, params, null, page, size);
 		long count = morderDao.findByPropertyCount(Morder.class, params);
-		Map<String, Object> dataMap = new HashMap<String, Object>();
+		Map<String, Object> dataMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && mlist.size() > 0) {
 			params.clear();
 			for (Morder m : mlist) {
 				params.put("order_id", m.getOrder_id());
 				List<MorderSub> mslist = morderSubDao.findByProperty(params, 0, 0);
-				Map<String, Object> item = new HashMap<String, Object>();
+				Map<String, Object> item = new HashMap<>();
 				item.put("head", m);
 				item.put("content", mslist);
 				lMap.add(item);
@@ -278,7 +278,6 @@ public class MorderServiceImpl implements MorderService {
 		 * "订单【" + goodsInfo.get("order_id") + "】" + "关联的商品【" +
 		 * goodsInfo.get("GoodsName") + "】已经存在，不需要重复添加"); return statusMap; }
 		 */
-
 		MorderSub mosb = new MorderSub();
 		mosb.setSeq(Integer.parseInt((count + 1) + ""));
 		mosb.setOrder_id(orderId);
@@ -298,7 +297,6 @@ public class MorderServiceImpl implements MorderService {
 		mosb.setQty(q);
 		mosb.setTotal(p * q);
 		mosb.setCreate_date(new Date());
-
 		mosb.setNetWt(goodsInfo.getDouble("netWt"));
 		mosb.setGrossWt(goodsInfo.getDouble("grossWt"));
 		if (StringEmptyUtils.isEmpty(goodsInfo.get("stdUnit") + "")) {

@@ -19,6 +19,7 @@ import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.manual.Mpay;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,7 +128,7 @@ public class PaytemServiceImpl implements PaymentService {
 			List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
 			if (payList != null && !payList.isEmpty()) {
 				Mpay payInfo = payList.get(0);
-				if(payInfo.getPay_record_status() == 2){
+				/*if(payInfo.getPay_record_status() == 2){
 					Map<String,Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), "支付流水号["+treadeNo+"]正在备案中无需再次发起!");
 					errorList.add(errMap);
@@ -137,7 +138,7 @@ public class PaytemServiceImpl implements PaymentService {
 					errMap.put(BaseCode.MSG.toString(), "支付流水号["+treadeNo+"]已备案成功无需再次发起!");
 					errorList.add(errMap);
 					continue;
-				}
+				}*/
 				Map<String, Object> checkMap = mpayServiceImpl.checkWallet(1, merchantId, merchantName, treadeNo,
 						payInfo.getPay_amount());
 				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
@@ -161,14 +162,14 @@ public class PaytemServiceImpl implements PaymentService {
 				Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap, tok,
 						recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
 
-				Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchantId, merchantName,
+			/*	Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchantId, merchantName,
 						treadeNo, proxyParentId, payInfo.getPay_amount(), proxyParentName);
 				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
 					Map<String,Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), "支付流水号["+treadeNo+"]推送失败----->>>"+reUpdateWalletMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
 					continue;
-				}
+				}*/
 				String rePayMessageID = paymentMap.get("messageID") + "";
 				// 更新服务器返回支付Id
 				Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
@@ -262,6 +263,13 @@ public class PaytemServiceImpl implements PaymentService {
 		List<Mpay> reList = paymentDao.findByPropertyOr2(Mpay.class, paramMap, 0, 0);
 		if (reList != null && reList.size() > 0) {
 			Mpay pay = reList.get(0);
+			paramMap.clear();
+			paramMap.put("merchantId", pay.getMerchant_no());
+			List<Merchant> reMerchantList = paymentDao.findByProperty(Merchant.class, paramMap, 1, 1);
+			Merchant merchant = null;
+			if(reMerchantList != null && !reMerchantList.isEmpty()){
+				merchant = reMerchantList.get(0);
+			}
 			String status = datasMap.get("status") + "";
 			String note = pay.getPay_re_note();
 			if ("null".equals(note) || note == null) {
@@ -270,6 +278,12 @@ public class PaytemServiceImpl implements PaymentService {
 			if ("1".equals(status)) {
 				// 支付单备案状态修改为成功
 				pay.setPay_record_status(3);
+				//进行钱包扣款
+				Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1,merchant.getMerchantId(), merchant.getMerchantName(), pay.getTrade_no(),
+						merchant.getProxyParentId(), pay.getPay_amount(), merchant.getProxyParentName());
+				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
+					return reUpdateWalletMap;
+				}
 			} else {
 				// 备案失败
 				pay.setPay_record_status(4);

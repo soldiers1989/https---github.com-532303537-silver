@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
+import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
 import org.silver.util.DateUtil;
@@ -89,7 +91,7 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<String, Object>();
+		Map<String, Object> reqMap = new HashMap<>();
 		reqMap = manualService.loadDatas(page, size, req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
@@ -266,7 +268,6 @@ public class EditRecordController {
 			String value = req.getParameter(key);
 			recordMap.put(key, value);
 		}
-
 		return JSONObject.fromObject(mdataService.sendMorderRecord(recordMap, orderNoPack)).toString();
 	}
 
@@ -303,7 +304,6 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/getOrderExcel")
 	@RequiresRoles("Merchant")
-
 	public void getOrderExcel(HttpServletRequest req, HttpServletResponse response, String date, String serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -379,10 +379,57 @@ public class EditRecordController {
 		return sb.toString();
 	}
 
-	public static void main(String[] args) {
-	String str = "= 3304200092 =";
-	System.out.println(str.replaceAll(" ", "").replaceAll("	", ""));
-		
+	/**
+	 * 商户修改手工订单信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/editMorderInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String editMorderInfo(HttpServletRequest req, HttpServletResponse response, String morderInfoPack) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		if (StringEmptyUtils.isNotEmpty(morderInfoPack)) {
+			Map<String, Object> statusMap = mdataService.editMorderInfo(morderInfoPack);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			return JSONObject.fromObject(datasMap).toString();
+		}
 	}
 
+	/**
+	 * 商户查询缓存中Excel读取进度
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequiresRoles("Merchant")
+	@RequestMapping(value = "/readExcelRedisInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = mdataService.readExcelRedisInfo();
+		return JSONObject.fromObject(statusMap).toString();
+
+	}
+
+	public static void main(String[] args) {
+		String str = " 广东省广州市广东东莞市虎门镇大莹东方国际服装城5楼天桥5026";
+		if(str.contains("东莞市")){
+			System.out.println("---------------");
+		}
+	}
 }
