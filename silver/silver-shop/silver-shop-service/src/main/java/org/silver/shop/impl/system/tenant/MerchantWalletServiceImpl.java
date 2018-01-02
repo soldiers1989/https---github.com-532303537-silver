@@ -178,24 +178,31 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			calendar.setTime(endDate);// 把当前时间赋给日历
 			Date startDate = null;
 			// 查询时间范围 1-三个月内,2-一年内,3-今天
-			if (timeLimit == 1) {// 查询最近三个月
+			switch (timeLimit) {
+			case 1:// 查询最近三个月
 				calendar.add(Calendar.MONTH, -3); // 设置为前3月
 				startDate = calendar.getTime(); // 得到前3月的时间
-			} else if (timeLimit == 2) {// 查询最近一年
+				break;
+			case 2:// 查询最近一年
 				calendar.add(Calendar.YEAR, -1); // 设置为前1年
 				startDate = calendar.getTime(); // 得到前1年的时间
-			} else if (timeLimit == 3) {// 查询今天
+				break;
+			case 3:// 查询今天
 				calendar.set(Calendar.HOUR_OF_DAY, 0);
 				calendar.set(Calendar.MINUTE, 0);
 				calendar.set(Calendar.SECOND, 0);
 				startDate = calendar.getTime();// 当天零点零分零秒
+				break;
+			default:
+				
+				break;
 			}
+			params.put("startDate", startDate);
+			params.put("endDate", endDate);
 			params.put("merchantId", merchantId);
 			if (type > 0) {
 				params.put("type", type);
 			}
-			params.put("startDate", startDate);
-			params.put("endDate", endDate);
 			List<Object> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page,
 					size);
 			long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);

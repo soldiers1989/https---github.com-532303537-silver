@@ -57,7 +57,7 @@
 		</property>
 
 		<property name="RecipientProvincesCode">
-			<column name="RecipientProvincesCode"  />
+			<column name="RecipientProvincesCode" />
 		</property>
 
 		<property name="OrderDocAcount">
@@ -150,7 +150,7 @@
 		<property name="postal">
 			<column name="postal" />
 		</property>
-		
+
 		<property name="RecipientCityName">
 			<column name="RecipientCityName" />
 		</property>
@@ -160,12 +160,11 @@
 		<property name="RecipientProvincesName">
 			<column name="RecipientProvincesName" />
 		</property>
-			<property name="oldOrderId">
+		<property name="oldOrderId">
 			<column name="oldOrderId" />
 		</property>
-		
-		<property name="seqNo" type="java.lang.Integer">
-			<column name="seqNo" not-null="true"  />
+		<property name="spareParams">
+			<column name="spareParams" />
 		</property>
 	</class>
 

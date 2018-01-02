@@ -447,8 +447,17 @@ public class GoodsRecordTransaction {
 	}
 
 	// 管理员查询商品备案信息
-	public Map<String, Object> managerGetGoodsRecordInfo(int page, int size) {
-		return goodsRecordService.managerGetGoodsRecordInfo(page, size);
+	public Map<String, Object> managerGetGoodsRecordInfo(HttpServletRequest req,int page, int size) {
+		Map<String,Object> paramMap = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			paramMap.put(key, value);
+		}
+		paramMap.remove("page");
+		paramMap.remove("size");
+		return goodsRecordService.managerGetGoodsRecordInfo(paramMap,page, size);
 	}
 
 	public Map<String, Object> batchAddRecordGoodsInfo(HttpServletRequest req) {
@@ -569,21 +578,14 @@ public class GoodsRecordTransaction {
 					break;
 				case 1:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						Map<String, Object> reMap = goodsRecordService.checkEntGoodsNoRepeat(value);
-						if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-							Map<String, Object> errMap = new HashMap<>();
-							errMap.put(BaseCode.MSG.toString(),
-									"【已备案商品详情表】第" + (r + 1) + "行,---->" + reMap.get(BaseCode.MSG.toString()));
-							errl.add(errMap);
-							break;
-						}
 						entGoodsNo = value;
+						break;
 					} else {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->企业商品自编号不能为空!");
 						errl.add(errMap);
+						continue;
 					}
-					break;
 				case 2:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						entGoodsNoSKU = value;
@@ -800,7 +802,6 @@ public class GoodsRecordTransaction {
 			GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
 			goodsRecordDetail.setSeq(seq);
 			goodsRecordDetail.setEntGoodsNo(entGoodsNo);
-			goodsRecordDetail.setEntGoodsNoSKU(entGoodsNoSKU);
 			goodsRecordDetail.setEportGoodsNo(eportGoodsNo);
 			goodsRecordDetail.setCiqGoodsNo(ciqGoodsNo);
 			goodsRecordDetail.setCusGoodsNo(cusGoodsNo);
@@ -834,12 +835,14 @@ public class GoodsRecordTransaction {
 			goodsRecordDetail.setCreateBy(merchantName);
 			goodsRecordDetail.setStatus(2);
 			goodsRecordDetail.setRecordFlag(0);
+			
 			Map<String, Object> reMap = goodsRecordService.checkEntGoodsNoRepeat(entGoodsNo);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put(BaseCode.MSG.toString(),
 						"【已备案商品详情表】第" + (r + 1) + "行,---->" + reMap.get(BaseCode.MSG.toString()));
 				errl.add(errMap);
+				return null;
 			} else {
 				Map<String, Object> item = goodsRecordService.batchCreateRecordGoodsDetail(goodsRecordDetail);
 				if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {

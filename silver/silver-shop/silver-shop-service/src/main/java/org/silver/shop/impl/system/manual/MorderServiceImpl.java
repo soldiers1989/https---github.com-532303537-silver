@@ -133,13 +133,13 @@ public class MorderServiceImpl implements MorderService {
 		} else {
 			params.remove("order_record_status");
 		}
-		if(StringEmptyUtils.isNotEmpty(params.get("startTime")+"")){
-			params.put("startTime", DateUtil.parseDate2(params.get("startTime")+""));
-		}else if(StringEmptyUtils.isNotEmpty(params.get("endTime")+"")){
-			params.put("endTime", DateUtil.parseDate2(params.get("endTime")+""));
+		if (StringEmptyUtils.isNotEmpty(params.get("startTime") + "")) {
+			params.put("startTime", DateUtil.parseDate2(params.get("startTime") + ""));
+		} else if (StringEmptyUtils.isNotEmpty(params.get("endTime") + "")) {
+			params.put("endTime", DateUtil.parseDate2(params.get("endTime") + ""));
 		}
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, params, null, page, size);
-		long count = morderDao.findByPropertyLikeCount(Morder.class, params,null);
+		long count = morderDao.findByPropertyLikeCount(Morder.class, params, null);
 		Map<String, Object> dataMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && mlist.size() > 0) {
@@ -251,7 +251,7 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	@Override
-	public Map<String, Object> createNewSub(JSONObject goodsInfo) {
+	public  Map<String, Object> createNewSub(JSONObject goodsInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		JSONArray datas = new JSONArray();
 		datas.add(goodsInfo);
@@ -311,12 +311,13 @@ public class MorderServiceImpl implements MorderService {
 		}
 		mosb.setSecUnit(goodsInfo.get("secUnit") + "");
 		mosb.setNumOfPackages(q);
+		mosb.setSeqNo(goodsInfo.getInt("seqNo"));
 		String firstLegalCount = goodsInfo.get("firstLegalCount") + "";
 		String secondLegalCount = goodsInfo.get("secondLegalCount") + "";
 		String packageType = goodsInfo.get("packageType") + "";
 		String transportModel = goodsInfo.get("transportModel") + "";
 		String numOfPackages = goodsInfo.get("numOfPackages") + "";
-		//
+		
 		if (StringEmptyUtils.isNotEmpty(firstLegalCount) && StringEmptyUtils.isNotEmpty(secondLegalCount)
 				&& StringEmptyUtils.isNotEmpty(packageType) && StringEmptyUtils.isNotEmpty(transportModel)
 				&& StringEmptyUtils.isNotEmpty(numOfPackages)) {
@@ -326,7 +327,14 @@ public class MorderServiceImpl implements MorderService {
 			mosb.setTransportModel(goodsInfo.getString("transportModel"));
 			mosb.setNumOfPackages(goodsInfo.getInt("numOfPackages"));
 		}
-
+		// (启邦客户)商品归属商家代码
+		String orderDocAcount = goodsInfo.get("orderDocAcount")+"";
+		// (启邦客户)商品归属SKU
+		String sku = goodsInfo.get("SKU")+"";
+		JSONObject spareParams = new JSONObject();
+		spareParams.put("orderDocAcount", orderDocAcount);
+		spareParams.put("SKU", sku);
+		mosb.setSpareParams(spareParams.toString());
 		if (morderSubDao.add(mosb)) {
 			statusMap.put("status", 1);
 			statusMap.put("msg", "订单商品【" + goodsInfo.get("GoodsName") + "】存储成功");
@@ -370,7 +378,7 @@ public class MorderServiceImpl implements MorderService {
 			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
 			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
 			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId,
-			JSONObject goodsInfo,int seqNo) {
+			JSONObject goodsInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.clear();
@@ -408,7 +416,7 @@ public class MorderServiceImpl implements MorderService {
 			}
 		} else {
 			Morder morder = new Morder();
-			
+
 			params.clear();
 			params.put("merchant_no", merchant_no);
 			params.put("dateSign", dateSign);
@@ -419,7 +427,7 @@ public class MorderServiceImpl implements MorderService {
 				return statusMap;
 			}
 			morder.setOrder_id(createMorderSysNo("YM", count + 1, new Date()));
-			//原导入表中的订单编号
+			// 原导入表中的订单编号
 			morder.setOldOrderId(orderId);
 			morder.setFCY(FCY);
 			morder.setTax(Tax);
@@ -427,9 +435,6 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientName(RecipientName);
 			morder.setRecipientID(RecipientID);
 			morder.setRecipientTel(RecipientTel);
-			morder.setRecipientProvincesCode(provinceCode);
-			morder.setRecipientCityCode(cityCode);
-			morder.setRecipientAreaCode(areaCode);
 			morder.setRecipientAddr(RecipientAddr);
 			// 暂时默认为下单人姓名
 			morder.setOrderDocAcount(OrderDocName);
@@ -454,12 +459,14 @@ public class MorderServiceImpl implements MorderService {
 			morder.setSenderTel(senderTel);
 
 			morder.setPostal(postal);
+			morder.setRecipientProvincesCode(provinceCode);
+			morder.setRecipientCityCode(cityCode);
+			morder.setRecipientAreaCode(areaCode);
 			morder.setRecipientProvincesName(provinceName);
 			morder.setRecipientCityName(cityName);
 			morder.setRecipientAreaName(areaName);
 			String randomDate = randomCreateOrderDate();
 			morder.setOrderDate(randomDate);
-			morder.setSeqNo(seqNo);
 			if (morderDao.add(morder)) {
 				statusMap.put("status", 1);
 				statusMap.put("order_id", morder.getOrder_id());
@@ -474,6 +481,7 @@ public class MorderServiceImpl implements MorderService {
 
 	/**
 	 * 随机生成一个3-5天前的日期
+	 * 
 	 * @return
 	 */
 	private String randomCreateOrderDate() {
@@ -481,7 +489,7 @@ public class MorderServiceImpl implements MorderService {
 		int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
 		Date dNow = new Date(); // 当前时间
 		Calendar calendar2 = Calendar.getInstance(); // 得到日历
-		calendar2.setTime(dNow);//将当前时间赋给日历
+		calendar2.setTime(dNow);// 将当前时间赋给日历
 		calendar2.add(Calendar.DATE, -2);
 		dNow = calendar2.getTime();//
 		Calendar calendar = Calendar.getInstance(); // 得到日历
@@ -520,6 +528,24 @@ public class MorderServiceImpl implements MorderService {
 		double tax = Double.parseDouble(item.get("tax") + "");
 		double actualAmountPaid = Double.parseDouble(item.get("actualAmountPaid") + "");
 		String orderId = item.get("orderId") + "";
+		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
+			long count = morderDao.findByPropertyCount(Morder.class, params);
+			if (count < 0) {
+				statusMap.put("status", -5);
+				statusMap.put("msg", "存储失败，系统内部错误");
+				return statusMap;
+			}
+			orderId = createMorderSysNo("YM", count + 1, new Date());
+		}
+		String entGoodsNo = item.get("entGoodsNo") + "";
+		params.put("entGoodsNo", entGoodsNo.trim());
+		params.put("goodsMerchantId", merchantId);
+		List<GoodsRecordDetail> goodsList = morderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		if (goodsList == null || goodsList.isEmpty()) {
+			statusMap.put("status", -1);
+			statusMap.put("msg", "商品编号[" + entGoodsNo + "]------>对应商品不存在,请核实!");
+			return statusMap;
+		}
 		params.clear();
 		params.put("merchant_no", merchantId);
 		params.put("order_id", orderId);
@@ -550,7 +576,12 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientName(item.get("recipientName") + "");
 			morder.setRecipientID(item.get("orderDocId") + "");
 			morder.setRecipientTel(item.get("recipientTel") + "");
-			morder.setRecipientProvincesCode(item.get("recipientAreaCode") + "");
+			morder.setRecipientProvincesCode(item.get("provinceCode") + "");
+			morder.setRecipientProvincesName(item.get("provinceName") + "");
+			morder.setRecipientCityCode(item.get("cityCode") + "");
+			morder.setRecipientCityName(item.get("cityName") + "");
+			morder.setRecipientAreaCode(item.get("areaCode") + "");
+			morder.setRecipientAreaName(item.get("areaName") + "");
 			morder.setRecipientAddr(item.get("recipientAddr") + "");
 			morder.setOrderDocAcount(item.get("orderDocAcount") + "");
 			morder.setOrderDocName(item.get("orderDocName") + "");
@@ -565,9 +596,12 @@ public class MorderServiceImpl implements MorderService {
 			morder.setCreate_date(new Date());
 			morder.setCreate_by(merchantId);
 			morder.setFcode(FCODE);
-			String orderDate = item.get("orderDate") + "";
-			morder.setDateSign(orderDate.substring(0, 7));
-			morder.setOrderDate(orderDate);
+			String randomDate = randomCreateOrderDate();
+			morder.setOrderDate(randomDate);
+			String ehsEntName = item.get("ehsEntName") + "";
+			JSONObject json = new JSONObject();
+			json.put("ehsEntName", ehsEntName);
+			morder.setSpareParams(json.toString());
 			if (morderDao.add(morder)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				statusMap.put("order_id", morder.getOrder_id());
@@ -586,7 +620,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> params = new HashMap<>();
 		String entGoodsNo = item.get("entGoodsNo") + "";
 		String goodsName = item.get("goodsName") + "";
-		params.put("goodsName", goodsName.trim());
+		// params.put("goodsName", goodsName.trim());
 		params.put("entGoodsNo", entGoodsNo.trim());
 		params.put("goodsMerchantId", merchantId);
 		List<GoodsRecordDetail> goodsList = morderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
@@ -606,11 +640,13 @@ public class MorderServiceImpl implements MorderService {
 			param.put("Unit", goods.getgUnit());
 			param.put("Price", item.get("price") + "");
 			param.put("Qty", item.get("count") + "");
-
 			param.put("netWt", goods.getNetWt());
 			param.put("grossWt", goods.getGrossWt());
 			param.put("stdUnit", goods.getStdUnit());
 			param.put("secUnit", goods.getSecUnit());
+			param.put("seqNo", item.get("seqNo") + "");
+			//param.put("SKU", goods.getEntGoodsNoSKU());
+			param.put("orderDocAcount", item.get("orderDocAcount") + "");
 			return createNewSub(param);
 		} else {
 			statusMap.put("status", -1);

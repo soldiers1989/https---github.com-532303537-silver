@@ -15,9 +15,6 @@
 		<property name="entGoodsNo" type="java.lang.String">
 			<column name="entGoodsNo" not-null="true" unique="true" />
 		</property>
-		<property name="entGoodsNoSKU" type="java.lang.String">
-			<column name="entGoodsNoSKU" />
-		</property>
 		<property name="eportGoodsNo" type="java.lang.String">
 			<column name="eportGoodsNo" />
 		</property>

@@ -1,11 +1,14 @@
 package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -17,16 +20,25 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
+import org.silver.shop.controller.system.cross.SendMsg;
+import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
+import org.silver.util.DateUtil;
+import org.silver.util.JedisUtil;
+import org.silver.util.RandomUtils;
+import org.silver.util.SerializeUtil;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.xml.sax.SAXException;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -62,14 +74,16 @@ public class MemberController {
 	public String memberRegister(@RequestParam("account") String account, @RequestParam("loginPass") String loginPass,
 			@RequestParam("memberIdCardName") String memberIdCardName,
 			@RequestParam("memberIdCard") String memberIdCard, @RequestParam("memberTel") String memberTel,
-			HttpServletRequest req, HttpServletResponse response) {
+			@RequestParam("verificationCode") int verificationCode, HttpServletRequest req,
+			HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPass != null && memberIdCardName != null && memberIdCard != null
-				&& memberTel != null) {
-			statusMap = memberTransaction.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberTel);
+				&& memberTel != null && verificationCode > 0) {
+			statusMap = memberTransaction.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberTel,
+					verificationCode);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.FORMAT_ERR.getMsg());
@@ -248,6 +262,56 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = memberTransaction.checkMerchantName(account);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 发送用户注册时手机验证码
+	 * 
+	 * @param phone
+	 *            手机号码
+	 * @return Map
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	@RequestMapping(value = "/sendMemberRegisterCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String sendMemberRegisterCode(@RequestParam("phone") String phone, HttpServletRequest req,
+			HttpServletResponse response) throws ParserConfigurationException, SAXException, IOException {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (phone.length() == 11) {
+			JSONObject json = new JSONObject();
+			// 获取用户注册保存在缓存中的验证码
+			String redisCode = JedisUtil.get("Shop_Key_MemberRegisterCode_" + phone);
+		//	if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+				int code = RandomUtils.getRandom(6);
+				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				json.put("time", new Date().getTime()+"");
+				json.put("code", code);
+				System.out.println("-------->>>>>" + code);
+				// 将查询出来的省市区放入到redis缓存中
+				JedisUtil.setListDatas("Shop_Key_MemberRegisterCode_" + phone, 900, json);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				return JSONObject.fromObject(statusMap).toString();
+			//} else {
+				//long time = Long.parseLong(json.get("time") + "");
+				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
+				//if (time - new Date().getTime() < 50000) {
+					//statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+					//statusMap.put(BaseCode.MSG.toString(), "已获取过验证码,请勿重复获取!");
+					//return JSONObject.fromObject(statusMap).toString();
+				//}
+			//}
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), "手机号码输入不正确,请重新输入!");
 		return JSONObject.fromObject(statusMap).toString();
 	}
 }

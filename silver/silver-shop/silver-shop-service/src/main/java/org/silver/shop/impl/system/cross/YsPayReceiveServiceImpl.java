@@ -622,7 +622,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("note", "");
 			//是否像海关发送
 			//paymentMap.put("uploadOrNot", false);
-			// 商城支付单备案流水号
+	//		String resultStr = YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", paymentMap);
 			String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
@@ -633,20 +633,19 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
 				JSONObject json2 = new JSONObject();
 				List<JSONObject> paymentList2 = new ArrayList<>();
-				json.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
-				json.element("PayStatus", paymentInfoMap.get("PayStatus"));
-				json.element("PayAmount", paymentInfoMap.get("PayAmount"));
-				json.element("PayCurrCode", paymentInfoMap.get("PayCurrCode"));
-				json.element("PayTime", paymentInfoMap.get("PayTime"));
-				json.element("PayerName", paymentInfoMap.get("PayerName"));
-				json.element("PayerDocumentType", paymentInfoMap.get("PayerDocumentType"));
-				json.element("PayerDocumentNumber", paymentInfoMap.get("PayerDocumentNumber"));
-				json.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
-				json.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
-				json.element("Notes", paymentInfoMap.get("Notes"));
+				json2.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
+				json2.element("PayStatus", paymentInfoMap.get("PayStatus"));
+				json2.element("PayAmount", paymentInfoMap.get("PayAmount"));
+				json2.element("PayCurrCode", paymentInfoMap.get("PayCurrCode"));
+				json2.element("PayTime", paymentInfoMap.get("PayTime"));
+				json2.element("PayerName", paymentInfoMap.get("PayerName"));
+				json2.element("PayerDocumentType", paymentInfoMap.get("PayerDocumentType"));
+				json2.element("PayerDocumentNumber", paymentInfoMap.get("PayerDocumentNumber"));
+				json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
+				json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
+				json2.element("Notes", paymentInfoMap.get("Notes"));
 				json2.element("EBPEntNo", merchantRecordInfo.getEbpEntNo());
 				json2.element("EBPEntName", merchantRecordInfo.getEbpEntName());
-			
 				paymentList2.add(json2);
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				paymentMap.put("eport", 1);
@@ -666,9 +665,10 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return statusMap;
 				}
 				paymentMap.put("clientsign", clientsign.trim());
+				//String resultStr2 =  YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report", paymentMap);
 				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
-					JSONObject.fromObject(resultStr2);
+					return JSONObject.fromObject(resultStr2);
 				} else {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");

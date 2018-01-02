@@ -167,18 +167,13 @@ public class PaytemServiceImpl implements PaymentService {
 				paymentInfoMap.put("Notes", payInfo.getRemarks());
 				Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap, tok,
 						recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
-
-				/*
-				 * Map<String, Object> reUpdateWalletMap =
-				 * mpayServiceImpl.updateWallet(1, merchantId, merchantName,
-				 * treadeNo, proxyParentId, payInfo.getPay_amount(),
-				 * proxyParentName); if
-				 * (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()
-				 * ))) { Map<String,Object> errMap = new HashMap<>();
-				 * errMap.put(BaseCode.MSG.toString(),
-				 * "支付流水号["+treadeNo+"]推送失败----->>>"+reUpdateWalletMap.get(
-				 * BaseCode.MSG.toString())); errorList.add(errMap); continue; }
-				 */
+				if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
+					Map<String, Object> errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(),
+							"支付流水号[" + treadeNo + "]----->>>" + paymentMap.get(BaseCode.MSG.toString()));
+					errorList.add(errMap);
+					continue;
+				}
 				String rePayMessageID = paymentMap.get("messageID") + "";
 				// 更新服务器返回支付Id
 				Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);

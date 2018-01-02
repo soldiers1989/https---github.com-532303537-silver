@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -297,7 +296,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordInfo(page, size);
+		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordInfo(req,page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -343,17 +342,5 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = goodsRecordTransaction.merchantDeleteGoodsRecordInfo(entGoodsNo);
 		return JSONObject.fromObject(statusMap).toString();
-	}
-
-	public static void main(String[] args) {
-		JSONArray json = new JSONArray();
-		Map<String, Object> map = new HashMap<>();
-		map.put("entGoodsNo", "");
-		map.put("eport", 1);
-		map.put("customsCode", "");
-		map.put("ciqOrgCode", "");
-		json.add(map);
-		String s = "GR5208_2017000795720";
-		System.out.println(s.length());
 	}
 }

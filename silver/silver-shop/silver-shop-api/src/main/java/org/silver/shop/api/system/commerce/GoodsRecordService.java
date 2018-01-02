@@ -142,7 +142,7 @@ public interface GoodsRecordService {
 	 * @param size 数目
 	 * @return
 	 */
-	public Map<String, Object> managerGetGoodsRecordInfo(int page, int size);
+	public Map<String, Object> managerGetGoodsRecordInfo(Map<String,Object> paramMap,int page, int size);
 
 	/**
 	 * 批量添加已备案商品头部(流水)信息

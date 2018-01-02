@@ -17,6 +17,7 @@ import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.manual.MuserService;
 import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.task.ExcelTask;
 import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
@@ -115,11 +116,14 @@ public class MdataService {
 	}
 
 	public Map<String, Object> groupCreateMpay(List<String> orderIDs) {
+		List<Map<String, Object>> errl = new ArrayList<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
+		
+		// ExcelTask excelTask = new (0, errl, merchantId, 1, this);
 		return mpayService.groupCreateMpay(merchantId, orderIDs);
 	}
 
@@ -454,7 +458,7 @@ public class MdataService {
 	}
 
 	// 商户修改手工订单信息
-	public Map<String, Object> editMorderInfo(JSONObject json,int length, int flag) {
+	public Map<String, Object> editMorderInfo(JSONObject json, int length, int flag) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -462,11 +466,11 @@ public class MdataService {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		String[] strArr = new String[length];
-		for(int i =0 ; i< length; i++){
-			String value= json.getString(Integer.toString(i));
-			strArr[i] =  value;
+		for (int i = 0; i < length; i++) {
+			String value = json.getString(Integer.toString(i));
+			strArr[i] = value;
 		}
-		return mpayService.editMorderInfo(merchantId, merchantName, strArr,flag);
+		return mpayService.editMorderInfo(merchantId, merchantName, strArr, flag);
 	}
 
 	// 读取缓存中excel导入实时数据

@@ -35,7 +35,8 @@ public class MorderSub implements Serializable {
 	private int numOfPackages ;//  箱件数 （同一订单商品总件数，例如同一订单有6支护手霜和4瓶钙片则填写10，即6+4=10。)
 	private int packageType ;//  包装种类
 	private String transportModel;//  运输方式
-
+	private int seqNo;//导入(手动订单时)生成的序列号
+	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
 	public long getId() {
 		return id;
 	}
@@ -243,5 +244,23 @@ public class MorderSub implements Serializable {
 	public void setTransportModel(String transportModel) {
 		this.transportModel = transportModel;
 	}
+
+	public int getSeqNo() {
+		return seqNo;
+	}
+
+	public void setSeqNo(int seqNo) {
+		this.seqNo = seqNo;
+	}
+
+	public String getSpareParams() {
+		return spareParams;
+	}
+
+	public void setSpareParams(String spareParams) {
+		this.spareParams = spareParams;
+	}
+
+	
 
 }

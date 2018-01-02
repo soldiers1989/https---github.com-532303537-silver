@@ -74,7 +74,7 @@ public class MerchantWalletController {
 	 * @param req
 	 * @param response
 	 * @param type
-	 *            查询时间范围 1-三个月内,2-一年内
+	 *            查询时间范围 1-三个月内,2-一年内,3-查询今天
 	 * @param page
 	 *            页数
 	 * @param size

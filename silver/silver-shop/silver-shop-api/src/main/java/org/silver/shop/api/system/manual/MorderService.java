@@ -49,7 +49,7 @@ public interface MorderService {
 			String RecipientTel, String RecipientProvincesCode, String RecipientAddr, String OrderDocAcount,
 			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
 			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
-			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId, JSONObject goodsInfo, int seqNo);
+			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId, JSONObject goodsInfo);
 
 	/**
 	 * 根据商品编号及名称检查商品是否真实存在

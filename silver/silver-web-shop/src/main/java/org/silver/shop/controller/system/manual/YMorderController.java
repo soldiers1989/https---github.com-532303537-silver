@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.silver.shop.controller.system.cross.ApipaySubmit;
 import org.silver.shop.controller.system.cross.DirectPayConfig;
+import org.silver.shop.task.ExcelTask;
+import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.MD5;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javassist.compiler.ast.Symbol;
 import net.sf.json.JSONObject;
 
 //银盟电子订单
@@ -137,4 +140,33 @@ public class YMorderController {
 				+ notify_url+"&client_sign="+client_sign+"&timestamp="+timestamp;
 	}
 
+	
+	public static void main(String[] args) {
+		int totalCount = 200;
+		int cpuCount = Runtime.getRuntime().availableProcessors();
+		int start = 0;
+		int end = 0;
+		for (int i = 0; i < cpuCount; i++) {
+		//	ExcelUtil excelC = new ExcelUtil(f);
+			if (i == 0) {
+				end = totalCount / cpuCount;
+				System.out.println("----开始第一次"+end);
+				//excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this);
+			} else {
+				start = end + 1;
+				end = start +(totalCount / cpuCount);
+				if (i == (cpuCount - 1)) {// 最后一次
+					System.out.println("----开始最后一次"+start);
+					
+					//excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this);
+				}else{
+					System.out.println("----开始每一次"+start);
+					System.out.println("----开始每一次结束---->>>>"+end);
+					//excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this);
+				}
+			}
+			
+			//threadPool.submit(excelTask);
+		}
+	}
 }

@@ -78,7 +78,7 @@ public class ExcelUtil {
 		this.sheet = sheet;
 	}
 
-	public Row getRow() {
+	public   Row getRow() {
 		return row;
 	}
 

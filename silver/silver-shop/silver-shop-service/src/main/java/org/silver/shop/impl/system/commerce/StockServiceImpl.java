@@ -512,6 +512,18 @@ public class StockServiceImpl implements StockService {
 					paramMap.put(key, value);
 				}
 				break;
+			case "recordFlag":
+				try {
+					int status = Integer.parseInt(value);
+					if (status != 0) {
+						paramMap.put(key, status);
+					}
+				} catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "recordFlag参数错误,请重新输入!");
+					return statusMap;
+				}
+				break;
 			default:
 				break;
 			}

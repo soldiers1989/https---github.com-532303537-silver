@@ -16,7 +16,6 @@ public class GoodsRecordDetail implements Serializable {
 	private long id;
 	private int seq; // 商品序号 001-999
 	private String entGoodsNo; // 企业商品自编号 企业的商品货号，不可重复
-	private String entGoodsNoSKU; // 电商平台自定义的商品货号（SKU）
 	private String eportGoodsNo;// 跨境公共平台商品备案申请号
 	private String ciqGoodsNo; // 检验检疫商品备案编号
 	private String cusGoodsNo; // 海关正式备案编号
@@ -78,6 +77,7 @@ public class GoodsRecordDetail implements Serializable {
 	private String ingredient;// 成分(商品向南沙国检备案必填)
 	private String additiveflag;//超范围使用食品添加剂
 	private String poisonflag;// 含有毒害物质
+	
 	public long getId() {
 		return id;
 	}
@@ -96,12 +96,7 @@ public class GoodsRecordDetail implements Serializable {
 	public void setEntGoodsNo(String entGoodsNo) {
 		this.entGoodsNo = entGoodsNo;
 	}
-	public String getEntGoodsNoSKU() {
-		return entGoodsNoSKU;
-	}
-	public void setEntGoodsNoSKU(String entGoodsNoSKU) {
-		this.entGoodsNoSKU = entGoodsNoSKU;
-	}
+	
 	public String getEportGoodsNo() {
 		return eportGoodsNo;
 	}

@@ -54,7 +54,7 @@ public class Morder implements Serializable {
 	private String RecipientCityName;//收货人城市名称
 	private String RecipientAreaName;//收货人区域名称
 	private String oldOrderId;//原导入表单中订单Id
-	private int seqNo;//订单导入时序号
+	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
 	public long getId() {
 		return id;
 	}
@@ -407,12 +407,13 @@ public class Morder implements Serializable {
 		this.oldOrderId = oldOrderId;
 	}
 
-	public int getSeqNo() {
-		return seqNo;
+	public String getSpareParams() {
+		return spareParams;
 	}
 
-	public void setSeqNo(int seqNo) {
-		this.seqNo = seqNo;
+	public void setSpareParams(String spareParams) {
+		this.spareParams = spareParams;
 	}
+
 
 }

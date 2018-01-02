@@ -373,49 +373,48 @@ public class ManualService {
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
 			File f = new File("/gadd-excel/" + list.get(0));
-			ExcelUtil excel = new ExcelUtil();
-			excel.open(f);
-			if (excel.getColumnCount(0, 0) == 18) { // 企邦模板表格长度
+			ExcelUtil excel = new ExcelUtil(f);
+			excel.open();
+			if (excel.getColumnCount(0, 0) == 14) { // 企邦模板表格长度(增加了序号列)
 				readQBSheet(0, excel, errl, merchantId);
-			} else {
-				//判断当前计算机CPU线程个数
-				// 读取国宗订单工作表
-				if(Runtime.getRuntime().availableProcessors() <= 2){
-					int totalCount = excel.getRowCount(0);
-					int secondTime = ((totalCount / 2) + 1);
-					ExcelTask excelTask = new ExcelTask(0, excel, errl, merchantId, 1, (totalCount / 2), this);
-					threadPool.submit(excelTask);
-					ExcelTask excelTask2 = new ExcelTask(0, excel, errl,merchantId,secondTime,totalCount,this); threadPool.submit(excelTask2);
-				}
+			} else if (excel.getColumnCount(0, 0) == 70) {// 国宗订单模板长度(加上序号列)
 				// readGZSheet(0, excel, errl, merchantId,0,0);
-				//总数
+				// 总数
 				int totalCount = excel.getRowCount(0);
-				//计算第一次读取结束的行数
-				int firstEndCount = totalCount / 4;
-				//获取第二次开始的行数
-				int secStartCount = (firstEndCount + 1);
-				//获取第二次结束的行数
-				int secEndCount = secStartCount + (totalCount / 4);
-				//第三次开始的行数
-				int thirdStartCount= secEndCount +1;
-				//第三次结束的行数
-				int thirdEndCount = thirdStartCount + (totalCount / 4);
-				//第四开始的行数
-				int fourthStartCount = thirdEndCount +1; 
-				ExcelTask excelTask = new ExcelTask(0, excel, errl, merchantId, 1, firstEndCount, this);
-				ExcelTask excelTask2 = new ExcelTask(0, excel, errl,merchantId,secStartCount,secEndCount,this);
-				ExcelTask excelTask3 = new ExcelTask(0, excel, errl,merchantId,thirdStartCount,thirdEndCount,this);
-				ExcelTask excelTask4 = new ExcelTask(0, excel, errl,merchantId,fourthStartCount,totalCount,this);
-				threadPool.submit(excelTask);
-				threadPool.submit(excelTask2);
-				threadPool.submit(excelTask3);
-				threadPool.submit(excelTask4);
-				//14460条记录 342517ms
-				//两百条记录
+				// 判断当前计算机CPU线程个数
+				int cpuCount = Runtime.getRuntime().availableProcessors();
+				int start = 0;
+				int end = 0;
+				ExcelTask excelTask = null;
+				for (int i = 0; i < cpuCount; i++) {
+					ExcelUtil excelC = new ExcelUtil(f);
+					if (i == 0) {
+						end = totalCount / cpuCount;
+						excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this);
+					} else {
+						start = end + 1;
+						end = start + (totalCount / cpuCount);
+						if (i == (cpuCount - 1)) {// 最后一次
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this);
+						} else {
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this);
+						}
+					}
+					threadPool.submit(excelTask);
+				}
+				// 14460条记录 342517ms
+				//329517ms
+				// 两百条记录
 				// 四40493ms
 				// 双任务56077ms
-				//三任务42593ms
+				// 三任务42593ms
 				// 单81934ms
+			} else {
+				reqMap.clear();
+				reqMap.put("status", -1);
+				reqMap.put("msg", "导入失败,请检查订单模板是否符合规范!");
+				reqMap.put("err", errl);
+				return reqMap;
 			}
 			excel.closeExcel();
 			// excel.getFile().delete();
@@ -429,43 +428,57 @@ public class ManualService {
 		return null;
 	}
 
+	/**
+	 * 企邦表单,暂默认为14列数据
+	 * 
+	 * @param sheet
+	 * @param excel
+	 * @param errl
+	 * @param merchantId
+	 * @return
+	 */
 	private Map<String, Object> readQBSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
 			String merchantId) {
+		Map<String, Object> statusMap = new HashMap<>();
+		int seqNo = 0;
 		String orderId = "";// 订单Id
 		String entGoodsNo = "";// 商品自编号
 		String goodsName = "";// 商品名称
 		double price = 0;// 单价
 		int count = 0;// 商品数量
-		double orderTotalPrice = 0;// 订单总金额
-		double tax = 0;// 税费
-		double actualAmountPaid = 0;// 实际支付金额
 		String recipientName = "";// 收货人名称
 		String recipientTel = "";// 收货人电话
-		String recipientAreaCode = "";// 收货人区域代码
 		String recipientAddr = "";// 收货人详细地址
-		String orderDocAcount = "";// 下单人账号
+		String orderDocAcount = "";// (启邦客户)商品归属商家代码
 		String orderDocName = "";// 下单人名称
 		String orderDocId = "";// 下单人身份证号码
-		String orderDocTel = "";// 下单手机号码
 		String ehsEntName = "";// 承运商
 		String waybillNo = "";// 运单编号
-		for (int r = 1; r <= excel.getRowCount(sheet); r++) {
+		long startTime = System.currentTimeMillis(); // 获取结束时间
+		for (int r = 2; r <= excel.getRowCount(sheet); r++) {
 			if (excel.getColumnCount(r) == 0) {
 				break;
 			}
 			for (int c = 0; c < excel.getColumnCount(r); c++) {
 				String value = excel.getCell(sheet, r, c);
 				if (c == 0) {
-					orderId = value;
+					// 序号
+					seqNo = Integer.parseInt(value);
 				} else if (c == 1) {
+					// 订单Id
+					orderId = value;
+				} else if (c == 2) {
+					// 商品自编号
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						entGoodsNo = value;
 					}
-				} else if (c == 2) {
+				} else if (c == 3) {
+					// 商品名称
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						goodsName = value;
 					}
-				} else if (c == 3) {
+				} else if (c == 4) {
+					// 商品单价
 					try {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							price = Double.parseDouble(value);
@@ -474,9 +487,10 @@ public class ManualService {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品单价输入错误!");
 						errl.add(errMap);
-						break;
+						continue;
 					}
-				} else if (c == 4) {
+				} else if (c == 5) {
+					// 数量
 					try {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							count = Integer.parseInt(value);
@@ -485,88 +499,86 @@ public class ManualService {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品数量输入错误!");
 						errl.add(errMap);
-						break;
-					}
-				} else if (c == 5) {
-					try {
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							orderTotalPrice = Double.parseDouble(value);
-						}
-					} catch (Exception e) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品订单总金额输入错误!");
-						errl.add(errMap);
-						break;
+						continue;
 					}
 				} else if (c == 6) {
-					try {
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							tax = Double.parseDouble(value);
-						}
-					} catch (Exception e) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品税费输入错误!");
-						errl.add(errMap);
-						break;
-					}
-				} else if (c == 7) {
-					try {
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							actualAmountPaid = Double.parseDouble(value);
-						}
-					} catch (Exception e) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品实际支付金额输入错误!");
-						errl.add(errMap);
-						break;
-					}
-				} else if (c == 8) {
+					// 收货人姓名
 					recipientName = value;
-				} else if (c == 9) {
+				} else if (c == 7) {
+					// 收件人电话
 					recipientTel = value;
-				} else if (c == 10) {
-					recipientAreaCode = value;
-				} else if (c == 11) {
+				} else if (c == 8) {
+					// 收货人详细地址
 					recipientAddr = value;
-				} else if (c == 12) {
+				} else if (c == 9) {
+					// (启邦客户)商品归属商家代码
 					orderDocAcount = value;
-				} else if (c == 13) {
+				} else if (c == 10) {
 					orderDocName = value;
-				} else if (c == 14) {
+				} else if (c == 11) {
 					orderDocId = value;
-				} else if (c == 15) {
-					orderDocTel = value;
-				} else if (c == 16) {
+				} else if (c == 12) {
+					// 承运商
 					ehsEntName = value;
-				} else if (c == 17) {
+				} else if (c == 13) {
 					waybillNo = value;
 				}
 			}
+			String areaCode = "";
+			String areaName = "";
+			String cityCode = "";
+			String cityName = "";
+			String provinceCode = "";
+			String provinceName = "";
 			Map<String, Object> item = new HashMap<>();
+			Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
+			if (provinceMap != null && !provinceMap.isEmpty()) {
+				if (StringEmptyUtils.isNotEmpty(provinceMap.get("areaName"))
+						&& StringEmptyUtils.isNotEmpty(provinceMap.get("areaCode"))) {
+					areaCode = provinceMap.get("areaCode") + "";
+					areaName = provinceMap.get("areaName") + "";
+				} else {// 如果未找到区域编码及区域名称,则沿用省份的编码
+					areaCode = provinceMap.get("provinceCode") + "";
+					areaName = provinceMap.get("provinceName") + "";
+				}
+				cityCode = provinceMap.get("cityCode") + "";
+				cityName = provinceMap.get("cityName") + "";
+				provinceCode = provinceMap.get("provinceCode") + "";
+				provinceName = provinceMap.get("provinceName") + "";
+			}
+			item.put("provinceCode", provinceCode);
+			item.put("provinceName", provinceName);
+			item.put("cityCode", cityCode);
+			item.put("cityName", cityName);
+			item.put("areaCode", areaCode);
+			item.put("areaName", areaName);
+			item.put("seqNo", seqNo);
 			item.put("orderId", orderId);
 			item.put("entGoodsNo", entGoodsNo);
 			item.put("goodsName", goodsName);
 			item.put("price", price);
 			item.put("count", count);
+			double orderTotalPrice = count * price;
 			item.put("orderTotalPrice", orderTotalPrice);
+			// 实际支付金额
+			item.put("actualAmountPaid", orderTotalPrice);
+			// 税费
+			double tax = 0;
 			item.put("tax", tax);
-			item.put("actualAmountPaid", actualAmountPaid);
 			item.put("recipientName", recipientName);
 			item.put("recipientTel", recipientTel);
-			item.put("recipientAreaCode", recipientAreaCode);
 			item.put("recipientAddr", recipientAddr);
-			item.put("orderDocAcount", orderDocAcount);
+			item.put("orderDocAcount", recipientName);
 			item.put("orderDocName", orderDocName);
 			item.put("orderDocId", orderDocId);
-			item.put("orderDocTel", orderDocTel);
+			// 下单人电话
+			item.put("orderDocTel", recipientTel);
 			item.put("ehsEntName", ehsEntName);
 			item.put("waybillNo", waybillNo);
 			item.put("serial", getSerialNo("QB"));
-			Date date = new Date();
-			String orderDate = DateUtil.formatDate(date, "YYYYMMDDHHMMSS");
-			String dateSign = orderDate.substring(0, 8);
-			item.put("dateSign", dateSign);
-			item.put("orderDate", orderDate);
+
+			item.put("ehsEntName", ehsEntName);
+			item.put("orderDocAcount", orderDocAcount);
 			Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item);
 			if (!"1".equals(orderMap.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
@@ -582,7 +594,11 @@ public class ManualService {
 				continue;
 			}
 		}
-		return null;
+		long endTime = System.currentTimeMillis(); // 获取结束时间
+		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
+		writeRedis("2", errl, excel.getRowCount(sheet), excel.getRowCount(sheet));
+		System.out.println("----错误信息-->>>" + errl.toString());
+		return statusMap;
 	}
 
 	/**
@@ -646,10 +662,12 @@ public class ManualService {
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
 		int serialNo = getSerialNo("GZ");
-		System.out.println("开始行数----->>>"+startCount+";结束行数---->>>"+endCount);
-		 for(int r = startCount; r <= endCount; r++){
-		//for (int r = 1; r <= excel.getRowCount(sheet); r++) {
-			writeRedis("1", errl, excel.getRowCount(sheet), r);
+		int completed = 0;
+		System.out.println("开始行数----->>>" + startCount + ";结束行数---->>>" + endCount);
+
+		for (int r = startCount; r <= endCount; r++) {
+			// for (int r = 1; r <= excel.getRowCount(sheet); r++) {
+			writeRedis("1", errl, excel.getRowCount(sheet), (completed + 1));
 			if (excel.getColumnCount(r) == 0) {
 				break;
 			}
@@ -663,9 +681,10 @@ public class ManualService {
 				}
 				if (c == 0) {
 					// 序号
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						seqNo = Integer.parseInt(value);
-					}
+
+					// if (StringEmptyUtils.isNotEmpty(value)) {
+					seqNo = Integer.parseInt(value);
+					// }
 				} else if (c == 1) {
 					orderId = value.trim();
 				} else if (c == 4) {
@@ -814,13 +833,14 @@ public class ManualService {
 			goodsInfo.put("numOfPackages", numOfPackages);
 			goodsInfo.put("packageType", packageType);
 			goodsInfo.put("transportModel", transportModel);
+			goodsInfo.put("seqNo", seqNo);
 
 			// 创建国宗订单
 			Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serialNo, dateSign, OrderDate,
 					FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel, RecipientProvincesCode,
 					RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel, senderName, senderCountry,
 					senderAreaCode, senderAddress, senderTel, areaCode, cityCode, provinceCode, postal, provinceName,
-					cityName, areaName, orderId, goodsInfo,seqNo);
+					cityName, areaName, orderId, goodsInfo);
 			if (!"1".equals(item.get("status") + "")) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + item.get("msg"));
