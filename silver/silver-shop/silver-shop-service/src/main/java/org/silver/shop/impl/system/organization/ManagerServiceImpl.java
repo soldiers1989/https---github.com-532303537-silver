@@ -16,6 +16,7 @@ import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,6 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Autowired
 	private ManagerDao managerDao;
-	@Autowired
-	private StockServiceImpl stockServiceImpl;
 
 	@Override
 	public List<Object> findManagerBy(String account) {
@@ -42,7 +41,7 @@ public class ManagerServiceImpl implements ManagerService {
 	@Override
 	public Map<String, Object> findAllmemberInfo(int page, int size, Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<Object> reList = managerDao.findByProperty(Member.class, paramMap, page, size);
 		long totalCount = managerDao.findByPropertyCount(Member.class, null);
@@ -110,7 +109,7 @@ public class ManagerServiceImpl implements ManagerService {
 	@Override
 	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, page, size);
 		long totalCount = managerDao.findByPropertyCount(Merchant.class, paramMap);

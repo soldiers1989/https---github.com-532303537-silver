@@ -38,13 +38,13 @@ public class ShopCarTransaction {
 	}
 	
 	//用户删除购物车信息
-	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId) {
+	public Map<String, Object> deleteShopCartGoodsInfo(String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return shopCarService.deleteShopCartGoodsInfo(goodsId, memberId, memberName);
+		return shopCarService.deleteShopCartGoodsInfo(entGoodsNo, memberId, memberName);
 	}
 
 	public Map<String, Object> editShopCarGoodsInfo(String goodsInfo) {

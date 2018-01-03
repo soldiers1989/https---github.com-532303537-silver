@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.cross;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -17,10 +20,7 @@ import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
-import org.silver.shop.impl.system.commerce.OrderServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
-import org.silver.shop.impl.system.tenant.WalletLogServiceImpl;
-import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
@@ -30,15 +30,17 @@ import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
-import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.SendMsg;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.xml.sax.SAXException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -85,6 +87,28 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		} else if (!orderList.isEmpty() && !orderGoodsList.isEmpty()) {
 			OrderContent orderInfo = (OrderContent) orderList.get(0);
 			OrderGoodsContent orderGoodsContent = (OrderGoodsContent) orderGoodsList.get(0);
+			String  merchantId= orderGoodsContent.getMerchantId();
+			params.clear();
+			params.put("merchantId", merchantId);
+			List<Object> merchantList = ysPayReceiveDao.findByProperty(Merchant.class, params, 1, 1);
+			String merchantPhone = "";
+			if (merchantList != null && !merchantList.isEmpty()) {
+				Merchant merchantInfo= (Merchant) merchantList.get(0);
+				 merchantPhone = merchantInfo.getMerchantPhone();
+			}else{
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), "查询订单商户信息失败!");
+				return statusMap;
+			}
+			try {
+				SendMsg.sendMsg(merchantPhone, "【银盟信息科技有限公司】您有一个订单需要处理,订单号" + reEntOrderNo );
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+			} catch (SAXException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			params.clear();
 			// 根据用户ID查询用户是否存在
 			params.put("memberId", orderInfo.getMemberId());
@@ -96,6 +120,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				if (!"1".equals(rePaymentMap.get(BaseCode.STATUS.toString()))) {
 					return rePaymentMap;
 				}
+				
 				// 获取返回的实体
 				PaymentContent paymentInfo = (PaymentContent) rePaymentMap.get(BaseCode.DATAS.toString());
 				Map<String,Object>  paymentInfoMap = new HashMap<>();
@@ -121,9 +146,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				OrderRecordContent orderRecordInfo = (OrderRecordContent) reOrderRecordMap
 						.get(BaseCode.DATAS.toString());
 				// 获取订单Id
-				String orderId = orderInfo.getEntOrderNo();
-				// 获取订单对应的商户Id
-				String merchantId = orderInfo.getMerchantId();
+				String orderId = orderInfo.getEntOrderNo();				
 				// 获取订单商品信息及备案头与备案商品信息
 				Map<String, Object> reMap = findOrderAndGoodsRecordInfo(orderId);
 				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {

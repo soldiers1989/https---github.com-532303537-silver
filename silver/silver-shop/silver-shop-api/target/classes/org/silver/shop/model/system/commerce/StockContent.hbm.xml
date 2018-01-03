@@ -91,6 +91,5 @@
 		<property name="memberPrice" type="double">
 			<column name="memberPrice" />
 		</property>
-       
     </class>
 </hibernate-mapping>

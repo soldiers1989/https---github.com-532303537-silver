@@ -144,11 +144,10 @@ public class MemberServiceImpl implements MemberService {
 				}
 			}
 		}
-
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> reMap = (Map<String, Object>) jsonList.get(i);
 			params.clear();
-			params.put("goodsBaseId", reMap.get("goodsId"));
+			params.put("entGoodsNo", reMap.get("entGoodsNo"));
 			params.put("memberId", memberId);
 			List<Object> reList = memberDao.findByProperty(ShopCarContent.class, params, 1, 1);
 			if (reList != null && reList.size() > 0) {
@@ -160,10 +159,9 @@ public class MemberServiceImpl implements MemberService {
 					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 					return statusMap;
 				}
-
 			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+				statusMap.put(BaseCode.MSG.toString(), "该商品未找到,请核对后在提交!");
 				return statusMap;
 			}
 		}

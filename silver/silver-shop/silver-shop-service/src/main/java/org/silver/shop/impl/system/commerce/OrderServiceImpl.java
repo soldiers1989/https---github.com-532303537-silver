@@ -27,6 +27,7 @@ import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +42,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderDao orderDao;
 	@Autowired
-	private StockServiceImpl stockServiceImpl;
-	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-
 	@Autowired
 	private YsPayReceiveService ysPayReceiveService;
 	
@@ -706,7 +704,7 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = stockServiceImpl.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");

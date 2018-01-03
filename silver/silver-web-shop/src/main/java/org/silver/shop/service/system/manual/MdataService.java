@@ -268,7 +268,7 @@ public class MdataService {
 				double netWt = 0.0;
 				double grossWt = 0.0;
 				double firstLegalCount = 0.0;
-				double secondLegalCount = 0.0;
+				double secLegalCount = 0.0;
 				int numOfPackages = 0;
 				int packageType = 0;
 				// Row rowIndex = lr.get(i);
@@ -331,7 +331,6 @@ public class MdataService {
 				OriginCountry = rowIndex.getString("OriginCountry") + "";
 				OriginCountry = OriginCountry.substring(10, OriginCountry.length() - 2);
 				Unit = rowIndex.getString("Unit").replace("{\"value\":\"", "").replace("\"}", "");
-
 				// 数量
 				String strQty = rowIndex.getString("Qty").replace("{\"value\":", "").replace("}", "");
 				Qty = Integer.parseInt(strQty);
@@ -348,8 +347,12 @@ public class MdataService {
 				firstLegalCount = Double.parseDouble(strFirstLegalCount);
 				String strSecondLegalCount = rowIndex.getString("secondLegalCount").replace("{\"value\":", "")
 						.replace("}", "");
-				secondLegalCount = Double.parseDouble(strSecondLegalCount);
+				secLegalCount = Double.parseDouble(strSecondLegalCount);
+				
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
+				
+				
+				
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 2, c, i + 1);
@@ -443,8 +446,18 @@ public class MdataService {
 						excel.writCell(0, i + 2, c, Price);
 					} else if (c == 68) {
 						excel.writCell(0, i + 2, c, Total);
-					} else if (c == 78) {
+					}else if(c == 76 ){
+						//第一法定数
+						excel.writCell(0, i + 2, c, firstLegalCount);
+					}else if(c == 77 ){
+						//第二法定数
+						excel.writCell(0, i + 2, c, secLegalCount);
+					}else if (c == 78) {
+						//HS编码
 						excel.writCell(0, i + 2, c, HSCode);
+					}else if(c == 79){
+						//行邮税号
+						excel.writCell(0, i + 2, c, "27000000");
 					}
 				}
 			}

@@ -2,7 +2,6 @@ package org.silver.shop.service.system.commerce;
 
 import java.beans.IntrospectionException;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -15,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.apache.zookeeper.data.Stat;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
@@ -36,6 +34,8 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.dubbo.config.annotation.Reference;
+
+import net.sf.json.JSONObject;
 
 /**
  * 商品备案Transaction
@@ -73,7 +73,7 @@ public class GoodsRecordTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		return goodsRecordService.merchantSendGoodsRecord(merchantName, merchantId, customsPort, customsCode,
 				ciqOrgCode, recordGoodsInfoPack);
-	}	
+	}
 
 	// 处理网关异步回调信息
 	public Map<String, Object> updateGoodsRecordInfo(HttpServletRequest req) {
@@ -447,8 +447,8 @@ public class GoodsRecordTransaction {
 	}
 
 	// 管理员查询商品备案信息
-	public Map<String, Object> managerGetGoodsRecordInfo(HttpServletRequest req,int page, int size) {
-		Map<String,Object> paramMap = new HashMap<>();
+	public Map<String, Object> managerGetGoodsRecordInfo(HttpServletRequest req, int page, int size) {
+		Map<String, Object> paramMap = new HashMap<>();
 		Enumeration<String> isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
 			String key = isKey.nextElement();
@@ -457,7 +457,7 @@ public class GoodsRecordTransaction {
 		}
 		paramMap.remove("page");
 		paramMap.remove("size");
-		return goodsRecordService.managerGetGoodsRecordInfo(paramMap,page, size);
+		return goodsRecordService.managerGetGoodsRecordInfo(paramMap, page, size);
 	}
 
 	public Map<String, Object> batchAddRecordGoodsInfo(HttpServletRequest req) {
@@ -513,11 +513,11 @@ public class GoodsRecordTransaction {
 	/**
 	 * 读取已备案商品详情
 	 * 
-	 * @param sheet
-	 * @param excel
-	 * @param errl
-	 * @param merchantId
-	 * @param merchantName
+	 * @param sheet  excel工作簿序号
+	 * @param excel 
+	 * @param errl 错误信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
 	 * @return
 	 */
 	private Map<String, Object> readRecordGoodsDetailSheed(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
@@ -553,6 +553,12 @@ public class GoodsRecordTransaction {
 		String ingredient = "";// 成分(商品向南沙国检备案必填)
 		String additiveflag = "";// 超范围使用食品添加剂
 		String poisonflag = "";// 含有毒害物质
+
+		String ebEntName = "";// 电商企业名称
+		String DZKNNo = "";// 电商企业海关备案号(电子口岸)
+		String ebEntNo = "";// 电商企业编号(智检)
+		String marCode = "";// (启邦客户)商品归属商家代码
+
 		for (int r = 2; r <= excel.getRowCount(sheet); r++) {
 			if (excel.getColumnCount(sheet, r) == 0) {
 				break;
@@ -572,11 +578,47 @@ public class GoodsRecordTransaction {
 					} catch (Exception e) {
 						logger.error(e);
 						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【已备案商品详情表】第" + (r + 1) + "行-->" + "商品序号数值有误");
+						errMap.put("msg", "【已备案商品详情表】第" + (r + 1) + "行-->" + "商品序号错误");
 						errl.add(errMap);
 					}
 					break;
 				case 1:
+					// 电商企业名称
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						ebEntName = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->电商企业名称不能为空!");
+						errl.add(errMap);
+						continue;
+					}
+				case 2:
+					// 电商企业海关备案号(电子口岸)
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						DZKNNo = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->电商企业海关(电子口岸)备案号不能为空!");
+						errl.add(errMap);
+						continue;
+					}
+				case 3:
+					// 电商企业编号(智检)
+					ebEntNo = value;
+					break;
+				case 4:// (启邦客户)商品归属商家代码
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						marCode = value;
+					}
+					break;
+				case 5:
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						entGoodsNoSKU = value;
+					}
+					break;
+				case 6:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						entGoodsNo = value;
 						break;
@@ -586,17 +628,9 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 						continue;
 					}
-				case 2:
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						entGoodsNoSKU = value;
-					}
-					break;
-				case 3:
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						eportGoodsNo = value;
-					}
-					break;
-				case 4:
+
+				case 7:
+
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						ciqGoodsNo = value;
 					} else {
@@ -605,33 +639,29 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 5:
+
+				case 8:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						cusGoodsNo = value;
 					} else {
 						cusGoodsNo = "*";
 					}
 					break;
-				case 6:
+
+				case 9:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						emsNo = value;
 					}
 					break;
-				case 7:
+
+				case 10:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						itemNo = value;
 					}
 					break;
-				case 8:
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						shelfGName = value;
-					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->商品上架名称不能为空!");
-						errl.add(errMap);
-					}
-					break;
-				case 9:
+
+				case 11:
+
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						ncadCode = value;
 					} else {
@@ -640,7 +670,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 10:
+				case 12:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						hsCode = value;
 					} else {
@@ -649,12 +679,12 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 11:
+				case 13:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						barCode = value;
 					}
 					break;
-				case 12:
+				case 14:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						goodsName = value;
 					} else {
@@ -663,7 +693,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 13:
+				case 15:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						goodsStyle = value;
 					} else {
@@ -672,7 +702,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 14:
+				case 16:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						brand = value;
 					} else {
@@ -681,7 +711,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 15:
+				case 17:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						gUnit = findUnit(value);
 					} else {
@@ -690,7 +720,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 16:
+				case 18:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						stdUnit = findUnit(value);
 					} else {
@@ -699,12 +729,12 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 17:
+				case 19:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						secUnit = findUnit(value);
 					}
 					break;
-				case 18:
+				case 20:
 					try {
 						regPrice = Double.parseDouble(value);
 					} catch (Exception e) {
@@ -714,7 +744,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 19:
+				case 21:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						giftFlag = value;
 					} else {
@@ -723,7 +753,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 20:
+				case 22:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						originCountry = findCountry(value);
 					} else {
@@ -732,7 +762,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 21:
+				case 23:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						quality = value;
 					} else {
@@ -741,12 +771,12 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 22:
+				case 24:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						qualityCertify = value;
 					}
 					break;
-				case 23:
+				case 25:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						manufactory = value;
 					} else {
@@ -755,7 +785,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 24:
+				case 26:
 					try {
 						netWt = Double.parseDouble(value);
 					} catch (Exception e) {
@@ -765,7 +795,7 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 25:
+				case 27:
 					try {
 						grossWt = Double.parseDouble(value);
 					} catch (Exception e) {
@@ -775,22 +805,22 @@ public class GoodsRecordTransaction {
 						errl.add(errMap);
 					}
 					break;
-				case 26:
+				case 28:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						notes = value;
 					}
 					break;
-				case 27:
+				case 29:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						ingredient = value;
 					}
 					break;
-				case 28:
+				case 30:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						additiveflag = value;
 					}
 					break;
-				case 29:
+				case 31:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						poisonflag = value;
 					}
@@ -800,6 +830,24 @@ public class GoodsRecordTransaction {
 				}
 			}
 			GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
+			if (DZKNNo.trim().length() >= 16) {
+				goodsRecordDetail.setDZKNNo(DZKNNo);
+			} else {
+				Map<String, Object> errMap = new HashMap<>();
+				errMap.put("msg", "【已备案商品详情表】第" + (r + 1) + "行-->" + "电子口岸备案号错误,请核对信息!");
+				errl.add(errMap);
+				continue;
+			}
+			// 当企邦的归属商户Id与Sku都填写了则进行针对性操作
+			if (StringEmptyUtils.isNotEmpty(marCode) && StringEmptyUtils.isNotEmpty(entGoodsNoSKU)) {
+				entGoodsNo = entGoodsNo + "_" + marCode;
+				JSONObject json = new JSONObject();
+				json.put("marCode", marCode);
+				json.put("SKU", entGoodsNoSKU);
+				goodsRecordDetail.setSpareParams(json.toString());
+			}
+			goodsRecordDetail.setEbEntNo(ebEntNo);
+			goodsRecordDetail.setEbEntName(ebEntName);
 			goodsRecordDetail.setSeq(seq);
 			goodsRecordDetail.setEntGoodsNo(entGoodsNo);
 			goodsRecordDetail.setEportGoodsNo(eportGoodsNo);
@@ -807,7 +855,7 @@ public class GoodsRecordTransaction {
 			goodsRecordDetail.setCusGoodsNo(cusGoodsNo);
 			goodsRecordDetail.setEmsNo(emsNo);
 			goodsRecordDetail.setItemNo(itemNo);
-			goodsRecordDetail.setShelfGName(shelfGName);
+			goodsRecordDetail.setShelfGName(goodsName);
 			goodsRecordDetail.setNcadCode(ncadCode);
 			goodsRecordDetail.setHsCode(hsCode);
 			goodsRecordDetail.setBarCode(barCode);
@@ -835,23 +883,23 @@ public class GoodsRecordTransaction {
 			goodsRecordDetail.setCreateBy(merchantName);
 			goodsRecordDetail.setStatus(2);
 			goodsRecordDetail.setRecordFlag(0);
-			
+
 			Map<String, Object> reMap = goodsRecordService.checkEntGoodsNoRepeat(entGoodsNo);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put(BaseCode.MSG.toString(),
 						"【已备案商品详情表】第" + (r + 1) + "行,---->" + reMap.get(BaseCode.MSG.toString()));
 				errl.add(errMap);
-				return null;
-			} else {
-				Map<String, Object> item = goodsRecordService.batchCreateRecordGoodsDetail(goodsRecordDetail);
-				if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(),
-							"【已备案商品详情表】第" + (r + 1) + "行,----> " + item.get(BaseCode.MSG.toString()));
-					errl.add(errMap);
-				}
+				continue;
 			}
+			Map<String, Object> item = goodsRecordService.batchCreateRecordGoodsDetail(goodsRecordDetail);
+			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
+				Map<String, Object> errMap = new HashMap<>();
+				errMap.put(BaseCode.MSG.toString(),
+						"【已备案商品详情表】第" + (r + 1) + "行,----> " + item.get(BaseCode.MSG.toString()));
+				errl.add(errMap);
+			}
+
 		}
 		recordContentMap.clear();
 		recordContentMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -977,18 +1025,18 @@ public class GoodsRecordTransaction {
 		return headMap;
 	}
 
-	//管理员查看商品备案详情
+	// 管理员查看商品备案详情
 	public Map<String, Object> managerGetGoodsRecordDetail(String entGoodsNo) {
 		return goodsRecordService.managerGetGoodsRecordDetail(entGoodsNo);
 	}
 
-	//商户删除商品备案信息
+	// 商户删除商品备案信息
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		return goodsRecordService.merchantDeleteGoodsRecordInfo(merchantId,merchantName,entGoodsNo);
+		return goodsRecordService.merchantDeleteGoodsRecordInfo(merchantId, merchantName, entGoodsNo);
 	}
 }

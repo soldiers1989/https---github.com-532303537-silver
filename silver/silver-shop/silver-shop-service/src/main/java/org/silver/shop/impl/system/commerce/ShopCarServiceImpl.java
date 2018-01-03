@@ -233,20 +233,19 @@ public class ShopCarServiceImpl implements ShopCarService {
 		return statusMap;
 	}
 
-	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId, String memberId, String memberName) {
+	public Map<String, Object> deleteShopCartGoodsInfo(String entGoodsNo, String memberId, String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		params.put("goodsBaseId", goodsId);
+		params.put("entGoodsNo", entGoodsNo);
 		params.put("memberId", memberId);
 		List<Object> reList = shopCarDao.findByProperty(ShopCarContent.class, params, 1, 1);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}
-		if (!reList.isEmpty()) {
+		}else if (!reList.isEmpty()) {
 			ShopCarContent cart = (ShopCarContent) reList.get(0);
-			if (!this.shopCarDao.delete(cart)) {
+			if (!shopCarDao.delete(cart)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 				return statusMap;

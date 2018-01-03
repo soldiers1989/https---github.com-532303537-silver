@@ -194,5 +194,19 @@
 		<property name="poisonflag" type="java.lang.String">
 			<column name="poisonflag" />
 		</property>
+		
+			<property name="ebEntName" type="java.lang.String">
+			<column name="ebEntName" />
+		</property>
+			<property name="DZKNNo" type="java.lang.String">
+			<column name="DZKNNo" />
+		</property>
+			<property name="ebEntNo" type="java.lang.String">
+			<column name="ebEntNo" />
+		</property>
+			<property name="spareParams" type="java.lang.String">
+			<column name="spareParams" />
+		</property>
+		
 	</class>
 </hibernate-mapping>

@@ -31,12 +31,12 @@ public interface ShopCarService {
 	/**
 	 * 用户删除购物车信息
 	 * 
-	 * @param goodsId
-	 * @param memberId
-	 * @param memberName
-	 * @return
+	 * @param entGoodsNo 商品自编号
+	 * @param memberId 用户Id
+	 * @param memberName 用户名称
+	 * @return Map
 	 */
-	public Map<String, Object> deleteShopCartGoodsInfo(String goodsId, String memberId, String memberName);
+	public Map<String, Object> deleteShopCartGoodsInfo(String entGoodsNo, String memberId, String memberName);
 
 	/**
 	 * 用户修改购物车选中标识与商品数量

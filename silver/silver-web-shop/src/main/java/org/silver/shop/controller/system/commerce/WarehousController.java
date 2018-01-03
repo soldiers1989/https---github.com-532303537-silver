@@ -36,24 +36,21 @@ public class WarehousController {
 	@ResponseBody
 	@ApiOperation("查询商户下仓库")
 	@RequiresRoles("Merchant")
-	public String getWarehousInfo(@RequestParam("page")int page,@RequestParam("size")int size,
+	public String getWarehousInfo(@RequestParam("page") int page, @RequestParam("size") int size,
 			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = warehousTransaction.getWarehousInfo(page,size);
+		Map<String, Object> statusMap = warehousTransaction.getWarehousInfo(page, size);
 		return JSONObject.fromObject(statusMap).toString();
-	}	
-	
+	}
+
 	public static void main(String[] args) {
-		 Calendar todayEnd = Calendar.getInstance();  
-	        todayEnd.set(Calendar.HOUR, 23);  
-	        todayEnd.set(Calendar.MINUTE, 59);  
-	        todayEnd.set(Calendar.SECOND, 59);  
-	        todayEnd.set(Calendar.MILLISECOND, 999);  
-	        todayEnd.getTime();
-	        System.out.println("---------->>>>>>"+todayEnd.getTime());
+		List<Object> l = new ArrayList<>();
+		if (l == null || l.isEmpty()) {
+			System.out.println("----------");
+		}
 	}
 }

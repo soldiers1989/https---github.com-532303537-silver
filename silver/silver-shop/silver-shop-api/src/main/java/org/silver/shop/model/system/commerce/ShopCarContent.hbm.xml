@@ -21,7 +21,7 @@
             <column name="merchantName" />
         </property>
         <property name="goodsBaseId" type="java.lang.String">
-            <column name="goodsBaseId" not-null="true"/>
+            <column name="goodsBaseId" />
         </property>
         <property name="goodsName" type="java.lang.String">
             <column name="goodsName" />
@@ -47,6 +47,6 @@
         <property name="entGoodsNo" type="java.lang.String">
         	<column name="entGoodsNo" not-null="true"/>
         </property>
-        
+       
     </class>
 </hibernate-mapping>

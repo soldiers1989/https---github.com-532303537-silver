@@ -323,6 +323,7 @@ public class EditRecordController {
 
 	}
 
+	//下载
 	public void downLoad(String filePath, HttpServletResponse response, boolean isOnLine) throws Exception {
 		File f = new File(filePath);
 		BufferedInputStream br = new BufferedInputStream(new FileInputStream(f));

@@ -25,7 +25,7 @@
 			<column name="orderId" not-null="true" />
 		</property>
 		<property name="goodsId" type="java.lang.String">
-			<column name="goodsId" not-null="true" />
+			<column name="goodsId"  />
 		</property>
 		<property name="goodsName" type="java.lang.String">
 			<column name="goodsName" not-null="true" />

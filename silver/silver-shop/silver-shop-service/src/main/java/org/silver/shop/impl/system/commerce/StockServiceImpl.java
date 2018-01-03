@@ -17,6 +17,7 @@ import org.silver.shop.dao.system.commerce.StockDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class StockServiceImpl implements StockService {
 
 	@Autowired
 	private StockDao stockDao;
-
+	
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
 			int size) {
@@ -44,6 +45,7 @@ public class StockServiceImpl implements StockService {
 		// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
 		String code = warehouseCode.substring(two + 1);
 		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size);
+		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0);
 		if (reTable == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
@@ -52,7 +54,7 @@ public class StockServiceImpl implements StockService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reTable));
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reTable.getRows().size());
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), count.getRows().size());
 			return statusMap;
 		}
 	}
@@ -348,7 +350,7 @@ public class StockServiceImpl implements StockService {
 			Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
 
-		Map<String, Object> reDatasMap = universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
@@ -375,172 +377,15 @@ public class StockServiceImpl implements StockService {
 		}
 	}
 
-	/**
-	 * 通用检索方法
-	 * 
-	 * @param datasMap
-	 *            参数Map
-	 * @return Map
-	 */
-	public final Map<String, Object> universalSearch(Map<String, Object> datasMap) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
-		Iterator<String> isKey = datasMap.keySet().iterator();
-		while (isKey.hasNext()) {
-			String key = isKey.next().trim();
-			String value = datasMap.get(key) + "".trim();
-			switch (key) {
-			case "goodsName":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					blurryMap.put(key, "%" + value + "%");
-				}
-				break;
-			case "spareGoodsFirstTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "spareGoodsSecondTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "spareGoodsThirdTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "goodsFirstTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "goodsSecondTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "goodsThirdTypeId":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "startDate":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(DateUtil.parseDate(value + ""));
-					Date startDate = cal.getTime();
-					paramMap.put(key, startDate);
-				}
-				break;
-			case "endDate":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(DateUtil.parseDate(value + ""));
-					cal.set(Calendar.HOUR, 23);
-					cal.set(Calendar.MINUTE, 59);
-					cal.set(Calendar.SECOND, 59);
-					cal.set(Calendar.MILLISECOND, 999);
-					Date endDate = cal.getTime();
-					paramMap.put(key, endDate);
-				}
-				break;
-			case "status":
-				try {
-					int status = Integer.parseInt(value);
-					if (status != 0) {
-						paramMap.put(key, status);
-					}
-				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "status参数错误,请重新输入!");
-					return statusMap;
-				}
-				break;
-			case "entOrderNo":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "sellFlag":
-				int sellFlag = 0;
-				try {
-					sellFlag = Integer.parseInt(value);
-				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "上/下架标识参数错误,请重新输入!");
-					return statusMap;
-				}
-				if (sellFlag > 0) {
-					paramMap.put(key, sellFlag);
-				}
-				break;
-
-			case "customsPort":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "customsCode":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value );
-				}
-				break;
-			case "ciqOrgCode":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value );
-				}
-				break;
-			case "warehouseCode":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					int one = value.indexOf('_');
-					int two = value.indexOf('_', one + 1);
-					// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
-					String code = value.substring(two + 1);
-					paramMap.put(key, code);
-				}
-				break;
-			case "merchantName":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "memberName":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "recordFlag":
-				try {
-					int status = Integer.parseInt(value);
-					if (status != 0) {
-						paramMap.put(key, status);
-					}
-				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "recordFlag参数错误,请重新输入!");
-					return statusMap;
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		statusMap.put("param", paramMap);
-		statusMap.put("blurry", blurryMap);
-		statusMap.put("error", lm);
-		return statusMap;
-	}
+	
 
 	@Override
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
-			String goodsInfoPack,int type) {
+			String goodsInfoPack, int type) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorMsgList = new ArrayList<>();
-		Map<String,Object> errorMap = new HashMap<>();
+		Map<String, Object> errorMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
@@ -552,27 +397,27 @@ public class StockServiceImpl implements StockService {
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
-			Map<String,Object> params = new HashMap<>();
-			String entGoodsNo = datasMap.get("entGoodsNo")+"";
+			Map<String, Object> params = new HashMap<>();
+			String entGoodsNo = datasMap.get("entGoodsNo") + "";
 			params.put("entGoodsNo", entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
 			if (reStockList == null) {
 				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
 				errorMsgList.add(errorMap);
 			} else if (!reStockList.isEmpty()) {
-				StockContent stockInfo= (StockContent) reStockList.get(0);
+				StockContent stockInfo = (StockContent) reStockList.get(0);
 				double price = 0.0;
-				try{
-					 price = Double.parseDouble(datasMap.get("price")+"");
-				}catch (Exception e){
+				try {
+					price = Double.parseDouble(datasMap.get("price") + "");
+				} catch (Exception e) {
 					errorMap.put(BaseCode.MSG.getBaseCode(), "商品价格错误,请重试！");
 					errorMsgList.add(errorMap);
 					continue;
 				}
-				//修改类型:1-市场价,2-销售价
-				if(type == 1){
+				// 修改类型:1-市场价,2-销售价
+				if (type == 1) {
 					stockInfo.setMarketPrice(price);
-				}else{
+				} else {
 					stockInfo.setRegPrice(price);
 				}
 				stockInfo.setUpdateBy(merchantName);

@@ -20,13 +20,13 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
-import org.silver.shop.controller.system.cross.SendMsg;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.RandomUtils;
+import org.silver.util.SendMsg;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -289,10 +289,10 @@ public class MemberController {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
 			String redisCode = JedisUtil.get("Shop_Key_MemberRegisterCode_" + phone);
-		//	if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
-				json.put("time", new Date().getTime()+"");
+				json.put("time", new Date().getTime() + "");
 				json.put("code", code);
 				System.out.println("-------->>>>>" + code);
 				// 将查询出来的省市区放入到redis缓存中
@@ -300,15 +300,15 @@ public class MemberController {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 				return JSONObject.fromObject(statusMap).toString();
-			//} else {
-				//long time = Long.parseLong(json.get("time") + "");
+			} else {
+				long time = Long.parseLong(json.get("time") + "");
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
-				//if (time - new Date().getTime() < 50000) {
-					//statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
-					//statusMap.put(BaseCode.MSG.toString(), "已获取过验证码,请勿重复获取!");
-					//return JSONObject.fromObject(statusMap).toString();
-				//}
-			//}
+				if (time - new Date().getTime() < 50000) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "已获取过验证码,请勿重复获取!");
+					return JSONObject.fromObject(statusMap).toString();
+				}
+			}
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), "手机号码输入不正确,请重新输入!");

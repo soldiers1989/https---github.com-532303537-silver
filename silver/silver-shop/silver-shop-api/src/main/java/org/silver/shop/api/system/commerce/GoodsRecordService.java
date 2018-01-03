@@ -160,8 +160,8 @@ public interface GoodsRecordService {
 			String customsPortName, String customsCode, String customsName, String ciqOrgCode, String ciqOrgName);
 
 	/**
-	 * 
-	 * @param goodsRecordDetail
+	 * 批量创建备案商品详细
+	 * @param goodsRecordDetail 备案商品详情
 	 * @return Map
 	 */
 	public Map<String, Object> batchCreateRecordGoodsDetail(  GoodsRecordDetail goodsRecordDetail);

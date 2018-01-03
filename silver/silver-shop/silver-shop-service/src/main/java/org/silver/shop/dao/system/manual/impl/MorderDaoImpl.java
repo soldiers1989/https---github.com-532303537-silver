@@ -24,7 +24,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T>  implements MorderDao {
 		Session session = null;
 		try {
 			String sql = "SELECT * FROM ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.order_id =t2.order_id "
-					+ "WHERE t1.create_date >= ?  AND t1.serial = ? AND t1.merchant_no = ?";
+					+ "WHERE t1.create_date >= ?  AND t1.serial = ? AND t1.merchant_no = ? ORDER BY t2.seqNo";
 			//t1.create_date >= ?  AND
 			session = getSession();
 			List<Object> sqlParams = new ArrayList<>();

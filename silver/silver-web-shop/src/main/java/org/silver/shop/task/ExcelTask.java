@@ -9,14 +9,14 @@ import org.silver.shop.utils.ExcelUtil;
 
 public class ExcelTask implements Callable<Object> {
 
-	private int sheet;
-	private ExcelUtil excel;
-	private List<Map<String, Object>> errorList;
-	private String merchantId;
-	private int startCount;
-	private int endCount;
-	private ManualService manualService;
-
+	private int sheet;//
+	private ExcelUtil excel;//
+	private List<Map<String, Object>> errorList;//
+	private String merchantId;//商户Id
+	private int startCount;//开始行数
+	private int endCount;//结束行数
+	private ManualService manualService;//
+	private int serialNo ;//订单批次号
 	/**
 	 * excel多任务读取
 	 * @param sheet
@@ -28,7 +28,7 @@ public class ExcelTask implements Callable<Object> {
 	 * @param manualService
 	 */
 	public ExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService) {
+			int endCount, ManualService manualService,int serialNo) {
 		this.sheet = sheet;
 		this.excel = excel;
 		this.errorList = errl;
@@ -36,6 +36,7 @@ public class ExcelTask implements Callable<Object> {
 		this.startCount = startCount;
 		this.endCount = endCount;
 		this.manualService = manualService;
+		this.serialNo = serialNo;
 	}
 	/**
 	 * 
@@ -61,7 +62,7 @@ public class ExcelTask implements Callable<Object> {
 	public Map<String, Object> call() {
 		
 		excel.open();
-		return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount);
+		return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount,serialNo);
 	}
 
 }

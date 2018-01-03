@@ -386,22 +386,24 @@ public class ManualService {
 				int start = 0;
 				int end = 0;
 				ExcelTask excelTask = null;
+				int serialNo = getSerialNo("GZ");
 				for (int i = 0; i < cpuCount; i++) {
 					ExcelUtil excelC = new ExcelUtil(f);
 					if (i == 0) {
 						end = totalCount / cpuCount;
-						excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this);
+						excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this,serialNo);
 					} else {
 						start = end + 1;
 						end = start + (totalCount / cpuCount);
 						if (i == (cpuCount - 1)) {// 最后一次
-							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this);
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this,serialNo);
 						} else {
-							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this);
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this,serialNo);
 						}
 					}
 					threadPool.submit(excelTask);
 				}
+				threadPool.shutdown();
 				// 14460条记录 342517ms
 				//329517ms
 				// 两百条记录
@@ -449,7 +451,7 @@ public class ManualService {
 		String recipientName = "";// 收货人名称
 		String recipientTel = "";// 收货人电话
 		String recipientAddr = "";// 收货人详细地址
-		String orderDocAcount = "";// (启邦客户)商品归属商家代码
+		String marCode = "";// (启邦客户)商品归属商家代码
 		String orderDocName = "";// 下单人名称
 		String orderDocId = "";// 下单人身份证号码
 		String ehsEntName = "";// 承运商
@@ -512,7 +514,7 @@ public class ManualService {
 					recipientAddr = value;
 				} else if (c == 9) {
 					// (启邦客户)商品归属商家代码
-					orderDocAcount = value;
+					marCode = value;
 				} else if (c == 10) {
 					orderDocName = value;
 				} else if (c == 11) {
@@ -573,12 +575,12 @@ public class ManualService {
 			item.put("orderDocId", orderDocId);
 			// 下单人电话
 			item.put("orderDocTel", recipientTel);
+			//企邦订单承运商
 			item.put("ehsEntName", ehsEntName);
 			item.put("waybillNo", waybillNo);
 			item.put("serial", getSerialNo("QB"));
-
-			item.put("ehsEntName", ehsEntName);
-			item.put("orderDocAcount", orderDocAcount);
+			
+			item.put("marCode", marCode);
 			Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item);
 			if (!"1".equals(orderMap.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
@@ -619,7 +621,7 @@ public class ManualService {
 	 * @return Map
 	 */
 	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, int startCount, int endCount) {
+			String merchantId, int startCount, int endCount,int serialNo) {
 		long startTime = System.currentTimeMillis(); // 获取开始时间
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
@@ -661,7 +663,7 @@ public class ManualService {
 		String senderAreaCode = "";// 发货人区域代码 国外填 000000
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
-		int serialNo = getSerialNo("GZ");
+		//int serialNo = getSerialNo("GZ");
 		int completed = 0;
 		System.out.println("开始行数----->>>" + startCount + ";结束行数---->>>" + endCount);
 
@@ -695,7 +697,7 @@ public class ManualService {
 					goodsName = value.trim();
 				} else if (c == 18) {
 					System.out.println(value);// 收货人姓名
-					RecipientName = value;
+					RecipientName = value.trim().replaceAll("  ", "").replaceAll(" ", "");
 				} else if (c == 20) {
 					System.out.println(value);// 邮编代码
 					if (StringEmptyUtils.isNotEmpty(value)) {
@@ -748,6 +750,8 @@ public class ManualService {
 					// 第一法定数量
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						firstLegalCount = Double.parseDouble(value.trim());
+					}else{
+						firstLegalCount = 0.0;
 					}
 				} else if (c == 52) {
 					// 第一法定计量单位
@@ -756,6 +760,8 @@ public class ManualService {
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						// 第二法定数量
 						secondLegalCount = Double.parseDouble(value.trim());
+					}else{
+						secondLegalCount = 0.0;
 					}
 				} else if (c == 54) {
 					// 第二法定计量单位

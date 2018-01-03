@@ -1,4 +1,4 @@
-package org.silver.shop.controller.system.cross;
+package org.silver.util;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -11,7 +11,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.silver.util.YmHttpUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

@@ -21,7 +21,6 @@ import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
-import org.silver.shop.impl.system.ExcelUtil;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.cross.YsPayReceiveServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
@@ -34,8 +33,10 @@ import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
+import org.silver.shop.util.ExcelUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.OrderByUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -499,6 +500,12 @@ public class MpayServiceImpl implements MpayService {
 				errorList.add(errMap);
 			} else {
 				Morder order = orderList.get(0);
+				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+				if(order.getOrder_record_status() == 3){
+					Map<String, Object> errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), "[" + orderNo + "]订单已成功备案,无需再次发起!");
+					errorList.add(errMap);
+				}
 				// 订单商品总额
 				double fcy = order.getFCY();
 				// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
@@ -511,6 +518,8 @@ public class MpayServiceImpl implements MpayService {
 				System.out.println("->>>>>>>>>>>" + reOrderMap);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					Map<String, Object> errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), reOrderMap.get(BaseCode.MSG.toString()));
+					errorList.add(errMap);
 					continue;
 				}
 
@@ -518,6 +527,7 @@ public class MpayServiceImpl implements MpayService {
 				// 更新服务器返回订单Id
 				Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
 				if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
+					
 					return reOrderMap2;
 				}
 			}
@@ -525,6 +535,7 @@ public class MpayServiceImpl implements MpayService {
 		statusMap.clear();
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.ERROR.toString(), errorList);
 		return statusMap;
 	}
 
@@ -577,10 +588,15 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> orderMap = new HashMap<>();
 		JSONObject goodsJson = null;
 		JSONObject orderJson = new JSONObject();
+		OrderByUtil.sortList(orderSubList, "sqlNo", "ASC");
+		String ebEntNo = "";
+		String ebEntName = "";
+		String DZKANo = "";
+
 		for (int i = 0; i < orderSubList.size(); i++) {
 			goodsJson = new JSONObject();
 			MorderSub goodsInfo = orderSubList.get(i);
-			goodsJson.element("Seq", goodsInfo.getSeq());
+			goodsJson.element("Seq", i + 1);
 			goodsJson.element("EntGoodsNo", goodsInfo.getEntGoodsNo());
 			goodsJson.element("CIQGoodsNo", goodsInfo.getCIQGoodsNo());
 			goodsJson.element("CusGoodsNo", goodsInfo.getCusGoodsNo());
@@ -598,10 +614,18 @@ public class MpayServiceImpl implements MpayService {
 			goodsJson.element("CurrCode", "142");
 			goodsJson.element("Notes", "");
 			String jsonGoods = goodsInfo.getSpareParams();
-			JSONObject params = JSONObject.fromObject(jsonGoods);
-			// 企邦专属字段
-			goodsJson.element("marCode", params.get("orderDocAcount"));
-			goodsJson.element("sku", params.get("SKU"));
+			if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
+				JSONObject params = JSONObject.fromObject(jsonGoods);
+				// 企邦专属字段
+				goodsJson.element("marCode", params.get("orderDocAcount"));
+				goodsJson.element("sku", params.get("SKU"));
+				// 电商企业编号
+				ebEntNo = params.get("ebEntNo") + "";
+				// 电商企业名称
+				ebEntName = params.get("ebEntName") + "";
+				// 电子口岸(16)编码
+				DZKANo = params.get("DZKNNo") + "";
+			}
 			goodsList.add(goodsJson);
 		}
 		orderJson.element("orderGoodsList", goodsList);
@@ -630,11 +654,12 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
 		orderJson.element("OrderDate", order.getCreate_date());
 		orderJson.element("entPayNo", order.getTrade_no());
-		String jsonOrder = order.getSpareParams();
-		JSONObject params = JSONObject.fromObject(jsonOrder);
-		// 企邦快递承运商
-		orderJson.element("tmsServiceCode", params.getString("ehsEntName"));
-
+		String orderSpare = order.getSpareParams();
+		if (StringEmptyUtils.isNotEmpty(orderSpare)) {
+			JSONObject params = JSONObject.fromObject(orderSpare);
+			// 企邦快递承运商
+			orderJson.element("tmsServiceCode", params.getString("ehsEntName"));
+		}
 		orderJsonList.add(orderJson);
 		// 客戶端签名
 		String clientsign = "";
@@ -665,9 +690,16 @@ public class MpayServiceImpl implements MpayService {
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		orderMap.put("eport", eport);
 		// 电商企业编号
-		orderMap.put("ebEntNo", recordMap.get("ebEntNo"));
-		// 电商企业名称
-		orderMap.put("ebEntName", recordMap.get("ebEntName"));
+		if(StringEmptyUtils.isNotEmpty(ebEntNo)&& StringEmptyUtils.isNotEmpty(ebEntName)){
+			orderMap.put("ebEntNo", ebEntNo);
+			// 电商企业名称
+			orderMap.put("ebEntName", ebEntName);
+		}else{
+			String ebEntNo2 = eport == 1 ? "C010000000537119" :"1509007917";
+			orderMap.put("ebEntNo", ebEntNo2);
+			// 电商企业名称
+			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+		}
 		orderMap.put("ciqOrgCode", recordMap.get("ciqOrgCode"));
 		orderMap.put("customsCode", recordMap.get("customsCode"));
 		orderMap.put("appkey", YmMallConfig.APPKEY);
@@ -677,7 +709,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		// orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr
 		// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
@@ -692,10 +724,16 @@ public class MpayServiceImpl implements MpayService {
 			MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 			orderMap.put("eport", 1);
-			// 电商企业编号
-			orderMap.put("ebEntNo", merchantRecordInfo.getEbEntNo());
-			// 电商企业名称
-			orderMap.put("ebEntName", merchantRecordInfo.getEbEntName());
+			if(StringEmptyUtils.isNotEmpty(DZKANo)&& StringEmptyUtils.isNotEmpty(ebEntName)){
+				// 电商企业编号
+				orderMap.put("ebEntNo", DZKANo);
+				// 电商企业名称
+				orderMap.put("ebEntName", ebEntName);
+			}else{
+				orderMap.put("ebEntNo", "C010000000537119");
+				// 电商企业名称
+				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
 			// String resultStr2
 			// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",

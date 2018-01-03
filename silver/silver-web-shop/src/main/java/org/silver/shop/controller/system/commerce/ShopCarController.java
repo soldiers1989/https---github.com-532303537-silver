@@ -1,13 +1,18 @@
 package org.silver.shop.controller.system.commerce;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.zookeeper.data.Stat;
+import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.service.system.commerce.ShopCarTransaction;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,13 +68,19 @@ public class ShopCarController {
 	@ApiOperation(value = "用户删除购物车信息")
 	@RequiresRoles("Member")
 	public String deleteShopCartGoodsInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("goodsId") String goodsId) {
+			String entGoodsNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = shopCarTransaction.deleteShopCartGoodsInfo(goodsId);
+		Map<String, Object> statusMap = new HashMap<>();
+		if(StringEmptyUtils.isNotEmpty(entGoodsNo)){
+			statusMap = shopCarTransaction.deleteShopCartGoodsInfo(entGoodsNo);
+		}else{
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.LOSS_SESSION.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "商品Id参数不正确!");
+		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -97,10 +108,5 @@ public class ShopCarController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = shopCarTransaction.editShopCarGoodsInfo(goodsInfo);
 		return JSONObject.fromObject(statusMap).toString();
-	}
-	
-	public static void main(String[] args) {
-		String str ="广州";
-		System.out.println(str.length());
 	}
 }
