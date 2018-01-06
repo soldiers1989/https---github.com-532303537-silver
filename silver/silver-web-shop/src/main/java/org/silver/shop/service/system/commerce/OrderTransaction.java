@@ -97,4 +97,22 @@ public class OrderTransaction {
 		}
 		return orderService.searchMerchantOrderInfo(merchantId, merchantName, param,page,size);
 	}
+
+	//获取商户每日订单报表
+	public Map<String, Object> getMerchantOrderReport(int page, int size,String startDate, String endDate) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return orderService.getMerchantOrderDailyReport(merchantId,merchantName,page,size,startDate,endDate);
+	}
+	
+	
+	public Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
+			String extra_common_param, String client_sign, String timestamp) {
+	
+		return orderService.doBusiness( merchant_cus_no, out_trade_no, amount,  notify_url,
+				 extra_common_param,  client_sign, timestamp);
+	}
 }

@@ -18,15 +18,19 @@ import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.cross.PaymentContent;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 
@@ -154,7 +158,7 @@ public class PaytemServiceImpl implements PaymentService {
 					continue;
 				}
 				Map<String, Object> paymentInfoMap = new HashMap<>();
-				paymentInfoMap.put("EntPayNo", treadeNo);
+				paymentInfoMap.put("EntPayNo", payInfo.getTrade_no());
 				paymentInfoMap.put("PayStatus", payInfo.getPay_status());
 				paymentInfoMap.put("PayAmount", payInfo.getPay_amount());
 				paymentInfoMap.put("PayCurrCode", payInfo.getPay_currCode());
@@ -250,7 +254,7 @@ public class PaytemServiceImpl implements PaymentService {
 			return paramMap;
 		} else {
 			paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), "更新支付订单返回messageID错误,服务器繁忙！");
+			paramMap.put(BaseCode.MSG.toString(), "更新支付单返回messageID错误,未找到支付流水号！");
 			return paramMap;
 		}
 	}
@@ -298,8 +302,8 @@ public class PaytemServiceImpl implements PaymentService {
 			pay.setUpdate_date(new Date());
 			if (!paymentDao.update(pay)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "异步更新订单备案信息错误!");
-				return paramMap;
+				statusMap.put(BaseCode.MSG.toString(), "异步更新支付单信息错误!");
+				return statusMap;
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
@@ -314,20 +318,12 @@ public class PaytemServiceImpl implements PaymentService {
 	public Object getMpayRecordInfo(String merchantId, String merchantName, Map<String, Object> params, int page,
 			int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		params.put("merchant_no", merchantId);
-		params.put("del_flag", 0);
-		if (!"0".equals(params.get("pay_record_status") + "")) {
-			params.put("pay_record_status", Integer.parseInt(params.get("pay_record_status") + ""));
-		} else {
-			params.remove("pay_record_status");
-		}
-		if(StringEmptyUtils.isNotEmpty(params.get("startTime")+"")){
-			params.put("startTime", DateUtil.parseDate2(params.get("startTime")+""));
-		}else if(StringEmptyUtils.isNotEmpty(params.get("endTime")+"")){
-			params.put("endTime", DateUtil.parseDate2(params.get("endTime")+""));
-		}
-		List<Object> reList = paymentDao.findByPropertyLike(Mpay.class, params, null, page, size);
-		long tatolCount = paymentDao.findByPropertyLikeCount(Mpay.class, params, null);
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		paramMap.put("merchant_no", merchantId);
+		paramMap.put("del_flag", 0);
+		List<Object> reList = paymentDao.findByPropertyLike(Mpay.class, paramMap, null, page, size);
+		long tatolCount = paymentDao.findByPropertyLikeCount(Mpay.class, paramMap, null);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
@@ -341,5 +337,32 @@ public class PaytemServiceImpl implements PaymentService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, int page, int size,
+			String startDate, String endDate) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("merchantId", merchantId);
+		paramsMap.put("startDate", startDate);
+		paramsMap.put("endDate", endDate);
+		Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
+		Table totalCount = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.getRows().isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
 	}
 }

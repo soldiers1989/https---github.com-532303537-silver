@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.category.GoodsThirdType;
@@ -25,6 +27,9 @@ import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.manual.YMorder;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.SearchUtils;
@@ -32,7 +37,11 @@ import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alibaba.dubbo.common.json.JSONObject;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
+
 import net.sf.json.JSONArray;
 
 @Service(interfaceClass = OrderService.class)
@@ -45,6 +54,8 @@ public class OrderServiceImpl implements OrderService {
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	@Autowired
 	private YsPayReceiveService ysPayReceiveService;
+	@Autowired
+	private AppkeyService appkeyService;
 	
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
@@ -335,9 +346,9 @@ public class OrderServiceImpl implements OrderService {
 				statusMap.put(BaseCode.MSG.toString(), "扣款失败,请重试！");
 				return statusMap;
 			}
-			datasMap.put("out_trade_no",reEntOrderNo);
+			datasMap.put("out_trade_no", reEntOrderNo);
 			datasMap.put("total_amount", totalPrice);
-			Map<String,Object> rePayMap = ysPayReceiveService.balancePayReceive(datasMap);
+			Map<String, Object> rePayMap = ysPayReceiveService.balancePayReceive(datasMap);
 			if (!"1".equals(rePayMap.get(BaseCode.STATUS.toString()))) {
 				return rePayMap;
 			}
@@ -730,5 +741,148 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.ERROR.toString(), errorList);
 			return statusMap;
 		}
+	}
+
+	@Override
+	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
+			String startDate, String endDate) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("merchantId", merchantId);
+		paramsMap.put("startDate", startDate);
+		paramsMap.put("endDate", endDate);
+		Table reList = orderDao.getOrderDailyReport(Morder.class, paramsMap, page, size);
+		Table totalCount = orderDao.getOrderDailyReport(Morder.class, paramsMap, 0, 0);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+			return statusMap;
+		} else if (!reList.getRows().isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return statusMap;
+		}
+	}
+	
+	@Override
+	public Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
+			String extra_common_param, String client_sign, String timestamp) {
+		Map<String,Object> merchantMap = getMerchantInfo(merchant_cus_no);
+		if(!"1".equals(merchantMap.get(BaseCode.STATUS.toString()))){
+			return merchantMap;
+		}
+		//Merchant merchant =  merchantMap.get(BaseCode.DATAS.toString());
+		// 查找appkey
+		String str = merchant_cus_no + out_trade_no + amount + notify_url + timestamp;
+		Map<String, Object> checkMap = appkeyService.CheckClientSign("4a5de70025a7425dabeef6e8ea752976", client_sign,
+				str, timestamp);
+		if ((int) checkMap.get("status") != 1) {
+			return checkMap;
+		}
+		return createEntity(merchant_cus_no, out_trade_no, amount, "content", extra_common_param, notify_url);
+	}
+	
+	
+	/**
+	 * 根据商户第三方自编号,查询商户信息
+	 * @param merchant_cus_no 商户第三方自编号
+	 * @return Map
+	 */
+	private Map<String, Object> getMerchantInfo(String merchant_cus_no) {
+		Map<String,Object> statusMap = new HashMap<>();
+		Map<String,Object> paramMap = new HashMap<>();
+		paramMap.put("merchantCusNo", merchant_cus_no);
+		List<Merchant> reList = orderDao.findByProperty(Merchant.class, paramMap, 1, 1);
+		if (reList == null) {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "["+merchant_cus_no+"]商户第三方自编号查询失败,服务器繁忙!");
+			return statusMap;
+		} else if (!reList.isEmpty()) {
+			Merchant merchant = reList.get(0);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.DATAS.toString(), merchant);		
+			return statusMap;
+		} else {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "["+merchant_cus_no+"]商户第三方自编号查询失败,请核实信息!");
+			return statusMap;
+		}
+	}
+
+	private Map<String, Object> createEntity(String merchant_no, String out_trade_no, String amount, String content,
+			String extra_common_param, String notify_url) {
+		Map<String, Object> statusMap = new HashMap<>();
+		double total = 0;
+		try {
+			total = Double.parseDouble(amount);
+			if (total < 0.01) {
+				statusMap.put("status", -6);
+				statusMap.put("msg", "无效的交易金额");
+				return statusMap;
+			}
+		} catch (Exception e) {
+			statusMap.put("status", -4);
+			statusMap.put("msg", "错误的交易金额");
+			return statusMap;
+		}
+
+		/*List<YMorder> last = orderDao.getLast(YMorder.class);
+		long id = 0;
+		if (last != null && last.size() > 0) {
+			id = last.get(0).getId();
+		} else if (last == null) {
+			statusMap.put("status", -5);
+			statusMap.put("msg", "系统内部错误，请稍后重试");
+			return statusMap;
+		}
+		Date d = new Date();
+		YMorder entity = new YMorder();
+		entity.setOrder_id(createSysNo(id, d));
+		entity.setMerchant_no(merchant_no);
+		entity.setOut_trade_no(out_trade_no);
+		entity.setAmount(total);
+		entity.setContent(content);
+		entity.setExtra_common_param(extra_common_param);
+		entity.setNotify_url(notify_url);
+		entity.setType(0);
+		entity.setDel_flag(0);
+		entity.setCreate_date(d);
+		entity.setCreate_by(merchant_no);
+		if (orderDao.add(entity)) {
+			statusMap.put("status", 1);
+			statusMap.put("order_id", entity.getOrder_id());
+			statusMap.put("msg", "订单生成成功");
+			return statusMap;
+		}*/
+		statusMap.put("status", -1);
+		statusMap.put("msg", "系统内部错误，请稍后重试");
+		return statusMap;
+	}
+	
+	/**
+	 * 创建订单流水号
+	 * @param id 
+	 * @param date
+	 * @return
+	 */
+	private String createSysNo(long id, Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		String str = id + "";
+		Random r = new Random();
+		String m = r.nextInt(10000) + "";
+		while (str.length() < 7) {
+			str = "0" + str;
+		}
+		while (m.length() < 5) {
+			m = "0" + m;
+		}
+		str = "YMOD_" + sdf.format(date) + str + m;
+		return str;
 	}
 }

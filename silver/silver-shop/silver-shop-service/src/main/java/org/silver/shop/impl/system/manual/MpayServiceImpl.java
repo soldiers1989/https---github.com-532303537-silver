@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Resource;
 
@@ -496,16 +497,17 @@ public class MpayServiceImpl implements MpayService {
 			List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 			if (orderList == null || orderSubList == null) {
 				Map<String, Object> errMap = new HashMap<>();
-				errMap.put(BaseCode.STATUS.toString(), "[" + orderNo + "]订单查询失败,服务器繁忙!");
+				errMap.put(BaseCode.MSG.toString(), "[" + orderNo + "]订单查询失败,服务器繁忙!");
 				errorList.add(errMap);
 			} else {
 				Morder order = orderList.get(0);
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-				if(order.getOrder_record_status() == 3){
+				/*if (order.getOrder_record_status() == 3) {
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.STATUS.toString(), "[" + orderNo + "]订单已成功备案,无需再次发起!");
+					errMap.put(BaseCode.MSG.toString(), "[" + orderNo + "]订单已成功备案,无需再次发起!");
 					errorList.add(errMap);
-				}
+					continue;
+				}*/
 				// 订单商品总额
 				double fcy = order.getFCY();
 				// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
@@ -518,7 +520,7 @@ public class MpayServiceImpl implements MpayService {
 				System.out.println("->>>>>>>>>>>" + reOrderMap);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.STATUS.toString(), reOrderMap.get(BaseCode.MSG.toString()));
+					errMap.put(BaseCode.MSG.toString(), reOrderMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
 					continue;
 				}
@@ -527,7 +529,6 @@ public class MpayServiceImpl implements MpayService {
 				// 更新服务器返回订单Id
 				Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
 				if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
-					
 					return reOrderMap2;
 				}
 			}
@@ -617,7 +618,7 @@ public class MpayServiceImpl implements MpayService {
 			if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
 				JSONObject params = JSONObject.fromObject(jsonGoods);
 				// 企邦专属字段
-				goodsJson.element("marCode", params.get("orderDocAcount"));
+				goodsJson.element("marCode", params.get("marCode"));
 				goodsJson.element("sku", params.get("SKU"));
 				// 电商企业编号
 				ebEntNo = params.get("ebEntNo") + "";
@@ -654,6 +655,7 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
 		orderJson.element("OrderDate", order.getCreate_date());
 		orderJson.element("entPayNo", order.getTrade_no());
+		// 企邦字段
 		String orderSpare = order.getSpareParams();
 		if (StringEmptyUtils.isNotEmpty(orderSpare)) {
 			JSONObject params = JSONObject.fromObject(orderSpare);
@@ -689,13 +691,13 @@ public class MpayServiceImpl implements MpayService {
 
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		orderMap.put("eport", eport);
-		// 电商企业编号
-		if(StringEmptyUtils.isNotEmpty(ebEntNo)&& StringEmptyUtils.isNotEmpty(ebEntName)){
+		if (StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
+			// 电商企业编号
 			orderMap.put("ebEntNo", ebEntNo);
 			// 电商企业名称
 			orderMap.put("ebEntName", ebEntName);
-		}else{
-			String ebEntNo2 = eport == 1 ? "C010000000537119" :"1509007917";
+		} else {
+			String ebEntNo2 = eport == 1 ? "C010000000537118" : "1509007917";
 			orderMap.put("ebEntNo", ebEntNo2);
 			// 电商企业名称
 			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
@@ -711,32 +713,27 @@ public class MpayServiceImpl implements MpayService {
 		// 是否像海关发送
 		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		// String resultStr
-		// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+		// String resultStr =
+		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 		// orderMap);
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
-			Map<String, Object> paramsMap = new HashMap<>();
-			paramsMap.put("merchantId", merchantId);
-			paramsMap.put("customsPort", 1);
-			List<Object> reMerchantList = morderDao.findByProperty(MerchantRecordInfo.class, paramsMap, 1, 1);
-			MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 			orderMap.put("eport", 1);
-			if(StringEmptyUtils.isNotEmpty(DZKANo)&& StringEmptyUtils.isNotEmpty(ebEntName)){
+			if (StringEmptyUtils.isNotEmpty(DZKANo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 				// 电商企业编号
 				orderMap.put("ebEntNo", DZKANo);
 				// 电商企业名称
 				orderMap.put("ebEntName", ebEntName);
-			}else{
-				orderMap.put("ebEntNo", "C010000000537119");
+			} else {
+				orderMap.put("ebEntNo", "C010000000537118");
 				// 电商企业名称
 				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
-			// String resultStr2
-			// =YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			// String resultStr2 =
+			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// orderMap);
 			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
@@ -895,41 +892,41 @@ public class MpayServiceImpl implements MpayService {
 			return statusMap;
 		}
 		paramMap.put("order_id", order_id);
-		paramMap.put("EntGoodsNo", entGoodsNo);
+		paramMap.put("EntGoodsNo", strArr[2]);
 		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			MorderSub goodsInfo = reOrderSubList.get(0);
 			goodsInfo.setSeq(Integer.parseInt(strArr[1]));
 			goodsInfo.setEntGoodsNo(entGoodsNo);
-			goodsInfo.setHSCode(strArr[2]);
-			goodsInfo.setGoodsName(strArr[3]);
-			goodsInfo.setCusGoodsNo(strArr[4]);
-			goodsInfo.setCIQGoodsNo(strArr[5]);
-			goodsInfo.setOriginCountry(strArr[6]);
-			goodsInfo.setGoodsStyle(strArr[7]);
-			goodsInfo.setBarCode(strArr[8]);
-			goodsInfo.setBrand(strArr[9]);
-			goodsInfo.setQty(Integer.parseInt(strArr[10]));
-			goodsInfo.setUnit(strArr[11]);
-			goodsInfo.setPrice(Double.parseDouble(strArr[12]));
-			goodsInfo.setTotal(Double.parseDouble(strArr[13]));
-			goodsInfo.setNetWt(Double.parseDouble(strArr[14]));
-			goodsInfo.setGrossWt(Double.parseDouble(strArr[15]));
-			goodsInfo.setFirstLegalCount(Integer.parseInt(strArr[16]));
-			goodsInfo.setSecondLegalCount(Integer.parseInt(strArr[17]));
-			goodsInfo.setStdUnit(strArr[18]);
-			goodsInfo.setSecUnit(strArr[19]);
-			goodsInfo.setNumOfPackages(Integer.parseInt(strArr[20]));
-			goodsInfo.setPackageType(Integer.parseInt(strArr[21]));
-			goodsInfo.setTransportModel(strArr[22]);
+			goodsInfo.setHSCode(strArr[3]);
+			goodsInfo.setGoodsName(strArr[4]);
+			goodsInfo.setCusGoodsNo(strArr[5]);
+			goodsInfo.setCIQGoodsNo(strArr[6]);
+			goodsInfo.setOriginCountry(strArr[7]);
+			goodsInfo.setGoodsStyle(strArr[8]);
+			goodsInfo.setBarCode(strArr[9]);
+			goodsInfo.setBrand(strArr[10]);
+			goodsInfo.setQty(Integer.parseInt(strArr[11]));
+			goodsInfo.setUnit(strArr[12]);
+			goodsInfo.setPrice(Double.parseDouble(strArr[13]));
+			goodsInfo.setTotal(Double.parseDouble(strArr[14]));
+			goodsInfo.setNetWt(Double.parseDouble(strArr[15]));
+			goodsInfo.setGrossWt(Double.parseDouble(strArr[16]));
+			goodsInfo.setFirstLegalCount(Double.parseDouble(strArr[17]));
+			goodsInfo.setSecondLegalCount(Double.parseDouble(strArr[18]));
+			goodsInfo.setStdUnit(strArr[19]);
+			goodsInfo.setSecUnit(strArr[20]);
+			goodsInfo.setNumOfPackages(Integer.parseInt(strArr[21]));
+			goodsInfo.setPackageType(Integer.parseInt(strArr[22]));
+			goodsInfo.setTransportModel(strArr[23]);
 			if (!morderDao.update(goodsInfo)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "更新订单备案商品错误!");
 				return statusMap;
 			}
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -952,22 +949,24 @@ public class MpayServiceImpl implements MpayService {
 		order.setOrderDocAcount(strArr[12]);
 		order.setOrderDocName(strArr[13]);
 		order.setOrderDocType(strArr[14]);
-		order.setOrderDocTel(strArr[15]);
-		order.setOrderDate(strArr[16]);
-		order.setTrade_no(strArr[17]);
-		order.setDateSign(strArr[18]);
-		order.setWaybill(strArr[19]);
+		order.setOrderDocId(strArr[15]);
+		order.setOrderDocTel(strArr[16]);
+		order.setOrderDate(strArr[17]);
+		order.setTrade_no(strArr[18]);
+		order.setDateSign(strArr[19]);
+		order.setWaybill(strArr[20]);
 		// order.setSerial(orderMap.get(""));
 		// order.setStatus(orderMap.get(""));
-		order.setSenderName(strArr[20]);
-		order.setSenderCountry(strArr[21]);
-		order.setSenderAddress(strArr[22]);
-		order.setSenderTel(strArr[23]);
-		order.setPostal(strArr[24]);
-		order.setRecipientProvincesName(strArr[25]);
-		order.setRecipientCityName(strArr[26]);
-		order.setRecipientAreaName(strArr[27]);
-		order.setOldOrderId(strArr[28]);
+		order.setSenderName(strArr[21]);
+		order.setSenderCountry(strArr[22]);
+		order.setSenderAreaCode(strArr[23]);
+		order.setSenderAddress(strArr[24]);
+		order.setSenderTel(strArr[25]);
+		order.setPostal(strArr[26]);
+		order.setRecipientProvincesName(strArr[27]);
+		order.setRecipientCityName(strArr[28]);
+		order.setRecipientAreaName(strArr[29]);
+		order.setOldOrderId(strArr[30]);
 		if (!morderDao.update(order)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "更新订单备案信息错误!");

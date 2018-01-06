@@ -3,9 +3,11 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.dao.BaseDao;
+
 import com.justep.baas.data.Table;
 
-public interface GoodsRecordDao<T> {
+public interface GoodsRecordDao<T> extends BaseDao<T> {
 
 	/**
 	 * 查询商户商品基本信息,并倒序
@@ -43,23 +45,7 @@ public interface GoodsRecordDao<T> {
 	 */
 	public Long findLastId();
 
-	/**
-	 * 根据实体、列(名)、值查询数据 倒序
-	 * 
-	 * @param entity
-	 *            实体名
-	 * @param params
-	 *            属性
-	 * @param descParams
-	 *            倒序参数
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数据条数
-	 * @return List
-	 */
-	public List<T> findByPropertyDesc(Class entity, Map<String, Object> params, String descParams, int page,
-			int size);
+	
 
 	/**
 	 * 根据年份查询当前年份下的流水号总数
@@ -119,40 +105,6 @@ public interface GoodsRecordDao<T> {
 	public boolean updateGoodsRecordStatus(String tableName, String merchantIdColumnName, String merchantId,
 			String goodsSerialNo, int status);
 
-	/**
-	 * 模糊查询总数
-	 * 
-	 * @param entity
-	 *            类
-	 * @param params
-	 *            查询参数
-	 * @return
-	 */
-	public long findByPropertyCount(Class entity, Map<String, Object> params);
-	
-	/**
-	 * 根据实体、列(名)、值模糊查询数据
-	 * 
-	 * @param entity
-	 *            实体名
-	 * @param params 主参数
-	 * @param blurryMap 模糊查询参数
-	 * @param page 页数
-	 * @param size 数目
-	 * @return List 
-	 */
-	public List<Object> findByPropertyLike(Class entity, Map<String, Object> params,Map blurryMap ,int page, int size);
-
-	
-	/**
-	 * 模糊查询总数
-	 * @param entity 类
-	 * @param params 主参数
-	 * @param blurryMap 模糊查询参数 
-	 * @return
-	 */
-	public long findByPropertyLikeCount(Class entity, Map<String,Object> params,Map<String,Object> blurryMap);
-	
 	/**
 	 * 
 	 * @param page

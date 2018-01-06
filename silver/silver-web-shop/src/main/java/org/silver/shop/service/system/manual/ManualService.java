@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,6 +24,7 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.model.common.base.Metering;
+import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
@@ -53,6 +55,9 @@ public class ManualService {
 	private MeteringTransaction meteringTransaction;
 	@Autowired
 	private ProvinceCityAreaTransaction provinceCityAreaTransaction;
+
+	// 创建一个静态钥匙
+	private static Object lock = "lock";// 值是任意的
 
 	public boolean saveDatas(String merchant_no, String[] head, int length, String[][] body) {
 
@@ -370,6 +375,7 @@ public class ManualService {
 		Map<String, Object> reqMap = fileUpLoadService.universalDoUpload(req, "/gadd-excel/", ".xls", false, 400, 400,
 				null);
 		List<Map<String, Object>> errl = new ArrayList<>();
+		int serialNo = 0;
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
 			File f = new File("/gadd-excel/" + list.get(0));
@@ -385,37 +391,29 @@ public class ManualService {
 				int cpuCount = Runtime.getRuntime().availableProcessors();
 				int start = 0;
 				int end = 0;
+				serialNo = getSerialNo("GZ");
 				ExcelTask excelTask = null;
-				int serialNo = getSerialNo("GZ");
 				for (int i = 0; i < cpuCount; i++) {
 					ExcelUtil excelC = new ExcelUtil(f);
 					if (i == 0) {
 						end = totalCount / cpuCount;
-						excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this,serialNo);
+						excelTask = new ExcelTask(0, excelC, errl, merchantId, 1, end, this, serialNo);
 					} else {
 						start = end + 1;
 						end = start + (totalCount / cpuCount);
 						if (i == (cpuCount - 1)) {// 最后一次
-							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this,serialNo);
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, totalCount, this, serialNo);
 						} else {
-							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this,serialNo);
+							excelTask = new ExcelTask(0, excelC, errl, merchantId, start, end, this, serialNo);
 						}
 					}
 					threadPool.submit(excelTask);
 				}
 				threadPool.shutdown();
-				// 14460条记录 342517ms
-				//329517ms
-				// 两百条记录
-				// 四40493ms
-				// 双任务56077ms
-				// 三任务42593ms
-				// 单81934ms
 			} else {
 				reqMap.clear();
 				reqMap.put("status", -1);
 				reqMap.put("msg", "导入失败,请检查订单模板是否符合规范!");
-				reqMap.put("err", errl);
 				return reqMap;
 			}
 			excel.closeExcel();
@@ -424,6 +422,7 @@ public class ManualService {
 			reqMap.clear();
 			reqMap.put("status", 1);
 			reqMap.put("msg", "执行成功,正在读取数据");
+			reqMap.put("serialNo", serialNo);
 			// reqMap.put("err", errl);
 			return reqMap;
 		}
@@ -575,11 +574,11 @@ public class ManualService {
 			item.put("orderDocId", orderDocId);
 			// 下单人电话
 			item.put("orderDocTel", recipientTel);
-			//企邦订单承运商
+			// 企邦订单承运商
 			item.put("ehsEntName", ehsEntName);
 			item.put("waybillNo", waybillNo);
 			item.put("serial", getSerialNo("QB"));
-			
+
 			item.put("marCode", marCode);
 			Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item);
 			if (!"1".equals(orderMap.get(BaseCode.STATUS.toString()))) {
@@ -598,7 +597,8 @@ public class ManualService {
 		}
 		long endTime = System.currentTimeMillis(); // 获取结束时间
 		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
-		writeRedis("2", errl, excel.getRowCount(sheet), excel.getRowCount(sheet));
+		// writeRedis("2", errl, excel.getRowCount(sheet),serialNo);
+		// excel.getRowCount(sheet));
 		System.out.println("----错误信息-->>>" + errl.toString());
 		return statusMap;
 	}
@@ -618,10 +618,12 @@ public class ManualService {
 	 *            表单开始行数
 	 * @param endCount
 	 *            表单结束行数
+	 * @param serialNo
+	 *            批次号
 	 * @return Map
 	 */
 	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, int startCount, int endCount,int serialNo) {
+			String merchantId, int startCount, int endCount, int serialNo) {
 		long startTime = System.currentTimeMillis(); // 获取开始时间
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
@@ -663,13 +665,11 @@ public class ManualService {
 		String senderAreaCode = "";// 发货人区域代码 国外填 000000
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
-		//int serialNo = getSerialNo("GZ");
-		int completed = 0;
 		System.out.println("开始行数----->>>" + startCount + ";结束行数---->>>" + endCount);
+		int rowTotalCount = excel.getRowCount(sheet);
 
 		for (int r = startCount; r <= endCount; r++) {
-			// for (int r = 1; r <= excel.getRowCount(sheet); r++) {
-			writeRedis("1", errl, excel.getRowCount(sheet), (completed + 1));
+
 			if (excel.getColumnCount(r) == 0) {
 				break;
 			}
@@ -683,7 +683,6 @@ public class ManualService {
 				}
 				if (c == 0) {
 					// 序号
-
 					// if (StringEmptyUtils.isNotEmpty(value)) {
 					seqNo = Integer.parseInt(value);
 					// }
@@ -750,7 +749,7 @@ public class ManualService {
 					// 第一法定数量
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						firstLegalCount = Double.parseDouble(value.trim());
-					}else{
+					} else {
 						firstLegalCount = 0.0;
 					}
 				} else if (c == 52) {
@@ -760,7 +759,7 @@ public class ManualService {
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						// 第二法定数量
 						secondLegalCount = Double.parseDouble(value.trim());
-					}else{
+					} else {
 						secondLegalCount = 0.0;
 					}
 				} else if (c == 54) {
@@ -866,13 +865,13 @@ public class ManualService {
 				System.out.println(goodsInfo.getString("BarCode") + "------<<<<商品自编号");
 				return statusMap;
 			}
+			writeRedis("1", errl, rowTotalCount, serialNo);
 		}
 		long endTime = System.currentTimeMillis(); // 获取结束时间
+		//writeRedis("1", errl, rowTotalCount, serialNo);
 		System.out.println("程序运行时间-------->>>>>>>>>>>>>>>> " + (endTime - startTime) + "ms");
-		writeRedis("2", errl, excel.getRowCount(sheet), excel.getRowCount(sheet));
-		System.out.println("----错误信息-->>>" + errl.toString());
+		System.out.println("--=--表格总数---->>>>>>>>>>>>>" + rowTotalCount);
 		return statusMap;
-
 	}
 
 	/**
@@ -888,16 +887,27 @@ public class ManualService {
 	 *            已完成数量
 	 * 
 	 */
-	private void writeRedis(String status, List<Map<String, Object>> errl, int totalCount, int completed) {
+	private void writeRedis(String status, List<Map<String, Object>> errl, int totalCount, int serialNo) {
+		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> datasMap = new HashMap<>();
-		System.out.println(
-				"状态-->" + status + ";----错误信息->>" + errl + ";----总计数量->>" + totalCount + ";----已完成数量>>" + completed);
+		int completed = 0;
 		datasMap.put("status", status);
-		datasMap.put("error", errl);
 		datasMap.put("totalCount", totalCount);
-		datasMap.put("completed", completed);
-		// 将数据放入到缓存中
-		JedisUtil.set("Shop_Key_ExcelIng_Map".getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+		
+		String key = "Shop_Key_ExcelIng_Map_" + serialNo;
+		synchronized (lock) {
+			byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
+			if (redisByte != null && redisByte.length > 0) {
+				datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
+				completed = Integer.parseInt(datasMap.get("completed") + "");
+			}
+			completed++;
+			datasMap.put("completed", completed);
+			System.out.println("状态-->" + status + ";----错误信息->>" + errl + ";----总计数量->>" + totalCount + ";----已完成数量>>"
+					+ completed);
+			// 将数据放入到缓存中
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+		}
 	}
 
 	/**
@@ -907,7 +917,7 @@ public class ManualService {
 	 *            收货人详细地址
 	 * 
 	 */
-	private Map<String, Object> searchProvinceCityArea(String recipientAddr) {
+	public Map<String, Object> searchProvinceCityArea(String recipientAddr) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> provinceCityAreaMap = (Map<String, Object>) provinceCityAreaTransaction
 				.getProvinceCityArea();
@@ -935,7 +945,8 @@ public class ManualService {
 				statusMap.put("cityName", cityName);
 				statusMap.put("provinceCode", provinceCode);
 				statusMap.put("provinceName", provinceName);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 				return statusMap;
 			}
 			// 地址中区域+省份未找到则把城市编码放入缓存
@@ -958,14 +969,16 @@ public class ManualService {
 					statusMap.put("cityName", cityName);
 					statusMap.put("provinceCode", provinceCode);
 					statusMap.put("provinceName", provinceName);
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					return statusMap;
 				} else if (provinceName.contains("上海市")) {
 					statusMap.put("cityCode", "310100");
 					statusMap.put("cityName", "市辖区");
 					statusMap.put("provinceCode", provinceCode);
 					statusMap.put("provinceName", provinceName);
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					return statusMap;
 				}
 				// 如果地址中省份+城市未找到则把省份编码放入缓存
@@ -983,7 +996,8 @@ public class ManualService {
 				statusMap.put("cityName", "");
 				statusMap.put("provinceCode", provinceCode);
 				statusMap.put("provinceName", provinceName);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.toString());
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 				return statusMap;
 			}
 		}

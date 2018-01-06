@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +12,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
+import org.silver.shop.controller.system.cross.DirectPayConfig;
 import org.silver.shop.service.system.commerce.OrderTransaction;
+import org.silver.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -176,5 +179,68 @@ public class OrderController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 	
-	
+	@RequestMapping(value = "/getMerchantOrderReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户查询订单每日报表")
+	@RequiresRoles("Merchant")
+	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size, String startDate,
+			String endDate) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (page >= 0 && size >= 0) {
+			statusMap = orderTransaction.getMerchantOrderReport( page, size,startDate,endDate);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	/**
+	 * 提供第四方下单入口
+	 * 
+	 */
+	@RequestMapping("/enter")
+	public String dopay(HttpServletRequest req, HttpServletResponse resp, String merchant_cus_no, String out_trade_no,
+			String amount, String return_url, String notify_url, String extra_common_param, String client_sign,
+			String timestamp,String errBack) {
+		if (merchant_cus_no != null && out_trade_no != null && amount != null && client_sign != null && timestamp != null
+				&& notify_url != null) {
+			Map<String, Object> reqMap = orderTransaction.doBusiness(merchant_cus_no, out_trade_no, amount, notify_url,
+					extra_common_param, client_sign, timestamp);
+			if ((int) reqMap.get("status") != 1) {
+				req.setAttribute("msg", reqMap.get("msg")+"<a href=\""+errBack+"\">"+"点击返回</a>");
+				return "ympay-err";
+			}
+			req.setAttribute("method", "ysepay.online.directpay.createbyuser");
+			req.setAttribute("partner_id", DirectPayConfig.PLATFORM_PARTNER_NO);
+			req.setAttribute("timestamp", DateUtil.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss"));
+			req.setAttribute("charset", DirectPayConfig.DEFAULT_CHARSET);
+			req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
+			// request.setAttribute("sign", userName);
+			req.setAttribute("notify_url", "http://ym.191ec.com/silver-web/ympay/callback,http://ym.191ec.com/silver-web-pay/pro/yspay-receive");
+			req.setAttribute("return_url", return_url);
+			req.setAttribute("version", DirectPayConfig.VERSION);
+			req.setAttribute("out_trade_no", reqMap.get("order_id"));// 商户订单号
+			req.setAttribute("subject", "即时到账");
+			req.setAttribute("total_amount", amount);// 支付总金额
+			req.setAttribute("seller_id", DirectPayConfig.PLATFORM_PARTNER_NO);
+			req.setAttribute("seller_name", DirectPayConfig.PLATFORM_PARTNER_NAME);
+			req.setAttribute("timeout_express", "1h");
+			req.setAttribute("business_code", "01000010");
+			req.setAttribute("extra_common_param", extra_common_param);// 支付人姓名
+			// request.setAttribute("pay_mode", "internetbank");
+			req.setAttribute("bank_type", "");
+			req.setAttribute("bank_account_type", "");
+			req.setAttribute("support_card_type", "");
+			req.setAttribute("bank_account_no", "");
+			return "yspayapi";
+		}
+		req.setAttribute("msg", "下单参数有误");
+		return "ympay-err";
+	}
 }

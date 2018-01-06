@@ -20,7 +20,9 @@ public class StringEmptyUtils {
 			return true;
 		} else if (pObj instanceof JSONNull) {
 			return true;
-		} else if (pObj instanceof String) {
+		}else if((pObj+"").trim().equals("null")){
+			return true;
+		}else if (pObj instanceof String) {
 			if (((String) pObj).length() == 0) {
 				return true;
 			}
@@ -32,9 +34,7 @@ public class StringEmptyUtils {
 			if (((Map) pObj).size() == 0) {
 				return true;
 			}
-		} else if((pObj+"").trim().equals("null")){
-			return true;
-		}
+		} 
 		return false;
 	}
 

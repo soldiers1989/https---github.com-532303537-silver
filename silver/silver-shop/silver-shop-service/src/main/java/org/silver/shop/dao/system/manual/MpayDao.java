@@ -205,11 +205,11 @@ public class MpayDao extends HibernateDaoImpl{
 	
 	
 	
-	public Long findByPropertyCount(Map<String, Object> params) {
+	public  Long findByPropertyCount(Map<String, Object> params) {
 		Session session = null;
 		try {
 			String hql = "select count(model) from Mpay model ";
-			List<Object> list = new ArrayList<Object>();
+			List<Object> list = new ArrayList<>();
 			if (params != null && params.size() > 0) {
 				hql += "where ";
 				String property;

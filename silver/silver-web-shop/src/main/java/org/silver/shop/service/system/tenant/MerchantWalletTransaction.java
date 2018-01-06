@@ -7,7 +7,6 @@ import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.utils.TotalProxy;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -25,9 +24,7 @@ public class MerchantWalletTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		Object target = merchantWalletService;
-		MerchantWalletService walletService = (MerchantWalletService) new TotalProxy(target).getProxyInstance();
-		return walletService.walletRecharge(merchantId, merchantName, money);
+		return merchantWalletService.walletRecharge(merchantId, merchantName, money);
 	}
 
 	// 商户获取钱包信息

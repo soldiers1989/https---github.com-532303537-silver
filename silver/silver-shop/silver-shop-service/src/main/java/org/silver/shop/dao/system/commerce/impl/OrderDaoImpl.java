@@ -1,5 +1,7 @@
 package org.silver.shop.dao.system.commerce.impl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +11,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.OrderDao;
+import org.silver.shop.model.system.manual.Morder;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
 
 import com.github.pagehelper.StringUtil;
@@ -81,6 +85,46 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			List<Object> results = query.list();
 			session.close();
 			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public Table getOrderDailyReport(Class class1, Map paramsMap, int page, int size) {
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add(paramsMap.get("merchantId") + "");
+			String startDate = paramsMap.get("startDate") + "";
+			String endDate = paramsMap.get("endDate") + "";
+			String sql = "SELECT count(t1.order_id) AS orderCount, sum(t1.FCY) as total,(sum(t1.FCY) * 0.001)  AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date FROM ym_shop_manual_morder t1 "
+					+ "WHERE  t1.merchant_no = ? AND t1.order_record_status = '3' ";
+			if (StringEmptyUtils.isNotEmpty(startDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(startDate);
+			}
+			if (StringEmptyUtils.isNotEmpty(endDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(endDate);
+			}
+			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d') ";
+			session = getSession();
+			Table t = null;
+			if (page > 0 && size > 0) {
+				page = page - 1;
+				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, page * size, size);
+			} else {
+				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
+			}
+			session.connection().close();
+			session.close();
+			return t;
 		} catch (Exception re) {
 			re.printStackTrace();
 			return null;

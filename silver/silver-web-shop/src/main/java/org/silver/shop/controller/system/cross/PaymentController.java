@@ -10,13 +10,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.service.system.cross.PaymentTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
@@ -126,6 +130,27 @@ public class PaymentController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(paytemTransaction.getMpayRecordInfo(req,page,size)).toString();
+		return JSONObject.fromObject(paytemTransaction.getMpayRecordInfo(req, page, size)).toString();
+	}
+
+	@RequestMapping(value = "/getMerchantPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户查询支付单报表")
+	@RequiresRoles("Merchant")
+	public String getMerchantPaymentReport(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (page >= 0 && size >= 0) {
+			statusMap = paytemTransaction.getMerchantPaymentReport(page, size, startDate, endDate);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }

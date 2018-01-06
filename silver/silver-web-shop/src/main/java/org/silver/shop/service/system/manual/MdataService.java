@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,6 +25,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
+import org.silver.util.SplitListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -115,16 +118,33 @@ public class MdataService {
 
 	}
 
-	public Map<String, Object> groupCreateMpay(List<String> orderIDs) {
-		List<Map<String, Object>> errl = new ArrayList<>();
+	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		Map<String,Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		
-		// ExcelTask excelTask = new (0, errl, merchantId, 1, this);
-		return mpayService.groupCreateMpay(merchantId, orderIDs);
+		// 判断当前计算机CPU线程个数
+		/*int cpuCount = Runtime.getRuntime().availableProcessors();
+		// 分批处理
+		Map<String, Object> reMap = SplitListUtils.batchList(orderIdList, cpuCount);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		//
+		List dataList = (List) reMap.get(BaseCode.DATAS.toString());
+		for (int i = 0; i < dataList.size(); i++) {
+			List list = (List) dataList.get(i);
+			ExcelTask excelTask = new ExcelTask(list, merchantId, mpayService);
+			threadPool.submit(excelTask);
+		}
+		threadPool.shutdown();
+		statusMap.put("status", 1);
+		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
+		return statusMap;*/
+		return mpayService.groupCreateMpay(merchantId, orderIdList);
 	}
 
 	public Object sendMorderRecord(Map<String, Object> recordMap, String orderNoPack) {
@@ -164,6 +184,12 @@ public class MdataService {
 		return doWrite(jarr, filePath);
 	}
 
+	/**
+	 * 按照国宗订单模板生成对应的excel模板
+	 * @param arr
+	 * @param filePath
+	 * @return
+	 */
 	private Map<String, Object> doWrite(JSONArray arr, String filePath) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (arr != null && arr.size() > 0) {
@@ -348,11 +374,9 @@ public class MdataService {
 				String strSecondLegalCount = rowIndex.getString("secondLegalCount").replace("{\"value\":", "")
 						.replace("}", "");
 				secLegalCount = Double.parseDouble(strSecondLegalCount);
-				
+
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
-				
-				
-				
+
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 2, c, i + 1);
@@ -396,13 +420,20 @@ public class MdataService {
 						excel.writCell(0, i + 2, c, OrderDocName);
 					} else if (c == 23) {
 						excel.writCell(0, i + 2, c, OrderDocTel);
-					} else if (c == 25) {
+					}else if(c == 24){
+						//订单人所在国家（地区）代码
+						excel.writCell(0, i + 2, c, "142");
+					}else if (c == 25) {
 						excel.writCell(0, i + 2, c, RecipientCityName);
 					} else if (c == 31) {
 						excel.writCell(0, i + 2, c, senderCountry);
 					} else if (c == 32) {
 						excel.writCell(0, i + 2, c, senderCountry);
-					} else if (c == 37) {
+					}else if(c == 36){
+						//是否转关
+						excel.writCell(0, i + 2, c, "N");
+					}else if (c == 37) {
+						//支付企业代码
 						excel.writCell(0, i + 2, c, "C000010000803304");
 					} else if (c == 38) {
 						excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司");
@@ -434,7 +465,11 @@ public class MdataService {
 						excel.writCell(0, i + 2, c, GoodsStyle);
 					} else if (c == 60) {
 						excel.writCell(0, i + 2, c, OriginCountry);
-					} else if (c == 62) {
+					} else if(c == 61){
+						//包装种类
+						excel.writCell(0, i + 2, c, "2");
+					}
+					else if (c == 62) {
 						excel.writCell(0, i + 2, c, Unit);
 					} else if (c == 63) {
 						excel.writCell(0, i + 2, c, Qty);
@@ -442,21 +477,25 @@ public class MdataService {
 						excel.writCell(0, i + 2, c, netWt);
 					} else if (c == 65) {
 						excel.writCell(0, i + 2, c, grossWt);
-					} else if (c == 67) {
+					}else if( c ==66){
+						//件数
+						excel.writCell(0, i + 2, c, "1");
+					}
+					else if (c == 67) {
 						excel.writCell(0, i + 2, c, Price);
 					} else if (c == 68) {
 						excel.writCell(0, i + 2, c, Total);
-					}else if(c == 76 ){
-						//第一法定数
+					} else if (c == 76) {
+						// 第一法定数
 						excel.writCell(0, i + 2, c, firstLegalCount);
-					}else if(c == 77 ){
-						//第二法定数
+					} else if (c == 77) {
+						// 第二法定数
 						excel.writCell(0, i + 2, c, secLegalCount);
-					}else if (c == 78) {
-						//HS编码
+					} else if (c == 78) {
+						// HS编码
 						excel.writCell(0, i + 2, c, HSCode);
-					}else if(c == 79){
-						//行邮税号
+					} else if (c == 79) {
+						// 行邮税号
 						excel.writCell(0, i + 2, c, "27000000");
 					}
 				}
@@ -487,20 +526,16 @@ public class MdataService {
 	}
 
 	// 读取缓存中excel导入实时数据
-	public Map<String, Object> readExcelRedisInfo() {
-		Map<String, Object> datasMap = new HashMap<>();
+	public Map<String, Object> readExcelRedisInfo(int serialNo) {
 		Map<String, Object> statusMap = new HashMap<>();
-		byte[] redisByte = JedisUtil.get("Shop_Key_ExcelIng_Map".getBytes(), 3600);
+		String key = "Shop_Key_ExcelIng_Map_"+serialNo;
+		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null && redisByte.length > 0) {
-			datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(datasMap));
-			return statusMap;
+			return (Map<String, Object>) SerializeUtil.toObject(redisByte);
 		} else {
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			datasMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
-			return datasMap;
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
+			return statusMap;
 		}
 	}
 }

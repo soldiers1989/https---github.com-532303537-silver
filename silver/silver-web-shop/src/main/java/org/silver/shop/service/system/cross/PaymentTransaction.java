@@ -63,4 +63,13 @@ public class PaymentTransaction {
 		params.remove("size");
 		return paymentService.getMpayRecordInfo(merchantId, merchantName,params,page,size);
 	}
+
+	public Map<String, Object> getMerchantPaymentReport(int page, int size, String startDate, String endDate) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return paymentService.getMerchantPaymentReport(merchantId,merchantName,page,size,startDate,endDate);
+	}
 }

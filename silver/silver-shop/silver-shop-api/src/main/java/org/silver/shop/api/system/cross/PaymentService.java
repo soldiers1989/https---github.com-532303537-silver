@@ -33,4 +33,17 @@ public interface PaymentService {
 	 * @return
 	 */
 	public Object getMpayRecordInfo(String merchantId, String merchantName, Map<String, Object> params,int page,int size);
+
+	/**
+	 * 获取商户支付单报表
+	 * @param merchantId
+	 * @param merchantName
+	 * @param page
+	 * @param size
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, int page, int size,
+			String startDate, String endDate);
 }

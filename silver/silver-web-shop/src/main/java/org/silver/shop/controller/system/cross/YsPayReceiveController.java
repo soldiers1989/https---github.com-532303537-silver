@@ -47,9 +47,9 @@ public class YsPayReceiveController {
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
 		Map<String, Object> statusMap=new HashMap<>(); 
-		if(ApipaySubmit.verifySign(req, datasMap)){
+		//if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
-		}
+		//}
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());

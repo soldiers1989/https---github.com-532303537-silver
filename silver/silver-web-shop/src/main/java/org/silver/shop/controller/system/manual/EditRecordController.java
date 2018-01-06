@@ -21,12 +21,18 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.alibaba.fastjson.JSON;
+
+import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 @RestController
@@ -160,7 +166,6 @@ public class EditRecordController {
 
 		reqMap = mdataService.loadMuserDatas("YM20170000015078659178651922", page, size);
 		return JSONObject.fromObject(reqMap).toString();
-
 	}
 
 	@RequestMapping(value = "/delMubySysno", produces = "application/json; charset=utf-8")
@@ -412,14 +417,40 @@ public class EditRecordController {
 	@RequiresRoles("Merchant")
 	@RequestMapping(value = "/readExcelRedisInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response) {
+	@ApiOperation("商户查询缓存中Excel读取进度")
+	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("serialNo")int serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = mdataService.readExcelRedisInfo();
+		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo);
 		return JSONObject.fromObject(statusMap).toString();
-
+	}
+	
+	/**
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/readInfo2", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("开放查询省市区")
+	public String readInfo2(HttpServletRequest req, HttpServletResponse response,String recipientAddr) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = manualService.searchProvinceCityArea(recipientAddr);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	public static void main(String[] args) {
+		File f = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第53批机场清关297-71196753.xls");
+		ExcelUtil e = new ExcelUtil(f);
+		e.open();
+		System.out.println("----->>>"+e.getRowCount(0));
 	}
 }

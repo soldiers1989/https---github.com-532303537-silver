@@ -424,7 +424,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		// 商城商品备案流水号
 		params.put("goodsSerialNo", goodsSerialNo);
 		// 是否像海关发送
-		//params.put("uploadOrNot", false);
+		params.put("uploadOrNot", false);
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", params);
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
@@ -755,10 +755,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		String entGoodsNo = datasMap.get("entGoodsNo") + "";
-		paramMap.put("reSerialNo", datasMap.get("messageID") + "");
+		//paramMap.put("reSerialNo", datasMap.get("messageID") + "");
 		paramMap.put("entGoodsNo", entGoodsNo);
 		String reMsg = datasMap.get("msg") + "";
-		List<Object> reGoodsRecordList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, paramMap, 1, 1);
+		List<Object> reGoodsRecordList = goodsRecordDao.findByPropertyOr2(GoodsRecordDetail.class, paramMap, 1, 1);
 		if (reGoodsRecordList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

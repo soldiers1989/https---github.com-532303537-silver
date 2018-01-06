@@ -25,6 +25,7 @@ import org.silver.shop.model.system.manual.Muser;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
+import org.silver.util.RandomUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -88,14 +89,10 @@ public class MorderServiceImpl implements MorderService {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
 		String dstr = sdf.format(d);
 		String nstr = id + "";
-		while (nstr.length() < 3) {
+		while (nstr.length() < 5) {
 			nstr = "0" + nstr;
 		}
-		Random r = new Random();
-		String rstr = r.nextInt(10000) + "";
-		while (rstr.length() < 3) {
-			rstr = "0" + rstr;
-		}
+		int rstr = RandomUtils.getRandom(4);
 		return sign + dstr + nstr + rstr;
 	}
 
@@ -133,6 +130,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
 		paramMap.put("merchant_no", dataMap.get("merchant_no") + "".trim());
+		paramMap.put("del_flag", 0);
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
 		Map<String, Object> statusMap = new HashMap<>();

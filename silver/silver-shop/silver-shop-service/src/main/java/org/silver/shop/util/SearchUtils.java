@@ -197,6 +197,16 @@ public final class SearchUtils {
 					paramMap.put(key, value);
 				}
 				break;
+			case "pay_record_status":
+				if (StringEmptyUtils.isNotEmpty(value) && Integer.parseInt(value) > 0) {
+					paramMap.put("pay_record_status", Integer.parseInt(value));
+				}
+				break;
+			case "morder_id":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
+				}
+				break;
 			default:
 				break;
 			}
