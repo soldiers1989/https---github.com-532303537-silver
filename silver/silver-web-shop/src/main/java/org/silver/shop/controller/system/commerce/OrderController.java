@@ -200,9 +200,21 @@ public class OrderController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
 	/**
-	 * 提供第四方下单入口
-	 * 
+	 *  提供第四方下单入口
+	 * @param req
+	 * @param resp
+	 * @param merchant_cus_no 商户编号
+	 * @param out_trade_no 交易订单号
+	 * @param amount 交易金额
+	 * @param return_url 回调URL
+	 * @param notify_url 银盛URl
+	 * @param extra_common_param  支付人姓名
+	 * @param client_sign 签名
+	 * @param timestamp 时间戳
+	 * @param errBack
+	 * @return
 	 */
 	@RequestMapping("/enter")
 	public String dopay(HttpServletRequest req, HttpServletResponse resp, String merchant_cus_no, String out_trade_no,
@@ -212,17 +224,19 @@ public class OrderController {
 				&& notify_url != null) {
 			Map<String, Object> reqMap = orderTransaction.doBusiness(merchant_cus_no, out_trade_no, amount, notify_url,
 					extra_common_param, client_sign, timestamp);
-			if ((int) reqMap.get("status") != 1) {
+			if (!"1".equals(reqMap.get("status")) ) {
+				System.out.println("---->>"+reqMap);
 				req.setAttribute("msg", reqMap.get("msg")+"<a href=\""+errBack+"\">"+"点击返回</a>");
 				return "ympay-err";
 			}
+			System.out.println("--------验证通过,准备向银盛发起--------------------");
 			req.setAttribute("method", "ysepay.online.directpay.createbyuser");
 			req.setAttribute("partner_id", DirectPayConfig.PLATFORM_PARTNER_NO);
 			req.setAttribute("timestamp", DateUtil.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss"));
 			req.setAttribute("charset", DirectPayConfig.DEFAULT_CHARSET);
 			req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
 			// request.setAttribute("sign", userName);
-			req.setAttribute("notify_url", "http://ym.191ec.com/silver-web/ympay/callback,http://ym.191ec.com/silver-web-pay/pro/yspay-receive");
+			req.setAttribute("notify_url", "http://ym.191ec.com/silver-web-shop/yspay-receive/ysPayReceive");
 			req.setAttribute("return_url", return_url);
 			req.setAttribute("version", DirectPayConfig.VERSION);
 			req.setAttribute("out_trade_no", reqMap.get("order_id"));// 商户订单号

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-1-8 10:48:24 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.QuartetOrderContent" table="ym_shop_quartet_order_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="orderId" type="java.lang.String">
+            <column name="orderId" not-null="true" unique="true"/>
+        </property>
+        <property name="merchantCusNo" type="java.lang.String">
+            <column name="merchantCusNo" not-null="true"/>
+        </property>
+        <property name="type" type="int">
+            <column name="type" />
+        </property>
+        <property name="content" type="java.lang.String">
+            <column name="content" />
+        </property>
+        <property name="tradeNo" type="java.lang.String">
+            <column name="tradeNo" />
+        </property>
+        <property name="amount" type="double">
+            <column name="amount" not-null="true"/>
+        </property>
+        <property name="orderStatus" type="int">
+            <column name="orderStatus" />
+        </property>
+        <property name="extraCommonParam" type="java.lang.String">
+            <column name="extraCommonParam" />
+        </property>
+        <property name="notifyUrl" type="java.lang.String">
+            <column name="notifyUrl" not-null="true"/>
+        </property>
+        <property name="delFlag" type="int">
+            <column name="delFlag" />
+        </property>
+        <property name="delDate" type="java.util.Date">
+            <column name="delDate" />
+        </property>
+        <property name="delBy" type="java.lang.String">
+            <column name="delBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="remarks" type="java.lang.String">
+            <column name="remarks" />
+        </property>
+    </class>
+</hibernate-mapping>

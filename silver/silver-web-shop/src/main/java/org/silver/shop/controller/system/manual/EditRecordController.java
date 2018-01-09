@@ -328,7 +328,7 @@ public class EditRecordController {
 
 	}
 
-	//下载
+	// 下载
 	public void downLoad(String filePath, HttpServletResponse response, boolean isOnLine) throws Exception {
 		File f = new File(filePath);
 		BufferedInputStream br = new BufferedInputStream(new FileInputStream(f));
@@ -351,7 +351,7 @@ public class EditRecordController {
 		out.flush();
 		br.close();
 		out.close();
-		 f.delete();
+		f.delete();
 	}
 
 	public String toUTF8(String s) {
@@ -418,7 +418,8 @@ public class EditRecordController {
 	@RequestMapping(value = "/readExcelRedisInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户查询缓存中Excel读取进度")
-	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("serialNo")int serialNo) {
+	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("serialNo") String serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -427,7 +428,7 @@ public class EditRecordController {
 		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 
 	 * @param req
@@ -437,7 +438,7 @@ public class EditRecordController {
 	@RequestMapping(value = "/readInfo2", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("开放查询省市区")
-	public String readInfo2(HttpServletRequest req, HttpServletResponse response,String recipientAddr) {
+	public String readInfo2(HttpServletRequest req, HttpServletResponse response, String recipientAddr) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -446,11 +447,14 @@ public class EditRecordController {
 		Map<String, Object> statusMap = manualService.searchProvinceCityArea(recipientAddr);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	public static void main(String[] args) {
-		File f = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第53批机场清关297-71196753.xls");
-		ExcelUtil e = new ExcelUtil(f);
-		e.open();
-		System.out.println("----->>>"+e.getRowCount(0));
+		File f = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/新建 Microsoft Excel 工作表.xlsx");
+		ExcelUtil excel = new ExcelUtil(f);
+		excel.open();
+		int row = 0;
+		// 总行数
+		int rowTotalCount = excel.getRowCount(0);
 	}
+
 }

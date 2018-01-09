@@ -19,8 +19,9 @@ public class ExcelTask implements Callable<Object> {
 	private ManualService manualService;//
 	private int serialNo;// 订单批次号
 	private MpayService mpayService;//
-	private List dataList ; //
-	
+	private List dataList; //
+	private int flag;// 标识：1-企邦,2-国宗
+	private int realRowCount;//总行数
 	/**
 	 * excel多任务读取
 	 * 
@@ -33,7 +34,7 @@ public class ExcelTask implements Callable<Object> {
 	 * @param manualService
 	 */
 	public ExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, int serialNo) {
+			int endCount, ManualService manualService, int serialNo, int flag,int realRowCount ) {
 		this.sheet = sheet;
 		this.excel = excel;
 		this.errorList = errl;
@@ -42,8 +43,10 @@ public class ExcelTask implements Callable<Object> {
 		this.endCount = endCount;
 		this.manualService = manualService;
 		this.serialNo = serialNo;
+		this.flag = flag;
+		this.realRowCount = realRowCount;
 	}
-	
+
 	/**
 	 * 
 	 * @param dataList
@@ -55,12 +58,17 @@ public class ExcelTask implements Callable<Object> {
 		this.merchantId = merchantId;
 		this.mpayService = mpayService;
 	}
+
 	@Override
 	public Map<String, Object> call() {
-		if(manualService !=null){
+		if (flag == 1) {
 			excel.open();
-			return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo);
-		}else if(mpayService !=null){
+			return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount);
+		} else if (flag == 2) {
+			excel.open();
+			return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo,realRowCount);
+		}
+		if (mpayService != null) {
 			return mpayService.groupCreateMpay(merchantId, dataList);
 		}
 		return null;

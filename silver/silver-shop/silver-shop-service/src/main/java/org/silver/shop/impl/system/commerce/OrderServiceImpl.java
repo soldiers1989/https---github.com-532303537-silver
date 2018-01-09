@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
+import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.api.system.manual.AppkeyService;
@@ -25,8 +26,10 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.commerce.QuartetOrderContent;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.YMorder;
 import org.silver.shop.model.system.organization.Merchant;
@@ -56,7 +59,9 @@ public class OrderServiceImpl implements OrderService {
 	private YsPayReceiveService ysPayReceiveService;
 	@Autowired
 	private AppkeyService appkeyService;
-	
+	@Autowired
+	private AccessTokenService accessTokenService;
+
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
 			String recipientId) {
@@ -769,53 +774,74 @@ public class OrderServiceImpl implements OrderService {
 			return statusMap;
 		}
 	}
-	
+
 	@Override
 	public Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
 			String extra_common_param, String client_sign, String timestamp) {
-		Map<String,Object> merchantMap = getMerchantInfo(merchant_cus_no);
-		if(!"1".equals(merchantMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> merchantMap = getMerchantInfo(merchant_cus_no);
+		if (!"1".equals(merchantMap.get(BaseCode.STATUS.toString()) + "")) {
 			return merchantMap;
 		}
-		//Merchant merchant =  merchantMap.get(BaseCode.DATAS.toString());
 		// 查找appkey
+		Appkey appkey = (Appkey) merchantMap.get(BaseCode.DATAS.toString());
+		timestamp = "1515392647125";
 		String str = merchant_cus_no + out_trade_no + amount + notify_url + timestamp;
-		Map<String, Object> checkMap = appkeyService.CheckClientSign("4a5de70025a7425dabeef6e8ea752976", client_sign,
-				str, timestamp);
-		if ((int) checkMap.get("status") != 1) {
+		// 请求获取tok
+		Map<String, Object> tokMap = accessTokenService.getAccessToken();
+		if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
+			return tokMap;
+		}
+		System.out.println("拼接str--------->>>>>>>>>>>" + str);
+		// 7e33bf4683e5166eeb74d236a15010e1
+		Map<String, Object> checkMap = appkeyService.CheckClientSign(appkey.getApp_key(), client_sign, str, timestamp);
+		if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()) + "")) {
 			return checkMap;
 		}
 		return createEntity(merchant_cus_no, out_trade_no, amount, "content", extra_common_param, notify_url);
 	}
-	
-	
+
 	/**
 	 * 根据商户第三方自编号,查询商户信息
-	 * @param merchant_cus_no 商户第三方自编号
+	 * 
+	 * @param merchant_cus_no
+	 *            商户第三方自编号
 	 * @return Map
 	 */
 	private Map<String, Object> getMerchantInfo(String merchant_cus_no) {
-		Map<String,Object> statusMap = new HashMap<>();
-		Map<String,Object> paramMap = new HashMap<>();
-		paramMap.put("merchantCusNo", merchant_cus_no);
-		List<Merchant> reList = orderDao.findByProperty(Merchant.class, paramMap, 1, 1);
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchant_cus_no", merchant_cus_no);
+		List<Appkey> reList = orderDao.findByProperty(Appkey.class, paramMap, 1, 1);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "["+merchant_cus_no+"]商户第三方自编号查询失败,服务器繁忙!");
+			statusMap.put(BaseCode.MSG.toString(), "商户编号[" + merchant_cus_no + "]查询appkey失败,服务器繁忙!");
 			return statusMap;
 		} else if (!reList.isEmpty()) {
-			Merchant merchant = reList.get(0);
+			Appkey appkey = reList.get(0);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), merchant);		
+			statusMap.put(BaseCode.DATAS.toString(), appkey);
 			return statusMap;
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "["+merchant_cus_no+"]商户第三方自编号查询失败,请核实信息!");
+			statusMap.put(BaseCode.MSG.toString(), "商户编号[" + merchant_cus_no + "]查询appkey失败,请核实信息!");
 			return statusMap;
 		}
 	}
 
-	private Map<String, Object> createEntity(String merchant_no, String out_trade_no, String amount, String content,
+	/**
+	 * 
+	 * @param merchant_cus_no
+	 *            商户编号
+	 * @param out_trade_no
+	 *            订单号
+	 * @param amount
+	 *            交易金额
+	 * @param content
+	 * @param extra_common_param
+	 * @param notify_url
+	 * @return
+	 */
+	private Map<String, Object> createEntity(String merchant_cus_no, String out_trade_no, String amount, String content,
 			String extra_common_param, String notify_url) {
 		Map<String, Object> statusMap = new HashMap<>();
 		double total = 0;
@@ -832,42 +858,40 @@ public class OrderServiceImpl implements OrderService {
 			return statusMap;
 		}
 
-		/*List<YMorder> last = orderDao.getLast(YMorder.class);
-		long id = 0;
-		if (last != null && last.size() > 0) {
-			id = last.get(0).getId();
-		} else if (last == null) {
-			statusMap.put("status", -5);
-			statusMap.put("msg", "系统内部错误，请稍后重试");
-			return statusMap;
-		}
-		Date d = new Date();
-		YMorder entity = new YMorder();
-		entity.setOrder_id(createSysNo(id, d));
-		entity.setMerchant_no(merchant_no);
-		entity.setOut_trade_no(out_trade_no);
+		/*
+		 * List<YMorder> last = orderDao.getLast(YMorder.class); long id = 0; if
+		 * (last != null && last.size() > 0) { id = last.get(0).getId(); } else
+		 * if (last == null) { statusMap.put("status", -5); statusMap.put("msg",
+		 * "系统内部错误，请稍后重试"); return statusMap; }
+		 */
+
+		QuartetOrderContent entity = new QuartetOrderContent();
+		// entity.setOrder_id(createSysNo(id, d));
+		entity.setMerchantCusNo(merchant_cus_no);
+		// entity.set(out_trade_no);
 		entity.setAmount(total);
 		entity.setContent(content);
-		entity.setExtra_common_param(extra_common_param);
-		entity.setNotify_url(notify_url);
+		entity.setExtraCommonParam(extra_common_param);
+		entity.setNotifyUrl(notify_url);
 		entity.setType(0);
-		entity.setDel_flag(0);
-		entity.setCreate_date(d);
-		entity.setCreate_by(merchant_no);
+		entity.setDelFlag(0);
+		entity.setCreateDate(new Date());
+		entity.setCreateBy(merchant_cus_no);
 		if (orderDao.add(entity)) {
 			statusMap.put("status", 1);
-			statusMap.put("order_id", entity.getOrder_id());
-			statusMap.put("msg", "订单生成成功");
+			statusMap.put("order_id", entity.getOrderId());
+			statusMap.put("msg", "订单保存成功");
 			return statusMap;
-		}*/
+		}
 		statusMap.put("status", -1);
 		statusMap.put("msg", "系统内部错误，请稍后重试");
 		return statusMap;
 	}
-	
+
 	/**
 	 * 创建订单流水号
-	 * @param id 
+	 * 
+	 * @param id
 	 * @param date
 	 * @return
 	 */

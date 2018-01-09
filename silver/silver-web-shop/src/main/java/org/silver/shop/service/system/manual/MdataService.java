@@ -526,7 +526,7 @@ public class MdataService {
 	}
 
 	// 读取缓存中excel导入实时数据
-	public Map<String, Object> readExcelRedisInfo(int serialNo) {
+	public Map<String, Object> readExcelRedisInfo(String serialNo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		String key = "Shop_Key_ExcelIng_Map_"+serialNo;
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);

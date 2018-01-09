@@ -589,7 +589,8 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> orderMap = new HashMap<>();
 		JSONObject goodsJson = null;
 		JSONObject orderJson = new JSONObject();
-		OrderByUtil.sortList(orderSubList, "sqlNo", "ASC");
+		//排序商品seq
+		OrderByUtil.sortList(orderSubList, "seqNo", "ASC");
 		String ebEntNo = "";
 		String ebEntName = "";
 		String DZKANo = "";
@@ -711,12 +712,12 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		//orderMap.put("uploadOrNot", false);
+	//	orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 		// orderMap);
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+	String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)

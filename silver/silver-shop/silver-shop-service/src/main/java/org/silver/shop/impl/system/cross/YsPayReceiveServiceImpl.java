@@ -776,7 +776,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			goodsJson.element("Total", goodsCount * price);
 			goodsJson.element("CurrCode", "142");
 			goodsJson.element("Notes", "");
-			ebEntNo =  eport == 1 ? goodsRecordDetail.getDZKNNo() :goodsRecordDetail.getEbEntNo() ;
+			ebEntNo = eport == 1 ? goodsRecordDetail.getDZKNNo() : goodsRecordDetail.getEbEntNo();
 			// 电商企业名称
 			ebEntName = goodsRecordDetail.getEbEntName();
 			String jsonGoods = goodsRecordDetail.getSpareParams();
@@ -853,7 +853,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			// 电商企业名称
 			orderMap.put("ebEntName", ebEntName);
 		} else {
-			String ebEntNo2 =  eport == 1 ? "C010000000537118" : "1509007917";
+			String ebEntNo2 = eport == 1 ? "C010000000537118" : "1509007917";
 			orderMap.put("ebEntNo", ebEntNo2);
 			// 电商企业名称
 			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
@@ -869,7 +869,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		orderMap.put("notifyurl", YmMallConfig.ORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-	//	orderMap.put("uploadOrNot", false);
+		// orderMap.put("uploadOrNot", false);
 
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);

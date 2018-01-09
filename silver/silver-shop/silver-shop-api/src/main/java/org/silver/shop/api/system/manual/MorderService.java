@@ -25,7 +25,7 @@ public interface MorderService {
 	public Map<String, Object> deleteByOrderId(String marchant_no, String order_id);
 
 	/**
-	 * 国宗物流
+	 * 生成国宗物流订单
 	 * 
 	 * @param senderTel
 	 * @param senderAddress
