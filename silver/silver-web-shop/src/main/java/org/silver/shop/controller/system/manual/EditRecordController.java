@@ -3,8 +3,12 @@ package org.silver.shop.controller.system.manual;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,7 +26,9 @@ import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
 import org.silver.shop.utils.ExcelUtil;
+import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
+import org.silver.util.FileUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -215,41 +221,6 @@ public class EditRecordController {
 
 	}
 
-	/********************************** 模拟生成支付信息 *********************************/
-
-	/**
-	 * 根据订单号生成支付单（支持批量）
-	 * 
-	 * @param resp
-	 * @param req
-	 * @return
-	 */
-	@RequestMapping(value = "/createMpayByOID", produces = "application/json; charset=utf-8")
-	@RequiresRoles("Merchant")
-	public String createMpayByOID(HttpServletResponse resp, HttpServletRequest req, int length) {
-		String originHeader = req.getHeader("Origin");
-		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		resp.setHeader("Access-Control-Allow-Credentials", "true");
-		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
-		Enumeration<String> itkeys = req.getParameterNames();
-		List<String> orderIDs = new ArrayList<>();
-		String key = "";
-		while (itkeys.hasMoreElements()) {
-			key = itkeys.nextElement();
-			String value = req.getParameter(key).trim();
-			orderIDs.add(value);
-		}
-		orderIDs.remove(length);
-		if (!orderIDs.isEmpty()) {
-			return JSONObject.fromObject(mdataService.groupCreateMpay(orderIDs)).toString();
-		}
-		reqMap.put("status", -3);
-		reqMap.put("msg", "缺少订单编号，生成失败");
-		return JSONObject.fromObject(reqMap).toString();
-	}
-
 	/**
 	 * 发起订单备案
 	 * 
@@ -419,13 +390,13 @@ public class EditRecordController {
 	@ResponseBody
 	@ApiOperation("商户查询缓存中Excel读取进度")
 	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("serialNo") String serialNo) {
+			@RequestParam("serialNo") String serialNo,@RequestParam("name") String name) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo);
+		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo,name);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -448,13 +419,29 @@ public class EditRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	public static void main(String[] args) {
-		File f = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/新建 Microsoft Excel 工作表.xlsx");
-		ExcelUtil excel = new ExcelUtil(f);
+	public static void main(String[] args) throws IOException {
+		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/新建 Microsoft Excel 工作表.xlsx");
+		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xls";
+
+		File dest = new File(source.getParentFile() + "/" + imgName);
+		System.out.println(dest.getName());
+		try {
+			FileUtils.copyFileUsingFileChannels(source, dest);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ExcelUtil excel = new ExcelUtil(dest);
+		System.out.println("---->>"+excel.getFile());
 		excel.open();
 		int row = 0;
 		// 总行数
 		int rowTotalCount = excel.getRowCount(0);
+		System.out.println(rowTotalCount);
+		excel.closeExcel();
+		System.out.println(dest.delete());
+
 	}
 
+	
 }

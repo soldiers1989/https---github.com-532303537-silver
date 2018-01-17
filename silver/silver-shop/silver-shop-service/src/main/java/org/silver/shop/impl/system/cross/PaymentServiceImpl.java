@@ -2,10 +2,12 @@ package org.silver.shop.impl.system.cross;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -24,7 +26,10 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.shop.util.SearchUtils;
+import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.RandomUtils;
+import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,7 +40,7 @@ import com.justep.baas.data.Transform;
 import net.sf.json.JSONArray;
 
 @Service(interfaceClass = PaymentService.class)
-public class PaytemServiceImpl implements PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
 	@Autowired
 	private PaymentDao paymentDao;
@@ -135,17 +140,16 @@ public class PaytemServiceImpl implements PaymentService {
 			List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
 			if (payList != null && !payList.isEmpty()) {
 				Mpay payInfo = payList.get(0);
-			/*	if (payInfo.getPay_record_status() == 2) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]正在备案中无需再次发起!");
-					errorList.add(errMap);
-					continue;
-				} else if (payInfo.getPay_record_status() == 3) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]已备案成功无需再次发起!");
-					errorList.add(errMap);
-					continue;
-				}*/
+				/*
+				 * if (payInfo.getPay_record_status() == 2) { Map<String,
+				 * Object> errMap = new HashMap<>();
+				 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
+				 * "]正在备案中无需再次发起!"); errorList.add(errMap); continue; } else if
+				 * (payInfo.getPay_record_status() == 3) { Map<String, Object>
+				 * errMap = new HashMap<>(); errMap.put(BaseCode.MSG.toString(),
+				 * "支付流水号[" + treadeNo + "]已备案成功无需再次发起!");
+				 * errorList.add(errMap); continue; }
+				 */
 				double payAmount = payInfo.getPay_amount();
 				// 将每个支付单总额进行累加,计算当前金额下是否有足够的余额支付费用
 				cumulativeAmount = payAmount += cumulativeAmount;
@@ -364,5 +368,140 @@ public class PaytemServiceImpl implements PaymentService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
+	}
+
+	@Override
+	public Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs,String serialNo,int realRowCount) {
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		if (merchantId != null && orderIDs != null && orderIDs.size() > 0) {
+			for (String order_id : orderIDs) {
+				Map<String, Object> params = new HashMap<>();
+				params.put("merchant_no", merchantId);
+				params.put("order_id", order_id);
+				List<Morder> morder = paymentDao.findByProperty(Morder.class, params, 1, 1);
+				if (morder != null && morder.size() > 0) {
+					params.clear();
+					params.put("morder_id", order_id);
+					List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
+					if (mpayl != null && mpayl.size() > 0) {
+						Map<String, Object> error = new HashMap<>();
+						error.put("status", -4);
+						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，不需要重复生成");
+						errorList.add(error);
+						continue;
+					}
+					params.clear();
+
+					int count = SerialNoUtils.getRedisIdCount("payment");
+					String trade_no = createTradeNo("01O", (count + 1), new Date());
+					String orderDate = morder.get(0).getOrderDate();
+					Date pay_time = DateUtil.randomPaymentDate(orderDate);
+					if (addEntity(merchantId, trade_no, order_id, morder.get(0).getActualAmountPaid(),
+							morder.get(0).getOrderDocName(), morder.get(0).getOrderDocId(),
+							morder.get(0).getOrderDocTel(), pay_time)
+							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
+						// 当创建完支付流水号之后
+						BufferUtils.writeRedis("1", errorList, realRowCount,  serialNo, "payment");
+						continue;
+					}
+					Map<String, Object> error = new HashMap<>();
+					statusMap.put("msg", order_id + "生成支付单出错，请稍后重试");
+					errorList.add(error);
+					continue;
+				}
+				Map<String, Object> error = new HashMap<>();
+				error.put("msg", order_id + "不存在的订单信息");
+				errorList.add(error);
+			}
+		} else {
+			statusMap.put("status", -3);
+			statusMap.put("msg", "非法请求");
+			return statusMap;
+		}
+	/*	statusMap.put("status", 1);
+		statusMap.put("msg", "支付单生成成功");
+		statusMap.put(BaseCode.ERROR.toString(), errorList);*/
+		BufferUtils.writeRedis("2", errorList, realRowCount, serialNo, "payment");
+		return statusMap;
+	}
+
+	/**
+	 * 保存支付单实体
+	 * 
+	 * @param merchant_no
+	 * @param trade_no
+	 * @param morder_id
+	 * @param amount
+	 * @param payer_name
+	 * @param payer_document_number
+	 * @param payer_phone_number
+	 * @param pay_time
+	 * @return
+	 */
+	private boolean addEntity(String merchant_no, String trade_no, String morder_id, double amount, String payer_name,
+			String payer_document_number, String payer_phone_number, Date pay_time) {
+		Mpay entity = new Mpay();
+		entity.setMerchant_no(merchant_no);
+		entity.setTrade_no(trade_no);
+		entity.setMorder_id(morder_id);
+		entity.setPay_amount(amount);
+		entity.setPayer_name(payer_name);
+		entity.setPayer_document_type("01");
+		entity.setPayer_document_number(payer_document_number);
+		entity.setPayer_phone_number(payer_phone_number);
+		entity.setTrade_status("TRADE_SUCCESS");
+		entity.setDel_flag(0);
+		entity.setCreate_date(new Date());
+		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
+		entity.setPay_status("D");
+		entity.setPay_currCode("142");
+		entity.setPay_record_status(1);
+		entity.setPay_time(pay_time);
+		return paymentDao.add(entity);
+	}
+
+	/**
+	 * 当生成的支付流水号更新到订单表中
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param order_id
+	 *            订单Id
+	 * @param trade_no
+	 *            支付流水号
+	 * @return boolean
+	 */
+	private boolean updateOrderPayNo(String merchantId, String order_id, String trade_no) {
+		Map<String, Object> param = new HashMap<>();
+		param.put("merchant_no", merchantId);
+		param.put("order_id", order_id);
+		List<Morder> reList = paymentDao.findByProperty(Morder.class, param, 1, 1);
+		if (reList != null && !reList.isEmpty()) {
+			Morder entity = reList.get(0);
+			entity.setTrade_no(trade_no);
+			entity.setUpdate_date(new Date());
+			return paymentDao.update(entity);
+		}
+		return false;
+	}
+
+	/**
+	 * 模拟银盛生成支付流水号
+	 * 
+	 * @param sign
+	 * @param id
+	 * @param d
+	 * @return
+	 */
+	private String createTradeNo(String sign, long id, Date date) {
+		String dstr = DateUtil.formatDate(date, "yyMMdd");
+		String nstr = id + "";
+		// 获取或随机4位数
+		int rstr = RandomUtils.getRandom(4);
+		while (nstr.length() < 5) {
+			nstr = "0" + nstr;
+		}
+		return sign + dstr + nstr + rstr;
 	}
 }

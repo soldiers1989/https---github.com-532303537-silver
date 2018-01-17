@@ -14,12 +14,12 @@ import org.silver.common.StatusCode;
 public class SplitListUtils {
 
 	/**
-	 * 
-	 * @param dataList
-	 * @param page
-	 * @return
+	 * 将List集合拆分为多个
+	 * @param dataList 
+	 * @param size 数量
+	 * @return Map
 	 */
-	public static Map<String, Object> batchList(List dataList, int length) {
+	public static Map<String, Object> batchList(List dataList, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 分批处理
 		if (null != dataList && !dataList.isEmpty()) {
@@ -29,15 +29,15 @@ public class SplitListUtils {
 			int start = 0;
 			int end = 0;
 			// 判断是否有必要分批
-			if (length < totalSize) {
-				int part = totalSize / length;// 分批数
+			if (size < totalSize) {
+				int part = totalSize / size;// 分批数
 				System.out.println("共有 ： " + totalSize + "条，！" + " 每一次的长度 ：" + part + "");
 				//遍历需要创建List的长度
-				for (int i = 0; i < length; i++) {					
-					if (i > 0 && length > 0) {
+				for (int i = 0; i < size; i++) {					
+					if (i > 0 && size > 0) {
 						start = i * part;
 						end = (i + 1) * part;
-						if(i == (length -1)){
+						if(i == (size -1)){
 							// 当是最后一次的时候
 							start = i * part;
 							end = totalSize;

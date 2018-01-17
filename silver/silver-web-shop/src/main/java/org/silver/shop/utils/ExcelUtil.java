@@ -173,7 +173,6 @@ public class ExcelUtil {
 				}catch (Exception e){
 					//e.printStackTrace();
 					book = new HSSFWorkbook(new POIFSFileSystem(fls));
-					
 				}
 				fls.close();
 				System.out.println("文件存在，读取内容");
@@ -210,11 +209,17 @@ public class ExcelUtil {
 	}
 
 	public void closeExcel() {
+		if(book!=null){
+			try {
+				book.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		if (ols != null) {
 			try {
 				ols.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

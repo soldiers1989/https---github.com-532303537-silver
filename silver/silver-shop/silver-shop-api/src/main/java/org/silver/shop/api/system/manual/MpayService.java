@@ -5,14 +5,7 @@ import java.util.Map;
 
 public interface MpayService {
 
-	/**
-	 * 根据订单id 列 批量生成相应支付单
-	 * 
-	 * @param merchant_no
-	 * @param orderIDs
-	 * @return
-	 */
-	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs);
+	
 
 	/**
 	 * 根据订单Id发起订单备案

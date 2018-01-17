@@ -1,5 +1,6 @@
 package org.silver.shop.api.system.cross;
 
+import java.util.List;
 import java.util.Map;
 
 public interface PaymentService {
@@ -27,8 +28,8 @@ public interface PaymentService {
 
 	/**
 	 * 获取商户支付单信息
-	 * @param merchantId
-	 * @param merchantName
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
 	 * @param params 
 	 * @return
 	 */
@@ -36,14 +37,25 @@ public interface PaymentService {
 
 	/**
 	 * 获取商户支付单报表
-	 * @param merchantId
-	 * @param merchantName
-	 * @param page
-	 * @param size
-	 * @param startDate
-	 * @param endDate
-	 * @return
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名
+	 * @param page 页数
+	 * @param size 每页数目
+	 * @param startDate 开始时间
+	 * @param endDate 结束时间
+	 * @return Map
 	 */
 	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, int page, int size,
 			String startDate, String endDate);
+	
+	/**
+	 * 根据订单id 批量生成相应支付单
+	 * 
+	 * @param merchant_no 商户Id
+	 * @param orderIDs 订单Id
+	 * @param serialNo 流水号
+	 * @param realRowCount 总数
+	 * @return Map
+	 */
+	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs, String serialNo,int realRowCount);
 }

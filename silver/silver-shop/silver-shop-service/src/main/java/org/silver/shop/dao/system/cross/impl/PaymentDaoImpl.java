@@ -26,7 +26,7 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String sql = "SELECT count(t1.trade_no) AS tradeCount,sum(t1.pay_amount) AS totalAmount,(sum(t1.pay_amount) * 0.002) AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') as date FROM 	ym_shop_manual_mpay t1 "
-					+ " WHERE  t1.merchant_no = ? AND t1.pay_record_status = '3' ";
+					+ " WHERE  t1.merchant_no = ? AND   (t1.pay_record_status = '3' OR t1.pay_record_status = '2')";
 			if (StringEmptyUtils.isNotEmpty(startDate)) {
 				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
 				sqlParams.add(startDate);

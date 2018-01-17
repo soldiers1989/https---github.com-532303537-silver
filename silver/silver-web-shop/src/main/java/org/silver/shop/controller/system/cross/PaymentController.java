@@ -1,7 +1,9 @@
 package org.silver.shop.controller.system.cross;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -152,5 +154,42 @@ public class PaymentController {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	
+	/********************************** 模拟生成支付信息 *********************************/
+
+	/**
+	 * 根据订单号生成支付单（支持批量）
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/createMpayByOID", produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ResponseBody
+	public String createMpayByOID(HttpServletResponse resp, HttpServletRequest req, int length) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reqMap = new HashMap<>();
+		Enumeration<String> itkeys = req.getParameterNames();
+		List<String> orderIDs = new ArrayList<>();
+		String key = "";
+		while (itkeys.hasMoreElements()) {
+			key = itkeys.nextElement();
+			String value = req.getParameter(key).trim();
+			orderIDs.add(value);
+		}
+		orderIDs.remove(length);
+		if (!orderIDs.isEmpty()) {
+			return JSONObject.fromObject(paytemTransaction.groupCreateMpay(orderIDs)).toString();
+		}
+		reqMap.put("status", -3);
+		reqMap.put("msg", "缺少订单编号，生成失败");
+		return JSONObject.fromObject(reqMap).toString();
 	}
 }

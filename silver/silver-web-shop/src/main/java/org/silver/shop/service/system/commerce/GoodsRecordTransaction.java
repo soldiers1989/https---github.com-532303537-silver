@@ -26,6 +26,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.CountryTransaction;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.utils.ExcelUtil;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.ConvertUtils;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.StringEmptyUtils;
@@ -218,6 +219,7 @@ public class GoodsRecordTransaction {
 		String ingredient = "";// 成分(商品向南沙国检备案必填)
 		String additiveflag = "";// 超范围使用食品添加剂
 		String poisonflag = "";// 含有毒害物质
+		int flag = 0;
 
 		for (int r = 2; r <= excel.getRowCount(); r++) {
 			if (excel.getColumnCount(r) == 0) {
@@ -231,40 +233,92 @@ public class GoodsRecordTransaction {
 					recordContentMap.put("err", errl);
 					return recordContentMap;
 				}
+			
 				switch (c) {
 				case 0:
-					shelfGName = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						shelfGName = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "上架商品名称不能为空!");
+						errl.add(errMap);
+						flag= 1;
+						continue;
+					}
 					break;
+				
 				case 1:
-					ncadCode = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						ncadCode = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "行邮税号不能为空!");
+						errl.add(errMap);
+						flag= 1;
+						continue;
+					}
 					break;
 				case 2:
-					hsCode = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						hsCode = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "HS编码不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 					break;
 				case 3:
 					barCode = value;
 					break;
 				case 4:
-					goodsName = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						goodsName = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品名称不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 					break;
 				case 5:
-					goodsStyle = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						goodsStyle = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "型号规格不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 					break;
 				case 6:
-					brand = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						brand = value;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "品牌不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 					break;
 				case 7:
 					if (StringUtils.isNotEmpty(value)) {
 						gUnit = findUnit(value);
 					} else {
-						gUnit = value;
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "申报计量单位不能为空!");
+						errl.add(errMap);
+						continue;
 					}
 					break;
 				case 8:
 					if (StringUtils.isNotEmpty(value)) {
 						stdUnit = findUnit(value);
 					} else {
-						stdUnit = value;
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "第一法定计量单位不能为空!");
+						errl.add(errMap);
+						continue;
 					}
 					break;
 				case 9:
@@ -280,33 +334,62 @@ public class GoodsRecordTransaction {
 					} catch (Exception e) {
 						e.printStackTrace();
 						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品单价数值有误");
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!");
 						errl.add(errMap);
 					}
 					break;
 				case 11:
-					giftFlag = value;
-					break;
+					if (StringUtils.isNotEmpty(value)) {
+						giftFlag = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "是否赠品不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 				case 12:
-					originCountry = findCountry(value);
-					break;
+					if (StringUtils.isNotEmpty(value)) {
+						originCountry = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "原产国不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 				case 13:
-					quality = value;
-					break;
+					if (StringUtils.isNotEmpty(value)) {
+						quality = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品品质及说明不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 				case 14:
 					qualityCertify = value;
 					break;
 				case 15:
-					manufactory = value;
-					break;
+					if (StringUtils.isNotEmpty(value)) {
+						manufactory = value;
+						break;
+					} else {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "生产厂家或供应商不能为空!");
+						errl.add(errMap);
+						continue;
+					}
 				case 16:
 					try {
 						netWt = Double.parseDouble(value);
 					} catch (Exception e) {
 						e.printStackTrace();
 						Map<String, Object> errMap = new HashMap<String, Object>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品净重数值有误");
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!");
 						errl.add(errMap);
+						continue;
 					}
 					break;
 				case 17:
@@ -315,8 +398,9 @@ public class GoodsRecordTransaction {
 					} catch (Exception e) {
 						e.printStackTrace();
 						Map<String, Object> errMap = new HashMap<String, Object>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品毛重数值有误");
+						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!");
 						errl.add(errMap);
+						continue;
 					}
 					break;
 				case 18:
@@ -376,7 +460,7 @@ public class GoodsRecordTransaction {
 					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				Map<String, Object> errMap = new HashMap<>();
-				errMap.put("msg", "【订单工作表】第" + (r + 1) + "行-->" + item.get("msg"));
+				errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + item.get("msg"));
 				errl.add(errMap);
 			}
 		}
@@ -517,11 +601,15 @@ public class GoodsRecordTransaction {
 	/**
 	 * 读取已备案商品详情
 	 * 
-	 * @param sheet  excel工作簿序号
-	 * @param excel 
-	 * @param errl 错误信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
+	 * @param sheet
+	 *            excel工作簿序号
+	 * @param excel
+	 * @param errl
+	 *            错误信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
 	 * @return
 	 */
 	private Map<String, Object> readRecordGoodsDetailSheed(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,

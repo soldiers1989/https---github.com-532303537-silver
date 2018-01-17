@@ -299,13 +299,15 @@ public final class DateUtil {
 
 	/**
 	 * 将字符串（yyyy-MM-dd HH:mm:ss）解析成日期
-	 * @param dateStr 日期格式的字符串
+	 * 
+	 * @param dateStr
+	 *            日期格式的字符串
 	 * @return 日期类型对象
 	 */
 	public static Date parseDate2(String dateStr) {
 		return parseDate(dateStr, "yyyy-MM-dd HH:mm:ss");
 	}
-	
+
 	/**
 	 * 按照指定的格式，将字符串解析成日期类型对象，例如：yyyy-MM-dd,yyyy/MM/dd,yyyy/MM/dd hh:mm:ss
 	 * 
@@ -342,57 +344,98 @@ public final class DateUtil {
 		SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return formater.format(timestamp);
 	}
-	
+
 	/**
 	 * 将时间戳转换为Date类型
-	 * @param timestamp 时间戳
+	 * 
+	 * @param timestamp
+	 *            时间戳
 	 * @return Date
 	 */
-	public static final Date timestampParseDate(long timestamp){
+	public static final Date timestampParseDate(long timestamp) {
 		if (timestamp < 0) {
 			return null;
 		}
-		String strTime= timestampParseTime(timestamp);
+		String strTime = timestampParseTime(timestamp);
 		return parseDate2(strTime);
 	}
-	
-	 /** 
-     * 获取随机日期 
-     *  
-     * @param beginDate 
-     *            起始日期，格式为：yyyyMMdd 
-     * @param endDate 
-     *            结束日期，格式为：yyyyMMdd 
-     * @return  StringTime yyyyMMddHHddss
-     */  
-  
-    public static String randomDate(Date beginDate, Date endDate) {  
-        try {  
-            SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHddss");  
-            // getTime()表示返回自 1970 年 1 月 1 日 00:00:00 GMT 以来此 Date 对象表示的毫秒数。  
-            if (beginDate.getTime() >= endDate.getTime()) {  
-                return "";  
-            }  
-            long date = random(beginDate.getTime(), endDate.getTime()) ;  
-            return format.format(new Date(date)) ;  
-        } catch (Exception e) {  
-            e.printStackTrace();  
-        }  
-        return "";  
-    }  
-  
-    /**
-     * 生成随机日期
-     * @param begin
-     * @param end
-     * @return
-     */
-    private static long random(long begin, long end) {  
-        long rtn = begin + (long) (Math.random() * (end - begin));  
-        // 如果返回的是开始时间和结束时间，则递归调用本函数查找随机值  
-        if (rtn == begin || rtn == end) {  
-            return random(begin, end);  
-        }  
-        return rtn;  
-    }  
+
+	/**
+	 * 获取随机日期
+	 * 
+	 * @param beginDate
+	 *            起始日期，格式为：yyyyMMdd
+	 * @param endDate
+	 *            结束日期，格式为：yyyyMMdd
+	 * @return StringTime yyyyMMddHHddss
+	 */
+
+	public static String randomDate(Date beginDate, Date endDate) {
+		try {
+			SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHddss");
+			// getTime()表示返回自 1970 年 1 月 1 日 00:00:00 GMT 以来此 Date 对象表示的毫秒数。
+			if (beginDate.getTime() >= endDate.getTime()) {
+				return "";
+			}
+			long date = random(beginDate.getTime(), endDate.getTime());
+			return format.format(new Date(date));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+
+	/**
+	 * 生成随机日期
+	 * 
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	private static long random(long begin, long end) {
+		long rtn = begin + (long) (Math.random() * (end - begin));
+		// 如果返回的是开始时间和结束时间，则递归调用本函数查找随机值
+		if (rtn == begin || rtn == end) {
+			return random(begin, end);
+		}
+		return rtn;
+	}
+
+	/**
+	 * 随机生成一个3-5天前的日期
+	 * 
+	 * @return String日期,格式yyyyMMddHHddss
+	 */
+	public static final String randomCreateDate() {
+		java.util.Random random = new java.util.Random();// 定义随机类
+		int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
+		Date dNow = new Date(); // 当前时间
+		Calendar calendar2 = Calendar.getInstance(); // 得到日历
+		calendar2.setTime(dNow);// 将当前时间赋给日历
+		calendar2.add(Calendar.DATE, -2);
+		dNow = calendar2.getTime();//
+		Calendar calendar = Calendar.getInstance(); // 得到日历
+		calendar.setTime(dNow);// 把当前时间赋给日历
+		calendar.add(Calendar.DATE, -(result + 2));
+		calendar.setTime(calendar.getTime());
+		Date dBefore = calendar.getTime(); // 得到随机3-5天时间
+		return randomDate(dBefore, dNow);
+	}
+
+	/**
+	 * 根据订单日期,生成支付单日期,格式为订单日期智商随机增加5分钟与60秒
+	 * @param orderDate 订单日期
+	 * @return Date 支付单日期
+	 */
+	public static final Date randomPaymentDate(String orderDate) {
+		java.util.Random random = new java.util.Random();// 定义随机类
+		int minute = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
+		int second = random.nextInt(60);
+		Date oldDate = DateUtil.parseDate2(DateUtil.toStringDate(orderDate));
+		Calendar nowTime = Calendar.getInstance();
+		nowTime.setTime(oldDate);
+		nowTime.add(Calendar.MINUTE, (minute + 1));
+		nowTime.add(Calendar.SECOND, (second + 1));
+		return nowTime.getTime();
+	}
 }

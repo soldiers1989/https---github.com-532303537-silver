@@ -11,6 +11,7 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.model.common.base.CustomsPort;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
@@ -30,8 +31,13 @@ public class CustomsPortTransaction {
 	public Map<String, Object> addCustomsPort(String provinceName, String provinceCode, String cityName,
 			String cityCode, int customsPort, String customsPortName, String customsCode, String customsName,
 			String ciqOrgCode, String ciqOrgName) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerName = managerInfo.getManagerName();
+		String managerId = managerInfo.getManagerId();
 		Map<String,Object>	reMap = customsPortService.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
-				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);
+				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName,managerId,managerName);
 		if(reMap!=null && reMap.size()>0){
 			String status = reMap.get(BaseCode.STATUS.toString())+"";
 			if(status.equals("1")){

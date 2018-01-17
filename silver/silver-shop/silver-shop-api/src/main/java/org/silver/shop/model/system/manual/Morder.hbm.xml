@@ -166,6 +166,7 @@
 		<property name="spareParams">
 			<column name="spareParams" />
 		</property>
+		
 	</class>
 
 </hibernate-mapping>

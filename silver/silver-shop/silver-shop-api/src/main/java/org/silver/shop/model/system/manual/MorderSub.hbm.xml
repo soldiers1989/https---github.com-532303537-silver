@@ -110,6 +110,9 @@
 		<property name="spareParams">
 			<column name="spareParams" />
 		</property>
+		<property name="merchant_no">
+			<column name="merchant_no" />
+		</property>
 	</class>
 
 </hibernate-mapping>

@@ -76,6 +76,7 @@ public class CustomsPortController {
 	@RequestMapping(value = "/addCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("添加已开通的海关及智检")
+	@RequiresRoles("Manager")
 	public String addCustomsPort(@RequestParam("provinceName") String provinceName,
 			@RequestParam("provinceCode") String provinceCode, @RequestParam("cityName") String cityName,
 			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,

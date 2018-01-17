@@ -1,6 +1,5 @@
 package org.silver.shop.impl.system.manual;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
-
 import javax.annotation.Resource;
 
 import org.silver.common.BaseCode;
@@ -23,28 +20,24 @@ import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
-import org.silver.shop.impl.system.cross.YsPayReceiveServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
-import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
-import org.silver.shop.util.ExcelUtil;
+import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
-import org.silver.util.OrderByUtil;
+import org.silver.util.SortUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.StringUtil;
-import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
@@ -72,144 +65,6 @@ public class MpayServiceImpl implements MpayService {
 
 	@Autowired
 	private WalletLogService walletLogService;
-
-	@Override
-	public Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs) {
-		Map<String, Object> statusMap = new HashMap<>();
-		List<Map<String, Object>> errorList = new ArrayList<>();
-		if (merchantId != null && orderIDs != null && orderIDs.size() > 0) {
-			for (String order_id : orderIDs) {
-				Map<String, Object> params = new HashMap<>();
-				params.put("merchant_no", merchantId);
-				params.put("order_id", order_id);
-				List<Morder> morder = morderDao.findByProperty(Morder.class, params, 1, 1);
-				if (morder != null && morder.size() > 0) {
-					params.clear();
-					params.put("morder_id", order_id);
-					List<Mpay> mpayl = mpayDao.findByProperty(params, 1, 1);
-					if (mpayl != null && mpayl.size() > 0) {
-						Map<String, Object> error = new HashMap<>();
-						error.put("status", -4);
-						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，不需要重复生成");
-						errorList.add(error);
-						continue;
-					}
-					params.clear();
-					long count = 0;
-					synchronized (this) {
-						count = mpayDao.findByPropertyCount(params);
-					}
-					if (count < 0) {
-						Map<String, Object> error = new HashMap<>();
-						error.put("status", -6);
-						error.put("msg", "系统内部错误，生成支付失败");
-						errorList.add(error);
-						continue;
-					}
-					String trade_no = createTradeNo("01O", (count + 1), new Date());
-
-					java.util.Random random = new java.util.Random();// 定义随机类
-					int minute = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
-					int second = random.nextInt(60);
-					String orderDate = DateUtil.toStringDate(morder.get(0).getOrderDate());
-					Date oldDate = DateUtil.parseDate2(orderDate);
-					Calendar nowTime = Calendar.getInstance();
-					nowTime.setTime(oldDate);
-					nowTime.add(Calendar.MINUTE, (minute + 1));
-					nowTime.add(Calendar.SECOND, (second + 1));
-					Date pay_time = nowTime.getTime();
-					if (addEntity(merchantId, trade_no, order_id, morder.get(0).getActualAmountPaid(),
-							morder.get(0).getOrderDocName(), morder.get(0).getOrderDocId(),
-							morder.get(0).getOrderDocTel(), pay_time)
-							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
-						// 当创建完支付流水号之后
-						continue;
-					}
-					Map<String, Object> error = new HashMap<>();
-					statusMap.put("status", -1);
-					statusMap.put("msg", order_id + "生成支付单出错，请稍后重试");
-					errorList.add(error);
-					continue;
-				}
-				Map<String, Object> error = new HashMap<>();
-				error.put("status", -2);
-				error.put("msg", order_id + "不存在的订单信息");
-				errorList.add(error);
-				continue;
-			}
-		} else {
-			statusMap.put("status", -3);
-			statusMap.put("msg", "非法请求");
-			return statusMap;
-		}
-		statusMap.put("status", 1);
-		statusMap.put("msg", "支付单生成成功");
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
-	}
-
-	private String createTradeNo(String sign, long id, Date d) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
-		Random r = new Random();
-		String dstr = sdf.format(d);
-		String nstr = id + "";
-		String rstr = r.nextInt(10000) + "";
-		while (nstr.length() < 5) {
-			nstr = "0" + nstr;
-		}
-		while (rstr.length() < 4) {
-			rstr = "0" + rstr;
-		}
-		return sign + dstr + nstr + rstr;
-
-	}
-
-	/**
-	 * 当生成的支付流水号更新到订单表中
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param order_id
-	 *            订单Id
-	 * @param trade_no
-	 *            支付流水号
-	 * @return boolean
-	 */
-	private boolean updateOrderPayNo(String merchantId, String order_id, String trade_no) {
-		Map<String, Object> param = new HashMap<>();
-		param.put("merchant_no", merchantId);
-		param.put("order_id", order_id);
-		List<Morder> reList = morderDao.findByProperty(Morder.class, param, 1, 1);
-		if (reList != null && !reList.isEmpty()) {
-			Morder entity = reList.get(0);
-			entity.setTrade_no(trade_no);
-			entity.setUpdate_date(new Date());
-			return morderDao.update(entity);
-		}
-		return false;
-	}
-
-	private boolean addEntity(String merchant_no, String trade_no, String morder_id, double amount, String payer_name,
-			String payer_document_number, String payer_phone_number, Date pay_time) {
-		Mpay entity = new Mpay();
-		entity.setMerchant_no(merchant_no);
-		entity.setTrade_no(trade_no);
-		entity.setMorder_id(morder_id);
-		entity.setPay_amount(amount);
-		entity.setPayer_name(payer_name);
-		entity.setPayer_document_type("01");
-		entity.setPayer_document_number(payer_document_number);
-		entity.setPayer_phone_number(payer_phone_number);
-		entity.setTrade_status("TRADE_SUCCESS");
-		entity.setDel_flag(0);
-		entity.setCreate_date(new Date());
-		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
-		entity.setPay_status("D");
-		entity.setPay_currCode("142");
-		entity.setPay_record_status(1);
-		entity.setPay_time(pay_time);
-		return mpayDao.add(entity);
-	}
 
 	/**
 	 * 查询商户钱包余额是否有足够的钱
@@ -485,6 +340,7 @@ public class MpayServiceImpl implements MpayService {
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
 		// 累计金额
 		double cumulativeAmount = 0.0;
+		int totalCount = jsonList.size();
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> orderMap = (Map<String, Object>) jsonList.get(i);
 			String orderNo = orderMap.get("orderNo") + "";
@@ -506,6 +362,7 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), "[" + orderNo + "]订单已成功备案,无需再次发起!");
 					errorList.add(errMap);
+					BufferUtils.writeRedis("1", errorList, (realRowCount - 1),  serialNo, "order")
 					continue;
 				}*/
 				// 订单商品总额
@@ -514,7 +371,10 @@ public class MpayServiceImpl implements MpayService {
 				cumulativeAmount = fcy += cumulativeAmount;
 				Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
 				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-					return checkMap;
+					Map<String, Object> errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(), checkMap.get(BaseCode.MSG.toString()));
+					errorList.add(errMap);
+					continue;
 				}
 				Map<String, Object> reOrderMap = sendOrder(merchantId, recordMap, orderSubList, tok, order);
 				System.out.println("->>>>>>>>>>>" + reOrderMap);
@@ -522,16 +382,18 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), reOrderMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
-					continue;
-				}
-
-				String reOrderMessageID = reOrderMap.get("messageID") + "";
-				// 更新服务器返回订单Id
-				Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
-				if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
-					return reOrderMap2;
+				}else{
+					String reOrderMessageID = reOrderMap.get("messageID") + "";
+					// 更新服务器返回订单Id
+					Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
+					if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), reOrderMap2.get(BaseCode.MSG.toString()));
+						errorList.add(errMap);
+					}
 				}
 			}
+		//	BufferUtils.writeRedis("1", errorList, totalCount,  serialNo, "orderRecord");
 		}
 		statusMap.clear();
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -590,7 +452,7 @@ public class MpayServiceImpl implements MpayService {
 		JSONObject goodsJson = null;
 		JSONObject orderJson = new JSONObject();
 		//排序商品seq
-		OrderByUtil.sortList(orderSubList, "seqNo", "ASC");
+		SortUtil.sortList(orderSubList, "seqNo", "ASC");
 		String ebEntNo = "";
 		String ebEntName = "";
 		String DZKANo = "";
@@ -847,7 +709,7 @@ public class MpayServiceImpl implements MpayService {
 						}
 						break;
 					case 2:
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr,merchantId);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
@@ -857,7 +719,7 @@ public class MpayServiceImpl implements MpayService {
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr,merchantId);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
@@ -883,17 +745,18 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr) {
+	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr,String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		String entGoodsNo = strArr[0];
+		String entGoodsNo = strArr[2];
 		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "备案商品自编号不能为空,请重新输入!");
 			return statusMap;
 		}
 		paramMap.put("order_id", order_id);
-		paramMap.put("EntGoodsNo", strArr[2]);
+		paramMap.put("EntGoodsNo", entGoodsNo);
+		paramMap.put("merchant_no", merchantId);
 		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			MorderSub goodsInfo = reOrderSubList.get(0);

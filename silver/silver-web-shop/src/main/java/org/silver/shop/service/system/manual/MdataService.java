@@ -2,6 +2,7 @@ package org.silver.shop.service.system.manual;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,34 +119,7 @@ public class MdataService {
 
 	}
 
-	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
-		ExecutorService threadPool = Executors.newCachedThreadPool();
-		Map<String,Object> statusMap = new HashMap<>();
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
-		// 获取登录后的商户账号
-		String merchantId = merchantInfo.getMerchantId();
-		// 判断当前计算机CPU线程个数
-		/*int cpuCount = Runtime.getRuntime().availableProcessors();
-		// 分批处理
-		Map<String, Object> reMap = SplitListUtils.batchList(orderIdList, cpuCount);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return reMap;
-		}
-		//
-		List dataList = (List) reMap.get(BaseCode.DATAS.toString());
-		for (int i = 0; i < dataList.size(); i++) {
-			List list = (List) dataList.get(i);
-			ExcelTask excelTask = new ExcelTask(list, merchantId, mpayService);
-			threadPool.submit(excelTask);
-		}
-		threadPool.shutdown();
-		statusMap.put("status", 1);
-		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
-		return statusMap;*/
-		return mpayService.groupCreateMpay(merchantId, orderIdList);
-	}
+	
 
 	public Object sendMorderRecord(Map<String, Object> recordMap, String orderNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -526,9 +500,11 @@ public class MdataService {
 	}
 
 	// 读取缓存中excel导入实时数据
-	public Map<String, Object> readExcelRedisInfo(String serialNo) {
+	public Map<String, Object> readExcelRedisInfo(String serialNo,String name) {
 		Map<String, Object> statusMap = new HashMap<>();
-		String key = "Shop_Key_ExcelIng_Map_"+serialNo;
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+	//	String key = "Shop_Key_ExcelIng_"+dateSign+"_"+serialNo;
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null && redisByte.length > 0) {
 			return (Map<String, Object>) SerializeUtil.toObject(redisByte);

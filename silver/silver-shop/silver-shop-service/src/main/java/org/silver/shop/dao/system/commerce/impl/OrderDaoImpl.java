@@ -104,7 +104,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String sql = "SELECT count(t1.order_id) AS orderCount, sum(t1.FCY) as total,(sum(t1.FCY) * 0.001)  AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date FROM ym_shop_manual_morder t1 "
-					+ "WHERE  t1.merchant_no = ? AND t1.order_record_status = '3' ";
+					+ "WHERE  t1.merchant_no = ? AND (t1.order_record_status = '3' OR t1.order_record_status = '2') ";
 			if (StringEmptyUtils.isNotEmpty(startDate)) {
 				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
 				sqlParams.add(startDate);

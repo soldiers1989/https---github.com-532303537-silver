@@ -27,6 +27,7 @@ import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.RandomUtils;
+import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,7 @@ public class MorderServiceImpl implements MorderService {
 	private MuserDao muserDao;
 
 	private static final String FCODE = "142";
-	// 创建一个静态钥匙
-	private static Object lock = "lock";// 值是任意的
+
 
 	@Override
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body) {
@@ -317,14 +317,14 @@ public class MorderServiceImpl implements MorderService {
 		String numOfPackages = goodsInfo.get("numOfPackages") + "";
 
 		if (StringEmptyUtils.isNotEmpty(firstLegalCount) && StringEmptyUtils.isNotEmpty(secondLegalCount)
-				&& StringEmptyUtils.isNotEmpty(packageType) && StringEmptyUtils.isNotEmpty(transportModel)
-				&& StringEmptyUtils.isNotEmpty(numOfPackages)) {
+				&& StringEmptyUtils.isNotEmpty(packageType) && StringEmptyUtils.isNotEmpty(numOfPackages)) {
 			mosb.setFirstLegalCount(goodsInfo.getDouble("firstLegalCount"));
 			mosb.setSecondLegalCount(goodsInfo.getDouble("secondLegalCount"));
 			mosb.setPackageType(goodsInfo.getInt("packageType"));
-			mosb.setTransportModel(goodsInfo.getString("transportModel"));
 			mosb.setNumOfPackages(goodsInfo.getInt("numOfPackages"));
 		}
+		mosb.setTransportModel(transportModel);
+		
 		// (启邦客户)商品归属商家代码
 		String marCode = goodsInfo.get("marCode") + "";
 		// (启邦客户)商品归属SKU
@@ -346,6 +346,7 @@ public class MorderServiceImpl implements MorderService {
 			spareParams.put("DZKNNo", DZKNNo);
 			mosb.setSpareParams(spareParams.toString());
 		}
+		mosb.setMerchant_no(goodsInfo.get("merchantId") + "");
 		if (morderSubDao.add(mosb)) {
 			statusMap.put("status", 1);
 			statusMap.put("msg", "订单商品【" + goodsInfo.get("GoodsName") + "】存储成功");
@@ -428,7 +429,7 @@ public class MorderServiceImpl implements MorderService {
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
-			int count = getRedisIdCount(dateSign);
+			int count = SerialNoUtils.getRedisIdCount("order");
 			/*
 			 * long count = morderDao.findByPropertyCount(Morder.class, params);
 			 * if (count < 0) { statusMap.put("status", -5);
@@ -473,7 +474,7 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientProvincesName(provinceName);
 			morder.setRecipientCityName(cityName);
 			morder.setRecipientAreaName(areaName);
-			String randomDate = randomCreateOrderDate();
+			String randomDate = DateUtil.randomCreateDate();
 			morder.setOrderDate(randomDate);
 			if (morderDao.add(morder)) {
 				statusMap.put("status", 1);
@@ -485,53 +486,6 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("msg", "存储失败，请稍后重试");
 			return statusMap;
 		}
-	}
-
-	/**
-	 * 获取当前日期下订单自增数
-	 * 
-	 * @param dateSign
-	 *            日期格式:yyyyMMdd
-	 * @return int
-	 */
-	private int getRedisIdCount(String dateSign) {
-		Map<String, Object> statusMap = new HashMap<>();
-		int orderCount = 1;
-		String key = "Shop_Key_OrderIdCount_Int" + dateSign;
-		synchronized (lock) {
-			// 读取缓存中的信息
-			byte[] redisByte = JedisUtil.get(key.getBytes(), 86400);
-			if (redisByte != null && redisByte.length > 0) {
-				Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-				System.out.println("---->>>>>>>>>>>>>>"+datasMap.get("orderCount"));
-				orderCount = Integer.parseInt(datasMap.get("orderCount") + "");
-				orderCount++;
-			} 
-			statusMap.put("orderCount", orderCount);
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(statusMap), 86400);
-			return orderCount;
-		}
-	}
-
-	/**
-	 * 随机生成一个3-5天前的日期
-	 * 
-	 * @return
-	 */
-	private String randomCreateOrderDate() {
-		java.util.Random random = new java.util.Random();// 定义随机类
-		int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
-		Date dNow = new Date(); // 当前时间
-		Calendar calendar2 = Calendar.getInstance(); // 得到日历
-		calendar2.setTime(dNow);// 将当前时间赋给日历
-		calendar2.add(Calendar.DATE, -2);
-		dNow = calendar2.getTime();//
-		Calendar calendar = Calendar.getInstance(); // 得到日历
-		calendar.setTime(dNow);// 把当前时间赋给日历
-		calendar.add(Calendar.DATE, -(result + 2));
-		calendar.setTime(calendar.getTime());
-		Date dBefore = calendar.getTime(); // 得到随机3-5天时间
-		return DateUtil.randomDate(dBefore, dNow);
 	}
 
 	@Override
@@ -565,7 +519,7 @@ public class MorderServiceImpl implements MorderService {
 		String orderId = item.get("orderId") + "";
 		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
 			// 查询缓存中订单自增Id
-			int count = getRedisIdCount(dateSign);
+			int count = SerialNoUtils.getRedisIdCount("order");
 			orderId = createMorderSysNo("YM", count, new Date());
 		}
 		// 校验企邦是否已经录入已备案商品信息
@@ -629,7 +583,7 @@ public class MorderServiceImpl implements MorderService {
 			morder.setCreate_date(new Date());
 			morder.setCreate_by(merchantId);
 			morder.setFcode(FCODE);
-			String randomDate = randomCreateOrderDate();
+			String randomDate = DateUtil.randomCreateDate();
 			morder.setOrderDate(randomDate);
 			String ehsEntName = item.get("ehsEntName") + "";
 			if (StringEmptyUtils.isNotEmpty(ehsEntName)) {

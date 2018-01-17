@@ -24,7 +24,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	@Override
 	public Map<String, Object> addCustomsPort(String provinceName, String provinceCode, String cityName,
 			String cityCode, int customsPort, String customsPortName, String customsCode, String customsName,
-			String ciqOrgCode, String ciqOrgName) {
+			String ciqOrgCode, String ciqOrgName,String managerId, String managerName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date date = new Date();
 		CustomsPort customsInfo = new CustomsPort();
@@ -40,6 +40,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		customsInfo.setCiqOrgName(ciqOrgName);
 		customsInfo.setCreateDate(date);
 		customsInfo.setDeleteFlag(0);
+		customsInfo.setCreateBy(managerName);
 		boolean flag = customsPortDao.add(customsInfo);
 		if (flag) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

@@ -37,6 +37,7 @@ public class MorderSub implements Serializable {
 	private String transportModel;//  运输方式
 	private int seqNo;//导入(手动订单时)生成的序列号
 	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
+	private String merchant_no;//商户Id
 	public long getId() {
 		return id;
 	}
@@ -261,6 +262,12 @@ public class MorderSub implements Serializable {
 		this.spareParams = spareParams;
 	}
 
-	
+	public String getMerchant_no() {
+		return merchant_no;
+	}
 
+	public void setMerchant_no(String merchant_no) {
+		this.merchant_no = merchant_no;
+	}
+	
 }
