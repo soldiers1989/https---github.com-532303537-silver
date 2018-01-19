@@ -9,10 +9,13 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.dao.common.base.ProvinceCityAreaDao;
+import org.silver.shop.dao.common.base.impl.ProvinceCityAreaDaoImpl;
 import org.silver.shop.model.common.base.Area;
 import org.silver.shop.model.common.base.City;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.base.Province;
+import org.silver.util.JedisUtil;
+import org.silver.util.SerializeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -20,11 +23,13 @@ import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
+import net.sf.json.JSONObject;
+
 @Service(interfaceClass = ProvinceCityAreaService.class)
 public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 
 	@Autowired
-	private ProvinceCityAreaDao provinceCityAreaDao;
+	private ProvinceCityAreaDao provinceCityAreaDao = new ProvinceCityAreaDaoImpl();
 
 	@Override
 	public Map<String, Object> getProvinceCityArea() {
@@ -128,15 +133,57 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	@Override
 	public Map<String, Object> getProvinceCityArea2() {
 		Map<String, Object> reMap = new HashMap<>();
-		// 查询省市区
-		Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
-		if (table != null && table.getRows().size() > 0) {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(table).getJSONArray("rows"));
-			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		Map<String, Object> datasMap = new HashMap<>();
+		Map<String, Object> province = null;
+		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
+		if (redisByte != null) {
+			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
+			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(province));
+			return datasMap;
 		} else {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			// 查询省市区
+			Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
+			if (table != null && !table.getRows().isEmpty()) {
+				com.alibaba.fastjson.JSONArray jsonObject = Transform.tableToJson(table).getJSONArray("rows");
+				reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				reMap.put(BaseCode.DATAS.toString(), jsonObject);
+				reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				if (jsonObject != null && !jsonObject.isEmpty()) {
+					Map<String, Object> item = new HashMap<>();
+					for (int i = 0; i < jsonObject.size(); i++) {
+						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
+						// 由于取出来是row数据,所以需要截取字符串
+						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
+								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
+										"")
+										+ "_"
+										+ provinceCityArea.getString("provinceName").replace("{\"value\":\"", "")
+												.replace("\"}", "")
+										+ "#"
+										+ provinceCityArea.getString("cityCode").replace("{\"value\":\"", "")
+												.replace("\"}", "").replace("{\"value\":\"", "").replace("\"}", "")
+										+ "_"
+										+ provinceCityArea.getString("cityName").replace("{\"value\":\"", "")
+												.replace("\"}", "")
+										+ "#"
+										+ provinceCityArea.getString("areaCode").replace("{\"value\":\"", "")
+												.replace("\"}", "")
+										+ "_" + provinceCityArea.getString("areaName").replace("{\"value\":\"", "")
+												.replace("\"}", ""));
+					}
+					// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
+					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 86400 * 5);
+					datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+					datasMap.put(BaseCode.DATAS.toString(), item);
+					return datasMap;
+				}
+			} else {
+				reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
+				reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			}
 		}
 		return reMap;
 	}

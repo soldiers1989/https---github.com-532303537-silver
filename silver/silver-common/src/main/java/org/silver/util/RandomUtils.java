@@ -1,5 +1,9 @@
 package org.silver.util;
 
+/**
+ * 随机数生成工具类
+ *
+ */
 public class RandomUtils {
 	private RandomUtils() {
 
@@ -7,8 +11,10 @@ public class RandomUtils {
 
 	/**
 	 * 根据需要的随机数长度来生成随机数
-	 * @param length 长度
-	 * @return
+	 * 
+	 * @param length
+	 *            长度
+	 * @return int
 	 */
 	public static int getRandom(int length) {
 		int num = 1;

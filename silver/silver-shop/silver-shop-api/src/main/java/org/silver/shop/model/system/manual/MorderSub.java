@@ -24,7 +24,7 @@ public class MorderSub implements Serializable {
 	private String Unit;// 计量单位
 	private double Price;// 单价
 	private double Total;// 总价
-	private Date create_date;
+	private Date create_date;//创建时间
 
 	private double netWt; // 净重
 	private double grossWt;// 毛重
@@ -38,6 +38,11 @@ public class MorderSub implements Serializable {
 	private int seqNo;//导入(手动订单时)生成的序列号
 	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
 	private String merchant_no;//商户Id
+	
+	private String createBy;// 创建人
+	private String updateBy;//更新人
+	private Date updateDate;//更新时间
+	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	public long getId() {
 		return id;
 	}
@@ -269,5 +274,39 @@ public class MorderSub implements Serializable {
 	public void setMerchant_no(String merchant_no) {
 		this.merchant_no = merchant_no;
 	}
+	public String getUpdateBy() {
+		return updateBy;
+	}
+
+	public Date getUpdateDate() {
+		return updateDate;
+	}
+
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	public int getDeleteFlag() {
+		return deleteFlag;
+	}
+
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
+	public void setUpdateBy(String updateBy) {
+		this.updateBy = updateBy;
+	}
+
+	public void setUpdateDate(Date updateDate) {
+		this.updateDate = updateDate;
+	}
+
+	public void setDeleteFlag(int deleteFlag) {
+		this.deleteFlag = deleteFlag;
+	}
+
+
+
 	
 }

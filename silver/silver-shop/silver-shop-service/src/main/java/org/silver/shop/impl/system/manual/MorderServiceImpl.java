@@ -27,6 +27,7 @@ import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.RandomUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
@@ -48,7 +49,6 @@ public class MorderServiceImpl implements MorderService {
 	private MuserDao muserDao;
 
 	private static final String FCODE = "142";
-
 
 	@Override
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body) {
@@ -131,8 +131,6 @@ public class MorderServiceImpl implements MorderService {
 	public Map<String, Object> pageFindRecords(Map<String, Object> dataMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
-		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
 		paramMap.put("merchant_no", dataMap.get("merchant_no") + "".trim());
 		paramMap.put("del_flag", 0);
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
@@ -155,8 +153,7 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("count", count);
 			return statusMap;
 		}
-		statusMap.put("status", -1);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
 
 	@Override
@@ -312,19 +309,24 @@ public class MorderServiceImpl implements MorderService {
 		mosb.setSeqNo(goodsInfo.getInt("seqNo"));
 		String firstLegalCount = goodsInfo.get("firstLegalCount") + "";
 		String secondLegalCount = goodsInfo.get("secondLegalCount") + "";
-		String packageType = goodsInfo.get("packageType") + "";
 		String transportModel = goodsInfo.get("transportModel") + "";
 		String numOfPackages = goodsInfo.get("numOfPackages") + "";
 
-		if (StringEmptyUtils.isNotEmpty(firstLegalCount) && StringEmptyUtils.isNotEmpty(secondLegalCount)
-				&& StringEmptyUtils.isNotEmpty(packageType) && StringEmptyUtils.isNotEmpty(numOfPackages)) {
+		if (StringEmptyUtils.isNotEmpty(firstLegalCount) && StringEmptyUtils.isNotEmpty(secondLegalCount)) {
 			mosb.setFirstLegalCount(goodsInfo.getDouble("firstLegalCount"));
 			mosb.setSecondLegalCount(goodsInfo.getDouble("secondLegalCount"));
-			mosb.setPackageType(goodsInfo.getInt("packageType"));
-			mosb.setNumOfPackages(goodsInfo.getInt("numOfPackages"));
 		}
-		mosb.setTransportModel(transportModel);
-		
+		if (StringEmptyUtils.isNotEmpty(numOfPackages)) {
+			mosb.setNumOfPackages(Integer.parseInt(numOfPackages));
+		}
+		String packageType = goodsInfo.get("packageType") + "";
+		if (StringEmptyUtils.isNotEmpty(packageType)) {
+			mosb.setPackageType(Integer.parseInt(packageType));
+		}
+		if(StringEmptyUtils.isNotEmpty(transportModel)){
+			mosb.setTransportModel(transportModel);
+		}
+
 		// (启邦客户)商品归属商家代码
 		String marCode = goodsInfo.get("marCode") + "";
 		// (启邦客户)商品归属SKU
@@ -347,6 +349,8 @@ public class MorderServiceImpl implements MorderService {
 			mosb.setSpareParams(spareParams.toString());
 		}
 		mosb.setMerchant_no(goodsInfo.get("merchantId") + "");
+		//删除标识:0-未删除,1-已删除
+		mosb.setDeleteFlag(0);
 		if (morderSubDao.add(mosb)) {
 			statusMap.put("status", 1);
 			statusMap.put("msg", "订单商品【" + goodsInfo.get("GoodsName") + "】存储成功");
@@ -358,26 +362,41 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	@Override
-	public Map<String, Object> deleteByOrderId(String marchant_no, String order_id) {
+	public Map<String, Object> deleteByOrderId(String merchantId, String merchantName, String orderIdPack) {
 		Map<String, Object> params = new HashMap<>();
-		params.put("marchant_no", marchant_no);
-		params.put("order_id", order_id);
-		List<Morder> mlist = morderDao.findByProperty(Morder.class, params, 1, 1);
-		params.clear();
-		if (mlist != null && mlist.size() > 0) {
-			if (deleteMsubByOrderId(order_id)) {
-				if (morderDao.delete(mlist.get(0))) {
-					params.put("status", 1);
-					params.put("msg", "移除数据成功");
-					return params;
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(orderIdPack);
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("订单Id信息错误,请重试!");
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> item = (Map<String, Object>) jsonList.get(i);
+			String orderId = item.get("orderId") + "";
+			params.put("marchant_no", merchantId);
+			params.put("order_id", orderId);
+			List<Morder> orderlist = morderDao.findByProperty(Morder.class, params, 1, 1);
+			params.clear();
+			if (orderlist != null && !orderlist.isEmpty()) {
+				Morder order = orderlist.get(0);
+				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
+					//删除标识:0-未删除,1-已删除
+					order.setDel_flag(1);
+					if(morderDao.update(order)){
+						return ReturnInfoUtils.successInfo();
+					}
+					return ReturnInfoUtils.errorInfo("订单删除失败,服务器繁忙!");
+					//deleteMsubByOrderId(orderId);
+				} else {
+					return ReturnInfoUtils.errorInfo("订单当前状态不允许删除,请联系管理员!");
 				}
 			}
 		}
-		params.put("status", -1);
-		params.put("msg", "移除数据失败，请重试");
-		return params;
+		return ReturnInfoUtils.errorInfo("订单信息参数错误,服务器繁忙!");
 	}
 
+	//删除订单商品
 	private boolean deleteMsubByOrderId(String order_id) {
 		return morderSubDao.deleteRecordsByOrderId(order_id);
 
@@ -430,11 +449,6 @@ public class MorderServiceImpl implements MorderService {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
 			int count = SerialNoUtils.getRedisIdCount("order");
-			/*
-			 * long count = morderDao.findByPropertyCount(Morder.class, params);
-			 * if (count < 0) { statusMap.put("status", -5);
-			 * statusMap.put("msg", "存储失败，系统内部错误"); return statusMap; }
-			 */
 			morder.setOrder_id(createMorderSysNo("YM", count, new Date()));
 			// 原导入表中的订单编号
 			morder.setOldOrderId(orderId);
@@ -643,6 +657,7 @@ public class MorderServiceImpl implements MorderService {
 			param.put("DZKNNo", goods.getDZKNNo());
 
 			param.put("seqNo", item.get("seqNo") + "");
+			param.put("merchantId", merchantId);
 			String spareParam = goods.getSpareParams();
 			if (StringEmptyUtils.isNotEmpty(spareParam)) {
 				JSONObject json = JSONObject.fromObject(spareParam);
@@ -652,9 +667,7 @@ public class MorderServiceImpl implements MorderService {
 			}
 			return createNewSub(param);
 		} else {
-			statusMap.put("status", -1);
-			statusMap.put("msg", goodsName + "------>该商品不存在,请核实!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo(goodsName + "------>该商品不存在,请核实!");
 		}
 	}
 }

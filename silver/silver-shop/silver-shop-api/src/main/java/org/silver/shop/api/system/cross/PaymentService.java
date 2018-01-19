@@ -55,7 +55,8 @@ public interface PaymentService {
 	 * @param orderIDs 订单Id
 	 * @param serialNo 流水号
 	 * @param realRowCount 总数
+	 * @param errorList 
 	 * @return Map
 	 */
-	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs, String serialNo,int realRowCount);
+	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs, String serialNo,int realRowCount, List<Map<String, Object>> errorList);
 }

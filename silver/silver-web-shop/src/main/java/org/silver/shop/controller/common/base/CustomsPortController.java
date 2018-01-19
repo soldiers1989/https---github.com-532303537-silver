@@ -82,7 +82,12 @@ public class CustomsPortController {
 			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsCode") String customsCode,
 			@RequestParam("customsName") String customsName, @RequestParam("ciqOrgCode") String ciqOrgCode,
-			@RequestParam("ciqOrgName") String ciqOrgName) {
+			@RequestParam("ciqOrgName") String ciqOrgName,HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = null;
 		statusMap = customsPortTransaction.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
 				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);

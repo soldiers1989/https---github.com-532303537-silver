@@ -34,11 +34,11 @@ public class Morder implements Serializable {
 	private String waybill;// 运单号
 	private int serial;// 批次号
 	private int status;// 0 未备案 1已发起过备案
-	private int del_flag;//
-	private Date create_date;//
-	private String create_by;//
-	private Date update_date;//
-	private Date update_by;//
+	private int del_flag;//删除标识:0-未删除,1-已删除
+	private Date create_date;//创建日期
+	private String create_by;// 创建人
+	private Date update_date;// 更新日期
+	private Date update_by;//更新人
 	private String remarks;//
 	private int order_record_status;// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 	private String order_serial_no;// 服务器接收成功后返回编号

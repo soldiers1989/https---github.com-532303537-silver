@@ -33,7 +33,7 @@ public class SplitListUtils {
 				int part = totalSize / size;// 分批数
 				System.out.println("共有 ： " + totalSize + "条，！" + " 每一次的长度 ：" + part + "");
 				//遍历需要创建List的长度
-				for (int i = 0; i < size; i++) {					
+				for (int i = 0; i < size; i++) {
 					if (i > 0 && size > 0) {
 						start = i * part;
 						end = (i + 1) * part;
@@ -47,6 +47,7 @@ public class SplitListUtils {
 					}
 					List<Object> listPage = dataList.subList(start, end);
 					list.add(listPage);
+					System.out.println(listPage);
 				}
 				datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.DATAS.toString(), list);
@@ -60,10 +61,10 @@ public class SplitListUtils {
 
 	public static void main(String[] args) {
 		List<Object> l = new ArrayList<>();
-		for (int i = 0; i <= 103; i++) {
+		for (int i = 0; i < 200; i++) {
 			l.add(i);
 		}
-		Map<String, Object> map = batchList(l, 6);
+		Map<String, Object> map = batchList(l, 4);
 		System.out.println(map);
 	}
 }

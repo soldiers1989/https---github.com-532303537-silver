@@ -1,4 +1,4 @@
-package org.silver.shop.utils;
+package org.silver.util;
 /**
  * 名称：Excel读写类
  * 功能：读取和改写已存在的Excel文件，暂不支持创建新文件。
@@ -151,7 +151,7 @@ public class ExcelUtil {
 					
 					FileOutputStream fileOut = new FileOutputStream(f.getPath());
 					workbook.write(fileOut);
-					fileOut.close();
+					fileOut.close(); 
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -290,7 +290,7 @@ public class ExcelUtil {
 			
 			}
 			// System.out.println(rowNum + "," + cellNum);
-			if (rowNum > getRowCount() || rowNum == 0) {
+			if (rowNum >= getRowCount() ) {
 					row = sheet.createRow(rowNum);
 					RowCount++;
 			//	System.out.println("创建行:" + row);

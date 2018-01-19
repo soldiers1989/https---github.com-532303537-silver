@@ -22,7 +22,14 @@ public interface MorderService {
 	 */
 	public Map<String, Object> createNewSub(JSONObject goodsInfo);
 
-	public Map<String, Object> deleteByOrderId(String marchant_no, String order_id);
+	/**
+	 * 删除订单信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param orderIdPack 订单Id(JSON格式)
+	 * @return Map
+	 */
+	public Map<String, Object> deleteByOrderId(String merchantId, String merchantName, String orderIdPack);
 
 	/**
 	 * 生成国宗物流订单
@@ -65,7 +72,7 @@ public interface MorderService {
 	/**
 	 * 批量导入企邦订单表
 	 * 
-	 * @param merchantId
+	 * @param merchantId 商户Id
 	 * @param item
 	 * @return
 	 */
@@ -74,7 +81,7 @@ public interface MorderService {
 	/**
 	 * 批量创建企邦订单商品
 	 * 
-	 * @param merchantId
+	 * @param merchantId 商户Id
 	 * @param item
 	 * @return
 	 */

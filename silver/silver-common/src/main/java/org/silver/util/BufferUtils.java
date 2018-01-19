@@ -32,7 +32,7 @@ public class BufferUtils {
 	 * @param completed
 	 *            已完成数量
 	 * @param name
-	 *            名称
+	 *            名称标识
 	 */
 	public static final void writeRedis(String status, List<Map<String, Object>> errl, int totalCount, String serialNo,
 			String name) {
@@ -85,6 +85,7 @@ public class BufferUtils {
 					datasMap.put("time", "---总线程运行时间----->" + (endTime - startTime) + "ms");
 					datasMap.remove("count");
 					datasMap.remove("startTime");
+					errl = SortUtil.sortList(errl);
 				}
 			}
 			datasMap.put(BaseCode.ERROR.toString(), errl);

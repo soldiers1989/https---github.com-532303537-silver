@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,11 +34,13 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
-import org.silver.shop.task.ExcelTask;
-import org.silver.shop.utils.ExcelUtil;
+import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
+import org.silver.shop.task.GZExcelTask;
+import org.silver.shop.task.QBExcelTask;
 import org.silver.util.AppUtil;
 import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
 import org.silver.util.JedisUtil;
@@ -63,6 +66,8 @@ public class ManualService {
 	private MeteringTransaction meteringTransaction;
 	@Autowired
 	private ProvinceCityAreaTransaction provinceCityAreaTransaction;
+	@Autowired
+	private GoodsRecordTransaction goodsRecordTransaction;
 
 	public boolean saveDatas(String merchant_no, String[] head, int length, String[][] body) {
 
@@ -365,9 +370,14 @@ public class ManualService {
 
 	}
 
-	public Map<String, Object> deleteByOrderId(String marchant_no, String order_id) {
-
-		return morderService.deleteByOrderId(marchant_no, order_id);
+	public Map<String, Object> deleteByOrderId( String orderIdPack) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return morderService.deleteByOrderId(merchantId,merchantName, orderIdPack);
 	}
 
 	public Map<String, Object> groupAddOrder(HttpServletRequest req) {
@@ -379,7 +389,7 @@ public class ManualService {
 		String merchantId = merchantInfo.getMerchantId();
 		Map<String, Object> reqMap = fileUpLoadService.universalDoUpload(req, "/gadd-excel/", ".xls", false, 400, 400,
 				null);
-		List<Map<String, Object>> errl = new ArrayList<>();
+		List<Map<String, Object>> errl = new Vector();
 		String serialNo = "";
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
@@ -475,15 +485,19 @@ public class ManualService {
 		int startCount = flag == 1 ? 2 : 1;
 		// 结束行数
 		int end = 0;
-		ExcelTask excelTask = null;
 		if (totalCount < cpuCount) {// 不需要开辟多线程
 			ExcelUtil excelC = new ExcelUtil(file);
-			excelTask = new ExcelTask(0, excelC, errl, merchantId, startCount, totalCount, this, serialNo, flag,
-					totalCount);
-			threadPool.submit(excelTask);
+			if (flag == 1) {
+				invokeQBExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo, totalCount,
+						threadPool);
+			} else if (flag == 2) {
+				invokeGZExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo, totalCount,
+						threadPool);
+			}
 		} else {
 			for (int i = 0; i < cpuCount; i++) {
 				// 副本文件名
+
 				String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xlsx";
 				File dest = new File(file.getParentFile() + "/" + imgName);
 				try {
@@ -491,28 +505,72 @@ public class ManualService {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				// 打开副本文件
+
 				ExcelUtil excelC = new ExcelUtil(dest);
-				if (i == 0) {
+				if (i == 0) {// 第一次
 					end = totalCount / cpuCount;
-					excelTask = new ExcelTask(0, excelC, errl, merchantId, startCount, end, this, serialNo, flag,
-							totalCount);
+					if (flag == 1) {
+						invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
+								threadPool);
+					} else if (flag == 2) {
+						invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
+								threadPool);
+					}
+					/*
+					 * excelTask = new QBExcelTask(0, excelC, errl, merchantId,
+					 * startCount, end, this, serialNo, flag, totalCount);
+					 */
 				} else {
 					startCount = end + 1;
 					end = startCount + (totalCount / cpuCount);
 					if (i == (cpuCount - 1)) {// 最后一次
-						excelTask = new ExcelTask(0, excelC, errl, merchantId, startCount, totalCount, this, serialNo,
-								flag, totalCount);
+						if (flag == 1) {
+							invokeQBExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo,
+									totalCount, threadPool);
+						} else if (flag == 2) {
+							invokeGZExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo,
+									totalCount, threadPool);
+						}
+						/*
+						 * excelTask = new QBExcelTask(0, excelC, errl,
+						 * merchantId, startCount, totalCount, this, serialNo,
+						 * flag, totalCount);
+						 */
 					} else {
-						excelTask = new ExcelTask(0, excelC, errl, merchantId, startCount, end, this, serialNo, flag,
-								totalCount);
+						if (flag == 1) {
+							invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
+									threadPool);
+						} else if (flag == 2) {
+							invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
+									threadPool);
+						}
+						/*
+						 * excelTask = new QBExcelTask(0, excelC, errl,
+						 * merchantId, startCount, end, this, serialNo, flag,
+						 * totalCount);
+						 */
 					}
 				}
-
-				threadPool.submit(excelTask);
+				// threadPool.submit(excelTask);
 			}
 		}
 		threadPool.shutdown();
+	}
+
+	// 调用国宗多任务
+	private void invokeGZExcelTask(ExcelUtil excelC, List errl, String merchantId, int startCount, int endCount,
+			ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+		GZExcelTask task = new GZExcelTask(0, excelC, errl, merchantId, startCount, endCount, manualService, serialNo,
+				totalCount);
+		threadPool.submit(task);
+	}
+
+	// 调用企邦多线程
+	private void invokeQBExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
+			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+		QBExcelTask task = new QBExcelTask(0, excel, errl, merchantId, startCount, endCount, manualService, serialNo,
+				totalCount);
+		threadPool.submit(task);
 	}
 
 	/**
@@ -555,7 +613,9 @@ public class ManualService {
 					String value = excel.getCell(sheet, r, c);
 					if (c == 0) {
 						// 序号
-						seqNo = Integer.parseInt(value);
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							seqNo = Integer.parseInt(value);
+						}
 					} else if (c == 1) {
 						// 订单Id
 						orderId = value;
@@ -671,10 +731,7 @@ public class ManualService {
 						errl.add(errMap);
 					}
 				}
-				BufferUtils.writeRedis("1", errl, (realRowCount - 1),  serialNo, "order");
-			}
-			if (!errl.isEmpty()) {
-				errl = SortUtil.sortList(errl);
+				BufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "order");
 			}
 			File file2 = excel.getFile();
 			// excel.closeExcel();
@@ -817,8 +874,11 @@ public class ManualService {
 					} else if (c == 35) {
 						// 计量单位
 						System.out.println(value);
-						if (StringEmptyUtils.isNotEmpty(value.trim())) {
-							unit = findUnit(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							value = goodsRecordTransaction.findUnit(value.trim());
+							if (StringEmptyUtils.isNotEmpty(value)) {
+								unit = value;
+							}
 						}
 					} else if (c == 41) {// 币制
 						currCode = value;
@@ -855,10 +915,16 @@ public class ManualService {
 						}
 					} else if (c == 15) {
 						// 箱件数
-						numOfPackages = Integer.parseInt(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							numOfPackages = Integer.parseInt(value.trim());
+						}
 					} else if (c == 10) {
 						// 包装种类
-						packageType = Integer.parseInt(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							packageType = Integer.parseInt(value.trim());
+						} else {
+							packageType = 4;
+						}
 					} else if (c == 8) {
 						// 运输方式
 						transportModel = value;
@@ -924,11 +990,11 @@ public class ManualService {
 				String[] str = serialNo.split("_");
 				int serial = Integer.parseInt(str[1]);
 				// 创建国宗订单
-				Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serial, dateSign,
-						OrderDate, FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel,
-						RecipientProvincesCode, RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
-						senderName, senderCountry, senderAreaCode, senderAddress, senderTel, areaCode, cityCode,
-						provinceCode, postal, provinceName, cityName, areaName, orderId, goodsInfo);
+				Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serial, dateSign, OrderDate,
+						FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel, RecipientProvincesCode,
+						RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel, senderName, senderCountry,
+						senderAreaCode, senderAddress, senderTel, areaCode, cityCode, provinceCode, postal,
+						provinceName, cityName, areaName, orderId, goodsInfo);
 				if (!"1".equals(item.get("status") + "")) {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put("msg", "【表格】第" + (r + 1) + "行订单--->" + item.get("msg"));
@@ -944,11 +1010,7 @@ public class ManualService {
 					errMap.put("msg", "【表格】第" + (r + 1) + "行商品----->" + goodsItem.get("msg"));
 					errl.add(errMap);
 				}
-				BufferUtils.writeRedis("1", errl, realRowCount,  serialNo, "order");
-			}
-
-			if (!errl.isEmpty()) {
-				errl = SortUtil.sortList(errl);
+				BufferUtils.writeRedis("1", errl, realRowCount, serialNo, "order");
 			}
 			File file2 = excel.getFile();
 			// excel.closeExcel();
@@ -958,7 +1020,7 @@ public class ManualService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		BufferUtils.writeRedis("2", errl, realRowCount,  serialNo, "order");
+		BufferUtils.writeRedis("2", errl, realRowCount, serialNo, "order");
 		// 393行：81767ms ,第二次()：76202ms
 		return statusMap;
 	}
@@ -1093,6 +1155,7 @@ public class ManualService {
 	// 根据计量单位的中文名称查询编码
 	private String findUnit(String value) {
 		List reList = meteringTransaction.findMetering();
+
 		if (reList != null && !reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
 				Metering metering = (Metering) reList.get(i);

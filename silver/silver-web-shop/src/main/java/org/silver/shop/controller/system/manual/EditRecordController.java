@@ -19,15 +19,16 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
-import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
+import org.silver.util.ExcelUtil;
 import org.silver.util.FileUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,8 +104,7 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
-		reqMap = manualService.loadDatas(page, size, req);
+		Map<String, Object> reqMap = manualService.loadDatas(page, size, req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
@@ -123,14 +123,25 @@ public class EditRecordController {
 
 	}
 
+	/**
+	 * 删除手工订单信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @param orderIdPack
+	 *            订单Id信息包
+	 * @return String JSON格式
+	 */
 	@RequestMapping(value = "/delete", produces = "application/json; charset=utf-8")
-	public String delete(HttpServletResponse resp, HttpServletRequest req, String order_id) {
+	@RequiresRoles(value = { "Merchant", "" }, logical = Logical.OR)
+	public String delete(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("orderIdPack") String orderIdPack) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = manualService.deleteByOrderId("YM20170000015078659178651922", order_id);
+		Map<String, Object> reqMap = manualService.deleteByOrderId(orderIdPack);
 		return JSONObject.fromObject(reqMap).toString();
 
 	}
@@ -236,15 +247,16 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> recordMap = new HashMap<>();
+		// 海关信息
+		Map<String, Object> customsMap = new HashMap<>();
 		Enumeration<String> itkeys = req.getParameterNames();
 		String key = "";
 		while (itkeys.hasMoreElements()) {
 			key = itkeys.nextElement();
 			String value = req.getParameter(key);
-			recordMap.put(key, value);
+			customsMap.put(key, value);
 		}
-		return JSONObject.fromObject(mdataService.sendMorderRecord(recordMap, orderNoPack)).toString();
+		return JSONObject.fromObject(mdataService.sendMorderRecord(customsMap, orderNoPack)).toString();
 	}
 
 	/**
@@ -390,13 +402,13 @@ public class EditRecordController {
 	@ResponseBody
 	@ApiOperation("商户查询缓存中Excel读取进度")
 	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("serialNo") String serialNo,@RequestParam("name") String name) {
+			@RequestParam("serialNo") String serialNo, @RequestParam("name") String name) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo,name);
+		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo, name);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -432,7 +444,7 @@ public class EditRecordController {
 			e.printStackTrace();
 		}
 		ExcelUtil excel = new ExcelUtil(dest);
-		System.out.println("---->>"+excel.getFile());
+		System.out.println("---->>" + excel.getFile());
 		excel.open();
 		int row = 0;
 		// 总行数
@@ -443,5 +455,4 @@ public class EditRecordController {
 
 	}
 
-	
 }

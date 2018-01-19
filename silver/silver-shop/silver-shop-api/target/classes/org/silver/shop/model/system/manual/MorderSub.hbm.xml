@@ -113,6 +113,20 @@
 		<property name="merchant_no">
 			<column name="merchant_no" />
 		</property>
+		
+		
+		<property name="createBy">
+			<column name="createBy" />
+		</property>
+		<property name="deleteFlag" type="java.lang.Integer">
+			<column name="deleteFlag" not-null="true" />
+		</property>
+		<property name="updateBy">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
 	</class>
 
 </hibernate-mapping>

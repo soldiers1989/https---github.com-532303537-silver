@@ -14,6 +14,7 @@ import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
 import org.springframework.stereotype.Service;
 
@@ -36,15 +37,16 @@ public class CustomsPortTransaction {
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerName = managerInfo.getManagerName();
 		String managerId = managerInfo.getManagerId();
-		Map<String,Object>	reMap = customsPortService.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
-				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName,managerId,managerName);
-		if(reMap!=null && reMap.size()>0){
-			String status = reMap.get(BaseCode.STATUS.toString())+"";
-			if(status.equals("1")){
-				return reMap;
-			}
+		if(customsPortService.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
+				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName,managerId,managerName)){
+			List<CustomsPort> customsPortList = null;
+			Map<String,Object> datasMap = customsPortService.findAllCustomsPort();
+			customsPortList = (List<CustomsPort>) datasMap.get(BaseCode.DATAS.toString());
+			// 将查询出来的口岸数据放入缓存中
+			JedisUtil.set("shop_port_AllCustomsPort".getBytes(), SerializeUtil.toBytes(customsPortList), 3600);
+			return ReturnInfoUtils.successInfo();
 		}
-		return null;
+		return ReturnInfoUtils.errorInfo("添加口岸失败,请重试!");
 	}
 
 	//查询所有已开通的口岸及关联的海关

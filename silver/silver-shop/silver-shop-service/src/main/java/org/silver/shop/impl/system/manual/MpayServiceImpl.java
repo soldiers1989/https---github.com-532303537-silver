@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import javax.annotation.Resource;
 
 import org.silver.common.BaseCode;
@@ -28,11 +31,16 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
+import org.silver.shop.task.ThreadTask;
 import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerialNoUtils;
 import org.silver.util.SortUtil;
+import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.TaskUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -300,7 +308,7 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	@Override
-	public Object sendMorderRecord(String merchantId, Map<String, Object> recordMap, String orderNoPack,
+	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
@@ -308,17 +316,15 @@ public class MpayServiceImpl implements MpayService {
 		try {
 			jsonList = JSONArray.fromObject(orderNoPack);
 		} catch (Exception e) {
-			statusMap.put(BaseCode.MSG.toString(), "订单编号错误,请核实！");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("订单编号错误,请核实！");
 		}
-		int eport = Integer.parseInt(recordMap.get("eport") + "");
-		String ciqOrgCode = recordMap.get("ciqOrgCode") + "";
-		String customsCode = recordMap.get("customsCode") + "";
+		int eport = Integer.parseInt(customsMap.get("eport") + "");
+		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
+		String customsCode = customsMap.get("customsCode") + "";
 
 		// 校验前台传递口岸、海关、智检编码
-		Map<String, Object> customsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
-		if (!"1".equals(customsMap.get(BaseCode.STATUS.toString()))) {
+		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
+		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
 			return customsMap;
 		}
 		// 获取商户在对应口岸的备案信息
@@ -327,10 +333,10 @@ public class MpayServiceImpl implements MpayService {
 			return merchantRecordMap;
 		}
 		MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) merchantRecordMap.get(BaseCode.DATAS.toString());
-		recordMap.put("ebEntNo", merchantRecordInfo.getEbEntNo());
-		recordMap.put("ebEntName", merchantRecordInfo.getEbEntName());
-		recordMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
-		recordMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
+		customsMap.put("ebEntNo", merchantRecordInfo.getEbEntNo());
+		customsMap.put("ebEntName", merchantRecordInfo.getEbEntName());
+		customsMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
+		customsMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
 
 		// 请求获取tok
 		Map<String, Object> tokMap = accessTokenService.getAccessToken();
@@ -338,11 +344,65 @@ public class MpayServiceImpl implements MpayService {
 			return tokMap;
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+
+		// 获取流水号
+		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
+		// 总数
+		int totalCount = jsonList.size();
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		// 获取当前计算机CPU线程个数
+		int cpuCount = Runtime.getRuntime().availableProcessors();
+		if (totalCount < cpuCount) {
+			ThreadTask threadTask = new ThreadTask(jsonList, merchantId, merchantName, errorList, customsMap, tok,
+					totalCount, serialNo, this);
+			threadPool.submit(threadTask);
+		} else {
+			// 分批处理
+			Map<String, Object> reMap = SplitListUtils.batchList(jsonList, cpuCount);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
+			//
+			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
+			for (int i = 0; i < dataList.size(); i++) {
+				List newList = (List) dataList.get(i);
+				ThreadTask threadTask = new ThreadTask(JSONArray.fromObject(newList), merchantId, merchantName, errorList, customsMap, tok,
+						totalCount, serialNo, this);
+				threadPool.submit(threadTask);
+			}
+		}
+		
+		//TaskUtils.invokeTask(totalCount, jsonList, merchantId, merchantName, errorList, reCustomsMap, tok, serialNo, this);
+		threadPool.shutdown();
+		statusMap.put("status", 1);
+		statusMap.put("msg", "执行成功,开始推送订单备案.......");
+		statusMap.put("serialNo", serialNo);
+		return statusMap;
+	}
+
+	/**
+	 * 准备开始推送订单备案
+	 * 
+	 * @param dataList
+	 *            订单信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param errorList
+	 *            错误信息
+	 * @param customsMap  海关信息
+	 * @param tok
+	 * @param totalCount 总行数
+	 * @param serialNo 批次号
+	 */
+	public final void startSendOrderRecord(JSONArray dataList, String merchantId, String merchantName,
+			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
+			String serialNo) {
 		// 累计金额
 		double cumulativeAmount = 0.0;
-		int totalCount = jsonList.size();
-		for (int i = 0; i < jsonList.size(); i++) {
-			Map<String, Object> orderMap = (Map<String, Object>) jsonList.get(i);
+		for (int i = 0; i < dataList.size(); i++) {
+			Map<String, Object> orderMap = (Map<String, Object>) dataList.get(i);
 			String orderNo = orderMap.get("orderNo") + "";
 			Map<String, Object> param = new HashMap<>();
 			param.put("merchant_no", merchantId);
@@ -350,21 +410,25 @@ public class MpayServiceImpl implements MpayService {
 			List<Morder> orderList = morderDao.findByProperty(Morder.class, param, 1, 1);
 			param.clear();
 			param.put("order_id", orderNo);
+			param.put("deleteFlag", 0);
 			List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 			if (orderList == null || orderSubList == null) {
 				Map<String, Object> errMap = new HashMap<>();
 				errMap.put(BaseCode.MSG.toString(), "[" + orderNo + "]订单查询失败,服务器繁忙!");
 				errorList.add(errMap);
+				BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
+				continue;
 			} else {
 				Morder order = orderList.get(0);
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-				/*if (order.getOrder_record_status() == 3) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(), "[" + orderNo + "]订单已成功备案,无需再次发起!");
-					errorList.add(errMap);
-					BufferUtils.writeRedis("1", errorList, (realRowCount - 1),  serialNo, "order")
-					continue;
-				}*/
+				/*
+				 * if (order.getOrder_record_status() == 3) { Map<String,
+				 * Object> errMap = new HashMap<>();
+				 * errMap.put(BaseCode.MSG.toString(), "[" + orderNo +
+				 * "]订单已成功备案,无需再次发起!"); errorList.add(errMap);
+				 * BufferUtils.writeRedis("1", errorList, (realRowCount - 1),
+				 * serialNo, "order") continue; }
+				 */
 				// 订单商品总额
 				double fcy = order.getFCY();
 				// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
@@ -374,15 +438,19 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), checkMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
+					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
 					continue;
 				}
-				Map<String, Object> reOrderMap = sendOrder(merchantId, recordMap, orderSubList, tok, order);
+				Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
 				System.out.println("->>>>>>>>>>>" + reOrderMap);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(), reOrderMap.get(BaseCode.MSG.toString()));
+					errMap.put(BaseCode.MSG.toString(),
+							"[" + orderNo + "]订单-->" + reOrderMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
-				}else{
+					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
+					continue;
+				} else {
 					String reOrderMessageID = reOrderMap.get("messageID") + "";
 					// 更新服务器返回订单Id
 					Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
@@ -390,18 +458,22 @@ public class MpayServiceImpl implements MpayService {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put(BaseCode.MSG.toString(), reOrderMap2.get(BaseCode.MSG.toString()));
 						errorList.add(errMap);
+						BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
+						continue;
 					}
 				}
 			}
-		//	BufferUtils.writeRedis("1", errorList, totalCount,  serialNo, "orderRecord");
+			BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
 		}
-		statusMap.clear();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
+		BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "orderRecord");
 	}
 
+	/**
+	 * 更新订单返回信息及订单状态
+	 * @param orderNo 订单编号
+	 * @param reOrderMessageID
+	 * @return Map
+	 */
 	private Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("order_id", orderNo);
@@ -414,18 +486,14 @@ public class MpayServiceImpl implements MpayService {
 				order.setOrder_record_status(2);
 				order.setUpdate_date(new Date());
 				if (!morderDao.update(order)) {
-					paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					paramMap.put(BaseCode.MSG.toString(), "更新服务器返回messageID错误!");
-					return paramMap;
+					return ReturnInfoUtils.errorInfo("更新服务器返回messageID错误!");
 				}
 			}
 			paramMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			paramMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			return paramMap;
 		} else {
-			paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), "更新支付订单返回messageID错误,服务器繁忙！");
-			return paramMap;
+			return ReturnInfoUtils.errorInfo("更新支付订单返回messageID错误,服务器繁忙！");
 		}
 	}
 
@@ -451,7 +519,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> orderMap = new HashMap<>();
 		JSONObject goodsJson = null;
 		JSONObject orderJson = new JSONObject();
-		//排序商品seq
+		// 排序商品seq
 		SortUtil.sortList(orderSubList, "seqNo", "ASC");
 		String ebEntNo = "";
 		String ebEntName = "";
@@ -574,12 +642,12 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-	//	orderMap.put("uploadOrNot", false);
+		orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 		// orderMap);
-	String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -602,17 +670,13 @@ public class MpayServiceImpl implements MpayService {
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
 			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("服务器接受订单信息失败,请重试！");
 			}
 		}
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("服务器接受订单信息失败,请重试！");
 		}
 	}
 
@@ -621,7 +685,6 @@ public class MpayServiceImpl implements MpayService {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, Object> orMap = new HashMap<>();
 		orMap.put("order_serial_no", datasMap.get("messageID") + "");
@@ -659,17 +722,12 @@ public class MpayServiceImpl implements MpayService {
 			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
 			order.setUpdate_date(new Date());
 			if (!morderDao.update(order)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "异步更新订单备案信息错误!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return ReturnInfoUtils.successInfo();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo("根据订单Id与msgId未找到数据,请核对信息!");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -688,9 +746,7 @@ public class MpayServiceImpl implements MpayService {
 
 	@Override
 	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr, int flag) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-
 		if (strArr != null && strArr.length > 0 && flag > 0) {
 			paramMap.put("order_id", strArr[0]);
 			paramMap.put("merchant_no", merchantId);
@@ -709,7 +765,7 @@ public class MpayServiceImpl implements MpayService {
 						}
 						break;
 					case 2:
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr,merchantId);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
@@ -719,40 +775,36 @@ public class MpayServiceImpl implements MpayService {
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr,merchantId);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
 						break;
 					default:
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), "修改标识错误,请重新输入!");
-						return statusMap;
+						return ReturnInfoUtils.errorInfo("修改订单或商品标识错误,请重新输入!");
 					}
 				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "订单当前状态不允许修改订单及商品信息!");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
 				}
 			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "订单不存在,请核实订单信息!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("订单不存在,请核实订单信息!");
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
-	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr,String merchantId) {
-		Map<String, Object> statusMap = new HashMap<>();
+	/**
+	 * 修改订单商品
+	 * @param order_id 订单Id
+	 * @param strArr 数据
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr, String merchantId) {
 		Map<String, Object> paramMap = new HashMap<>();
-		String entGoodsNo = strArr[2];
+		String entGoodsNo = strArr[24];
 		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "备案商品自编号不能为空,请重新输入!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("备案商品自编号不能为空,请重新输入!");
 		}
 		paramMap.put("order_id", order_id);
 		paramMap.put("EntGoodsNo", entGoodsNo);
@@ -761,7 +813,7 @@ public class MpayServiceImpl implements MpayService {
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			MorderSub goodsInfo = reOrderSubList.get(0);
 			goodsInfo.setSeq(Integer.parseInt(strArr[1]));
-			goodsInfo.setEntGoodsNo(entGoodsNo);
+			goodsInfo.setEntGoodsNo(strArr[2]);
 			goodsInfo.setHSCode(strArr[3]);
 			goodsInfo.setGoodsName(strArr[4]);
 			goodsInfo.setCusGoodsNo(strArr[5]);
@@ -784,25 +836,37 @@ public class MpayServiceImpl implements MpayService {
 			goodsInfo.setPackageType(Integer.parseInt(strArr[22]));
 			goodsInfo.setTransportModel(strArr[23]);
 			if (!morderDao.update(goodsInfo)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "更新订单备案商品错误!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("更新订单备案商品错误,请重试!");
 			}
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询订单商品信息错误,请重试!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 修改订单信息
+	 * @param order 订单实体
+	 * @param strArr 修改信息
+	 * @return Map
+	 */
 	private Map<String, Object> editMorderInfo(Morder order, String[] strArr) {
-		Map<String, Object> statusMap = new HashMap<>();
 		order.setFcode(strArr[1]);
-		order.setFCY(Double.parseDouble(strArr[2]));
-		order.setTax(Double.parseDouble(strArr[3]));
-		order.setActualAmountPaid(Double.parseDouble(strArr[4]));
+		try {
+			order.setFCY(Double.parseDouble(strArr[2]));
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("订单商品总金额错误,请重新输入!");
+		}
+		try {
+			order.setTax(Double.parseDouble(strArr[3]));
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("订单税费错误,请重新输入!");
+		}
+		try {
+			order.setActualAmountPaid(Double.parseDouble(strArr[4]));
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("实际支付金额错误,请重新输入!");
+		}
 		order.setRecipientName(strArr[5]);
 		order.setRecipientAddr(strArr[6]);
 		order.setRecipientID(strArr[7]);
@@ -815,11 +879,10 @@ public class MpayServiceImpl implements MpayService {
 		order.setOrderDocType(strArr[14]);
 		order.setOrderDocId(strArr[15]);
 		order.setOrderDocTel(strArr[16]);
-		order.setOrderDate(strArr[17]);
+		// order.setOrderDate(strArr[17]);
 		order.setTrade_no(strArr[18]);
-		order.setDateSign(strArr[19]);
+		// order.setDateSign(strArr[19]);
 		order.setWaybill(strArr[20]);
-		// order.setSerial(orderMap.get(""));
 		// order.setStatus(orderMap.get(""));
 		order.setSenderName(strArr[21]);
 		order.setSenderCountry(strArr[22]);
@@ -831,12 +894,14 @@ public class MpayServiceImpl implements MpayService {
 		order.setRecipientCityName(strArr[28]);
 		order.setRecipientAreaName(strArr[29]);
 		order.setOldOrderId(strArr[30]);
-		if (!morderDao.update(order)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "更新订单备案信息错误!");
-			return statusMap;
+		try {
+			order.setSerial(Integer.parseInt(strArr[32]));
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		if (!morderDao.update(order)) {
+			return ReturnInfoUtils.errorInfo("更新订单备案信息错误!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

@@ -20,9 +20,8 @@ import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.manual.MuserService;
 import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.task.ExcelTask;
-import org.silver.shop.utils.ExcelUtil;
 import org.silver.util.DateUtil;
+import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
@@ -121,7 +120,7 @@ public class MdataService {
 
 	
 
-	public Object sendMorderRecord(Map<String, Object> recordMap, String orderNoPack) {
+	public Object sendMorderRecord(Map<String, Object> customsMap, String orderNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -130,7 +129,9 @@ public class MdataService {
 		String merchantName = merchantInfo.getMerchantName();
 		String proxyParentId = merchantInfo.getProxyParentId();
 		String proxyParentName = merchantInfo.getProxyParentName();
-		return mpayService.sendMorderRecord(merchantId, recordMap, orderNoPack, proxyParentId, merchantName,
+		
+		
+		return mpayService.sendMorderRecord(merchantId, customsMap, orderNoPack, proxyParentId, merchantName,
 				proxyParentName);
 	}
 
@@ -170,86 +171,86 @@ public class MdataService {
 			File f = new File(filePath);
 			ExcelUtil excel = new ExcelUtil(f);
 			excel.open();
-			excel.writCell(0, 1, 0, "序号*");
-			excel.writCell(0, 1, 1, "订单编号*");
-			excel.writCell(0, 1, 2, "订单日期*");
-			excel.writCell(0, 1, 3, "进出口日期*");
-			excel.writCell(0, 1, 4, "订单运费*");
-			excel.writCell(0, 1, 5, "收件人所在国家*");
-			excel.writCell(0, 1, 6, "收件人所在省*");
-			excel.writCell(0, 1, 7, "收件人所在市*");
-			excel.writCell(0, 1, 8, "收件人所在区");
-			excel.writCell(0, 1, 9, "收件人详细地址*");
-			excel.writCell(0, 1, 10, "收件人姓名*");
-			excel.writCell(0, 1, 11, "收件人电话*");
-			excel.writCell(0, 1, 12, "发货人*");
-			excel.writCell(0, 1, 13, "发货人所在国家*");
-			excel.writCell(0, 1, 14, "发货人所在省");
-			excel.writCell(0, 1, 15, "发货人所在市*");
-			excel.writCell(0, 1, 16, "发货人所在区");
-			excel.writCell(0, 1, 17, "发货人地址*");
-			excel.writCell(0, 1, 18, "发货人电话*");
-			excel.writCell(0, 1, 19, "订单人姓名*");
-			excel.writCell(0, 1, 20, "订单人证件类型*");
-			excel.writCell(0, 1, 21, "订单人证件号码*");
-			excel.writCell(0, 1, 22, "订单人注册号*");
-			excel.writCell(0, 1, 23, "订单人电话*");
-			excel.writCell(0, 1, 24, "订单人所在国家（地区）代码*");
-			excel.writCell(0, 1, 25, "订单人所在城市名称");
-			excel.writCell(0, 1, 26, "运输方式*");
-			excel.writCell(0, 1, 27, "运输工具名称*");
-			excel.writCell(0, 1, 28, "运输工具代码");
-			excel.writCell(0, 1, 29, "航班航次编号*");
-			excel.writCell(0, 1, 30, "舱单号*");
-			excel.writCell(0, 1, 31, "启运国*");
-			excel.writCell(0, 1, 32, "启运港");
-			excel.writCell(0, 1, 33, "集装箱号");
-			excel.writCell(0, 1, 34, "集装箱尺寸");
-			excel.writCell(0, 1, 35, "集装箱类型");
-			excel.writCell(0, 1, 36, "是否转关*");
-			excel.writCell(0, 1, 37, "支付企业代码*");
-			excel.writCell(0, 1, 38, "支付企业名称*");
-			excel.writCell(0, 1, 39, "支付流水号*");
-			excel.writCell(0, 1, 40, "电子订单状态*");
-			excel.writCell(0, 1, 41, "支付状态*");
-			excel.writCell(0, 1, 42, "其他费用*");
-			excel.writCell(0, 1, 43, "支付交易类型");
-			excel.writCell(0, 1, 44, "出仓进境日期*");
-			excel.writCell(0, 1, 45, "货物存放地");
-			excel.writCell(0, 1, 46, "路由状态");
-			excel.writCell(0, 1, 47, "电子运单状态*");
-			excel.writCell(0, 1, 48, "运单二维码编号");
-			excel.writCell(0, 1, 49, "备注");
-			excel.writCell(0, 1, 50, "物流订单号");
-			excel.writCell(0, 1, 51, "运单号*");
-			excel.writCell(0, 1, 52, "进/出境口岸*");
-			excel.writCell(0, 1, 53, "快递公司*");
-			excel.writCell(0, 1, 54, "商品货号*");
-			excel.writCell(0, 1, 55, "品牌");
-			excel.writCell(0, 1, 56, "商品信息*");
-			excel.writCell(0, 1, 57, "商品海关备案号*");
-			excel.writCell(0, 1, 58, "商检备案号*");
-			excel.writCell(0, 1, 59, "规格型号*");
-			excel.writCell(0, 1, 60, "原产国*");
-			excel.writCell(0, 1, 61, "包装种类*");
-			excel.writCell(0, 1, 62, "计量单位*");
-			excel.writCell(0, 1, 63, "申报数量*");
-			excel.writCell(0, 1, 64, "净重*");
-			excel.writCell(0, 1, 65, "毛重*");
-			excel.writCell(0, 1, 66, "件数*");
-			excel.writCell(0, 1, 67, "商品单价*");
-			excel.writCell(0, 1, 68, "商品总价*");
-			excel.writCell(0, 1, 69, "商品批次号*");
-			excel.writCell(0, 1, 70, "抵付金额*");
-			excel.writCell(0, 1, 71, "抵付说明");
-			excel.writCell(0, 1, 72, "ERP订单号");
-			excel.writCell(0, 1, 73, "ERP单价");
-			excel.writCell(0, 1, 74, "ERP总价");
-			excel.writCell(0, 1, 75, "ERP商品名称");
-			excel.writCell(0, 1, 76, "第一数量*");
-			excel.writCell(0, 1, 77, "第二数量*");
-			excel.writCell(0, 1, 78, "HS编码");
-			excel.writCell(0, 1, 79, "行邮税号");
+			excel.writCell(0, 0, 0, "序号*");
+			excel.writCell(0, 0, 1, "订单编号*");
+			excel.writCell(0, 0, 2, "订单日期*");
+			excel.writCell(0, 0, 3, "进出口日期*");
+			excel.writCell(0, 0, 4, "订单运费*");
+			excel.writCell(0, 0, 5, "收件人所在国家*");
+			excel.writCell(0, 0, 6, "收件人所在省*");
+			excel.writCell(0, 0, 7, "收件人所在市*");
+			excel.writCell(0, 0, 8, "收件人所在区");
+			excel.writCell(0, 0, 9, "收件人详细地址*");
+			excel.writCell(0, 0, 10, "收件人姓名*");
+			excel.writCell(0, 0, 11, "收件人电话*");
+			excel.writCell(0, 0, 12, "发货人*");
+			excel.writCell(0, 0, 13, "发货人所在国家*");
+			excel.writCell(0, 0, 14, "发货人所在省");
+			excel.writCell(0, 0, 15, "发货人所在市*");
+			excel.writCell(0, 0, 16, "发货人所在区");
+			excel.writCell(0, 0, 17, "发货人地址*");
+			excel.writCell(0, 0, 18, "发货人电话*");
+			excel.writCell(0, 0, 19, "订单人姓名*");
+			excel.writCell(0, 0, 20, "订单人证件类型*");
+			excel.writCell(0, 0, 21, "订单人证件号码*");
+			excel.writCell(0, 0, 22, "订单人注册号*");
+			excel.writCell(0, 0, 23, "订单人电话*");
+			excel.writCell(0, 0, 24, "订单人所在国家（地区）代码*");
+			excel.writCell(0, 0, 25, "订单人所在城市名称");
+			excel.writCell(0, 0, 26, "运输方式*");
+			excel.writCell(0, 0, 27, "运输工具名称*");
+			excel.writCell(0, 0, 28, "运输工具代码");
+			excel.writCell(0, 0, 29, "航班航次编号*");
+			excel.writCell(0, 0, 30, "舱单号*");
+			excel.writCell(0, 0, 31, "启运国*");
+			excel.writCell(0, 0, 32, "启运港");
+			excel.writCell(0, 0, 33, "集装箱号");
+			excel.writCell(0, 0, 34, "集装箱尺寸");
+			excel.writCell(0, 0, 35, "集装箱类型");
+			excel.writCell(0, 0, 36, "是否转关*");
+			excel.writCell(0, 0, 37, "支付企业代码*");
+			excel.writCell(0, 0, 38, "支付企业名称*");
+			excel.writCell(0, 0, 39, "支付流水号*");
+			excel.writCell(0, 0, 40, "电子订单状态*");
+			excel.writCell(0, 0, 41, "支付状态*");
+			excel.writCell(0, 0, 42, "其他费用*");
+			excel.writCell(0, 0, 43, "支付交易类型");
+			excel.writCell(0, 0, 44, "出仓进境日期*");
+			excel.writCell(0, 0, 45, "货物存放地");
+			excel.writCell(0, 0, 46, "路由状态");
+			excel.writCell(0, 0, 47, "电子运单状态*");
+			excel.writCell(0, 0, 48, "运单二维码编号");
+			excel.writCell(0, 0, 49, "备注");
+			excel.writCell(0, 0, 50, "物流订单号");
+			excel.writCell(0, 0, 51, "运单号*");
+			excel.writCell(0, 0, 52, "进/出境口岸*");
+			excel.writCell(0, 0, 53, "快递公司*");
+			excel.writCell(0, 0, 54, "商品货号*");
+			excel.writCell(0, 0, 55, "品牌");
+			excel.writCell(0, 0, 56, "商品信息*");
+			excel.writCell(0, 0, 57, "商品海关备案号*");
+			excel.writCell(0, 0, 58, "商检备案号*");
+			excel.writCell(0, 0, 59, "规格型号*");
+			excel.writCell(0, 0, 60, "原产国*");
+			excel.writCell(0, 0, 61, "包装种类*");
+			excel.writCell(0, 0, 62, "计量单位*");
+			excel.writCell(0, 0, 63, "申报数量*");
+			excel.writCell(0, 0, 64, "净重*");
+			excel.writCell(0, 0, 65, "毛重*");
+			excel.writCell(0, 0, 66, "件数*");
+			excel.writCell(0, 0, 67, "商品单价*");
+			excel.writCell(0, 0, 68, "商品总价*");
+			excel.writCell(0, 0, 69, "商品批次号*");
+			excel.writCell(0, 0, 70, "抵付金额*");
+			excel.writCell(0, 0, 71, "抵付说明");
+			excel.writCell(0, 0, 72, "ERP订单号");
+			excel.writCell(0, 0, 73, "ERP单价");
+			excel.writCell(0, 0, 74, "ERP总价");
+			excel.writCell(0, 0, 75, "ERP商品名称");
+			excel.writCell(0, 0, 76, "第一数量*");
+			excel.writCell(0, 0, 77, "第二数量*");
+			excel.writCell(0, 0, 78, "HS编码");
+			excel.writCell(0, 0, 79, "行邮税号");
 
 			for (int i = 0; i < arr.size(); i++) {
 				String order_Id, Fcode, RecipientName, RecipientAddr, RecipientID, RecipientTel, RecipientProvincesCode,
@@ -353,124 +354,124 @@ public class MdataService {
 
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
-						excel.writCell(0, i + 2, c, i + 1);
+						excel.writCell(0, i + 1, c, i + 1);
 					} else if (c == 1) {
 						// 订单Id
-						excel.writCell(0, i + 2, c, order_Id);
+						excel.writCell(0, i + 1, c, order_Id);
 					} else if (c == 2) {
 						// 下单日期
-						excel.writCell(0, i + 2, c, create_date);
+						excel.writCell(0, i + 1, c, create_date);
 					} else if (c == 3) {
-						excel.writCell(0, i + 2, c, create_date);
+						excel.writCell(0, i + 1, c, create_date);
 					} else if (c == 6) {
-						excel.writCell(0, i + 2, c, RecipientProvincesName);
+						excel.writCell(0, i + 1, c, RecipientProvincesName);
 					} else if (c == 7) {
-						excel.writCell(0, i + 2, c, RecipientCityName);
+						excel.writCell(0, i + 1, c, RecipientCityName);
 					} else if (c == 8) {
-						excel.writCell(0, i + 2, c, RecipientAreaName);
+						excel.writCell(0, i + 1, c, RecipientAreaName);
 					} else if (c == 9) {
-						excel.writCell(0, i + 2, c, RecipientAddr);
+						excel.writCell(0, i + 1, c, RecipientAddr);
 					} else if (c == 10) {
-						excel.writCell(0, i + 2, c, RecipientName);
+						excel.writCell(0, i + 1, c, RecipientName);
 					} else if (c == 11) {
-						excel.writCell(0, i + 2, c, RecipientTel);
+						excel.writCell(0, i + 1, c, RecipientTel);
 					} else if (c == 12) {
-						excel.writCell(0, i + 2, c, senderName);
+						excel.writCell(0, i + 1, c, senderName);
 					} else if (c == 13) {
-						excel.writCell(0, i + 2, c, senderCountry);
+						excel.writCell(0, i + 1, c, senderCountry);
 					} else if (c == 15) {
-						excel.writCell(0, i + 2, c, senderAreaCode);
+						excel.writCell(0, i + 1, c, senderAreaCode);
 					} else if (c == 17) {
-						excel.writCell(0, i + 2, c, senderAddress);
+						excel.writCell(0, i + 1, c, senderAddress);
 					} else if (c == 18) {
-						excel.writCell(0, i + 2, c, senderTel);
+						excel.writCell(0, i + 1, c, senderTel);
 					} else if (c == 19) {
-						excel.writCell(0, i + 2, c, OrderDocName);
+						excel.writCell(0, i + 1, c, OrderDocName);
 					} else if (c == 20) {
-						excel.writCell(0, i + 2, c, OrderDocType);
+						excel.writCell(0, i + 1, c, OrderDocType);
 					} else if (c == 21) {
-						excel.writCell(0, i + 2, c, OrderDocId);
+						excel.writCell(0, i + 1, c, OrderDocId);
 					} else if (c == 22) {
-						excel.writCell(0, i + 2, c, OrderDocName);
+						excel.writCell(0, i + 1, c, OrderDocName);
 					} else if (c == 23) {
-						excel.writCell(0, i + 2, c, OrderDocTel);
+						excel.writCell(0, i + 1, c, OrderDocTel);
 					}else if(c == 24){
 						//订单人所在国家（地区）代码
-						excel.writCell(0, i + 2, c, "142");
+						excel.writCell(0, i + 1, c, "142");
 					}else if (c == 25) {
-						excel.writCell(0, i + 2, c, RecipientCityName);
+						excel.writCell(0, i + 1, c, RecipientCityName);
 					} else if (c == 31) {
-						excel.writCell(0, i + 2, c, senderCountry);
+						excel.writCell(0, i + 1, c, senderCountry);
 					} else if (c == 32) {
-						excel.writCell(0, i + 2, c, senderCountry);
+						excel.writCell(0, i + 1, c, senderCountry);
 					}else if(c == 36){
 						//是否转关
-						excel.writCell(0, i + 2, c, "N");
+						excel.writCell(0, i + 1, c, "N");
 					}else if (c == 37) {
 						//支付企业代码
-						excel.writCell(0, i + 2, c, "C000010000803304");
+						excel.writCell(0, i + 1, c, "C000010000803304");
 					} else if (c == 38) {
-						excel.writCell(0, i + 2, c, "银盛支付服务股份有限公司");
+						excel.writCell(0, i + 1, c, "银盛支付服务股份有限公司");
 					} else if (c == 39) {
-						excel.writCell(0, i + 2, c, trade_no);
+						excel.writCell(0, i + 1, c, trade_no);
 					} else if (c == 44) {
 						// 出仓进境日期
-						excel.writCell(0, i + 2, c, create_date);
+						excel.writCell(0, i + 1, c, create_date);
 					} else if (c == 50) {
 						// 物流订单号
-						excel.writCell(0, i + 2, c, order_Id);
+						excel.writCell(0, i + 1, c, order_Id);
 					} else if (c == 51) {
-						excel.writCell(0, i + 2, c, waybill);
+						excel.writCell(0, i + 1, c, waybill);
 					} else if (c == 54) {
-						excel.writCell(0, i + 2, c, EntGoodsNo);
+						excel.writCell(0, i + 1, c, EntGoodsNo);
 					} else if (c == 56) {
 						// 品牌
-						excel.writCell(0, i + 2, c, Brand);
+						excel.writCell(0, i + 1, c, Brand);
 					} else if (c == 55) {
 						// 商品信息
-						excel.writCell(0, i + 2, c, GoodsName);
+						excel.writCell(0, i + 1, c, GoodsName);
 					} else if (c == 57) {
 						// 海关备案号=HS编码
-						excel.writCell(0, i + 2, c, HSCode);
+						excel.writCell(0, i + 1, c, HSCode);
 					} else if (c == 58) {
 						// 商检备案号
-						excel.writCell(0, i + 2, c, CIQGoodsNo);
+						excel.writCell(0, i + 1, c, CIQGoodsNo);
 					} else if (c == 59) {
-						excel.writCell(0, i + 2, c, GoodsStyle);
+						excel.writCell(0, i + 1, c, GoodsStyle);
 					} else if (c == 60) {
-						excel.writCell(0, i + 2, c, OriginCountry);
+						excel.writCell(0, i + 1, c, OriginCountry);
 					} else if(c == 61){
 						//包装种类
-						excel.writCell(0, i + 2, c, "2");
+						excel.writCell(0, i + 1, c, "2");
 					}
 					else if (c == 62) {
-						excel.writCell(0, i + 2, c, Unit);
+						excel.writCell(0, i + 1, c, Unit);
 					} else if (c == 63) {
-						excel.writCell(0, i + 2, c, Qty);
+						excel.writCell(0, i + 1, c, Qty);
 					} else if (c == 64) {
-						excel.writCell(0, i + 2, c, netWt);
+						excel.writCell(0, i + 1, c, netWt);
 					} else if (c == 65) {
-						excel.writCell(0, i + 2, c, grossWt);
+						excel.writCell(0, i + 1, c, grossWt);
 					}else if( c ==66){
 						//件数
-						excel.writCell(0, i + 2, c, "1");
+						excel.writCell(0, i + 1, c, "1");
 					}
 					else if (c == 67) {
-						excel.writCell(0, i + 2, c, Price);
+						excel.writCell(0, i + 1, c, Price);
 					} else if (c == 68) {
-						excel.writCell(0, i + 2, c, Total);
+						excel.writCell(0, i + 1, c, Total);
 					} else if (c == 76) {
 						// 第一法定数
-						excel.writCell(0, i + 2, c, firstLegalCount);
+						excel.writCell(0, i + 1, c, firstLegalCount);
 					} else if (c == 77) {
 						// 第二法定数
-						excel.writCell(0, i + 2, c, secLegalCount);
+						excel.writCell(0, i + 1, c, secLegalCount);
 					} else if (c == 78) {
 						// HS编码
-						excel.writCell(0, i + 2, c, HSCode);
+						excel.writCell(0, i + 1, c, HSCode);
 					} else if (c == 79) {
 						// 行邮税号
-						excel.writCell(0, i + 2, c, "27000000");
+						excel.writCell(0, i + 1, c, "27000000");
 					}
 				}
 			}

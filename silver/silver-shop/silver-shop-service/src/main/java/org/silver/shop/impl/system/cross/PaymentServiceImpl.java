@@ -129,6 +129,33 @@ public class PaymentServiceImpl implements PaymentService {
 			return tokMap;
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		// 获取流水号
+		String serialNo = "paymentRecord_" + SerialNoUtils.getSerialNo("paymentRecord");
+		//总数
+		int totalCount = jsonList.size();
+
+		startSendPaymentRecord(jsonList, merchantId, merchantName, errorList, recordMap, tok, totalCount, serialNo);
+		statusMap.clear();
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.ERROR.toString(), errorList);
+		return statusMap;
+	}
+
+	/**
+	 * 开始发起支付单推送
+	 * @param jsonList 
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param errorList 错误信息
+	 * @param recordMap 商户备案信息
+	 * @param tok 
+	 * @param totalCount 总数
+	 * @param serialNo 批次号
+	 */
+	public final void startSendPaymentRecord(JSONArray jsonList, String merchantId, String merchantName,
+			List<Map<String, Object>> errorList, Map<String, Object> recordMap, String tok, int totalCount,
+			String serialNo) {
 		Map<String, Object> param = new HashMap<>();
 		double cumulativeAmount = 0.0;
 		for (int i = 0; i < jsonList.size(); i++) {
@@ -159,6 +186,7 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!");
 					errorList.add(errMap);
+					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 					continue;
 				}
 				Map<String, Object> paymentInfoMap = new HashMap<>();
@@ -180,6 +208,7 @@ public class PaymentServiceImpl implements PaymentService {
 					errMap.put(BaseCode.MSG.toString(),
 							"支付流水号[" + treadeNo + "]----->>>" + paymentMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
+					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 					continue;
 				}
 				String rePayMessageID = paymentMap.get("messageID") + "";
@@ -190,20 +219,19 @@ public class PaymentServiceImpl implements PaymentService {
 					errMap.put(BaseCode.MSG.toString(),
 							"支付流水号[" + treadeNo + "]----->>>" + rePaymentMap2.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
+					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 					continue;
 				}
 			} else {
 				Map<String, Object> errorMap = new HashMap<>();
 				errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
 				errorList.add(errorMap);
+				BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 				continue;
 			}
+			BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 		}
-		statusMap.clear();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
+		BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "paymentRecord");
 	}
 
 	/**
@@ -371,9 +399,10 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs,String serialNo,int realRowCount) {
+	public Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs, String serialNo,
+			int realRowCount,List<Map<String,Object>> errorList) {
 		Map<String, Object> statusMap = new HashMap<>();
-		List<Map<String, Object>> errorList = new ArrayList<>();
+		
 		if (merchantId != null && orderIDs != null && orderIDs.size() > 0) {
 			for (String order_id : orderIDs) {
 				Map<String, Object> params = new HashMap<>();
@@ -386,9 +415,9 @@ public class PaymentServiceImpl implements PaymentService {
 					List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 					if (mpayl != null && mpayl.size() > 0) {
 						Map<String, Object> error = new HashMap<>();
-						error.put("status", -4);
 						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，不需要重复生成");
 						errorList.add(error);
+						BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 						continue;
 					}
 					params.clear();
@@ -402,26 +431,25 @@ public class PaymentServiceImpl implements PaymentService {
 							morder.get(0).getOrderDocTel(), pay_time)
 							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
 						// 当创建完支付流水号之后
-						BufferUtils.writeRedis("1", errorList, realRowCount,  serialNo, "payment");
+						BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 						continue;
 					}
 					Map<String, Object> error = new HashMap<>();
 					statusMap.put("msg", order_id + "生成支付单出错，请稍后重试");
 					errorList.add(error);
+					BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 					continue;
 				}
 				Map<String, Object> error = new HashMap<>();
 				error.put("msg", order_id + "不存在的订单信息");
 				errorList.add(error);
+				BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 			}
 		} else {
 			statusMap.put("status", -3);
 			statusMap.put("msg", "非法请求");
 			return statusMap;
 		}
-	/*	statusMap.put("status", 1);
-		statusMap.put("msg", "支付单生成成功");
-		statusMap.put(BaseCode.ERROR.toString(), errorList);*/
 		BufferUtils.writeRedis("2", errorList, realRowCount, serialNo, "payment");
 		return statusMap;
 	}
@@ -458,6 +486,7 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setPay_currCode("142");
 		entity.setPay_record_status(1);
 		entity.setPay_time(pay_time);
+		entity.setCreate_by("system");
 		return paymentDao.add(entity);
 	}
 

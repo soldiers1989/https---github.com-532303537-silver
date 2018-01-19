@@ -130,10 +130,10 @@ public class ProvinceCityAreaTransaction {
 	 * 
 	 * @return
 	 */
-	public Object getProvinceCityArea() {
+	public  Object getProvinceCityArea() {
 		Map<String, Object> datasMap = new HashMap<>();
 		Map<String, Object> province = null;
-		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
 		if (redisByte != null) {
 			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -144,38 +144,9 @@ public class ProvinceCityAreaTransaction {
 			datasMap = provinceCityAreaService.getProvinceCityArea2();
 			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
-				com.alibaba.fastjson.JSONArray jsonObject = (com.alibaba.fastjson.JSONArray) datasMap
-						.get(BaseCode.DATAS.getBaseCode());
-				if (jsonObject != null && !jsonObject.isEmpty()) {
-					Map<String, Object> item = new HashMap<>();
-					for (int i = 0; i < jsonObject.size(); i++) {
-						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
-						// 由于取出来是row数据,所以需要截取字符串
-						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
-								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
-										"")
-										+ "_"
-										+ provinceCityArea.getString("provinceName").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "#"
-										+ provinceCityArea.getString("cityCode").replace("{\"value\":\"", "")
-												.replace("\"}", "").replace("{\"value\":\"", "").replace("\"}", "")
-										+ "_"
-										+ provinceCityArea.getString("cityName").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "#"
-										+ provinceCityArea.getString("areaCode").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "_" + provinceCityArea.getString("areaName").replace("{\"value\":\"", "")
-												.replace("\"}", ""));
-					}
-					// 将查询出来的数据放入到缓存中
-					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 3600);
-					datasMap.put(BaseCode.DATAS.toString(), item);
-				}
+				return datasMap;
 			}
 		}
 		return datasMap;
 	}
-
 }

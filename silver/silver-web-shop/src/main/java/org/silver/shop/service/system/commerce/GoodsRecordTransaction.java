@@ -25,11 +25,11 @@ import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.CountryTransaction;
 import org.silver.shop.service.common.base.MeteringTransaction;
-import org.silver.shop.utils.ExcelUtil;
-import org.silver.util.CheckDatasUtil;
 import org.silver.util.ConvertUtils;
+import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -233,7 +233,7 @@ public class GoodsRecordTransaction {
 					recordContentMap.put("err", errl);
 					return recordContentMap;
 				}
-			
+
 				switch (c) {
 				case 0:
 					if (StringEmptyUtils.isNotEmpty(value)) {
@@ -242,11 +242,11 @@ public class GoodsRecordTransaction {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "上架商品名称不能为空!");
 						errl.add(errMap);
-						flag= 1;
+						flag = 1;
 						continue;
 					}
 					break;
-				
+
 				case 1:
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						ncadCode = value;
@@ -254,7 +254,7 @@ public class GoodsRecordTransaction {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "行邮税号不能为空!");
 						errl.add(errMap);
-						flag= 1;
+						flag = 1;
 						continue;
 					}
 					break;
@@ -471,18 +471,57 @@ public class GoodsRecordTransaction {
 		return recordContentMap;
 	}
 
-	// 根据计量单位的中文名称查询编码
-	private String findUnit(String value) {
-		List reList = meteringTransaction.findMetering();
-		if (reList != null && !reList.isEmpty()) {
-			for (int i = 0; i < reList.size(); i++) {
-				Metering metering = (Metering) reList.get(i);
-				if (value.equals(metering.getMeteringName())) {
-					return metering.getMeteringCode();
+	/**
+	 *  根据计量单位的中文名称或比代码查询编码
+	 * @param value
+	 * @return
+	 */
+	public  final String findUnit(String value) {
+		if (StringEmptyUtils.isNotEmpty(value)) {
+			List reList = meteringTransaction.findMetering();
+			if (reList != null && !reList.isEmpty()) {
+				if (StringUtil.isContainChinese(value)) {
+					return getChineseByUnit(reList, value);
+				}
+				if (StringUtil.isNumeric(value)) {
+					return getNumericByUnit(reList, value);
 				}
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 根据编码查询计量单位
+	 * @param reList
+	 * @param value 
+	 * @return
+	 */
+	private String getNumericByUnit(List reList, String value) {
+		for (int i = 0; i < reList.size(); i++) {
+			Metering metering = (Metering) reList.get(i);
+			String code = metering.getMeteringCode();
+			if (value.equals(code)) {
+				return code;
+			}
+		}
+		return "011";
+	}
+
+	/**
+	 * 根据中文名称查询计量单位
+	 * @param list
+	 * @param value
+	 * @return
+	 */
+	private String getChineseByUnit(List list, String value) {
+		for (int i = 0; i < list.size(); i++) {
+			Metering metering = (Metering) list.get(i);
+			if (value.equals(metering.getMeteringName())) {
+				return metering.getMeteringCode();
+			}
+		}
+		return "011";
 	}
 
 	// 根据国家中文名称查询国家编码
