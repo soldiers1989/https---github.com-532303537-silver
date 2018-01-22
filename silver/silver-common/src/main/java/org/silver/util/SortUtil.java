@@ -119,11 +119,11 @@ public class SortUtil {
 	 * @Title: sortMap
 	 * @Description: 对集合内的数据按key的字母顺序做排序
 	 */
-	public static List<Map<String, Object>> sortList(final List list) {
+	public static List<Map<String, Object>> sortList(final List<Map<String, Object>> list) {
 		// 对list进行重新按照glxxlx进行升序-从小到大
 		if (null != list && !list.isEmpty()) {
-			Collections.sort(list, new Comparator<Map<Object, Object>>() {
-				public int compare(Map<Object, Object> o1, Map<Object, Object> o2) {
+			Collections.sort(list, new Comparator<Map<String, Object>>() {
+				public int compare(Map<String, Object> o1, Map<String, Object> o2) {
 					String msg = o1.get("msg") + "";
 					String index1 = msg.substring(msg.indexOf("第") + 1, msg.indexOf("行"));
 					String msg2 = o2.get("msg") + "";
@@ -139,11 +139,11 @@ public class SortUtil {
 	}
 
 	public static void main(String[] args) {
-		List<Map<Object, Object>> list = new ArrayList<Map<Object, Object>>();
-		Map<Object, Object> map = new HashMap<Object, Object>();
-		Map<Object, Object> map1 = new HashMap<Object, Object>();
-		Map<Object, Object> map2 = new HashMap<Object, Object>();
-		Map<Object, Object> map3 = new HashMap<Object, Object>();
+		List<Map<Object, Object>> list = new ArrayList<>();
+		Map<Object, Object> map = new HashMap<>();
+		Map<Object, Object> map1 = new HashMap<>();
+		Map<Object, Object> map2 = new HashMap<>();
+		Map<Object, Object> map3 = new HashMap<>();
 		map.put("number", "第" + 11 + "行");
 		map1.put("number", "第" + 2 + "行");
 		map2.put("number", "第" + 4 + "行");
@@ -157,7 +157,7 @@ public class SortUtil {
 		list.add(map2);
 		list.add(map3);
 		// map = new SortUtil().sortList(list);
-		System.out.println(SortUtil.sortList(list));
+		//System.out.println(SortUtil.sortList(list));
 		// OrderByUtil.sortList(list, "sqlNo", "ASC");
 	}
 

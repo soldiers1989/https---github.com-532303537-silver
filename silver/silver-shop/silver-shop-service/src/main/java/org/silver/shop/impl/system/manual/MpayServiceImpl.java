@@ -366,13 +366,14 @@ public class MpayServiceImpl implements MpayService {
 			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
 			for (int i = 0; i < dataList.size(); i++) {
 				List newList = (List) dataList.get(i);
-				ThreadTask threadTask = new ThreadTask(JSONArray.fromObject(newList), merchantId, merchantName, errorList, customsMap, tok,
-						totalCount, serialNo, this);
+				ThreadTask threadTask = new ThreadTask(JSONArray.fromObject(newList), merchantId, merchantName,
+						errorList, customsMap, tok, totalCount, serialNo, this);
 				threadPool.submit(threadTask);
 			}
 		}
-		
-		//TaskUtils.invokeTask(totalCount, jsonList, merchantId, merchantName, errorList, reCustomsMap, tok, serialNo, this);
+
+		// TaskUtils.invokeTask(totalCount, jsonList, merchantId, merchantName,
+		// errorList, reCustomsMap, tok, serialNo, this);
 		threadPool.shutdown();
 		statusMap.put("status", 1);
 		statusMap.put("msg", "执行成功,开始推送订单备案.......");
@@ -391,10 +392,13 @@ public class MpayServiceImpl implements MpayService {
 	 *            商户名称
 	 * @param errorList
 	 *            错误信息
-	 * @param customsMap  海关信息
+	 * @param customsMap
+	 *            海关信息
 	 * @param tok
-	 * @param totalCount 总行数
-	 * @param serialNo 批次号
+	 * @param totalCount
+	 *            总行数
+	 * @param serialNo
+	 *            批次号
 	 */
 	public final void startSendOrderRecord(JSONArray dataList, String merchantId, String merchantName,
 			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
@@ -470,7 +474,9 @@ public class MpayServiceImpl implements MpayService {
 
 	/**
 	 * 更新订单返回信息及订单状态
-	 * @param orderNo 订单编号
+	 * 
+	 * @param orderNo
+	 *            订单编号
 	 * @param reOrderMessageID
 	 * @return Map
 	 */
@@ -545,19 +551,8 @@ public class MpayServiceImpl implements MpayService {
 			goodsJson.element("Total", goodsInfo.getTotal());
 			goodsJson.element("CurrCode", "142");
 			goodsJson.element("Notes", "");
-			String jsonGoods = goodsInfo.getSpareParams();
-			if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
-				JSONObject params = JSONObject.fromObject(jsonGoods);
-				// 企邦专属字段
-				goodsJson.element("marCode", params.get("marCode"));
-				goodsJson.element("sku", params.get("SKU"));
-				// 电商企业编号
-				ebEntNo = params.get("ebEntNo") + "";
-				// 电商企业名称
-				ebEntName = params.get("ebEntName") + "";
-				// 电子口岸(16)编码
-				DZKANo = params.get("DZKNNo") + "";
-			}
+			addQBGoodsInfo(goodsInfo, goodsJson);
+
 			goodsList.add(goodsJson);
 		}
 		orderJson.element("orderGoodsList", goodsList);
@@ -586,13 +581,9 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
 		orderJson.element("OrderDate", order.getCreate_date());
 		orderJson.element("entPayNo", order.getTrade_no());
-		// 企邦字段
-		String orderSpare = order.getSpareParams();
-		if (StringEmptyUtils.isNotEmpty(orderSpare)) {
-			JSONObject params = JSONObject.fromObject(orderSpare);
-			// 企邦快递承运商
-			orderJson.element("tmsServiceCode", params.getString("ehsEntName"));
-		}
+		orderJson.element("waybill", order.getWaybill());
+		addQBOrderInfo(order, orderJson);
+
 		orderJsonList.add(orderJson);
 		// 客戶端签名
 		String clientsign = "";
@@ -642,7 +633,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
@@ -677,6 +668,45 @@ public class MpayServiceImpl implements MpayService {
 			return JSONObject.fromObject(resultStr);
 		} else {
 			return ReturnInfoUtils.errorInfo("服务器接受订单信息失败,请重试！");
+		}
+	}
+
+	/**
+	 * 根据业务需求添加企邦商品专属字段
+	 * @param goodsInfo
+	 * @param goodsJson
+	 */
+	private void addQBGoodsInfo(MorderSub goodsInfo, JSONObject goodsJson) {
+		String ebEntNo = "";
+		String ebEntName = "";
+		String DZKANo = "";
+		String jsonGoods = goodsInfo.getSpareParams();
+		if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
+			JSONObject params = JSONObject.fromObject(jsonGoods);
+			// 企邦专属字段
+			goodsJson.element("marCode", params.get("marCode"));
+			goodsJson.element("sku", params.get("SKU"));
+			// 电商企业编号
+			ebEntNo = params.get("ebEntNo") + "";
+			// 电商企业名称
+			ebEntName = params.get("ebEntName") + "";
+			// 电子口岸(16)编码
+			DZKANo = params.get("DZKNNo") + "";
+		}
+	}
+
+	/**
+	 * 根据业务需求添加企邦订单专属字段
+	 * @param order 订单信息
+	 * @param orderJson 订单集合
+	 */
+	private void addQBOrderInfo(Morder order, JSONObject orderJson) {
+		// 企邦字段
+		String orderSpare = order.getSpareParams();
+		if (StringEmptyUtils.isNotEmpty(orderSpare)) {
+			JSONObject params = JSONObject.fromObject(orderSpare);
+			// 企邦快递承运商
+			orderJson.element("tmsServiceCode", params.getString("ehsEntName"));
 		}
 	}
 
@@ -795,9 +825,13 @@ public class MpayServiceImpl implements MpayService {
 
 	/**
 	 * 修改订单商品
-	 * @param order_id 订单Id
-	 * @param strArr 数据
-	 * @param merchantId 商户Id
+	 * 
+	 * @param order_id
+	 *            订单Id
+	 * @param strArr
+	 *            数据
+	 * @param merchantId
+	 *            商户Id
 	 * @return Map
 	 */
 	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr, String merchantId) {
@@ -846,8 +880,11 @@ public class MpayServiceImpl implements MpayService {
 
 	/**
 	 * 修改订单信息
-	 * @param order 订单实体
-	 * @param strArr 修改信息
+	 * 
+	 * @param order
+	 *            订单实体
+	 * @param strArr
+	 *            修改信息
 	 * @return Map
 	 */
 	private Map<String, Object> editMorderInfo(Morder order, String[] strArr) {
