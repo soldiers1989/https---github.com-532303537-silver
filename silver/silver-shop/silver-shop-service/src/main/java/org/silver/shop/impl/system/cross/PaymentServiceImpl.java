@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -25,11 +28,14 @@ import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
+import org.silver.shop.task.GroupPaymentTask;
+import org.silver.shop.task.PaymentRecordTask;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.RandomUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -131,27 +137,57 @@ public class PaymentServiceImpl implements PaymentService {
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
 		// 获取流水号
 		String serialNo = "paymentRecord_" + SerialNoUtils.getSerialNo("paymentRecord");
-		//总数
+		// 总数
 		int totalCount = jsonList.size();
 
-		startSendPaymentRecord(jsonList, merchantId, merchantName, errorList, recordMap, tok, totalCount, serialNo);
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		// 获取当前计算机CPU线程个数
+		int cpuCount = Runtime.getRuntime().availableProcessors();
+		if (totalCount < cpuCount) {
+			PaymentRecordTask threadTask = new PaymentRecordTask(jsonList, merchantId, merchantName, errorList,
+					recordMap, tok, totalCount, serialNo, this);
+			threadPool.submit(threadTask);
+		} else {
+			// 分批处理
+			Map<String, Object> reMap = SplitListUtils.batchList(jsonList, cpuCount);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
+			//
+			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
+			for (int i = 0; i < dataList.size(); i++) {
+				List newList = (List) dataList.get(i);
+				PaymentRecordTask threadTask = new PaymentRecordTask(JSONArray.fromObject(newList), merchantId,
+						merchantName, errorList, recordMap, tok, totalCount, serialNo, this);
+				threadPool.submit(threadTask);
+			}
+		}
+		// startSendPaymentRecord(jsonList, merchantId, merchantName, errorList,
+		// recordMap, tok, totalCount, serialNo);
 		statusMap.clear();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
+		statusMap.put("status", 1);
+		statusMap.put("msg", "执行成功,开始推送支付单备案.......");
+		statusMap.put("serialNo", serialNo);
 		return statusMap;
 	}
 
 	/**
 	 * 开始发起支付单推送
-	 * @param jsonList 
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param errorList 错误信息
-	 * @param recordMap 商户备案信息
-	 * @param tok 
-	 * @param totalCount 总数
-	 * @param serialNo 批次号
+	 * 
+	 * @param jsonList
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param errorList
+	 *            错误信息
+	 * @param recordMap
+	 *            商户备案信息
+	 * @param tok
+	 * @param totalCount
+	 *            总数
+	 * @param serialNo
+	 *            批次号
 	 */
 	public final void startSendPaymentRecord(JSONArray jsonList, String merchantId, String merchantName,
 			List<Map<String, Object>> errorList, Map<String, Object> recordMap, String tok, int totalCount,
@@ -399,10 +435,9 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs, String serialNo,
-			int realRowCount,List<Map<String,Object>> errorList) {
+	public final Map<String, Object> groupCreateMpay(String merchantId, List<String> orderIDs, String serialNo,
+			int realRowCount, List<Map<String, Object>> errorList) {
 		Map<String, Object> statusMap = new HashMap<>();
-		
 		if (merchantId != null && orderIDs != null && orderIDs.size() > 0) {
 			for (String order_id : orderIDs) {
 				Map<String, Object> params = new HashMap<>();
@@ -415,13 +450,13 @@ public class PaymentServiceImpl implements PaymentService {
 					List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 					if (mpayl != null && mpayl.size() > 0) {
 						Map<String, Object> error = new HashMap<>();
-						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，不需要重复生成");
+						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，无需重复生成!");
 						errorList.add(error);
 						BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
+						System.out.println("---->>>>>>>" + errorList);
 						continue;
 					}
 					params.clear();
-
 					int count = SerialNoUtils.getRedisIdCount("payment");
 					String trade_no = createTradeNo("01O", (count + 1), new Date());
 					String orderDate = morder.get(0).getOrderDate();
@@ -435,23 +470,23 @@ public class PaymentServiceImpl implements PaymentService {
 						continue;
 					}
 					Map<String, Object> error = new HashMap<>();
-					statusMap.put("msg", order_id + "生成支付单出错，请稍后重试");
+					statusMap.put("msg", order_id + "生成支付单出错，请稍后重试!");
 					errorList.add(error);
 					BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 					continue;
 				}
 				Map<String, Object> error = new HashMap<>();
-				error.put("msg", order_id + "不存在的订单信息");
+				error.put("msg", order_id + "不存在的订单信息!");
 				errorList.add(error);
 				BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 			}
+			BufferUtils.writeRedis("2", errorList, realRowCount, serialNo, "payment");
+			return null;
 		} else {
 			statusMap.put("status", -3);
 			statusMap.put("msg", "非法请求");
 			return statusMap;
 		}
-		BufferUtils.writeRedis("2", errorList, realRowCount, serialNo, "payment");
-		return statusMap;
 	}
 
 	/**
@@ -533,4 +568,39 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return sign + dstr + nstr + rstr;
 	}
+
+	@Override
+	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName) {
+		Map<String, Object> statusMap = new HashMap<>();
+		// 获取当前计算机CPU线程个数
+		int cpuCount = Runtime.getRuntime().availableProcessors();
+		String serialNo = "payment_" + SerialNoUtils.getSerialNo("payment");
+		// 总数
+		int realRowCount = orderIdList.size();
+		List<Map<String, Object>> errorList = new Vector();
+		if (realRowCount <= cpuCount) {
+			groupCreateMpay(merchantId, orderIdList, serialNo, realRowCount, errorList);
+		} else {
+			ExecutorService threadPool = Executors.newCachedThreadPool();
+			// 分批处理
+			Map<String, Object> reMap = SplitListUtils.batchList(orderIdList, cpuCount);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
+			//
+			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
+			for (int i = 0; i < dataList.size(); i++) {
+				List list = (List) dataList.get(i);
+				GroupPaymentTask task = new GroupPaymentTask(list, merchantId, this, serialNo, realRowCount,
+						errorList);
+				threadPool.submit(task);
+			}
+			threadPool.shutdown();
+		}
+		statusMap.put("status", 1);
+		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
+		statusMap.put("serialNo", serialNo);
+		return statusMap;
+	}
+
 }

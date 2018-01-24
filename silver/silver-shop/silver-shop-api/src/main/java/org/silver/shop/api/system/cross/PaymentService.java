@@ -59,4 +59,13 @@ public interface PaymentService {
 	 * @return Map
 	 */
 	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs, String serialNo,int realRowCount, List<Map<String, Object>> errorList);
+	
+	/**
+	 * 分批启动多线程创建支付单流水
+	 * @param orderIdList
+	 * @param merchantId
+	 * @param merchantName
+	 * @return
+	 */
+	public Map<String,Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName);
 }

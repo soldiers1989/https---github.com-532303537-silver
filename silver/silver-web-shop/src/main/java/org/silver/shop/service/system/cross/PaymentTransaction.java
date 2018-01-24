@@ -1,24 +1,17 @@
 package org.silver.shop.service.system.cross;
 
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.task.GroupPaymentTask;
-import org.silver.util.SerialNoUtils;
-import org.silver.util.SplitListUtils;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -88,37 +81,9 @@ public class PaymentTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		// 获取当前计算机CPU线程个数
-		int cpuCount = Runtime.getRuntime().availableProcessors();
-		String serialNo = "payment_" + SerialNoUtils.getSerialNo("payment");
-		// 总数
-		int realRowCount = orderIdList.size();
-		List<Map<String, Object>> errorList = new ArrayList<>();
-		if (realRowCount < cpuCount) {
-			paymentService.groupCreateMpay(merchantId, orderIdList, serialNo, realRowCount,errorList);
-		} else {
-			ExecutorService threadPool = Executors.newCachedThreadPool();
-			// 分批处理
-			Map<String, Object> reMap = SplitListUtils.batchList(orderIdList, cpuCount);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
-			//
-			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
-			for (int i = 0; i < dataList.size(); i++) {
-				List list = (List) dataList.get(i);
-				GroupPaymentTask task = new GroupPaymentTask(list, merchantId, paymentService, serialNo, realRowCount,errorList);
-				threadPool.submit(task);
-			}
-			threadPool.shutdown();
-		}
-		statusMap.put("status", 1);
-		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
-		statusMap.put("serialNo", serialNo);
-		return statusMap;
+		String merchantName = merchantInfo.getMerchantName();
 		// 单35458ms
 		// 多14675ms
-		// return paymentService.groupCreateMpay(merchantId, orderIdList,
-		// serialNo, realRowCount);
+		 return paymentService.splitStartPaymentId(orderIdList,merchantId,merchantName);
 	}
 }

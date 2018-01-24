@@ -380,6 +380,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	public List findByPropertyLike(Class entity, Map params, Map blurryMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
+		String treadeKey = "";
 		try {
 			session = getSession();
 			String hql = "from " + entName + " model ";
@@ -390,15 +391,18 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if ("startDate".equals(property)) {//驼峰写法实体
+					if ("startDate".equals(property)) {// 驼峰写法实体
 						hql = hql + "model.createDate " + " >= " + "? " + " and ";
-					} else if ("endDate".equals(property)) {//驼峰写法实体
+					} else if ("endDate".equals(property)) {// 驼峰写法实体
 						hql = hql + "model.createDate " + " <= " + "?" + " and ";
-					}else if("startTime".equals(property)){//用于兼容下划线版本实体
+					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
 						hql = hql + "model.create_date " + " >= " + "? " + " and ";
-					}else if("endTime".equals(property)){//用于兼容下划线版本实体
+					} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
 						hql = hql + "model.create_date " + " <= " + "? " + " and ";
-					}else {
+					} else if ("tradeNoFlag".equals(property)) {
+						hql = hql + "model.trade_no " + params.get(property) + " and ";
+						continue;
+					} else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -453,11 +457,15 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 						hql = hql + "model.createDate" + " >= " + "?" + " and ";
 					} else if ("endDate".equals(property)) {
 						hql = hql + "model.createDate" + " <= " + "?" + " and ";
-					}else if("startTime".equals(property)){//用于兼容下划线版本实体
+					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
 						hql = hql + "model.create_date " + " >= " + "? " + " and ";
-					}else if("endTime".equals(property)){//用于兼容下划线版本实体
+					} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
 						hql = hql + "model.create_date " + " <= " + "? " + " and ";
-					} else {
+					} else if ("tradeNoFlag".equals(property)) {
+						hql = hql + "model.trade_no " + params.get(property) + " and ";
+						continue;
+					}
+					else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -555,7 +563,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<T> findByPropertyOr2(Class entity,  Map orMap, int page, int size) {
+	public List<T> findByPropertyOr2(Class entity, Map orMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -603,19 +611,20 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-	
-	public static void main(String[] args)  {
-		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+
+	public static void main(String[] args) {
+		//ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
-		BaseDaoImpl bd =  new BaseDaoImpl();
+		BaseDaoImpl bd = new BaseDaoImpl();
 		paramMap.put("firstTypeId", Long.parseLong("29"));
-		//List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null, 0, 0);
-		Map<String,Object> orMap = new HashMap<>();
-		orMap.put("order_serial_no",  "222");
+		// List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null,
+		// 0, 0);
+		Map<String, Object> orMap = new HashMap<>();
+		orMap.put("order_serial_no", "222");
 		orMap.put("order_id", "65478417");
 		List<Morder> reList = bd.findByPropertyOr2(Morder.class, orMap, 0, 0);
-		
-		System.out.println("0----->>>>"+reList.size());
+
+		System.out.println("0----->>>>" + reList.size());
 	}
 
 }

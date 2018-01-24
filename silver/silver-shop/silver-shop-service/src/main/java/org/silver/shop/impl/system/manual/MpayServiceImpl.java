@@ -31,7 +31,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
-import org.silver.shop.task.ThreadTask;
+import org.silver.shop.task.OrderRecordTask;
 import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
@@ -321,11 +321,10 @@ public class MpayServiceImpl implements MpayService {
 		int eport = Integer.parseInt(customsMap.get("eport") + "");
 		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
 		String customsCode = customsMap.get("customsCode") + "";
-
 		// 校验前台传递口岸、海关、智检编码
 		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
 		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
-			return customsMap;
+			return reCustomsMap;
 		}
 		// 获取商户在对应口岸的备案信息
 		Map<String, Object> merchantRecordMap = getMerchantRecordInfo(merchantId, eport);
@@ -344,7 +343,6 @@ public class MpayServiceImpl implements MpayService {
 			return tokMap;
 		}
 		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
-
 		// 获取流水号
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		// 总数
@@ -353,8 +351,8 @@ public class MpayServiceImpl implements MpayService {
 		// 获取当前计算机CPU线程个数
 		int cpuCount = Runtime.getRuntime().availableProcessors();
 		if (totalCount < cpuCount) {
-			ThreadTask threadTask = new ThreadTask(jsonList, merchantId, merchantName, errorList, customsMap, tok,
-					totalCount, serialNo, this);
+			OrderRecordTask threadTask = new OrderRecordTask(jsonList, merchantId, merchantName, errorList, customsMap,
+					tok, totalCount, serialNo, this);
 			threadPool.submit(threadTask);
 		} else {
 			// 分批处理
@@ -366,12 +364,11 @@ public class MpayServiceImpl implements MpayService {
 			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
 			for (int i = 0; i < dataList.size(); i++) {
 				List newList = (List) dataList.get(i);
-				ThreadTask threadTask = new ThreadTask(JSONArray.fromObject(newList), merchantId, merchantName,
-						errorList, customsMap, tok, totalCount, serialNo, this);
+				OrderRecordTask threadTask = new OrderRecordTask(JSONArray.fromObject(newList), merchantId,
+						merchantName, errorList, customsMap, tok, totalCount, serialNo, this);
 				threadPool.submit(threadTask);
 			}
 		}
-
 		// TaskUtils.invokeTask(totalCount, jsonList, merchantId, merchantName,
 		// errorList, reCustomsMap, tok, serialNo, this);
 		threadPool.shutdown();
@@ -399,6 +396,7 @@ public class MpayServiceImpl implements MpayService {
 	 *            总行数
 	 * @param serialNo
 	 *            批次号
+	 * @param threadPool
 	 */
 	public final void startSendOrderRecord(JSONArray dataList, String merchantId, String merchantName,
 			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
@@ -551,8 +549,20 @@ public class MpayServiceImpl implements MpayService {
 			goodsJson.element("Total", goodsInfo.getTotal());
 			goodsJson.element("CurrCode", "142");
 			goodsJson.element("Notes", "");
-			addQBGoodsInfo(goodsInfo, goodsJson);
-
+			// 企邦商品业务字段
+			String jsonGoods = goodsInfo.getSpareParams();
+			if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
+				JSONObject params = JSONObject.fromObject(jsonGoods);
+				// 企邦专属字段
+				goodsJson.element("marCode", params.get("marCode"));
+				goodsJson.element("sku", params.get("SKU"));
+				// 电商企业编号
+				ebEntNo = params.get("ebEntNo") + "";
+				// 电商企业名称
+				ebEntName = params.get("ebEntName") + "";
+				// 电子口岸(16)编码
+				DZKANo = params.get("DZKNNo") + "";
+			}
 			goodsList.add(goodsJson);
 		}
 		orderJson.element("orderGoodsList", goodsList);
@@ -582,6 +592,7 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDate", order.getCreate_date());
 		orderJson.element("entPayNo", order.getTrade_no());
 		orderJson.element("waybill", order.getWaybill());
+
 		addQBOrderInfo(order, orderJson);
 
 		orderJsonList.add(orderJson);
@@ -633,12 +644,12 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		//orderMap.put("uploadOrNot", false);
+		 orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		// String resultStr =
-		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-		// orderMap);
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+		 String resultStr =
+		 YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+		 orderMap);
+		//String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -654,10 +665,10 @@ public class MpayServiceImpl implements MpayService {
 				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
-			// String resultStr2 =
-			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			// orderMap);
-			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+			 String resultStr2 =
+			 YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			 orderMap);
+			//String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
 			} else {
@@ -672,33 +683,12 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	/**
-	 * 根据业务需求添加企邦商品专属字段
-	 * @param goodsInfo
-	 * @param goodsJson
-	 */
-	private void addQBGoodsInfo(MorderSub goodsInfo, JSONObject goodsJson) {
-		String ebEntNo = "";
-		String ebEntName = "";
-		String DZKANo = "";
-		String jsonGoods = goodsInfo.getSpareParams();
-		if (StringEmptyUtils.isNotEmpty(jsonGoods)) {
-			JSONObject params = JSONObject.fromObject(jsonGoods);
-			// 企邦专属字段
-			goodsJson.element("marCode", params.get("marCode"));
-			goodsJson.element("sku", params.get("SKU"));
-			// 电商企业编号
-			ebEntNo = params.get("ebEntNo") + "";
-			// 电商企业名称
-			ebEntName = params.get("ebEntName") + "";
-			// 电子口岸(16)编码
-			DZKANo = params.get("DZKNNo") + "";
-		}
-	}
-
-	/**
 	 * 根据业务需求添加企邦订单专属字段
-	 * @param order 订单信息
-	 * @param orderJson 订单集合
+	 * 
+	 * @param order
+	 *            订单信息
+	 * @param orderJson
+	 *            订单集合
 	 */
 	private void addQBOrderInfo(Morder order, JSONObject orderJson) {
 		// 企邦字段

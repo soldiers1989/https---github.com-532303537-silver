@@ -42,4 +42,20 @@ public class ReturnInfoUtils {
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
 	}
+	
+	/**
+	 * 返回成功信息,并带Data数据
+	 * @param Datas 返回参数
+	 * @return Map
+	 */
+	public static final Map<String, Object> successDataInfo(Object datas) {
+		Map<String, Object> statusMap = new HashMap<>();
+		if(datas == null ){
+			return null;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.DATAS.toString(), datas);
+		return statusMap;
+	}
 }

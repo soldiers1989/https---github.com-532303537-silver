@@ -71,7 +71,7 @@ public class BufferUtils {
 				// 获取当前计算机CPU线程个数
 				int cpuCount = Runtime.getRuntime().availableProcessors();
 				// int cpuCount = 1;
-				if (totalCount < cpuCount) {
+				if (totalCount <= cpuCount) {
 					count = cpuCount;
 				} else {
 					count++;
@@ -85,7 +85,9 @@ public class BufferUtils {
 					datasMap.put("time", "---总线程运行时间----->" + (endTime - startTime) + "ms");
 					datasMap.remove("count");
 					datasMap.remove("startTime");
-					errl = SortUtil.sortList(errl);
+					if("order".equals(name)){//只有再订单导入时才需要排序错误
+						errl = SortUtil.sortList(errl);
+					}
 				}
 			}
 			datasMap.put(BaseCode.ERROR.toString(), errl);

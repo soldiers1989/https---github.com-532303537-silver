@@ -30,6 +30,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.model.common.base.Metering;
 import org.silver.shop.model.common.base.Province;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.PostalTransaction;
@@ -44,6 +45,7 @@ import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.SortUtil;
@@ -370,14 +372,14 @@ public class ManualService {
 
 	}
 
-	public Map<String, Object> deleteByOrderId( String orderIdPack) {
+	public Map<String, Object> deleteByOrderId(String orderIdPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return morderService.deleteByOrderId(merchantId,merchantName, orderIdPack);
+		return morderService.deleteByOrderId(merchantId, merchantName, orderIdPack);
 	}
 
 	public Map<String, Object> groupAddOrder(HttpServletRequest req) {
@@ -389,7 +391,7 @@ public class ManualService {
 		String merchantId = merchantInfo.getMerchantId();
 		Map<String, Object> reqMap = fileUpLoadService.universalDoUpload(req, "/gadd-excel/", ".xls", false, 400, 400,
 				null);
-		List<Map<String, Object>> errl = new Vector();
+
 		String serialNo = "";
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
@@ -401,33 +403,29 @@ public class ManualService {
 			// 有数据的总行数
 			int realRowCount = excelRealRowCount(excel.getRowCount(0), excel);
 			if (realRowCount <= 0) {
-				statusMap.put("status", -1);
-				statusMap.put("msg", "导入失败,请检查是否有数据或数据符合要求!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("导入失败,请检查是否有数据或数据符合要求!");
 			}
 			if (columnTotalCount == 14) { // 企邦模板表格长度(增加了序号列)
+				// 用于前台区分哪家批次号
 				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB");
 				// 企邦表单多了一行说明
 				realRowCount = realRowCount + 1;
 				// readQBSheet(0, excel, errl, merchantId, serialNo);
-				startTask(1, realRowCount, file, errl, merchantId, serialNo);
-				// 用于前台区分哪家批次号
+				startTask(1, realRowCount, file, merchantId, serialNo);
 				statusMap.put("serialNo", serialNo);
 			} else if (columnTotalCount == 70) {// 国宗订单模板长度(加上序号列)
 				// readGZSheet(0, excel, errl, merchantId,0,0);
-				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
-				startTask(2, realRowCount, file, errl, merchantId, serialNo);
 				// 用于前台区分哪家批次号
+				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
+				startTask(2, realRowCount, file, merchantId, serialNo);
 				statusMap.put("serialNo", serialNo);
 			} else {
-				statusMap.put("status", -1);
-				statusMap.put("msg", "导入失败,请检查订单模板是否符合规范!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板是否符合规范!");
 			}
 			excel.closeExcel();
 			file.delete();
 			statusMap.put("status", 1);
-			statusMap.put("msg", "执行成功,正在读取数据");
+			statusMap.put("msg", "执行成功,正在读取数据....");
 			return statusMap;
 		}
 		return null;
@@ -476,8 +474,10 @@ public class ManualService {
 	 * @param serialNo
 	 *            导入批次号
 	 */
-	private void startTask(int flag, int totalCount, File file, List errl, String merchantId, String serialNo) {
+	private void startTask(int flag, int totalCount, File file, String merchantId, String serialNo) {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
+		List<Map<String, Object>> errl = new Vector();
+		List<Object> cacheList = new Vector();
 		// 判断当前计算机CPU线程个数
 		int cpuCount = Runtime.getRuntime().availableProcessors();
 		// int cpuCount = 1;
@@ -485,19 +485,13 @@ public class ManualService {
 		int startCount = flag == 1 ? 2 : 1;
 		// 结束行数
 		int end = 0;
-		if (totalCount < cpuCount) {// 不需要开辟多线程
+		if (totalCount <= cpuCount) {// 不需要开辟多线程
 			ExcelUtil excelC = new ExcelUtil(file);
-			if (flag == 1) {
-				invokeQBExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo, totalCount,
-						threadPool);
-			} else if (flag == 2) {
-				invokeGZExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo, totalCount,
-						threadPool);
-			}
+			startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount, threadPool,
+					cacheList);
 		} else {
 			for (int i = 0; i < cpuCount; i++) {
 				// 副本文件名
-
 				String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xlsx";
 				File dest = new File(file.getParentFile() + "/" + imgName);
 				try {
@@ -505,71 +499,79 @@ public class ManualService {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-
 				ExcelUtil excelC = new ExcelUtil(dest);
 				if (i == 0) {// 第一次
 					end = totalCount / cpuCount;
-					if (flag == 1) {
-						invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
-								threadPool);
-					} else if (flag == 2) {
-						invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
-								threadPool);
-					}
-					/*
-					 * excelTask = new QBExcelTask(0, excelC, errl, merchantId,
-					 * startCount, end, this, serialNo, flag, totalCount);
-					 */
+					startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool,
+							cacheList);
 				} else {
 					startCount = end + 1;
 					end = startCount + (totalCount / cpuCount);
 					if (i == (cpuCount - 1)) {// 最后一次
-						if (flag == 1) {
-							invokeQBExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo,
-									totalCount, threadPool);
-						} else if (flag == 2) {
-							invokeGZExcelTask(excelC, errl, merchantId, startCount, totalCount, this, serialNo,
-									totalCount, threadPool);
-						}
-						/*
-						 * excelTask = new QBExcelTask(0, excelC, errl,
-						 * merchantId, startCount, totalCount, this, serialNo,
-						 * flag, totalCount);
-						 */
+						startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount,
+								threadPool, cacheList);
 					} else {
-						if (flag == 1) {
-							invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
-									threadPool);
-						} else if (flag == 2) {
-							invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount,
-									threadPool);
-						}
-						/*
-						 * excelTask = new QBExcelTask(0, excelC, errl,
-						 * merchantId, startCount, end, this, serialNo, flag,
-						 * totalCount);
-						 */
+						startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool,
+								cacheList);
 					}
 				}
-				// threadPool.submit(excelTask);
 			}
 		}
 		threadPool.shutdown();
 	}
 
+	/**
+	 * 根据需求判断启动对应的线程进行Excel信息读取
+	 * 
+	 * @param flag
+	 *            1-企邦,2-国宗
+	 * @param excelC
+	 *            工具类
+	 * @param errl
+	 *            错误信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param startCount
+	 *            开始行数
+	 * @param end
+	 *            结束行数
+	 * @param serialNo
+	 *            批次号
+	 * @param totalCount
+	 *            总行数
+	 * @param threadPool
+	 *            线程池
+	 * @param cacheList
+	 *            缓存
+	 */
+	private void startTask(int flag, ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
+			int startCount, int end, String serialNo, int totalCount, ExecutorService threadPool,
+			List<Object> cacheList) {
+		if (flag == 1) {
+			invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool,
+					cacheList);
+		} else if (flag == 2) {
+			invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool,
+					cacheList);
+		}
+
+	}
+
 	// 调用国宗多任务
-	private void invokeGZExcelTask(ExcelUtil excelC, List errl, String merchantId, int startCount, int endCount,
-			ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+	private void invokeGZExcelTask(ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId, int startCount,
+			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool,
+			List<Object> cacheList) {
 		GZExcelTask task = new GZExcelTask(0, excelC, errl, merchantId, startCount, endCount, manualService, serialNo,
-				totalCount);
+				totalCount, cacheList);
 		threadPool.submit(task);
 	}
 
 	// 调用企邦多线程
 	private void invokeQBExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool,
+			List<Object> cacheList) {
 		QBExcelTask task = new QBExcelTask(0, excel, errl, merchantId, startCount, endCount, manualService, serialNo,
-				totalCount);
+				totalCount, cacheList);
 		threadPool.submit(task);
 	}
 
@@ -587,7 +589,7 @@ public class ManualService {
 	 * @return
 	 */
 	public Map<String, Object> readQBSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String serialNo, int startCount, int endCount, int realRowCount) {
+			String merchantId, String serialNo, int startCount, int endCount, int realRowCount, List cacheList) {
 		Map<String, Object> statusMap = new HashMap<>();
 		int seqNo = 0;
 		String orderId = "";// 订单Id
@@ -765,10 +767,12 @@ public class ManualService {
 	 *            批次号
 	 * @param realRowCount
 	 *            总行数
+	 * @param cacheList
+	 *            缓存信息
 	 * @return Map
 	 */
 	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, int startCount, int endCount, String serialNo, int realRowCount) {
+			String merchantId, int startCount, int endCount, String serialNo, int realRowCount, List cacheList) {
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
@@ -960,7 +964,7 @@ public class ManualService {
 				dateSign = OrderDate.substring(0, 8);
 				// 根据 商品名 商品货号 查找出已备案商品信息，生成订单关联的商品数据
 				JSONObject goodsInfo = new JSONObject();
-				goodsInfo.put("EntGoodsNo", EntGoodsNo);
+				goodsInfo.put("entGoodsNo", EntGoodsNo);
 				goodsInfo.put("HSCode", hsCode);
 				goodsInfo.put("Brand", goodsName);
 				goodsInfo.put("BarCode", EntGoodsNo);
@@ -995,10 +999,17 @@ public class ManualService {
 						RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel, senderName, senderCountry,
 						senderAreaCode, senderAddress, senderTel, areaCode, cityCode, provinceCode, postal,
 						provinceName, cityName, areaName, orderId, goodsInfo);
-				if (!"1".equals(item.get("status") + "")) {
+				if ("10".equals(item.get("status") + "")) {// 当遇到超额时
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put("msg", "【表格】第" + (r + 1) + "行订单--->" + item.get("msg"));
+					String msg = item.get("msg") + "";
+					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
 					errl.add(errMap);
+				} else if (!"1".equals(item.get("status") + "")) {
+					Map<String, Object> errMap = new HashMap<>();
+					String msg = item.get("msg") + "";
+					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
+					errl.add(errMap);
+					BufferUtils.writeRedis("1", errl, realRowCount, serialNo, "order");
 					continue;
 				}
 				String order_id = item.get("order_id") + "";
@@ -1165,5 +1176,26 @@ public class ManualService {
 			}
 		}
 		return null;
+	}
+
+	// 删除订单商品信息
+	public Map<String, Object> deleteOrderGoodsInfo(String idPack) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取管理员登录时,shiro存入在session中的数据
+	//	Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String id = "";
+		String name = "";
+		// 获取登录后的商户账号
+		if (merchantInfo != null) {
+			id = merchantInfo.getMerchantId();
+			name = merchantInfo.getMerchantName();
+		} 
+//		else if (managerInfo != null) {
+//			id = managerInfo.getManagerId();
+//			name = managerInfo.getManagerName();
+//		}
+		return morderService.deleteOrderGoodsInfo(id, name, idPack);
 	}
 }

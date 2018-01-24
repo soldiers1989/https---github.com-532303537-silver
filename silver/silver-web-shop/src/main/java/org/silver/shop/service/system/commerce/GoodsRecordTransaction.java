@@ -219,7 +219,6 @@ public class GoodsRecordTransaction {
 		String ingredient = "";// 成分(商品向南沙国检备案必填)
 		String additiveflag = "";// 超范围使用食品添加剂
 		String poisonflag = "";// 含有毒害物质
-		int flag = 0;
 
 		for (int r = 2; r <= excel.getRowCount(); r++) {
 			if (excel.getColumnCount(r) == 0) {
@@ -242,7 +241,6 @@ public class GoodsRecordTransaction {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "上架商品名称不能为空!");
 						errl.add(errMap);
-						flag = 1;
 						continue;
 					}
 					break;
@@ -254,7 +252,6 @@ public class GoodsRecordTransaction {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "行邮税号不能为空!");
 						errl.add(errMap);
-						flag = 1;
 						continue;
 					}
 					break;

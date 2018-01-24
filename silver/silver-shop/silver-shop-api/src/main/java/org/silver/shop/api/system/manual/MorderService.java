@@ -1,5 +1,6 @@
 package org.silver.shop.api.system.manual;
 
+import java.util.List;
 import java.util.Map;
 
 import net.sf.json.JSONObject;
@@ -86,4 +87,13 @@ public interface MorderService {
 	 * @return
 	 */
 	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item);
+
+	/**
+	 * 删除订单关联的商品信息
+	 * @param id 操作人Id
+	 * @param name 操作人名称
+	 * @param idPack Id信息包
+	 * @return Map
+	 */
+	public Map<String, Object> deleteOrderGoodsInfo(String id, String name, String idPack);
 }

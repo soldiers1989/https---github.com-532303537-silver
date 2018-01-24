@@ -132,9 +132,9 @@ public class EditRecordController {
 	 *            订单Id信息包
 	 * @return String JSON格式
 	 */
-	@RequestMapping(value = "/delete", produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/deleteOrderInfo", produces = "application/json; charset=utf-8")
 	@RequiresRoles(value = { "Merchant", "" }, logical = Logical.OR)
-	public String delete(HttpServletResponse resp, HttpServletRequest req,
+	public String deleteOrderInfo(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("orderIdPack") String orderIdPack) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -143,9 +143,31 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = manualService.deleteByOrderId(orderIdPack);
 		return JSONObject.fromObject(reqMap).toString();
-
 	}
 
+	/**
+	 * 删除手工订单关联的商品信息信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @param idPack
+	 *            Id信息包
+	 * @return String JSON格式
+	 */
+	@RequestMapping(value = "/deleteOrderGoodsInfo", produces = "application/json; charset=utf-8")
+	@RequiresRoles(value = { "Merchant", "" }, logical = Logical.OR)
+	public String deleteOrderGoodsInfo(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("idPack") String idPack) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reqMap = manualService.deleteOrderGoodsInfo(idPack);
+		return JSONObject.fromObject(reqMap).toString();
+	}
+	
+	
 	/********************** 手工录入人员信息 ************************/
 	@RequestMapping(value = "/addMuser", produces = "application/json; charset=utf-8")
 	public String addMuser(HttpServletResponse resp, HttpServletRequest req, int length) {
@@ -229,7 +251,6 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = manualService.groupAddOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
-
 	}
 
 	/**

@@ -314,4 +314,13 @@ public class MemberController {
 		statusMap.put(BaseCode.MSG.toString(), "手机号码输入不正确,请重新输入!");
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	public static void main(String[] args) {
+		String str = "1";
+		if("10".equals(str)){
+			System.out.println("------10-----");
+		}else if(!"1".equals(str)){
+			System.out.println("------111111-----");
+		}
+	}
 }

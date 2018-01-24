@@ -133,6 +133,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("merchant_no", dataMap.get("merchant_no") + "".trim());
 		paramMap.put("del_flag", 0);
+
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
 		Map<String, Object> statusMap = new HashMap<>();
@@ -251,7 +252,7 @@ public class MorderServiceImpl implements MorderService {
 		JSONArray datas = new JSONArray();
 		datas.add(goodsInfo);
 		List<String> noNullKeys = new ArrayList<>();
-		noNullKeys.add("EntGoodsNo");
+		noNullKeys.add("entGoodsNo");
 		noNullKeys.add("HSCode");
 		noNullKeys.add("Brand");
 		// noNullKeys.add("BarCode");
@@ -281,7 +282,7 @@ public class MorderServiceImpl implements MorderService {
 		MorderSub mosb = new MorderSub();
 		mosb.setSeq(Integer.parseInt((count + 1) + ""));
 		mosb.setOrder_id(orderId);
-		mosb.setEntGoodsNo(goodsInfo.get("EntGoodsNo") + "");
+		mosb.setEntGoodsNo(goodsInfo.get("entGoodsNo") + "");
 		mosb.setHSCode(goodsInfo.get("HSCode") + "");
 		mosb.setBrand(goodsInfo.get("Brand") + "");
 		mosb.setBarCode(goodsInfo.get("BarCode") + "");
@@ -323,7 +324,7 @@ public class MorderServiceImpl implements MorderService {
 		if (StringEmptyUtils.isNotEmpty(packageType)) {
 			mosb.setPackageType(Integer.parseInt(packageType));
 		}
-		if(StringEmptyUtils.isNotEmpty(transportModel)){
+		if (StringEmptyUtils.isNotEmpty(transportModel)) {
 			mosb.setTransportModel(transportModel);
 		}
 
@@ -349,7 +350,7 @@ public class MorderServiceImpl implements MorderService {
 			mosb.setSpareParams(spareParams.toString());
 		}
 		mosb.setMerchant_no(goodsInfo.get("merchantId") + "");
-		//删除标识:0-未删除,1-已删除
+		// 删除标识:0-未删除,1-已删除
 		mosb.setDeleteFlag(0);
 		if (morderSubDao.add(mosb)) {
 			statusMap.put("status", 1);
@@ -368,12 +369,13 @@ public class MorderServiceImpl implements MorderService {
 		try {
 			jsonList = JSONArray.fromObject(orderIdPack);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return ReturnInfoUtils.errorInfo("订单Id信息错误,请重试!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> item = (Map<String, Object>) jsonList.get(i);
 			String orderId = item.get("orderId") + "";
-			params.put("marchant_no", merchantId);
+			params.put("merchant_no", merchantId);
 			params.put("order_id", orderId);
 			List<Morder> orderlist = morderDao.findByProperty(Morder.class, params, 1, 1);
 			params.clear();
@@ -381,25 +383,19 @@ public class MorderServiceImpl implements MorderService {
 				Morder order = orderlist.get(0);
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
-					//删除标识:0-未删除,1-已删除
+					// 删除标识:0-未删除,1-已删除
 					order.setDel_flag(1);
-					if(morderDao.update(order)){
+					if (morderDao.update(order)) {
 						return ReturnInfoUtils.successInfo();
 					}
 					return ReturnInfoUtils.errorInfo("订单删除失败,服务器繁忙!");
-					//deleteMsubByOrderId(orderId);
+					// deleteMsubByOrderId(orderId);
 				} else {
 					return ReturnInfoUtils.errorInfo("订单当前状态不允许删除,请联系管理员!");
 				}
 			}
 		}
 		return ReturnInfoUtils.errorInfo("订单信息参数错误,服务器繁忙!");
-	}
-
-	//删除订单商品
-	private boolean deleteMsubByOrderId(String order_id) {
-		return morderSubDao.deleteRecordsByOrderId(order_id);
-
 	}
 
 	@Override
@@ -413,93 +409,125 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.clear();
-		/*
-		 * params.put("order_id", orderId); params.put("Qty",
-		 * goodsInfo.getInt("Qty")); params.put("EntGoodsNo",
-		 * goodsInfo.getString("EntGoodsNo")); params.put("Price",
-		 * goodsInfo.getDouble("Price")); params.put("GoodsStyle",
-		 * goodsInfo.getString("GoodsStyle")); List<MorderSub> msList =
-		 * morderDao.findByProperty(MorderSub.class, params, 1, 1); if(msList
-		 * !=null && !msList.isEmpty()){ System.out.println(
-		 * "=================订单与订单商品已存在，请勿重复下单================");
-		 * statusMap.put(BaseCode.STATUS.toString(),StatusCode.FORMAT_ERR.
-		 * getStatus()); statusMap.put(BaseCode.MSG.toString(),
-		 * "订单与订单商品已存在，请勿重复下单"); return statusMap; }
-		 */
-		params.clear();
 		params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
-		if (ml != null && ml.size() > 0) {
+		if (ml != null && !ml.isEmpty()) {
 			Morder morder = ml.get(0);
-			if (ml.get(0).getFCY() + ActualAmountPaid < 2000) {
-				morder.setActualAmountPaid(morder.getActualAmountPaid() + Tax + ActualAmountPaid);
-				morder.setFCY(morder.getFCY() + FCY);
-				morderDao.update(morder);
-				statusMap.put("status", 1);
-				statusMap.put("order_id", morder.getOrder_id());
-				statusMap.put("msg", "订单更新总价");
-				return statusMap;
-			} else {
-				statusMap.put("status", -6);
-				statusMap.put("msg", "订单总金额超过2000，请重新下单");
-				return statusMap;
+			if (morder.getDel_flag() == 1) {
+				return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
 			}
-		} else {
-			Morder morder = new Morder();
-			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("order");
-			morder.setOrder_id(createMorderSysNo("YM", count, new Date()));
-			// 原导入表中的订单编号
-			morder.setOldOrderId(orderId);
-			morder.setFCY(FCY);
-			morder.setTax(Tax);
-			morder.setActualAmountPaid(ActualAmountPaid);
-			morder.setRecipientName(RecipientName);
-			morder.setRecipientID(RecipientID);
-			morder.setRecipientTel(RecipientTel);
-			morder.setRecipientAddr(RecipientAddr);
-			// 暂时默认为下单人姓名
-			morder.setOrderDocAcount(OrderDocName);
-			morder.setOrderDocName(OrderDocName);
-			morder.setOrderDocType("01");// 身份证
-			morder.setOrderDocId(OrderDocId);
-			morder.setOrderDocTel(OrderDocTel);
-			morder.setMerchant_no(merchant_no);
-			morder.setDateSign(dateSign);
-			morder.setSerial(serial);
-			morder.setWaybill(waybill);
-			morder.setDel_flag(0);
-			// 订单备案状态
-			morder.setOrder_record_status(1);
-			morder.setCreate_date(new Date());
-			morder.setCreate_by(merchant_no);
-			morder.setFcode(FCODE);
-			morder.setSenderName(senderName);
-			morder.setSenderCountry(senderCountry);
-			morder.setSenderAreaCode(senderAreaCode);
-			morder.setSenderAddress(senderAddress);
-			morder.setSenderTel(senderTel);
+			return judgmentOrderInfo(morder, goodsInfo, ActualAmountPaid, FCY, Tax, 1);
+		}
+		Morder morder = new Morder();
+		// 查询缓存中订单自增Id
+		int count = SerialNoUtils.getRedisIdCount("order");
+		morder.setOrder_id(createMorderSysNo("YM", count, new Date()));
+		// 原导入表中的订单编号
+		morder.setOldOrderId(orderId);
+		morder.setFCY(FCY);
+		morder.setTax(Tax);
+		morder.setActualAmountPaid(ActualAmountPaid);
+		morder.setRecipientName(RecipientName);
+		morder.setRecipientID(RecipientID);
+		morder.setRecipientTel(RecipientTel);
+		morder.setRecipientAddr(RecipientAddr);
+		// 暂时默认为下单人姓名
+		morder.setOrderDocAcount(OrderDocName);
+		morder.setOrderDocName(OrderDocName);
+		morder.setOrderDocType("01");// 身份证
+		morder.setOrderDocId(OrderDocId);
+		morder.setOrderDocTel(OrderDocTel);
+		morder.setMerchant_no(merchant_no);
+		morder.setDateSign(dateSign);
+		morder.setSerial(serial);
+		morder.setWaybill(waybill);
+		morder.setDel_flag(0);
+		// 订单备案状态
+		morder.setOrder_record_status(1);
+		morder.setCreate_date(new Date());
+		morder.setCreate_by(merchant_no);
+		morder.setFcode(FCODE);
+		morder.setSenderName(senderName);
+		morder.setSenderCountry(senderCountry);
+		morder.setSenderAreaCode(senderAreaCode);
+		morder.setSenderAddress(senderAddress);
+		morder.setSenderTel(senderTel);
 
-			morder.setPostal(postal);
-			morder.setRecipientProvincesCode(provinceCode);
-			morder.setRecipientCityCode(cityCode);
-			morder.setRecipientAreaCode(areaCode);
-			morder.setRecipientProvincesName(provinceName);
-			morder.setRecipientCityName(cityName);
-			morder.setRecipientAreaName(areaName);
-			String randomDate = DateUtil.randomCreateDate();
-			morder.setOrderDate(randomDate);
-			if (morderDao.add(morder)) {
-				statusMap.put("status", 1);
-				statusMap.put("order_id", morder.getOrder_id());
-				statusMap.put("msg", "存储完毕");
-				return statusMap;
-			}
-			statusMap.put("status", -1);
-			statusMap.put("msg", "存储失败，请稍后重试");
+		morder.setPostal(postal);
+		morder.setRecipientProvincesCode(provinceCode);
+		morder.setRecipientCityCode(cityCode);
+		morder.setRecipientAreaCode(areaCode);
+		morder.setRecipientProvincesName(provinceName);
+		morder.setRecipientCityName(cityName);
+		morder.setRecipientAreaName(areaName);
+		String randomDate = DateUtil.randomCreateDate();
+		morder.setOrderDate(randomDate);
+		if (morderDao.add(morder)) {
+			statusMap.put("status", 1);
+			statusMap.put("order_id", morder.getOrder_id());
+			statusMap.put("msg", "存储完毕");
 			return statusMap;
 		}
+		return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单存储失败，请稍后重试!");
+	}
+
+	/**
+	 * 判断订单与订单商品信息是否存在,如果只是商品不存在则更新订单金额,如果订单与商品、序号都已存在则判定为重复导入
+	 * 
+	 * @param morder
+	 *            订单信息
+	 * @param goodsInfo
+	 *            商品信息
+	 * @param actualAmountPaid
+	 *            总金额
+	 * @param FCY
+	 *            单价
+	 * @param tax
+	 *            税费
+	 * @param flag
+	 *            暂定标识1-国宗,2-企邦
+	 * @param cacheList
+	 * @return Map
+	 */
+	private Map<String, Object> judgmentOrderInfo(Morder morder, JSONObject goodsInfo, Double actualAmountPaid,
+			Double FCY, Double tax, int flag) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramsMap = new HashMap<>();
+		String waybill = morder.getWaybill().trim();
+		String orderId = morder.getOrder_id().trim();
+		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
+		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
+		List<MorderSub> ms = morderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
+		if (ms != null && !ms.isEmpty()) {
+			MorderSub goods = ms.get(0);
+			return ReturnInfoUtils.errorInfo(goods.getGoodsName() + "<--该订单与商品信息已存在,无需重复导入!");
+		} else {
+			morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
+			morder.setFCY(morder.getFCY() + FCY);
+			if(!morderDao.update(morder)){
+				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
+			}
+			statusMap.put("status", 1);
+			statusMap.put("order_id", morder.getOrder_id());
+			statusMap.put("msg", "订单更新总价");
+			if (morder.getFCY() + FCY + actualAmountPaid >= 2000) {// 当订单金额超过2000时
+				if (flag == 1) {
+					statusMap.clear();
+					statusMap.put(BaseCode.STATUS.toString(), "10");
+					statusMap.put("order_id", morder.getOrder_id());
+					statusMap.put(BaseCode.MSG.toString(),
+							"运单号[" + waybill + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
+				} else if (flag == 2) {
+					statusMap.clear();
+					statusMap.put(BaseCode.STATUS.toString(), "10");
+					statusMap.put("order_id", morder.getOrder_id());
+					statusMap.put(BaseCode.MSG.toString(), "订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
+				}
+			}
+			return statusMap;
+		}
+
 	}
 
 	@Override
@@ -526,6 +554,7 @@ public class MorderServiceImpl implements MorderService {
 	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
+		List<String> cacheList = new ArrayList<>();
 		double orderTotalPrice = Double.parseDouble(item.get("orderTotalPrice") + "");
 		double tax = Double.parseDouble(item.get("tax") + "");
 		double actualAmountPaid = Double.parseDouble(item.get("actualAmountPaid") + "");
@@ -551,81 +580,73 @@ public class MorderServiceImpl implements MorderService {
 		params.put("merchant_no", merchantId);
 		params.put("order_id", orderId);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
+		Map<String, Object> reMap = null;
 		if (ml != null && !ml.isEmpty()) {
 			Morder morder = ml.get(0);
-			// 已存在的订单总金额,加上新增的订单金额超过2000 则提示不生成
-			if (morder.getFCY() + orderTotalPrice < 2000) {
-				morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
-				morder.setFCY(morder.getFCY() + orderTotalPrice);
-				morderDao.update(morder);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put("order_id", morder.getOrder_id());
-				statusMap.put("msg", "订单更新总价");
-				return statusMap;
-			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put("msg", "订单总金额超过2000，请重新下单");
-				return statusMap;
-			}
-		} else {
-			Morder morder = new Morder();
-			morder.setOrder_id(orderId);
-			morder.setMerchant_no(merchantId);
-			morder.setFCY(orderTotalPrice);
-			morder.setTax(tax);
-			morder.setActualAmountPaid(actualAmountPaid);
-			morder.setRecipientName(item.get("recipientName") + "");
-			morder.setRecipientID(item.get("orderDocId") + "");
-			morder.setRecipientTel(item.get("recipientTel") + "");
-			morder.setRecipientProvincesCode(item.get("provinceCode") + "");
-			morder.setRecipientProvincesName(item.get("provinceName") + "");
-			morder.setRecipientCityCode(item.get("cityCode") + "");
-			morder.setRecipientCityName(item.get("cityName") + "");
-			morder.setRecipientAreaCode(item.get("areaCode") + "");
-			morder.setRecipientAreaName(item.get("areaName") + "");
-			morder.setRecipientAddr(item.get("recipientAddr") + "");
-			morder.setOrderDocAcount(item.get("orderDocAcount") + "");
-			morder.setOrderDocName(item.get("orderDocName") + "");
-			morder.setOrderDocType("01");// 身份证
-			morder.setOrderDocId(item.get("orderDocId") + "");
-			morder.setOrderDocTel(item.get("orderDocTel") + "");
-			morder.setDateSign(dateSign);
-			morder.setSerial(Integer.parseInt(item.get("serial") + ""));
-			morder.setWaybill(item.get("waybillNo") + "");
-			morder.setDel_flag(0);
-			morder.setOrder_record_status(1);
-			morder.setCreate_date(new Date());
-			morder.setCreate_by(merchantId);
-			morder.setFcode(FCODE);
-			String randomDate = DateUtil.randomCreateDate();
-			morder.setOrderDate(randomDate);
-			String ehsEntName = item.get("ehsEntName") + "";
-			if (StringEmptyUtils.isNotEmpty(ehsEntName)) {
-				JSONObject json = new JSONObject();
-				json.put("ehsEntName", ehsEntName);
-				morder.setSpareParams(json.toString());
-			}
-			if (morderDao.add(morder)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put("order_id", morder.getOrder_id());
-				statusMap.put("msg", "存储完毕");
-				return statusMap;
-			}
+			// 企邦的税费暂写死为0
+			return judgmentOrderInfo(morder, JSONObject.fromObject(item), actualAmountPaid, 0.0, tax, 2);
+		}
+
+		Morder morder = new Morder();
+		morder.setOrder_id(orderId);
+		morder.setMerchant_no(merchantId);
+		morder.setFCY(orderTotalPrice);
+		morder.setTax(tax);
+		morder.setActualAmountPaid(actualAmountPaid);
+		morder.setRecipientName(item.get("recipientName") + "");
+		morder.setRecipientID(item.get("orderDocId") + "");
+		morder.setRecipientTel(item.get("recipientTel") + "");
+		morder.setRecipientProvincesCode(item.get("provinceCode") + "");
+		morder.setRecipientProvincesName(item.get("provinceName") + "");
+		morder.setRecipientCityCode(item.get("cityCode") + "");
+		morder.setRecipientCityName(item.get("cityName") + "");
+		morder.setRecipientAreaCode(item.get("areaCode") + "");
+		morder.setRecipientAreaName(item.get("areaName") + "");
+		morder.setRecipientAddr(item.get("recipientAddr") + "");
+		morder.setOrderDocAcount(item.get("orderDocAcount") + "");
+		morder.setOrderDocName(item.get("orderDocName") + "");
+		morder.setOrderDocType("01");// 身份证
+		morder.setOrderDocId(item.get("orderDocId") + "");
+		morder.setOrderDocTel(item.get("orderDocTel") + "");
+		morder.setDateSign(dateSign);
+		morder.setSerial(Integer.parseInt(item.get("serial") + ""));
+		morder.setWaybill(item.get("waybillNo") + "");
+		morder.setDel_flag(0);
+		morder.setOrder_record_status(1);
+		morder.setCreate_date(new Date());
+		morder.setCreate_by(merchantId);
+		morder.setFcode(FCODE);
+		String randomDate = DateUtil.randomCreateDate();
+		morder.setOrderDate(randomDate);
+		String ehsEntName = item.get("ehsEntName") + "";
+		if (StringEmptyUtils.isNotEmpty(ehsEntName)) {
+			JSONObject json = new JSONObject();
+			json.put("ehsEntName", ehsEntName);
+			morder.setSpareParams(json.toString());
+		}
+		if (!morderDao.add(morder)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put("msg", "存储失败，请稍后重试");
 			return statusMap;
 		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put("order_id", morder.getOrder_id());
+		statusMap.put("msg", "存储完毕");
+		return statusMap;
+
 	}
 
 	@Override
 	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		String entGoodsNo = item.get("entGoodsNo") + "";
 		String marCode = item.get("marCode") + "";
 		String goodsName = item.get("goodsName") + "";
-		params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
-
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
+			params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		} else {
+			params.put("entGoodsNo", entGoodsNo.trim());
+		}
 		params.put("goodsMerchantId", merchantId);
 		List<GoodsRecordDetail> goodsList = morderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 		if (goodsList != null && !goodsList.isEmpty()) {
@@ -633,8 +654,10 @@ public class MorderServiceImpl implements MorderService {
 			JSONObject param = new JSONObject();
 			param.put("order_id", item.get("orderId") + "");
 			String reEntGoodsNo = goods.getEntGoodsNo();
-			String[] str = reEntGoodsNo.split("_");
-			reEntGoodsNo = str[0];
+			if (StringEmptyUtils.isNotEmpty(marCode)) {
+				String[] str = reEntGoodsNo.split("_");
+				reEntGoodsNo = str[0];
+			}
 			param.put("EntGoodsNo", reEntGoodsNo);
 			param.put("HSCode", goods.getHsCode());
 			param.put("Brand", goods.getBrand());
@@ -669,5 +692,75 @@ public class MorderServiceImpl implements MorderService {
 		} else {
 			return ReturnInfoUtils.errorInfo(goodsName + "------>该商品不存在,请核实!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> deleteOrderGoodsInfo(String id, String name, String idPack) {
+		Map<String, Object> params = new HashMap<>();
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(idPack);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("参数错误!");
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> datas = (Map<String, Object>) jsonList.get(i);
+			String orderId = datas.get("orderId") + "";
+			String goodsId = datas.get("goodsId") + "";
+			params.clear();
+			params.put("order_id", orderId);
+			List<Morder> orderlist = morderDao.findByProperty(Morder.class, params, 1, 1);
+			params.put("EntGoodsNo", goodsId);
+			List<MorderSub> orderSublist = morderDao.findByProperty(MorderSub.class, params, 1, 1);
+			if (orderSublist != null && !orderSublist.isEmpty()) {
+				MorderSub goodsInfo = orderSublist.get(0);
+				goodsInfo.setDeleteFlag(1);
+				if (!morderDao.update(goodsInfo)) {
+					return ReturnInfoUtils.errorInfo(goodsInfo.getGoodsName() + "<----删除失败,服务器繁忙!");
+				} else {
+					// 单价
+					Double price = goodsInfo.getPrice();
+					// 数量
+					int count = goodsInfo.getQty();
+					// 总价
+					Double total = price * count;
+					Map<String, Object> reMap = updateOrderAmount(orderlist, total);
+					if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+						return reMap;
+					}
+				}
+			} else {
+				return ReturnInfoUtils.errorInfo("未找到商品信息,请核实参数是否正确!");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 更新订单信息中订单总金额与实际支付金额
+	 * 
+	 * @param orderlist
+	 *            订单信息
+	 * @param total
+	 *            商品总金额
+	 * @return Map
+	 */
+	private Map<String, Object> updateOrderAmount(List<Morder> orderlist, Double total) {
+		if (orderlist != null && !orderlist.isEmpty() && total >= 0) {
+			Morder order = orderlist.get(0);
+			// 订单商品总金额
+			Double fcy = order.getFCY();
+			// 实际支付金额
+			Double actualAmountPaid = order.getActualAmountPaid();
+			order.setFCY(fcy - total);
+			order.setActualAmountPaid(actualAmountPaid - total);
+			if (!morderDao.update(order)) {
+				return ReturnInfoUtils.errorInfo("更新订单金额失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("未找到订单信息,请核实参数是否正确!");
+
 	}
 }

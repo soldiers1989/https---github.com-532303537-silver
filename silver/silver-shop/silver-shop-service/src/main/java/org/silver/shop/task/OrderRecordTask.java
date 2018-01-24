@@ -3,16 +3,17 @@ package org.silver.shop.task;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 
 import net.sf.json.JSONArray;
 
 /**
- * 多线程推送备案信息
+ * 多线程推送订单备案信息
  *
  */
-public class ThreadTask implements Callable<Object> {
+public class OrderRecordTask implements Callable<Object> {
 
 	private JSONArray dataList;//
 	private String merchantId;// 商户Id
@@ -26,17 +27,27 @@ public class ThreadTask implements Callable<Object> {
 
 	/**
 	 * 推送订单信息
-	 * @param dataList 订单信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param errorList 错误信息
-	 * @param customsMap 海关口岸信息
-	 * @param tok 
-	 * @param totalCount 总数
-	 * @param serialNo 批次号
-	 * @param mpayServiceImpl 实现类
+	 * 
+	 * @param dataList
+	 *            订单信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param errorList
+	 *            错误信息
+	 * @param customsMap
+	 *            海关口岸信息
+	 * @param tok
+	 * @param totalCount
+	 *            总数
+	 * @param serialNo
+	 *            批次号
+	 * @param mpayServiceImpl
+	 *            实现类
+	 * @param threadPool
 	 */
-	public  ThreadTask(JSONArray dataList, String merchantId, String merchantName,
+	public OrderRecordTask(JSONArray dataList, String merchantId, String merchantName,
 			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
 			String serialNo, MpayServiceImpl mpayServiceImpl) {
 		this.dataList = dataList;
