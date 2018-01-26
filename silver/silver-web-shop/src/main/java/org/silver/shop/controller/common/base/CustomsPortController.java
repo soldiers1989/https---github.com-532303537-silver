@@ -82,7 +82,7 @@ public class CustomsPortController {
 			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsCode") String customsCode,
 			@RequestParam("customsName") String customsName, @RequestParam("ciqOrgCode") String ciqOrgCode,
-			@RequestParam("ciqOrgName") String ciqOrgName,HttpServletRequest req, HttpServletResponse response) {
+			@RequestParam("ciqOrgName") String ciqOrgName, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -127,4 +127,21 @@ public class CustomsPortController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 刪除已开通的 海关及国检名称与编码
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/deleteCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("刪除已开通的 海关及国检名称与编码")
+	@RequiresRoles("Manager")
+	public String deleteCustomsPort(HttpServletRequest req, HttpServletResponse response, @RequestParam("id") long id) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(customsPortTransaction.deleteCustomsPort(id)).toString();
+	}
 }

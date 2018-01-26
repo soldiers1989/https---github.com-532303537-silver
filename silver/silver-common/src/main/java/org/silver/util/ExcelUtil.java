@@ -173,6 +173,7 @@ public class ExcelUtil {
 				}catch (Exception e){
 					//e.printStackTrace();
 					book = new HSSFWorkbook(new POIFSFileSystem(fls));
+				//    book = new HSSFWorkbook(new FileInputStream(f));
 				}
 				fls.close();
 				System.out.println("文件存在，读取内容");

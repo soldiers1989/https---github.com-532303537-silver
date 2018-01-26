@@ -137,13 +137,20 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	public Map<String, Object> updateWallet(int type, String merchantId, String merchantName, String serialNo,
 			String proxyId, double payAmount, String proxyParentName) {
-		Map<String, Object> merchantWalletMap = saveMerchantWalletLog(type, merchantId, merchantName, proxyId,
-				proxyParentName, serialNo, payAmount);
-		if (!"1".equals(merchantWalletMap.get(BaseCode.STATUS.toString()) + "")) {
-			return merchantWalletMap;
+		if (type == 1
+				|| type == 2 && StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)
+						&& StringEmptyUtils.isNotEmpty(serialNo) && StringEmptyUtils.isNotEmpty(proxyId)
+						&& payAmount > 0 && StringEmptyUtils.isNotEmpty(proxyParentName)) {
+			Map<String, Object> merchantWalletMap = saveMerchantWalletLog(type, merchantId, merchantName, proxyId,
+					proxyParentName, serialNo, payAmount);
+			if (!"1".equals(merchantWalletMap.get(BaseCode.STATUS.toString()) + "")) {
+				return merchantWalletMap;
+			}
+			double serviceFee = Double.parseDouble(merchantWalletMap.get("serviceFee") + "");
+			return saveProxyWalletLog(type, merchantId, merchantName, proxyId, proxyParentName, serialNo, serviceFee);
+		} else {
+			return ReturnInfoUtils.errorInfo("更新钱包信息,参数出错,请核实信息!");
 		}
-		double serviceFee = Double.parseDouble(merchantWalletMap.get("serviceFee") + "");
-		return saveProxyWalletLog(type, merchantId, merchantName, proxyId, proxyParentName, serialNo, serviceFee);
 	}
 
 	/**
@@ -644,12 +651,12 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		 orderMap.put("uploadOrNot", false);
+		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		 String resultStr =
-		 YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-		 orderMap);
-		//String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+		// String resultStr =
+		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+		// orderMap);
+		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -665,10 +672,10 @@ public class MpayServiceImpl implements MpayService {
 				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
-			 String resultStr2 =
-			 YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			 orderMap);
-			//String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+			// String resultStr2 =
+			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			// orderMap);
+			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
 			} else {
@@ -711,7 +718,7 @@ public class MpayServiceImpl implements MpayService {
 		orMap.put("order_id", datasMap.get("entOrderNo") + "");
 		String reMsg = datasMap.get("msg") + "";
 		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 0, 0);
-		if (reList != null && reList.size() > 0) {
+		if (reList != null && !reList.isEmpty()) {
 			Morder order = reList.get(0);
 			paramMap.clear();
 			paramMap.put("merchantId", order.getMerchant_no());
@@ -719,6 +726,8 @@ public class MpayServiceImpl implements MpayService {
 			Merchant merchant = null;
 			if (reMerchantList != null && !reMerchantList.isEmpty()) {
 				merchant = reMerchantList.get(0);
+			} else {
+				return ReturnInfoUtils.errorInfo("查询商户信息失败,请核对信息!");
 			}
 			String status = datasMap.get("status") + "";
 			String note = order.getOrder_re_note();
@@ -726,8 +735,6 @@ public class MpayServiceImpl implements MpayService {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				// 支付单备案状态修改为成功
-				order.setOrder_record_status(3);
 				// 商户钱包扣钱进代理商钱包
 				Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(),
 						merchant.getMerchantName(), order.getOrder_id(), merchant.getProxyParentId(), order.getFCY(),
@@ -735,6 +742,8 @@ public class MpayServiceImpl implements MpayService {
 				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
 					return reUpdateWalletMap;
 				}
+				// 支付单备案状态修改为成功
+				order.setOrder_record_status(3);
 			} else {
 				// 备案失败
 				order.setOrder_record_status(4);
@@ -828,7 +837,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> paramMap = new HashMap<>();
 		String entGoodsNo = strArr[24];
 		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
-			return ReturnInfoUtils.errorInfo("备案商品自编号不能为空,请重新输入!");
+			return ReturnInfoUtils.errorInfo("商品自编号不能为空!");
 		}
 		paramMap.put("order_id", order_id);
 		paramMap.put("EntGoodsNo", entGoodsNo);
@@ -846,10 +855,22 @@ public class MpayServiceImpl implements MpayService {
 			goodsInfo.setGoodsStyle(strArr[8]);
 			goodsInfo.setBarCode(strArr[9]);
 			goodsInfo.setBrand(strArr[10]);
-			goodsInfo.setQty(Integer.parseInt(strArr[11]));
+			int count = 0;
+			double price = 0.0;
+			try {
+				count = Integer.parseInt(strArr[11]);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("商品数量输入错误,请重新输入!");
+			}
+			try {
+				price = Double.parseDouble(strArr[13]);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("商品单价输入错误,请重新输入!");
+			}
+			goodsInfo.setQty(count);
 			goodsInfo.setUnit(strArr[12]);
-			goodsInfo.setPrice(Double.parseDouble(strArr[13]));
-			goodsInfo.setTotal(Double.parseDouble(strArr[14]));
+			goodsInfo.setPrice(price);
+			goodsInfo.setTotal(count * price);
 			goodsInfo.setNetWt(Double.parseDouble(strArr[15]));
 			goodsInfo.setGrossWt(Double.parseDouble(strArr[16]));
 			goodsInfo.setFirstLegalCount(Double.parseDouble(strArr[17]));
@@ -879,21 +900,21 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private Map<String, Object> editMorderInfo(Morder order, String[] strArr) {
 		order.setFcode(strArr[1]);
+		Double totalprice = 0.0;
+		Double tax = 0.0;
 		try {
-			order.setFCY(Double.parseDouble(strArr[2]));
+			totalprice = Double.parseDouble(strArr[2]);
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("订单商品总金额错误,请重新输入!");
 		}
 		try {
-			order.setTax(Double.parseDouble(strArr[3]));
+			tax = Double.parseDouble(strArr[3]);
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("订单税费错误,请重新输入!");
 		}
-		try {
-			order.setActualAmountPaid(Double.parseDouble(strArr[4]));
-		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("实际支付金额错误,请重新输入!");
-		}
+		order.setFCY(totalprice);
+		order.setTax(tax);
+		order.setActualAmountPaid(totalprice + tax);
 		order.setRecipientName(strArr[5]);
 		order.setRecipientAddr(strArr[6]);
 		order.setRecipientID(strArr[7]);

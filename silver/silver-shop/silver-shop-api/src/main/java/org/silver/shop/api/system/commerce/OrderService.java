@@ -102,4 +102,13 @@ public interface OrderService {
 	 */
 	Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
 			String extra_common_param, String client_sign, String timestamp);
+
+	/**
+	 * 管理员查询所有手动订单信息
+	 * @param size 
+	 * @param page 
+	 * @param params 
+	 * @return
+	 */
+	public Map<String, Object> getManualOrderInfo(Map<String, Object> params, int page, int size);
 }

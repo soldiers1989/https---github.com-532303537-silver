@@ -411,13 +411,14 @@ public class MorderServiceImpl implements MorderService {
 		params.clear();
 		params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
+		params.put("merchant_no", merchant_no);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml != null && !ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			if (morder.getDel_flag() == 1) {
 				return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
 			}
-			return judgmentOrderInfo(morder, goodsInfo, ActualAmountPaid, FCY, Tax, 1);
+			return judgmentOrderInfo(morder, goodsInfo, ActualAmountPaid, FCY, Tax, 1,merchant_no);
 		}
 		Morder morder = new Morder();
 		// 查询缓存中订单自增Id
@@ -491,27 +492,39 @@ public class MorderServiceImpl implements MorderService {
 	 * @return Map
 	 */
 	private Map<String, Object> judgmentOrderInfo(Morder morder, JSONObject goodsInfo, Double actualAmountPaid,
-			Double FCY, Double tax, int flag) {
+			Double FCY, Double tax, int flag,String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		String waybill = morder.getWaybill().trim();
 		String orderId = morder.getOrder_id().trim();
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
-		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
+		String entGoodsNo = goodsInfo.get("entGoodsNo")+"";
+		if (flag == 2) {
+			String orderDocName = goodsInfo.get("orderDocName")+"";
+			paramsMap.put("EntGoodsNo", entGoodsNo+"_"+orderDocName);
+		} else {
+			paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
+		}
+		paramsMap.put("merchant_no", merchantId);
 		List<MorderSub> ms = morderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
 		if (ms != null && !ms.isEmpty()) {
-			MorderSub goods = ms.get(0);
-			return ReturnInfoUtils.errorInfo(goods.getGoodsName() + "<--该订单与商品信息已存在,无需重复导入!");
+			if (flag == 1) {
+				return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]  <--与商品信息已存在,无需重复导入!");
+			} else if (flag == 2) {
+				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]  <--该订单与商品信息已存在,无需重复导入!");
+			}
+			return null;
 		} else {
 			morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
-			morder.setFCY(morder.getFCY() + FCY);
-			if(!morderDao.update(morder)){
+			double reFCY = morder.getFCY();
+			morder.setFCY(reFCY + FCY);
+			if (!morderDao.update(morder)) {
 				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
 			}
 			statusMap.put("status", 1);
 			statusMap.put("order_id", morder.getOrder_id());
 			statusMap.put("msg", "订单更新总价");
-			if (morder.getFCY() + FCY + actualAmountPaid >= 2000) {// 当订单金额超过2000时
+			if (reFCY + FCY >= 2000) {// 当订单金额超过2000时
 				if (flag == 1) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
@@ -554,7 +567,6 @@ public class MorderServiceImpl implements MorderService {
 	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		List<String> cacheList = new ArrayList<>();
 		double orderTotalPrice = Double.parseDouble(item.get("orderTotalPrice") + "");
 		double tax = Double.parseDouble(item.get("tax") + "");
 		double actualAmountPaid = Double.parseDouble(item.get("actualAmountPaid") + "");
@@ -580,11 +592,10 @@ public class MorderServiceImpl implements MorderService {
 		params.put("merchant_no", merchantId);
 		params.put("order_id", orderId);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
-		Map<String, Object> reMap = null;
 		if (ml != null && !ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			// 企邦的税费暂写死为0
-			return judgmentOrderInfo(morder, JSONObject.fromObject(item), actualAmountPaid, 0.0, tax, 2);
+			return judgmentOrderInfo(morder, JSONObject.fromObject(item), actualAmountPaid, 0.0, tax, 2,merchantId);
 		}
 
 		Morder morder = new Morder();
@@ -626,7 +637,7 @@ public class MorderServiceImpl implements MorderService {
 		}
 		if (!morderDao.add(morder)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put("msg", "存储失败，请稍后重试");
+			statusMap.put("msg", "保存订单错误，请核对订单信息!");
 			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -658,7 +669,7 @@ public class MorderServiceImpl implements MorderService {
 				String[] str = reEntGoodsNo.split("_");
 				reEntGoodsNo = str[0];
 			}
-			param.put("EntGoodsNo", reEntGoodsNo);
+			param.put("entGoodsNo", reEntGoodsNo);
 			param.put("HSCode", goods.getHsCode());
 			param.put("Brand", goods.getBrand());
 			param.put("BarCode", goods.getBarCode());

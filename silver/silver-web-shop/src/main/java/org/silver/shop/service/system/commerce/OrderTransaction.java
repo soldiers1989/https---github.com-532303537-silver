@@ -115,4 +115,18 @@ public class OrderTransaction {
 		return orderService.doBusiness( merchant_cus_no, out_trade_no, amount,  notify_url,
 				 extra_common_param,  client_sign, timestamp);
 	}
+
+	//管理员查询手动订单信息
+	public Map<String, Object> getManualOrderInfo(int page, int size, HttpServletRequest req) {
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		params.remove("page");
+		params.remove("size");
+		return orderService.getManualOrderInfo(params, page, size);
+	}
 }

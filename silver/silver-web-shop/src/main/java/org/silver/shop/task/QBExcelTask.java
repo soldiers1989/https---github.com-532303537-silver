@@ -26,7 +26,6 @@ public class QBExcelTask extends TaskUtils {
 	private String serialNo;// 流水号
 	private List dataList; //
 	private int realRowCount;//总行数
-	private List cacheList;//缓存
 	
 	/**
 	 * excel多任务读取
@@ -40,7 +39,7 @@ public class QBExcelTask extends TaskUtils {
 	 * @param manualService
 	 */
 	public QBExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo,  int realRowCount ,List cacheList) {
+			int endCount, ManualService manualService, String serialNo,  int realRowCount) {
 		this.sheet = sheet;
 		this.excel = excel;
 		this.errorList = errl;
@@ -50,7 +49,6 @@ public class QBExcelTask extends TaskUtils {
 		this.manualService = manualService;
 		this.serialNo = serialNo;
 		this.realRowCount = realRowCount;
-		this.cacheList = cacheList;
 	}
 
 	/*public ExcelTask(List dataList, String merchantId, PaymentService paymentService,String serialNo,int realRowCount) {
@@ -74,7 +72,13 @@ public class QBExcelTask extends TaskUtils {
 		if (paymentService != null) {
 			return paymentService.groupCreateMpay(merchantId, dataList,serialNo,realRowCount);
 		}*/
-		excel.open();
-		return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount,cacheList);
+		try{
+			System.out.println("------call方法--------");
+			excel.open();
+			return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount);
+		}catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

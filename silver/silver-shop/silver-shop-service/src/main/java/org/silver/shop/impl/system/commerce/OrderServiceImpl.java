@@ -31,6 +31,7 @@ import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.YMorder;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -908,5 +909,31 @@ public class OrderServiceImpl implements OrderService {
 		}
 		str = "YMOD_" + sdf.format(date) + str + m;
 		return str;
+	}
+
+	@Override
+	public Map<String, Object> getManualOrderInfo(Map<String, Object> dataMap, int page, int size) {
+		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+
+		List<Morder> orderList = orderDao.findByProperty(Morder.class, null, page, size);
+		long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
+		List<Map<String,Object>> list = new ArrayList<>();
+		for (Morder order : orderList) {
+			Map<String,Object> item = new HashMap<>();
+			String orderId = order.getOrder_id();
+			paramMap.clear();
+			paramMap.put("order_id", orderId);
+			List<MorderSub> goodsList = orderDao.findByProperty(MorderSub.class, null, 0, 0);
+			item.put("head", order);
+			item.put("content", goodsList);
+			list.add(item);
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.DATAS.toString(), list);
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
+		return statusMap;
 	}
 }

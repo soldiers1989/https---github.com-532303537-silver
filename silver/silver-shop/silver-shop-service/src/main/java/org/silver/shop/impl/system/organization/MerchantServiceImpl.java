@@ -142,10 +142,13 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setCreateBy(createBy);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
+			merchant.setProxyParentId("prxoy_00001");
+			merchant.setProxyParentName("银盟");
 			recordInfo.setMerchantId(merchantId);
 			recordInfo.setCreateBy(createBy);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
+			
 			if (!merchantDao.add(merchant)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,服务器繁忙!");
@@ -168,6 +171,8 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setCreateBy(createBy);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
+			merchant.setProxyParentId("prxoy_00001");
+			merchant.setProxyParentName("银盟");
 			// 商戶基本信息实例化
 			if (merchantDao.add(merchant)) {
 				JSONArray jsonList = null;

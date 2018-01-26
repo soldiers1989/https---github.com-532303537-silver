@@ -46,4 +46,11 @@ public interface CustomsPortService {
 	 * @return
 	 */
 	public Map<String, Object> findMerchantCustomsPort(String merchantId, String merchantName);
+
+	/**
+	 * 管理员根据ID删除口岸信息
+	 * @param id
+	 * @return
+	 */
+	public boolean deleteCustomsPort(long id);
 }

@@ -81,4 +81,16 @@ public class CustomsPortTransaction {
 		String merchantName = merchantInfo.getMerchantName();		
 		return customsPortService.findMerchantCustomsPort(merchantId,merchantName);
 	}
+
+	public Map<String, Object> deleteCustomsPort(long id) {
+		if(customsPortService.deleteCustomsPort(id)){
+			List<CustomsPort> customsPortList = null;
+			Map<String,Object> datasMap = customsPortService.findAllCustomsPort();
+			customsPortList = (List<CustomsPort>) datasMap.get(BaseCode.DATAS.toString());
+			// 将查询出来的口岸数据放入缓存中
+			JedisUtil.set("shop_port_AllCustomsPort".getBytes(), SerializeUtil.toBytes(customsPortList), 3600);
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("删除失败,服务器繁忙!");
+	}
 }

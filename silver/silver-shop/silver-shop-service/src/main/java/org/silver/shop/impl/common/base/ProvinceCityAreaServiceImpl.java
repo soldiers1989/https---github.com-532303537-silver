@@ -174,7 +174,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 												.replace("\"}", ""));
 					}
 					// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
-					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 86400 * 5);
+					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 86400 );
 					datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 					datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					datasMap.put(BaseCode.DATAS.toString(), item);

@@ -22,9 +22,9 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	private CustomsPortDao customsPortDao;
 
 	@Override
-	public boolean addCustomsPort(String provinceName, String provinceCode, String cityName,
-			String cityCode, int customsPort, String customsPortName, String customsCode, String customsName,
-			String ciqOrgCode, String ciqOrgName,String managerId, String managerName) {
+	public boolean addCustomsPort(String provinceName, String provinceCode, String cityName, String cityCode,
+			int customsPort, String customsPortName, String customsCode, String customsName, String ciqOrgCode,
+			String ciqOrgName, String managerId, String managerName) {
 		Date date = new Date();
 		CustomsPort customsInfo = new CustomsPort();
 		customsInfo.setProvince(provinceName);
@@ -74,7 +74,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 			paramMap.put("customsPort", customsPort.getCustomsPort());
 			paramMap.put("merchantId", merchantId);
 			List<Object> reList = customsPortDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
-			if(reList !=null  && reList.isEmpty()){
+			if (reList != null && reList.isEmpty()) {
 				allCustomsList.remove(i);
 			}
 		}
@@ -84,4 +84,15 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		return statusMap;
 	}
 
+	@Override
+	public boolean deleteCustomsPort(long id) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("id", id);
+		List<Object> dataList = customsPortDao.findByProperty(CustomsPort.class, params, 1, 1);
+		if (dataList != null && !dataList.isEmpty()) {
+			CustomsPort customs = (CustomsPort) dataList.get(0);
+			return customsPortDao.delete(customs);
+		}
+		return false;
+	}
 }

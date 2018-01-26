@@ -644,11 +644,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("note", "");
 			// 是否像海关发送
 			
-			paymentMap.put("uploadOrNot", false);
-			 String resultStr =
-			YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			 paymentMap);
-			//String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
+			//paymentMap.put("uploadOrNot", false);
+			// String resultStr =
+			//YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			// paymentMap);
+			String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
 				System.out.println("------第二次发起支付单推送------>>>>>>>>>>");
@@ -692,10 +692,10 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				}
 				paymentMap.put("clientsign", clientsign.trim());
 				System.out.println("------第二次发起支付单推送-------");
-				 String resultStr2 =
-				 YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-				 paymentMap);
-				//String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
+			//	 String resultStr2 =
+				// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+				 //paymentMap);
+				String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					return JSONObject.fromObject(resultStr2);
 				} else {

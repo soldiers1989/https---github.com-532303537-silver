@@ -257,4 +257,19 @@ public class OrderController {
 		req.setAttribute("msg", "下单参数有误");
 		return "ympay-err";
 	}
+	
+	
+	@RequestMapping(value = "/getManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员查询所有手工订单信息")
+	public String getManualOrderInfo(HttpServletRequest req, HttpServletResponse response, int page, int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = orderTransaction.getManualOrderInfo(page, size, req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

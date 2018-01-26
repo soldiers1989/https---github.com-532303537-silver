@@ -477,7 +477,6 @@ public class ManualService {
 	private void startTask(int flag, int totalCount, File file, String merchantId, String serialNo) {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
 		List<Map<String, Object>> errl = new Vector();
-		List<Object> cacheList = new Vector();
 		// 判断当前计算机CPU线程个数
 		int cpuCount = Runtime.getRuntime().availableProcessors();
 		// int cpuCount = 1;
@@ -486,9 +485,16 @@ public class ManualService {
 		// 结束行数
 		int end = 0;
 		if (totalCount <= cpuCount) {// 不需要开辟多线程
-			ExcelUtil excelC = new ExcelUtil(file);
-			startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount, threadPool,
-					cacheList);
+			// 副本文件名
+			String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xlsx";
+			File dest = new File(file.getParentFile() + "/" + imgName);
+			try {
+				FileUtils.copyFileUsingFileChannels(file, dest);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			ExcelUtil excelC = new ExcelUtil(dest);
+			startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount, threadPool);
 		} else {
 			for (int i = 0; i < cpuCount; i++) {
 				// 副本文件名
@@ -502,17 +508,15 @@ public class ManualService {
 				ExcelUtil excelC = new ExcelUtil(dest);
 				if (i == 0) {// 第一次
 					end = totalCount / cpuCount;
-					startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool,
-							cacheList);
+					startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool);
 				} else {
 					startCount = end + 1;
 					end = startCount + (totalCount / cpuCount);
 					if (i == (cpuCount - 1)) {// 最后一次
 						startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount,
-								threadPool, cacheList);
+								threadPool);
 					} else {
-						startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool,
-								cacheList);
+						startTask(flag, excelC, errl, merchantId, startCount, end, serialNo, totalCount, threadPool);
 					}
 				}
 			}
@@ -541,37 +545,33 @@ public class ManualService {
 	 *            总行数
 	 * @param threadPool
 	 *            线程池
-	 * @param cacheList
-	 *            缓存
+	 * 
 	 */
 	private void startTask(int flag, ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
-			int startCount, int end, String serialNo, int totalCount, ExecutorService threadPool,
-			List<Object> cacheList) {
+			int startCount, int end, String serialNo, int totalCount, ExecutorService threadPool) {
 		if (flag == 1) {
-			invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool,
-					cacheList);
+			invokeQBExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool);
 		} else if (flag == 2) {
-			invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool,
-					cacheList);
+			invokeGZExcelTask(excelC, errl, merchantId, startCount, end, this, serialNo, totalCount, threadPool);
 		}
 
 	}
 
 	// 调用国宗多任务
 	private void invokeGZExcelTask(ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool,
-			List<Object> cacheList) {
+			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+		System.out.println("------------开始开启子任务-------");
 		GZExcelTask task = new GZExcelTask(0, excelC, errl, merchantId, startCount, endCount, manualService, serialNo,
-				totalCount, cacheList);
+				totalCount);
 		threadPool.submit(task);
 	}
 
 	// 调用企邦多线程
 	private void invokeQBExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool,
-			List<Object> cacheList) {
+			int endCount, ManualService manualService, String serialNo, int totalCount, ExecutorService threadPool) {
+		System.out.println("------------开始开启子任务-------");
 		QBExcelTask task = new QBExcelTask(0, excel, errl, merchantId, startCount, endCount, manualService, serialNo,
-				totalCount, cacheList);
+				totalCount);
 		threadPool.submit(task);
 	}
 
@@ -589,7 +589,8 @@ public class ManualService {
 	 * @return
 	 */
 	public Map<String, Object> readQBSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String serialNo, int startCount, int endCount, int realRowCount, List cacheList) {
+			String merchantId, String serialNo, int startCount, int endCount, int realRowCount) {
+
 		Map<String, Object> statusMap = new HashMap<>();
 		int seqNo = 0;
 		String orderId = "";// 订单Id
@@ -606,6 +607,7 @@ public class ManualService {
 		String ehsEntName = "";// 承运商
 		String waybillNo = "";// 运单编号
 		try {
+			System.out.println("--------------开始循环表单中数据-----------");
 			// for (int r = 2; r <= rowTotalCount; r++) {
 			for (int r = startCount; r <= endCount; r++) {
 				if (excel.getColumnCount(r) == 0) {
@@ -678,7 +680,6 @@ public class ManualService {
 						waybillNo = value;
 					}
 				}
-
 				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
@@ -720,19 +721,26 @@ public class ManualService {
 				item.put("serial", serial);
 				item.put("marCode", marCode);
 				Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item);
-				if (!"1".equals(orderMap.get(BaseCode.STATUS.toString()))) {
+				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(),
-							"第" + (r + 1) + "行,---->" + orderMap.get(BaseCode.MSG.toString()));
+					String msg = orderMap.get("msg") + "";
+					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
 					errl.add(errMap);
-				} else {
-					Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item);
-					if ((int) orderSubMap.get("status") != 1) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "第" + (r + 1) + "行-->" + orderSubMap.get("msg"));
-						errl.add(errMap);
-					}
+				} else if (!"1".equals(orderMap.get("status") + "")) {
+					Map<String, Object> errMap = new HashMap<>();
+					String msg = orderMap.get("msg") + "";
+					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
+					errl.add(errMap);
+					BufferUtils.writeRedis("1", errl, realRowCount, serialNo, "order");
+					continue;
 				}
+				Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item);
+				if ((int) orderSubMap.get("status") != 1) {
+					Map<String, Object> errMap = new HashMap<>();
+					errMap.put("msg", "第" + (r + 1) + "行-->" + orderSubMap.get("msg"));
+					errl.add(errMap);
+				}
+
 				BufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "order");
 			}
 			File file2 = excel.getFile();
@@ -767,12 +775,10 @@ public class ManualService {
 	 *            批次号
 	 * @param realRowCount
 	 *            总行数
-	 * @param cacheList
-	 *            缓存信息
 	 * @return Map
 	 */
 	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, int startCount, int endCount, String serialNo, int realRowCount, List cacheList) {
+			String merchantId, int startCount, int endCount, String serialNo, int realRowCount) {
 		Map<String, Object> statusMap = new HashMap<>();
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
@@ -814,6 +820,7 @@ public class ManualService {
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
 		try {
+			System.out.println("--------------开始循环表单中数据-----------");
 			for (int r = startCount; r <= endCount; r++) {
 				if (excel.getColumnCount(r) == 0) {
 					break;
@@ -1135,6 +1142,30 @@ public class ManualService {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					return statusMap;
+				} else if (provinceName.contains("北京市")) {
+					statusMap.put("cityCode", "110100");
+					statusMap.put("cityName", "市辖区");
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+					return statusMap;
+				} else if (provinceName.contains("天津市")) {
+					statusMap.put("cityCode", "120100");
+					statusMap.put("cityName", "市辖区");
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+					return statusMap;
+				} else if (provinceName.contains("重庆市")) {
+					statusMap.put("cityCode", "500100");
+					statusMap.put("cityName", "市辖区");
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+					return statusMap;
 				}
 				// 如果地址中省份+城市未找到则把省份编码放入缓存
 				reProvinceMap.put(provinceCode, provinceCode + "_" + provinceName);
@@ -1184,18 +1215,19 @@ public class ManualService {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取管理员登录时,shiro存入在session中的数据
-	//	Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		// Manager managerInfo = (Manager)
+		// currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String id = "";
 		String name = "";
 		// 获取登录后的商户账号
 		if (merchantInfo != null) {
 			id = merchantInfo.getMerchantId();
 			name = merchantInfo.getMerchantName();
-		} 
-//		else if (managerInfo != null) {
-//			id = managerInfo.getManagerId();
-//			name = managerInfo.getManagerName();
-//		}
+		}
+		// else if (managerInfo != null) {
+		// id = managerInfo.getManagerId();
+		// name = managerInfo.getManagerName();
+		// }
 		return morderService.deleteOrderGoodsInfo(id, name, idPack);
 	}
 }
