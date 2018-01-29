@@ -28,6 +28,7 @@ import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -469,11 +470,12 @@ public class GoodsRecordTransaction {
 	}
 
 	/**
-	 *  根据计量单位的中文名称或比代码查询编码
+	 * 根据计量单位的中文名称或比代码查询编码
+	 * 
 	 * @param value
 	 * @return
 	 */
-	public  final String findUnit(String value) {
+	public final String findUnit(String value) {
 		if (StringEmptyUtils.isNotEmpty(value)) {
 			List reList = meteringTransaction.findMetering();
 			if (reList != null && !reList.isEmpty()) {
@@ -490,8 +492,9 @@ public class GoodsRecordTransaction {
 
 	/**
 	 * 根据编码查询计量单位
+	 * 
 	 * @param reList
-	 * @param value 
+	 * @param value
 	 * @return
 	 */
 	private String getNumericByUnit(List reList, String value) {
@@ -507,6 +510,7 @@ public class GoodsRecordTransaction {
 
 	/**
 	 * 根据中文名称查询计量单位
+	 * 
 	 * @param list
 	 * @param value
 	 * @return
@@ -616,22 +620,19 @@ public class GoodsRecordTransaction {
 
 	private Map<String, Object> readRecordGoodsInfo(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
 			String merchantId, String merchantName) {
-		String goodsSerialNo = "";
-		switch (sheet) {
-		case 0:
+		if (excel.getRowCount(0) == 6) {// 已备案商品信息头长度
 			Map<String, Object> item = readRecordGoodsHeadSheed(sheet, excel, errl, merchantId, merchantName);
-			goodsSerialNo = item.get("goodsSerialNo") + "";
-			if (StringEmptyUtils.isNotEmpty(goodsSerialNo)) {
-				return readRecordGoodsDetailSheed(1, excel, errl, merchantId, merchantName, goodsSerialNo);
-			} else {
-				Map<String, Object> errMap = new HashMap<>();
-				errMap.put(BaseCode.MSG.toString(), "导入备案商品(子表)出错,请重试");
-				errl.add(errMap);
+			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				return item;
+			} else {
+				if (excel.getRowCount(0) == 32) {// 已备案商品详情表长度
+					String goodsSerialNo = item.get("goodsSerialNo") + "";
+					return readRecordGoodsDetailSheed(1, excel, errl, merchantId, merchantName, goodsSerialNo);
+				}
+				return ReturnInfoUtils.errorInfo("已备案商品详情表模板错误,请核实是否符合要求!");
 			}
-		default:
-			return null;
 		}
+		return ReturnInfoUtils.errorInfo("已备案商品信息头模板错误,请核实是否符合要求!");
 	}
 
 	/**
@@ -763,7 +764,7 @@ public class GoodsRecordTransaction {
 						ciqGoodsNo = value;
 					} else {
 						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->企业商品自编号不能为空!");
+						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->检验检疫商品备案编号不能为空!");
 						errl.add(errMap);
 					}
 					break;
@@ -966,9 +967,10 @@ public class GoodsRecordTransaction {
 				errl.add(errMap);
 				continue;
 			}
+			String newEntGoodsNo = "";
 			// 当企邦的归属商户Id与Sku都填写了则进行针对性操作
 			if (StringEmptyUtils.isNotEmpty(marCode) && StringEmptyUtils.isNotEmpty(entGoodsNoSKU)) {
-				entGoodsNo = entGoodsNo + "_" + marCode;
+				newEntGoodsNo = entGoodsNo + "_" + marCode;
 				JSONObject json = new JSONObject();
 				json.put("marCode", marCode);
 				json.put("SKU", entGoodsNoSKU);
@@ -977,7 +979,7 @@ public class GoodsRecordTransaction {
 			goodsRecordDetail.setEbEntNo(ebEntNo);
 			goodsRecordDetail.setEbEntName(ebEntName);
 			goodsRecordDetail.setSeq(seq);
-			goodsRecordDetail.setEntGoodsNo(entGoodsNo);
+			goodsRecordDetail.setEntGoodsNo(newEntGoodsNo);
 			goodsRecordDetail.setEportGoodsNo(eportGoodsNo);
 			goodsRecordDetail.setCiqGoodsNo(ciqGoodsNo);
 			goodsRecordDetail.setCusGoodsNo(cusGoodsNo);
@@ -1147,7 +1149,6 @@ public class GoodsRecordTransaction {
 		}
 		headMap.clear();
 		headMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		headMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		headMap.put(BaseCode.ERROR.toString(), errl);
 		headMap.put("goodsSerialNo", item.get("goodsSerialNo"));
 		return headMap;

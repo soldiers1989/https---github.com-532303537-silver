@@ -453,9 +453,9 @@ public class EditRecordController {
 	}
 
 	public static void main(String[] args) throws IOException {
-		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/新建 Microsoft Excel 工作表.xlsx");
+		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第51批999-43825025清单#200.xlsx");
 		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xls";
-
+/*
 		File dest = new File(source.getParentFile() + "/" + imgName);
 		System.out.println(dest.getName());
 		try {
@@ -463,8 +463,8 @@ public class EditRecordController {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		ExcelUtil excel = new ExcelUtil(dest);
+		}*/
+		ExcelUtil excel = new ExcelUtil(source);
 		System.out.println("---->>" + excel.getFile());
 		excel.open();
 		int row = 0;
@@ -472,7 +472,7 @@ public class EditRecordController {
 		int rowTotalCount = excel.getRowCount(0);
 		System.out.println(rowTotalCount);
 		excel.closeExcel();
-		System.out.println(dest.delete());
+		System.out.println(source.delete());
 
 	}
 

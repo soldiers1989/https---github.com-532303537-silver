@@ -1,5 +1,6 @@
 package org.silver.util;
 
+import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +71,6 @@ public class BufferUtils {
 			} else if ("2".equals(status)) {
 				// 获取当前计算机CPU线程个数
 				int cpuCount = Runtime.getRuntime().availableProcessors();
-				// int cpuCount = 1;
 				if (totalCount <= cpuCount) {
 					count = cpuCount;
 				} else {
@@ -87,6 +87,7 @@ public class BufferUtils {
 					datasMap.remove("startTime");
 					if("order".equals(name)){//只有再订单导入时才需要排序错误
 						errl = SortUtil.sortList(errl);
+						FileUtils.deleteFile(new File("/gadd-excel/"));
 					}
 				}
 			}

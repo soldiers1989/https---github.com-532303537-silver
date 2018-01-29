@@ -744,16 +744,16 @@ public class ManualService {
 				BufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "order");
 			}
 			File file2 = excel.getFile();
-			// excel.closeExcel();
+			//excel.closeExcel();
 			if (!file2.delete()) {
 				System.out.println("-----------文件没有删除--------------");
 			}
+			BufferUtils.writeRedis("2", errl, (realRowCount - 1), serialNo, "order");
+			return statusMap;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-		BufferUtils.writeRedis("2", errl, (realRowCount - 1), serialNo, "order");
-		return statusMap;
 	}
 
 	/**
@@ -1031,7 +1031,7 @@ public class ManualService {
 				BufferUtils.writeRedis("1", errl, realRowCount, serialNo, "order");
 			}
 			File file2 = excel.getFile();
-			// excel.closeExcel();
+			 excel.closeExcel();
 			if (!file2.delete()) {
 				System.out.println("-----------文件没有删除--------------");
 			}

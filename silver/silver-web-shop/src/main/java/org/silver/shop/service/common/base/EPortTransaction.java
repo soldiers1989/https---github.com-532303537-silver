@@ -15,7 +15,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
  * 商品备案的口岸 Transaction
  *
  */
-@Service("ePortTransaction")
+@Service
 public class EPortTransaction {
 
 	@Reference

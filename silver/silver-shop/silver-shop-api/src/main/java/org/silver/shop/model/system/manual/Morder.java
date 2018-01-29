@@ -38,7 +38,7 @@ public class Morder implements Serializable {
 	private Date create_date;//创建日期
 	private String create_by;// 创建人
 	private Date update_date;// 更新日期
-	private Date update_by;//更新人
+	private String update_by;//更新人
 	private String remarks;//
 	private int order_record_status;// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 	private String order_serial_no;// 服务器接收成功后返回编号
@@ -263,11 +263,13 @@ public class Morder implements Serializable {
 		this.update_date = update_date;
 	}
 
-	public Date getUpdate_by() {
+	
+
+	public String getUpdate_by() {
 		return update_by;
 	}
 
-	public void setUpdate_by(Date update_by) {
+	public void setUpdate_by(String update_by) {
 		this.update_by = update_by;
 	}
 

@@ -194,80 +194,84 @@ public class PaymentServiceImpl implements PaymentService {
 			String serialNo) {
 		Map<String, Object> param = new HashMap<>();
 		double cumulativeAmount = 0.0;
-		for (int i = 0; i < jsonList.size(); i++) {
-			Map<String, Object> treadeMap = (Map<String, Object>) jsonList.get(i);
-			String treadeNo = treadeMap.get("treadeNo") + "";
-			param.clear();
-			param.put("merchant_no", merchantId);
-			param.put("trade_no", treadeNo);
-			List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
-			if (payList != null && !payList.isEmpty()) {
-				Mpay payInfo = payList.get(0);
-				/*
-				 * if (payInfo.getPay_record_status() == 2) { Map<String,
-				 * Object> errMap = new HashMap<>();
-				 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
-				 * "]正在备案中无需再次发起!"); errorList.add(errMap); continue; } else if
-				 * (payInfo.getPay_record_status() == 3) { Map<String, Object>
-				 * errMap = new HashMap<>(); errMap.put(BaseCode.MSG.toString(),
-				 * "支付流水号[" + treadeNo + "]已备案成功无需再次发起!");
-				 * errorList.add(errMap); continue; }
-				 */
-				double payAmount = payInfo.getPay_amount();
-				// 将每个支付单总额进行累加,计算当前金额下是否有足够的余额支付费用
-				cumulativeAmount = payAmount += cumulativeAmount;
-				Map<String, Object> checkMap = mpayServiceImpl.checkWallet(1, merchantId, merchantName, treadeNo,
-						cumulativeAmount);
-				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!");
-					errorList.add(errMap);
+		try {
+			for (int i = 0; i < jsonList.size(); i++) {
+				Map<String, Object> treadeMap = (Map<String, Object>) jsonList.get(i);
+				String treadeNo = treadeMap.get("treadeNo") + "";
+				param.clear();
+				param.put("merchant_no", merchantId);
+				param.put("trade_no", treadeNo);
+				List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
+				if (payList != null && !payList.isEmpty()) {
+					Mpay payInfo = payList.get(0);
+					/*
+					 * if (payInfo.getPay_record_status() == 2) { Map<String,
+					 * Object> errMap = new HashMap<>();
+					 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
+					 * "]正在备案中无需再次发起!"); errorList.add(errMap); continue; } else
+					 * if (payInfo.getPay_record_status() == 3) { Map<String,
+					 * Object> errMap = new HashMap<>();
+					 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
+					 * "]已备案成功无需再次发起!"); errorList.add(errMap); continue; }
+					 */
+					double payAmount = payInfo.getPay_amount();
+					// 将每个支付单总额进行累加,计算当前金额下是否有足够的余额支付费用
+					cumulativeAmount = payAmount += cumulativeAmount;
+					Map<String, Object> checkMap = mpayServiceImpl.checkWallet(1, merchantId, merchantName, treadeNo,
+							cumulativeAmount);
+					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!");
+						errorList.add(errMap);
+						BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
+						continue;
+					}
+					Map<String, Object> paymentInfoMap = new HashMap<>();
+					paymentInfoMap.put("EntPayNo", payInfo.getTrade_no());
+					paymentInfoMap.put("PayStatus", payInfo.getPay_status());
+					paymentInfoMap.put("PayAmount", payInfo.getPay_amount());
+					paymentInfoMap.put("PayCurrCode", payInfo.getPay_currCode());
+					paymentInfoMap.put("PayTime", payInfo.getCreate_date());
+					paymentInfoMap.put("PayerName", payInfo.getPayer_name());
+					paymentInfoMap.put("PayerDocumentType", payInfo.getPayer_document_type());
+					paymentInfoMap.put("PayerDocumentNumber", payInfo.getPayer_document_number());
+					paymentInfoMap.put("PayerPhoneNumber", payInfo.getPayer_phone_number());
+					paymentInfoMap.put("EntOrderNo", payInfo.getMorder_id());
+					paymentInfoMap.put("Notes", payInfo.getRemarks());
+					Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap,
+							tok, recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
+					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(),
+								"支付流水号[" + treadeNo + "]----->>>" + paymentMap.get(BaseCode.MSG.toString()));
+						errorList.add(errMap);
+						BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
+						continue;
+					}
+					String rePayMessageID = paymentMap.get("messageID") + "";
+					// 更新服务器返回支付Id
+					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
+					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
+						Map<String, Object> errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(),
+								"支付流水号[" + treadeNo + "]----->>>" + rePaymentMap2.get(BaseCode.MSG.toString()));
+						errorList.add(errMap);
+						BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
+						continue;
+					}
+				} else {
+					Map<String, Object> errorMap = new HashMap<>();
+					errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
+					errorList.add(errorMap);
 					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 					continue;
 				}
-				Map<String, Object> paymentInfoMap = new HashMap<>();
-				paymentInfoMap.put("EntPayNo", payInfo.getTrade_no());
-				paymentInfoMap.put("PayStatus", payInfo.getPay_status());
-				paymentInfoMap.put("PayAmount", payInfo.getPay_amount());
-				paymentInfoMap.put("PayCurrCode", payInfo.getPay_currCode());
-				paymentInfoMap.put("PayTime", payInfo.getCreate_date());
-				paymentInfoMap.put("PayerName", payInfo.getPayer_name());
-				paymentInfoMap.put("PayerDocumentType", payInfo.getPayer_document_type());
-				paymentInfoMap.put("PayerDocumentNumber", payInfo.getPayer_document_number());
-				paymentInfoMap.put("PayerPhoneNumber", payInfo.getPayer_phone_number());
-				paymentInfoMap.put("EntOrderNo", payInfo.getMorder_id());
-				paymentInfoMap.put("Notes", payInfo.getRemarks());
-				Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap, tok,
-						recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
-				if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(),
-							"支付流水号[" + treadeNo + "]----->>>" + paymentMap.get(BaseCode.MSG.toString()));
-					errorList.add(errMap);
-					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
-					continue;
-				}
-				String rePayMessageID = paymentMap.get("messageID") + "";
-				// 更新服务器返回支付Id
-				Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
-				if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put(BaseCode.MSG.toString(),
-							"支付流水号[" + treadeNo + "]----->>>" + rePaymentMap2.get(BaseCode.MSG.toString()));
-					errorList.add(errMap);
-					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
-					continue;
-				}
-			} else {
-				Map<String, Object> errorMap = new HashMap<>();
-				errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
-				errorList.add(errorMap);
 				BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
-				continue;
 			}
-			BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
+			BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "paymentRecord");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "paymentRecord");
 	}
 
 	/**
@@ -591,8 +595,7 @@ public class PaymentServiceImpl implements PaymentService {
 			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
 			for (int i = 0; i < dataList.size(); i++) {
 				List list = (List) dataList.get(i);
-				GroupPaymentTask task = new GroupPaymentTask(list, merchantId, this, serialNo, realRowCount,
-						errorList);
+				GroupPaymentTask task = new GroupPaymentTask(list, merchantId, this, serialNo, realRowCount, errorList);
 				threadPool.submit(task);
 			}
 			threadPool.shutdown();

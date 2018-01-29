@@ -15,6 +15,7 @@ import org.silver.shop.model.common.base.City;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.base.Province;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -86,51 +87,6 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	}
 
 	@Override
-	public Map<String, Object> getProvince() {
-		Map<String, Object> reMap = new HashMap<>();
-		List<Object> dataList = provinceCityAreaDao.findAll(Province.class, 0, 0);
-		if (dataList != null && dataList.size() > 0) {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reMap.put(BaseCode.DATAS.toString(), dataList);
-			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-		}
-		return reMap;
-	}
-
-	@Override
-	public Map<String, Object> getCity() {
-		Map<String, Object> reMap = new HashMap<>();
-		List<Object> dataList = provinceCityAreaDao.findAll(City.class, 0, 0);
-		if (dataList != null && dataList.size() > 0) {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reMap.put(BaseCode.DATAS.toString(), dataList);
-			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-		}
-		return reMap;
-	}
-
-	@Override
-	public Map<String, Object> getArea() {
-		Map<String, Object> reMap = new HashMap<>();
-		List<Object> dataList = provinceCityAreaDao.findAll(Area.class, 0, 0);
-		if (dataList != null && dataList.size() > 0) {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reMap.put(BaseCode.DATAS.toString(), dataList);
-			reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-		}
-		return reMap;
-	}
-
-	@Override
 	public Map<String, Object> getProvinceCityArea2() {
 		Map<String, Object> reMap = new HashMap<>();
 		Map<String, Object> datasMap = new HashMap<>();
@@ -143,6 +99,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(province));
 			return datasMap;
 		} else {
+			//findProvinceCityArePostal();
 			// 查询省市区
 			Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
 			if (table != null && !table.getRows().isEmpty()) {
@@ -174,7 +131,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 												.replace("\"}", ""));
 					}
 					// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
-					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), 86400 );
+					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), (3600 *24) *5);
 					datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 					datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 					datasMap.put(BaseCode.DATAS.toString(), item);
@@ -186,6 +143,54 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			}
 		}
 		return reMap;
+	}
+
+	@Override
+	public Object editProvinceCityAreaInfo(String[] strArr) {
+		if (strArr != null) {
+			Province province = null;
+			City city = null;
+			Area area = null;
+			Map<String, Object> params = new HashMap<>();
+			String provinceId = strArr[0];
+			params.put("id", Long.parseLong(provinceId));
+			List<Province> rePronvinceList = provinceCityAreaDao.findByProperty(Province.class, params, 1, 1);
+			if (rePronvinceList != null && !rePronvinceList.isEmpty()) {
+				province = rePronvinceList.get(0);
+				params.clear();
+				String cityId = strArr[3];
+				params.put("id", Long.parseLong(cityId));
+				List<City> reCityList = provinceCityAreaDao.findByProperty(City.class, params, 1, 1);
+				if (reCityList != null && !reCityList.isEmpty()) {
+					city = reCityList.get(0);
+					params.clear();
+					String areaId = strArr[7];
+					params.put("id", Long.parseLong(areaId));
+					List<Area> reAreaList = provinceCityAreaDao.findByProperty(Area.class, params, 1, 1);
+					if (reAreaList != null && !reAreaList.isEmpty()) {
+						area = reAreaList.get(0);
+						if (!provinceCityAreaDao.update(province)) {
+							return ReturnInfoUtils.errorInfo("更新省份信息失败,服务器繁忙!");
+						}
+						if (!provinceCityAreaDao.update(city)) {
+							return ReturnInfoUtils.errorInfo("更新城市信息失败,服务器繁忙!");
+						}
+						if (!provinceCityAreaDao.update(area)) {
+							return ReturnInfoUtils.errorInfo("更新区域信息失败,服务器繁忙!");
+						}
+						
+						
+					} else {
+						return ReturnInfoUtils.errorInfo("区域信息未找到,请核对信息!");
+					}
+				} else {
+					return ReturnInfoUtils.errorInfo("城市信息未找到,请核对信息!");
+				}
+			} else {
+				return ReturnInfoUtils.errorInfo("省份信息未找到,请核对信息!");
+			}
+		}
+		return ReturnInfoUtils.errorInfo("参数错误,请核对信息!");
 	}
 
 }

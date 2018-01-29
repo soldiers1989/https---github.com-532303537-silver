@@ -74,6 +74,8 @@
 				/member/*=anon
 				/proxy/*=anon
 				/proxyWallet/*=anon
+				/managerWallet/*=anon
+				/idCard/*=anon
 				/manual/*=anon
 				/ympay/*=anon
 				/yspay-receive/*=anon

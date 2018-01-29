@@ -788,23 +788,23 @@ public class MpayServiceImpl implements MpayService {
 					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
 					switch (flag) {
 					case 1:
-						reOrderMap = editMorderInfo(order, strArr);
+						reOrderMap = editMorderInfo(order, strArr, merchantName);
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
 						break;
 					case 2:
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId,merchantName);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
 						break;
 					case 3:
-						reOrderMap = editMorderInfo(order, strArr);
+						reOrderMap = editMorderInfo(order, strArr, merchantName);
 						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderMap;
 						}
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId);
+						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId, merchantName);
 						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
 							return reOrderSubMap;
 						}
@@ -831,9 +831,10 @@ public class MpayServiceImpl implements MpayService {
 	 *            数据
 	 * @param merchantId
 	 *            商户Id
+	 * @param merchantName 
 	 * @return Map
 	 */
-	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr, String merchantId) {
+	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr, String merchantId, String merchantName) {
 		Map<String, Object> paramMap = new HashMap<>();
 		String entGoodsNo = strArr[24];
 		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
@@ -873,13 +874,36 @@ public class MpayServiceImpl implements MpayService {
 			goodsInfo.setTotal(count * price);
 			goodsInfo.setNetWt(Double.parseDouble(strArr[15]));
 			goodsInfo.setGrossWt(Double.parseDouble(strArr[16]));
-			goodsInfo.setFirstLegalCount(Double.parseDouble(strArr[17]));
-			goodsInfo.setSecondLegalCount(Double.parseDouble(strArr[18]));
+			if(StringEmptyUtils.isEmpty(strArr[17])){
+				goodsInfo.setFirstLegalCount(0.0);
+			}else{
+				goodsInfo.setFirstLegalCount(Double.parseDouble(strArr[17]));
+			}
+			if(StringEmptyUtils.isEmpty(strArr[18])){
+				goodsInfo.setSecondLegalCount(0.0);
+			}else{
+				goodsInfo.setSecondLegalCount(Double.parseDouble(strArr[18]));
+			}
+			
 			goodsInfo.setStdUnit(strArr[19]);
 			goodsInfo.setSecUnit(strArr[20]);
-			goodsInfo.setNumOfPackages(Integer.parseInt(strArr[21]));
-			goodsInfo.setPackageType(Integer.parseInt(strArr[22]));
+			if(StringEmptyUtils.isEmpty(strArr[21])){
+				goodsInfo.setNumOfPackages(0);
+			}else{
+				goodsInfo.setNumOfPackages(Integer.parseInt(strArr[21]));
+			}
+			if(StringEmptyUtils.isEmpty(strArr[22])){
+				goodsInfo.setPackageType(0);
+			}else{
+				goodsInfo.setPackageType(Integer.parseInt(strArr[22]));
+			}
+			
+		
 			goodsInfo.setTransportModel(strArr[23]);
+			goodsInfo.setUpdateBy(merchantName);
+			goodsInfo.setUpdateDate(new Date());
+			
+			
 			if (!morderDao.update(goodsInfo)) {
 				return ReturnInfoUtils.errorInfo("更新订单备案商品错误,请重试!");
 			}
@@ -896,9 +920,10 @@ public class MpayServiceImpl implements MpayService {
 	 *            订单实体
 	 * @param strArr
 	 *            修改信息
+	 * @param merchantName 
 	 * @return Map
 	 */
-	private Map<String, Object> editMorderInfo(Morder order, String[] strArr) {
+	private Map<String, Object> editMorderInfo(Morder order, String[] strArr, String merchantName) {
 		order.setFcode(strArr[1]);
 		Double totalprice = 0.0;
 		Double tax = 0.0;
@@ -942,6 +967,8 @@ public class MpayServiceImpl implements MpayService {
 		order.setRecipientCityName(strArr[28]);
 		order.setRecipientAreaName(strArr[29]);
 		order.setOldOrderId(strArr[30]);
+		order.setUpdate_date(new Date());
+		order.setUpdate_by(merchantName);
 		try {
 			order.setSerial(Integer.parseInt(strArr[32]));
 		} catch (Exception e) {

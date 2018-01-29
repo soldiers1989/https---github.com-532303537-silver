@@ -13,13 +13,13 @@
 		</property>
 		<property name="connection.url">
 <!-- 			jdbc:mysql://150.242.58.22:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
- -->		jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
+ -->			jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
 		</property>
 		<!-- jdbc:mysql://yueliankeji.mysql.rds.aliyuncs.com:3302/szs_sj?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true -->
-	
+
 		<property name="connection.username">root</property>
 		<property name="connection.password">123</property>
-		
+
 		<!-- <property name="connection.password">123</property> -->
 		<!-- <property name="connection.username">root</property> -->
 		<property name="connection.driver_class">
@@ -38,9 +38,9 @@
 		<property name="hibernate.format_sql">false</property>
 
 		<!-- <property name="hibernate.hbm2ddl.auto">update</property> -->
-		
-		
-	<!-- 	<property name="hibernate.c3p0.testConnectionOnCheckout">true</property> -->
+
+
+		<!-- <property name="hibernate.c3p0.testConnectionOnCheckout">true</property> -->
 
 		<mapping resource="org/silver/shop/model/system/organization/Merchant.hbm.xml" />
 		<mapping
@@ -106,7 +106,7 @@
 		<mapping resource="org/silver/shop/model/system/tenant/ProxyWalletLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/Postal.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/Appkey.hbm.xml" />
-
+		<mapping resource="org/silver/shop/model/common/base/IdCard.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/commerce/QuartetOrderContent.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->

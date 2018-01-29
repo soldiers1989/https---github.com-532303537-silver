@@ -142,7 +142,7 @@ public class MorderServiceImpl implements MorderService {
 			paramMap.clear();
 			for (Morder m : mlist) {
 				paramMap.put("order_id", m.getOrder_id());
-
+				paramMap.put("deleteFlag", 0);
 				List<MorderSub> mslist = morderSubDao.findByProperty(paramMap, 0, 0);
 				Map<String, Object> item = new HashMap<>();
 				item.put("head", m);
@@ -418,7 +418,7 @@ public class MorderServiceImpl implements MorderService {
 			if (morder.getDel_flag() == 1) {
 				return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
 			}
-			return judgmentOrderInfo(morder, goodsInfo, ActualAmountPaid, FCY, Tax, 1,merchant_no);
+			return judgmentOrderInfo(morder, goodsInfo, ActualAmountPaid, FCY, Tax, 1, merchant_no);
 		}
 		Morder morder = new Morder();
 		// 查询缓存中订单自增Id
@@ -492,19 +492,13 @@ public class MorderServiceImpl implements MorderService {
 	 * @return Map
 	 */
 	private Map<String, Object> judgmentOrderInfo(Morder morder, JSONObject goodsInfo, Double actualAmountPaid,
-			Double FCY, Double tax, int flag,String merchantId) {
+			Double FCY, Double tax, int flag, String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		String waybill = morder.getWaybill().trim();
 		String orderId = morder.getOrder_id().trim();
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
-		String entGoodsNo = goodsInfo.get("entGoodsNo")+"";
-		if (flag == 2) {
-			String orderDocName = goodsInfo.get("orderDocName")+"";
-			paramsMap.put("EntGoodsNo", entGoodsNo+"_"+orderDocName);
-		} else {
-			paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
-		}
+		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
 		paramsMap.put("merchant_no", merchantId);
 		List<MorderSub> ms = morderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
 		if (ms != null && !ms.isEmpty()) {
@@ -515,8 +509,8 @@ public class MorderServiceImpl implements MorderService {
 			}
 			return null;
 		} else {
-			morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
 			double reFCY = morder.getFCY();
+			morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
 			morder.setFCY(reFCY + FCY);
 			if (!morderDao.update(morder)) {
 				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
@@ -595,7 +589,7 @@ public class MorderServiceImpl implements MorderService {
 		if (ml != null && !ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			// 企邦的税费暂写死为0
-			return judgmentOrderInfo(morder, JSONObject.fromObject(item), actualAmountPaid, 0.0, tax, 2,merchantId);
+			return judgmentOrderInfo(morder, JSONObject.fromObject(item), actualAmountPaid, orderTotalPrice, 0.0, 2, merchantId);
 		}
 
 		Morder morder = new Morder();
