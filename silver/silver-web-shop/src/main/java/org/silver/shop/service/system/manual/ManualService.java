@@ -744,7 +744,7 @@ public class ManualService {
 				BufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "order");
 			}
 			File file2 = excel.getFile();
-			//excel.closeExcel();
+			// excel.closeExcel();
 			if (!file2.delete()) {
 				System.out.println("-----------文件没有删除--------------");
 			}
@@ -1030,11 +1030,7 @@ public class ManualService {
 				}
 				BufferUtils.writeRedis("1", errl, realRowCount, serialNo, "order");
 			}
-			File file2 = excel.getFile();
-			 excel.closeExcel();
-			if (!file2.delete()) {
-				System.out.println("-----------文件没有删除--------------");
-			}
+			excel.closeExcel();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1194,21 +1190,6 @@ public class ManualService {
 		return AppUtil.generateAppKey().substring(0, 6);
 	}
 
-	// 根据计量单位的中文名称查询编码
-	private String findUnit(String value) {
-		List reList = meteringTransaction.findMetering();
-
-		if (reList != null && !reList.isEmpty()) {
-			for (int i = 0; i < reList.size(); i++) {
-				Metering metering = (Metering) reList.get(i);
-				if (value.equals(metering.getMeteringName())) {
-					return metering.getMeteringCode();
-				}
-			}
-		}
-		return null;
-	}
-
 	// 删除订单商品信息
 	public Map<String, Object> deleteOrderGoodsInfo(String idPack) {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -1229,5 +1210,39 @@ public class ManualService {
 		// name = managerInfo.getManagerName();
 		// }
 		return morderService.deleteOrderGoodsInfo(id, name, idPack);
+	}
+
+	// 商户修改手工订单信息
+		public Map<String, Object> editMorderInfo(JSONObject json, int length, int flag) {
+			Subject currentUser = SecurityUtils.getSubject();
+			// 获取商户登录时,shiro存入在session中的数据
+			Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+			// 获取登录后的商户账号
+			String merchantId = merchantInfo.getMerchantId();
+			String merchantName = merchantInfo.getMerchantName();
+			String[] strArr = new String[length];
+			for (int i = 0; i < length; i++) {
+				String value = json.getString(Integer.toString(i));
+				strArr[i] = value;
+			}
+			return morderService.editMorderInfo(merchantId, merchantName, strArr, flag);
+		}
+	
+	public Map<String, Object> addOrderGoodsInfo(int length, HttpServletRequest req) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		String[] strArr = new String[length];
+		//0是长度,参数从1开始
+		int i = 0 ;
+		Enumeration<String> isKey= req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			strArr[i] = req.getParameter(key);
+			i++;
+		}
+		return morderService.addOrderGoodsInfo(merchantId,merchantName,strArr);
 	}
 }

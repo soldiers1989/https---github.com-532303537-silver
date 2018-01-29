@@ -166,8 +166,7 @@ public class EditRecordController {
 		Map<String, Object> reqMap = manualService.deleteOrderGoodsInfo(idPack);
 		return JSONObject.fromObject(reqMap).toString();
 	}
-	
-	
+
 	/********************** 手工录入人员信息 ************************/
 	@RequestMapping(value = "/addMuser", produces = "application/json; charset=utf-8")
 	public String addMuser(HttpServletResponse resp, HttpServletRequest req, int length) {
@@ -402,7 +401,7 @@ public class EditRecordController {
 		Map<String, Object> datasMap = new HashMap<>();
 		try {
 			JSONObject json = JSONObject.fromObject(morderInfoPack);
-			Map<String, Object> statusMap = mdataService.editMorderInfo(json, length, flag);
+			Map<String, Object> statusMap = manualService.editMorderInfo(json, length, flag);
 			return JSONObject.fromObject(statusMap).toString();
 		} catch (Exception e) {
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
@@ -452,18 +451,35 @@ public class EditRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	/**
+	 * 添加手工订单对应的商品信息
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/addOrderGoodsInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("添加手工订单商品信息")
+	public String addOrderGoodsInfo(HttpServletRequest req, HttpServletResponse response,int length ) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = manualService.addOrderGoodsInfo(length,req);
+		return JSONObject.fromObject(statusMap).toString();
+	}
+
 	public static void main(String[] args) throws IOException {
 		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第51批999-43825025清单#200.xlsx");
 		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xls";
-/*
-		File dest = new File(source.getParentFile() + "/" + imgName);
-		System.out.println(dest.getName());
-		try {
-			FileUtils.copyFileUsingFileChannels(source, dest);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		/*
+		 * File dest = new File(source.getParentFile() + "/" + imgName);
+		 * System.out.println(dest.getName()); try {
+		 * FileUtils.copyFileUsingFileChannels(source, dest); } catch
+		 * (IOException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); }
+		 */
 		ExcelUtil excel = new ExcelUtil(source);
 		System.out.println("---->>" + excel.getFile());
 		excel.open();

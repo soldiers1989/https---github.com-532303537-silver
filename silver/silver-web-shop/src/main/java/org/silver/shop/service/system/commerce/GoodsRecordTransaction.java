@@ -602,16 +602,15 @@ public class GoodsRecordTransaction {
 			File file = new File("/RecordGoodsAdd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(file);
-			readRecordGoodsInfo(0, excel, errl, merchantId, merchantName);
-			excel.closeExcel();
-			if (!file.delete()) {
-				System.out.println("--------excel文件没有删除-----");
-			}
-			reqMap.clear();
-			reqMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reqMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			reqMap.put(BaseCode.ERROR.toString(), errl);
-			return reqMap;
+			return readRecordGoodsInfo(0, excel, errl, merchantId, merchantName);
+			/*
+			 * excel.closeExcel(); if (!file.delete()) {
+			 * System.out.println("--------excel文件没有删除-----"); } reqMap.clear();
+			 * reqMap.put(BaseCode.STATUS.toString(),
+			 * StatusCode.SUCCESS.getStatus());
+			 * reqMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			 * reqMap.put(BaseCode.ERROR.toString(), errl); return reqMap;
+			 */
 		}
 		reqMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.toString());
 		reqMap.put(BaseCode.MSG.toString(), "导入文件出错，请重试");
@@ -620,19 +619,13 @@ public class GoodsRecordTransaction {
 
 	private Map<String, Object> readRecordGoodsInfo(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
 			String merchantId, String merchantName) {
-		if (excel.getRowCount(0) == 6) {// 已备案商品信息头长度
-			Map<String, Object> item = readRecordGoodsHeadSheed(sheet, excel, errl, merchantId, merchantName);
-			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
-				return item;
-			} else {
-				if (excel.getRowCount(0) == 32) {// 已备案商品详情表长度
-					String goodsSerialNo = item.get("goodsSerialNo") + "";
-					return readRecordGoodsDetailSheed(1, excel, errl, merchantId, merchantName, goodsSerialNo);
-				}
-				return ReturnInfoUtils.errorInfo("已备案商品详情表模板错误,请核实是否符合要求!");
-			}
+		Map<String, Object> item = readRecordGoodsHeadSheed(sheet, excel, errl, merchantId, merchantName);
+		if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
+			return item;
+		} else {
+			String goodsSerialNo = item.get("goodsSerialNo") + "";
+			return readRecordGoodsDetailSheed(1, excel, errl, merchantId, merchantName, goodsSerialNo);
 		}
-		return ReturnInfoUtils.errorInfo("已备案商品信息头模板错误,请核实是否符合要求!");
 	}
 
 	/**

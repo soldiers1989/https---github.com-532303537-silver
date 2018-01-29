@@ -644,7 +644,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("note", "");
 			// 是否像海关发送
 			
-			paymentMap.put("uploadOrNot", false);
+			//paymentMap.put("uploadOrNot", false);
 			// String resultStr =
 			//YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// paymentMap);

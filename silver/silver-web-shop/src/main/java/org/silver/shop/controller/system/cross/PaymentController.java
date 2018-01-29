@@ -59,7 +59,7 @@ public class PaymentController {
 	}
 
 	/**
-	 * 发起支付单备案
+	 * 发起手工支付单备案
 	 * 
 	 * @param resp
 	 * @param req

@@ -484,21 +484,7 @@ public class MdataService {
 		return null;
 	}
 
-	// 商户修改手工订单信息
-	public Map<String, Object> editMorderInfo(JSONObject json, int length, int flag) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
-		// 获取登录后的商户账号
-		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		String[] strArr = new String[length];
-		for (int i = 0; i < length; i++) {
-			String value = json.getString(Integer.toString(i));
-			strArr[i] = value;
-		}
-		return mpayService.editMorderInfo(merchantId, merchantName, strArr, flag);
-	}
+	
 
 	// 读取缓存中excel导入实时数据
 	public Map<String, Object> readExcelRedisInfo(String serialNo,String name) {

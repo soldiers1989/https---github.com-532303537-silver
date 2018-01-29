@@ -455,7 +455,7 @@ public class MpayServiceImpl implements MpayService {
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					Map<String, Object> errMap = new HashMap<>();
 					errMap.put(BaseCode.MSG.toString(),
-							"[" + orderNo + "]订单-->" + reOrderMap.get(BaseCode.MSG.toString()));
+							"订单[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()));
 					errorList.add(errMap);
 					BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
 					continue;
@@ -673,8 +673,8 @@ public class MpayServiceImpl implements MpayService {
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
 			// String resultStr2 =
-			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			// orderMap);
+			 //YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			 //orderMap);
 			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
@@ -773,210 +773,6 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	@Override
-	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr, int flag) {
-		Map<String, Object> paramMap = new HashMap<>();
-		if (strArr != null && strArr.length > 0 && flag > 0) {
-			paramMap.put("order_id", strArr[0]);
-			paramMap.put("merchant_no", merchantId);
-			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, paramMap, 1, 1);
-			if (reOrderList != null && !reOrderList.isEmpty()) {
-				Morder order = reOrderList.get(0);
-				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
-					Map<String, Object> reOrderMap = null;
-					Map<String, Object> reOrderSubMap = null;
-					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
-					switch (flag) {
-					case 1:
-						reOrderMap = editMorderInfo(order, strArr, merchantName);
-						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
-							return reOrderMap;
-						}
-						break;
-					case 2:
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId,merchantName);
-						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
-							return reOrderSubMap;
-						}
-						break;
-					case 3:
-						reOrderMap = editMorderInfo(order, strArr, merchantName);
-						if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
-							return reOrderMap;
-						}
-						reOrderSubMap = editMorderSubInfo(order.getOrder_id(), strArr, merchantId, merchantName);
-						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
-							return reOrderSubMap;
-						}
-						break;
-					default:
-						return ReturnInfoUtils.errorInfo("修改订单或商品标识错误,请重新输入!");
-					}
-				} else {
-					return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
-				}
-			} else {
-				return ReturnInfoUtils.errorInfo("订单不存在,请核实订单信息!");
-			}
-		}
-		return ReturnInfoUtils.successInfo();
-	}
+	
 
-	/**
-	 * 修改订单商品
-	 * 
-	 * @param order_id
-	 *            订单Id
-	 * @param strArr
-	 *            数据
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName 
-	 * @return Map
-	 */
-	private Map<String, Object> editMorderSubInfo(String order_id, String[] strArr, String merchantId, String merchantName) {
-		Map<String, Object> paramMap = new HashMap<>();
-		String entGoodsNo = strArr[24];
-		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
-			return ReturnInfoUtils.errorInfo("商品自编号不能为空!");
-		}
-		paramMap.put("order_id", order_id);
-		paramMap.put("EntGoodsNo", entGoodsNo);
-		paramMap.put("merchant_no", merchantId);
-		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
-		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
-			MorderSub goodsInfo = reOrderSubList.get(0);
-			goodsInfo.setSeq(Integer.parseInt(strArr[1]));
-			goodsInfo.setEntGoodsNo(strArr[2]);
-			goodsInfo.setHSCode(strArr[3]);
-			goodsInfo.setGoodsName(strArr[4]);
-			goodsInfo.setCusGoodsNo(strArr[5]);
-			goodsInfo.setCIQGoodsNo(strArr[6]);
-			goodsInfo.setOriginCountry(strArr[7]);
-			goodsInfo.setGoodsStyle(strArr[8]);
-			goodsInfo.setBarCode(strArr[9]);
-			goodsInfo.setBrand(strArr[10]);
-			int count = 0;
-			double price = 0.0;
-			try {
-				count = Integer.parseInt(strArr[11]);
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("商品数量输入错误,请重新输入!");
-			}
-			try {
-				price = Double.parseDouble(strArr[13]);
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("商品单价输入错误,请重新输入!");
-			}
-			goodsInfo.setQty(count);
-			goodsInfo.setUnit(strArr[12]);
-			goodsInfo.setPrice(price);
-			goodsInfo.setTotal(count * price);
-			goodsInfo.setNetWt(Double.parseDouble(strArr[15]));
-			goodsInfo.setGrossWt(Double.parseDouble(strArr[16]));
-			if(StringEmptyUtils.isEmpty(strArr[17])){
-				goodsInfo.setFirstLegalCount(0.0);
-			}else{
-				goodsInfo.setFirstLegalCount(Double.parseDouble(strArr[17]));
-			}
-			if(StringEmptyUtils.isEmpty(strArr[18])){
-				goodsInfo.setSecondLegalCount(0.0);
-			}else{
-				goodsInfo.setSecondLegalCount(Double.parseDouble(strArr[18]));
-			}
-			
-			goodsInfo.setStdUnit(strArr[19]);
-			goodsInfo.setSecUnit(strArr[20]);
-			if(StringEmptyUtils.isEmpty(strArr[21])){
-				goodsInfo.setNumOfPackages(0);
-			}else{
-				goodsInfo.setNumOfPackages(Integer.parseInt(strArr[21]));
-			}
-			if(StringEmptyUtils.isEmpty(strArr[22])){
-				goodsInfo.setPackageType(0);
-			}else{
-				goodsInfo.setPackageType(Integer.parseInt(strArr[22]));
-			}
-			
-		
-			goodsInfo.setTransportModel(strArr[23]);
-			goodsInfo.setUpdateBy(merchantName);
-			goodsInfo.setUpdateDate(new Date());
-			
-			
-			if (!morderDao.update(goodsInfo)) {
-				return ReturnInfoUtils.errorInfo("更新订单备案商品错误,请重试!");
-			}
-		} else {
-			return ReturnInfoUtils.errorInfo("查询订单商品信息错误,请重试!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 修改订单信息
-	 * 
-	 * @param order
-	 *            订单实体
-	 * @param strArr
-	 *            修改信息
-	 * @param merchantName 
-	 * @return Map
-	 */
-	private Map<String, Object> editMorderInfo(Morder order, String[] strArr, String merchantName) {
-		order.setFcode(strArr[1]);
-		Double totalprice = 0.0;
-		Double tax = 0.0;
-		try {
-			totalprice = Double.parseDouble(strArr[2]);
-		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("订单商品总金额错误,请重新输入!");
-		}
-		try {
-			tax = Double.parseDouble(strArr[3]);
-		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("订单税费错误,请重新输入!");
-		}
-		order.setFCY(totalprice);
-		order.setTax(tax);
-		order.setActualAmountPaid(totalprice + tax);
-		order.setRecipientName(strArr[5]);
-		order.setRecipientAddr(strArr[6]);
-		order.setRecipientID(strArr[7]);
-		order.setRecipientTel(strArr[8]);
-		order.setRecipientProvincesCode(strArr[9]);
-		order.setRecipientCityCode(strArr[10]);
-		order.setRecipientAreaCode(strArr[11]);
-		order.setOrderDocAcount(strArr[12]);
-		order.setOrderDocName(strArr[13]);
-		order.setOrderDocType(strArr[14]);
-		order.setOrderDocId(strArr[15]);
-		order.setOrderDocTel(strArr[16]);
-		// order.setOrderDate(strArr[17]);
-		order.setTrade_no(strArr[18]);
-		// order.setDateSign(strArr[19]);
-		order.setWaybill(strArr[20]);
-		// order.setStatus(orderMap.get(""));
-		order.setSenderName(strArr[21]);
-		order.setSenderCountry(strArr[22]);
-		order.setSenderAreaCode(strArr[23]);
-		order.setSenderAddress(strArr[24]);
-		order.setSenderTel(strArr[25]);
-		order.setPostal(strArr[26]);
-		order.setRecipientProvincesName(strArr[27]);
-		order.setRecipientCityName(strArr[28]);
-		order.setRecipientAreaName(strArr[29]);
-		order.setOldOrderId(strArr[30]);
-		order.setUpdate_date(new Date());
-		order.setUpdate_by(merchantName);
-		try {
-			order.setSerial(Integer.parseInt(strArr[32]));
-		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
-		}
-		if (!morderDao.update(order)) {
-			return ReturnInfoUtils.errorInfo("更新订单备案信息错误!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
 }

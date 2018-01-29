@@ -8,7 +8,7 @@ import net.sf.json.JSONObject;
 public interface MorderService {
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body);
 
-	public Map<String, Object> pageFindRecords(Map<String, Object> params,int page,int size);
+	public Map<String, Object> pageFindRecords(Map<String, Object> params, int page, int size);
 
 	public Map<String, Object> createNew(String merchant_no, String OrderDate, String order_id, Double FCY, Double Tax,
 			Double ActualAmountPaid, String RecipientName, String RecipientID, String RecipientTel,
@@ -25,9 +25,13 @@ public interface MorderService {
 
 	/**
 	 * 删除订单信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param orderIdPack 订单Id(JSON格式)
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param orderIdPack
+	 *            订单Id(JSON格式)
 	 * @return Map
 	 */
 	public Map<String, Object> deleteByOrderId(String merchantId, String merchantName, String orderIdPack);
@@ -43,13 +47,13 @@ public interface MorderService {
 	 * @param provinceCode
 	 * @param cityCode
 	 * @param areaCode
-	 * @param postal 
-	 * @param areaName 
-	 * @param cityName 
-	 * @param provinceName 
-	 * @param orderId 
-	 * @param goodsInfo 
-	 * @param seqNo 
+	 * @param postal
+	 * @param areaName
+	 * @param cityName
+	 * @param provinceName
+	 * @param orderId
+	 * @param goodsInfo
+	 * @param seqNo
 	 * @return
 	 */
 	public Map<String, Object> guoCreateNew(String merchant_no, String waybill, int serial, String dateSign,
@@ -57,7 +61,8 @@ public interface MorderService {
 			String RecipientTel, String RecipientProvincesCode, String RecipientAddr, String OrderDocAcount,
 			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
 			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
-			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId, JSONObject goodsInfo);
+			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId,
+			JSONObject goodsInfo);
 
 	/**
 	 * 根据商品编号及名称检查商品是否真实存在
@@ -73,7 +78,8 @@ public interface MorderService {
 	/**
 	 * 批量导入企邦订单表
 	 * 
-	 * @param merchantId 商户Id
+	 * @param merchantId
+	 *            商户Id
 	 * @param item
 	 * @return
 	 */
@@ -82,7 +88,8 @@ public interface MorderService {
 	/**
 	 * 批量创建企邦订单商品
 	 * 
-	 * @param merchantId 商户Id
+	 * @param merchantId
+	 *            商户Id
 	 * @param item
 	 * @return
 	 */
@@ -90,10 +97,38 @@ public interface MorderService {
 
 	/**
 	 * 删除订单关联的商品信息
-	 * @param id 操作人Id
-	 * @param name 操作人名称
-	 * @param idPack Id信息包
+	 * 
+	 * @param id
+	 *            操作人Id
+	 * @param name
+	 *            操作人名称
+	 * @param idPack
+	 *            Id信息包
 	 * @return Map
 	 */
 	public Map<String, Object> deleteOrderGoodsInfo(String id, String name, String idPack);
+
+	/**
+	 * 商户修改手工(导入)的订单
+	 * 
+	 * @param strArr
+	 *            修改参数
+	 * @param flag
+	 *            修改标识 1-订单,2-订单商品,3-订单与商品一起修改
+	 * @return Map
+	 */
+	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr, int flag);
+
+	/**
+	 * 添加手工订单对应的商品信息
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param strArr
+	 *            商品信息
+	 * @return Map
+	 */
+	public Map<String, Object> addOrderGoodsInfo(String merchantId, String merchantName, String[] strArr);
 }

@@ -42,14 +42,6 @@ public interface MpayService {
 	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,
 			String date, String serialNo);
 
-	/**
-	 * 商户修改手工(导入)的订单
-	 * 
-	 * @param strArr
-	 *           修改参数
-	 * @param flag 修改标识 1-订单,2-订单商品,3-订单与商品一起修改
-	 * @return Map
-	 */
-	public Map<String, Object> editMorderInfo(String merchantId, String merchantName, String[] strArr, int flag);
+
 
 }
