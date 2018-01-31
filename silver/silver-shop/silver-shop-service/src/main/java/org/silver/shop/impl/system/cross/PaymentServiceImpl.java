@@ -419,6 +419,7 @@ public class PaymentServiceImpl implements PaymentService {
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
 			paramsMap.put("merchantId", merchantId);
+			paramsMap.put("merchantName", merchantName);
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
 			Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
@@ -457,7 +458,6 @@ public class PaymentServiceImpl implements PaymentService {
 						error.put("msg", "订单【" + order_id + "】" + "关联的支付单已经存在，无需重复生成!");
 						errorList.add(error);
 						BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
-						System.out.println("---->>>>>>>" + errorList);
 						continue;
 					}
 					params.clear();
@@ -465,9 +465,10 @@ public class PaymentServiceImpl implements PaymentService {
 					String trade_no = createTradeNo("01O", (count + 1), new Date());
 					String orderDate = morder.get(0).getOrderDate();
 					Date pay_time = DateUtil.randomPaymentDate(orderDate);
+					
 					if (addEntity(merchantId, trade_no, order_id, morder.get(0).getActualAmountPaid(),
 							morder.get(0).getOrderDocName(), morder.get(0).getOrderDocId(),
-							morder.get(0).getOrderDocTel(), pay_time)
+							morder.get(0).getOrderDocTel(), pay_time,morder.get(0).getCreate_by())
 							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
 						// 当创建完支付流水号之后
 						BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
@@ -484,7 +485,7 @@ public class PaymentServiceImpl implements PaymentService {
 				errorList.add(error);
 				BufferUtils.writeRedis("1", errorList, realRowCount, serialNo, "payment");
 			}
-			BufferUtils.writeRedis("2", errorList, realRowCount, serialNo, "payment");
+			BufferUtils.writeCompletedRedis("2", errorList, realRowCount, serialNo, "payment");
 			return null;
 		} else {
 			statusMap.put("status", -3);
@@ -504,10 +505,11 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @param payer_document_number
 	 * @param payer_phone_number
 	 * @param pay_time
+	 * @param merchantName 
 	 * @return
 	 */
 	private boolean addEntity(String merchant_no, String trade_no, String morder_id, double amount, String payer_name,
-			String payer_document_number, String payer_phone_number, Date pay_time) {
+			String payer_document_number, String payer_phone_number, Date pay_time, String merchantName) {
 		Mpay entity = new Mpay();
 		entity.setMerchant_no(merchant_no);
 		entity.setTrade_no(trade_no);
@@ -525,7 +527,8 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setPay_currCode("142");
 		entity.setPay_record_status(1);
 		entity.setPay_time(pay_time);
-		entity.setCreate_by("system");
+		entity.setCreate_by(merchantName);
+		
 		return paymentDao.add(entity);
 	}
 

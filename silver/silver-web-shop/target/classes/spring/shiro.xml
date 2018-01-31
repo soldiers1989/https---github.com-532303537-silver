@@ -74,6 +74,7 @@
 				/member/*=anon
 				/proxy/*=anon
 				/proxyWallet/*=anon
+				/errorLogs/*=anon
 				/managerWallet/*=anon
 				/idCard/*=anon
 				/manual/*=anon

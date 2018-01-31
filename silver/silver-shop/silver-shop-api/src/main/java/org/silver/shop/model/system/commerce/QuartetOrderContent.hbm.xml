@@ -59,5 +59,9 @@
         <property name="remarks" type="java.lang.String">
             <column name="remarks" />
         </property>
+        
+          <property name="tenantOrderId" type="java.lang.String">
+            <column name="tenantOrderId" not-null="true" unique="true"/>
+        </property>
     </class>
 </hibernate-mapping>

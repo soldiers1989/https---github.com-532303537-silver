@@ -21,6 +21,7 @@ import org.silver.shop.dao.system.manual.MuserDao;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.Muser;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.util.SearchUtils;
@@ -88,17 +89,6 @@ public class MorderServiceImpl implements MorderService {
 		morder.setFcode(FCODE);
 		return morderDao.add(morder);
 
-	}
-
-	private String createMorderSysNo(String sign, long id, Date d) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
-		String dstr = sdf.format(d);
-		String nstr = id + "";
-		while (nstr.length() < 5) {
-			nstr = "0" + nstr;
-		}
-		int rstr = RandomUtils.getRandom(4);
-		return sign + dstr + nstr + rstr;
 	}
 
 	private boolean saveBody(String order_id, int body_length, String[][] body, Date d) {
@@ -425,7 +415,7 @@ public class MorderServiceImpl implements MorderService {
 		Morder morder = new Morder();
 		// 查询缓存中订单自增Id
 		int count = SerialNoUtils.getRedisIdCount("order");
-		morder.setOrder_id(createMorderSysNo("YM", count, new Date()));
+		morder.setOrder_id(SerialNoUtils.getSerialNo("YM", count));
 		// 原导入表中的订单编号
 		morder.setOldOrderId(orderId);
 		morder.setFCY(FCY);
@@ -571,7 +561,7 @@ public class MorderServiceImpl implements MorderService {
 		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
 			// 查询缓存中订单自增Id
 			int count = SerialNoUtils.getRedisIdCount("order");
-			orderId = createMorderSysNo("YM", count, new Date());
+			orderId = SerialNoUtils.getSerialNo("YM", count);
 		}
 		// 校验企邦是否已经录入已备案商品信息
 		String entGoodsNo = item.get("entGoodsNo") + "";
@@ -1117,6 +1107,30 @@ public class MorderServiceImpl implements MorderService {
 				}
 			}
 
+		}
+		return null;
+	}
+
+	@Override
+	public Map<String, Object> updateOldPaymentCreateBy() {
+		Map<String, Object> params = new HashMap<>();
+		List<Merchant> reList = morderDao.findByProperty(Merchant.class, null, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			for (Merchant merchantInfo : reList) {
+				params.clear();
+				String merchantId = merchantInfo.getMerchantId();
+				params.put("merchant_no", merchantId);
+				List<Mpay> rePayList = morderDao.findByProperty(Mpay.class, params, 0, 0);
+				if (rePayList != null && !rePayList.isEmpty()) {
+					for(Mpay pay : rePayList){
+						pay.setCreate_by(merchantInfo.getMerchantName());
+						if(!morderDao.update(pay)){
+							return null;
+						}
+					}
+				}
+			}
+			
 		}
 		return null;
 	}

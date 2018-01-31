@@ -20,15 +20,19 @@ public class ErrorLogInfo implements Serializable {
 
 	private String note; // 操作说明
 
-	private Date operationTime; // 操作时间
+	private Date createDate; // 操作时间
 
-	private String operator; // 操作人
+	private String createBy; // 操作人
 
 	private String operatorId; // 操作人编号
 	
 	private String serialNo;// 流水号
 
 	private String remark;//
+	
+	private int type ;//类型：1-错误,2-警告订单超额....待续
+	
+	private int readingSign;//阅读标识:1-未阅读,2-已阅读
 	
 	public long getId() {
 		return id;
@@ -40,14 +44,6 @@ public class ErrorLogInfo implements Serializable {
 
 	public String getNote() {
 		return note;
-	}
-
-	public Date getOperationTime() {
-		return operationTime;
-	}
-
-	public String getOperator() {
-		return operator;
 	}
 
 	public String getOperatorId() {
@@ -66,12 +62,21 @@ public class ErrorLogInfo implements Serializable {
 		this.note = note;
 	}
 
-	public void setOperationTime(Date operationTime) {
-		this.operationTime = operationTime;
+
+	public Date getCreateDate() {
+		return createDate;
 	}
 
-	public void setOperator(String operator) {
-		this.operator = operator;
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
 	}
 
 	public void setOperatorId(String operatorId) {
@@ -92,6 +97,22 @@ public class ErrorLogInfo implements Serializable {
 
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public int getReadingSign() {
+		return readingSign;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public void setReadingSign(int readingSign) {
+		this.readingSign = readingSign;
 	}
 
 }

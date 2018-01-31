@@ -13,8 +13,11 @@ import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
@@ -37,15 +40,37 @@ public class ErrorLogsController {
 	@RequestMapping(value = "/addErrorLogs", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String addErrorLogs(HttpServletRequest req, HttpServletResponse response,
-			List<Map<String, Object>> errorList, int totalCount, String serialNo,String action) {
+			List<Map<String, Object>> errorList, int totalCount, String serialNo, String action) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if(errorList !=null && totalCount >=0&& StringEmptyUtils.isNotEmpty(serialNo)&&  StringEmptyUtils.isNotEmpty(action)){
-			return JSONObject.fromObject(errorLogsTransaction.addErrorLogs(errorList,totalCount,serialNo,action)).toString();
+		if (errorList != null && totalCount >= 0 && StringEmptyUtils.isNotEmpty(serialNo)
+				&& StringEmptyUtils.isNotEmpty(action)) {
+			return JSONObject.fromObject(errorLogsTransaction.addErrorLogs(errorList, totalCount, serialNo, action))
+					.toString();
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数出错,请核对信息!")).toString();
+	}
+
+	/**
+	 * 商户查询错误日志记录
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/merchantGetErrorLogs", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户查询错误日志记录")
+	public String merchantGetErrorLogs(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(errorLogsTransaction.merchantGetErrorLogs(req, page, size)).toString();
 	}
 }

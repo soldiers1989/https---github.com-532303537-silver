@@ -1,7 +1,11 @@
 package org.silver.shop.service.system.log;
 
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -27,6 +31,20 @@ public class ErrorLogsTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return errorLogsService.addErrorLogs(errorList,totalCount,serialNo,merchantId,merchantName,action);
+	}
+
+	//获取商户日志
+	public Object merchantGetErrorLogs(HttpServletRequest req ,int page,int size) {
+		Map<String,Object> params = new HashMap<>();
+		Enumeration<String>  isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		params.remove("page");
+		params.remove("size");
+		return errorLogsService.merchantGetErrorLogs(params,page,size); 
 	}
 	
 	

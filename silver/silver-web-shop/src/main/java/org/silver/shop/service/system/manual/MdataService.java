@@ -118,8 +118,6 @@ public class MdataService {
 
 	}
 
-	
-
 	public Object sendMorderRecord(Map<String, Object> customsMap, String orderNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
@@ -129,8 +127,6 @@ public class MdataService {
 		String merchantName = merchantInfo.getMerchantName();
 		String proxyParentId = merchantInfo.getProxyParentId();
 		String proxyParentName = merchantInfo.getProxyParentName();
-		
-		
 		return mpayService.sendMorderRecord(merchantId, customsMap, orderNoPack, proxyParentId, merchantName,
 				proxyParentName);
 	}

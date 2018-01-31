@@ -103,7 +103,7 @@ public class ExcelBufferUtils {
 				counter = new AtomicInteger(0);
 				statusCounter = new AtomicInteger(0);
 				switch (name) {
-				case "order":// 只有再订单导入时才需要排序错误
+				case "orderImport":// 只有再订单导入时才需要排序错误
 					errl = SortUtil.sortList(errl);
 					FileUtils.deleteFile(new File("/gadd-excel/"));
 					errorLogs.addErrorLogs(errl, totalCount, serialNo, name);

@@ -139,4 +139,10 @@ public interface MorderService {
 	 * @return
 	 */
 	public Map<String, Object> updateOldCreateBy();
+
+	/**
+	 * 临时接口,由于修改之前的支付单信息生成时创建人为空,修改为商户名称
+	 * @return
+	 */
+	public Map<String, Object> updateOldPaymentCreateBy();
 }

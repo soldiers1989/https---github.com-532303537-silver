@@ -208,16 +208,33 @@ public final class SearchUtils {
 				}
 				break;
 			case "tradeNoFlag":
-				if (StringEmptyUtils.isNotEmpty(value)  ) {
-					if("1".equals(value)){
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					if ("1".equals(value)) {
 						// 支付流水为空
 						paramMap.put(key, " IS NULL");
-					}else if("2".equals(value)){
+					} else if ("2".equals(value)) {
 						// 支付流水不为空
 						paramMap.put(key, " IS NOT NULL ");
 					}
 				}
 				break;
+			case "type":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, Integer.parseInt(value));
+				}
+				break;
+
+			case "action":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
+				}
+				break;
+			case "serialNo":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, Integer.parseInt(value));
+				}
+				break;
+
 			default:
 				break;
 			}

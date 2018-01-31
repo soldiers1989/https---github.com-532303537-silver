@@ -169,7 +169,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 		}
 		getProvinceCityArea();
 		getProvinceCityArea2();
-		return ReturnInfoUtils.errorInfo("参数错误,请核对信息!");
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -231,8 +231,8 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 		List<Province> rePronvinceList = provinceCityAreaDao.findByProperty(Province.class, params, 1, 1);
 		if (rePronvinceList != null && !rePronvinceList.isEmpty()) {
 			Province province = rePronvinceList.get(0);
-			province.setProvinceName(datas.get("newCode") + "");
-			province.setProvinceCode(datas.get("name") + "");
+			province.setProvinceCode(datas.get("newCode") + "");
+			province.setProvinceName(datas.get("name") + "");
 			if (!provinceCityAreaDao.update(province)) {
 				return ReturnInfoUtils.errorInfo("更新省份信息失败,服务器繁忙!");
 			}

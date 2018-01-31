@@ -216,16 +216,15 @@ public class OrderController {
 	 * @param errBack
 	 * @return
 	 */
-	@RequestMapping("/enter")
-	public String dopay(HttpServletRequest req, HttpServletResponse resp, String merchant_cus_no, String out_trade_no,
-			String amount, String return_url, String notify_url, String extra_common_param, String client_sign,
+	@RequestMapping(value = "/enter", method = RequestMethod.POST)
+	public String dopay(HttpServletRequest req, HttpServletResponse resp, String merchantCusNo, String outTradeNo,
+			String amount, String returnUrl, String notifyUrl, String extraCommonParam, String clientSign,
 			String timestamp,String errBack) {
-		if (merchant_cus_no != null && out_trade_no != null && amount != null && client_sign != null && timestamp != null
-				&& notify_url != null) {
-			Map<String, Object> reqMap = orderTransaction.doBusiness(merchant_cus_no, out_trade_no, amount, notify_url,
-					extra_common_param, client_sign, timestamp);
+		if (merchantCusNo != null && outTradeNo != null && amount != null && clientSign != null && timestamp != null
+				&& notifyUrl != null) {
+			Map<String, Object> reqMap = orderTransaction.doBusiness(merchantCusNo, outTradeNo, amount, notifyUrl,
+					extraCommonParam, clientSign, timestamp);
 			if (!"1".equals(reqMap.get("status")) ) {
-				System.out.println("---->>"+reqMap);
 				req.setAttribute("msg", reqMap.get("msg")+"<a href=\""+errBack+"\">"+"点击返回</a>");
 				return "ympay-err";
 			}
@@ -237,7 +236,7 @@ public class OrderController {
 			req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
 			// request.setAttribute("sign", userName);
 			req.setAttribute("notify_url", "http://ym.191ec.com/silver-web-shop/yspay-receive/ysPayReceive");
-			req.setAttribute("return_url", return_url);
+			req.setAttribute("return_url", returnUrl);
 			req.setAttribute("version", DirectPayConfig.VERSION);
 			req.setAttribute("out_trade_no", reqMap.get("order_id"));// 商户订单号
 			req.setAttribute("subject", "即时到账");
@@ -246,7 +245,7 @@ public class OrderController {
 			req.setAttribute("seller_name", DirectPayConfig.PLATFORM_PARTNER_NAME);
 			req.setAttribute("timeout_express", "1h");
 			req.setAttribute("business_code", "01000010");
-			req.setAttribute("extra_common_param", extra_common_param);// 支付人姓名
+			req.setAttribute("extra_common_param", extraCommonParam);// 支付人姓名
 			// request.setAttribute("pay_mode", "internetbank");
 			req.setAttribute("bank_type", "");
 			req.setAttribute("bank_account_type", "");

@@ -22,8 +22,8 @@
 			</props>
 		</property>
 	</bean>
-	<bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp"
-		lazy-init="false" destroy-method="close" />
+	<!-- <bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp"
+		lazy-init="false" destroy-method="close" /> -->
 	
 	<!-- 扫描注解 -->
 	<context:component-scan base-package="org.silver.shop">

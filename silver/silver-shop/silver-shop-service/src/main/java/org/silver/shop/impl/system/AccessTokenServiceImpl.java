@@ -7,6 +7,8 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.config.YmMallConfig;
+import org.silver.shop.impl.system.manual.AppkeyServiceImpl;
+import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
@@ -48,10 +50,10 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		return statusMap;
 	}
 
-	public Map<String, Object> getTestToken() {
+	public  Map<String, Object> getTestToken() {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		String timestamp ="1515392647125";
+		String timestamp = System.currentTimeMillis()+"";
 		String signature = MD5.getMD5(("cf285ec49c724019a297c0dc6941df5d" + "jbTEF04KL350s0bCOmGL8q8p1dawGXHTPq9SKKk8l5gzAuWbmdYqjhdpgyyHnPco" + timestamp).getBytes());
 		params.put("appkey", "cf285ec49c724019a297c0dc6941df5d");
 		params.put("timestamp", timestamp);
@@ -75,9 +77,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 	
 	public static void main(String[] args) {
-		AccessTokenServiceImpl a = new AccessTokenServiceImpl();
-		System.out.println(a.getTestToken());
-		
+		AccessTokenServiceImpl as =new AccessTokenServiceImpl();
+	/*	System.out.println(as.createRecord("银盟通网网关", "YM", "020-85668893", "123", "广州银盟信息科技有限公司", "http://www.191ec.com"));
+		//{msg=生成成功,请注意保护好您的密钥, appKey=4a5de70025a7425dabeef6e8ea752976, appSecret=NeMs1DFG8xFARwZeSlRZwlT22ayY5oIbkgZg1uCziQ3LfSgqcPN4qGydAt7s3jMW, status=1}
+		JedisUtil.set("".getBytes(), "value".getBytes(), 3600*5);*/
+		System.out.println(as.getAccessToken());
 		
 	}
 }

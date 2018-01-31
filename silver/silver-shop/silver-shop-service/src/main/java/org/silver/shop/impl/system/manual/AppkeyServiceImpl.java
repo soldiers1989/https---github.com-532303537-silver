@@ -140,11 +140,14 @@ public class AppkeyServiceImpl implements AppkeyService {
 	public static void main(String[] args) {
 		ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		AppkeyServiceImpl as = new AppkeyServiceImpl();
-		System.out.println(
-				as.createRecord("银盟跨境商城-授权网关", "YM", "020-85668893", "YM_MerchantId_00030", "广州银盟信息科技有限公司", "http://www.191ec.com"));
-		// {msg=生成成功,请注意保护好您的密钥, appKey=4a5de70025a7425dabeef6e8ea752976,
+		/*System.out.println(
+				as.createRecord("银盟跨境商城-授权网关", "YM", "020-85668893", "YM_MerchantId_00001", "广州银盟信息科技有限公司", "http://www.191ec.com"));
+*/		// {msg=生成成功,请注意保护好您的密钥, appKey=4a5de70025a7425dabeef6e8ea752976,
 		// appSecret=NeMs1DFG8xFARwZeSlRZwlT22ayY5oIbkgZg1uCziQ3LfSgqcPN4qGydAt7s3jMW,
 		// status=1}
-		JedisUtil.set("".getBytes(), "value".getBytes(), 3600 * 5);
+		String value =  "4bb80f35608d4faa8923efb003f74b9a";
+		String key =value+"_Shop_AccessToken";
+		JedisUtil.set(key.getBytes(), value.getBytes(), 3600*5);
+		//JedisUtil.set("4bb80f35608d4faa8923efb003f74b9a_Shop_AccessToken".getBytes(),value.getBytes(), 3600 * 5);
 	}
 }

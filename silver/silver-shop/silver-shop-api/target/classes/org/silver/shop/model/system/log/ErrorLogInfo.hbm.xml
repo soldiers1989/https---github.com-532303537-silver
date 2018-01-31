@@ -14,11 +14,11 @@
         <property name="note" type="java.lang.String">
             <column name="note" />
         </property>
-        <property name="operationTime" type="java.util.Date">
-            <column name="operationTime" not-null="true"/>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" not-null="true"/>
         </property>
-        <property name="operator" type="java.lang.String">
-            <column name="operator" not-null="true"/>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" not-null="true"/>
         </property>
         <property name="operatorId" type="java.lang.String">
             <column name="operatorId" />
@@ -29,5 +29,13 @@
          <property name="remark" type="java.lang.String">
             <column name="remark" />
         </property>
+        
+        <property name="type" type="int">
+            <column name="type" />
+        </property>
+         <property name="readingSign" type="int">
+            <column name="readingSign" />
+        </property>
+        
     </class>
 </hibernate-mapping>

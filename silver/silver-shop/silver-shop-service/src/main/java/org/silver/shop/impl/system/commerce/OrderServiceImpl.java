@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.commerce;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,6 +18,7 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.api.system.manual.AppkeyService;
+import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.category.GoodsThirdType;
@@ -37,6 +39,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.SearchUtils;
+import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -747,7 +750,7 @@ public class OrderServiceImpl implements OrderService {
 			String startDate, String endDate) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		if(page >= 0 && size >= 0 ){
+		if (page >= 0 && size >= 0) {
 			paramsMap.put("merchantId", merchantId);
 			paramsMap.put("merchantName", merchantName);
 			paramsMap.put("startDate", startDate);
@@ -770,28 +773,38 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
-			String extra_common_param, String client_sign, String timestamp) {
-		Map<String, Object> merchantMap = getMerchantInfo(merchant_cus_no);
+	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
+			String extraCommonParam, String clientSign, String timestamp) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> merchantMap = getMerchantInfo(merchantCusNo);
 		if (!"1".equals(merchantMap.get(BaseCode.STATUS.toString()) + "")) {
 			return merchantMap;
 		}
-		// 查找appkey
-		Appkey appkey = (Appkey) merchantMap.get(BaseCode.DATAS.toString());
-		timestamp = "1515392647125";
-		String str = merchant_cus_no + out_trade_no + amount + notify_url + timestamp;
+		timestamp = System.currentTimeMillis() + "";
+		String str = amount + merchantCusNo + outTradeNo + notifyUrl + timestamp;
 		// 请求获取tok
 		Map<String, Object> tokMap = accessTokenService.getAccessToken();
 		if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
 			return tokMap;
 		}
+		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
 		System.out.println("拼接str--------->>>>>>>>>>>" + str);
-		// 7e33bf4683e5166eeb74d236a15010e1
-		Map<String, Object> checkMap = appkeyService.CheckClientSign(appkey.getApp_key(), client_sign, str, timestamp);
+
+		// 客戶端签名
+		// String clientSign = "";
+		try {
+			clientSign = MD5.getMD5((YmMallConfig.APPKEY + tok + str + timestamp).getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return statusMap;
+		}
+		Map<String, Object> checkMap = appkeyService.CheckClientSign(YmMallConfig.APPKEY, clientSign, str, timestamp);
 		if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()) + "")) {
 			return checkMap;
 		}
-		return createEntity(merchant_cus_no, out_trade_no, amount, "content", extra_common_param, notify_url);
+		return createEntity(merchantCusNo, outTradeNo, amount, "content", extraCommonParam, notifyUrl);
 	}
 
 	/**
@@ -823,35 +836,28 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	/**
-	 * 
-	 * @param merchant_cus_no
-	 *            商户编号
-	 * @param out_trade_no
-	 *            订单号
+	 * 保存订单信息
+	 * @param notifyUrl
+	 * @param extraCommonParam
+	 * @param string
 	 * @param amount
-	 *            交易金额
-	 * @param content
-	 * @param extra_common_param
-	 * @param notify_url
+	 * @param outTradeNo
+	 * @param merchantCusNo
 	 * @return
 	 */
-	private Map<String, Object> createEntity(String merchant_cus_no, String out_trade_no, String amount, String content,
-			String extra_common_param, String notify_url) {
+	private Map<String, Object> createEntity(String merchantCusNo, String outTradeNo, String amount, String content,
+			String extraCommonParam, String notifyUrl) {
 		Map<String, Object> statusMap = new HashMap<>();
 		double total = 0;
 		try {
 			total = Double.parseDouble(amount);
 			if (total < 0.01) {
-				statusMap.put("status", -6);
-				statusMap.put("msg", "无效的交易金额");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo(total + "<------无效的交易金额");
 			}
 		} catch (Exception e) {
-			statusMap.put("status", -4);
-			statusMap.put("msg", "错误的交易金额");
-			return statusMap;
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("错误的交易金额!");
 		}
-
 		/*
 		 * List<YMorder> last = orderDao.getLast(YMorder.class); long id = 0; if
 		 * (last != null && last.size() > 0) { id = last.get(0).getId(); } else
@@ -860,61 +866,40 @@ public class OrderServiceImpl implements OrderService {
 		 */
 
 		QuartetOrderContent entity = new QuartetOrderContent();
-		// entity.setOrder_id(createSysNo(id, d));
-		entity.setMerchantCusNo(merchant_cus_no);
-		// entity.set(out_trade_no);
+		// 查询缓存中订单自增Id
+		int count = SerialNoUtils.getRedisIdCount("quartetOrder");
+		entity.setOrderId(SerialNoUtils.getSerialNo("YM", count));
+		entity.setMerchantCusNo(merchantCusNo);
 		entity.setAmount(total);
 		entity.setContent(content);
-		entity.setExtraCommonParam(extra_common_param);
-		entity.setNotifyUrl(notify_url);
+		entity.setExtraCommonParam(extraCommonParam);
+		entity.setNotifyUrl(notifyUrl);
 		entity.setType(0);
 		entity.setDelFlag(0);
 		entity.setCreateDate(new Date());
-		entity.setCreateBy(merchant_cus_no);
+		
+		entity.setCreateBy("system");
+		entity.setTenantOrderId(outTradeNo);
 		if (orderDao.add(entity)) {
-			statusMap.put("status", 1);
+			statusMap.put("status", "1");
 			statusMap.put("order_id", entity.getOrderId());
 			statusMap.put("msg", "订单保存成功");
 			return statusMap;
 		}
-		statusMap.put("status", -1);
-		statusMap.put("msg", "系统内部错误，请稍后重试");
-		return statusMap;
-	}
-
-	/**
-	 * 创建订单流水号
-	 * 
-	 * @param id
-	 * @param date
-	 * @return
-	 */
-	private String createSysNo(long id, Date date) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String str = id + "";
-		Random r = new Random();
-		String m = r.nextInt(10000) + "";
-		while (str.length() < 7) {
-			str = "0" + str;
-		}
-		while (m.length() < 5) {
-			m = "0" + m;
-		}
-		str = "YMOD_" + sdf.format(date) + str + m;
-		return str;
+		return ReturnInfoUtils.errorInfo("系统保存订单错误，请稍后重试!");
 	}
 
 	@Override
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> dataMap, int page, int size) {
-		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 
 		List<Morder> orderList = orderDao.findByProperty(Morder.class, null, page, size);
 		long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		List<Map<String,Object>> list = new ArrayList<>();
+		List<Map<String, Object>> list = new ArrayList<>();
 		for (Morder order : orderList) {
-			Map<String,Object> item = new HashMap<>();
+			Map<String, Object> item = new HashMap<>();
 			String orderId = order.getOrder_id();
 			paramMap.clear();
 			paramMap.put("order_id", orderId);

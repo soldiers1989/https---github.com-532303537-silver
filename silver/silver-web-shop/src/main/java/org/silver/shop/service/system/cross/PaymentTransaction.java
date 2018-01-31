@@ -75,7 +75,6 @@ public class PaymentTransaction {
 	}
 
 	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());

@@ -95,28 +95,27 @@ public class OrderTransaction {
 			String value = req.getParameter(key);
 			param.put(key, value);
 		}
-		return orderService.searchMerchantOrderInfo(merchantId, merchantName, param,page,size);
+		return orderService.searchMerchantOrderInfo(merchantId, merchantName, param, page, size);
 	}
 
-	//获取商户每日订单报表
-	public Map<String, Object> getMerchantOrderReport(int page, int size,String startDate, String endDate) {
+	// 获取商户每日订单报表
+	public Map<String, Object> getMerchantOrderReport(int page, int size, String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return orderService.getMerchantOrderDailyReport(merchantId,merchantName,page,size,startDate,endDate);
-	}
-	
-	
-	public Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
-			String extra_common_param, String client_sign, String timestamp) {
-	
-		return orderService.doBusiness( merchant_cus_no, out_trade_no, amount,  notify_url,
-				 extra_common_param,  client_sign, timestamp);
+		return orderService.getMerchantOrderDailyReport(merchantId, merchantName, page, size, startDate, endDate);
 	}
 
-	//管理员查询手动订单信息
+	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
+			String extraCommonParam, String clientSign, String timestamp) {
+
+		return orderService.doBusiness(merchantCusNo, outTradeNo, amount, notifyUrl, extraCommonParam, clientSign,
+				timestamp);
+	}
+
+	// 管理员查询手动订单信息
 	public Map<String, Object> getManualOrderInfo(int page, int size, HttpServletRequest req) {
 		Map<String, Object> params = new HashMap<>();
 		Enumeration<String> isKey = req.getParameterNames();
@@ -130,10 +129,10 @@ public class OrderTransaction {
 		return orderService.getManualOrderInfo(params, page, size);
 	}
 
-	//管理员查询商户订单报表
+	// 管理员查询商户订单报表
 	public Map<String, Object> managerGetOrderReport(int page, int size, String startDate, String endDate,
 			String merchantId, String merchantName) {
-		
-		return orderService.getOrderReport(page,size,startDate,endDate,merchantId,merchantName);
+
+		return orderService.getOrderReport(page, size, startDate, endDate, merchantId, merchantName);
 	}
 }

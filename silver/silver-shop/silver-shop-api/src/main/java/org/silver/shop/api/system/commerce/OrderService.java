@@ -90,18 +90,18 @@ public interface OrderService {
 	
 	/**
 	 * 银盟电子订单下单
-	 * @param merchant_cus_no 商户号
-	 * @param out_trade_no 商户订单批次号 所属商户下唯一标识
+	 * @param merchantCusNo 商户号
+	 * @param outTradeNo 商户订单批次号 所属商户下唯一标识
 	 * @param amount  交易金额
-	 * @param notify_url 异步通知url
-	 * @param extra_common_param 额外参数  可空
-	 * @param client_sign  客户端签名
+	 * @param notifyUrl 异步通知url
+	 * @param extraCommonParam 额外参数  可空
+	 * @param clientSign  客户端签名
 	 * @param timestamp  时间戳
 	 * 
 	 * @return 返回下单的必须参数map
 	 */
-	Map<String, Object> doBusiness(String merchant_cus_no, String out_trade_no, String amount, String notify_url,
-			String extra_common_param, String client_sign, String timestamp);
+	Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
+			String extraCommonParam, String clientSign, String timestamp);
 
 	/**
 	 * 管理员查询所有手动订单信息
