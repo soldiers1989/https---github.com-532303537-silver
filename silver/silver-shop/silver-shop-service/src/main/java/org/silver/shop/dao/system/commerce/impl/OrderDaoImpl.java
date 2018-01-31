@@ -100,11 +100,20 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();
-			sqlParams.add(paramsMap.get("merchantId") + "");
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String sql = "SELECT count(t1.order_id) AS orderCount, sum(t1.FCY) as total,(sum(t1.FCY) * 0.001)  AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date FROM ym_shop_manual_morder t1 "
-					+ "WHERE  t1.merchant_no = ? AND (t1.order_record_status = '3' OR t1.order_record_status = '2') ";
+					+ "WHERE (t1.order_record_status = '3' OR t1.order_record_status = '2') ";
+			String merchantId = paramsMap.get("merchantId") + "";
+			if(StringEmptyUtils.isNotEmpty(merchantId)){
+				sql += " AND t1.merchant_no = ? ";
+				sqlParams.add(merchantId);
+			}
+			String merchantName = paramsMap.get("merchantName") + "";
+			if(StringEmptyUtils.isNotEmpty(merchantName)){
+				sql+= " AND t1.create_by = ? ";
+				sqlParams.add(merchantName);
+			}
 			if (StringEmptyUtils.isNotEmpty(startDate)) {
 				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
 				sqlParams.add(startDate);

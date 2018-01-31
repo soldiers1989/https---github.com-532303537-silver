@@ -37,6 +37,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.SearchUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -617,8 +618,7 @@ public class OrderServiceImpl implements OrderService {
 		paramsMap.put("id", thirdId);
 		List<Object> reGoodsThirdList = orderDao.findByProperty(GoodsThirdType.class, paramsMap, 1, 1);
 		if (reGoodsThirdList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询商品税率失败,服务器繁忙！");
+			return ReturnInfoUtils.errorInfo("查询商品税率失败,服务器繁忙!");
 		} else if (!reGoodsThirdList.isEmpty()) {
 			GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
 			// 税费 = 购买单价 × 件数 × 跨境电商综合税率
@@ -627,11 +627,10 @@ public class OrderServiceImpl implements OrderService {
 			total += regPrice * count * (consolidatedTax / 100d);
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), total);
+			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询商品税率无数据,服务器繁忙！");
+			return ReturnInfoUtils.errorInfo("查询商品税率无数据,服务器繁忙!");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -661,9 +660,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), orderTotalCount);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -686,9 +683,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.DATAS.toString(), lm);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -711,9 +706,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.DATAS.toString(), lm);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -754,26 +747,26 @@ public class OrderServiceImpl implements OrderService {
 			String startDate, String endDate) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		paramsMap.put("merchantId", merchantId);
-		paramsMap.put("startDate", startDate);
-		paramsMap.put("endDate", endDate);
-		Table reList = orderDao.getOrderDailyReport(Morder.class, paramsMap, page, size);
-		Table totalCount = orderDao.getOrderDailyReport(Morder.class, paramsMap, 0, 0);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (!reList.getRows().isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+		if(page >= 0 && size >= 0 ){
+			paramsMap.put("merchantId", merchantId);
+			paramsMap.put("merchantName", merchantName);
+			paramsMap.put("startDate", startDate);
+			paramsMap.put("endDate", endDate);
+			Table reList = orderDao.getOrderDailyReport(Morder.class, paramsMap, page, size);
+			Table totalCount = orderDao.getOrderDailyReport(Morder.class, paramsMap, 0, 0);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("服务器繁忙!");
+			} else if (!reList.getRows().isEmpty()) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
+				statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
+				return statusMap;
+			} else {
+				return ReturnInfoUtils.errorInfo("暂无数据!");
+			}
 		}
+		return ReturnInfoUtils.errorInfo("请求参数出错,请核对信息!");
 	}
 
 	@Override
@@ -935,5 +928,11 @@ public class OrderServiceImpl implements OrderService {
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId,
+			String merchantName) {
+		return getMerchantOrderDailyReport(merchantId, merchantName, page, size, startDate, endDate);
 	}
 }

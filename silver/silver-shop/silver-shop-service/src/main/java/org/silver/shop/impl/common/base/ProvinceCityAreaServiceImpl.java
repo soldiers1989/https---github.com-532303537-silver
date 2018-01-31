@@ -24,6 +24,8 @@ import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
+import net.sf.ezmorph.object.SwitchingMorpher;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service(interfaceClass = ProvinceCityAreaService.class)
@@ -80,6 +82,9 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			}
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), provinceList);
+
+			// 将查询出来的省市区放入到redis缓存中
+			JedisUtil.setListDatas("Shop_Key_ProvinceCityArea_Map", 3600, provinceList);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 		}
@@ -89,17 +94,13 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	@Override
 	public Map<String, Object> getProvinceCityArea2() {
 		Map<String, Object> reMap = new HashMap<>();
-		Map<String, Object> datasMap = new HashMap<>();
 		Map<String, Object> province = null;
 		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
 		if (redisByte != null) {
 			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(province));
-			return datasMap;
+			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(province), 0);
 		} else {
-			//findProvinceCityArePostal();
+			// findProvinceCityArePostal();
 			// 查询省市区
 			Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
 			if (table != null && !table.getRows().isEmpty()) {
@@ -131,11 +132,8 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 												.replace("\"}", ""));
 					}
 					// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
-					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), (3600 *24) *5);
-					datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-					datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-					datasMap.put(BaseCode.DATAS.toString(), item);
-					return datasMap;
+					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), (3600 * 24) * 5);
+					return ReturnInfoUtils.successDataInfo(item, 0);
 				}
 			} else {
 				reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
@@ -146,51 +144,102 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	}
 
 	@Override
-	public Object editProvinceCityAreaInfo(String[] strArr) {
-		if (strArr != null) {
-			Province province = null;
-			City city = null;
-			Area area = null;
-			Map<String, Object> params = new HashMap<>();
-			String provinceId = strArr[0];
-			params.put("id", Long.parseLong(provinceId));
-			List<Province> rePronvinceList = provinceCityAreaDao.findByProperty(Province.class, params, 1, 1);
-			if (rePronvinceList != null && !rePronvinceList.isEmpty()) {
-				province = rePronvinceList.get(0);
-				params.clear();
-				String cityId = strArr[3];
-				params.put("id", Long.parseLong(cityId));
-				List<City> reCityList = provinceCityAreaDao.findByProperty(City.class, params, 1, 1);
-				if (reCityList != null && !reCityList.isEmpty()) {
-					city = reCityList.get(0);
-					params.clear();
-					String areaId = strArr[7];
-					params.put("id", Long.parseLong(areaId));
-					List<Area> reAreaList = provinceCityAreaDao.findByProperty(Area.class, params, 1, 1);
-					if (reAreaList != null && !reAreaList.isEmpty()) {
-						area = reAreaList.get(0);
-						if (!provinceCityAreaDao.update(province)) {
-							return ReturnInfoUtils.errorInfo("更新省份信息失败,服务器繁忙!");
-						}
-						if (!provinceCityAreaDao.update(city)) {
-							return ReturnInfoUtils.errorInfo("更新城市信息失败,服务器繁忙!");
-						}
-						if (!provinceCityAreaDao.update(area)) {
-							return ReturnInfoUtils.errorInfo("更新区域信息失败,服务器繁忙!");
-						}
-						
-						
-					} else {
-						return ReturnInfoUtils.errorInfo("区域信息未找到,请核对信息!");
-					}
-				} else {
-					return ReturnInfoUtils.errorInfo("城市信息未找到,请核对信息!");
-				}
-			} else {
-				return ReturnInfoUtils.errorInfo("省份信息未找到,请核对信息!");
+	public Map<String, Object> editProvinceCityAreaInfo(Map<String,Object> params, int flag) {
+		switch (flag) {
+		case 1:
+			Map<String, Object> provinceMap = editProvince(JSONObject.fromObject(params));
+			if (!"1".equals(provinceMap.get(BaseCode.STATUS.toString()))) {
+				return provinceMap;
 			}
+			break;
+		case 2:
+			Map<String, Object> cityMap = editCity(JSONObject.fromObject(params));
+			if (!"1".equals(cityMap.get(BaseCode.STATUS.toString()))) {
+				return cityMap;
+			}
+			break;
+		case 3:
+			Map<String, Object> areaMap = editArea(JSONObject.fromObject(params));
+			if (!"1".equals(areaMap.get(BaseCode.STATUS.toString()))) {
+				return areaMap;
+			}
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("标识错误！");
 		}
+		getProvinceCityArea();
+		getProvinceCityArea2();
 		return ReturnInfoUtils.errorInfo("参数错误,请核对信息!");
+	}
+
+	/**
+	 * 修改区域信息
+	 * @param datas
+	 * @return Map
+	 */
+	private Map<String, Object> editArea(JSONObject datas) {
+		Map<String, Object> params = new HashMap<>();
+		String oldAreaCode = datas.get("oldCode") + "";
+		params.put("areaCode", oldAreaCode);
+		List<Area> reAreaList = provinceCityAreaDao.findByProperty(Area.class, params, 1, 1);
+		if (reAreaList != null && !reAreaList.isEmpty()) {
+			Area area = reAreaList.get(0);
+			area.setAreaCode(datas.get("newCode") + "");
+			area.setAreaName(datas.get("name") + "");
+			area.setCityCode(datas.get("parentCode") + "");
+			if (!provinceCityAreaDao.update(area)) {
+				return ReturnInfoUtils.errorInfo("更新区域信息失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("区域信息未找到,请核对信息!");
+	}
+
+	/**
+	 * 修改城市信息
+	 * @param datas
+	 * @return
+	 */
+	private Map<String, Object> editCity(JSONObject datas) {
+		Map<String, Object> params = new HashMap<>();
+		String oldCityCode = datas.get("oldCode") + "";
+		params.put("cityCode", oldCityCode);
+		List<City> reCityList = provinceCityAreaDao.findByProperty(City.class, params, 1, 1);
+		if (reCityList != null && !reCityList.isEmpty()) {
+			City city = reCityList.get(0);
+			city.setCityCode(datas.get("newCode") + "");
+			city.setCityName(datas.get("name") + "");
+			city.setProvinceCode(datas.get("parentCode") + "");
+			if (!provinceCityAreaDao.update(city)) {
+				return ReturnInfoUtils.errorInfo("更新城市信息失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("城市信息未找到,请核对信息!");
+	}
+
+	/**
+	 * 修改省份
+	 * 
+	 * @param datas
+	 * @return
+	 */
+	private Map<String, Object> editProvince(JSONObject datas) {
+		Map<String, Object> params = new HashMap<>();
+		String oldProvinceCode = datas.get("oldCode") + "";
+		params.put("provinceCode", oldProvinceCode);
+		List<Province> rePronvinceList = provinceCityAreaDao.findByProperty(Province.class, params, 1, 1);
+		if (rePronvinceList != null && !rePronvinceList.isEmpty()) {
+			Province province = rePronvinceList.get(0);
+			province.setProvinceName(datas.get("newCode") + "");
+			province.setProvinceCode(datas.get("name") + "");
+			if (!provinceCityAreaDao.update(province)) {
+				return ReturnInfoUtils.errorInfo("更新省份信息失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("省份信息未找到,请核对信息!");
+
 	}
 
 }

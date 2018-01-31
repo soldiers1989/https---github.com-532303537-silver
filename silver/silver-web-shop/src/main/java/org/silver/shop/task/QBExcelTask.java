@@ -24,9 +24,8 @@ public class QBExcelTask extends TaskUtils {
 	private int endCount;// 结束行数
 	private ManualService manualService;//
 	private String serialNo;// 流水号
-	private List dataList; //
 	private int realRowCount;//总行数
-	
+	private String merchantName ;//商户名称
 	/**
 	 * excel多任务读取
 	 * 
@@ -37,9 +36,10 @@ public class QBExcelTask extends TaskUtils {
 	 * @param startCount
 	 * @param endCount
 	 * @param manualService
+	 * @param merchantName 
 	 */
 	public QBExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo,  int realRowCount) {
+			int endCount, ManualService manualService, String serialNo,  int realRowCount, String merchantName) {
 		this.sheet = sheet;
 		this.excel = excel;
 		this.errorList = errl;
@@ -49,33 +49,14 @@ public class QBExcelTask extends TaskUtils {
 		this.manualService = manualService;
 		this.serialNo = serialNo;
 		this.realRowCount = realRowCount;
+		this.merchantName = merchantName;
 	}
-
-	/*public ExcelTask(List dataList, String merchantId, PaymentService paymentService,String serialNo,int realRowCount) {
-		this.dataList = dataList;
-		this.merchantId = merchantId;
-		this.paymentService = paymentService;
-		this.serialNo = serialNo;
-		this.realRowCount = realRowCount;
-	}*/
-
 	@Override
 	public Map<String, Object> call() {
-	/*	
-		if (flag == 1) {
-			excel.open();
-			return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount);
-		} else if (flag == 2) {
-			excel.open();
-			return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo,realRowCount);
-		}
-		if (paymentService != null) {
-			return paymentService.groupCreateMpay(merchantId, dataList,serialNo,realRowCount);
-		}*/
 		try{
 			System.out.println("------call方法--------");
 			excel.open();
-			return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount);
+			return manualService.readQBSheet(sheet, excel, errorList, merchantId,serialNo, startCount, endCount, realRowCount,merchantName);
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;

@@ -111,4 +111,17 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> params, int page, int size);
+
+	/**
+	 * 管理员查询商户订单报表
+	 * @param page 页数
+	 * @param size 数目
+	 * @param startDate 开始时间
+	 * @param endDate 结束时间
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @return Map
+	 */
+	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId,
+			String merchantName);
 }

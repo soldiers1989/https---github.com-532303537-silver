@@ -155,8 +155,7 @@ public class PaymentController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	/********************************** 模拟生成支付信息 *********************************/
 
 	/**
@@ -191,5 +190,27 @@ public class PaymentController {
 		reqMap.put("status", -3);
 		reqMap.put("msg", "缺少订单编号，生成失败");
 		return JSONObject.fromObject(reqMap).toString();
+	}
+
+	@RequestMapping(value = "/managerGetPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员查询支付单报表")
+	@RequiresRoles("Manager")
+	public String managerGetPaymentReport(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate,
+			String merchantId, String merchantName) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (page >= 0 && size >= 0) {
+			statusMap = paytemTransaction.managerGetPaymentReport(page, size, startDate, endDate,merchantId,merchantName);
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		}
+		return JSONObject.fromObject(statusMap).toString();
 	}
 }

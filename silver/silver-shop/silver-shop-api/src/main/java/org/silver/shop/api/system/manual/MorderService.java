@@ -80,20 +80,22 @@ public interface MorderService {
 	 * 
 	 * @param merchantId
 	 *            商户Id
-	 * @param item
-	 * @return
+	 * @param item 订单信息
+	 * @param merchantName 商户名称
+	 * @return Map
 	 */
-	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item);
+	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item, String merchantName);
 
 	/**
 	 * 批量创建企邦订单商品
 	 * 
 	 * @param merchantId
 	 *            商户Id
-	 * @param item
+	 * @param item 商品信息
+	 * @param merchantName 商户名称
 	 * @return
 	 */
-	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item);
+	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item, String merchantName);
 
 	/**
 	 * 删除订单关联的商品信息
@@ -131,4 +133,10 @@ public interface MorderService {
 	 * @return Map
 	 */
 	public Map<String, Object> addOrderGoodsInfo(String merchantId, String merchantName, String[] strArr);
+
+	/**
+	 * 临时接口,由于修改之前的手工订单导入的创建人为商户Id,修改为商户名称
+	 * @return
+	 */
+	public Map<String, Object> updateOldCreateBy();
 }

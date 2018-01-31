@@ -49,19 +49,19 @@ public class ReturnInfoUtils {
 	 * 
 	 * @param Datas
 	 *            返回参数
-	 * @param count 
-	 * 				总数
+	 * @param count
+	 *            总数
 	 * @return Map
 	 */
 	public static final Map<String, Object> successDataInfo(Object datas, int count) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (datas == null) {
+		if (datas == null || count < 0) {
 			return null;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		statusMap.put(BaseCode.DATAS.toString(), datas);
-		if (count > 0) {
+		if (count >= 0) {
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
 		}
 		return statusMap;

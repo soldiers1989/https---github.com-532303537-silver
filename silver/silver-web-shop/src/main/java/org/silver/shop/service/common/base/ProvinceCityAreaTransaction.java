@@ -40,20 +40,18 @@ public class ProvinceCityAreaTransaction {
 	public List<Object> findProvinceCityArea() {
 		List<Object> datasList = null;
 		Map<String, Object> datasMap = null;
-		String redisList = JedisUtil.get("Shop_Key_ProvinceCityArea_Map");
+		String redisList = JedisUtil.get("Shop_Key_ProvinceCityArea_List");
 		if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
 			datasMap = provinceCityAreaService.getProvinceCityArea();
 			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-			if (status.equals("1")) {
+			if (status.equals("1")) {// 当查询成功时
 				datasList = (List) datasMap.get(BaseCode.DATAS.toString());
-				// 将查询出来的省市区放入到redis缓存中
-				JedisUtil.setListDatas("Shop_Key_ProvinceCityArea_Map", 3600, datasList);
 			}
+			return JSONArray.fromObject(datasList);
 		} else {
 			// redis缓存中已有数据,直接返回数据
 			return JSONArray.fromObject(redisList);
 		}
-		return JSONArray.fromObject(datasList);
 	}
 
 	/**
@@ -81,15 +79,15 @@ public class ProvinceCityAreaTransaction {
 		return datasMap;
 	}
 
-	public Object editProvinceCityAreaInfo(HttpServletRequest req, int length) {
-		String[] strArr = new String[length];
+	public Object editProvinceCityAreaInfo(HttpServletRequest req, int flag) {
+		Map<String, Object> params = new HashMap<>();
 		Enumeration<String> isKey = req.getParameterNames();
-		int i = 0 ;
 		while (isKey.hasMoreElements()) {
 			String key = isKey.nextElement();
-			strArr[i] = req.getParameter(key);
-			i++;
-		}	
-		return provinceCityAreaService.editProvinceCityAreaInfo(strArr);
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		params.remove("flag");
+		return provinceCityAreaService.editProvinceCityAreaInfo(params, flag);
 	}
 }

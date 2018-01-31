@@ -470,6 +470,27 @@ public class EditRecordController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
+	
+	/**
+	 * 临时接口,由于修改之前的手工订单导入的创建人为商户Id,修改为商户名称
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/updateOldCreateBy", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("修改旧数据中创建人")
+	@RequiresRoles("Manager")
+	public String updateOldCreateBy(HttpServletRequest req, HttpServletResponse response ) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = manualService.updateOldCreateBy();
+		return JSONObject.fromObject(statusMap).toString();
+	}
+	
 	public static void main(String[] args) throws IOException {
 		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第51批999-43825025清单#200.xlsx");
 		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xls";

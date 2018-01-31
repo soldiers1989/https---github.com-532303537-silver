@@ -25,7 +25,7 @@ public class GZExcelTask extends TaskUtils {
 	private ManualService manualService;//
 	private String serialNo;// 流水号
 	private int realRowCount;// 总行数
-
+	private String merchantName ;//商户名称
 	/**
 	 * excel多任务读取
 	 * 
@@ -36,9 +36,10 @@ public class GZExcelTask extends TaskUtils {
 	 * @param startCount
 	 * @param endCount
 	 * @param manualService
+	 * @param merchantName 
 	 */
 	public GZExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int realRowCount) {
+			int endCount, ManualService manualService, String serialNo, int realRowCount, String merchantName) {
 		this.sheet = sheet;
 		this.excel = excel;
 		this.errorList = errl;
@@ -48,6 +49,7 @@ public class GZExcelTask extends TaskUtils {
 		this.manualService = manualService;
 		this.serialNo = serialNo;
 		this.realRowCount = realRowCount;
+		this.merchantName = merchantName;
 	}
 
 	@Override
@@ -56,7 +58,7 @@ public class GZExcelTask extends TaskUtils {
 			System.out.println("------call方法--------");
 			excel.open();
 			return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo,
-					realRowCount);
+					realRowCount,merchantName);
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;

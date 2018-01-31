@@ -22,6 +22,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Muser;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
@@ -350,6 +351,7 @@ public class MorderServiceImpl implements MorderService {
 			mosb.setSpareParams(spareParams.toString());
 		}
 		mosb.setMerchant_no(goodsInfo.get("merchantId") + "");
+		mosb.setCreateBy(goodsInfo.get("merchantName") + "");
 		// 删除标识:0-未删除,1-已删除
 		mosb.setDeleteFlag(0);
 		if (morderSubDao.add(mosb)) {
@@ -447,7 +449,7 @@ public class MorderServiceImpl implements MorderService {
 		// 订单备案状态
 		morder.setOrder_record_status(1);
 		morder.setCreate_date(new Date());
-		morder.setCreate_by(merchant_no);
+		morder.setCreate_by(goodsInfo.get("merchantName") + "");
 		morder.setFcode(FCODE);
 		morder.setSenderName(senderName);
 		morder.setSenderCountry(senderCountry);
@@ -499,7 +501,7 @@ public class MorderServiceImpl implements MorderService {
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
 		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
 		paramsMap.put("merchant_no", merchantId);
-		paramsMap.put("order_id",morder.getOrder_id() );
+		paramsMap.put("order_id", morder.getOrder_id());
 		List<MorderSub> ms = morderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
 		if (ms != null && !ms.isEmpty()) {
 			if (flag == 1) {
@@ -558,7 +560,7 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	@Override
-	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item) {
+	public Map<String, Object> createQBOrder(String merchantId, Map<String, Object> item, String merchantName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		double orderTotalPrice = Double.parseDouble(item.get("orderTotalPrice") + "");
@@ -643,7 +645,7 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	@Override
-	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item) {
+	public Map<String, Object> createQBOrderSub(String merchantId, Map<String, Object> item, String merchantName) {
 		Map<String, Object> params = new HashMap<>();
 		String entGoodsNo = item.get("entGoodsNo") + "";
 		String marCode = item.get("marCode") + "";
@@ -687,6 +689,7 @@ public class MorderServiceImpl implements MorderService {
 
 			param.put("seqNo", item.get("seqNo") + "");
 			param.put("merchantId", merchantId);
+			param.put("merchantName", merchantName);
 			String spareParam = goods.getSpareParams();
 			if (StringEmptyUtils.isNotEmpty(spareParam)) {
 				JSONObject json = JSONObject.fromObject(spareParam);
@@ -803,7 +806,6 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return ReturnInfoUtils.errorInfo("请求参数出错,请核对信息!");
 	}
-	
 
 	/**
 	 * 商户修改手工订单后,更新订单商品总金额
@@ -993,8 +995,7 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-	
-	
+
 	@Override
 	public Map<String, Object> addOrderGoodsInfo(String merchantId, String merchantName, String[] strArr) {
 		Map<String, Object> params = new HashMap<>();
@@ -1044,7 +1045,7 @@ public class MorderServiceImpl implements MorderService {
 				// 企邦字段
 				String spareParams = order.getSpareParams();
 				JSONObject json = JSONObject.fromObject(spareParams);
-				//当企邦订单中承运商字段存在时则必须填写企邦对应的商品属性
+				// 当企邦订单中承运商字段存在时则必须填写企邦对应的商品属性
 				if (StringEmptyUtils.isNotEmpty(json.get("ehsEntName") + "")) {
 					String marCode = strArr[23];
 					String sku = strArr[24];
@@ -1073,5 +1074,50 @@ public class MorderServiceImpl implements MorderService {
 			return ReturnInfoUtils.errorInfo("未找到订单关联的商品信息,请核对信息!");
 		}
 		return ReturnInfoUtils.errorInfo("商品信息参数错误,请核对信息!");
+	}
+
+	@Override
+	public Map<String, Object> updateOldCreateBy() {
+		Map<String, Object> params = new HashMap<>();
+		List<Merchant> reList = morderDao.findByProperty(Merchant.class, null, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			for (Merchant merchantInfo : reList) {
+				params.clear();
+				String merchantId = merchantInfo.getMerchantId();
+				params.put("merchant_no", merchantId);
+				List<Morder> reOrderList = morderDao.findByProperty(Morder.class, params, 0, 0);
+				
+				if (reOrderList != null && !reOrderList.isEmpty()) {
+					for(Morder order :reOrderList){
+						String orderId = order.getOrder_id();
+						order.setCreate_by(merchantInfo.getMerchantName());
+						order.setUpdate_date(new Date());
+						order.setUpdate_by("system");
+						if(!morderDao.update(order)){
+							return ReturnInfoUtils.errorInfo("订单号["+order.getOrder_id()+"]更新订单错误!");
+						}
+						params.clear();
+						params.put("order_id", orderId);
+						List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
+						if(reOrderSubList!=null && !reOrderSubList.isEmpty()){
+							for(MorderSub orderSub : reOrderSubList){
+								if(StringEmptyUtils.isEmpty(Integer.toString(orderSub.getSeqNo()))){
+									orderSub.setSeqNo(0);
+								}
+								orderSub.setMerchant_no(merchantId);
+								orderSub.setCreateBy(merchantInfo.getMerchantName());
+								orderSub.setUpdateDate(new Date());
+								orderSub.setUpdateBy("system");
+								if(!morderDao.update(orderSub)){
+									return ReturnInfoUtils.errorInfo("订单号["+order.getOrder_id()+"]更新订单商品错误!");
+								}
+							}
+						}
+					}
+				}
+			}
+
+		}
+		return null;
 	}
 }

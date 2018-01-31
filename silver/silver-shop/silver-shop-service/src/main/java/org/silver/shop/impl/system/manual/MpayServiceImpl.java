@@ -32,7 +32,7 @@ import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.silver.shop.task.OrderRecordTask;
-import org.silver.util.BufferUtils;
+import org.silver.shop.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -474,7 +474,7 @@ public class MpayServiceImpl implements MpayService {
 			}
 			BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "orderRecord");
 		}
-		BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "orderRecord");
+		BufferUtils.writeCompletedRedis("2", errorList, totalCount, serialNo, "orderRecord");
 	}
 
 	/**

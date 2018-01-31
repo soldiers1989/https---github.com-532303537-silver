@@ -22,11 +22,20 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();
-			sqlParams.add(paramsMap.get("merchantId") + "");
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String sql = "SELECT count(t1.trade_no) AS tradeCount,sum(t1.pay_amount) AS totalAmount,(sum(t1.pay_amount) * 0.002) AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') as date FROM 	ym_shop_manual_mpay t1 "
-					+ " WHERE  t1.merchant_no = ? AND   (t1.pay_record_status = '3' OR t1.pay_record_status = '2')";
+					+ " WHERE (t1.pay_record_status = '3' OR t1.pay_record_status = '2') ";
+			String merchantId = paramsMap.get("merchantId") + "";	
+			if(StringEmptyUtils.isNotEmpty(merchantId)){
+				sql += " AND t1.merchant_no = ? ";
+				sqlParams.add(merchantId);
+			}
+			String merchantName = paramsMap.get("merchantName") + "";	
+			if(StringEmptyUtils.isNotEmpty(merchantName)){
+				sql += " AND t1.create_by = ? ";
+				sqlParams.add(merchantName);
+			}
 			if (StringEmptyUtils.isNotEmpty(startDate)) {
 				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
 				sqlParams.add(startDate);

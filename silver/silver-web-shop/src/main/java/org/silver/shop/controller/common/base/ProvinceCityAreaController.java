@@ -65,12 +65,12 @@ public class ProvinceCityAreaController {
 	@ResponseBody
 	@ApiOperation("修改省市区信息")
 	@RequiresRoles("Manager")
-	public String editProvinceCityAreaInfo(HttpServletResponse response, HttpServletRequest req, int length) {
+	public String editProvinceCityAreaInfo(HttpServletResponse response, HttpServletRequest req, int flag) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(provinceCityAreaTransaction.editProvinceCityAreaInfo(req,length)).toString();
+		return JSONObject.fromObject(provinceCityAreaTransaction.editProvinceCityAreaInfo(req, flag)).toString();
 	}
 }

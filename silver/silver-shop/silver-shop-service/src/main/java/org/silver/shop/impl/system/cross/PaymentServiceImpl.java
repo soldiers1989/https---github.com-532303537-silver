@@ -30,10 +30,11 @@ import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.PaymentRecordTask;
+import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.SearchUtils;
-import org.silver.util.BufferUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.RandomUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
@@ -268,7 +269,7 @@ public class PaymentServiceImpl implements PaymentService {
 				}
 				BufferUtils.writeRedis("1", errorList, totalCount, serialNo, "paymentRecord");
 			}
-			BufferUtils.writeRedis("2", errorList, totalCount, serialNo, "paymentRecord");
+			BufferUtils.writeCompletedRedis("2", errorList, totalCount, serialNo, "paymentRecord");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -416,26 +417,25 @@ public class PaymentServiceImpl implements PaymentService {
 			String startDate, String endDate) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		paramsMap.put("merchantId", merchantId);
-		paramsMap.put("startDate", startDate);
-		paramsMap.put("endDate", endDate);
-		Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
-		Table totalCount = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (!reList.getRows().isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+		if (page >= 0 && size >= 0) {
+			paramsMap.put("merchantId", merchantId);
+			paramsMap.put("startDate", startDate);
+			paramsMap.put("endDate", endDate);
+			Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
+			Table totalCount = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			} else if (!reList.getRows().isEmpty()) {
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
+				statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
+				return statusMap;
+			} else {
+				return ReturnInfoUtils.errorInfo("暂无数据!");
+			}
 		}
+		return ReturnInfoUtils.errorInfo("请求参数出错,请核实信息!");
 	}
 
 	@Override
@@ -604,6 +604,13 @@ public class PaymentServiceImpl implements PaymentService {
 		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
 		statusMap.put("serialNo", serialNo);
 		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
+			String merchantId, String merchantName) {
+
+		return getMerchantPaymentReport(merchantId, merchantName, page, size, startDate, endDate);
 	}
 
 }

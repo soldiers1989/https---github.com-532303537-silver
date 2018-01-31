@@ -9,13 +9,13 @@ public interface PaymentService {
 
 	/**
 	 * 根据支付单Id发起支付单备案
-	 * @param merchantId 
-	 * @param merchantId
-	 * @param proxyParentId 
-	 * @param merchantName 
+	 * @param merchantId 商户Id
+	 * @param recordMap 备案包
+	 * @param tradeNoPack 交易包
+	 * @param proxyParentId 代理商Id
+	 * @param merchantName 商户名称
 	 * @param proxyParentName 
-	 * @param tradeIDs
-	 * @return
+	 * @return 
 	 */
 	public Object sendMpayByRecord(String merchantId, Map<String,Object> recordMap, String tradeNoPack, String proxyParentId, String merchantName, String proxyParentName);
 	
@@ -55,17 +55,30 @@ public interface PaymentService {
 	 * @param orderIDs 订单Id
 	 * @param serialNo 流水号
 	 * @param realRowCount 总数
-	 * @param errorList 
+	 * @param errorList 错误集合 
 	 * @return Map
 	 */
 	public Map<String, Object> groupCreateMpay(String merchant_no, List<String> orderIDs, String serialNo,int realRowCount, List<Map<String, Object>> errorList);
 	
 	/**
 	 * 分批启动多线程创建支付单流水
-	 * @param orderIdList
+	 * @param orderIdList 订单Id集合
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @return Map
+	 */
+	public Map<String,Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName);
+
+	/**
+	 * 管理员查询支付单报表信息
+	 * @param page
+	 * @param size
+	 * @param startDate
+	 * @param endDate
 	 * @param merchantId
 	 * @param merchantName
 	 * @return
 	 */
-	public Map<String,Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName);
+	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
+			String merchantId, String merchantName);
 }
