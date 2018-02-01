@@ -81,8 +81,6 @@ public class PaymentTransaction {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		// 单35458ms
-		// 多14675ms
 		 return paymentService.splitStartPaymentId(orderIdList,merchantId,merchantName);
 	}
 

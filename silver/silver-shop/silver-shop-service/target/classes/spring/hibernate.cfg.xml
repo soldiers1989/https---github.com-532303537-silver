@@ -12,15 +12,16 @@
 			org.hibernate.dialect.MySQLDialect
 		</property>
 		<property name="connection.url">
-	<!-- 		jdbc:mysql://150.242.58.22:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
- -->			jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
- 		</property>
+			jdbc:mysql://150.242.58.23:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
+			<!-- jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
+ --> 		</property>
 		<!-- jdbc:mysql://yueliankeji.mysql.rds.aliyuncs.com:3302/szs_sj?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true
  -->
- 		<property name="connection.username">root</property>
-		<property name="connection.password">123</property> 
+ 		<!-- <property name="connection.username">root</property>
+		<property name="connection.password">123</property>  -->
 
-		<!-- <property name="connection.username">root</property> <property name="connection.password">ppxcat58</property> -->
+		<property name="connection.username">root</property> 
+		<property name="connection.password">ppxcat58</property>
 		<property name="connection.driver_class">
 			com.mysql.jdbc.Driver
 		</property>
@@ -36,7 +37,7 @@
 		<property name="hibernate.show_sql">false</property>
 		<property name="hibernate.format_sql">false</property>
 
-		<!--  <property name="hibernate.hbm2ddl.auto">update</property>  -->
+		 <property name="hibernate.hbm2ddl.auto">update</property> 
 
 
 		<!-- <property name="hibernate.c3p0.testConnectionOnCheckout">true</property> -->

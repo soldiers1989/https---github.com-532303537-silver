@@ -28,7 +28,9 @@ import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
 import org.silver.shop.task.GZExcelTask;
 import org.silver.shop.task.QBExcelTask;
 import org.silver.shop.utils.ExcelBufferUtils;
+import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.AppUtil;
+import org.silver.util.CalculateCpuUtils;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
@@ -45,6 +47,7 @@ import net.sf.json.JSONObject;
 @Service("manualService")
 public class ManualService {
 
+	
 	@Reference
 	private MorderService morderService;
 	@Autowired
@@ -411,7 +414,6 @@ public class ManualService {
 				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板是否符合规范!");
 			}
 			excel.closeExcel();
-			file.delete();
 			statusMap.put("status", 1);
 			statusMap.put("msg", "执行成功,正在读取数据....");
 			return statusMap;
@@ -475,25 +477,14 @@ public class ManualService {
 			String merchantName) {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
 		List<Map<String, Object>> errl = new Vector();
-		// 判断当前计算机CPU线程个数
-		int cpuCount = Runtime.getRuntime().availableProcessors();
-		// int cpuCount = 1;
 		// 开始行数
 		int startCount = flag == 1 ? 2 : 1;
 		// 结束行数
 		int end = 0;
-		/*if (serialNo.contains("QB")) {
-			if (totalCount * 3 < cpuCount) {
-				cpuCount = 6;
-			} else if (totalCount * 5 < cpuCount) {
-				cpuCount = 12;
-			} else if (totalCount * 7 < cpuCount) {
-				cpuCount = 20;
-			}else if (totalCount >= 300) {
-				cpuCount =Runtime.getRuntime().availableProcessors();
-			}
-		}*/
-		if (totalCount <= cpuCount) {// 不需要开辟多线程
+		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
+		// 本地端PC
+		// cpuCount = 6;
+		if (cpuCount == 1) {// 不需要开辟多线程
 			File dest = copyFile(file);
 			ExcelUtil excelC = new ExcelUtil(dest);
 			startTask(flag, excelC, errl, merchantId, startCount, totalCount, serialNo, totalCount, threadPool,
@@ -644,10 +635,8 @@ public class ManualService {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							seqNo = Integer.parseInt(value);
 						} else {
-							Map<String, Object> errMap = new HashMap<>();
-							errMap.put("msg", "【表格】第" + (r + 1) + "行--->表单序号错误,请核对信息!");
-							errl.add(errMap);
-							excelBufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "orderImport");
+							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
+							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 							continue;
 						}
 					} else if (c == 1) {
@@ -713,11 +702,8 @@ public class ManualService {
 				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
 				if (provinceMap == null) {
-					Map<String, Object> errMap = new HashMap<>();
 					String msg = "订单号[" + orderId + "]收货人地址填写有误,请核对信息!";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
-					errl.add(errMap);
-					excelBufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "orderImport");
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 3);
 				}
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
 				if (reProvinceCityAreaMap != null) {
@@ -758,32 +744,26 @@ public class ManualService {
 				item.put("serial", serial);
 				item.put("marCode", marCode);
 				Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item, merchantName);
-				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时
-					Map<String, Object> errMap = new HashMap<>();
+				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时,继续将剩下的订单商品导入
 					String msg = orderMap.get("msg") + "";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
-					errl.add(errMap);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 2);
 				} else if (!"1".equals(orderMap.get("status") + "")) {
-					Map<String, Object> errMap = new HashMap<>();
 					String msg = orderMap.get("msg") + "";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
-					errl.add(errMap);
-					excelBufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "orderImport");
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 					continue;
 				}
 				Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item, merchantName);
 				if ((int) orderSubMap.get("status") != 1) {
-					Map<String, Object> errMap = new HashMap<>();
-					errMap.put("msg", "第" + (r + 1) + "行-->" + orderSubMap.get("msg"));
-					errl.add(errMap);
+					String msg = orderSubMap.get("msg")+"";
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 				}
-				excelBufferUtils.writeRedis("1", errl, (realRowCount - 1), serialNo, "orderImport");
+				excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "orderImport");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		excel.closeExcel();
-		excelBufferUtils.writeCompletedRedis("2", errl, (realRowCount - 1), serialNo, "orderImport");
+		excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "orderImport");
 		return null;
 	}
 
@@ -863,9 +843,9 @@ public class ManualService {
 							seqNo = Integer.parseInt(value);
 						} else {
 							Map<String, Object> errMap = new HashMap<>();
-							errMap.put("msg", "【表格】第" + (r + 1) + "行--->表单序号错误,请核对信息!");
+							errMap.put("msg", "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!");
 							errl.add(errMap);
-							excelBufferUtils.writeRedis("1", errl, realRowCount, serialNo, "orderImport");
+							excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 							continue;
 						}
 					} else if (c == 1) {
@@ -987,10 +967,10 @@ public class ManualService {
 				Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
 					Map<String, Object> errMap = new HashMap<>();
-					String msg = "订单号[" + orderId + "]--->收货人地址填写有误,请核对信息!";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
+					String msg = "运单号[" + waybill + "]-->收货人地址填写有误,请核对信息!";
+					errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + msg);
 					errl.add(errMap);
-					excelBufferUtils.writeRedis("1", errl, realRowCount, serialNo, "orderImport");
+					excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 				}
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
 				if (reProvinceCityAreaMap != null) {
@@ -1050,14 +1030,14 @@ public class ManualService {
 				if ("10".equals(item.get("status") + "")) {// 当遇到超额时
 					Map<String, Object> errMap = new HashMap<>();
 					String msg = item.get("msg") + "";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
+					errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + msg);
 					errl.add(errMap);
 				} else if (!"1".equals(item.get("status") + "")) {
 					Map<String, Object> errMap = new HashMap<>();
 					String msg = item.get("msg") + "";
-					errMap.put("msg", "【表格】第" + (r + 1) + "行--->" + msg);
+					errMap.put("msg", "【表格】第" + (r + 1) + "行-->" + msg);
 					errl.add(errMap);
-					excelBufferUtils.writeRedis("1", errl, realRowCount, serialNo, "orderImport");
+					excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 					continue;
 				}
 				String order_id = item.get("order_id") + "";
@@ -1066,16 +1046,20 @@ public class ManualService {
 				Map<String, Object> goodsItem = morderService.createNewSub(goodsInfo);
 				if ((int) goodsItem.get("status") != 1) {
 					Map<String, Object> errMap = new HashMap<>();
-					errMap.put("msg", "【表格】第" + (r + 1) + "行商品----->" + goodsItem.get("msg"));
+					errMap.put("msg", "【表格】第" + (r + 1) + "行商品-->" + goodsItem.get("msg"));
 					errl.add(errMap);
 				}
-				excelBufferUtils.writeRedis("1", errl, realRowCount, serialNo, "orderImport");
+				excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			Map<String, Object> errMap = new HashMap<>();
+			errMap.put("msg", "表格数据不正确,请核对是否所有数据都有格式化为文本!");
+			errl.add(errMap);
+			excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 		}
 		excel.closeExcel();
-		excelBufferUtils.writeCompletedRedis("2", errl, realRowCount, serialNo, "orderImport");
+		excelBufferUtils.writeCompletedRedis(errl, realRowCount, serialNo, "orderImport");
 		// 393行：81767ms ,第二次()：76202ms
 		return statusMap;
 	}
@@ -1121,37 +1105,16 @@ public class ManualService {
 		Map<String, Object> provinceCityAreaMap = (Map<String, Object>) provinceCityAreaTransaction
 				.getProvinceCityArea();
 		if (!"1".equals(provinceCityAreaMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
-			statusMap.put(BaseCode.MSG.toString(), "查询省市区失败,请核对邮编号码!");
-			return statusMap;
+			return provinceCityAreaMap;
 		}
 		Map<String, Object> areaMap = (Map<String, Object>) provinceCityAreaMap.get(BaseCode.DATAS.getBaseCode());
-		Map<String, Object> reCityMap = new HashMap<>();
-		// 遍历全国所有区域
-		for (Map.Entry<String, Object> entry : areaMap.entrySet()) {
-			String str = entry.getValue() + "";
-			String[] a = str.split("#");
-			String provinceCode = a[0].split("_")[0].trim();
-			String provinceName = a[0].split("_")[1].trim();
-			String cityCode = a[1].split("_")[0].trim();
-			String cityName = a[1].split("_")[1].trim();
-			String areaCode = a[2].split("_")[0].trim();
-			String areaName = a[2].split("_")[1].trim();
-			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)) {
-				statusMap.put("areaCode", areaCode);
-				statusMap.put("areaName", areaName);
-				statusMap.put("cityCode", cityCode);
-				statusMap.put("cityName", cityName);
-				statusMap.put("provinceCode", provinceCode);
-				statusMap.put("provinceName", provinceName);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				return statusMap;
-			}
-			// 地址中区域+省份未找到则把城市编码放入缓存
-			reCityMap.put(cityCode, cityCode + "_" + cityName + "#" + provinceCode + "_" + provinceName);
 
+		Map<String, Object> reAreaMap = areaGetProvinceCityAreaInfo(areaMap, recipientAddr);
+		if ("1".equals(reAreaMap.get(BaseCode.STATUS.toString()))) {
+			return reAreaMap;
 		}
+		// 返回的城市信息
+		Map<String, Object> reCityMap = (Map<String, Object>) reAreaMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> reProvinceMap = new HashMap<>();
 		// 根据省份+城市查询
 		for (Map.Entry<String, Object> entry : reCityMap.entrySet()) {
@@ -1225,6 +1188,57 @@ public class ManualService {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 根据全国所有区域,查询对应的省市区信息
+	 * 
+	 * @param areaMap
+	 *            全国所有区域信息集合
+	 * @param recipientAddr
+	 *            收货人详细地址
+	 * @return Map
+	 */
+	private Map<String, Object> areaGetProvinceCityAreaInfo(Map<String, Object> areaMap, String recipientAddr) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> reCityMap = new HashMap<>();
+		// 遍历全国所有区域
+		for (Map.Entry<String, Object> entry : areaMap.entrySet()) {
+			String str = entry.getValue() + "";
+			String[] a = str.split("#");
+			String provinceCode = a[0].split("_")[0].trim();
+			String provinceName = a[0].split("_")[1].trim();
+			String cityCode = a[1].split("_")[0].trim();
+			String cityName = a[1].split("_")[1].trim();
+			String areaCode = a[2].split("_")[0].trim();
+			String areaName = a[2].split("_")[1].trim();
+			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)) {
+				statusMap.put("areaCode", areaCode);
+				statusMap.put("areaName", areaName);
+				statusMap.put("cityCode", cityCode);
+				statusMap.put("cityName", cityName);
+				statusMap.put("provinceCode", provinceCode);
+				statusMap.put("provinceName", provinceName);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				return statusMap;
+			} else if (recipientAddr.contains(areaName) && recipientAddr.contains(cityName)) {
+				statusMap.put("areaCode", areaCode);
+				statusMap.put("areaName", areaName);
+				statusMap.put("cityCode", cityCode);
+				statusMap.put("cityName", cityName);
+				statusMap.put("provinceCode", provinceCode);
+				statusMap.put("provinceName", provinceName);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				return statusMap;
+			}
+			// 地址中区域+省份未找到则把城市编码放入缓存
+			reCityMap.put(cityCode, cityCode + "_" + cityName + "#" + provinceCode + "_" + provinceName);
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+		statusMap.put(BaseCode.DATAS.toString(), reCityMap);
+		return statusMap;
 	}
 
 	private String getOrderDocAcount() {

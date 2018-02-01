@@ -33,13 +33,12 @@ public class ErrorLogsServiceImpl implements ErrorLogsService {
 			String[] strArr = serialNo.split("_");
 			for (int i = 0; i < errorList.size(); i++) {
 				ErrorLogInfo loginfo = new ErrorLogInfo();
-				Map<String, Object> msgMap = errorList.get(i);
-				String msg = msgMap.get(BaseCode.MSG.toString()) + "";
-				// 类型：1-错误,2-警告订单超额....待续
-				if (msg.contains("金额超过2000")) {
-					loginfo.setType(2);
-				} else {
-					loginfo.setType(1);
+				Map<String, Object> errorMap = errorList.get(i);
+				String msg = errorMap.get(BaseCode.MSG.toString()) + "";
+				String type = errorMap.get("type") + "";
+				if (StringEmptyUtils.isNotEmpty(type)) {
+					// 类型：1-错误,2-警告订单超额,3-详细地址信息错误...待续
+					loginfo.setType(Integer.parseInt(type));
 				}
 				loginfo.setSerialNo(strArr[1]);
 				loginfo.setAction(action);
@@ -50,7 +49,7 @@ public class ErrorLogsServiceImpl implements ErrorLogsService {
 				// 阅读标识:1-未阅读,2-已阅读
 				loginfo.setReadingSign(1);
 				if (!errorLogsDao.add(loginfo)) {
-					return ReturnInfoUtils.errorInfo(msgMap.get(BaseCode.MSG.toString()) + ";保存失败,服务器繁忙");
+					System.out.println(msg + " 保存失败,服务器繁忙");
 				}
 			}
 			return ReturnInfoUtils.successInfo();
@@ -59,13 +58,18 @@ public class ErrorLogsServiceImpl implements ErrorLogsService {
 	}
 
 	@Override
-	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size) {
+	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size, String merchantId,
+			String merchantName) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
-		String blurryStr = params.get("blurryStr")+"";
+		String blurryStr = "";
+		if (StringEmptyUtils.isNotEmpty(params.get("blurryStr") + "")) {
+			blurryStr = params.get("blurryStr") + "";
+		}
 		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		blurryMap.put("action", blurryStr);
+		paramMap.put("operatorId", merchantId);
 		long count = 0;
 		if (page == 0 && size == 0) {
 			paramMap.put("readingSign", 1);
@@ -74,10 +78,10 @@ public class ErrorLogsServiceImpl implements ErrorLogsService {
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
 			return statusMap;
-		} else {
-			count = errorLogsDao.findByPropertyLikeCount(ErrorLogInfo.class, paramMap, blurryMap);
 		}
-		List<ErrorLogInfo> reList = errorLogsDao.findByPropertyLike(ErrorLogInfo.class, paramMap, blurryMap, page, size);
+		List<ErrorLogInfo> reList = errorLogsDao.findByPropertyLike(ErrorLogInfo.class, paramMap, blurryMap, page,
+				size);
+		count = errorLogsDao.findByPropertyLikeCount(ErrorLogInfo.class, paramMap, blurryMap);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {

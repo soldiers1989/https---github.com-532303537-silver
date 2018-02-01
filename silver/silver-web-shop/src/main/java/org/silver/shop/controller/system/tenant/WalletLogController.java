@@ -25,5 +25,8 @@ import net.sf.json.JSONObject;
 @RequestMapping("/walletLog")
 public class WalletLogController {
 	
-	
+	public static void main(String[] args) {
+		int cpu = 32;
+		System.out.println(cpu/2);
+	}
 }

@@ -231,7 +231,7 @@ public final class SearchUtils {
 				break;
 			case "serialNo":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, Integer.parseInt(value));
+					paramMap.put(key, value);
 				}
 				break;
 

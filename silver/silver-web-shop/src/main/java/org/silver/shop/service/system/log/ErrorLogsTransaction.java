@@ -36,6 +36,12 @@ public class ErrorLogsTransaction {
 	//获取商户日志
 	public Object merchantGetErrorLogs(HttpServletRequest req ,int page,int size) {
 		Map<String,Object> params = new HashMap<>();
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
 		Enumeration<String>  isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
 			String key =  isKey.nextElement();
@@ -44,7 +50,8 @@ public class ErrorLogsTransaction {
 		}
 		params.remove("page");
 		params.remove("size");
-		return errorLogsService.merchantGetErrorLogs(params,page,size); 
+		
+		return errorLogsService.merchantGetErrorLogs(params,page,size,merchantId,merchantName); 
 	}
 	
 	

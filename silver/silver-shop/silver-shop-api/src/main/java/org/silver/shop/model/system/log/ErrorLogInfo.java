@@ -30,7 +30,7 @@ public class ErrorLogInfo implements Serializable {
 
 	private String remark;//
 	
-	private int type ;//类型：1-错误,2-警告订单超额....待续
+	private int type ;//类型：1-错误,2-警告订单超额,3-详细地址信息错误...待续
 	
 	private int readingSign;//阅读标识:1-未阅读,2-已阅读
 	

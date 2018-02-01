@@ -29,11 +29,13 @@ public interface ErrorLogsService {
 	 * @param endDate 结束日期
 	 * @param page 页数
 	 * @param size 数目
+	 * @param merchantName 
+	 * @param merchantId 
 	 * @param serialNo 批次号
 	 * @param action 操作名称
 	 * @param blurryStr 
 	 * @return Map
 	 */
-	public Object merchantGetErrorLogs(Map<String,Object> params,int page,int size);
+	public Object merchantGetErrorLogs(Map<String,Object> params,int page,int size, String merchantId, String merchantName);
 
 }

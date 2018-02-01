@@ -413,8 +413,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " LIKE " + "?" + " and ";
-					list.add(blurryMap.get(property));
+					hql = hql + "model." + property + " LIKE " + " ? " + " and ";
+					list.add("%"+blurryMap.get(property)+"%");
 				}
 			}
 			hql += " 1=1 Order By id DESC";
@@ -476,8 +476,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " LIKE " + "?" + " and ";
-					list.add(blurryMap.get(property));
+					hql = hql + "model." + property + " LIKE " + " ? " + " and ";
+					list.add("%"+blurryMap.get(property)+"%");
 				}
 			}
 			hql += " 1=1 ";

@@ -234,7 +234,7 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 批量导入手工订单 暂只支持有国宗、企邦
+	 * 批量导入手工订单 暂只支持有国宗、企邦(将作为对外统一模板)
 	 * 
 	 * @param resp
 	 * @param req
