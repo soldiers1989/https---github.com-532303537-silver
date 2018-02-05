@@ -33,7 +33,9 @@ import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.silver.shop.task.OrderRecordTask;
 import org.silver.shop.util.BufferUtils;
+import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.RedisInfoUtils;
+import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -77,6 +79,10 @@ public class MpayServiceImpl implements MpayService {
 
 	@Autowired
 	private BufferUtils bufferUtils;
+
+	@Autowired
+	private InvokeTaskUtils invokeTaskUtils;
+
 	/**
 	 * 查询商户钱包余额是否有足够的钱
 	 * 
@@ -357,31 +363,16 @@ public class MpayServiceImpl implements MpayService {
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		// 总数
 		int totalCount = jsonList.size();
-		ExecutorService threadPool = Executors.newCachedThreadPool();
-		// 获取当前计算机CPU线程个数
-		int cpuCount = Runtime.getRuntime().availableProcessors();
-		if (totalCount < cpuCount) {
-			OrderRecordTask threadTask = new OrderRecordTask(jsonList, merchantId, merchantName, errorList, customsMap,
-					tok, totalCount, serialNo, this);
-			threadPool.submit(threadTask);
-		} else {
-			// 分批处理
-			Map<String, Object> reMap = SplitListUtils.batchList(jsonList, cpuCount);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
-			//
-			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
-			for (int i = 0; i < dataList.size(); i++) {
-				List newList = (List) dataList.get(i);
-				OrderRecordTask threadTask = new OrderRecordTask(JSONArray.fromObject(newList), merchantId,
-						merchantName, errorList, customsMap, tok, totalCount, serialNo, this);
-				threadPool.submit(threadTask);
-			}
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("merchantName", merchantName);
+		params.put("tok", tok);
+		params.put("serialNo", serialNo);
+		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
+				 params);
+		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+			return reMap;
 		}
-		// TaskUtils.invokeTask(totalCount, jsonList, merchantId, merchantName,
-		// errorList, reCustomsMap, tok, serialNo, this);
-		threadPool.shutdown();
 		statusMap.put("status", 1);
 		statusMap.put("msg", "执行成功,开始推送订单备案.......");
 		statusMap.put("serialNo", serialNo);
@@ -426,18 +417,18 @@ public class MpayServiceImpl implements MpayService {
 			List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 			if (orderList == null || orderSubList == null) {
 				String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 				continue;
 			} else {
 				Morder order = orderList.get(0);
 				if (order.getFCY() > 2000) {
 					String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 					continue;
 				}
 				if (!checkProvincesCityAreaCode(order)) {
 					String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 					continue;
 				}
 
@@ -458,14 +449,14 @@ public class MpayServiceImpl implements MpayService {
 				Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
 				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
 					String msg = checkMap.get(BaseCode.MSG.toString()) + "";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 					continue;
 				}
 				Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
 				System.out.println("->>>>>>>>>>>" + reOrderMap);
 				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 					String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 					continue;
 				} else {
 					String reOrderMessageID = reOrderMap.get("messageID") + "";
@@ -473,7 +464,7 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
 					if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord",1);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 						continue;
 					}
 				}
@@ -667,7 +658,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
@@ -695,7 +686,7 @@ public class MpayServiceImpl implements MpayService {
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
 			} else {
-				return ReturnInfoUtils.errorInfo("服务器接受订单信息失败,请重试！");
+				return ReturnInfoUtils.errorInfo("第二次推送订单信息接收失败,请重试！");
 			}
 		}
 		if (StringUtil.isNotEmpty(resultStr)) {

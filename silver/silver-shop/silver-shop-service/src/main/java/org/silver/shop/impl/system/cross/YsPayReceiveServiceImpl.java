@@ -35,6 +35,7 @@ import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -643,7 +644,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("notifyurl", notifyurl);
 			paymentMap.put("note", "");
 			// 是否像海关发送
-			
 			//paymentMap.put("uploadOrNot", false);
 			// String resultStr =
 			//YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
@@ -651,7 +651,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
-				System.out.println("------第二次发起支付单推送------>>>>>>>>>>");
+				System.out.println("------第二次发起支付单推送------");
 				Map<String, Object> paramsMap = new HashMap<>();
 				paramsMap.put("merchantId", merchantId);
 				paramsMap.put("customsPort", 1);
@@ -699,9 +699,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					return JSONObject.fromObject(resultStr2);
 				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("第二次推送订单信息接收失败,请重试！");
 				}
 			}
 			if (StringUtil.isNotEmpty(resultStr)) {

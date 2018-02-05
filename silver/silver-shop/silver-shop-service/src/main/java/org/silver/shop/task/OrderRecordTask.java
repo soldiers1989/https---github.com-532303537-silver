@@ -63,8 +63,12 @@ public class OrderRecordTask implements Callable<Object> {
 
 	@Override
 	public Object call() throws Exception {
-		mpayServiceImpl.startSendOrderRecord(dataList, merchantId, merchantName, errorList, customsMap, tok, totalCount,
-				serialNo);
+		try {
+			mpayServiceImpl.startSendOrderRecord(dataList, merchantId, merchantName, errorList, customsMap, tok, totalCount,
+					serialNo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 

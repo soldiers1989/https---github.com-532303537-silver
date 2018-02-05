@@ -100,6 +100,7 @@ public class BufferUtils {
 				statusCounter.set(cpuCount);
 			} else {
 				datasMap.put("count", statusCounter.getAndIncrement());
+				datasMap.put(BaseCode.STATUS.toString(), "1");
 			}
 			if (statusCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");

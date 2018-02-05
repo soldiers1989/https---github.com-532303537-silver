@@ -8,7 +8,7 @@ import org.silver.common.BaseCode;
 
 public class RedisInfoUtils {
 	/**
-	 * 
+	 * 公共缓存执行方法
 	 * @param msg
 	 *            错误信息
 	 * @param errorList

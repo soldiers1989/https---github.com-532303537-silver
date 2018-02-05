@@ -8,7 +8,7 @@ import org.silver.shop.impl.system.cross.PaymentServiceImpl;
 import org.silver.util.TaskUtils;
 
 /**
- * 模拟生成(银盛)支付单流水号
+ * 多线程调用模拟生成(银盛)支付单流水号方法
  *
  */
 public class GroupPaymentTask extends TaskUtils {

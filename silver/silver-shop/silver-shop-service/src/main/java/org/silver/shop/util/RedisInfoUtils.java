@@ -21,9 +21,11 @@ public class RedisInfoUtils {
 	 *            批次号
 	 * @param name
 	 *            名称
+	 * @param tyep
+	 *            类型：1-错误,2-警告订单超额,3-详细地址信息错误...待续
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, int totalCount,
-			String serialNo, String name,int type) {
+			String serialNo, String name, int type) {
 		Map<String, Object> errMap = new HashMap<>();
 		errMap.put(BaseCode.MSG.toString(), msg);
 		errMap.put("type", type);

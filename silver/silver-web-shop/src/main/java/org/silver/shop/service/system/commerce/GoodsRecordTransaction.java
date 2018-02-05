@@ -7,6 +7,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -166,7 +167,7 @@ public class GoodsRecordTransaction {
 
 	// 批量添加未备案商品信息
 	public Map<String, Object> batchAddNotRecordGoodsInfo(HttpServletRequest req) {
-		List<Map<String, Object>> errl = new ArrayList<>();
+		Vector  errl = new Vector();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());

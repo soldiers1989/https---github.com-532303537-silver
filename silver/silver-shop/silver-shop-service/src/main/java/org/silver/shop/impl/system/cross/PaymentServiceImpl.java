@@ -31,6 +31,7 @@ import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.PaymentRecordTask;
 import org.silver.shop.util.BufferUtils;
+import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CalculateCpuUtils;
@@ -64,6 +65,8 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Autowired
 	private BufferUtils bufferUtils;
+	@Autowired
+	private InvokeTaskUtils invokeTaskUtils;
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -145,28 +148,15 @@ public class PaymentServiceImpl implements PaymentService {
 		String serialNo = "paymentRecord_" + SerialNoUtils.getSerialNo("paymentRecord");
 		// 总数
 		int totalCount = jsonList.size();
-
-		ExecutorService threadPool = Executors.newCachedThreadPool();
-		// 获取当前计算机CPU线程个数
-		int cpuCount = Runtime.getRuntime().availableProcessors();
-		if (totalCount < cpuCount) {
-			PaymentRecordTask threadTask = new PaymentRecordTask(jsonList, merchantId, merchantName, errorList,
-					recordMap, tok, totalCount, serialNo, this);
-			threadPool.submit(threadTask);
-		} else {
-			// 分批处理
-			Map<String, Object> reMap = SplitListUtils.batchList(jsonList, cpuCount);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
-			//
-			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
-			for (int i = 0; i < dataList.size(); i++) {
-				List newList = (List) dataList.get(i);
-				PaymentRecordTask threadTask = new PaymentRecordTask(JSONArray.fromObject(newList), merchantId,
-						merchantName, errorList, recordMap, tok, totalCount, serialNo, this);
-				threadPool.submit(threadTask);
-			}
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("merchantName", merchantName);
+		params.put("tok", tok);
+		params.put("serialNo", serialNo);
+		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(3, totalCount, jsonList, errorList, recordMap,
+				params);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
 		}
 		// startSendPaymentRecord(jsonList, merchantId, merchantName, errorList,
 		// recordMap, tok, totalCount, serialNo);
@@ -200,10 +190,10 @@ public class PaymentServiceImpl implements PaymentService {
 			String serialNo) {
 		Map<String, Object> param = new HashMap<>();
 		double cumulativeAmount = 0.0;
-		try {
-			for (int i = 0; i < jsonList.size(); i++) {
-				Map<String, Object> treadeMap = (Map<String, Object>) jsonList.get(i);
-				String treadeNo = treadeMap.get("treadeNo") + "";
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> treadeMap = (Map<String, Object>) jsonList.get(i);
+			String treadeNo = treadeMap.get("treadeNo") + "";
+			try {
 				param.clear();
 				param.put("merchant_no", merchantId);
 				param.put("trade_no", treadeNo);
@@ -226,10 +216,8 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> checkMap = mpayServiceImpl.checkWallet(1, merchantId, merchantName, treadeNo,
 							cumulativeAmount);
 					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!");
-						errorList.add(errMap);
-						bufferUtils.writeRedis(errorList, totalCount, serialNo, "paymentRecord");
+						String msg = "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "paymentRecord", 1);
 						continue;
 					}
 					Map<String, Object> paymentInfoMap = new HashMap<>();
@@ -247,37 +235,31 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap,
 							tok, recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
 					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(),
-								"支付流水号[" + treadeNo + "]----->>>" + paymentMap.get(BaseCode.MSG.toString()));
-						errorList.add(errMap);
-						bufferUtils.writeRedis(errorList, totalCount, serialNo, "paymentRecord");
+						String msg = "支付流水号[" + treadeNo + "]-->" + paymentMap.get(BaseCode.MSG.toString());
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "paymentRecord", 1);
 						continue;
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
 					// 更新服务器返回支付Id
 					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
 					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(),
-								"支付流水号[" + treadeNo + "]----->>>" + rePaymentMap2.get(BaseCode.MSG.toString()));
-						errorList.add(errMap);
-						bufferUtils.writeRedis(errorList, totalCount, serialNo, "paymentRecord");
+						String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentMap2.get(BaseCode.MSG.toString());
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "paymentRecord", 1);
 						continue;
 					}
 				} else {
-					Map<String, Object> errorMap = new HashMap<>();
-					errorMap.put(BaseCode.MSG.toString(), "[" + treadeNo + "]该支付流水号不存在,请核实！");
-					errorList.add(errorMap);
-					bufferUtils.writeRedis(errorList, totalCount, serialNo, "paymentRecord");
+					String msg = "支付流水号[" + treadeNo + "]查询支付单信息失败,请核实流水号!";
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "paymentRecord", 1);
 					continue;
 				}
 				bufferUtils.writeRedis(errorList, totalCount, serialNo, "paymentRecord");
+			} catch (Exception e) {
+				e.printStackTrace();
+				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
+				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "paymentRecord", 1);
 			}
-			bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "paymentRecord", merchantId, merchantName);
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
+		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "paymentRecord", merchantId, merchantName);
 	}
 
 	/**
@@ -582,28 +564,19 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName) {
 		Map<String, Object> statusMap = new HashMap<>();
-		int cpuCount = CalculateCpuUtils.calculateCpu(orderIdList.size());
 		String serialNo = "payment_" + SerialNoUtils.getSerialNo("payment");
 		// 总数
-		int realRowCount = orderIdList.size();
+		int totalCount = orderIdList.size();
 		List<Map<String, Object>> errorList = new Vector();
-		if (cpuCount == 1) {
-			groupCreateMpay(merchantId, orderIdList, serialNo, realRowCount, errorList);
-		} else {
-			ExecutorService threadPool = Executors.newCachedThreadPool();
-			// 分批处理
-			Map<String, Object> reMap = SplitListUtils.batchList(orderIdList, cpuCount);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
-			//
-			List dataList = (List) reMap.get(BaseCode.DATAS.toString());
-			for (int i = 0; i < dataList.size(); i++) {
-				List list = (List) dataList.get(i);
-				GroupPaymentTask task = new GroupPaymentTask(list, merchantId, this, serialNo, realRowCount, errorList);
-				threadPool.submit(task);
-			}
-			threadPool.shutdown();
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("merchantName", merchantName);
+		params.put("tok", "tok");
+		params.put("serialNo", serialNo);
+		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(1, totalCount, JSONArray.fromObject(orderIdList),
+				errorList, null, params);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
 		}
 		statusMap.put("status", 1);
 		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
