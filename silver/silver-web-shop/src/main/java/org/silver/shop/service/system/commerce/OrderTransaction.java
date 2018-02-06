@@ -135,4 +135,8 @@ public class OrderTransaction {
 
 		return orderService.getOrderReport(page, size, startDate, endDate, merchantId, merchantName);
 	}
+
+	public Map<String,Object> managerDeleteTestOrder() {
+		return orderService.managerDeleteTestOrder();
+	}
 }

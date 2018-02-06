@@ -234,7 +234,11 @@ public final class SearchUtils {
 					paramMap.put(key, value);
 				}
 				break;
-
+			case "waybill":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
+				}
+				break;
 			default:
 				break;
 			}

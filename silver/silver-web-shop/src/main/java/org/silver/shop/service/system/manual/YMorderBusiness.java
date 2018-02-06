@@ -21,4 +21,8 @@ public class YMorderBusiness {
 		return yMorderService.doCallBack(order_id,trade_no,trade_status);
 	}
 
+	
+	public static void main(String[] args) {
+		System.out.println(" lulu lemon ".trim());
+	}
 }

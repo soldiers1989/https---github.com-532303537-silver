@@ -113,4 +113,11 @@ public interface OrderDao<T> extends BaseDao{
 	 * @return 
 	 */
 	public Table getOrderDailyReport(Class<T> class1, Map<String, Object> paramsMap, int page, int size);
+
+
+	/**
+	 * 管理员临时删除测试账号下的所有数据
+	 * @return
+	 */
+	public boolean managerDeleteTestOrder();
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.model.system.manual.Morder;
@@ -105,13 +106,13 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			String sql = "SELECT count(t1.order_id) AS orderCount, sum(t1.FCY) as total,(sum(t1.FCY) * 0.001)  AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date FROM ym_shop_manual_morder t1 "
 					+ "WHERE (t1.order_record_status = '3' OR t1.order_record_status = '2') ";
 			String merchantId = paramsMap.get("merchantId") + "";
-			if(StringEmptyUtils.isNotEmpty(merchantId)){
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sql += " AND t1.merchant_no = ? ";
 				sqlParams.add(merchantId);
 			}
 			String merchantName = paramsMap.get("merchantName") + "";
-			if(StringEmptyUtils.isNotEmpty(merchantName)){
-				sql+= " AND t1.create_by = ? ";
+			if (StringEmptyUtils.isNotEmpty(merchantName)) {
+				sql += " AND t1.create_by = ? ";
 				sqlParams.add(merchantName);
 			}
 			if (StringEmptyUtils.isNotEmpty(startDate)) {
@@ -141,6 +142,26 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
+		}
+	}
+
+	@Override
+	public boolean managerDeleteTestOrder() {
+		Session session = null;
+		try {
+			session = getSession();
+			Transaction tra = session.beginTransaction();
+			String sql = "DELETE t1,t2 FROM ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.merchant_no =t2.merchant_no "
+					+ "WHERE t1.merchant_no = 'MerchantId_00047' AND t1.create_by = '测试账号'";
+			Query q = session.createQuery(sql);
+			q.executeUpdate();
+			session.flush();
+			session.close();
+			tra.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 

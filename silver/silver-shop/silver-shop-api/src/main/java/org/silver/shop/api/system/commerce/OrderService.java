@@ -124,4 +124,10 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId,
 			String merchantName);
+
+	/**
+	 * 临时用于管理员删除测试账号下所有数据
+	 * @return
+	 */
+	public  Map<String,Object> managerDeleteTestOrder();
 }

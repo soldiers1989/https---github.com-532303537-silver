@@ -920,4 +920,12 @@ public class OrderServiceImpl implements OrderService {
 			String merchantName) {
 		return getMerchantOrderDailyReport(merchantId, merchantName, page, size, startDate, endDate);
 	}
+
+	@Override
+	public Map<String, Object> managerDeleteTestOrder() {
+		 if(orderDao.managerDeleteTestOrder()){
+			 ReturnInfoUtils.successInfo();
+		 }
+		return null;
+	}
 }

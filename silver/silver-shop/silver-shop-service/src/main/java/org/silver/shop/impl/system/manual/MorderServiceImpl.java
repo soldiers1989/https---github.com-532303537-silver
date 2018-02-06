@@ -240,7 +240,7 @@ public class MorderServiceImpl implements MorderService {
 	@Override
 	public Map<String, Object> createNewSub(JSONObject goodsInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
-		JSONArray datas = new JSONArray();
+	/*	JSONArray datas = new JSONArray();
 		datas.add(goodsInfo);
 		List<String> noNullKeys = new ArrayList<>();
 		noNullKeys.add("entGoodsNo");
@@ -255,10 +255,11 @@ public class MorderServiceImpl implements MorderService {
 		noNullKeys.add("Unit");
 		noNullKeys.add("Price");
 		noNullKeys.add("Qty");
-		Map<String, Object> checkMap = CheckDatasUtil.checkData(datas, noNullKeys);
+		
+		Map<String, Object> checkMap = CheckDatasUtil.changeMsg(datas, noNullKeys);
 		if ((int) checkMap.get("status") != 1) {
 			return checkMap;
-		}
+		}*/
 		Map<String, Object> map = new HashMap<>();
 		String orderId = goodsInfo.get("order_id") + "";
 		map.put("order_id", orderId);
@@ -612,7 +613,7 @@ public class MorderServiceImpl implements MorderService {
 		morder.setDel_flag(0);
 		morder.setOrder_record_status(1);
 		morder.setCreate_date(new Date());
-		morder.setCreate_by(merchantId);
+		morder.setCreate_by(merchantName);
 		morder.setFcode(FCODE);
 		String randomDate = DateUtil.randomCreateDate();
 		morder.setOrderDate(randomDate);

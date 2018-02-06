@@ -32,6 +32,7 @@ import org.silver.shop.utils.InvokeTaskUtils;
 import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.AppUtil;
 import org.silver.util.CalculateCpuUtils;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service("manualService")
@@ -406,7 +408,7 @@ public class ManualService {
 				// readQBSheet(0, excel, errl, merchantId, serialNo);
 				invokeTaskUtils.startTask(1, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
-			} else if (columnTotalCount == 70) {// 国宗订单模板长度(加上序号列)
+			} else if (columnTotalCount == 71) {// 国宗订单模板长度(加上序号列)
 				// readGZSheet(0, excel, errl, merchantId,0,0);
 				// 用于前台区分哪家批次号
 				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
@@ -705,6 +707,7 @@ public class ManualService {
 		String senderAreaCode = "";// 发货人区域代码 国外填 000000
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
+		String brand = "";// 品牌
 		System.out.println("--------------开始循环表单中数据-----------");
 		int totalColumnCount = excel.getColumnCount(0);
 		try {
@@ -727,6 +730,31 @@ public class ManualService {
 					} else if (c == 4) {
 						System.out.println(value);// 运单号
 						waybill = value.trim();
+					} else if (c == 8) {
+						// 运输方式
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							transportModel = value.trim();
+						} else {
+							transportModel = "4";
+						}
+					} else if (c == 10) {
+						// 包装种类
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							packageType = Integer.parseInt(value.trim());
+						} else {
+							packageType = 4;
+						}
+					} else if (c == 13) {
+						// 净重
+						netWt = Double.parseDouble(value.trim());
+					} else if (c == 14) {
+						// 毛重
+						grossWt = Double.parseDouble(value.trim());
+					} else if (c == 15) {
+						// 箱件数
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							numOfPackages = Integer.parseInt(value.trim());
+						}
 					} else if (c == 16) {
 						System.out.println(value);// 商品名
 						goodsName = value.trim();
@@ -747,25 +775,19 @@ public class ManualService {
 					} else if (c == 24) {
 						System.out.println(value);// 收货人身份证
 						RecipientID = value.trim().replace("x", "X");
+					} else if (c == 26) {
+						senderName = value; // 发货人姓名
+					} else if (c == 27) {
+						senderCountry = value;// 发货人国家代码
+					} else if (c == 28) {
+						senderAreaCode = value;// 发货人区域代码 国外填 000000
+					} else if (c == 29) {
+						senderAddress = value;// 发货人地址
+					} else if (c == 30) {
+						senderTel = value;// 发货人电话
 					} else if (c == 33) {
 						System.out.println(value);// 商品货号
 						EntGoodsNo = value.replaceAll(" ", "");
-					} else if (c == 36) {
-						System.out.println(value);// 数量
-						total_count = Integer.parseInt(value.trim());
-					} else if (c == 40) {
-						System.out.println(value);// 单价
-						price = Double.parseDouble(value.trim());
-					} else if (c == 56) {
-						ciqGoodsNo = value;
-						System.out.println(value);// 商品国检备案号
-					} else if (c == 55) {
-						// 商品规格
-						goodsStyle = value;
-						System.out.println(value);
-					} else if (c == 39) {
-						hsCode = value.trim();
-						System.out.println(value);// HS编码
 					} else if (c == 34) {// 原产国
 						originCountry = value;
 						System.out.println(value);
@@ -778,15 +800,18 @@ public class ManualService {
 								unit = value;
 							}
 						}
+					} else if (c == 36) {
+						System.out.println(value);// 数量
+						total_count = Integer.parseInt(value.trim());
+					} else if (c == 40) {
+						System.out.println(value);// 单价
+						price = Double.parseDouble(value.trim());
+					} else if (c == 39) {
+						hsCode = value.trim();
+						System.out.println(value);// HS编码
 					} else if (c == 41) {// 币制
 						currCode = value;
 						System.out.println(value);
-					} else if (c == 13) {
-						// 净重
-						netWt = Double.parseDouble(value.trim());
-					} else if (c == 14) {
-						// 毛重
-						grossWt = Double.parseDouble(value.trim());
 					} else if (c == 51) {
 						// 第一法定数量
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -811,37 +836,26 @@ public class ManualService {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							secUnit = value;
 						}
-					} else if (c == 15) {
-						// 箱件数
+					} else if (c == 55) {
+						// 品牌
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							numOfPackages = Integer.parseInt(value.trim());
+							brand = value.trim();
 						}
-					} else if (c == 10) {
-						// 包装种类
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							packageType = Integer.parseInt(value.trim());
-						} else {
-							packageType = 4;
-						}
-					} else if (c == 8) {
-						// 运输方式
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							transportModel = value.trim();
-						} else {
-							transportModel = "4";
-						}
-					} else if (c == 26) {
-						senderName = value; // 发货人姓名
-					} else if (c == 27) {
-						senderCountry = value;// 发货人国家代码
-					} else if (c == 28) {
-						senderAreaCode = value;// 发货人区域代码 国外填 000000
-					} else if (c == 29) {
-						senderAddress = value;// 发货人地址
-					} else if (c == 30) {
-						senderTel = value;// 发货人电话
+					} else if (c == 56) {
+						// 商品规格
+						goodsStyle = value;
+						System.out.println(value);
+					} else if (c == 57) {
+						ciqGoodsNo = value;
+						System.out.println(value);// 商品国检备案号
 					}
 				}
+				if (!checkEntGoodsNoLength(EntGoodsNo)) {
+					String msg = "【表格】第" + (r + 1) + "行-->商品货号长度超过20,请核对商品货号是否正确!";
+					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
+					continue;
+				}
+
 				Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]-->收货人地址填写有误,请核对信息!";
@@ -868,7 +882,7 @@ public class ManualService {
 				JSONObject goodsInfo = new JSONObject();
 				goodsInfo.put("entGoodsNo", EntGoodsNo);
 				goodsInfo.put("HSCode", hsCode);
-				goodsInfo.put("Brand", goodsName);
+				goodsInfo.put("Brand", brand);
 				goodsInfo.put("BarCode", EntGoodsNo);
 				goodsInfo.put("GoodsName", goodsName);
 				goodsInfo.put("OriginCountry", originCountry);
@@ -896,6 +910,12 @@ public class ManualService {
 				goodsInfo.put("merchantName", merchantName);
 				String[] str = serialNo.split("_");
 				int serial = Integer.parseInt(str[1]);
+				Map<String, Object> reGoodsMap = checkGoodsInfo(goodsInfo);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
+					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
+					continue;
+				}
 				// 创建国宗订单
 				Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serial, dateSign, OrderDate,
 						FCY, Tax, ActualAmountPaid, RecipientName, RecipientID, RecipientTel, RecipientProvincesCode,
@@ -928,6 +948,36 @@ public class ManualService {
 			RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 		}
 		return statusMap;
+	}
+
+	private Map<String, Object> checkGoodsInfo(JSONObject goodsInfo) {
+
+		JSONArray datas = new JSONArray();
+		datas.add(goodsInfo);
+		List<String> noNullKeys = new ArrayList<>();
+		noNullKeys.add("entGoodsNo");
+		noNullKeys.add("HSCode");
+		noNullKeys.add("Brand");
+		// noNullKeys.add("BarCode");
+		noNullKeys.add("GoodsName");
+		noNullKeys.add("OriginCountry");
+		noNullKeys.add("CusGoodsNo");
+		noNullKeys.add("CIQGoodsNo");
+		noNullKeys.add("GoodsStyle");
+		noNullKeys.add("Unit");
+		noNullKeys.add("Price");
+		noNullKeys.add("Qty");
+		return CheckDatasUtil.changeMsg(datas, noNullKeys);
+	}
+
+	/**
+	 * 校验商品自编号是否超过海关要求长的
+	 * 
+	 * @param entGoodsNo
+	 * @return
+	 */
+	private boolean checkEntGoodsNoLength(String entGoodsNo) {
+		return StringEmptyUtils.isNotEmpty(entGoodsNo) && entGoodsNo.length() <= 20;
 	}
 
 	/**
@@ -1173,5 +1223,9 @@ public class ManualService {
 
 	public Map<String, Object> updateOldPaymentCreateBy() {
 		return morderService.updateOldPaymentCreateBy();
+	}
+
+	public static void main(String[] args) {
+		System.out.println("HX1800203GA666732284".length());
 	}
 }

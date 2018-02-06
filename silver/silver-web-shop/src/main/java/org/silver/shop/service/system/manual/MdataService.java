@@ -1,6 +1,7 @@
 package org.silver.shop.service.system.manual;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -157,6 +158,7 @@ public class MdataService {
 
 	/**
 	 * 按照国宗订单模板生成对应的excel模板
+	 * 
 	 * @param arr
 	 * @param filePath
 	 * @return
@@ -332,9 +334,9 @@ public class MdataService {
 				String strQty = rowIndex.getString("Qty").replace("{\"value\":", "").replace("}", "");
 				Qty = Integer.parseInt(strQty);
 				String strNetWt = rowIndex.getString("netWt").replace("{\"value\":", "").replace("}", "");
-				netWt = Double.parseDouble(strNetWt);
+				// netWt = Double.parseDouble(strNetWt);
 				String strGrossWt = rowIndex.getString("grossWt").replace("{\"value\":", "").replace("}", "");
-				grossWt = Double.parseDouble(strGrossWt);
+				// grossWt = Double.parseDouble(strGrossWt);
 				String strPrice = rowIndex.getString("Price").replace("{\"value\":", "").replace("}", "");
 				Price = Double.parseDouble(strPrice);
 				String strTotal = rowIndex.getString("Total").replace("{\"value\":", "").replace("}", "");
@@ -374,9 +376,12 @@ public class MdataService {
 					} else if (c == 12) {
 						excel.writCell(0, i + 1, c, senderName);
 					} else if (c == 13) {
+						// 发货人所在国家
 						excel.writCell(0, i + 1, c, senderCountry);
 					} else if (c == 15) {
-						excel.writCell(0, i + 1, c, senderAreaCode);
+						// 发货人所在市,2018-02-05客户要求填写本发货人国家相同编码
+						// excel.writCell(0, i + 1, c, senderAreaCode);
+						excel.writCell(0, i + 1, c, senderCountry);
 					} else if (c == 17) {
 						excel.writCell(0, i + 1, c, senderAddress);
 					} else if (c == 18) {
@@ -391,20 +396,20 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, OrderDocName);
 					} else if (c == 23) {
 						excel.writCell(0, i + 1, c, OrderDocTel);
-					}else if(c == 24){
-						//订单人所在国家（地区）代码
+					} else if (c == 24) {
+						// 订单人所在国家（地区）代码
 						excel.writCell(0, i + 1, c, "142");
-					}else if (c == 25) {
+					} else if (c == 25) {
 						excel.writCell(0, i + 1, c, RecipientCityName);
 					} else if (c == 31) {
 						excel.writCell(0, i + 1, c, senderCountry);
 					} else if (c == 32) {
 						excel.writCell(0, i + 1, c, senderCountry);
-					}else if(c == 36){
-						//是否转关
+					} else if (c == 36) {
+						// 是否转关
 						excel.writCell(0, i + 1, c, "N");
-					}else if (c == 37) {
-						//支付企业代码
+					} else if (c == 37) {
+						// 支付企业代码
 						excel.writCell(0, i + 1, c, "C000010000803304");
 					} else if (c == 38) {
 						excel.writCell(0, i + 1, c, "银盛支付服务股份有限公司");
@@ -418,12 +423,15 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, order_Id);
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
+					} else if (c == 53) {
+						// 进出口口岸2018-02-05 要求填写5141
+						excel.writCell(0, i + 1, c, "5141");
 					} else if (c == 54) {
 						excel.writCell(0, i + 1, c, EntGoodsNo);
-					} else if (c == 56) {
+					} else if (c == 55) {
 						// 品牌
 						excel.writCell(0, i + 1, c, Brand);
-					} else if (c == 55) {
+					} else if (c == 56) {
 						// 商品信息
 						excel.writCell(0, i + 1, c, GoodsName);
 					} else if (c == 57) {
@@ -436,23 +444,23 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, GoodsStyle);
 					} else if (c == 60) {
 						excel.writCell(0, i + 1, c, OriginCountry);
-					} else if(c == 61){
-						//包装种类
+					} else if (c == 61) {
+						// 包装种类
 						excel.writCell(0, i + 1, c, "2");
-					}
-					else if (c == 62) {
+					} else if (c == 62) {
 						excel.writCell(0, i + 1, c, Unit);
 					} else if (c == 63) {
 						excel.writCell(0, i + 1, c, Qty);
 					} else if (c == 64) {
-						excel.writCell(0, i + 1, c, netWt);
+						// 净重
+						excel.writCell(0, i + 1, c, strNetWt);
 					} else if (c == 65) {
-						excel.writCell(0, i + 1, c, grossWt);
-					}else if( c ==66){
-						//件数
+						//毛重
+						excel.writCell(0, i + 1, c, strGrossWt);
+					} else if (c == 66) {
+						// 件数
 						excel.writCell(0, i + 1, c, "1");
-					}
-					else if (c == 67) {
+					} else if (c == 67) {
 						excel.writCell(0, i + 1, c, Price);
 					} else if (c == 68) {
 						excel.writCell(0, i + 1, c, Total);
@@ -480,14 +488,12 @@ public class MdataService {
 		return null;
 	}
 
-	
-
 	// 读取缓存中excel导入实时数据
-	public Map<String, Object> readExcelRedisInfo(String serialNo,String name) {
+	public Map<String, Object> readExcelRedisInfo(String serialNo, String name) {
 		Map<String, Object> statusMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
-	//	String key = "Shop_Key_ExcelIng_"+dateSign+"_"+serialNo;
+		// String key = "Shop_Key_ExcelIng_"+dateSign+"_"+serialNo;
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null && redisByte.length > 0) {
 			return (Map<String, Object>) SerializeUtil.toObject(redisByte);
@@ -496,5 +502,11 @@ public class MdataService {
 			statusMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
 			return statusMap;
 		}
+	}
+
+	public static void main(String[] args) {
+		DecimalFormat df = new DecimalFormat("0.00");
+		double d = 1.043352;
+		System.out.println(df.format(d));
 	}
 }

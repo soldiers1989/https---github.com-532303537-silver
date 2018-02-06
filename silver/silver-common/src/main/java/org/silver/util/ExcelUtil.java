@@ -23,6 +23,8 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Header;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -34,15 +36,13 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.WorksheetDocument;
 
-
-
 public class ExcelUtil {
-    
-	private Workbook book=null;
+
+	private Workbook book = null;
 	private HSSFWorkbook wb = null;
-//	private XSSFWorkbook xb=null;
+	// private XSSFWorkbook xb=null;
 	private Sheet sheet = null;
-//	private XSSFSheet xsheet = null;
+	// private XSSFSheet xsheet = null;
 
 	private Row row = null;
 	private XSSFRow xrow = null;
@@ -78,7 +78,7 @@ public class ExcelUtil {
 		this.sheet = sheet;
 	}
 
-	public   Row getRow() {
+	public Row getRow() {
 		return row;
 	}
 
@@ -148,10 +148,10 @@ public class ExcelUtil {
 				System.out.println("文件不存在，创建一个");
 				try {
 					HSSFWorkbook workbook = new HSSFWorkbook();
-					
+
 					FileOutputStream fileOut = new FileOutputStream(f.getPath());
 					workbook.write(fileOut);
-					fileOut.close(); 
+					fileOut.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -168,12 +168,12 @@ public class ExcelUtil {
 
 			} else {
 				fls = new FileInputStream(f);
-				try{
+				try {
 					book = new XSSFWorkbook(f);
-				}catch (Exception e){
-					//e.printStackTrace();
+				} catch (Exception e) {
+					// e.printStackTrace();
 					book = new HSSFWorkbook(new POIFSFileSystem(fls));
-				//    book = new HSSFWorkbook(new FileInputStream(f));
+					// book = new HSSFWorkbook(new FileInputStream(f));
 				}
 				fls.close();
 				System.out.println("文件存在，读取内容");
@@ -210,7 +210,7 @@ public class ExcelUtil {
 	}
 
 	public void closeExcel() {
-		if(book!=null){
+		if (book != null) {
 			try {
 				book.close();
 			} catch (IOException e) {
@@ -232,7 +232,7 @@ public class ExcelUtil {
 	public void writRow(int sheetNum, int rowNum, List<Object> l) {
 		int n = l.size();
 		if (sheetNum < 0 || rowNum < 0 || n <= 0) {
-		//	System.out.println("参数出错！");
+			// System.out.println("参数出错！");
 		} else {
 			for (int i = 0; i < n; i++) {
 				writCell(sheetNum, rowNum, i, l.get(i));
@@ -248,11 +248,12 @@ public class ExcelUtil {
 	public void writRow(List<Object> l) {
 		writRow(this.sheetNum, this.rowNum, l);
 	}
-    public void mergeCells(int row,int line,int endRow,int endLine){
-    	 CellRangeAddress cra=new CellRangeAddress(row, line, endRow, endLine);     
-    	 sheet.addMergedRegion(cra);
-    }
-   
+
+	public void mergeCells(int row, int line, int endRow, int endLine) {
+		CellRangeAddress cra = new CellRangeAddress(row, line, endRow, endLine);
+		sheet.addMergedRegion(cra);
+	}
+
 	// ---------------------------------------
 	// ---------------写入列内容---------------
 	// ---------------------------------------
@@ -280,40 +281,40 @@ public class ExcelUtil {
 	// ---------------------------------------
 	public void writCell(int sheetNum, int rowNum, int cellNum, Object message) {
 		if (sheetNum < 0 || rowNum < 0 || cellNum < 0) {
-		//	System.out.println("参数出错！");
+			// System.out.println("参数出错！");
 		} else {
 			try {
-			
-				sheet=	book.getSheetAt(sheetNum);
-			
+
+				sheet = book.getSheetAt(sheetNum);
+
 			} catch (IllegalArgumentException e) {
-				sheet=	book.createSheet("sheet" + (sheetNum + 1));
-			
+				sheet = book.createSheet("sheet" + (sheetNum + 1));
+
 			}
 			// System.out.println(rowNum + "," + cellNum);
-			if (rowNum >= getRowCount() ) {
-					row = sheet.createRow(rowNum);
-					RowCount++;
-			//	System.out.println("创建行:" + row);
+			if (rowNum >= getRowCount()) {
+				row = sheet.createRow(rowNum);
+				RowCount++;
+				// System.out.println("创建行:" + row);
 			} else {
-				
-					row = sheet.getRow(rowNum);
-					if (row == null)
-						row = sheet.createRow(rowNum);
-				
-				//System.out.println("读取行:" + row);
+
+				row = sheet.getRow(rowNum);
+				if (row == null)
+					row = sheet.createRow(rowNum);
+
+				// System.out.println("读取行:" + row);
 			}
 			// save();
-			   Cell cell = null;
-				if (cellNum <= row.getLastCellNum()) {
-					cell = row.getCell(cellNum);
-					if (cell == null)
-						cell = row.createCell(cellNum);
-				} else {
+			Cell cell = null;
+			if (cellNum <= row.getLastCellNum()) {
+				cell = row.getCell(cellNum);
+				if (cell == null)
 					cell = row.createCell(cellNum);
-				}
+			} else {
+				cell = row.createCell(cellNum);
+			}
 			if (message != null) {
-				//System.out.println(message + "message");
+				// System.out.println(message + "message");
 				message = message + "";
 				if (message.getClass().getName().equals("java.lang.Integer")) {
 					cell.setCellValue((Integer) message);
@@ -393,9 +394,9 @@ public class ExcelUtil {
 
 	public int getColumnCount(int sheetNum, int rowNum) {
 		if (book != null) {
-		    Sheet sheet = book.getSheetAt(sheetNum);
+			Sheet sheet = book.getSheetAt(sheetNum);
 			Row row = sheet.getRow(rowNum);
-			if(row==null){
+			if (row == null) {
 				return 0;
 			}
 			int rowcount = -1;
@@ -468,18 +469,19 @@ public class ExcelUtil {
 		return getCell(this.sheetNum, rowNum, cellNum);
 	}
 
-	public String getCell(int sheetNum, int rowNum, int cellNum)  {
+	public String getCell(int sheetNum, int rowNum, int cellNum) {
 		if (sheetNum < 0 || rowNum < 0) {
 			return null;
 		}
 		String cell = null;
 		sheet = book.getSheetAt(sheetNum);
 		row = sheet.getRow(rowNum);
-	
+
 		if (row.getCell(cellNum) != null) {
 			switch (row.getCell(cellNum).getCellType()) {
 			case Cell.CELL_TYPE_FORMULA:
-				cell = "FORMULA";
+				//cell = "FORMULA";
+				cell = String.valueOf(formulaEvaluation(row.getCell(cellNum)).getNumberValue());
 				break;
 			case Cell.CELL_TYPE_NUMERIC:
 				cell = String.valueOf(row.getCell(cellNum).getNumericCellValue());
@@ -500,10 +502,16 @@ public class ExcelUtil {
 		}
 		return cell;
 	}
-
 	
-	 
-	
+	/**
+	 * 用于转换excel表单中公式下的数值
+	 * @param cell
+	 * @return CellValue
+	 */
+	private CellValue formulaEvaluation(Cell cell) {
+	    FormulaEvaluator formulaEval = book.getCreationHelper().createFormulaEvaluator();
+	    return formulaEval.evaluate(cell);
+	}
 	// ---------------------------------------
 	// ---------------------------------------
 	/**
@@ -511,36 +519,33 @@ public class ExcelUtil {
 	 * @throws ParseException
 	 */
 	public static void main(String[] args) throws ParseException {
-		//StudentDao std = new StudentDao();
-	//	List<Object> stuL = null;//std.findByProperty("school_id", "11010001");
-		
-			File f = new File("C:\\Users\\Administrator\\Desktop\\ysTest.xls");
+		// StudentDao std = new StudentDao();
+		// List<Object> stuL = null;//std.findByProperty("school_id",
+		// "11010001");
 
-			ExcelUtil excel = new ExcelUtil(f);
-			excel.open();
-			System.out.println(excel.getCell(1, 0));
-			/*for (int i = 0; i < 5; i++) {
-				
-				for (int c = 0; c < 5; c++) {
-					
-					if (c == 0) {
-						excel.writCell(0, i + 1, c, "grade_name");
-					} else if (c == 1) {
-						excel.writCell(0, i + 1, c, "class_name");
-					} else if (c == 2) {
-						excel.writCell(0, i + 1, c, "s_uuid");
-					} else if (c == 3) {
-						excel.writCell(0, i + 1, c, "student_name");
-					} else if (c == 4) {
-						excel.writCell(0, i + 1, c, "gender");
-					}
+		File f = new File("C:\\Users\\Administrator\\Desktop\\ysTest.xls");
 
-				}*/
-			//}
-	//}
-			
-		//	excel.save();
-		//}
+		ExcelUtil excel = new ExcelUtil(f);
+		excel.open();
+		System.out.println(excel.getCell(1, 0));
+		/*
+		 * for (int i = 0; i < 5; i++) {
+		 * 
+		 * for (int c = 0; c < 5; c++) {
+		 * 
+		 * if (c == 0) { excel.writCell(0, i + 1, c, "grade_name"); } else if (c
+		 * == 1) { excel.writCell(0, i + 1, c, "class_name"); } else if (c == 2)
+		 * { excel.writCell(0, i + 1, c, "s_uuid"); } else if (c == 3) {
+		 * excel.writCell(0, i + 1, c, "student_name"); } else if (c == 4) {
+		 * excel.writCell(0, i + 1, c, "gender"); }
+		 * 
+		 * }
+		 */
+		// }
+		// }
+
+		// excel.save();
+		// }
 
 		// 第一个sheet 第二个参数 行 第三个参数；列
 

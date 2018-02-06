@@ -73,49 +73,59 @@ public class CheckDatasUtil {
 		} else {
 			msg = reDataMap.get(BaseCode.MSG.toString()) + "";
 			msg = msg.replace("条数据", "个商品");
-			if (msg.contains("shelfGName")) {
-				msg = msg.replace("shelfGName", "商品上架名称");
-			} else if (msg.contains("ncadCode")) {
-				msg = msg.replace("ncadCode", "行邮税号");
-			} else if (msg.contains("hsCode")) {
-				msg = msg.replace("hsCode", "HS编码");
-			} else if (msg.contains("goodsName")) {
-				msg = msg.replace("goodsName", "商品名称");
-			} else if (msg.contains("goodsStyle")) {
-				msg = msg.replace("goodsStyle", "商品规格");
-			} else if (msg.contains("brand")) {
+			msg = msg.toLowerCase();
+			if (msg.contains("shelfgname")) {
+				msg = msg.replace("shelfgname", "商品上架名称");
+			} else if (msg.contains("ncadcode")) {
+				msg = msg.replace("ncadcode", "行邮税号");
+			} else if (msg.contains("hscode") ) {
+				msg = msg.replace("hscode", "HS编码");
+			} else if (msg.contains("goodsname") ) {
+				msg = msg.replace("goodsname", "商品名称");
+			} else if (msg.contains("goodsstyle") ) {
+				msg = msg.replace("goodsstyle", "商品规格");
+			} else if (msg.contains("brand") ) {
 				msg = msg.replace("brand", "品牌");
-			} else if (msg.contains("gUnit")) {
-				msg = msg.replace("gUnit", "申报计量单位");
-			} else if (msg.contains("stdUnit")) {
-				msg = msg.replace("stdUnit", "第一计量单位");
-			} else if (msg.contains("regPrice")) {
-				msg = msg.replace("regPrice", "单价");
-			} else if (msg.contains("giftFlag")) {
-				msg = msg.replace("giftFlag", "是否赠品标识");
-			} else if (msg.contains("originCountry")) {
-				msg = msg.replace("originCountry", "原产国");
+			} else if (msg.contains("gunit") ) {
+				msg = msg.replace("gunit", "申报计量单位");
+			} else if (msg.contains("stdunit")) {
+				msg = msg.replace("stdunit", "第一计量单位");
+			} else if (msg.contains("regprice") ) {
+				msg = msg.replace("regprice", "单价");
+			} else if (msg.contains("giftflag")) {
+				msg = msg.replace("giftflag", "是否赠品标识");
+			} else if (msg.contains("origincountry")  ) {
+				msg = msg.replace("origincountry", "原产国");
 			} else if (msg.contains("quality")) {
 				msg = msg.replace("quality", "商品品质及说明");
 			} else if (msg.contains("manufactory")) {
 				msg = msg.replace("manufactory", "生产厂家或供应商");
-			} else if (msg.contains("netWt")) {
-				msg = msg.replace("netWt", "净重");
-			} else if (msg.contains("grossWt")) {
-				msg = msg.replace("grossWt", "毛重");
+			} else if (msg.contains("netwt")) {
+				msg = msg.replace("netwt", "净重");
+			} else if (msg.contains("grosswt")) {
+				msg = msg.replace("grosswt", "毛重");
 			} else if (msg.contains("ingredient")) {
 				msg = msg.replace("ingredient", "成分");
-			} else if (msg.contains("eportGoodsNo")) {
-				msg = msg.replace("eportGoodsNo", "跨境公共平台商品备案申请号");
-			} else if (msg.contains("ciqGoodsNo")) {
-				msg = msg.replace("ciqGoodsNo", "检验检疫商品备案编号");
-			} else if (msg.contains("cusGoodsNo")) {
-				msg = msg.replace("cusGoodsNo", "海关正式备案编号");
-			} else if (msg.contains("entGoodsNo")) {
-				msg = msg.replace("entGoodsNo", "企业商品自编号");
-			}
+			} else if (msg.contains("eportgoodsno")) {
+				msg = msg.replace("eportgoodsno", "跨境公共平台商品备案申请号");
+			} else if (msg.contains("ciqgoodsno")) {
+				msg = msg.replace("ciqgoodsno", "检验检疫商品备案编号");
+			} else if (msg.contains("cusgoodsno")) {
+				msg = msg.replace("cusgoodsno", "海关正式备案编号");
+			} else if (msg.contains("entgoodsno")) {
+				msg = msg.replace("entgoodsno", "企业商品自编号");
+			}else if (msg.contains("qty")) {
+				msg = msg.replace("qty", "数量");
+			}else if (msg.contains("unit") ) {
+				msg = msg.replace("unit", "计量单位");
+			} 
 			reDataMap.put(BaseCode.MSG.toString(), msg);
 			return reDataMap;
 		}
+	}
+	
+	public static void main(String[] args) {
+		String str = "A啊B不c";
+		System.out.println(str.toLowerCase());
 	}
 }
