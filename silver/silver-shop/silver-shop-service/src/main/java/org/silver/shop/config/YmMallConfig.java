@@ -33,4 +33,5 @@ public class YmMallConfig {
 	 * 手工支付单备案异步回调URL
 	 */
 	public static final String MANUALPAYMENTNOTIFYURL = YM+"/silver-web-shop/payment/rePayNotifyMsg";
+	
 }

@@ -73,6 +73,7 @@ public class CheckDatasUtil {
 		} else {
 			msg = reDataMap.get(BaseCode.MSG.toString()) + "";
 			msg = msg.replace("条数据", "个商品");
+			//将所有key值转换为小写,实现通用
 			msg = msg.toLowerCase();
 			if (msg.contains("shelfgname")) {
 				msg = msg.replace("shelfgname", "商品上架名称");

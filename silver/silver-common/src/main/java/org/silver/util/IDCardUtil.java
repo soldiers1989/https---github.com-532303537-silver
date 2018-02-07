@@ -147,8 +147,8 @@ public final class IDCardUtil {
 	}
 
 	public static void main(String[] args) throws Throwable {
-		String idcard1 = "11010519491231002X";
-		String idcard2 = "440524188001010014";
+		String idcard1 = "430624199204035964";
+		String idcard2 = "430624199204035964";
 		System.out.println(IDCardUtil.getGenderFromPersonIDCode(idcard1));
 		System.out.println(IDCardUtil.isIdentity(idcard2));
 	}

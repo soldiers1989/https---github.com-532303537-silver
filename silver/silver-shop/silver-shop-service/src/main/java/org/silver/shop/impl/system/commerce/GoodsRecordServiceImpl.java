@@ -1249,7 +1249,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
 		}
-		String goodsRecordSerialNo = SerialNoUtils.getSerialNotTimestamp("GR_", year, goodsRecordSerialNoCount);
+		// 查询缓存中商品自编号自增Id
+		int count = SerialNoUtils.getRedisIdCount("goods");
+		String goodsRecordSerialNo = SerialNoUtils.getSerialNo("GR", count);
 		goodsRecordDetail.setEntGoodsNo(goodsRecordSerialNo);
 		// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
 		goodsRecordDetail.setStatus(4);
@@ -1611,12 +1613,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> goodsMap = (Map<String, Object>) jsonList.get(i);
-			int status = 0 ;
+			int status = 0;
 			try {
-				status = Integer.parseInt(goodsMap.get("status")+"");
+				status = Integer.parseInt(goodsMap.get("status") + "");
 				// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案,3-审核不通过
 				if (status == 1 || status == 3) {
-					
+
 				} else {
 					return ReturnInfoUtils.errorInfo("已备案商品状态参数错误,请重试!");
 				}
@@ -1638,7 +1640,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				List<GoodsContent> reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, paramMap, 1, 1);
 				if (reGoodsList != null && !reGoodsList.isEmpty()) {
 					GoodsContent goodsInfo = reGoodsList.get(0);
-				
+
 					// if (status == 2) {
 					goodsRecordInfo.setRecordFlag(status);
 					goodsRecordInfo.setStatus(2);

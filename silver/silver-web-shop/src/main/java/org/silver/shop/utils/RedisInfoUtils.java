@@ -18,9 +18,9 @@ public class RedisInfoUtils {
 	 * @param serialNo
 	 *            批次号
 	 * @param name
-	 *            名称
+	 *            名称(标识)
 	 * @param type
-	 *            1-错误,2-警告订单超额,3-详细地址信息错误...待续
+	 *            1-错误,2-警告订单超额,3-详细地址信息错误,4-身份证校验不通过.....待续
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, int totalCount,
 			String serialNo, String name, int type) {

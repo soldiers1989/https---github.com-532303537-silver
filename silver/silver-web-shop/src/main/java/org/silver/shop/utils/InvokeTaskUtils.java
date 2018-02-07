@@ -8,8 +8,10 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.task.GZExcelTask;
+import org.silver.shop.task.NotRGExcelTask;
 import org.silver.shop.task.QBExcelTask;
 import org.silver.util.AppUtil;
 import org.silver.util.CalculateCpuUtils;
@@ -27,11 +29,14 @@ public class InvokeTaskUtils {
 	@Autowired
 	private ManualService manualService;
 
+	@Autowired
+	private GoodsRecordTransaction goodsRecordTransaction;
+
 	/**
 	 * 启动线程,根据启动线程数量对应CPU数
 	 * 
 	 * @param flag
-	 *            1-企邦,2-国宗
+	 *            1-企邦(手工订单导入),2-国宗(手工订单导入),3-(批量导入未)备案商品
 	 * @param totalCount
 	 *            总行数
 	 * @param file
@@ -43,13 +48,14 @@ public class InvokeTaskUtils {
 	 * @param serialNo
 	 *            导入批次号
 	 * @param merchantName
+	 *            商户名称
 	 */
 	public void startTask(int flag, int totalCount, File file, String merchantId, String serialNo,
 			String merchantName) {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
 		List<Map<String, Object>> errl = new Vector();
 		// 开始行数
-		int startCount = flag == 1 ? 2 : 1;
+		int startCount = flag == 2 ? 1 : 2;
 		// 结束行数
 		int end = 0;
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
@@ -106,7 +112,7 @@ public class InvokeTaskUtils {
 	 * 根据需求判断启动对应的线程进行Excel信息读取
 	 * 
 	 * @param flag
-	 *            1-企邦,2-国宗
+	 *            1-企邦(手工订单导入),2-国宗(手工订单导入),3-(批量导入未)备案商品
 	 * @param excelC
 	 *            工具类
 	 * @param errl
@@ -124,7 +130,7 @@ public class InvokeTaskUtils {
 	 * @param threadPool
 	 *            线程池
 	 * @param merchantName
-	 * 
+	 *           商户名称
 	 */
 	private void startTask(int flag, ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
 			int startCount, int end, String serialNo, int totalCount, ExecutorService threadPool, String merchantName) {
@@ -137,9 +143,22 @@ public class InvokeTaskUtils {
 			invokeGZExcelTask(excelC, errl, merchantId, startCount, end, manualService, serialNo, totalCount,
 					threadPool, merchantName);
 			break;
+		case 3:
+			invokeNotRecordGoodsExcelTask(excelC, errl, merchantId, startCount, end, goodsRecordTransaction, serialNo,
+					totalCount, threadPool, merchantName);
+			break;
 		default:
 			break;
 		}
+	}
+
+	// 调用导入未备案商品任务
+	private void invokeNotRecordGoodsExcelTask(ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
+			int startCount, int endCount, GoodsRecordTransaction goodsRecordTransaction, String serialNo,
+			int totalCount, ExecutorService threadPool, String merchantName) {
+		NotRGExcelTask task = new NotRGExcelTask( excelC, errl, merchantId, startCount, endCount,
+				goodsRecordTransaction, serialNo, totalCount, merchantName);
+		threadPool.submit(task);
 	}
 
 	// 调用国宗多任务
@@ -158,5 +177,9 @@ public class InvokeTaskUtils {
 		QBExcelTask task = new QBExcelTask(0, excel, errl, merchantId, startCount, endCount, manualService, serialNo,
 				totalCount, merchantName);
 		threadPool.submit(task);
+	}
+
+	public static void main(String[] args) {
+		System.out.println(1 != 2 ? 1 : 2);
 	}
 }

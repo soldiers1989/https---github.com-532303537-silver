@@ -423,9 +423,12 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, order_Id);
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
-					} else if (c == 53) {
+					} else if (c == 52) {
 						// 进出口口岸2018-02-05 要求填写5141
 						excel.writCell(0, i + 1, c, "5141");
+					} else if (c == 53) {
+						// 快递公司
+						excel.writCell(0, i + 1, c, "邮政快递");
 					} else if (c == 54) {
 						excel.writCell(0, i + 1, c, EntGoodsNo);
 					} else if (c == 55) {
@@ -455,7 +458,7 @@ public class MdataService {
 						// 净重
 						excel.writCell(0, i + 1, c, strNetWt);
 					} else if (c == 65) {
-						//毛重
+						// 毛重
 						excel.writCell(0, i + 1, c, strGrossWt);
 					} else if (c == 66) {
 						// 件数

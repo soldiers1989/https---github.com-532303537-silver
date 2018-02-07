@@ -33,7 +33,7 @@ public class IdCardController {
 	@ApiOperation("管理员查询所有身份证信息")
 	@RequiresRoles("Manager")
 	public String getAllIdCard(HttpServletRequest req, HttpServletResponse response, @RequestParam("page") int page,
-			@RequestParam("size") int size, String idName, String idNumber,int type) {
+			@RequestParam("size") int size, String idName, String idNumber,String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

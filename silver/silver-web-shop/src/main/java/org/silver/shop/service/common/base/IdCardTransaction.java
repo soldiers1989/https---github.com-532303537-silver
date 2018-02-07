@@ -13,7 +13,7 @@ public class IdCardTransaction {
 	@Reference
 	private IdCardService idCardService;
 	
-	public Map<String,Object> getAllIdCard(int page, int size, String idName,String idNumber, int type) {
+	public Map<String,Object> getAllIdCard(int page, int size, String idName,String idNumber, String type) {
 		return idCardService.getAllIdCard(idName,idNumber,page,size,type);
 	}
 
@@ -27,4 +27,13 @@ public class IdCardTransaction {
 		return idCardService.firstUpdateIdCardInfo();
 	}
 
+	
+	public static void main(String[] args) {
+		for(int i =0 ;i<5; i++){
+			if(i==1){
+				continue;
+			}
+		}
+		System.out.println("----------------");
+	}
 }

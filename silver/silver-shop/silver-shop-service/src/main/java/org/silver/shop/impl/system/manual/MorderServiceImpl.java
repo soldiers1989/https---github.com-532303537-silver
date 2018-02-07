@@ -567,7 +567,11 @@ public class MorderServiceImpl implements MorderService {
 		// 校验企邦是否已经录入已备案商品信息
 		String entGoodsNo = item.get("entGoodsNo") + "";
 		String marCode = item.get("marCode") + "";
-		params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		if(StringEmptyUtils.isNotEmpty(marCode)){
+			params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		}else{
+			params.put("entGoodsNo", entGoodsNo.trim());
+		}
 		params.put("goodsMerchantId", merchantId);
 		List<GoodsRecordDetail> goodsList = morderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 		if (goodsList == null || goodsList.isEmpty()) {
@@ -659,7 +663,11 @@ public class MorderServiceImpl implements MorderService {
 			}
 			param.put("entGoodsNo", reEntGoodsNo);
 			param.put("HSCode", goods.getHsCode());
-			param.put("Brand", goods.getBrand());
+			if(StringEmptyUtils.isEmpty(goods.getBrand())){
+				param.put("Brand", reEntGoodsNo);
+			}else{
+				param.put("Brand", goods.getBrand());
+			}
 			param.put("BarCode", goods.getBarCode());
 			param.put("CusGoodsNo", goods.getCusGoodsNo());
 			param.put("CIQGoodsNo", goods.getCiqGoodsNo());
@@ -773,7 +781,7 @@ public class MorderServiceImpl implements MorderService {
 			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, paramMap, 1, 1);
 			if (reOrderList != null && !reOrderList.isEmpty()) {
 				Morder order = reOrderList.get(0);
-				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
+				//if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
 					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
 					switch (flag) {
 					case 1:
@@ -788,9 +796,9 @@ public class MorderServiceImpl implements MorderService {
 					default:
 						return ReturnInfoUtils.errorInfo("修改订单或商品标识错误,请重新输入!");
 					}
-				} else {
-					return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
-				}
+			//	} else {
+				//	return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
+				//}
 			} else {
 				return ReturnInfoUtils.errorInfo("订单不存在,请核实订单信息!");
 			}

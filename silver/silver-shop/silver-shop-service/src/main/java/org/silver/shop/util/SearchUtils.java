@@ -72,22 +72,22 @@ public final class SearchUtils {
 				break;
 			case "startDate":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					Calendar cal = Calendar.getInstance();
+					/*Calendar cal = Calendar.getInstance();
 					cal.setTime(DateUtil.parseDate(value + ""));
-					Date startDate = cal.getTime();
-					paramMap.put(key, startDate);
+					Date startDate = cal.getTime();*/
+					paramMap.put(key, DateUtil.parseDate2(value + ""));
 				}
 				break;
 			case "endDate":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					Calendar cal = Calendar.getInstance();
+				/*	Calendar cal = Calendar.getInstance();
 					cal.setTime(DateUtil.parseDate(value + ""));
 					cal.set(Calendar.HOUR, 23);
 					cal.set(Calendar.MINUTE, 59);
 					cal.set(Calendar.SECOND, 59);
 					cal.set(Calendar.MILLISECOND, 999);
-					Date endDate = cal.getTime();
-					paramMap.put(key, endDate);
+					Date endDate = cal.getTime();*/
+					paramMap.put(key, DateUtil.parseDate2(value + ""));
 				}
 				break;
 			case "status":

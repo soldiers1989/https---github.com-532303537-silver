@@ -13,7 +13,7 @@ public interface IdCardService {
 	 * @param type  类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
 	 * @return Map
 	 */
-	public Map<String,Object> getAllIdCard(String idName, String idNumber, int page, int size, int type);
+	public Map<String,Object> getAllIdCard(String idName, String idNumber, int page, int size, String type);
 
 	/**
 	 * 管理员修改身份证信息

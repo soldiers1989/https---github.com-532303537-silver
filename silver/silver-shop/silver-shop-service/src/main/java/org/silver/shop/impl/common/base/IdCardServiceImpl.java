@@ -11,6 +11,7 @@ import org.silver.shop.api.common.base.IdCardService;
 import org.silver.shop.dao.common.base.IdCardDao;
 import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ public class IdCardServiceImpl implements IdCardService {
 	private IdCardDao idCardDao;
 
 	@Override
-	public Map<String, Object> getAllIdCard(String idName, String idNumber, int page, int size, int type) {
-		if (page >= 0 && size >= 0 && type >= 0) {
+	public Map<String, Object> getAllIdCard(String idName, String idNumber, int page, int size, String type) {
+		if (page >= 0 && size >= 0 ) {
 			Map<String, Object> params = new HashMap<>();
 			if (StringEmptyUtils.isNotEmpty(idName)) {
 				params.put("name", idName);
@@ -33,8 +34,8 @@ public class IdCardServiceImpl implements IdCardService {
 			if (StringEmptyUtils.isNotEmpty(idNumber)) {
 				params.put("idNumber", idNumber);
 			}
-			if (type > 0) {
-				params.put("type", type);
+			if (StringEmptyUtils.isNotEmpty(type)) {
+				params.put("type", Integer.parseInt(type));
 			}
 			List<IdCard> idList = idCardDao.findByProperty(IdCard.class, params, page, size);
 			long count = idCardDao.findByPropertyCount(IdCard.class, params);
@@ -44,6 +45,7 @@ public class IdCardServiceImpl implements IdCardService {
 				params.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 				params.put(BaseCode.TOTALCOUNT.toString(), count);
 				params.put(BaseCode.DATAS.toString(), idList);
+				return params;
 			}
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
@@ -87,13 +89,18 @@ public class IdCardServiceImpl implements IdCardService {
 				String name = order.getOrderDocName();
 				idCard.setName(name);
 				idCard.setIdNumber(id);
-				idCard.setType(3);
+				//类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
+				if(IdcardValidator.isValidatedAllIdcard(id)){
+					idCard.setType(3);
+				}else{
+					idCard.setType(5);
+				}
 				idCard.setCreateBy("system");
 				idCard.setCreateDate(new Date());
 				idCard.setDeleteFlag(0);
 				params.put("idNumber", id);
 				List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 0, 0);
-				if(idCardList!=null && !idCardList.isEmpty()){
+				if (idCardList != null && !idCardList.isEmpty()) {
 					continue;
 				}
 				if (!idCardDao.add(idCard)) {

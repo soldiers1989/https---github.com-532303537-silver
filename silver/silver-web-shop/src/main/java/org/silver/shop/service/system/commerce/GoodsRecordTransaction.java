@@ -26,10 +26,15 @@ import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.CountryTransaction;
 import org.silver.shop.service.common.base.MeteringTransaction;
+import org.silver.shop.service.system.manual.ManualService;
+import org.silver.shop.utils.ExcelBufferUtils;
+import org.silver.shop.utils.InvokeTaskUtils;
+import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +61,10 @@ public class GoodsRecordTransaction {
 	private MeteringTransaction meteringTransaction;
 	@Autowired
 	private CountryTransaction countryTransaction;
+	@Autowired
+	private ExcelBufferUtils excelBufferUtils;
+	@Autowired
+	private InvokeTaskUtils invokeTaskUtils;
 
 	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	public Map<String, Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
@@ -167,7 +176,7 @@ public class GoodsRecordTransaction {
 
 	// 批量添加未备案商品信息
 	public Map<String, Object> batchAddNotRecordGoodsInfo(HttpServletRequest req) {
-		Vector  errl = new Vector();
+		Vector errl = new Vector();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
@@ -180,15 +189,27 @@ public class GoodsRecordTransaction {
 			File file = new File("/RecordGoodsAdd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(file);
-			batchAddNotRecordGoodsInfo(excel, errl, merchantId, merchantName);
+			// 总列数
+			int columnTotalCount = excel.getColumnCount(0, 0);
+			// 有数据的总行数
+			int realRowCount = ManualService.excelRealRowCount(excel.getRowCount(0), excel);
+			// 用于前台区查询缓存
+			String serialNo = "NotRecordGoods_" + SerialNoUtils.getSerialNo("NotRecordGoods");
+			// 模板多了一行说明
+			realRowCount = realRowCount + 1;
+			// readQBSheet(0, excel, errl, merchantId, serialNo);
+			invokeTaskUtils.startTask(3, realRowCount, file, merchantId, serialNo, merchantName);
+			// batchAddNotRecordGoodsInfo(excel, errl, merchantId,
+			// merchantName);
 			excel.closeExcel();
 			if (!file.delete()) {
 				System.out.println("----------文件没有删除-----");
 			}
 			reqMap.clear();
 			reqMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			reqMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			reqMap.put(BaseCode.MSG.toString(), "执行成功,正在读取数据.......");
 			reqMap.put(BaseCode.ERROR.toString(), errl);
+			reqMap.put("serialNo", serialNo);
 			return reqMap;
 		}
 		reqMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.toString());
@@ -196,9 +217,9 @@ public class GoodsRecordTransaction {
 		return reqMap;
 	}
 
-	private Map<String, Object> batchAddNotRecordGoodsInfo(ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String merchantName) {
-		Map<String, Object> recordContentMap = new HashMap<>();
+	public void batchAddNotRecordGoodsInfo(  ExcelUtil excel,
+			List<Map<String, Object>> errl, String merchantId, String serialNo, int startCount, int endCount,
+			int realRowCount, String merchantName) {
 		String shelfGName = ""; // 上架品名 在电商平台上的商品名称
 		String ncadCode = ""; // 行邮税号 商品综合分类表(NCAD)
 		String hsCode = ""; // HS编码
@@ -221,197 +242,180 @@ public class GoodsRecordTransaction {
 		String ingredient = "";// 成分(商品向南沙国检备案必填)
 		String additiveflag = "";// 超范围使用食品添加剂
 		String poisonflag = "";// 含有毒害物质
-
-		for (int r = 2; r <= excel.getRowCount(); r++) {
-			if (excel.getColumnCount(r) == 0) {
-				break;
-			}
-			for (int c = 0; c < excel.getColumnCount(); c++) {
-				String value = excel.getCell(r, c);
-				if (c == 0 && "".equals(value)) {
+		int totalColumnCount = excel.getColumnCount(0);
+		// for (int r = 2; r <= excel.getRowCount(); r++) {
+		for (int r = startCount; r <= endCount; r++) {
+			// if (excel.getColumnCount(r) == 0) { break; }
+			for (int c = 0; c < totalColumnCount; c++) {
+				String value = excel.getCell(0,r, c);
+			/*	if (c == 0 && "".equals(value)) {
 					recordContentMap.put("status", 1);
 					recordContentMap.put("msg", "导入完成");
-					recordContentMap.put("err", errl);
+					recordContentMap.put("err", errorList);
 					return recordContentMap;
-				}
-
+				}*/
 				switch (c) {
-				case 0:
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						shelfGName = value;
-					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "上架商品名称不能为空!");
-						errl.add(errMap);
-						continue;
-					}
-					break;
-
 				case 1:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						ncadCode = value;
-					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "行邮税号不能为空!");
-						errl.add(errMap);
+						shelfGName = value;
+					} else {						
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "上架商品名称不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 2:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						hsCode = value;
+						ncadCode = value;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "HS编码不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "行邮税号不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 3:
-					barCode = value;
-					break;
-				case 4:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						goodsName = value;
+						hsCode = value;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品名称不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "HS编码不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
+				case 4:
+					barCode = value;
+					break;
 				case 5:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						goodsStyle = value;
+						goodsName = value;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "型号规格不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品名称不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 6:
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						brand = value;
+						goodsStyle = value;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "品牌不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "型号规格不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 7:
-					if (StringUtils.isNotEmpty(value)) {
-						gUnit = findUnit(value);
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						brand = value;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "申报计量单位不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "品牌不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 8:
 					if (StringUtils.isNotEmpty(value)) {
-						stdUnit = findUnit(value);
+						gUnit = findUnit(value);
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "第一法定计量单位不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "申报计量单位不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 9:
+					if (StringUtils.isNotEmpty(value)) {
+						stdUnit = findUnit(value);
+					} else {
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "第一法定计量单位不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
+						continue;
+					}
+					break;
+				case 10:
 					if (StringUtils.isNotEmpty(value)) {
 						secUnit = findUnit(value);
 					} else {
 						secUnit = value;
 					}
 					break;
-				case 10:
+				case 11:
 					try {
 						regPrice = Double.parseDouble(value);
 					} catch (Exception e) {
 						e.printStackTrace();
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
+						continue;
 					}
 					break;
-				case 11:
+				case 12:
 					if (StringUtils.isNotEmpty(value)) {
 						giftFlag = value;
 						break;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "是否赠品不能为空!");
-						errl.add(errMap);
-						continue;
-					}
-				case 12:
-					if (StringUtils.isNotEmpty(value)) {
-						originCountry = value;
-						break;
-					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "原产国不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品是否赠品(标识)不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 				case 13:
 					if (StringUtils.isNotEmpty(value)) {
-						quality = value;
+						originCountry = value;
 						break;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品品质及说明不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品原产国不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 				case 14:
+					if (StringUtils.isNotEmpty(value)) {
+						quality = value;
+						break;
+					} else {
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品品质及说明不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
+						continue;
+					}
+				case 15:
 					qualityCertify = value;
 					break;
-				case 15:
+				case 16:
 					if (StringUtils.isNotEmpty(value)) {
 						manufactory = value;
 						break;
 					} else {
-						Map<String, Object> errMap = new HashMap<>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "生产厂家或供应商不能为空!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品生产厂家或供应商不能为空!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
-				case 16:
+				case 17:
 					try {
 						netWt = Double.parseDouble(value);
 					} catch (Exception e) {
 						e.printStackTrace();
-						Map<String, Object> errMap = new HashMap<String, Object>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!");
-						errl.add(errMap);
-						continue;
-					}
-					break;
-				case 17:
-					try {
-						grossWt = Double.parseDouble(value);
-					} catch (Exception e) {
-						e.printStackTrace();
-						Map<String, Object> errMap = new HashMap<String, Object>();
-						errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!");
-						errl.add(errMap);
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
 						continue;
 					}
 					break;
 				case 18:
-					notes = value;
+					try {
+						grossWt = Double.parseDouble(value);
+					} catch (Exception e) {
+						e.printStackTrace();
+						String msg = "【未备案商品表】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!";
+						RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
+						continue;
+					}
 					break;
 				case 19:
-					ingredient = value;
+					notes = value;
 					break;
 				case 20:
-					additiveflag = value;
+					ingredient = value;
 					break;
 				case 21:
+					additiveflag = value;
+					break;
+				case 22:
 					poisonflag = value;
 					break;
 				default:
@@ -458,16 +462,19 @@ public class GoodsRecordTransaction {
 			Map<String, Object> item = goodsRecordService.batchCreateNotRecordGoods(goodsInfo, merchantId,
 					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
-				Map<String, Object> errMap = new HashMap<>();
-				errMap.put("msg", "【未备案商品表】第" + (r + 1) + "行-->" + item.get("msg"));
-				errl.add(errMap);
+				String msg = "【未备案商品表】第" + (r + 1) + "行-->" + item.get("msg");
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "NotRGImport", 1);
+				continue;
 			}
+			excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "NotRGImport");
 		}
-		recordContentMap.clear();
-		recordContentMap.put(BaseCode.STATUS.toString(), 1);
-		recordContentMap.put(BaseCode.MSG.toString(), "导入完成");
-		recordContentMap.put(BaseCode.ERROR.toString(), errl);
-		return recordContentMap;
+		
+		excel.closeExcel();
+		excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "NotRGImport");
+		//recordContentMap.clear();
+		//recordContentMap.put(BaseCode.STATUS.toString(), 1);
+		//recordContentMap.put(BaseCode.MSG.toString(), "导入完成");
+		//return recordContentMap;
 	}
 
 	/**
@@ -603,7 +610,8 @@ public class GoodsRecordTransaction {
 			File file = new File("/RecordGoodsAdd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(file);
-			return readRecordGoodsInfo(0, excel, errl, merchantId, merchantName);
+			String serialNo = "RecordGoods_" + SerialNoUtils.getSerialNo("RecordGoods");
+			return readRecordGoodsInfo(0, excel, errl, merchantId, merchantName, file, serialNo);
 			/*
 			 * excel.closeExcel(); if (!file.delete()) {
 			 * System.out.println("--------excel文件没有删除-----"); } reqMap.clear();
@@ -619,12 +627,17 @@ public class GoodsRecordTransaction {
 	}
 
 	private Map<String, Object> readRecordGoodsInfo(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String merchantName) {
+			String merchantId, String merchantName, File file, String serialNo) {
 		Map<String, Object> item = readRecordGoodsHeadSheed(sheet, excel, errl, merchantId, merchantName);
 		if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 			return item;
 		} else {
 			String goodsSerialNo = item.get("goodsSerialNo") + "";
+			// 有数据的总行数
+			// int realRowCount =
+			// ManualService.excelRealRowCount(excel.getRowCount(0), excel);
+			// invokeTaskUtils.startTask(1, realRowCount, file, merchantId,
+			// serialNo, merchantName);
 			return readRecordGoodsDetailSheed(1, excel, errl, merchantId, merchantName, goodsSerialNo);
 		}
 	}
@@ -969,11 +982,13 @@ public class GoodsRecordTransaction {
 				json.put("marCode", marCode);
 				json.put("SKU", entGoodsNoSKU);
 				goodsRecordDetail.setSpareParams(json.toString());
+				goodsRecordDetail.setEntGoodsNo(newEntGoodsNo);
+			}else{
+				goodsRecordDetail.setEntGoodsNo(entGoodsNo);
 			}
 			goodsRecordDetail.setEbEntNo(ebEntNo);
 			goodsRecordDetail.setEbEntName(ebEntName);
 			goodsRecordDetail.setSeq(seq);
-			goodsRecordDetail.setEntGoodsNo(newEntGoodsNo);
 			goodsRecordDetail.setEportGoodsNo(eportGoodsNo);
 			goodsRecordDetail.setCiqGoodsNo(ciqGoodsNo);
 			goodsRecordDetail.setCusGoodsNo(cusGoodsNo);

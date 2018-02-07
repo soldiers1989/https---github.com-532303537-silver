@@ -36,6 +36,7 @@ import org.silver.util.CheckDatasUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
+import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -432,7 +433,7 @@ public class ManualService {
 	 *            总行数
 	 * @param excel
 	 */
-	private int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
+	public static int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
 		int realRowCount = 0;
 		int totalColumnCount = excel.getColumnCount(0);
 		for (int r = rowTotalCount; r > 0; r--) {
@@ -483,8 +484,8 @@ public class ManualService {
 	 *            商户名称
 	 * @return Map
 	 */
-	public Map<String, Object> readQBSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String serialNo, int startCount, int endCount, int realRowCount, String merchantName) {
+	public void readQBSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId,
+			String serialNo, int startCount, int endCount, int realRowCount, String merchantName) {
 		int seqNo = 0;
 		String orderId = "";// 订单Id
 		String entGoodsNo = "";// 商品自编号
@@ -517,7 +518,7 @@ public class ManualService {
 						}
 					} else if (c == 1) {
 						// 订单Id
-						orderId = value;
+						orderId = value.trim();
 					} else if (c == 2) {
 						// 商品自编号
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -536,7 +537,7 @@ public class ManualService {
 							}
 						} catch (Exception e) {
 							Map<String, Object> errMap = new HashMap<>();
-							errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品单价输入错误!");
+							errMap.put(BaseCode.MSG.toString(), "【表格】第" + (r + 1) + "行,商品单价输入错误!");
 							errl.add(errMap);
 							break;
 						}
@@ -548,7 +549,7 @@ public class ManualService {
 							}
 						} catch (Exception e) {
 							Map<String, Object> errMap = new HashMap<>();
-							errMap.put(BaseCode.MSG.toString(), "第" + (r + 1) + "行,商品数量输入错误!");
+							errMap.put(BaseCode.MSG.toString(), "【表格】第" + (r + 1) + "行,商品数量输入错误!");
 							errl.add(errMap);
 							break;
 						}
@@ -567,7 +568,7 @@ public class ManualService {
 					} else if (c == 10) {
 						orderDocName = value;
 					} else if (c == 11) {
-						orderDocId = value;
+						orderDocId = value.trim().replace("x", "X");
 					} else if (c == 12) {
 						// 承运商
 						ehsEntName = value;
@@ -575,10 +576,15 @@ public class ManualService {
 						waybillNo = value;
 					}
 				}
+				if (!IdcardValidator.isValidatedAllIdcard(orderDocId)) {
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
+					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
+					// continue;
+				}
 				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
 				if (provinceMap == null) {
-					String msg = "订单号[" + orderId + "]收货人地址填写有误,请核对信息!";
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址填写有误,请核对信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 3);
 				}
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
@@ -621,16 +627,16 @@ public class ManualService {
 				item.put("marCode", marCode);
 				Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item, merchantName);
 				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时,继续将剩下的订单商品导入
-					String msg = orderMap.get("msg") + "";
+					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 2);
 				} else if (!"1".equals(orderMap.get("status") + "")) {
-					String msg = orderMap.get("msg") + "";
+					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 					continue;
 				}
 				Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item, merchantName);
-				if ((int) orderSubMap.get("status") != 1) {
-					String msg = orderSubMap.get("msg") + "";
+				if (!"1".equals(orderSubMap.get("status") + "")) {
+					String msg = "【表格】第" + (r + 1) + "行-->" + orderSubMap.get("msg") + "";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 				}
 				excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "orderImport");
@@ -640,7 +646,6 @@ public class ManualService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
 	}
 
 	/**
@@ -729,7 +734,9 @@ public class ManualService {
 						}
 					} else if (c == 4) {
 						System.out.println(value);// 运单号
-						waybill = value.trim();
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							waybill = value.replaceAll(" ", "");
+						}
 					} else if (c == 8) {
 						// 运输方式
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -851,24 +858,29 @@ public class ManualService {
 					}
 				}
 				if (!checkEntGoodsNoLength(EntGoodsNo)) {
-					String msg = "【表格】第" + (r + 1) + "行-->商品货号长度超过20,请核对商品货号是否正确!";
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 					continue;
 				}
-
+				if (!IdcardValidator.isValidatedAllIdcard(RecipientID)) {
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
+					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
+					// continue;
+				}
 				Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]-->收货人地址填写有误,请核对信息!";
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]收货人地址填写有误,请核对信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 3);
-				}
-				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
-				if (reProvinceCityAreaMap != null) {
-					areaCode = reProvinceCityAreaMap.get("areaCode") + "";
-					areaName = reProvinceCityAreaMap.get("areaName") + "";
-					cityCode = reProvinceCityAreaMap.get("cityCode") + "";
-					cityName = reProvinceCityAreaMap.get("cityName") + "";
-					provinceCode = reProvinceCityAreaMap.get("provinceCode") + "";
-					provinceName = reProvinceCityAreaMap.get("provinceName") + "";
+				}else{
+					Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
+					if (reProvinceCityAreaMap != null) {
+						areaCode = reProvinceCityAreaMap.get("areaCode") + "";
+						areaName = reProvinceCityAreaMap.get("areaName") + "";
+						cityCode = reProvinceCityAreaMap.get("cityCode") + "";
+						cityName = reProvinceCityAreaMap.get("cityName") + "";
+						provinceCode = reProvinceCityAreaMap.get("provinceCode") + "";
+						provinceName = reProvinceCityAreaMap.get("provinceName") + "";
+					}
 				}
 				OrderDocName = RecipientName;
 				OrderDocId = RecipientID;

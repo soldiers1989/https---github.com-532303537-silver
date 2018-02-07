@@ -2,33 +2,29 @@ package org.silver.shop.task;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
-import org.silver.shop.api.system.cross.PaymentService;
-import org.silver.shop.api.system.manual.MpayService;
+import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.util.ExcelUtil;
 import org.silver.util.TaskUtils;
 
 /**
- * 企邦Excel导入实现类
+ * 未备案商品子任务类
  *
  */
-public class QBExcelTask extends TaskUtils {
-
-	private int sheet;//
+public class NotRGExcelTask extends TaskUtils {
 	private ExcelUtil excel;//
 	private List<Map<String, Object>> errorList;//
 	private String merchantId;// 商户Id
 	private int startCount;// 开始行数
 	private int endCount;// 结束行数
-	private ManualService manualService;//
+	private GoodsRecordTransaction goodsRecordTransaction;//
 	private String serialNo;// 流水号
 	private int realRowCount;// 总行数
 	private String merchantName;// 商户名称
 
 	/**
-	 * excel多任务读取
+	 * excel多任务读取未备案商品
 	 * 
 	 * @param sheet
 	 * @param excel
@@ -36,18 +32,17 @@ public class QBExcelTask extends TaskUtils {
 	 * @param merchantId
 	 * @param startCount
 	 * @param endCount
-	 * @param manualService
+	 * @param goodsRecordTransaction
 	 * @param merchantName
 	 */
-	public QBExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int realRowCount, String merchantName) {
-		this.sheet = sheet;
+	public NotRGExcelTask(  ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
+			int endCount, GoodsRecordTransaction goodsRecordTransaction, String serialNo, int realRowCount, String merchantName) {
 		this.excel = excel;
 		this.errorList = errl;
 		this.merchantId = merchantId;
 		this.startCount = startCount;
 		this.endCount = endCount;
-		this.manualService = manualService;
+		this.goodsRecordTransaction = goodsRecordTransaction;
 		this.serialNo = serialNo;
 		this.realRowCount = realRowCount;
 		this.merchantName = merchantName;
@@ -58,11 +53,12 @@ public class QBExcelTask extends TaskUtils {
 		try {
 			System.out.println("------call方法--------");
 			excel.open();
-			manualService.readQBSheet(sheet, excel, errorList, merchantId, serialNo, startCount, endCount, realRowCount,
+			goodsRecordTransaction.batchAddNotRecordGoodsInfo( excel, errorList, merchantId, serialNo, startCount, endCount, realRowCount,
 					merchantName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
+
 }
