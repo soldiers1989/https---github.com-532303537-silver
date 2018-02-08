@@ -8,24 +8,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
-import org.silver.shop.controller.system.log.ErrorLogsController;
-import org.silver.shop.model.common.base.CustomsPort;
-import org.silver.shop.model.system.log.ErrorLogInfo;
 import org.silver.shop.service.system.log.ErrorLogsTransaction;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUtils;
-import org.silver.util.HttpUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
 import org.silver.util.SortUtil;
 import org.silver.util.StringEmptyUtils;
-import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import net.sf.json.JSONArray;
 
 /**
  * 主要用于Excel导入时写入缓冲数据
@@ -73,9 +65,6 @@ public class ExcelBufferUtils {
 
 	/**
 	 * 线程执行完成时写入缓存
-	 * 
-	 * @param status
-	 *            2-已完成
 	 * @param errl
 	 *            错误信息
 	 * @param totalCount
@@ -97,15 +86,13 @@ public class ExcelBufferUtils {
 			} else {
 				datasMap.put("count", statusCounter.getAndIncrement());
 			}
+			datasMap.put(BaseCode.STATUS.toString(), "1");
 			if (statusCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
-				datasMap.remove("count");
-				datasMap.remove("cpuCount");
 				// 重置计数器
 				counter = new AtomicInteger(0);
 				statusCounter = new AtomicInteger(0);
-
 				switch (name) {
 				case "orderImport":// 只有再订单导入时才需要排序错误
 					errl = SortUtil.sortList(errl);
@@ -120,6 +107,7 @@ public class ExcelBufferUtils {
 			datasMap.put(BaseCode.ERROR.toString(), errl);
 			datasMap.put("totalCount", totalCount);
 			datasMap.put("cpuCount", cpuCount);
+			datasMap.put("completed", counter.getAndIncrement());
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
@@ -136,5 +124,13 @@ public class ExcelBufferUtils {
 			}
 		}
 		return CalculateCpuUtils.calculateCpu(totalCount);
+	}
+	
+	public static void main(String[] args) {
+		for(int i =1;i<6 ;i ++){
+			System.out.println(statusCounter.getAndIncrement());
+		}
+		
+		System.out.println("-->>>>>>"+statusCounter.get());
 	}
 }

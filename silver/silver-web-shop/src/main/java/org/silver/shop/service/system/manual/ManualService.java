@@ -404,8 +404,8 @@ public class ManualService {
 			if (columnTotalCount == 14) { // 企邦模板表格长度(增加了序号列)
 				// 用于前台区分哪家批次号
 				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB");
-				// 企邦表单多了一行说明
-				realRowCount = realRowCount + 1;
+				// 多了一行说明
+				realRowCount += 1;
 				// readQBSheet(0, excel, errl, merchantId, serialNo);
 				invokeTaskUtils.startTask(1, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
@@ -505,15 +505,21 @@ public class ManualService {
 		// for (int r = 2; r <= rowTotalCount; r++) {
 		try {
 			for (int r = startCount; r <= endCount; r++) {
+				if (excel.getColumnCount(sheet, r) == 0) {
+					break;
+				}
 				for (int c = 0; c < totalColumnCount; c++) {
 					String value = excel.getCell(sheet, r, c);
+					if (c == 0 && "".equals(value)) {
+						break;
+					}
 					if (c == 0) {
 						// 序号
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
+							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
 							continue;
 						}
 					} else if (c == 1) {
@@ -578,14 +584,14 @@ public class ManualService {
 				}
 				if (!IdcardValidator.isValidatedAllIdcard(orderDocId)) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 4);
 					// continue;
 				}
 				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
 				if (provinceMap == null) {
-					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址填写有误,请核对信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 3);
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址不符合规范,请核对信息!";
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 3);
 				}
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
 				if (reProvinceCityAreaMap != null) {
@@ -628,23 +634,24 @@ public class ManualService {
 				Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item, merchantName);
 				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时,继续将剩下的订单商品导入
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 2);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 2);
 				} else if (!"1".equals(orderMap.get("status") + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
 					continue;
 				}
 				Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item, merchantName);
 				if (!"1".equals(orderSubMap.get("status") + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderSubMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
 				}
-				excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "orderImport");
+				excelBufferUtils.writeRedis(errl, (realRowCount -1), serialNo, "orderImport");
 			}
-			excel.closeExcel();
-			excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "orderImport");
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			excel.closeExcel();
+			excelBufferUtils.writeCompletedRedis(errl, (realRowCount -1), serialNo, "orderImport");
 		}
 	}
 
@@ -670,9 +677,8 @@ public class ManualService {
 	 * @param merchantName
 	 * @return Map
 	 */
-	public final Map<String, Object> readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, int startCount, int endCount, String serialNo, int realRowCount, String merchantName) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public final void readGZSheet(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId,
+			int startCount, int endCount, String serialNo, int realRowCount, String merchantName) {
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
 				RecipientTel = null, RecipientAddr = null, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
@@ -717,8 +723,14 @@ public class ManualService {
 		int totalColumnCount = excel.getColumnCount(0);
 		try {
 			for (int r = startCount; r <= endCount; r++) {
+				if (excel.getColumnCount(sheet, r) == 0) {
+					break;
+				}
 				for (int c = 0; c < totalColumnCount; c++) {
 					String value = excel.getCell(sheet, r, c);
+					if (c == 0 && "".equals(value)) {
+						break;
+					}
 					if (c == 0) {
 						// 序号
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -871,7 +883,7 @@ public class ManualService {
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]收货人地址填写有误,请核对信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 3);
-				}else{
+				} else {
 					Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
 					if (reProvinceCityAreaMap != null) {
 						areaCode = reProvinceCityAreaMap.get("areaCode") + "";
@@ -952,14 +964,14 @@ public class ManualService {
 				}
 				excelBufferUtils.writeRedis(errl, realRowCount, serialNo, "orderImport");
 			}
-			excel.closeExcel();
-			excelBufferUtils.writeCompletedRedis(errl, realRowCount, serialNo, "orderImport");
 		} catch (Exception e) {
 			e.printStackTrace();
 			String msg = "表格数据不正确,请核对是否所有数据都有格式化为文本!";
 			RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
+		} finally {
+			excel.closeExcel();
+			excelBufferUtils.writeCompletedRedis(errl, realRowCount, serialNo, "orderImport");
 		}
-		return statusMap;
 	}
 
 	private Map<String, Object> checkGoodsInfo(JSONObject goodsInfo) {

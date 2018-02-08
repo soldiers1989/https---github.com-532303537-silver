@@ -42,7 +42,7 @@ public class StockContent implements Serializable {
 	private double marketPrice;//商品(市场)价格
 	private double salePrice;//商品(特卖)价格
 	private double memberPrice;//商品(会员)价格
-	
+	private int readingCount;//商品浏览数量
 	private String reMark;//备用字段
 	public long getId() {
 		return id;
@@ -225,6 +225,12 @@ public class StockContent implements Serializable {
 	}
 	public void setReMark(String reMark) {
 		this.reMark = reMark;
+	}
+	public int getReadingCount() {
+		return readingCount;
+	}
+	public void setReadingCount(int readingCount) {
+		this.readingCount = readingCount;
 	}
 	
 	

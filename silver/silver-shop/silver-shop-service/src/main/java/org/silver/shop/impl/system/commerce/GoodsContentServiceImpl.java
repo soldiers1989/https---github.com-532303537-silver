@@ -227,6 +227,13 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			datas.put("goods", goods);
 			datas.put("stock", stockInfo);
 			lm.add(datas);
+			int reRedingCount  =stockInfo.getReadingCount();
+			stockInfo.setReadingCount(reRedingCount++);
+			if(!goodsContentDao.update(stockInfo)){
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
+				return statusMap;
+			}
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), lm);

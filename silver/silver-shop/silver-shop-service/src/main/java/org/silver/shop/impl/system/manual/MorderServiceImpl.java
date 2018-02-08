@@ -240,26 +240,20 @@ public class MorderServiceImpl implements MorderService {
 	@Override
 	public Map<String, Object> createNewSub(JSONObject goodsInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
-	/*	JSONArray datas = new JSONArray();
-		datas.add(goodsInfo);
-		List<String> noNullKeys = new ArrayList<>();
-		noNullKeys.add("entGoodsNo");
-		noNullKeys.add("HSCode");
-		noNullKeys.add("Brand");
-		// noNullKeys.add("BarCode");
-		noNullKeys.add("GoodsName");
-		noNullKeys.add("OriginCountry");
-		noNullKeys.add("CusGoodsNo");
-		noNullKeys.add("CIQGoodsNo");
-		noNullKeys.add("GoodsStyle");
-		noNullKeys.add("Unit");
-		noNullKeys.add("Price");
-		noNullKeys.add("Qty");
-		
-		Map<String, Object> checkMap = CheckDatasUtil.changeMsg(datas, noNullKeys);
-		if ((int) checkMap.get("status") != 1) {
-			return checkMap;
-		}*/
+		/*
+		 * JSONArray datas = new JSONArray(); datas.add(goodsInfo); List<String>
+		 * noNullKeys = new ArrayList<>(); noNullKeys.add("entGoodsNo");
+		 * noNullKeys.add("HSCode"); noNullKeys.add("Brand"); //
+		 * noNullKeys.add("BarCode"); noNullKeys.add("GoodsName");
+		 * noNullKeys.add("OriginCountry"); noNullKeys.add("CusGoodsNo");
+		 * noNullKeys.add("CIQGoodsNo"); noNullKeys.add("GoodsStyle");
+		 * noNullKeys.add("Unit"); noNullKeys.add("Price");
+		 * noNullKeys.add("Qty");
+		 * 
+		 * Map<String, Object> checkMap = CheckDatasUtil.changeMsg(datas,
+		 * noNullKeys); if ((int) checkMap.get("status") != 1) { return
+		 * checkMap; }
+		 */
 		Map<String, Object> map = new HashMap<>();
 		String orderId = goodsInfo.get("order_id") + "";
 		map.put("order_id", orderId);
@@ -402,7 +396,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.clear();
-		params.put("dateSign", dateSign);
+		// params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
 		params.put("merchant_no", merchant_no);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
@@ -466,7 +460,7 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	/**
-	 * 判断订单与订单商品信息是否存在,如果只是商品不存在则更新订单金额,如果订单与商品、序号都已存在则判定为重复导入
+	 * 判断订单与订单商品信息是否存在,如果只是商品不存在则更新订单金额,如果订单号+商品自编号+序号+商户Id查询商品是否已存在,已存在则判定为重复导入
 	 * 
 	 * @param morder
 	 *            订单信息
@@ -567,9 +561,9 @@ public class MorderServiceImpl implements MorderService {
 		// 校验企邦是否已经录入已备案商品信息
 		String entGoodsNo = item.get("entGoodsNo") + "";
 		String marCode = item.get("marCode") + "";
-		if(StringEmptyUtils.isNotEmpty(marCode)){
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
 			params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
-		}else{
+		} else {
 			params.put("entGoodsNo", entGoodsNo.trim());
 		}
 		params.put("goodsMerchantId", merchantId);
@@ -663,9 +657,9 @@ public class MorderServiceImpl implements MorderService {
 			}
 			param.put("entGoodsNo", reEntGoodsNo);
 			param.put("HSCode", goods.getHsCode());
-			if(StringEmptyUtils.isEmpty(goods.getBrand())){
+			if (StringEmptyUtils.isEmpty(goods.getBrand())) {
 				param.put("Brand", reEntGoodsNo);
-			}else{
+			} else {
 				param.put("Brand", goods.getBrand());
 			}
 			param.put("BarCode", goods.getBarCode());
@@ -781,24 +775,24 @@ public class MorderServiceImpl implements MorderService {
 			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, paramMap, 1, 1);
 			if (reOrderList != null && !reOrderList.isEmpty()) {
 				Morder order = reOrderList.get(0);
-				//if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
-					// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
-					switch (flag) {
-					case 1:
-						return editMorderInfo(order, strArr, merchantName);
-					case 2:
-						Map<String, Object> reOrderSubMap = editMorderSubInfo(orderId, strArr, merchantId,
-								merchantName);
-						if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
-							return reOrderSubMap;
-						}
-						return updateOrderAmount(order, merchantName);
-					default:
-						return ReturnInfoUtils.errorInfo("修改订单或商品标识错误,请重新输入!");
+				// if (order.getOrder_record_status() == 1 ||
+				// order.getOrder_record_status() == 4) {
+				// 1-修改订单信息,2-修改订单商品信息,3-订单及商品信息都修改
+				switch (flag) {
+				case 1:
+					return editMorderInfo(order, strArr, merchantName);
+				case 2:
+					Map<String, Object> reOrderSubMap = editMorderSubInfo(orderId, strArr, merchantId, merchantName);
+					if (!"1".equals(reOrderSubMap.get(BaseCode.STATUS.toString()))) {
+						return reOrderSubMap;
 					}
-			//	} else {
-				//	return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
-				//}
+					return updateOrderAmount(order, merchantName);
+				default:
+					return ReturnInfoUtils.errorInfo("修改订单或商品标识错误,请重新输入!");
+				}
+				// } else {
+				// return ReturnInfoUtils.errorInfo("订单当前状态不允许修改订单及商品信息!");
+				// }
 			} else {
 				return ReturnInfoUtils.errorInfo("订单不存在,请核实订单信息!");
 			}
@@ -1085,30 +1079,30 @@ public class MorderServiceImpl implements MorderService {
 				String merchantId = merchantInfo.getMerchantId();
 				params.put("merchant_no", merchantId);
 				List<Morder> reOrderList = morderDao.findByProperty(Morder.class, params, 0, 0);
-				
+
 				if (reOrderList != null && !reOrderList.isEmpty()) {
-					for(Morder order :reOrderList){
+					for (Morder order : reOrderList) {
 						String orderId = order.getOrder_id();
 						order.setCreate_by(merchantInfo.getMerchantName());
 						order.setUpdate_date(new Date());
 						order.setUpdate_by("system");
-						if(!morderDao.update(order)){
-							return ReturnInfoUtils.errorInfo("订单号["+order.getOrder_id()+"]更新订单错误!");
+						if (!morderDao.update(order)) {
+							return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]更新订单错误!");
 						}
 						params.clear();
 						params.put("order_id", orderId);
 						List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
-						if(reOrderSubList!=null && !reOrderSubList.isEmpty()){
-							for(MorderSub orderSub : reOrderSubList){
-								if(StringEmptyUtils.isEmpty(Integer.toString(orderSub.getSeqNo()))){
+						if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
+							for (MorderSub orderSub : reOrderSubList) {
+								if (StringEmptyUtils.isEmpty(Integer.toString(orderSub.getSeqNo()))) {
 									orderSub.setSeqNo(0);
 								}
 								orderSub.setMerchant_no(merchantId);
 								orderSub.setCreateBy(merchantInfo.getMerchantName());
 								orderSub.setUpdateDate(new Date());
 								orderSub.setUpdateBy("system");
-								if(!morderDao.update(orderSub)){
-									return ReturnInfoUtils.errorInfo("订单号["+order.getOrder_id()+"]更新订单商品错误!");
+								if (!morderDao.update(orderSub)) {
+									return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]更新订单商品错误!");
 								}
 							}
 						}
@@ -1131,15 +1125,15 @@ public class MorderServiceImpl implements MorderService {
 				params.put("merchant_no", merchantId);
 				List<Mpay> rePayList = morderDao.findByProperty(Mpay.class, params, 0, 0);
 				if (rePayList != null && !rePayList.isEmpty()) {
-					for(Mpay pay : rePayList){
+					for (Mpay pay : rePayList) {
 						pay.setCreate_by(merchantInfo.getMerchantName());
-						if(!morderDao.update(pay)){
+						if (!morderDao.update(pay)) {
 							return null;
 						}
 					}
 				}
 			}
-			
+
 		}
 		return null;
 	}

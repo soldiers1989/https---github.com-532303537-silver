@@ -3,11 +3,12 @@ package org.silver.shop.dao.system.commerce;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.dao.BaseDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
 
 import com.justep.baas.data.Table;
 
-public interface GoodsContentDao {
+public interface GoodsContentDao  extends BaseDao{
 
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
@@ -74,28 +75,6 @@ public interface GoodsContentDao {
 	 * @return
 	 */
 	public Table getAlreadyRecordGoodsBaseInfo( int firstType, int  secndType,int thirdType,int page, int size);
-	
-	
-	/**
-	 * 模糊查询总数
-	 * @param entity 类
-	 * @param params 查询参数
-	 * @return
-	 */
-	public long findByPropertyCount(Class entity,Map<String,Object> params);
-	
-	/**
-	 * 根据实体、列(名)、值模糊查询数据
-	 * 
-	 * @param entity
-	 *            实体名
-	 * @param params
-	 *            属性
-	 * @param page 页数
-	 * @param size 数目
-	 * @return List 
-	 */
-	public List<Object> findByPropertyLike(Class entity, Map<String, Object> params,Map blullyMap, int page, int size);
 	
 	/**
 	 * 模糊查询总数

@@ -2,10 +2,6 @@ package org.silver.shop.task;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-
-import org.silver.shop.api.system.cross.PaymentService;
-import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.util.ExcelUtil;
 import org.silver.util.TaskUtils;
@@ -25,7 +21,8 @@ public class GZExcelTask extends TaskUtils {
 	private ManualService manualService;//
 	private String serialNo;// 流水号
 	private int realRowCount;// 总行数
-	private String merchantName ;//商户名称
+	private String merchantName;// 商户名称
+
 	/**
 	 * excel多任务读取
 	 * 
@@ -36,7 +33,7 @@ public class GZExcelTask extends TaskUtils {
 	 * @param startCount
 	 * @param endCount
 	 * @param manualService
-	 * @param merchantName 
+	 * @param merchantName
 	 */
 	public GZExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
 			int endCount, ManualService manualService, String serialNo, int realRowCount, String merchantName) {
@@ -54,12 +51,13 @@ public class GZExcelTask extends TaskUtils {
 
 	@Override
 	public Map<String, Object> call() {
-		try{
+		try {
 			System.out.println("------call方法--------");
 			excel.open();
-			return manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo,
-					realRowCount,merchantName);
-		}catch (Exception e) {
+			manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo, realRowCount,
+					merchantName);
+			return null;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}

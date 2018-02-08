@@ -1236,19 +1236,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	public Map<String, Object> batchCreateNotRecordGoods(GoodsRecordDetail goodsRecordDetail, String merchantId,
 			String merchantName) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Date date = new Date();
-		Calendar calendar = Calendar.getInstance();
-		int year = calendar.get(Calendar.YEAR);
-		// 查询数据库字段名
-		String property2 = "entGoodsNo";
-		// 根据年份查询,当前年份下的id数量
-		long goodsRecordSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecordDetail.class, property2, year);
-		// 当返回-1时,则查询数据库失败
-		if (goodsRecordSerialNoCount < 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}
 		// 查询缓存中商品自编号自增Id
 		int count = SerialNoUtils.getRedisIdCount("goods");
 		String goodsRecordSerialNo = SerialNoUtils.getSerialNo("GR", count);
@@ -1260,7 +1247,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		goodsRecordDetail.setGoodsMerchantId(merchantId);
 		goodsRecordDetail.setGoodsMerchantName(merchantName);
 		goodsRecordDetail.setCreateBy(merchantName);
-		goodsRecordDetail.setCreateDate(date);
+		goodsRecordDetail.setCreateDate(new Date());
 		// 删除标识:0-未删除,1-已删除
 		goodsRecordDetail.setDeleteFlag(0);
 		// goodRecordInfo.setGoodsSerialNo(goodsRecordSerialNo);

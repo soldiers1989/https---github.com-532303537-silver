@@ -55,7 +55,13 @@ public class InvokeTaskUtils {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
 		List<Map<String, Object>> errl = new Vector();
 		// 开始行数
-		int startCount = flag == 2 ? 1 : 2;
+		int startCount = 0;
+		if (flag == 2) {
+			startCount = 1;
+		} else {
+			// 企邦表(银盟定义的模板)多了一行说明,所以开始行数为2
+			startCount = 2;
+		}
 		// 结束行数
 		int end = 0;
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
@@ -130,7 +136,7 @@ public class InvokeTaskUtils {
 	 * @param threadPool
 	 *            线程池
 	 * @param merchantName
-	 *           商户名称
+	 *            商户名称
 	 */
 	private void startTask(int flag, ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
 			int startCount, int end, String serialNo, int totalCount, ExecutorService threadPool, String merchantName) {
@@ -156,8 +162,8 @@ public class InvokeTaskUtils {
 	private void invokeNotRecordGoodsExcelTask(ExcelUtil excelC, List<Map<String, Object>> errl, String merchantId,
 			int startCount, int endCount, GoodsRecordTransaction goodsRecordTransaction, String serialNo,
 			int totalCount, ExecutorService threadPool, String merchantName) {
-		NotRGExcelTask task = new NotRGExcelTask( excelC, errl, merchantId, startCount, endCount,
-				goodsRecordTransaction, serialNo, totalCount, merchantName);
+		NotRGExcelTask task = new NotRGExcelTask(excelC, errl, merchantId, startCount, endCount, goodsRecordTransaction,
+				serialNo, totalCount, merchantName);
 		threadPool.submit(task);
 	}
 
@@ -180,6 +186,8 @@ public class InvokeTaskUtils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(1 != 2 ? 1 : 2);
+		for(int i =0 ; i <6 ; i ++){
+			System.out.println(i);
+		}
 	}
 }
