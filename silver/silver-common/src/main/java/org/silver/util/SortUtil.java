@@ -115,8 +115,8 @@ public class SortUtil {
 	}
 
 	/**
-	 * 
-	 * @Title: sortMap
+	 * 根据List集合内的Map中的msg信息找到第与行,进行错误消息排序
+	 * @Title: list
 	 * @Description: 对集合内的数据按key的字母顺序做排序
 	 */
 	public static List<Map<String, Object>> sortList(final List<Map<String, Object>> list) {
@@ -125,6 +125,10 @@ public class SortUtil {
 			Collections.sort(list, new Comparator<Map<String, Object>>() {
 				public int compare(Map<String, Object> o1, Map<String, Object> o2) {
 					String msg = o1.get("msg") + "";
+					//当截取时段为-1时,则证明消息不需要截取后排序,直接返回即可
+					if (msg.indexOf("第") < 0 && msg.indexOf("行") < 0) {
+						return 0;
+					}
 					String index1 = msg.substring(msg.indexOf("第") + 1, msg.indexOf("行"));
 					String msg2 = o2.get("msg") + "";
 					String index2 = msg2.substring(msg2.indexOf("第") + 1, msg2.indexOf("行"));
@@ -148,16 +152,16 @@ public class SortUtil {
 		map1.put("number", "第" + 2 + "行");
 		map2.put("number", "第" + 4 + "行");
 		map3.put("number", "第" + 3 + "行");
-	/*	map.put("number", 11 + "aaa");
-		map1.put("number", 2 + "ccc");
-		map2.put("number", 44 + "vvv");
-		map3.put("number", 3 + "sss");*/
+		/*
+		 * map.put("number", 11 + "aaa"); map1.put("number", 2 + "ccc");
+		 * map2.put("number", 44 + "vvv"); map3.put("number", 3 + "sss");
+		 */
 		list.add(map);
 		list.add(map1);
 		list.add(map2);
 		list.add(map3);
 		// map = new SortUtil().sortList(list);
-		//System.out.println(SortUtil.sortList(list));
+		// System.out.println(SortUtil.sortList(list));
 		// OrderByUtil.sortList(list, "sqlNo", "ASC");
 	}
 

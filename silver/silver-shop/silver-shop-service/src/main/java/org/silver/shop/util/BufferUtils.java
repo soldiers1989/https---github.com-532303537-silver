@@ -1,31 +1,23 @@
 package org.silver.shop.util;
 
-import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.api.system.log.ErrorLogsService;
-import org.silver.shop.impl.system.log.ErrorLogsServiceImpl;
-import org.silver.shop.model.system.log.ErrorLogInfo;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
-import org.silver.util.FileUtils;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
-import org.silver.util.SortUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 /**
- * 用于批量生成信息时,缓冲数据
+ * 用于批量生成支付单、发送支付单与订单时,缓冲数据
  *
  */
 @Component

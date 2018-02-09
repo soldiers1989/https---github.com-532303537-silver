@@ -106,7 +106,6 @@ public class SerialNoUtils {
 			byte[] redisByte = JedisUtil.get(key.getBytes(), 86400);
 			if (redisByte != null && redisByte.length > 0) {
 				Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-				System.out.println("---->>>>>>>>>>>>>>" + datasMap.get("count"));
 				count = Integer.parseInt(datasMap.get("count") + "");
 				count++;
 			}
@@ -145,8 +144,6 @@ public class SerialNoUtils {
 	 * 
 	 * @param topStr
 	 *            自编抬头
-	 * @param year
-	 *            年份
 	 * @param serialNoCount
 	 *            流水号数目
 	 * @return String

@@ -145,4 +145,15 @@ public interface MorderService {
 	 * @return
 	 */
 	public Map<String, Object> updateOldPaymentCreateBy();
+
+	/**
+	 * 商户根据时间段查询已备案成功的订单信息中的商品信息,添加至备案商品信息中
+	 * @param startTime 开始时间
+	 * @param endTime 结束时间
+	 * @param merchantName  商户名称
+	 * @param merchantId 商户Id
+	 * @param customsMap 
+	 * @return
+	 */
+	public Map<String, Object> updateManualOrderGoodsInfo(String startTime, String endTime, String merchantId, String merchantName, Map<String, Object> customsMap);
 }

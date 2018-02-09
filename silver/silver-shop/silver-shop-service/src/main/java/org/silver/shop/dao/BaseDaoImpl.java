@@ -380,7 +380,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	public List findByPropertyLike(Class entity, Map params, Map blurryMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
-		String treadeKey = "";
 		try {
 			session = getSession();
 			String hql = "from " + entName + " model ";
@@ -392,18 +391,18 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				while (is.hasNext()) {
 					property = is.next();
 					if ("startDate".equals(property)) {// 驼峰写法实体
-						hql = hql + "model.createDate " + " >= " + "? " + " and ";
+						hql += "model.createDate " + " >= " + "? " + " and ";
 					} else if ("endDate".equals(property)) {// 驼峰写法实体
-						hql = hql + "model.createDate " + " <= " + "?" + " and ";
+						hql += "model.createDate " + " <= " + "?" + " and ";
 					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
-						hql = hql + "model.create_date " + " >= " + "? " + " and ";
+						hql += "model.create_date " + " >= " + "? " + " and ";
 					} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
-						hql = hql + "model.create_date " + " <= " + "? " + " and ";
+						hql += "model.create_date " + " <= " + "? " + " and ";
 					} else if ("tradeNoFlag".equals(property)) {
-						hql = hql + "model.trade_no " + params.get(property) + " and ";
+						hql +=  "model.trade_no " + params.get(property) + " and ";
 						continue;
 					} else {
-						hql = hql + "model." + property + " = " + "?" + " and ";
+						hql +=  "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
 				}
@@ -413,8 +412,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " LIKE " + " ? " + " and ";
-					list.add("%"+blurryMap.get(property)+"%");
+					hql += "model." + property + " LIKE " + " ? " + " and ";
+					list.add("%" + blurryMap.get(property) + "%");
 				}
 			}
 			hql += " 1=1 Order By id DESC";
@@ -464,8 +463,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 					} else if ("tradeNoFlag".equals(property)) {
 						hql = hql + "model.trade_no " + params.get(property) + " and ";
 						continue;
-					}
-					else {
+					} else {
 						hql = hql + "model." + property + " = " + "?" + " and ";
 					}
 					list.add(params.get(property));
@@ -477,7 +475,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				while (is.hasNext()) {
 					property = is.next();
 					hql = hql + "model." + property + " LIKE " + " ? " + " and ";
-					list.add("%"+blurryMap.get(property)+"%");
+					list.add("%" + blurryMap.get(property) + "%");
 				}
 			}
 			hql += " 1=1 ";
@@ -613,7 +611,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	public static void main(String[] args) {
-		//ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
+		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
 		paramMap.put("firstTypeId", Long.parseLong("29"));

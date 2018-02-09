@@ -10,6 +10,7 @@ import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.GoodsContentDao;
 import org.silver.shop.model.system.commerce.GoodsContent;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
 
 import com.justep.baas.data.DataUtils;
@@ -86,9 +87,12 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 		Connection conn = null;
 		try {
 			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
-					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 AND t1.spareGoodsName LIKE ?";			
+					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 ";			
 			List<Object> sqlParams = new ArrayList<>();
-			sqlParams.add("%"+goodsName+"%");
+			if(StringEmptyUtils.isNotEmpty(goodsName)){
+				queryString+=" AND t1.spareGoodsName LIKE ?";
+				sqlParams.add("%"+goodsName+"%");
+			}
 			session = getSession();
 			Table l = null;
 			if (page > 0 && size > 0) {

@@ -2,6 +2,7 @@ package org.silver.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class SplitListUtils {
 			// 判断是否有必要分批
 			if (size < totalSize) {
 				int part = totalSize / size;// 分批数
-				System.out.println("共有 ： " + totalSize + "条，！" + " 每一次的长度 ：" + part + "");
+				System.out.println("共有 ： " + totalSize + "条，！" + " 每一次的长度 ：" + part );
 				//遍历需要创建List的长度
 				for (int i = 0; i < size; i++) {
 					if (i > 0 && size > 0) {
@@ -46,8 +47,8 @@ public class SplitListUtils {
 						end = (i + 1) * part;
 					}
 					List<Object> listPage = dataList.subList(start, end);
+					System.out.println("--->"+listPage);
 					list.add(listPage);
-					System.out.println(listPage);
 				}
 				datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.DATAS.toString(), list);
@@ -60,11 +61,15 @@ public class SplitListUtils {
 	}
 
 	public static void main(String[] args) {
-		List<Object> l = new ArrayList<>();
-		for (int i = 0; i < 200; i++) {
+		long startTime =System.currentTimeMillis();
+		List<Object> l = new ArrayList();
+		for (int i = 0; i < 1000000; i++) {
 			l.add(i);
 		}
 		Map<String, Object> map = batchList(l, 4);
+		
 		System.out.println(map);
+		long endTime =System.currentTimeMillis();
+		System.out.println("耗时："+(endTime - startTime)+"ms");
 	}
 }

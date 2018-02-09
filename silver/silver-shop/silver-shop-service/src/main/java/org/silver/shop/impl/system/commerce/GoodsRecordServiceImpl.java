@@ -462,16 +462,14 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private final Map<String, Object> saveRecordHeadInfo(String merchantId, String merchantName, CustomsPort portInfo,
 			Map<String, Object> mRecordMap) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reGoodsSerialNoMap = createGoodsSerialNo();
-		if (!"1".equals(reGoodsSerialNoMap.get(BaseCode.STATUS.toString()))) {
-			return reGoodsSerialNoMap;
-		}
-		String goodsSerialNo = reGoodsSerialNoMap.get(BaseCode.DATAS.toString()) + "";
+		// 查询缓存中商品自编号自增Id
+		int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+		String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
 		Date date = new Date();
 		GoodsRecord recordInfo = new GoodsRecord();
 		recordInfo.setMerchantId(merchantId);
 		recordInfo.setMerchantName(merchantName);
-		recordInfo.setGoodsSerialNo(goodsSerialNo);
+		recordInfo.setGoodsSerialNo(goodsRecordHeadSerialNo);
 		// 海关口岸代码 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		recordInfo.setCustomsPort(portInfo.getCustomsPort());
 		recordInfo.setCustomsPortName(portInfo.getCustomsPortName());
@@ -495,33 +493,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return statusMap;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.DATAS.toString(), goodsSerialNo);
-		return statusMap;
-	}
-
-	/**
-	 * 创建商品备案流水号
-	 * 
-	 * @return Map datas = goodsSerialNo
-	 */
-	private Map<String, Object> createGoodsSerialNo() {
-		Map<String, Object> statusMap = new HashMap<>();
-		Calendar calendar = Calendar.getInstance();
-		int year = calendar.get(Calendar.YEAR);
-		// 查询数据库字段名
-		String property = "goodsSerialNo";
-		// 根据年份查询,当前年份下的id数量
-		long goodsSerialNoCount = goodsRecordDao.findSerialNoCount(GoodsRecord.class, property, year);
-		// 当返回-1时,则查询数据库失败
-		if (goodsSerialNoCount < 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}
-		// 生成备案商品流水号
-		String goodsSerialNo = SerialNoUtils.getSerialNo("GR_", year, goodsSerialNoCount);
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.DATAS.getBaseCode(), goodsSerialNo);
+		statusMap.put(BaseCode.DATAS.toString(), goodsRecordHeadSerialNo);
 		return statusMap;
 	}
 
@@ -1858,11 +1830,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!warehousMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return warehousMap;
 		}
-		Map<String, Object> reGoodsSerialNoMap = createGoodsSerialNo();
-		if (!"1".equals(reGoodsSerialNoMap.get(BaseCode.STATUS.toString()))) {
-			return reGoodsSerialNoMap;
-		}
-		String goodsSerialNo = reGoodsSerialNoMap.get(BaseCode.DATAS.toString()) + "";
+		// 查询缓存中商品自编号自增Id
+		int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+		String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
 		// 根据商户编号,查询商户海关备案信息
 		paramMap.put("merchantId", merchantId);
 		List<Object> reMerchantRecordList = goodsRecordDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
@@ -1885,7 +1855,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		GoodsRecord goodsRecordInfo = new GoodsRecord();
 		goodsRecordInfo.setMerchantId(merchantId);
 		goodsRecordInfo.setMerchantName(merchantName);
-		goodsRecordInfo.setGoodsSerialNo(goodsSerialNo);
+		goodsRecordInfo.setGoodsSerialNo(goodsRecordHeadSerialNo);
 		goodsRecordInfo.setCustomsPort(customsPort);
 		goodsRecordInfo.setCustomsPortName(customsPortName);
 		goodsRecordInfo.setCustomsCode(customsCode);
@@ -1906,7 +1876,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put("goodsSerialNo", goodsSerialNo);
+		statusMap.put("goodsSerialNo", goodsRecordHeadSerialNo);
 		return statusMap;
 	}
 

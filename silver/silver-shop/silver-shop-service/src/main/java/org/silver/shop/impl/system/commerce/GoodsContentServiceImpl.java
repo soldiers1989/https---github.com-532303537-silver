@@ -18,6 +18,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.ConvertUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +28,11 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
-
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired
 	private GoodsContentDao goodsContentDao;
-
-
 
 	@Override
 	public Map<String, Object> createGoodsId() {
@@ -131,9 +129,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), total);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -156,7 +152,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		if (reList != null && !reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			goodsInfo = (GoodsContent) ConvertUtils.mapChangeToEntity(goodsInfo, datasMap);
-			if(goodsImage !=null && !"".equals(goodsImage) && !"null".equals(goodsImage)){
+			if (goodsImage != null && !"".equals(goodsImage) && !"null".equals(goodsImage)) {
 				goodsInfo.setGoodsImage(goodsImage);
 			}
 			goodsInfo.setUpdateDate(date);
@@ -171,9 +167,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -200,6 +194,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType, secndType, thirdType, page, size);
+		Table tCount = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType, secndType, thirdType, 0, 0);
 		if (t == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
@@ -208,6 +203,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(t));
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), tCount.getRows().size());
 			return statusMap;
 		}
 	}
@@ -227,21 +223,18 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			datas.put("goods", goods);
 			datas.put("stock", stockInfo);
 			lm.add(datas);
-			int reRedingCount  =stockInfo.getReadingCount();
-			stockInfo.setReadingCount(reRedingCount++);
-			if(!goodsContentDao.update(stockInfo)){
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-				return statusMap;
+			int reRedingCount = stockInfo.getReadingCount();
+			reRedingCount++;
+			stockInfo.setReadingCount(reRedingCount);
+			if (!goodsContentDao.update(stockInfo)) {
+				return ReturnInfoUtils.errorInfo("暂无数据!");
 			}
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.getBaseCode(), lm);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -272,27 +265,28 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), reGoodsRecordCount);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
 	@Override
 	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, page, size);
-		if (t == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), Transform.tableToJson(t));
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), t.getRows().size());
-			return statusMap;
+		if (page >= 0 && size >= 0) {
+			Map<String, Object> statusMap = new HashMap<>();
+			Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, page, size);
+			Table tCount = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, 0, 0);
+			if (t == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			} else {
+				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+				statusMap.put(BaseCode.DATAS.getBaseCode(), Transform.tableToJson(t));
+				statusMap.put(BaseCode.TOTALCOUNT.toString(), tCount.getRows().size());
+				return statusMap;
+			}
 		}
+		return ReturnInfoUtils.errorInfo("请求参数出错!");
+
 	}
 
 	@Override
@@ -345,9 +339,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 			statusMap.put(BaseCode.DATAS.toString(), goodsInfo);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 }

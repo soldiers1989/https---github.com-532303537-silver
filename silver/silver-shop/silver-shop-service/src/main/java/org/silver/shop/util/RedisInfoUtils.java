@@ -22,7 +22,7 @@ public class RedisInfoUtils {
 	 * @param name
 	 *            名称
 	 * @param tyep
-	 *            类型：1-错误,2-警告订单超额,3-详细地址信息错误...待续
+	 *             1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重,6-更新(已备案成功)手动订单商品..待续
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, int totalCount,
 			String serialNo, String name, int type) {

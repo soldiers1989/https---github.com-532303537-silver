@@ -32,6 +32,7 @@ import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.PaymentRecordTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CalculateCpuUtils;
@@ -67,6 +68,8 @@ public class PaymentServiceImpl implements PaymentService {
 	private BufferUtils bufferUtils;
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
+	@Autowired
+	private MerchantUtils merchantUtils;
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -129,7 +132,7 @@ public class PaymentServiceImpl implements PaymentService {
 			return customsMap;
 		}
 		// 获取商户在对应口岸的备案信息
-		Map<String, Object> merchantRecordMap = getMerchantRecordInfo(merchantId, eport);
+		Map<String, Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(merchantId, eport);
 		if (!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))) {
 			return merchantRecordMap;
 		}
@@ -260,35 +263,6 @@ public class PaymentServiceImpl implements PaymentService {
 			}
 		}
 		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "paymentRecord", merchantId, merchantName);
-	}
-
-	/**
-	 * 根据商户Id及口岸获取商户对应的备案信息
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param eport
-	 *            口岸
-	 * @return Map
-	 */
-	private final Map<String, Object> getMerchantRecordInfo(String merchantId, int eport) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> param = new HashMap<>();
-		param.put("merchantId", merchantId);
-		param.put("customsPort", eport);
-		List<MerchantRecordInfo> recordList = paymentDao.findByProperty(MerchantRecordInfo.class, param, 1, 1);
-		if (recordList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-		} else if (!recordList.isEmpty()) {
-			MerchantRecordInfo entity = recordList.get(0);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), entity);
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-		}
-		return statusMap;
 	}
 
 	// 更新支付单返回信息

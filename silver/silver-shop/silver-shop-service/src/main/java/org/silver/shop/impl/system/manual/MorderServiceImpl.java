@@ -1,14 +1,13 @@
 package org.silver.shop.impl.system.manual;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Resource;
 
@@ -18,24 +17,33 @@ import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MorderSubDao;
 import org.silver.shop.dao.system.manual.MuserDao;
+import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
+import org.silver.shop.model.common.base.CustomsPort;
+import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.Muser;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.task.UpdateMOrderGoodsTask;
+import org.silver.shop.util.BufferUtils;
+import org.silver.shop.util.InvokeTaskUtils;
+import org.silver.shop.util.MerchantUtils;
+import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
-import org.silver.util.CheckDatasUtil;
+import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
-import org.silver.util.JedisUtil;
-import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Row;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -49,7 +57,16 @@ public class MorderServiceImpl implements MorderService {
 	private MorderSubDao morderSubDao;
 	@Resource
 	private MuserDao muserDao;
+	@Autowired
+	private GoodsRecordServiceImpl goodsRecordServiceImpl;
+	@Autowired
+	private MerchantUtils merchantUtils;
+	@Autowired
+	private InvokeTaskUtils invokeTaskUtils;
+	@Autowired
+	private BufferUtils bufferUtils;
 
+	// 海关币制默认为人名币
 	private static final String FCODE = "142";
 
 	@Override
@@ -962,7 +979,8 @@ public class MorderServiceImpl implements MorderService {
 		order.setOrderDocId(strArr[15]);
 		order.setOrderDocTel(strArr[16]);
 		// order.setOrderDate(strArr[17]);
-		order.setTrade_no(strArr[18]);
+
+		// order.setTrade_no(strArr[18]);
 		// order.setDateSign(strArr[19]);
 		order.setWaybill(strArr[20]);
 		// order.setStatus(orderMap.get(""));
@@ -1137,4 +1155,225 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return null;
 	}
+
+	@Override
+	public Map<String, Object> updateManualOrderGoodsInfo(String startTime, String endTime, String merchantId,
+			String merchantName, Map<String, Object> customsMap) {
+		if (StringEmptyUtils.isNotEmpty(startTime) && StringEmptyUtils.isNotEmpty(endTime)
+				&& StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)) {
+			//
+			Map<String, Object> reDatasMap = checkInfo(merchantId, merchantName, customsMap);
+			if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+				return reDatasMap;
+			}
+			Map<String, Object> item = (Map<String, Object>) reDatasMap.get(BaseCode.DATAS.toString());
+			Map<String, Object> params = new HashMap<>();
+			// 查询缓存中商品自编号自增Id
+			int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+			String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
+			if (!saveGoodsRecordHead(item)) {
+				return ReturnInfoUtils.errorInfo("保存商品备案信息头错误,服务器繁忙!");
+			}
+			Long totalCountT = morderDao.getMOrderAndMGoodsInfoCount(merchantId, startTime, endTime, 0, 0);
+			// 获取总数
+			int totalCount = totalCountT.intValue();
+			// 创建线程池
+			ExecutorService threadPool = Executors.newCachedThreadPool();
+			// 获取流水号
+			String serialNo = "updateMOrderGoods_" + SerialNoUtils.getSerialNo("updateMOrderGoods");
+			Map<String,Object> reTaskMap = startTask(totalCount, merchantId, merchantName, startTime, endTime, serialNo, goodsRecordHeadSerialNo,
+					threadPool);
+			if(!"1".equals(reTaskMap.get(BaseCode.STATUS.toString()))){
+				return reTaskMap;
+			}
+			threadPool.shutdown();
+			params.clear();
+			params.put("serialNo", serialNo);
+			params.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			params.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return params;
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	private Map<String,Object> startTask(int totalCount, String merchantId, String merchantName, String startTime, String endTime,
+			String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
+		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
+		int page = 1;
+		int size = 0;
+		int counter = totalCount / cpuCount;
+		for (int i = 0; i < cpuCount; i++) {
+			if (page == cpuCount) {
+				// 最后一次长度 = 总数 - (最后一次) * 每一次长度
+				size = totalCount - ((cpuCount - 1) * counter);
+			} else {
+				size = 1 * counter;
+			}
+			Table table = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
+			page++;
+			if (table != null && !table.getRows().isEmpty()) {
+				// 获取表单中的List<Row>数据
+				List<Row> reOrderList = table.getRows();
+				// 错误List
+				Vector errorList = new Vector<>();
+				UpdateMOrderGoodsTask updateMOrderGoodsTask = new UpdateMOrderGoodsTask(reOrderList, merchantId,
+						merchantName, errorList, totalCount, serialNo, this, goodsRecordHeadSerialNo);
+				threadPool.submit(updateMOrderGoodsTask);
+			} else {
+				return ReturnInfoUtils.errorInfo("订单信息查询失败,服务器繁忙!");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	public void saveGoodsRecordContent(List<Row> dataList, String merchantId, String merchantName, List errorList,
+			int totalCount, String serialNo, String goodsRecordHeadSerialNo) {
+		Map<String, Object> params = new HashMap<>();
+		for (int i = 0; i < dataList.size(); i++) {
+			String entGoodsNo = dataList.get(i).getValue("EntGoodsNo") + "";
+			String orderId = dataList.get(i).getValue("order_id") + "";
+			params.clear();
+			params.put("entGoodsNo", entGoodsNo);
+			params.put("goodsMerchantId", merchantId);
+			List<GoodsRecordDetail> reGoodsContentList = morderDao.findByProperty(GoodsRecordDetail.class, params, 0,
+					0);
+			if (reGoodsContentList != null && !reGoodsContentList.isEmpty()) {
+				String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
+				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+				continue;
+			} else if (reGoodsContentList == null) {
+				String msg = "订单号[" + orderId + "]查询信息失败,服务器繁忙!";
+				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+				continue;
+			} else {
+				GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
+				int seq = Integer.parseInt(dataList.get(i).getValue("Seq") + "");
+				goodsRecordDetail.setSeq(seq);
+				goodsRecordDetail.setEntGoodsNo(entGoodsNo);
+				String ciqGoodsNo = dataList.get(i).getValue("CIQGoodsNo") + "";
+				goodsRecordDetail.setCiqGoodsNo(ciqGoodsNo);
+				String cusGoodsNo = dataList.get(i).getValue("CusGoodsNo") + "";
+				goodsRecordDetail.setCusGoodsNo(cusGoodsNo);
+				String goodsName = dataList.get(i).getValue("GoodsName") + "";
+				goodsRecordDetail.setShelfGName(goodsName);
+				goodsRecordDetail.setNcadCode("27000000");
+				String hsCode = dataList.get(i).getValue("HSCode") + "";
+				goodsRecordDetail.setHsCode(hsCode);
+				String barCode = dataList.get(i).getValue("BarCode") + "";
+				goodsRecordDetail.setBarCode(barCode);
+				goodsRecordDetail.setGoodsName(goodsName);
+				String goodsStyle = dataList.get(i).getValue("GoodsStyle") + "";
+				goodsRecordDetail.setGoodsStyle(goodsStyle);
+				String brand = dataList.get(i).getValue("Brand") + "";
+				goodsRecordDetail.setBrand(brand);
+				String unit = dataList.get(i).getValue("Unit") + "";
+				goodsRecordDetail.setgUnit(unit);
+				String stdUnit = dataList.get(i).getValue("stdUnit") + "";
+				goodsRecordDetail.setStdUnit(stdUnit);
+				Double price = Double.parseDouble(dataList.get(i).getValue("Price") + "");
+				goodsRecordDetail.setRegPrice(price);
+				goodsRecordDetail.setGiftFlag("1");
+				String originCountry = dataList.get(i).getValue("OriginCountry") + "";
+				goodsRecordDetail.setOriginCountry(originCountry);
+				goodsRecordDetail.setQuality("合格");
+				// 供应商
+				goodsRecordDetail.setManufactory(merchantName);
+				Double netWt = Double.parseDouble(dataList.get(i).getValue("netWt") + "");
+				goodsRecordDetail.setNetWt(netWt);
+				Double grossWt = Double.parseDouble(dataList.get(i).getValue("grossWt") + "");
+				goodsRecordDetail.setGrossWt(grossWt);
+				// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
+				goodsRecordDetail.setStatus(2);
+				// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案,3-审核不通过
+				goodsRecordDetail.setRecordFlag(0);
+				goodsRecordDetail.setCreateBy(merchantName);
+				goodsRecordDetail.setCreateDate(new Date());
+				goodsRecordDetail.setDeleteFlag(0);
+				goodsRecordDetail.setGoodsMerchantId(merchantId);
+				goodsRecordDetail.setGoodsMerchantName(merchantName);
+				goodsRecordDetail.setGoodsSerialNo(goodsRecordHeadSerialNo);
+				if (!morderDao.add(goodsRecordDetail)) {
+					String msg = "订单号[" + orderId + "]更新商品信息失败,未知错误!";
+					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+					continue;
+				}
+			}
+			bufferUtils.writeRedis(errorList, totalCount, serialNo, "updateMOrderGoods");
+		}
+		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "updateMOrderGoods", merchantId, merchantName);
+	}
+
+	/**
+	 * 检查前台传递海关信息及查询商户备案信息
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param customsMap
+	 *            海关口岸信息
+	 * @return Map
+	 */
+	private Map<String, Object> checkInfo(String merchantId, String merchantName, Map<String, Object> customsMap) {
+		int eport = Integer.parseInt(customsMap.get("eport") + "");
+		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
+		String customsCode = customsMap.get("customsCode") + "";
+		// 校验前台传递口岸、海关、智检编码
+		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
+		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
+			return reCustomsMap;
+		}
+		CustomsPort portInfo = (CustomsPort) reCustomsMap.get(BaseCode.DATAS.toString());
+		// 获取商户在对应口岸的备案信息
+		Map<String, Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(merchantId, eport);
+		if (!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))) {
+			return merchantRecordMap;
+		}
+		MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) merchantRecordMap.get(BaseCode.DATAS.toString());
+		Map<String, Object> item = new HashMap<>();
+		item.put("customsPort", portInfo.getCustomsPort());
+		item.put("customsPortName", portInfo.getCustomsPortName());
+		item.put("customsCode", portInfo.getCustomsCode());
+		item.put("customsName", portInfo.getCustomsName());
+		item.put("ciqOrgCode", portInfo.getCiqOrgCode());
+		item.put("ciqOrgName", portInfo.getCiqOrgName());
+		item.put("ebEntNo", merchantRecordInfo.getEbEntNo());
+		item.put("ebEntName", merchantRecordInfo.getEbEntName());
+		item.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
+		item.put("ebpEntName", merchantRecordInfo.getEbpEntName());
+		item.put("merchantId", merchantId);
+		item.put("merchantName", merchantName);
+		return ReturnInfoUtils.successDataInfo(item, 0);
+	}
+
+	/**
+	 * 根据查询出来的海关口岸信息及商户备案信息,创建商品备案信息头
+	 * 
+	 * @param customsMap
+	 *            海关口岸信息与商户备案信息
+	 * @return boolean
+	 */
+	private boolean saveGoodsRecordHead(Map<String, Object> customsMap) {
+		GoodsRecord goodsRecord = new GoodsRecord();
+		goodsRecord.setGoodsSerialNo(customsMap.get("goodsRecordHeadSerialNo") + "");
+		goodsRecord.setCustomsPort(Integer.parseInt(customsMap.get("customsPort") + ""));
+		goodsRecord.setCustomsPortName(customsMap.get("customsPortName") + "");
+		goodsRecord.setCustomsCode(customsMap.get("customsCode") + "");
+		goodsRecord.setCustomsName(customsMap.get("customsName") + "");
+		goodsRecord.setCiqOrgCode(customsMap.get("ciqOrgCode") + "");
+		goodsRecord.setCiqOrgName(customsMap.get("ciqOrgName") + "");
+		goodsRecord.setEbEntNo(customsMap.get("ebEntNo") + "");
+		goodsRecord.setEbEntName(customsMap.get("ebEntName") + "");
+		goodsRecord.setEbpEntNo(customsMap.get("ebpEntNo") + "");
+		goodsRecord.setEbpEntName(customsMap.get("ebpEntName") + "");
+		// 接收状态
+		goodsRecord.setStatus(1);
+		goodsRecord.setMerchantId(customsMap.get("merchantId") + "");
+		goodsRecord.setMerchantName(customsMap.get("merchantName") + "");
+		goodsRecord.setCreateBy(customsMap.get("merchantName") + "");
+		goodsRecord.setCreateDate(new Date());
+		goodsRecord.setDeleteFlag(0);
+		return morderDao.add(goodsRecord);
+	}
+
 }

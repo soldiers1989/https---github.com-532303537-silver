@@ -146,7 +146,7 @@ public class GoodsContentController {
 
 	@RequestMapping(value = "/getOneGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("前台根据商品ID查询商品基本信息")
+	@ApiOperation("前台根据商品自编号查询商品基本信息")
 	public String getOneGoodsBaseInfo(@RequestParam("entGoodsNo") String entGoodsNo, HttpServletRequest req,
 			HttpServletResponse response) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -180,7 +180,7 @@ public class GoodsContentController {
 	@RequestMapping(value = "/searchGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商城根据商品名搜索商品")
-	public String searchGoodsInfo(@RequestParam("goodsName") String goodsName, @RequestParam("page") int page,
+	public String searchGoodsInfo( String goodsName, @RequestParam("page") int page,
 			@RequestParam("size") int size, HttpServletRequest req, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

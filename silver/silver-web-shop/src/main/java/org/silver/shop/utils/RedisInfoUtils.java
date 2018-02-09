@@ -9,6 +9,7 @@ import org.silver.common.BaseCode;
 public class RedisInfoUtils {
 	/**
 	 * 公共缓存执行方法
+	 * 
 	 * @param msg
 	 *            错误信息
 	 * @param errorList
@@ -20,7 +21,7 @@ public class RedisInfoUtils {
 	 * @param name
 	 *            名称(标识)
 	 * @param type
-	 *            1-错误,2-警告订单超额,3-详细地址信息错误,4-身份证校验不通过.....待续
+	 *            1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重....待续
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, int totalCount,
 			String serialNo, String name, int type) {

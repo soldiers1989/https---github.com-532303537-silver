@@ -34,6 +34,7 @@ import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.silver.shop.task.OrderRecordTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
@@ -83,6 +84,8 @@ public class MpayServiceImpl implements MpayService {
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
 
+	@Autowired
+	private MerchantUtils merchantUtils;
 	/**
 	 * 查询商户钱包余额是否有足够的钱
 	 * 
@@ -294,35 +297,6 @@ public class MpayServiceImpl implements MpayService {
 		return statusMap;
 	}
 
-	/**
-	 * 根据商户Id及口岸获取商户对应的备案信息
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param eport
-	 *            口岸
-	 * @return Map
-	 */
-	private final Map<String, Object> getMerchantRecordInfo(String merchantId, int eport) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> param = new HashMap<>();
-		param.put("merchantId", merchantId);
-		param.put("customsPort", eport);
-		List<MerchantRecordInfo> recordList = morderDao.findByProperty(MerchantRecordInfo.class, param, 1, 1);
-		if (recordList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getStatus());
-		} else if (!recordList.isEmpty()) {
-			MerchantRecordInfo entity = recordList.get(0);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), entity);
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getStatus());
-		}
-		return statusMap;
-	}
-
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
@@ -343,7 +317,7 @@ public class MpayServiceImpl implements MpayService {
 			return reCustomsMap;
 		}
 		// 获取商户在对应口岸的备案信息
-		Map<String, Object> merchantRecordMap = getMerchantRecordInfo(merchantId, eport);
+		Map<String, Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(merchantId, eport);
 		if (!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))) {
 			return merchantRecordMap;
 		}

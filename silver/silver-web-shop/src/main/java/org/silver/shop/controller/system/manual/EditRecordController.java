@@ -33,6 +33,7 @@ import org.silver.util.FileUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -491,6 +492,7 @@ public class EditRecordController {
 		Map<String, Object> statusMap = manualService.updateOldCreateBy();
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
 	/**
 	 * 临时接口,由于修改之前的支付单信息生成时创建人为空,修改为商户名称
 	 * 
@@ -511,26 +513,36 @@ public class EditRecordController {
 		Map<String, Object> statusMap = manualService.updateOldPaymentCreateBy();
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	public static void main(String[] args) throws IOException {
-		File source = new File("C://Users/Lenovo/Desktop/国宗表单/国宗原订单/第51批999-43825025清单#200.xlsx");
-		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xls";
-		/*
-		 * File dest = new File(source.getParentFile() + "/" + imgName);
-		 * System.out.println(dest.getName()); try {
-		 * FileUtils.copyFileUsingFileChannels(source, dest); } catch
-		 * (IOException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
-		ExcelUtil excel = new ExcelUtil(source);
-		System.out.println("---->>" + excel.getFile());
-		excel.open();
-		int row = 0;
-		// 总行数
-		int rowTotalCount = excel.getRowCount(0);
-		System.out.println(rowTotalCount);
-		excel.closeExcel();
-		System.out.println(source.delete());
 
+	/**
+	 * 商户根据已备案成功的订单信息中的商品信息,添加至备案商品信息中
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/updateManualOrderGoodsInfo",method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("更新已备案成功的手工订单商品进备案信息")
+	@RequiresRoles("Merchant")
+	public String updateManualOrderGoodsInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime,
+			@RequestParam("eport") String eport, @RequestParam("ciqOrgCode") String ciqOrgCode,
+			@RequestParam("customsCode") String customsCode) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Enumeration<String> isKey = req.getParameterNames();
+		Map<String, Object> customsMap = new HashMap<>();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			customsMap.put(key, value);
+		}
+		Map<String, Object> statusMap = manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap);
+		return JSONObject.fromObject(statusMap).toString();
 	}
 
 }

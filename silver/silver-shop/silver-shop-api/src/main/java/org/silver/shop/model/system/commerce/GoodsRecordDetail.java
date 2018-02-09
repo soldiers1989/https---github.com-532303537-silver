@@ -81,7 +81,7 @@ public class GoodsRecordDetail implements Serializable {
 	private String ebEntName;// 电商企业名称
 	private String DZKNNo;// 电商企业海关备案号(电子口岸)
 	private String ebEntNo;// 电商企业编号(智检)
-	private String spareParams;// 备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
+	private String spareParams;// 备用时段,用于存放不同供货商的多余字段信息,存储格式为JSON
 
 	public long getId() {
 		return id;

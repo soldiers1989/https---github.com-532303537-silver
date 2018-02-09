@@ -56,8 +56,6 @@ public class ManualService {
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 	@Autowired
-	private MeteringTransaction meteringTransaction;
-	@Autowired
 	private ProvinceCityAreaTransaction provinceCityAreaTransaction;
 	@Autowired
 	private GoodsRecordTransaction goodsRecordTransaction;
@@ -519,7 +517,7 @@ public class ManualService {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
+							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 							continue;
 						}
 					} else if (c == 1) {
@@ -584,14 +582,14 @@ public class ManualService {
 				}
 				if (!IdcardValidator.isValidatedAllIdcard(orderDocId)) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 4);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 4);
 					// continue;
 				}
 				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> provinceMap = searchProvinceCityArea(recipientAddr);
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址不符合规范,请核对信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 3);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 3);
 				}
 				Map<String, Object> reProvinceCityAreaMap = doProvinceCityArea(provinceMap);
 				if (reProvinceCityAreaMap != null) {
@@ -634,24 +632,26 @@ public class ManualService {
 				Map<String, Object> orderMap = morderService.createQBOrder(merchantId, item, merchantName);
 				if ("10".equals(orderMap.get("status") + "")) {// 当遇到超额时,继续将剩下的订单商品导入
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 2);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 2);
 				} else if (!"1".equals(orderMap.get("status") + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 					continue;
 				}
 				Map<String, Object> orderSubMap = morderService.createQBOrderSub(merchantId, item, merchantName);
 				if (!"1".equals(orderSubMap.get("status") + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderSubMap.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "orderImport", 1);
+					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 1);
 				}
-				excelBufferUtils.writeRedis(errl, (realRowCount -1), serialNo, "orderImport");
+				excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "orderImport");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			String msg = "表格数据不符合规范,请核对所有数据都有格式化为文本,或排序是否正确!";
+			RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 		} finally {
 			excel.closeExcel();
-			excelBufferUtils.writeCompletedRedis(errl, (realRowCount -1), serialNo, "orderImport");
+			excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "orderImport");
 		}
 	}
 
@@ -874,10 +874,13 @@ public class ManualService {
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 					continue;
 				}
-				if (!IdcardValidator.isValidatedAllIdcard(RecipientID)) {
+				if (netWt > grossWt) {
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
+					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 5);
+				}
+				if (!IdcardValidator.isValidate18Idcard(RecipientID)) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
-					// continue;
 				}
 				Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
@@ -966,7 +969,7 @@ public class ManualService {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			String msg = "表格数据不正确,请核对是否所有数据都有格式化为文本!";
+			String msg = "表格数据不符合规范,请核对所有数据都有格式化为文本,或排序是否正确!";
 			RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 		} finally {
 			excel.closeExcel();
@@ -1249,7 +1252,14 @@ public class ManualService {
 		return morderService.updateOldPaymentCreateBy();
 	}
 
-	public static void main(String[] args) {
-		System.out.println("HX1800203GA666732284".length());
+	public Map<String, Object> updateManualOrderGoodsInfo(String startTime, String endTime,
+			Map<String, Object> customsMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return morderService.updateManualOrderGoodsInfo(startTime, endTime, merchantId, merchantName, customsMap);
 	}
 }
