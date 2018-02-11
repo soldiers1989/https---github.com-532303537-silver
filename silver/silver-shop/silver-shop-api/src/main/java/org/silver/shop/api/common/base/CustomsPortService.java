@@ -53,4 +53,13 @@ public interface CustomsPortService {
 	 * @return
 	 */
 	public boolean deleteCustomsPort(long id);
+
+	/**
+	 * 管理员修改已开通口岸信息
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
+	 * @param params 修改信息包
+	 * @return Map
+	 */
+	public Map<String,Object> modifyCustomsPort(String managerId, String managerName, Map<String, Object> params);
 }

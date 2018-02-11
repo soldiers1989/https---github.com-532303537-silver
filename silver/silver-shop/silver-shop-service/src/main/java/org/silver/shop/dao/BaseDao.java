@@ -198,10 +198,12 @@ public interface BaseDao<T> {
 			int page, int size);
 
 	/**
-	 * 单独根据实体、列(名)、值模糊查询数据
+	 * 单独根据实体、列(名)、值Or查询数据
 	 * 
 	 * @param entity
-	 *            * 实体名 * @param OrMap Or条件查询参数
+	 *            实体名
+	 * @param OrMap
+	 *            Or条件查询参数
 	 * @param page
 	 *            页数
 	 * @param size

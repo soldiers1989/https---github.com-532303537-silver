@@ -24,6 +24,7 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
+import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
@@ -86,6 +87,7 @@ public class MpayServiceImpl implements MpayService {
 
 	@Autowired
 	private MerchantUtils merchantUtils;
+
 	/**
 	 * 查询商户钱包余额是否有足够的钱
 	 * 
@@ -343,8 +345,8 @@ public class MpayServiceImpl implements MpayService {
 		params.put("tok", tok);
 		params.put("serialNo", serialNo);
 		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
-				 params);
-		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+				params);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
 		statusMap.put("status", 1);
@@ -632,7 +634,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 是否像海关发送
-		//orderMap.put("uploadOrNot", false);
+		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
@@ -693,7 +695,6 @@ public class MpayServiceImpl implements MpayService {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
-		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, Object> orMap = new HashMap<>();
 		orMap.put("order_serial_no", datasMap.get("messageID") + "");
 		orMap.put("order_id", datasMap.get("entOrderNo") + "");
@@ -701,30 +702,21 @@ public class MpayServiceImpl implements MpayService {
 		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 0, 0);
 		if (reList != null && !reList.isEmpty()) {
 			Morder order = reList.get(0);
-			paramMap.clear();
-			paramMap.put("merchantId", order.getMerchant_no());
-			List<Merchant> reMerchantList = morderDao.findByProperty(Merchant.class, paramMap, 1, 1);
-			Merchant merchant = null;
-			if (reMerchantList != null && !reMerchantList.isEmpty()) {
-				merchant = reMerchantList.get(0);
-			} else {
-				return ReturnInfoUtils.errorInfo("查询商户信息失败,请核对信息!");
+			String orderId = order.getOrder_id();
+			String merchantId = order.getMerchant_no();
+			Map<String, Object> reOrderMap = orderToll(merchantId, orderId, order.getFCY());
+			if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
+				return reOrderMap;
 			}
 			String status = datasMap.get("status") + "";
 			String note = order.getOrder_re_note();
-			if ("null".equals(note) || note == null) {
+			if (StringEmptyUtils.isEmpty(note)) {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				// 商户钱包扣钱进代理商钱包
-				Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(),
-						merchant.getMerchantName(), order.getOrder_id(), merchant.getProxyParentId(), order.getFCY(),
-						merchant.getProxyParentName());
-				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
-					return reUpdateWalletMap;
-				}
-				// 支付单备案状态修改为成功
 				order.setOrder_record_status(3);
+				findOrderGoodsInfo(orderId, merchantId);
+
 			} else {
 				// 备案失败
 				order.setOrder_record_status(4);
@@ -737,6 +729,78 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("根据订单Id与msgId未找到数据,请核对信息!");
+		}
+	}
+
+	private void findOrderGoodsInfo(String orderId, String merchantId) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("order_id", orderId);
+		params.put("merchant_no", merchantId);
+		List<MorderSub> reGoodsList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
+		if (reGoodsList != null && !reGoodsList.isEmpty()) {
+			for (MorderSub goods : reGoodsList) {
+				String entGoodsNo = goods.getEntGoodsNo();
+				String spareParams = goods.getSpareParams();
+				if (StringEmptyUtils.isNotEmpty(spareParams)) {
+					JSONObject json = JSONObject.fromObject(spareParams);
+					String marCode = json.get("marCode") + "";
+					entGoodsNo = entGoodsNo + "_" + marCode;
+				}
+				// 订单商品数量
+				int count = goods.getQty();
+				updateStockDoneCount(entGoodsNo,count,merchantId);
+			
+			}
+		}
+	}
+
+	private void updateStockDoneCount(String entGoodsNo, int count, String merchantId) {
+		Map<String,Object> params = new HashMap<>();
+		params.put("entGoodsNo", entGoodsNo);
+		params.put("merchantId", merchantId);
+		List<StockContent> reStockList = morderDao.findByProperty(StockContent.class, params, 1, 1);
+		if (reStockList != null && !reStockList.isEmpty()) {
+			for (StockContent stock : reStockList) {
+				int oldDoneCount = stock.getDoneCount();
+				int oldReadIngCount = stock.getReadingCount();
+				stock.setDoneCount(oldDoneCount + count);
+				stock.setReadingCount(oldReadIngCount + 1);
+				stock.setUpdateBy("system");
+				stock.setUpdateDate(new Date());
+				morderDao.update(stock);
+			}
+		}
+		
+	}
+
+	/**
+	 * 订单备案成功后,进行订单平台服务费扣款
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param orderId
+	 *            订单Id
+	 * @param price
+	 *            订单总金额
+	 * @return Map
+	 */
+	private Map<String, Object> orderToll(String merchantId, String orderId, double price) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		List<Merchant> reMerchantList = morderDao.findByProperty(Merchant.class, params, 1, 1);
+		Merchant merchant = null;
+		if (reMerchantList != null && !reMerchantList.isEmpty()) {
+			merchant = reMerchantList.get(0);
+			// 商户钱包扣钱进代理商钱包
+			Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(),
+					merchant.getMerchantName(), orderId, merchant.getProxyParentId(), price,
+					merchant.getProxyParentName());
+			if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
+				return reUpdateWalletMap;
+			}
+			return ReturnInfoUtils.successInfo();
+		} else {
+			return ReturnInfoUtils.errorInfo("查询商户信息失败,请核对信息!");
 		}
 	}
 

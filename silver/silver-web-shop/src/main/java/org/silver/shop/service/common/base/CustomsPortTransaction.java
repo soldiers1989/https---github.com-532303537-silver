@@ -93,4 +93,13 @@ public class CustomsPortTransaction {
 		}
 		return ReturnInfoUtils.errorInfo("删除失败,服务器繁忙!");
 	}
+
+	public Object modifyCustomsPort(Map<String, Object> params) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerName = managerInfo.getManagerName();
+		String managerId = managerInfo.getManagerId();
+		return customsPortService.modifyCustomsPort(managerId,managerName,params);
+	}
 }

@@ -1,5 +1,6 @@
 package org.silver.shop.controller.common.base;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -143,5 +144,30 @@ public class CustomsPortController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(customsPortTransaction.deleteCustomsPort(id)).toString();
+	}
+
+	/**
+	 * 管理员修改已开通的 海关及国检名称与编码
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/modifyCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员修改已开通的海关及国检名称与编码")
+	@RequiresRoles("Manager")
+	public String modifyCustomsPort(HttpServletRequest req, HttpServletResponse response, @RequestParam("id") long id) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> params = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		return JSONObject.fromObject(customsPortTransaction.modifyCustomsPort(params)).toString();
 	}
 }

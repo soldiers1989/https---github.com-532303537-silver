@@ -1167,10 +1167,18 @@ public class MorderServiceImpl implements MorderService {
 				return reDatasMap;
 			}
 			Map<String, Object> item = (Map<String, Object>) reDatasMap.get(BaseCode.DATAS.toString());
+			String customsCode = item.get("customsCode") + "";
+			String customsName = item.get("customsName") + "";
+			// 创建商品仓库
+			Map<String, Object> warehousMap = goodsRecordServiceImpl.createWarehous(merchantId, merchantName, customsCode, customsName);
+			if (!warehousMap.get(BaseCode.STATUS.toString()).equals("1")) {
+				return warehousMap;
+			}
 			Map<String, Object> params = new HashMap<>();
 			// 查询缓存中商品自编号自增Id
 			int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
 			String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
+			item.put("goodsRecordHeadSerialNo", goodsRecordHeadSerialNo);
 			if (!saveGoodsRecordHead(item)) {
 				return ReturnInfoUtils.errorInfo("保存商品备案信息头错误,服务器繁忙!");
 			}
@@ -1181,9 +1189,9 @@ public class MorderServiceImpl implements MorderService {
 			ExecutorService threadPool = Executors.newCachedThreadPool();
 			// 获取流水号
 			String serialNo = "updateMOrderGoods_" + SerialNoUtils.getSerialNo("updateMOrderGoods");
-			Map<String,Object> reTaskMap = startTask(totalCount, merchantId, merchantName, startTime, endTime, serialNo, goodsRecordHeadSerialNo,
-					threadPool);
-			if(!"1".equals(reTaskMap.get(BaseCode.STATUS.toString()))){
+			Map<String, Object> reTaskMap = startTask(totalCount, merchantId, merchantName, startTime, endTime,
+					serialNo, goodsRecordHeadSerialNo, threadPool);
+			if (!"1".equals(reTaskMap.get(BaseCode.STATUS.toString()))) {
 				return reTaskMap;
 			}
 			threadPool.shutdown();
@@ -1196,25 +1204,36 @@ public class MorderServiceImpl implements MorderService {
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
-	private Map<String,Object> startTask(int totalCount, String merchantId, String merchantName, String startTime, String endTime,
-			String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
+	/**
+	 * 根据对应的CPU数量开辟子任务查询订单商品信息
+	 * @param totalCount 总数
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param startTime 查询开始时间
+	 * @param endTime 查询结束时间
+	 * @param serialNo 批次号
+	 * @param goodsRecordHeadSerialNo 已备案商品信息(头部)流水号
+	 * @param threadPool 线程池
+	 * @return Map
+	 */
+	private Map<String, Object> startTask(int totalCount, String merchantId, String merchantName, String startTime,
+			String endTime, String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
 		int page = 1;
-		int size = 0;
-		int counter = totalCount / cpuCount;
+		int size = totalCount / cpuCount;
 		for (int i = 0; i < cpuCount; i++) {
-			if (page == cpuCount) {
-				// 最后一次长度 = 总数 - (最后一次) * 每一次长度
-				size = totalCount - ((cpuCount - 1) * counter);
-			} else {
-				size = 1 * counter;
-			}
 			Table table = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
-			page++;
 			if (table != null && !table.getRows().isEmpty()) {
 				// 获取表单中的List<Row>数据
 				List<Row> reOrderList = table.getRows();
-				// 错误List
+				List<Row> lr2 = null;
+				//当最后一次的时候page+1查询CPU数未除尽的数量,然后进行统一处理
+				if (page == cpuCount) {
+					page += 1;
+					Table table2 = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
+					lr2 = table2.getRows();
+					reOrderList.addAll(lr2);
+				}
 				Vector errorList = new Vector<>();
 				UpdateMOrderGoodsTask updateMOrderGoodsTask = new UpdateMOrderGoodsTask(reOrderList, merchantId,
 						merchantName, errorList, totalCount, serialNo, this, goodsRecordHeadSerialNo);
@@ -1222,10 +1241,21 @@ public class MorderServiceImpl implements MorderService {
 			} else {
 				return ReturnInfoUtils.errorInfo("订单信息查询失败,服务器繁忙!");
 			}
+			page++;
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 遍历查询出来商品信息,保存至已备案商品信息表中
+ 	 * @param dataList 订单商品信息
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param errorList 错误信息
+	 * @param totalCount 总数
+	 * @param serialNo 批次号
+	 * @param goodsRecordHeadSerialNo 已备案商品信息(头部)流水号
+	 */
 	public void saveGoodsRecordContent(List<Row> dataList, String merchantId, String merchantName, List errorList,
 			int totalCount, String serialNo, String goodsRecordHeadSerialNo) {
 		Map<String, Object> params = new HashMap<>();
