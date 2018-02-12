@@ -379,7 +379,9 @@ public class PaymentServiceImpl implements PaymentService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
-			paramsMap.put("merchantId", merchantId);
+			if(StringEmptyUtils.isNotEmpty(merchantId)){
+				paramsMap.put("merchantId", merchantId);
+			}
 			paramsMap.put("merchantName", merchantName);
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
@@ -560,9 +562,9 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantId, String merchantName) {
+			 String merchantName) {
 
-		return getMerchantPaymentReport(merchantId, merchantName, page, size, startDate, endDate);
+		return getMerchantPaymentReport(null, merchantName, page, size, startDate, endDate);
 	}
 
 }

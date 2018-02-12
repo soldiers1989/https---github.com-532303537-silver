@@ -149,7 +149,7 @@ public final class SearchUtils {
 				break;
 			case "merchantName":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
+					paramMap.put(key, value.trim());
 				}
 				break;
 			case "memberName":
@@ -242,6 +242,16 @@ public final class SearchUtils {
 			case "entGoodsNo":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value);
+				}
+				break;
+			case "merchantStatus":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
+				break;
+			case "del_flag":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, Integer.parseInt(value));
 				}
 				break;
 			default:

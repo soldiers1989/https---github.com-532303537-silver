@@ -3,6 +3,8 @@ package org.silver.shop.api.system.organization;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
+
 public interface ManagerService {
 
 	
@@ -138,6 +140,24 @@ public interface ManagerService {
 	 * @return Map
 	 */
 	public Map<String, Object> deleteMerchantRecordInfo(long id);
+
+	/**
+	 * 管理员审核商户
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
+	 * @param json 数据名称
+	 * @return Map
+	 */
+	public Map<String, Object> managerAuditMerchantInfo(String managerId, String managerName, JSONArray json);
+
+	/**
+	 * 管理员重置商户密码
+	 * @param merchantId 商户Id
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
+	 * @return Map
+	 */
+	public Map<String, Object> resetMerchantLoginPassword(String merchantId, String managerId, String managerName);
 
 	
 }

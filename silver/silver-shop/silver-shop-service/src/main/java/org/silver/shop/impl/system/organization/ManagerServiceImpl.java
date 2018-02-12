@@ -18,6 +18,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -108,31 +109,22 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, page, size);
-		long totalCount = managerDao.findByPropertyCount(Merchant.class, paramMap);
+		List<Merchant> reList = managerDao.findByProperty(Merchant.class, paramMap, page, size);
+		Long totalCount = managerDao.findByPropertyCount(Merchant.class, paramMap);
 		List<Object> item = new ArrayList<>();
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
-				Merchant merchantInfo = (Merchant) reList.get(i);
+				Merchant merchantInfo =  reList.get(i);
 				merchantInfo.setLoginPassword("");
 				item.add(merchantInfo);
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), item);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(item, totalCount.intValue());
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -143,18 +135,14 @@ public class ManagerServiceImpl implements ManagerService {
 		paramMap.put("merchantId", merchantId);
 		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, 1, 1);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -188,13 +176,9 @@ public class ManagerServiceImpl implements ManagerService {
 				statusMap.put(BaseCode.MSG.getBaseCode(), "修改密码错误,服务器繁忙!");
 				return statusMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -587,18 +571,14 @@ public class ManagerServiceImpl implements ManagerService {
 		paramMap.put("merchantId", merchantId);
 		List<Object> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -618,12 +598,12 @@ public class ManagerServiceImpl implements ManagerService {
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			Map<String, Object> paramMap = new HashMap<>();
 			String strId = datasMap.get("id") + "";
-			if(StringEmptyUtils.isNotEmpty(strId)){//当有商品备案Id时
+			if (StringEmptyUtils.isNotEmpty(strId)) {// 当有商品备案Id时
 				long id = Long.parseLong(strId);
 				paramMap.put("id", id);
 				List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
 				if (reList != null && !reList.isEmpty()) {
-					MerchantRecordInfo recordInfo =  reList.get(0);
+					MerchantRecordInfo recordInfo = reList.get(0);
 					int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 					String ebEntNo = datasMap.get("ebEntNo") + "";
 					String ebEntName = datasMap.get("ebEntName") + "";
@@ -635,17 +615,15 @@ public class ManagerServiceImpl implements ManagerService {
 					recordInfo.setEbpEntNo(ebpEntNo);
 					recordInfo.setEbpEntName(ebpEntName);
 					if (!managerDao.update(recordInfo)) {
-						statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-						return statusMap;
+						return ReturnInfoUtils.errorInfo("更新备案信息失败,服务器繁忙!");
 					}
 				} else {
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 					statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 					return statusMap;
 				}
-			}else{//当没有传Id时则为新建
-				MerchantRecordInfo recordInfo =  new MerchantRecordInfo();
+			} else {// 当没有传Id时则为新建
+				MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 				int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 				String ebEntNo = datasMap.get("ebEntNo") + "";
 				String ebEntName = datasMap.get("ebEntName") + "";
@@ -661,42 +639,77 @@ public class ManagerServiceImpl implements ManagerService {
 				recordInfo.setCreateBy(managerName);
 				recordInfo.setCreateDate(new Date());
 				if (!managerDao.add(recordInfo)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
 				}
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
 	public Map<String, Object> deleteMerchantRecordInfo(long id) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("id", id);
 		List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			MerchantRecordInfo recordInfo = reList.get(0);
-			if(!managerDao.delete(recordInfo)){
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+			if (!managerDao.delete(recordInfo)) {
+				return ReturnInfoUtils.errorInfo("删除失败,服务器繁忙!");
 			}
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> managerAuditMerchantInfo(String managerId, String managerName, JSONArray json) {
+		if (StringEmptyUtils.isNotEmpty(managerName) && !json.isEmpty()) {
+			for (int i = 0; i < json.size(); i++) {
+				Map<String, Object> datasMap = (Map<String, Object>) json.get(i);
+				String merchantId = datasMap.get("merchantId") + "";
+				String status = datasMap.get("status") + "";
+				// 商户状态：1-启用，2-禁用，3-审核
+				if ("1".equals(status) || "2".equals(status) || "3".equals(status)) {
+					Map<String, Object> params = new HashMap<>();
+					params.put("merchantId", merchantId);
+					List<Merchant> reList = managerDao.findByProperty(Merchant.class, params, 0, 0);
+					if (reList != null && !reList.isEmpty()) {
+						Merchant merchant = reList.get(0);
+						merchant.setMerchantStatus(status);
+						if(!managerDao.update(merchant)){
+							return ReturnInfoUtils.errorInfo("更新失败,请重试!");
+						}
+					}
+				} else {
+					return ReturnInfoUtils.errorInfo("状态参数不正确,请重新输入!");
+				}
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("请求参数出错!");
+	}
+
+	@Override
+	public Map<String, Object> resetMerchantLoginPassword(String merchantId, String managerId, String managerName) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchantId", merchantId);
+		List<Merchant> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			Merchant merchant =  reList.get(0);
+			// 默认为：888888
+			merchant.setLoginPassword("21218CCA77804D2BA1922C33E0151105");
+			if (!managerDao.update(merchant)) {
+				return ReturnInfoUtils.errorInfo("重置密码失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		} else {
+			return ReturnInfoUtils.errorInfo("商户信息未找到,请核对商户是否存在!");
+		}
 	}
 
 }

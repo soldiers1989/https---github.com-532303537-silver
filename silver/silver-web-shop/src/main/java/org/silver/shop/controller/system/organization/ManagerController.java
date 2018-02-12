@@ -84,7 +84,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllmemberInfo(req,page,size);
+		Map<String, Object> statusMap = managerTransaction.findAllmemberInfo(req, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -142,7 +142,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo(req,page,size);
+		Map<String, Object> statusMap = managerTransaction.findAllMerchantInfo(req, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -429,6 +429,7 @@ public class ManagerController {
 
 	/**
 	 * 管理员修改用户信息
+	 * 
 	 * @param req
 	 * @param response
 	 * @param merchantId
@@ -448,7 +449,7 @@ public class ManagerController {
 		Map<String, Object> statusMap = managerTransaction.managerEditMemberInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 管理员查看商户备案信息
 	 * 
@@ -480,7 +481,6 @@ public class ManagerController {
 		}
 	}
 
-	
 	/**
 	 * 管理员修改商户备案信息
 	 * 
@@ -495,7 +495,8 @@ public class ManagerController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商户备案信息")
 	public String editMerchantRecordDetail(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId,@RequestParam("merchantRecordInfo")String merchantRecordInfo) {
+			@RequestParam("merchantId") String merchantId,
+			@RequestParam("merchantRecordInfo") String merchantRecordInfo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -503,7 +504,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (merchantId != null) {
-			statusMap = managerTransaction.editMerchantRecordDetail(merchantId,merchantRecordInfo);
+			statusMap = managerTransaction.editMerchantRecordDetail(merchantId, merchantRecordInfo);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -511,29 +512,26 @@ public class ManagerController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
-	
+
 	/**
 	 * 管理员删除商户备案信息
 	 * 
 	 * @param req
 	 * @param response
-	 * @param merchantId
-	 *            商户Id
 	 * @return
 	 */
 	@RequestMapping(value = "/managerDeleteMerchantRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除商户备案信息")
-	public String managerDeleteMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response,
-			long id) {
+	public String managerDeleteMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response, long id) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (id >0) {
+		if (id > 0) {
 			statusMap = managerTransaction.deleteMerchantRecordInfo(id);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
@@ -542,7 +540,49 @@ public class ManagerController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
-	
-	
-	
+
+	/**
+	 * 管理员审核商户
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/managerAuditMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员审核商户")
+	public String managerAuditMerchantInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantPack") String merchantPack) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+
+		return JSONObject.fromObject(managerTransaction.managerAuditMerchantInfo(merchantPack)).toString();
+	}
+	/**
+	 * 管理员重置商户登录密码
+	 * 
+	 * @param req
+	 * @param response
+	 * @param managerId
+	 *            管理员Id
+	 * @return Json
+	 */
+	@RequestMapping(value = "/resetMerchantLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("超级管理员重置运营人员密码")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String resetMerchantLoginPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = managerTransaction.resetMerchantLoginPassword(merchantId);
+		return JSONObject.fromObject(statusMap).toString();
+	}
 }

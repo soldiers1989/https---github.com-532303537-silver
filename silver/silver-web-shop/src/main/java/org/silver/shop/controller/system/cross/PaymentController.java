@@ -198,7 +198,7 @@ public class PaymentController {
 	@RequiresRoles("Manager")
 	public String managerGetPaymentReport(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate,
-			String merchantId, String merchantName) {
+			 String merchantName) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -206,7 +206,7 @@ public class PaymentController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
-			statusMap = paytemTransaction.managerGetPaymentReport(page, size, startDate, endDate,merchantId,merchantName);
+			statusMap = paytemTransaction.managerGetPaymentReport(page, size, startDate, endDate,merchantName);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());

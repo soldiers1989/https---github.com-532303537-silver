@@ -12,8 +12,10 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,23 +36,25 @@ public class MemberTransaction {
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberTel, int verificationCode) {
 		Map<String, Object> datasMap = memberService.createMemberId();
-		if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
+		if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 			return datasMap;
 		}
+		if (!IdcardValidator.is18Idcard(memberIdCard)) {
+			return ReturnInfoUtils.errorInfo("身份证号码输入错误,请重新输入");
+		}
 		String memberId = datasMap.get(BaseCode.DATAS.toString()) + "";
+		//获取缓存中用户注册手机验证码
 		String redis = JedisUtil.get("Shop_Key_MemberRegisterCode_" + memberTel);
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			JSONObject json = JSONObject.fromObject(redis);
-			long time = Long.parseLong(json.get("time")+"");
-			if (time - new Date().getTime() < 9000) {
+			long time = Long.parseLong(json.get("time") + "");
+			int code = Integer.parseInt(json.get("code") + "");
+			if ((time - new Date().getTime()) < 9000 && code == verificationCode) {
 				return memberService.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberId,
 						memberTel);
 			}
 		}
-		datasMap.clear();
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), "手机验证码错误,请重试!");
-		return datasMap;
+		return ReturnInfoUtils.errorInfo("手机验证码错误,请重新输入!");
 	}
 
 	// 用户登录
@@ -59,10 +63,8 @@ public class MemberTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Object> reList = memberService.findMemberBy(account);
 		if (reList == null) {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return datasMap;
-		} else if (reList.size() > 0) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+		} else if (!reList.isEmpty()) {
 			Member member = (Member) reList.get(0);
 			String name = member.getMemberName();
 			String loginpas = member.getLoginPass();

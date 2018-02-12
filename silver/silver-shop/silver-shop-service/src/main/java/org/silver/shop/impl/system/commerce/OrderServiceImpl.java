@@ -751,7 +751,9 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
-			paramsMap.put("merchantId", merchantId);
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				paramsMap.put("merchantId", merchantId);
+			}
 			paramsMap.put("merchantName", merchantName);
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
@@ -837,6 +839,7 @@ public class OrderServiceImpl implements OrderService {
 
 	/**
 	 * 保存订单信息
+	 * 
 	 * @param notifyUrl
 	 * @param extraCommonParam
 	 * @param string
@@ -877,7 +880,7 @@ public class OrderServiceImpl implements OrderService {
 		entity.setType(0);
 		entity.setDelFlag(0);
 		entity.setCreateDate(new Date());
-		
+
 		entity.setCreateBy("system");
 		entity.setTenantOrderId(outTradeNo);
 		if (orderDao.add(entity)) {
@@ -916,16 +919,16 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId,
+	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate,
 			String merchantName) {
-		return getMerchantOrderDailyReport(merchantId, merchantName, page, size, startDate, endDate);
+		return getMerchantOrderDailyReport("", merchantName, page, size, startDate, endDate);
 	}
 
 	@Override
 	public Map<String, Object> managerDeleteTestOrder() {
-		 if(orderDao.managerDeleteTestOrder()){
-			 ReturnInfoUtils.successInfo();
-		 }
+		if (orderDao.managerDeleteTestOrder()) {
+			ReturnInfoUtils.successInfo();
+		}
 		return null;
 	}
 }

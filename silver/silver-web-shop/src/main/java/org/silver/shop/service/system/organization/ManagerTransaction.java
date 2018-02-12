@@ -20,10 +20,13 @@ import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import net.sf.json.JSONArray;
 
 @Service("managerTransaction")
 public class ManagerTransaction {
@@ -61,7 +64,7 @@ public class ManagerTransaction {
 	}
 
 	// 管理员查询所有用户信息
-	public Map<String, Object> findAllmemberInfo(HttpServletRequest req,int page, int size) {
+	public Map<String, Object> findAllmemberInfo(HttpServletRequest req, int page, int size) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> iskey = req.getParameterNames();
 		while (iskey.hasMoreElements()) {
@@ -69,7 +72,7 @@ public class ManagerTransaction {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		return managerService.findAllmemberInfo(page,size,datasMap);
+		return managerService.findAllmemberInfo(page, size, datasMap);
 	}
 
 	// 创建管理员
@@ -200,7 +203,7 @@ public class ManagerTransaction {
 		String managerName = managerInfo.getManagerName();
 		String path = "/opt/www/img/" + merchantId + "/";
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
-		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString())+"")) {
+		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()) + "")) {
 			return imgMap;
 		}
 		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
@@ -242,36 +245,50 @@ public class ManagerTransaction {
 		return managerService.managerEditMemberInfo(managerId, managerName, datasMap);
 	}
 
-	//管理员查看商户备案信息
+	// 管理员查看商户备案信息
 	public Map<String, Object> findMerchantRecordDetail(String merchantId) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		String managerId = managerInfo.getManagerId();
-		String managerName = managerInfo.getManagerName();
-		
 		return managerService.findMerchantRecordDetail(merchantId);
 	}
-	
-	//管理员修改商户备案信息
+
+	// 管理员修改商户备案信息
 	public Map<String, Object> editMerchantRecordDetail(String merchantId, String merchantRecordInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return managerService.editMerchantRecordDetail(managerId,managerName,merchantId,merchantRecordInfo);
+		return managerService.editMerchantRecordDetail(managerId, managerName, merchantId, merchantRecordInfo);
 	}
 
-	//管理员删除商户备案信息
+	// 管理员删除商户备案信息
 	public Map<String, Object> deleteMerchantRecordInfo(long id) {
+		return managerService.deleteMerchantRecordInfo(id);
+	}
+
+	//
+	public Map<String, Object> managerAuditMerchantInfo(String merchantPack) {
+		JSONArray json = null;
+		try {
+			json = JSONArray.fromObject(merchantPack);
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("参数错误!");
+		}
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return managerService.deleteMerchantRecordInfo(id);
+		return managerService.managerAuditMerchantInfo(managerId,managerName,json);
 	}
 
-	
+	//
+	public Map<String, Object> resetMerchantLoginPassword(String merchantId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return managerService.resetMerchantLoginPassword(merchantId,managerId,managerName);
+	}
+
 }

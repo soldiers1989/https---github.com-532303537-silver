@@ -75,10 +75,9 @@ public interface PaymentService {
 	 * @param size
 	 * @param startDate
 	 * @param endDate
-	 * @param merchantId
 	 * @param merchantName
 	 * @return
 	 */
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantId, String merchantName);
+			 String merchantName);
 }

@@ -83,14 +83,13 @@ public class IdCardServiceImpl implements IdCardService {
 		List<Morder> morderList = idCardDao.findByProperty(Morder.class, params, 0, 0);
 		if (morderList != null && !morderList.isEmpty()) {
 			for (Morder order : morderList) {
-				params.clear();
 				IdCard idCard = new IdCard();
 				String id = order.getOrderDocId();
 				String name = order.getOrderDocName();
 				idCard.setName(name);
 				idCard.setIdNumber(id);
 				//类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-				if(IdcardValidator.isValidatedAllIdcard(id)){
+				if(IdcardValidator.is18Idcard(id)){
 					idCard.setType(3);
 				}else{
 					idCard.setType(5);
@@ -98,9 +97,13 @@ public class IdCardServiceImpl implements IdCardService {
 				idCard.setCreateBy("system");
 				idCard.setCreateDate(new Date());
 				idCard.setDeleteFlag(0);
+				params.clear();
 				params.put("idNumber", id);
-				List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 0, 0);
+				List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 1, 1);
 				if (idCardList != null && !idCardList.isEmpty()) {
+					if(!IdcardValidator.is18Idcard(idCardList.get(0).getIdNumber())){
+						idCard.setType(5);
+					}
 					continue;
 				}
 				if (!idCardDao.add(idCard)) {

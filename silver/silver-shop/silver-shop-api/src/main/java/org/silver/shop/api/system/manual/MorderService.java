@@ -156,4 +156,13 @@ public interface MorderService {
 	 * @return
 	 */
 	public Map<String, Object> updateManualOrderGoodsInfo(String startTime, String endTime, String merchantId, String merchantName, Map<String, Object> customsMap);
+
+	/**
+	 * 管理员获取手工订单信息
+	 * @param params
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> managerLoadMorderDatas(Map<String, Object> params, int page, int size);
 }

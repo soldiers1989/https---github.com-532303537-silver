@@ -76,7 +76,7 @@ public class MerchantController {
 				statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
 			} catch (LockedAccountException lae) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
-				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");
+				statusMap.put(BaseCode.MSG.getBaseCode(), "账户未通过审核或已被禁用,请联系管理员!");
 			} catch (AuthenticationException ae) {
 				System.out.println(ae.getMessage());
 				ae.printStackTrace();

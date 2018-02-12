@@ -131,9 +131,9 @@ public class OrderTransaction {
 
 	// 管理员查询商户订单报表
 	public Map<String, Object> managerGetOrderReport(int page, int size, String startDate, String endDate,
-			String merchantId, String merchantName) {
+			 String merchantName) {
 
-		return orderService.getOrderReport(page, size, startDate, endDate, merchantId, merchantName);
+		return orderService.getOrderReport(page, size, startDate, endDate,  merchantName);
 	}
 
 	public Map<String,Object> managerDeleteTestOrder() {

@@ -62,15 +62,15 @@ public class MerchantTransaction {
 		List<Object> reList = merchantService.findMerchantBy(account);
 		if (reList != null && !reList.isEmpty()) {// 商户数据不为空
 			Merchant merchant = (Merchant) reList.get(0);
-			// 商户状态：1-启用，2-禁用，3-审核
-			String status = merchant.getMerchantStatus();
 			String name = merchant.getMerchantName();
 			String loginpas = merchant.getLoginPassword();
 			String md5Pas = md5.getMD5ofStr(loginPassword);
+			// 商户状态：1-启用，2-禁用，3-审核
+			String status = merchant.getMerchantStatus();
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
-				// 判断帐号是否锁定
-				if ("2".equals(status)) {
+				// 判断帐号是否通过审核
+				if ("2".equals(status) || "3".equals(status)) {
 					// 抛出 帐号锁定异常
 					throw new LockedAccountException();
 				}

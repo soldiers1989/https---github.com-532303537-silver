@@ -21,6 +21,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.MeteringTransaction;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
@@ -1261,5 +1262,18 @@ public class ManualService {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return morderService.updateManualOrderGoodsInfo(startTime, endTime, merchantId, merchantName, customsMap);
+	}
+
+	public Map<String, Object> managerLoadMorderDatas(int page, int size, HttpServletRequest req) {
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		params.remove("page");
+		params.remove("size");
+		return morderService.managerLoadMorderDatas(params, page, size);
 	}
 }

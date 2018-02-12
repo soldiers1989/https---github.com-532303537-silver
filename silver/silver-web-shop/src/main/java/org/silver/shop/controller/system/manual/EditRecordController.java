@@ -97,6 +97,14 @@ public class EditRecordController {
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
+	/**
+	 * 商户查询手工订单信息
+	 * @param resp
+	 * @param req
+	 * @param page
+	 * @param size
+	 * @return
+	 */
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
 	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
@@ -544,5 +552,23 @@ public class EditRecordController {
 		Map<String, Object> statusMap = manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-
+	/**
+	 * 管理员查询手工订单信息
+	 * @param resp
+	 * @param req
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	@RequestMapping(value = "/managerLoadMorderDatas", produces = "application/json; charset=utf-8")
+	@RequiresRoles("Manager")
+	public String managerLoadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reqMap = manualService.managerLoadMorderDatas(page, size, req);
+		return JSONObject.fromObject(reqMap).toString();
+	}
 }

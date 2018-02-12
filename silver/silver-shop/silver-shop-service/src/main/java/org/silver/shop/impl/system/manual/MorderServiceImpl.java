@@ -1170,7 +1170,8 @@ public class MorderServiceImpl implements MorderService {
 			String customsCode = item.get("customsCode") + "";
 			String customsName = item.get("customsName") + "";
 			// 创建商品仓库
-			Map<String, Object> warehousMap = goodsRecordServiceImpl.createWarehous(merchantId, merchantName, customsCode, customsName);
+			Map<String, Object> warehousMap = goodsRecordServiceImpl.createWarehous(merchantId, merchantName,
+					customsCode, customsName);
 			if (!warehousMap.get(BaseCode.STATUS.toString()).equals("1")) {
 				return warehousMap;
 			}
@@ -1206,14 +1207,23 @@ public class MorderServiceImpl implements MorderService {
 
 	/**
 	 * 根据对应的CPU数量开辟子任务查询订单商品信息
-	 * @param totalCount 总数
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param startTime 查询开始时间
-	 * @param endTime 查询结束时间
-	 * @param serialNo 批次号
-	 * @param goodsRecordHeadSerialNo 已备案商品信息(头部)流水号
-	 * @param threadPool 线程池
+	 * 
+	 * @param totalCount
+	 *            总数
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param startTime
+	 *            查询开始时间
+	 * @param endTime
+	 *            查询结束时间
+	 * @param serialNo
+	 *            批次号
+	 * @param goodsRecordHeadSerialNo
+	 *            已备案商品信息(头部)流水号
+	 * @param threadPool
+	 *            线程池
 	 * @return Map
 	 */
 	private Map<String, Object> startTask(int totalCount, String merchantId, String merchantName, String startTime,
@@ -1227,7 +1237,7 @@ public class MorderServiceImpl implements MorderService {
 				// 获取表单中的List<Row>数据
 				List<Row> reOrderList = table.getRows();
 				List<Row> lr2 = null;
-				//当最后一次的时候page+1查询CPU数未除尽的数量,然后进行统一处理
+				// 当最后一次的时候page+1查询CPU数未除尽的数量,然后进行统一处理
 				if (page == cpuCount) {
 					page += 1;
 					Table table2 = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
@@ -1248,13 +1258,21 @@ public class MorderServiceImpl implements MorderService {
 
 	/**
 	 * 遍历查询出来商品信息,保存至已备案商品信息表中
- 	 * @param dataList 订单商品信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param errorList 错误信息
-	 * @param totalCount 总数
-	 * @param serialNo 批次号
-	 * @param goodsRecordHeadSerialNo 已备案商品信息(头部)流水号
+	 * 
+	 * @param dataList
+	 *            订单商品信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param errorList
+	 *            错误信息
+	 * @param totalCount
+	 *            总数
+	 * @param serialNo
+	 *            批次号
+	 * @param goodsRecordHeadSerialNo
+	 *            已备案商品信息(头部)流水号
 	 */
 	public void saveGoodsRecordContent(List<Row> dataList, String merchantId, String merchantName, List errorList,
 			int totalCount, String serialNo, String goodsRecordHeadSerialNo) {
@@ -1267,12 +1285,12 @@ public class MorderServiceImpl implements MorderService {
 			params.put("goodsMerchantId", merchantId);
 			List<GoodsRecordDetail> reGoodsContentList = morderDao.findByProperty(GoodsRecordDetail.class, params, 0,
 					0);
-			if (reGoodsContentList != null && !reGoodsContentList.isEmpty()) {
-				String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
+			if (reGoodsContentList == null) {
+				String msg = "订单号[" + orderId + "]查询信息失败,服务器繁忙!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 				continue;
-			} else if (reGoodsContentList == null) {
-				String msg = "订单号[" + orderId + "]查询信息失败,服务器繁忙!";
+			} else if (!reGoodsContentList.isEmpty()) {
+				String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 				continue;
 			} else {
@@ -1404,6 +1422,29 @@ public class MorderServiceImpl implements MorderService {
 		goodsRecord.setCreateDate(new Date());
 		goodsRecord.setDeleteFlag(0);
 		return morderDao.add(goodsRecord);
+	}
+
+	@Override
+	public Map<String, Object> managerLoadMorderDatas(Map<String, Object> params, int page, int size) {
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+
+		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
+		Long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
+		List<Map<String, Object>> lMap = new ArrayList<>();
+		if (mlist != null && !mlist.isEmpty()) {
+			paramMap.clear();
+			for (Morder m : mlist) {
+				paramMap.put("order_id", m.getOrder_id());
+				List<MorderSub> mslist = morderSubDao.findByProperty(paramMap, 0, 0);
+				Map<String, Object> item = new HashMap<>();
+				item.put("head", m);
+				item.put("content", mslist);
+				lMap.add(item);
+			}
+			return ReturnInfoUtils.successDataInfo(lMap, count.intValue());
+		}
+		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
 
 }
