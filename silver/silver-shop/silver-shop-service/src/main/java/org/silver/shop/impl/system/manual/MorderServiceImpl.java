@@ -1183,6 +1183,7 @@ public class MorderServiceImpl implements MorderService {
 			if (!saveGoodsRecordHead(item)) {
 				return ReturnInfoUtils.errorInfo("保存商品备案信息头错误,服务器繁忙!");
 			}
+			//查询当前已备案成功的订单商品信息信息中(商品自编号)还未添加至商品备案信息表中的总数
 			Long totalCountT = morderDao.getMOrderAndMGoodsInfoCount(merchantId, startTime, endTime, 0, 0);
 			// 获取总数
 			int totalCount = totalCountT.intValue();
@@ -1231,6 +1232,7 @@ public class MorderServiceImpl implements MorderService {
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
 		int page = 1;
 		int size = totalCount / cpuCount;
+		long start = System.currentTimeMillis();
 		for (int i = 0; i < cpuCount; i++) {
 			Table table = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
 			if (table != null && !table.getRows().isEmpty()) {
@@ -1249,10 +1251,12 @@ public class MorderServiceImpl implements MorderService {
 						merchantName, errorList, totalCount, serialNo, this, goodsRecordHeadSerialNo);
 				threadPool.submit(updateMOrderGoodsTask);
 			} else {
-				return ReturnInfoUtils.errorInfo("订单信息查询失败,服务器繁忙!");
+				return ReturnInfoUtils.errorInfo("没有需要更新的订单信息!");
 			}
 			page++;
 		}
+		long end = System.currentTimeMillis();
+		System.out.println("总计耗时："+(end - start)+"ms");
 		return ReturnInfoUtils.successInfo();
 	}
 
@@ -1290,9 +1294,10 @@ public class MorderServiceImpl implements MorderService {
 				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 				continue;
 			} else if (!reGoodsContentList.isEmpty()) {
-				String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
-				continue;
+				//由于查询出来的总数已检索了未添加至备案商品信息表中,故无需添加记录,否则会造成计数错误
+				//String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
+				//RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+				//continue;
 			} else {
 				GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
 				int seq = Integer.parseInt(dataList.get(i).getValue("Seq") + "");
@@ -1340,6 +1345,10 @@ public class MorderServiceImpl implements MorderService {
 				goodsRecordDetail.setGoodsMerchantId(merchantId);
 				goodsRecordDetail.setGoodsMerchantName(merchantName);
 				goodsRecordDetail.setGoodsSerialNo(goodsRecordHeadSerialNo);
+				String spareParams = dataList.get(i).getValue("spareParams1") + "";
+				if(StringEmptyUtils.isNotEmpty(spareParams)){
+					goodsRecordDetail.setSpareParams(spareParams);
+				}
 				if (!morderDao.add(goodsRecordDetail)) {
 					String msg = "订单号[" + orderId + "]更新商品信息失败,未知错误!";
 					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);

@@ -28,16 +28,11 @@ public class ManagerWalletServiceImpl implements ManagerWalletService {
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<MerchantWalletContent> reList = managerWalletDao.findByProperty(MerchantWalletContent.class, paramMap,
 				page, size);
-		long count = managerWalletDao.findByPropertyCount(MerchantWalletContent.class, null);
+		Long count = managerWalletDao.findByPropertyCount(MerchantWalletContent.class, null);
 		if (reList != null && !reList.isEmpty()) {
-			Map<String, Object> statusMap = new HashMap<>();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, count.intValue());
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据");
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
