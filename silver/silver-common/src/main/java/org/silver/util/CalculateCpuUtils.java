@@ -38,4 +38,7 @@ public class CalculateCpuUtils {
 		}
 	}
 
+	public static void main(String[] args) {
+		System.out.println("--->>>"+calculateCpu(811));
+	}
 }

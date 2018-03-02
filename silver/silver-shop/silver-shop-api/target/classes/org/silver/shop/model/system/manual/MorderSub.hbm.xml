@@ -4,7 +4,7 @@
 
 <hibernate-mapping package="org.silver.shop.model.system.manual">
 
-	<class name="MorderSub" table="ym_shop_manual_morder_sub">
+	<class name="MorderSub" table="ym_shop_manual_morder_sub" >
 
 		<id name="id" type="long">
 			<column name="id" />

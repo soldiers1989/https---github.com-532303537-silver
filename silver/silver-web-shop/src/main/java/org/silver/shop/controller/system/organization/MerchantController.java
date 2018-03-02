@@ -20,6 +20,9 @@ import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.MerchantTransaction;
+import org.silver.shop.utils.RedisInfoUtils;
+import org.silver.util.IdcardValidator;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -107,18 +110,20 @@ public class MerchantController {
 			@RequestParam("loginPassword") String loginPassword,
 			@RequestParam("merchantIdCardName") String merchantIdCardName,
 			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") String type, HttpServletResponse response) {
+			@RequestParam("type") String type, String phone, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		Map<String, Object> statusMap = new HashMap<>();
-		if ("1".equals(type) && account != null && loginPassword != null && merchantIdCardName != null
-				&& merchantIdCard != null) {// 1-银盟商户注册
+		if (!IdcardValidator.isValidatedAllIdcard(merchantIdCard)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("身份证号码错误,请重新输入!")).toString();
+		}
+		if ("1".equals(type) && account != null && loginPassword != null && merchantIdCardName != null) {// 1-银盟商户注册
 			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
-					recordInfoPack, type);
+					recordInfoPack, type,phone);
 			return JSONObject.fromObject(statusMap).toString();
 		} else if ("2".equals(type) && recordInfoPack != null && account != null && loginPassword != null
-				&& merchantIdCardName != null && merchantIdCard != null) {// 2-第三方商户注册
+				&& merchantIdCardName != null) {// 2-第三方商户注册
 			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
-					recordInfoPack, type);
+					recordInfoPack, type,phone);
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());

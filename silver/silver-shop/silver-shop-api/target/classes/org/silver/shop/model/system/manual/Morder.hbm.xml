@@ -2,9 +2,9 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.silver.shop.model.system.manual">
+<hibernate-mapping package="org.silver.shop.model.system.manual" >
 
-	<class name="Morder" table="ym_shop_manual_morder">
+	<class name="Morder" table="ym_shop_manual_morder" >
 
 		<id name="id" type="long">
 			<column name="id" />

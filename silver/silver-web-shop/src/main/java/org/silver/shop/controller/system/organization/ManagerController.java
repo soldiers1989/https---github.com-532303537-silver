@@ -285,7 +285,7 @@ public class ManagerController {
 			@RequestParam("loginPassword") String loginPassword,
 			@RequestParam("merchantIdCardName") String merchantIdCardName,
 			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") int type, @RequestParam("imgLength") int imgLength, HttpServletRequest req,
+			@RequestParam("type") int type, @RequestParam("imgLength") int imgLength, String phone,HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -295,7 +295,7 @@ public class ManagerController {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type == 1 || type == 2 && imgLength > 0) {
 			statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type, imgLength, req);
+					merchantIdCardName, recordInfoPack, type, imgLength, req,phone);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());

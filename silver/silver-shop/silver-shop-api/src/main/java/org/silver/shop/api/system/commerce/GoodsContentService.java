@@ -12,13 +12,12 @@ public interface GoodsContentService {
 	 * 添加商品基本信息
 	 * @param date 
 	 * @param goodsYear 
-	 * @param imgList 
 	 * @param params 
 	 * @param merchantName 
 	 * @param merchantId 
 	 * @return
 	 */
-	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params, List<Object> imgList, int goodsYear, Date date);
+	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params,  int goodsYear, Date date);
 
 	/**
 	 * 创建自编商品ID 获取商品基本信息的自增ID后,不足5位则前面补0

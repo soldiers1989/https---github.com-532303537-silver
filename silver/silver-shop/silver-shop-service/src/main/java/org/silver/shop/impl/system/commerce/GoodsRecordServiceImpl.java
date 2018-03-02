@@ -427,7 +427,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		// 商城商品备案流水号
 		params.put("goodsSerialNo", goodsSerialNo);
 		// 是否像海关发送
-		params.put("uploadOrNot", false);
+		//params.put("uploadOrNot", false);
 		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", params);
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
@@ -1198,10 +1198,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	public Map<String, Object> batchCreateNotRecordGoods(GoodsRecordDetail goodsRecordDetail, String merchantId,
 			String merchantName) {
 		Map<String, Object> statusMap = new HashMap<>();
-		// 查询缓存中商品自编号自增Id
-		int count = SerialNoUtils.getRedisIdCount("goods");
-		String goodsRecordSerialNo = SerialNoUtils.getSerialNo("GR", count);
-		goodsRecordDetail.setEntGoodsNo(goodsRecordSerialNo);
+		
 		// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
 		goodsRecordDetail.setStatus(4);
 		// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
@@ -1872,16 +1869,16 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			int status = goodsRecordInfo.getStatus();
 			int recordFlag = goodsRecordInfo.getRecordFlag();
 			// 当商品备案状态为未备案或失败并且商品已备案状态不是审核通过的其他任何状态,才允许删除商品信息
-			if (status == 3 || status == 4 && recordFlag != 1) {
+		//	if (status == 3 || status == 4 && recordFlag != 1) {
 				goodsRecordInfo.setDeleteFlag(1);
 				goodsRecordInfo.setDeleteBy(merchantName);
 				goodsRecordInfo.setDeleteDate(date);
 				if (!goodsRecordDao.update(goodsRecordInfo)) {
 					return ReturnInfoUtils.errorInfo(goodsRecordInfo.getShelfGName() + " 删除失败,请重试!");
 				}
-			} else {
-				return ReturnInfoUtils.errorInfo(goodsRecordInfo.getShelfGName() + "的备案状态不允许删除信息!");
-			}
+			//} else {
+				//return ReturnInfoUtils.errorInfo(goodsRecordInfo.getShelfGName() + "的备案状态不允许删除信息!");
+			//}
 			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");

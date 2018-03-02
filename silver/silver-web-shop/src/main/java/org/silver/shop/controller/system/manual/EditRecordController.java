@@ -571,4 +571,46 @@ public class EditRecordController {
 		Map<String, Object> reqMap = manualService.managerLoadMorderDatas(page, size, req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
+	
+	
+	/**
+	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。
+	 * 批量导入手工订单 暂只支持有国宗
+	 * 、企邦(将作为对外统一模板)
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/pretreatmentGroupGZOrder", produces = "application/json; charset=utf-8")
+	public String pretreatmentGroupGZOrder(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
+		return JSONObject.fromObject(reqMap).toString();
+	}
+	
+	
+	/**
+	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。
+	 * 批量导入手工订单 企邦(将作为对外统一模板)需要登陆商户,已便于校验商品
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/pretreatmentGroupQBOrder", produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	public String pretreatmentGroupQBOrder(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
+		return JSONObject.fromObject(reqMap).toString();
+	}
 }

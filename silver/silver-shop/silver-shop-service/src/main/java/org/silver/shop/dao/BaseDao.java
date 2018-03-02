@@ -212,4 +212,19 @@ public interface BaseDao<T> {
 	 */
 	public List<T> findByPropertyOr2(Class<T> entity, Map<String, List<Object>> orMap, int page, int size);
 
+	/**
+	 * (线程安全)根据实体、列(名)、值查询数据
+	 * 
+	 * @param entity
+	 *            实体名
+	 * @param params
+	 *            属性
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @return List
+	 */
+	public List<T> synFindByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
+	
 }

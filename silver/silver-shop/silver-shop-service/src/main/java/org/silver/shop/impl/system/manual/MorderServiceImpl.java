@@ -3,9 +3,13 @@ package org.silver.shop.impl.system.manual;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,6 +22,7 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MorderSubDao;
 import org.silver.shop.dao.system.manual.MuserDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
+import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -35,8 +40,10 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -68,6 +75,8 @@ public class MorderServiceImpl implements MorderService {
 
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";
+
+	private static final String LOCK = "lock";
 
 	@Override
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body) {
@@ -412,12 +421,13 @@ public class MorderServiceImpl implements MorderService {
 			JSONObject goodsInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		params.clear();
 		// params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
 		params.put("merchant_no", merchant_no);
-		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
-		if (ml != null && !ml.isEmpty()) {
+		List<Morder> ml = morderDao.synFindByProperty(Morder.class, params, 1, 1);
+		if (ml == null) {
+			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!");
+		} else if (!ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			if (morder.getDel_flag() == 1) {
 				return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
@@ -427,7 +437,8 @@ public class MorderServiceImpl implements MorderService {
 		Morder morder = new Morder();
 		// 查询缓存中订单自增Id
 		int count = SerialNoUtils.getRedisIdCount("order");
-		morder.setOrder_id(SerialNoUtils.getSerialNo("YM", count));
+		String newOrderId = SerialNoUtils.getSerialNo("YM", count);
+		morder.setOrder_id(newOrderId);
 		// 原导入表中的订单编号
 		morder.setOldOrderId(orderId);
 		morder.setFCY(FCY);
@@ -470,10 +481,11 @@ public class MorderServiceImpl implements MorderService {
 		morder.setOrderDate(randomDate);
 		if (morderDao.add(morder)) {
 			statusMap.put("status", 1);
-			statusMap.put("order_id", morder.getOrder_id());
+			statusMap.put("order_id", newOrderId);
 			return statusMap;
 		}
 		return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单存储失败，请稍后重试!");
+
 	}
 
 	/**
@@ -484,9 +496,9 @@ public class MorderServiceImpl implements MorderService {
 	 * @param goodsInfo
 	 *            商品信息
 	 * @param actualAmountPaid
-	 *            总金额
+	 *            实际支付总金额
 	 * @param FCY
-	 *            单价
+	 *            商品总额
 	 * @param tax
 	 *            税费
 	 * @param flag
@@ -505,24 +517,25 @@ public class MorderServiceImpl implements MorderService {
 		paramsMap.put("merchant_no", merchantId);
 		paramsMap.put("order_id", morder.getOrder_id());
 		List<MorderSub> ms = morderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
-		if (ms != null && !ms.isEmpty()) {
+		if (ms == null) {
+			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]  <--查询订单商品信息失败!");
+		} else if (!ms.isEmpty()) {
 			if (flag == 1) {
 				return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]  <--与商品信息已存在,无需重复导入!");
-			} else if (flag == 2) {
-				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]  <--该订单与商品信息已存在,无需重复导入!");
 			}
-			return null;
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]  <--该订单与商品信息已存在,无需重复导入!");
 		} else {
 			double reFCY = morder.getFCY();
-			morder.setActualAmountPaid(morder.getActualAmountPaid() + tax + actualAmountPaid);
-			morder.setFCY(reFCY + FCY);
+			double newFcy = reFCY + FCY;
+			morder.setFCY(newFcy);
+			double newActualAmountPaid = newFcy + tax;
+			morder.setActualAmountPaid(newActualAmountPaid);
 			if (!morderDao.update(morder)) {
 				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
 			}
 			statusMap.put("status", 1);
 			statusMap.put("order_id", morder.getOrder_id());
-			statusMap.put("msg", "订单更新总价");
-			if (reFCY + FCY >= 2000) {// 当订单金额超过2000时
+			if (newFcy >= 2000) {// 当订单金额超过2000时
 				if (flag == 1) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
@@ -647,7 +660,6 @@ public class MorderServiceImpl implements MorderService {
 		statusMap.put("order_id", morder.getOrder_id());
 		statusMap.put("msg", "存储完毕");
 		return statusMap;
-
 	}
 
 	@Override
@@ -933,10 +945,10 @@ public class MorderServiceImpl implements MorderService {
 			if (!morderDao.update(goodsInfo)) {
 				return ReturnInfoUtils.errorInfo("更新订单备案商品错误,请重试!");
 			}
-		} else {
-			return ReturnInfoUtils.errorInfo("查询订单商品信息错误,请重试!");
+			return ReturnInfoUtils.successInfo();
 		}
-		return ReturnInfoUtils.successInfo();
+		return ReturnInfoUtils.errorInfo("查询订单商品信息错误,请重试!");
+
 	}
 
 	/**
@@ -1183,19 +1195,19 @@ public class MorderServiceImpl implements MorderService {
 			if (!saveGoodsRecordHead(item)) {
 				return ReturnInfoUtils.errorInfo("保存商品备案信息头错误,服务器繁忙!");
 			}
-			//查询当前已备案成功的订单商品信息信息中(商品自编号)还未添加至商品备案信息表中的总数
+			// 查询当前已备案成功的订单商品信息信息中(商品自编号)还未添加至商品备案信息表中的总数
 			Long totalCountT = morderDao.getMOrderAndMGoodsInfoCount(merchantId, startTime, endTime, 0, 0);
 			// 获取总数
 			int totalCount = totalCountT.intValue();
+			if (totalCount <= 0) {
+				return ReturnInfoUtils.errorInfo("没有需要更新的订单信息!");
+			}
 			// 创建线程池
 			ExecutorService threadPool = Executors.newCachedThreadPool();
 			// 获取流水号
 			String serialNo = "updateMOrderGoods_" + SerialNoUtils.getSerialNo("updateMOrderGoods");
-			Map<String, Object> reTaskMap = startTask(totalCount, merchantId, merchantName, startTime, endTime,
-					serialNo, goodsRecordHeadSerialNo, threadPool);
-			if (!"1".equals(reTaskMap.get(BaseCode.STATUS.toString()))) {
-				return reTaskMap;
-			}
+			startTask(totalCount, merchantId, merchantName, startTime, endTime, serialNo, goodsRecordHeadSerialNo,
+					threadPool);
 			threadPool.shutdown();
 			params.clear();
 			params.put("serialNo", serialNo);
@@ -1227,8 +1239,8 @@ public class MorderServiceImpl implements MorderService {
 	 *            线程池
 	 * @return Map
 	 */
-	private Map<String, Object> startTask(int totalCount, String merchantId, String merchantName, String startTime,
-			String endTime, String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
+	private void startTask(int totalCount, String merchantId, String merchantName, String startTime, String endTime,
+			String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
 		int page = 1;
 		int size = totalCount / cpuCount;
@@ -1250,14 +1262,11 @@ public class MorderServiceImpl implements MorderService {
 				UpdateMOrderGoodsTask updateMOrderGoodsTask = new UpdateMOrderGoodsTask(reOrderList, merchantId,
 						merchantName, errorList, totalCount, serialNo, this, goodsRecordHeadSerialNo);
 				threadPool.submit(updateMOrderGoodsTask);
-			} else {
-				return ReturnInfoUtils.errorInfo("没有需要更新的订单信息!");
 			}
 			page++;
 		}
 		long end = System.currentTimeMillis();
-		System.out.println("总计耗时："+(end - start)+"ms");
-		return ReturnInfoUtils.successInfo();
+		System.out.println("总计耗时：" + (end - start) + "ms");
 	}
 
 	/**
@@ -1294,10 +1303,11 @@ public class MorderServiceImpl implements MorderService {
 				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 				continue;
 			} else if (!reGoodsContentList.isEmpty()) {
-				//由于查询出来的总数已检索了未添加至备案商品信息表中,故无需添加记录,否则会造成计数错误
-				//String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
-				//RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
-				//continue;
+				// 由于查询出来的总数已检索了未添加至备案商品信息表中,故无需添加记录,否则会造成计数错误
+				// String msg = "商品自编号[" + entGoodsNo + "]已存在,无需重复添加至已备案信息!";
+				// RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount,
+				// serialNo, "updateMOrderGoods", 6);
+				// continue;
 			} else {
 				GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
 				int seq = Integer.parseInt(dataList.get(i).getValue("Seq") + "");
@@ -1346,7 +1356,7 @@ public class MorderServiceImpl implements MorderService {
 				goodsRecordDetail.setGoodsMerchantName(merchantName);
 				goodsRecordDetail.setGoodsSerialNo(goodsRecordHeadSerialNo);
 				String spareParams = dataList.get(i).getValue("spareParams1") + "";
-				if(StringEmptyUtils.isNotEmpty(spareParams)){
+				if (StringEmptyUtils.isNotEmpty(spareParams)) {
 					goodsRecordDetail.setSpareParams(spareParams);
 				}
 				if (!morderDao.add(goodsRecordDetail)) {
@@ -1456,4 +1466,224 @@ public class MorderServiceImpl implements MorderService {
 		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
 
+	@Override
+	public Map<String, Object> checkGZOrder(String waybill, int serial, String dateSign, String OrderDate, Double FCY,
+			Double Tax, Double ActualAmountPaid, String RecipientName, String RecipientID, String RecipientTel,
+			String RecipientProvincesCode, String RecipientAddr, String OrderDocAcount, String OrderDocName,
+			String OrderDocId, String OrderDocTel, String senderName, String senderCountry, String senderAreaCode,
+			String senderAddress, String senderTel, String areaCode, String cityCode, String provinceCode,
+			String postal, String provinceName, String cityName, String areaName, String orderId,
+			JSONObject goodsInfo) {
+		//
+		String key = "Shop_Key_CheckGZOrder_List_" + serial;
+		Map<String, Object> statusMap = new HashMap<>();
+		ConcurrentMap<String, Object> item = new ConcurrentHashMap<>();
+		synchronized (LOCK) {
+			byte[] redisByte = JedisUtil.get(key.getBytes());
+			if (redisByte != null && redisByte.length > 0) {
+				item = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
+				if (item.containsKey(waybill)) {
+					return updateRedisInfo(item, FCY, Tax, waybill, key);
+				}
+			}
+			Morder morder = new Morder();
+			// 查询缓存中订单自增Id
+			int count = SerialNoUtils.getRedisIdCount("checkOrder");
+			morder.setOrder_id(SerialNoUtils.getSerialNo("YM", count));
+			// 原导入表中的订单编号
+			morder.setOldOrderId(orderId);
+			morder.setFCY(FCY);
+			morder.setTax(Tax);
+			morder.setActualAmountPaid(ActualAmountPaid);
+			morder.setRecipientName(RecipientName);
+			morder.setRecipientID(RecipientID);
+			morder.setRecipientTel(RecipientTel);
+			morder.setRecipientAddr(RecipientAddr);
+			// 暂时默认为下单人姓名
+			morder.setOrderDocAcount(OrderDocName);
+			morder.setOrderDocName(OrderDocName);
+			morder.setOrderDocType("01");// 身份证
+			morder.setOrderDocId(OrderDocId);
+			morder.setOrderDocTel(OrderDocTel);
+			morder.setDateSign(dateSign);
+			morder.setSerial(serial);
+			morder.setWaybill(waybill);
+			morder.setDel_flag(0);
+			// 订单备案状态
+			morder.setOrder_record_status(1);
+			morder.setCreate_date(new Date());
+			morder.setCreate_by(goodsInfo.get("merchantName") + "");
+			morder.setFcode(FCODE);
+			morder.setSenderName(senderName);
+			morder.setSenderCountry(senderCountry);
+			morder.setSenderAreaCode(senderAreaCode);
+			morder.setSenderAddress(senderAddress);
+			morder.setSenderTel(senderTel);
+			morder.setPostal(postal);
+			morder.setRecipientProvincesCode(provinceCode);
+			morder.setRecipientCityCode(cityCode);
+			morder.setRecipientAreaCode(areaCode);
+			morder.setRecipientProvincesName(provinceName);
+			morder.setRecipientCityName(cityName);
+			morder.setRecipientAreaName(areaName);
+			String randomDate = DateUtil.randomCreateDate();
+			morder.setOrderDate(randomDate);
+			List<Morder> mOrderList = new ArrayList();
+			mOrderList.add(morder);
+			item.put(waybill, mOrderList);
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(item), 1800);
+			statusMap.put("status", 1);
+			statusMap.put("order_id", morder.getOrder_id());
+			return statusMap;
+		}
+	}
+
+	/**
+	 * 根据缓存中找出的订单信息,更新订单商品总金额与订单实际支付金额
+	 * 
+	 * @param item
+	 * @param FCY
+	 *            订单商品金额
+	 * @param Tax
+	 *            订单税费
+	 * @param waybill
+	 *            运单号
+	 * @param key
+	 *            缓存Key
+	 * @return Map
+	 */
+	private Map<String, Object> updateRedisInfo(ConcurrentMap<String, Object> item, Double FCY, Double Tax,
+			String waybill, String key) {
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Morder> newList = new ArrayList();
+		List<Morder> mOrderList = (List<Morder>) item.get(waybill);
+		Morder order = mOrderList.get(0);
+		double newFcy = order.getFCY() + FCY;
+		order.setFCY(newFcy);
+		double newActualAmountPaid = newFcy + Tax;
+		order.setActualAmountPaid(newActualAmountPaid);
+		System.out.println("运单号-->" + order.getWaybill() + ";--商品金额>>" + FCY + ";--订单商品总金额--->" + newFcy);
+		// 覆盖原来的值
+		newList.add(order);
+		item.put(waybill, newList);
+		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(item), 1800);
+		if (newFcy > 2000) {// 当订单金额超过2000时
+			statusMap.put(BaseCode.STATUS.toString(), "10");
+			statusMap.put("order_id", order.getOrder_id());
+			statusMap.put(BaseCode.MSG.toString(), "运单号[" + order.getWaybill() + "]<--关联商品总计金额超过2000,请核对金额!");
+			return statusMap;
+		}
+		statusMap.put("status", 1);
+		statusMap.put("order_id", order.getOrder_id());
+		return statusMap;
+	}
+
+	@Override
+	public Map<String, Object> checkQBOrder(String merchantId, Map<String, Object> item, String merchantName) {
+		//
+		String key = "Shop_Key_CheckQBOrder_List_" + item.get("serial");
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
+		ConcurrentMap<String, Object> concurrentMap = new ConcurrentHashMap<>();
+		double orderTotalPrice = Double.parseDouble(item.get("orderTotalPrice") + "");
+		double tax = Double.parseDouble(item.get("tax") + "");
+		double actualAmountPaid = Double.parseDouble(item.get("actualAmountPaid") + "");
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String orderId = item.get("orderId") + "";
+		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
+			// 查询缓存中订单自增Id
+			int count = SerialNoUtils.getRedisIdCount("order");
+			orderId = SerialNoUtils.getSerialNo("YM", count);
+		}
+		// 校验企邦是否已经录入已备案商品信息
+		String entGoodsNo = item.get("entGoodsNo") + "";
+		String marCode = item.get("marCode") + "";
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
+			params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		} else {
+			params.put("entGoodsNo", entGoodsNo.trim());
+		}
+		params.put("goodsMerchantId", merchantId);
+		List<GoodsRecordDetail> goodsList = morderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		if (goodsList == null || goodsList.isEmpty()) {
+			statusMap.put("status", -1);
+			statusMap.put("msg", "商品编号[" + entGoodsNo.trim() + "]与[" + marCode.trim() + "]------>对应商品不存在,请核实!");
+			return statusMap;
+		}
+		synchronized (LOCK) {
+			byte[] redisByte = JedisUtil.get(key.getBytes());
+			if (redisByte != null && redisByte.length > 0) {
+				concurrentMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
+				if (item.containsKey(orderId)) {
+					List<Morder> newList = new ArrayList();
+					List<Morder> mOrderList = (List<Morder>) concurrentMap.get(orderId);
+					Morder order = mOrderList.get(0);
+					double newFcy = order.getFCY() + orderTotalPrice;
+					order.setFCY(newFcy);
+					double newActualAmountPaid = newFcy + tax;
+					order.setActualAmountPaid(newActualAmountPaid);
+					System.out.println(
+							"订单号-->" + order.getOrder_id() + ";--商品金额>>" + orderTotalPrice + ";--订单商品总金额--->" + newFcy);
+					// 覆盖原来的值
+					newList.add(order);
+					concurrentMap.put(orderId, newList);
+					JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(concurrentMap), 1800);
+					if (newFcy > 2000) {// 当订单金额超过2000时
+						statusMap.put(BaseCode.STATUS.toString(), "10");
+						statusMap.put("order_id", order.getOrder_id());
+						statusMap.put(BaseCode.MSG.toString(),
+								"订单号[" + order.getOrder_id() + "]<--关联商品总计金额超过2000,请核对金额!");
+						return statusMap;
+					}
+					statusMap.put("status", 1);
+					statusMap.put("order_id", order.getOrder_id());
+					return statusMap;
+				}
+			}
+			Morder morder = new Morder();
+			morder.setOrder_id(orderId);
+			morder.setMerchant_no(merchantId);
+			morder.setFCY(orderTotalPrice);
+			morder.setTax(tax);
+			morder.setActualAmountPaid(actualAmountPaid);
+			morder.setRecipientName(item.get("recipientName") + "");
+			morder.setRecipientID(item.get("orderDocId") + "");
+			morder.setRecipientTel(item.get("recipientTel") + "");
+			morder.setRecipientProvincesCode(item.get("provinceCode") + "");
+			morder.setRecipientProvincesName(item.get("provinceName") + "");
+			morder.setRecipientCityCode(item.get("cityCode") + "");
+			morder.setRecipientCityName(item.get("cityName") + "");
+			morder.setRecipientAreaCode(item.get("areaCode") + "");
+			morder.setRecipientAreaName(item.get("areaName") + "");
+			morder.setRecipientAddr(item.get("recipientAddr") + "");
+			morder.setOrderDocAcount(item.get("orderDocAcount") + "");
+			morder.setOrderDocName(item.get("orderDocName") + "");
+			morder.setOrderDocType("01");// 身份证
+			morder.setOrderDocId(item.get("orderDocId") + "");
+			morder.setOrderDocTel(item.get("orderDocTel") + "");
+			morder.setDateSign(dateSign);
+			morder.setSerial(Integer.parseInt(item.get("serial") + ""));
+			morder.setWaybill(item.get("waybillNo") + "");
+			morder.setDel_flag(0);
+			morder.setOrder_record_status(1);
+			morder.setCreate_date(new Date());
+			morder.setCreate_by(merchantName);
+			morder.setFcode(FCODE);
+			String randomDate = DateUtil.randomCreateDate();
+			morder.setOrderDate(randomDate);
+			String ehsEntName = item.get("ehsEntName") + "";
+			if (StringEmptyUtils.isNotEmpty(ehsEntName)) {
+				JSONObject json = new JSONObject();
+				json.put("ehsEntName", ehsEntName);
+				morder.setSpareParams(json.toString());
+			}
+			List<Morder> mOrderList = new ArrayList();
+			mOrderList.add(morder);
+			concurrentMap.put(orderId, mOrderList);
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(concurrentMap), 1800);
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put("order_id", morder.getOrder_id());
+			return statusMap;
+		}
+	}
 }

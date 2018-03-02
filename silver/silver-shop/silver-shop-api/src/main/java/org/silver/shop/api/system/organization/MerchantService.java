@@ -21,10 +21,11 @@ public interface MerchantService {
 	 * @param recordInfoPack 商户备案信息包
 	 * @param type  类型：1-银盟商户注册,2-第三方商户注册	
 	 * @param createBy 创建人
+	 * @param phone 
 	 * @return Map
 	 */
 	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy);
+			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy, String phone);
 
 	/**
 	 * 检查商户名是否重复

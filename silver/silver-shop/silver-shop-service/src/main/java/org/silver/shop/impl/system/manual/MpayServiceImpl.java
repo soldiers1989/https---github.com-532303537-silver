@@ -40,6 +40,7 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SortUtil;
@@ -381,71 +382,76 @@ public class MpayServiceImpl implements MpayService {
 		// 累计金额
 		double cumulativeAmount = 0.0;
 		for (int i = 0; i < dataList.size(); i++) {
-			Map<String, Object> orderMap = (Map<String, Object>) dataList.get(i);
-			String orderNo = orderMap.get("orderNo") + "";
-			Map<String, Object> param = new HashMap<>();
-			param.put("merchant_no", merchantId);
-			param.put("order_id", orderNo);
-			List<Morder> orderList = morderDao.findByProperty(Morder.class, param, 1, 1);
-			param.clear();
-			param.put("order_id", orderNo);
-			param.put("deleteFlag", 0);
-			List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
-			if (orderList == null || orderSubList == null) {
-				String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
-				continue;
-			} else {
-				Morder order = orderList.get(0);
-				if (order.getFCY() > 2000) {
-					String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
-					continue;
-				}
-				if (!checkProvincesCityAreaCode(order)) {
-					String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
-					continue;
-				}
-
-				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-				/*
-				 * if (order.getOrder_record_status() == 3) { Map<String,
-				 * Object> errMap = new HashMap<>();
-				 * errMap.put(BaseCode.MSG.toString(), "[" + orderNo +
-				 * "]订单已成功备案,无需再次发起!"); errorList.add(errMap);
-				 * BufferUtils.writeRedis("1", errorList, (realRowCount - 1),
-				 * serialNo, "order") continue; }
-				 */
-
-				// 订单商品总额
-				double fcy = order.getFCY();
-				// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
-				cumulativeAmount = fcy += cumulativeAmount;
-				Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
-				if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-					String msg = checkMap.get(BaseCode.MSG.toString()) + "";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
-					continue;
-				}
-				Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
-				System.out.println("->>>>>>>>>>>" + reOrderMap);
-				if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
-					String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
+			try {
+				Map<String, Object> orderMap = (Map<String, Object>) dataList.get(i);
+				String orderNo = orderMap.get("orderNo") + "";
+				Map<String, Object> param = new HashMap<>();
+				param.put("merchant_no", merchantId);
+				param.put("order_id", orderNo);
+				List<Morder> orderList = morderDao.findByProperty(Morder.class, param, 1, 1);
+				param.clear();
+				param.put("order_id", orderNo);
+				param.put("deleteFlag", 0);
+				List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
+				if (orderList == null || orderSubList == null) {
+					String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
 					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 					continue;
 				} else {
-					String reOrderMessageID = reOrderMap.get("messageID") + "";
-					// 更新服务器返回订单Id
-					Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
-					if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
-						String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
+					Morder order = orderList.get(0);
+					if (order.getFCY() > 2000) {
+						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
 						continue;
 					}
+					if (!checkProvincesCityAreaCode(order)) {
+						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						continue;
+					}
+
+					// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+					/*
+					 * if (order.getOrder_record_status() == 3) { Map<String,
+					 * Object> errMap = new HashMap<>();
+					 * errMap.put(BaseCode.MSG.toString(), "[" + orderNo +
+					 * "]订单已成功备案,无需再次发起!"); errorList.add(errMap);
+					 * BufferUtils.writeRedis("1", errorList, (realRowCount -
+					 * 1), serialNo, "order") continue; }
+					 */
+
+					// 订单商品总额
+					double fcy = order.getFCY();
+					// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
+					cumulativeAmount = fcy += cumulativeAmount;
+					Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
+					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
+						String msg = checkMap.get(BaseCode.MSG.toString()) + "";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						continue;
+					}
+					Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
+					System.out.println("->>>>>>>>>>>" + reOrderMap);
+					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
+						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						continue;
+					} else {
+						String reOrderMessageID = reOrderMap.get("messageID") + "";
+						// 更新服务器返回订单Id
+						Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
+						if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
+							String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
+							RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+							continue;
+						}
+					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}finally {
+				bufferUtils.writeRedis(errorList, totalCount, serialNo, "orderRecord");
 			}
-			bufferUtils.writeRedis(errorList, totalCount, serialNo, "orderRecord");
 		}
 		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "orderRecord", merchantId, merchantName);
 	}
@@ -714,11 +720,15 @@ public class MpayServiceImpl implements MpayService {
 				note = "";
 			}
 			if ("1".equals(status)) {
+				System.out.println("-------备案成功,更新状态-----");
 				order.setOrder_record_status(3);
 				findOrderGoodsInfo(orderId, merchantId);
 
 			} else {
 				// 备案失败
+				if (reMsg.contains("旧报文数据") || reMsg.contains("订单数据已存在")) {
+					return ReturnInfoUtils.successInfo();
+				}
 				order.setOrder_record_status(4);
 			}
 			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
@@ -739,6 +749,7 @@ public class MpayServiceImpl implements MpayService {
 		List<MorderSub> reGoodsList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
 		if (reGoodsList != null && !reGoodsList.isEmpty()) {
 			for (MorderSub goods : reGoodsList) {
+				System.out.println("--------遍历所有订单下的商品-----");
 				String entGoodsNo = goods.getEntGoodsNo();
 				String spareParams = goods.getSpareParams();
 				if (StringEmptyUtils.isNotEmpty(spareParams)) {
@@ -748,29 +759,31 @@ public class MpayServiceImpl implements MpayService {
 				}
 				// 订单商品数量
 				int count = goods.getQty();
-				updateStockDoneCount(entGoodsNo,count,merchantId);
-			
+				updateStockDoneCount(entGoodsNo, count, merchantId);
 			}
+		}else{
+			System.out.println("---------订单商品未找到----------");
 		}
 	}
 
 	private void updateStockDoneCount(String entGoodsNo, int count, String merchantId) {
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("entGoodsNo", entGoodsNo);
 		params.put("merchantId", merchantId);
 		List<StockContent> reStockList = morderDao.findByProperty(StockContent.class, params, 1, 1);
 		if (reStockList != null && !reStockList.isEmpty()) {
 			for (StockContent stock : reStockList) {
+				System.out.println("------开始遍历库存中商品---");
 				int oldDoneCount = stock.getDoneCount();
 				int oldReadIngCount = stock.getReadingCount();
 				stock.setDoneCount(oldDoneCount + count);
-				stock.setReadingCount(oldReadIngCount + 1);
+				stock.setReadingCount(oldReadIngCount + RandomUtils.getRandom(1));
 				stock.setUpdateBy("system");
 				stock.setUpdateDate(new Date());
 				morderDao.update(stock);
 			}
 		}
-		
+
 	}
 
 	/**

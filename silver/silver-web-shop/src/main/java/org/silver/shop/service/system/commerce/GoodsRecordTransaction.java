@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.commerce;
 
-
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.util.ArrayList;
@@ -312,7 +311,7 @@ public class GoodsRecordTransaction {
 					}
 					break;
 				case 13:
-					if (StringUtils.isNotEmpty(value)) {
+					if (StringUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(findCountry(value))) {
 						originCountry = value;
 					}
 					break;
@@ -353,51 +352,56 @@ public class GoodsRecordTransaction {
 					break;
 				}
 			}
-			try {
-				Double.parseDouble(regPrice);
-			} catch (Exception e) {
-				e.printStackTrace();
-				String msg = "【表格】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "notRGImport", 1);
-				continue;
-			}
-			try {
-				Double.parseDouble(netWt);
-			} catch (Exception e) {
-				e.printStackTrace();
-				String msg = "【表格】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "notRGImport", 1);
-				continue;
-			}
-			try {
-				Double.parseDouble(grossWt);
-			} catch (Exception e) {
-				e.printStackTrace();
-				String msg = "【表格】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "notRGImport", 1);
-				continue;
-			}
+			// 查询缓存中商品自编号自增Id
+			int count = SerialNoUtils.getRedisIdCount("goods");
+			String entGoodsNo = SerialNoUtils.getSerialNo("GR", count);
 			Map<String, Object> param = new HashMap<>();
 			// 由于行循环是从第三行开始读取,所以SEQ要减1
 			param.put("seq", r - 1);
+			param.put("entGoodsNo", entGoodsNo);
 			param.put("shelfGName", shelfGName);
 			param.put("ncadCode", ncadCode);
 			param.put("hsCode", hsCode);
-			param.put("barCode", barCode);
+			if (StringEmptyUtils.isEmpty(barCode)) {
+				param.put("barCode", entGoodsNo);
+			} else {
+				param.put("barCode", barCode);
+			}
 			param.put("goodsName", goodsName);
 			param.put("goodsStyle", goodsStyle);
 			param.put("brand", brand);
 			param.put("gUnit", gUnit);
 			param.put("stdUnit", stdUnit);
 			param.put("secUnit", secUnit);
-			param.put("regPrice", regPrice);
+			try {
+				param.put("regPrice", Double.parseDouble(regPrice));
+			} catch (Exception e) {
+				e.printStackTrace();
+				String msg = "【表格】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!";
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				continue;
+			}
 			param.put("giftFlag", giftFlag);
 			param.put("originCountry", originCountry);
 			param.put("quality", quality);
 			param.put("qualityCertify", qualityCertify);
 			param.put("manufactory", manufactory);
-			param.put("netWt", netWt);
-			param.put("grossWt", grossWt);
+			try {
+				param.put("netWt", Double.parseDouble(netWt));
+			} catch (Exception e) {
+				e.printStackTrace();
+				String msg = "【表格】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!";
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				continue;
+			}
+			try {
+				param.put("grossWt", Double.parseDouble(grossWt));
+			} catch (Exception e) {
+				e.printStackTrace();
+				String msg = "【表格】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!";
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				continue;
+			}
 			param.put("notes", notes);
 			param.put("ingredient", ingredient);
 			param.put("additiveflag", additiveflag);
@@ -405,7 +409,7 @@ public class GoodsRecordTransaction {
 			Map<String, Object> reGoodsMap = checkGoodsInfo(JSONObject.fromObject(param));
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
 				continue;
 			}
 			GoodsRecordDetail goodsInfo = null;
@@ -424,13 +428,13 @@ public class GoodsRecordTransaction {
 					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg");
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount -1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
 				continue;
 			}
-			excelBufferUtils.writeRedis(errl, (realRowCount -1), serialNo, "notRGImport");
+			excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "notRGImport");
 		}
 		excel.closeExcel();
-		excelBufferUtils.writeCompletedRedis(errl, (realRowCount -1), serialNo, "notRGImport");
+		excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "notRGImport");
 	}
 
 	/**
@@ -518,7 +522,13 @@ public class GoodsRecordTransaction {
 		return "011";
 	}
 
-	// 根据国家中文名称查询国家编码
+	/**
+	 * 根据国家中文名称查询国家编码
+	 * 
+	 * @param value
+	 *            国家中文名称
+	 * @return String
+	 */
 	private String findCountry(String value) {
 		List reList = countryTransaction.findAllCountry();
 		if (reList != null && !reList.isEmpty()) {
@@ -875,11 +885,11 @@ public class GoodsRecordTransaction {
 					}
 					break;
 				case 22:
-					if (StringEmptyUtils.isNotEmpty(value)) {
-						originCountry = findCountry(value);
+					if (StringEmptyUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(findCountry(value))) {
+						originCountry = value;
 					} else {
 						Map<String, Object> errMap = new HashMap<>();
-						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->原产国不能为空!");
+						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->原产国填写错误,请核对信息!");
 						errl.add(errMap);
 					}
 					break;
@@ -959,20 +969,18 @@ public class GoodsRecordTransaction {
 				errl.add(errMap);
 				continue;
 			}
-			String newEntGoodsNo = "";
 			// 当企邦的归属商户Id与Sku都填写了则进行针对性操作
 			if (StringEmptyUtils.isNotEmpty(marCode)) {
-				newEntGoodsNo = entGoodsNo + "_" + marCode;
+				entGoodsNo = entGoodsNo + "_" + marCode;
 				JSONObject json = new JSONObject();
 				json.put("marCode", marCode);
 				if (StringEmptyUtils.isNotEmpty(entGoodsNoSKU)) {
 					json.put("SKU", entGoodsNoSKU);
 				}
 				goodsRecordDetail.setSpareParams(json.toString());
-				goodsRecordDetail.setEntGoodsNo(newEntGoodsNo);
-			} else {
-				goodsRecordDetail.setEntGoodsNo(entGoodsNo);
 			}
+			
+			goodsRecordDetail.setEntGoodsNo(entGoodsNo);
 			goodsRecordDetail.setEbEntNo(ebEntNo);
 			goodsRecordDetail.setEbEntName(ebEntName);
 			goodsRecordDetail.setSeq(seq);
@@ -1163,5 +1171,10 @@ public class GoodsRecordTransaction {
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
 		return goodsRecordService.merchantDeleteGoodsRecordInfo(merchantId, merchantName, entGoodsNo);
+	}
+
+	public static void main(String[] args) {
+		String str = "GR20180227002638035";
+		System.out.println(str.length());
 	}
 }

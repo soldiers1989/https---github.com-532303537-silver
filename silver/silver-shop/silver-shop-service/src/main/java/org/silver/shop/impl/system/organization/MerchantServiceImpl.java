@@ -27,7 +27,7 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	
+
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
@@ -125,7 +125,8 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy) {
+			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type, String createBy,
+			String phone) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
@@ -144,11 +145,12 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			merchant.setProxyParentId("prxoy_00001");
 			merchant.setProxyParentName("银盟");
+			merchant.setMerchantPhone(phone);
 			recordInfo.setMerchantId(merchantId);
 			recordInfo.setCreateBy(createBy);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			
+
 			if (!merchantDao.add(merchant)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,服务器繁忙!");
@@ -173,6 +175,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			merchant.setProxyParentId("prxoy_00001");
 			merchant.setProxyParentName("银盟");
+			merchant.setMerchantPhone(phone);
 			// 商戶基本信息实例化
 			if (merchantDao.add(merchant)) {
 				JSONArray jsonList = null;
@@ -188,10 +191,10 @@ public class MerchantServiceImpl implements MerchantService {
 				for (int x = 0; x < jsonList.size(); x++) {
 					Map<String, Object> packMap = (Map) jsonList.get(x);
 					Map<String, Object> listMap = new HashMap<>();
-					int eport = 0 ;
-					try{
+					int eport = 0;
+					try {
 						eport = Integer.parseInt((packMap.get(EPORT) + ""));
-					}catch (Exception e){
+					} catch (Exception e) {
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 						statusMap.put(BaseCode.MSG.getBaseCode(), "口岸参数错误！");
 						return statusMap;
@@ -229,7 +232,7 @@ public class MerchantServiceImpl implements MerchantService {
 					}
 				}
 			}
-		}		
+		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
 		return statusMap;

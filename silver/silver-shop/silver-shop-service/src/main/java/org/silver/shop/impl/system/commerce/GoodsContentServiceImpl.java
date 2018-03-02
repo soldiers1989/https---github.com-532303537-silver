@@ -20,6 +20,7 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,28 +60,19 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Override
 	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params,
-			List<Object> imgList, int goodsYear, Date date) {
+		 int goodsYear, Date date) {
 		Map<String, Object> statusMap = new HashMap<>();
-		String goodsImage = "";
-		// 拼接多张图片字符串
-		for (int i = 0; i < imgList.size(); i++) {
-			String imgStr = imgList.get(i) + "";
-			if (imgStr != null && !"".equals(imgStr.trim())) {
-				goodsImage = goodsImage + imgStr + ";";
-			}
-		}
 		GoodsContent goodsInfo = new GoodsContent();
 		goodsInfo.setGoodsId(params.get("goodsId") + "");
 		goodsInfo.setGoodsName(params.get("goodsName") + "");
 		goodsInfo.setGoodsMerchantName(merchantName);
-		goodsInfo.setGoodsImage(goodsImage);
+		goodsInfo.setGoodsImage(params.get("mainImg")+"");
 		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId") + "");
 		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName") + "");
 		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId") + "");
 		goodsInfo.setGoodsSecondTypeName(params.get("goodsSecondTypeName") + "");
 		goodsInfo.setGoodsThirdTypeId(params.get("goodsThirdTypeId") + "");
 		goodsInfo.setGoodsThirdTypeName(params.get("goodsThirdTypeName") + "");
-
 		goodsInfo.setGoodsDetail(params.get("goodsDetail") + "");
 		goodsInfo.setGoodsBrand(params.get("goodsBrand") + "");
 		goodsInfo.setGoodsStyle(params.get("goodsStyle") + "");
@@ -152,7 +144,7 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		if (reList != null && !reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			goodsInfo = (GoodsContent) ConvertUtils.mapChangeToEntity(goodsInfo, datasMap);
-			if (goodsImage != null && !"".equals(goodsImage) && !"null".equals(goodsImage)) {
+			if (StringEmptyUtils.isNotEmpty(goodsImage)) {
 				goodsInfo.setGoodsImage(goodsImage);
 			}
 			goodsInfo.setUpdateDate(date);

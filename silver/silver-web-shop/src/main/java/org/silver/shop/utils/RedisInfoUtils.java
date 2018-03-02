@@ -30,6 +30,8 @@ public class RedisInfoUtils {
 		errMap.put("type", type);
 		errorList.add(errMap);
 		ExcelBufferUtils excelBufferUtils = new ExcelBufferUtils();
-		excelBufferUtils.writeRedis(errorList, totalCount, serialNo, name);
+		if(type == 1){
+			excelBufferUtils.writeRedis(errorList, totalCount, serialNo, name);
+		}
 	}
 }

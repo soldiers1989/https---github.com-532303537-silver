@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.util.ExcelUtil;
+import org.silver.util.StringEmptyUtils;
 import org.silver.util.TaskUtils;
 
 /**
@@ -49,13 +50,38 @@ public class GZExcelTask extends TaskUtils {
 		this.merchantName = merchantName;
 	}
 
+	/**
+	 * excel多任务预处理
+	 * 
+	 * @param sheet
+	 * @param excel
+	 * @param errl
+	 * @param startCount
+	 * @param endCount
+	 * @param manualService
+	 */
+	public GZExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,   int startCount,
+			int endCount, ManualService manualService, String serialNo, int realRowCount) {
+		this.sheet = sheet;
+		this.excel = excel;
+		this.errorList = errl;
+		this.startCount = startCount;
+		this.endCount = endCount;
+		this.manualService = manualService;
+		this.serialNo = serialNo;
+		this.realRowCount = realRowCount;
+	}
+	
 	@Override
 	public Map<String, Object> call() {
 		try {
-			System.out.println("------call方法--------");
 			excel.open();
-			manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo, realRowCount,
-					merchantName);
+			if(StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)){
+				manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo, realRowCount,
+						merchantName);
+			}else{
+				manualService.pretreatmentGZTable(sheet, excel, errorList, startCount, endCount, serialNo, realRowCount);
+			}
 			return null;
 		} catch (Exception e) {
 			e.printStackTrace();

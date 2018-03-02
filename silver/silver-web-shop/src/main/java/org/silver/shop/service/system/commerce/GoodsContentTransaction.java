@@ -19,6 +19,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.ConvertUtils;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,46 +35,38 @@ public class GoodsContentTransaction {
 
 	// 商户添加商品基本信息
 	public Map<String, Object> addMerchantGoodsBaseInfo(HttpServletRequest req) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req,
-				"/opt/www/img/merchant/" + merchantId + "/goods/", ".jpg", false, 800, 800, null);
-		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if (status.equals("1")) {// 商品展示图片上传成功后
-			Date date = new Date();
-			// 获取商品基本信息的自增ID
-			Map<String, Object> reMap = goodsContentService.createGoodsId();
-			String idStatus = reMap.get(BaseCode.STATUS.toString()) + "";
-			if (idStatus.equals("1")) {// 自增ID查询成功
-				Map<String, Object> params = new HashMap<>();
-				Calendar cl = Calendar.getInstance();
-				int goodsYear = cl.get(Calendar.YEAR);
-				List<Object> imgList = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-				params.put("goodsId", reMap.get(BaseCode.DATAS.toString()) + "");
-				params.put("goodsName", req.getParameter("goodsName"));
-				params.put("goodsFirstTypeId", req.getParameter("goodsFirstTypeId"));
-				params.put("goodsFirstTypeName", req.getParameter("goodsFirstTypeName"));
-				params.put("goodsSecondTypeId", req.getParameter("goodsSecondTypeId"));
-				params.put("goodsSecondTypeName", req.getParameter("goodsSecondTypeName"));
-				params.put("goodsThirdTypeId", req.getParameter("goodsThirdTypeId"));
-				params.put("goodsThirdTypeName", req.getParameter("goodsThirdTypeName"));
-				params.put("goodsDetail", req.getParameter("goodsDetail"));
-				params.put("goodsBrand", req.getParameter("goodsBrand"));
-				params.put("goodsStyle", req.getParameter("goodsStyle"));
-				params.put("goodsUnit", req.getParameter("goodsUnit"));
-				params.put("goodsRegPrice", req.getParameter("goodsRegPrice"));
-				params.put("goodsOriginCountry", req.getParameter("goodsOriginCountry"));
-				params.put("goodsBarCode", req.getParameter("goodsBarCode"));
-				return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params, imgList, goodsYear, date);
-			}
+		Date date = new Date();
+		// 获取商品基本信息的自增ID
+		Map<String, Object> reMap = goodsContentService.createGoodsId();
+		String idStatus = reMap.get(BaseCode.STATUS.toString()) + "";
+		if (idStatus.equals("1")) {// 自增ID查询成功
+			Map<String, Object> params = new HashMap<>();
+			Calendar cl = Calendar.getInstance();
+			int goodsYear = cl.get(Calendar.YEAR);
+			params.put("mainImg",req.getParameter("mainImg")+"");
+			params.put("goodsId", reMap.get(BaseCode.DATAS.toString()) + "");
+			params.put("goodsName", req.getParameter("goodsName"));
+			params.put("goodsFirstTypeId", req.getParameter("goodsFirstTypeId"));
+			params.put("goodsFirstTypeName", req.getParameter("goodsFirstTypeName"));
+			params.put("goodsSecondTypeId", req.getParameter("goodsSecondTypeId"));
+			params.put("goodsSecondTypeName", req.getParameter("goodsSecondTypeName"));
+			params.put("goodsThirdTypeId", req.getParameter("goodsThirdTypeId"));
+			params.put("goodsThirdTypeName", req.getParameter("goodsThirdTypeName"));
+			params.put("goodsDetail", req.getParameter("goodsDetail"));
+			params.put("goodsBrand", req.getParameter("goodsBrand"));
+			params.put("goodsStyle", req.getParameter("goodsStyle"));
+			params.put("goodsUnit", req.getParameter("goodsUnit"));
+			params.put("goodsRegPrice", req.getParameter("goodsRegPrice"));
+			params.put("goodsOriginCountry", req.getParameter("goodsOriginCountry"));
+			params.put("goodsBarCode", req.getParameter("goodsBarCode"));
+			return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,  goodsYear, date);
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("服务器查询ID繁忙,请重试!");
 	}
 
 	// 商户查询商品基本信息

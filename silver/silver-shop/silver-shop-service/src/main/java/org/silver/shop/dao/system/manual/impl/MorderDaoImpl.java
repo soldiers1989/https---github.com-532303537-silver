@@ -107,9 +107,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			}
 			session.connection().close();
 			session.close();
-			//将链表查询出的数据进行转换
-			long count = Long.parseLong(t.getRows().get(0).getValue("count")+"");
-			return count;
+			// 将链表查询出的数据进行转换
+			return Long.parseLong(t.getRows().get(0).getValue("count") + "");
 		} catch (Exception re) {
 			re.printStackTrace();
 			// log.error("查询数据出错！", re);

@@ -5,9 +5,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.service.system.log.ErrorLogsTransaction;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
@@ -65,6 +68,7 @@ public class ExcelBufferUtils {
 
 	/**
 	 * 线程执行完成时写入缓存
+	 * 
 	 * @param errl
 	 *            错误信息
 	 * @param totalCount
@@ -76,6 +80,7 @@ public class ExcelBufferUtils {
 	 */
 	public final void writeCompletedRedis(List<Map<String, Object>> errl, int totalCount, String serialNo,
 			String name) {
+		System.out.println("------------运行完成写入方法----------");
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
@@ -86,6 +91,7 @@ public class ExcelBufferUtils {
 			} else {
 				datasMap.put("count", statusCounter.getAndIncrement());
 			}
+			datasMap.put("cpuCount", cpuCount);
 			datasMap.put(BaseCode.STATUS.toString(), "1");
 			if (statusCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
@@ -93,26 +99,83 @@ public class ExcelBufferUtils {
 				// 重置计数器
 				counter = new AtomicInteger(0);
 				statusCounter = new AtomicInteger(0);
-				switch (name) {
-				case "orderImport":// 只有再订单导入时才需要排序错误
-					errl = SortUtil.sortList(errl);
-					// 删除文件夹下所有复制文件
-					FileUtils.deleteFile(new File("/gadd-excel/"));
-					errorLogs.addErrorLogs(errl, totalCount, serialNo, name);
-					break;
-				default:
-					break;
-				}
+				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
+				datasMap.put("orderTotalAmount", reMap.get("orderTotalAmount"));
+				datasMap.put("fcy", reMap.get("fcy"));
+				datasMap.put(BaseCode.ERROR.toString(), reMap.get(BaseCode.ERROR.toString()));
+				datasMap.remove("cpuCount");
 			}
-			datasMap.put(BaseCode.ERROR.toString(), errl);
 			datasMap.put("totalCount", totalCount);
-			datasMap.put("cpuCount", cpuCount);
-			datasMap.put("completed", counter.getAndIncrement());
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
 	}
 
+	/**
+	 * 
+	 * @param errl
+	 * @param totalCount
+	 * @param serialNo
+	 * @param name
+	 */
+	private Map<String, Object> finishProcessing(List<Map<String, Object>> errl, int totalCount, String serialNo,
+			String name) {
+		Map<String, Object> statusMap = new HashMap<>();
+		// 截取批次号数字
+				String[] str = serialNo.split("_");
+				int serial = Integer.parseInt(str[1]);
+				String key = "";
+		switch (name) {
+		case "orderImport":
+			// 删除文件夹下所有复制文件
+			FileUtils.deleteFile(new File("/gadd-excel/"));
+			errorLogs.addErrorLogs(SortUtil.sortList(errl), totalCount, serialNo, name);
+			break;
+		case "checkGZOrderImport":// 国宗订单导入预处理
+			 key = "Shop_Key_CheckGZOrder_List_" + serial;
+			return checkGZOrderImport(serialNo,SortUtil.sortList(errl),key);
+		case "checkQBOrderImport":
+			key = "Shop_Key_CheckQBOrder_List_" + serial;
+			return checkGZOrderImport(serialNo,SortUtil.sortList(errl),key);
+		default:
+			break;
+		}
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.ERROR.toString(), errl);
+		return statusMap;
+	}
+
+	private Map<String,Object> checkGZOrderImport(String serialNo, List<Map<String, Object>> errl, String key) {
+		Map<String,Object> statusMap = new HashMap<>();
+		double orderTotalAmount = 0.0;
+		double fcy = 0.0;
+		byte[] redisByte = JedisUtil.get(key.getBytes());
+		if (redisByte != null && redisByte.length > 0) {
+			// 换取缓存中的Map
+			ConcurrentMap<String, Object> item = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
+			for (Map.Entry<String, Object> entry : item.entrySet()) {
+				List<Morder> mOrderList = (List<Morder>) entry.getValue();
+				Morder order = mOrderList.get(0);
+				// 总订单实际支付金额
+				orderTotalAmount += order.getActualAmountPaid();
+				// 总订单商品总金额
+				fcy += order.getFCY();
+			}
+		}
+		statusMap.put("orderTotalAmount", orderTotalAmount);
+		statusMap.put("fcy", fcy);
+		return statusMap;
+	}
+
+	/**
+	 * 根据键获取缓存中已计算好的CPU数量,如缓存中没有则从新计算
+	 * 
+	 * @param key
+	 *            缓存中的键
+	 * @param totalCount
+	 *            总数
+	 * @return int cpu数
+	 */
 	private final int getRedisCPUCount(String key, int totalCount) {
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null) {
@@ -124,13 +187,5 @@ public class ExcelBufferUtils {
 			}
 		}
 		return CalculateCpuUtils.calculateCpu(totalCount);
-	}
-	
-	public static void main(String[] args) {
-		for(int i =1;i<6 ;i ++){
-			System.out.println(statusCounter.getAndIncrement());
-		}
-		
-		System.out.println("-->>>>>>"+statusCounter.get());
 	}
 }

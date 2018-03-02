@@ -41,7 +41,7 @@ public class MerchantTransaction {
 
 	// 商戶注册
 	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, String type) {
+			String merchantIdCardName, String recordInfoPack, String type, String phone) {
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
 		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
@@ -50,7 +50,7 @@ public class MerchantTransaction {
 			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 			// 商户注册
 			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type, account);
+					merchantIdCardName, recordInfoPack, type, account,phone);
 		}
 		return reIdMap;
 	}

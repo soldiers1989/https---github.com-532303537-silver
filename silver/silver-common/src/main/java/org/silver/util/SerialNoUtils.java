@@ -140,7 +140,7 @@ public class SerialNoUtils {
 	}
 
 	/**
-	 * 生成流水号 流水号格式为:自编抬头+时间(yyMMdd)+五位增长数(当前年份下ID总数+1)+4位随机数
+	 * 生成流水号 流水号格式为:自编抬头+时间(yyyyMMdd)+五位增长数(当天缓存自增数)+4位随机数
 	 * 
 	 * @param topStr
 	 *            自编抬头
@@ -152,18 +152,24 @@ public class SerialNoUtils {
 		Date date = new Date();
 		long count = serialNoCount + 1;
 		String strCount = String.valueOf(count);
+		int randomNumber = 4;
 		while (strCount.length() < 5) {
 			strCount = "0" + strCount;
 		}
+		String time = DateUtil.formatDate(date, "yyyyMMdd");
+		if (strCount.length() > 5) {
+			randomNumber = 3;
+		}
 		// 默认随机数为4位
-		int ramCount = RandomUtils.getRandom(4);
-		String time = DateUtil.formatDate(date, "yyyyMM");
+		int ramCount = RandomUtils.getRandom(randomNumber);
 		return topStr + time + strCount + ramCount;
 	}
 
 	public static void main(String[] args) {
-		String s = getSerialNo("tes_", 2017, 100000);
-		String s2 = getSerialNotTimestamp("tes_", 2017, 100000);
-		System.out.println("------->>>>>" + s2.length());
+		String str = "YT201802228377126678";
+		Map<String, Object> map = new HashMap<>();
+		map.put("str", str);
+		System.out.println(map);
+		System.out.println(map.toString());
 	}
 }

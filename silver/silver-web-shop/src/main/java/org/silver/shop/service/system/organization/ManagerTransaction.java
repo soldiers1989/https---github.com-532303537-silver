@@ -136,7 +136,7 @@ public class ManagerTransaction {
 
 	// 管理员添加商户
 	public Map<String, Object> managerAddMerchantInfo(String merchantName, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, int type, int imgLength, HttpServletRequest req) {
+			String merchantIdCardName, String recordInfoPack, int type, int imgLength, HttpServletRequest req,String phone) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
@@ -150,7 +150,7 @@ public class ManagerTransaction {
 		String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
 		// 添加商户
 		Map<String, Object> registerMap = merchantService.merchantRegister(merchantId, merchantName, loginPassword,
-				merchantIdCard, merchantIdCardName, recordInfoPack, Integer.toString(type), managerName);
+				merchantIdCard, merchantIdCardName, recordInfoPack, Integer.toString(type), managerName,phone);
 		if (!"1".equals(registerMap.get(BaseCode.STATUS.toString()))) {
 			return registerMap;
 		}

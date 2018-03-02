@@ -73,7 +73,7 @@ public class Uploader {
 
 	}
 
-	public void upload(String path, String fileDate) throws Exception {
+	public void upload(String path, String merchantId) throws Exception {
 		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(
 				this.request.getSession().getServletContext());
 		if (multipartResolver.isMultipart(this.request)) {
@@ -93,7 +93,7 @@ public class Uploader {
 								this.originalName = myFileName;
 								this.fileName = imgName;
 								this.type = this.getFileExt(this.fileName);
-								this.url =  "http://localhost:8080/UME/img/goodsContent/"+fileDate+"/" + this.fileName;
+								this.url =  "http://ym.191ec.com/img/goodsContent/"+merchantId+"/" + this.fileName;
 								this.state = "SUCCESS";
 							}
 						} catch (IllegalStateException e) {

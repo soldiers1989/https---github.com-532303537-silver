@@ -8,9 +8,14 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+import org.silver.common.LoginType;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.Uploader;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +27,8 @@ import net.sf.json.JSONObject;
 @Controller
 @RequestMapping(value = "/upload")
 public class UploadController {
-	private static final String FILEPATH = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/";
+	//private static final String FILEPATH = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/";
+	private static final String FILEPATH ="/opt/www/img/";
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
@@ -44,9 +50,8 @@ public class UploadController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Date date = new Date();
-		String fileDate =  DateUtil.formatDate(date, "yyyyMM");
-		String path = FILEPATH + "goodsContent/" + fileDate + "/";
+		String merchantId = req.getParameter("merchantId");
+		String path = FILEPATH + "goodsContent/" + merchantId + "/";
 		try {
 			req.setCharacterEncoding("utf-8");
 		} catch (UnsupportedEncodingException e2) {
@@ -59,7 +64,7 @@ public class UploadController {
 		up.setAllowFiles(fileType);
 		up.setMaxSize(100000); // 单位KB
 		try {
-			up.upload(path, fileDate);
+			up.upload(path, merchantId);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}

@@ -480,14 +480,17 @@ public class ExcelUtil {
 		if (row.getCell(cellNum) != null) {
 			switch (row.getCell(cellNum).getCellType()) {
 			case Cell.CELL_TYPE_FORMULA:
-				//cell = "FORMULA";
+				// cell = "FORMULA";
 				cell = String.valueOf(formulaEvaluation(row.getCell(cellNum)).getNumberValue());
 				break;
 			case Cell.CELL_TYPE_NUMERIC:
-				cell = String.valueOf(row.getCell(cellNum).getNumericCellValue());
+				//cell = String.valueOf(row.getCell(cellNum).getNumericCellValue());
+				//由于会产生浮点数,因此都转换为String类型
+				row.getCell(cellNum).setCellType(Cell.CELL_TYPE_STRING);
+				cell = row.getCell(cellNum).getStringCellValue().trim();
 				break;
 			case Cell.CELL_TYPE_STRING:
-				cell = row.getCell(cellNum).getStringCellValue();
+				cell = row.getCell(cellNum).getStringCellValue().trim();
 				break;
 			case Cell.CELL_TYPE_BOOLEAN:
 				cell = String.valueOf(row.getCell(cellNum).getBooleanCellValue());
@@ -502,16 +505,18 @@ public class ExcelUtil {
 		}
 		return cell;
 	}
-	
+
 	/**
 	 * 用于转换excel表单中公式下的数值
+	 * 
 	 * @param cell
 	 * @return CellValue
 	 */
 	private CellValue formulaEvaluation(Cell cell) {
-	    FormulaEvaluator formulaEval = book.getCreationHelper().createFormulaEvaluator();
-	    return formulaEval.evaluate(cell);
+		FormulaEvaluator formulaEval = book.getCreationHelper().createFormulaEvaluator();
+		return formulaEval.evaluate(cell);
 	}
+
 	// ---------------------------------------
 	// ---------------------------------------
 	/**

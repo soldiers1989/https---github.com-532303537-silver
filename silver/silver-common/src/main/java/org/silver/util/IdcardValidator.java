@@ -445,7 +445,7 @@ public class IdcardValidator {
 		//IdcardValidator iv = new IdcardValidator();
 		//System.out.println(isValidatedAllIdcard(idcard15));
 		System.out.println(isValidatedAllIdcard(idcard18));
-		if ( !IdcardValidator.isValidate18Idcard(idcard15)) {
+		if ( !IdcardValidator.isValidate18Idcard("430703199302291340")) {
 			System.out.println("------------");
 		}
 		System.out.println("222222222222222222222");

@@ -165,4 +165,45 @@ public interface MorderService {
 	 * @return
 	 */
 	public Map<String, Object> managerLoadMorderDatas(Map<String, Object> params, int page, int size);
+	
+	
+	/**
+	 * (预处理)校验国宗物流订单
+	 * 
+	 * @param senderTel
+	 * @param senderAddress
+	 * @param senderAreaCode
+	 * @param senderCountry
+	 * @param senderName
+	 * @param provinceCode
+	 * @param cityCode
+	 * @param areaCode
+	 * @param postal
+	 * @param areaName
+	 * @param cityName
+	 * @param provinceName
+	 * @param orderId
+	 * @param goodsInfo
+	 * @param seqNo
+	 * @return
+	 */
+	public Map<String, Object> checkGZOrder(  String waybill, int serial, String dateSign,
+			String OrderDate, Double FCY, Double Tax, Double ActualAmountPaid, String RecipientName, String RecipientID,
+			String RecipientTel, String RecipientProvincesCode, String RecipientAddr, String OrderDocAcount,
+			String OrderDocName, String OrderDocId, String OrderDocTel, String senderName, String senderCountry,
+			String senderAreaCode, String senderAddress, String senderTel, String areaCode, String cityCode,
+			String provinceCode, String postal, String provinceName, String cityName, String areaName, String orderId,
+			JSONObject goodsInfo);
+	
+	/**
+	 * (预处理)导入企邦订单表
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param item 订单信息
+	 * @param merchantName 商户名称
+	 * @return Map
+	 */
+	public Map<String, Object> checkQBOrder(String merchantId, Map<String, Object> item, String merchantName);
+	
 }
