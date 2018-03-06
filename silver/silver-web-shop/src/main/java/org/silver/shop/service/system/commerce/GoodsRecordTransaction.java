@@ -116,29 +116,19 @@ public class GoodsRecordTransaction {
 
 	// 商户修改备案商品中的商品基本信息
 	public Map<String, Object> editMerchantRecordGoodsDetailInfo(HttpServletRequest req, int type) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> imgMap = null;
-		String status = "";
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		imgMap = fileUpLoadService.universalDoUpload(req, "/opt/www/img/merchant/" + merchantId + "/goods/", ".jpg",
-				false, 800, 800, null);
-		status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if (!"1".equals(status)) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "上传图片失败,请重试!");
-		}
+	
 		Enumeration<String> isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
 			String key = isKey.nextElement();
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
 		}
-		paramMap.put("imgList", imgMap.get(BaseCode.DATAS.getBaseCode()));
 		return goodsRecordService.editMerchantRecordGoodsDetailInfo(merchantId, merchantName, paramMap, type);
 	}
 

@@ -389,6 +389,9 @@ public class ManualService {
 		String serialNo = "";
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
+			if(list.isEmpty()){
+				return ReturnInfoUtils.errorInfo("文件上传失败,请重试!");
+			}
 			File file = new File("/gadd-excel/" + list.get(0));
 			File dest = copyFile(file);
 			ExcelUtil excel = new ExcelUtil(dest);
@@ -405,11 +408,9 @@ public class ManualService {
 				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB");
 				// 多了一行说明
 				realRowCount += 1;
-				// readQBSheet(0, excel, errl, merchantId, serialNo);
 				invokeTaskUtils.startTask(1, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else if (columnTotalCount == 71) {// 国宗订单模板长度(加上序号列)
-				// readGZSheet(0, excel, errl, merchantId,0,0);
 				// 用于前台区分哪家批次号
 				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
 				invokeTaskUtils.startTask(2, realRowCount, file, merchantId, serialNo, merchantName);
@@ -431,7 +432,7 @@ public class ManualService {
 	 * @param file
 	 * @return
 	 */
-	private  File copyFile(File file) {
+	private File copyFile(File file) {
 		// 副本文件名
 		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xlsx";
 		File dest = new File(file.getParentFile() + "/" + imgName);
@@ -442,7 +443,7 @@ public class ManualService {
 		}
 		return dest;
 	}
-	
+
 	/**
 	 * 通过逆向工程获取表单中真实数据行数(默认再总行数上减1)
 	 * 
@@ -751,6 +752,7 @@ public class ManualService {
 					break;
 				}
 				for (int c = 0; c < totalColumnCount; c++) {
+
 					String value = excel.getCell(sheet, r, c);
 					if (c == 0 && "".equals(value)) {
 						break;
@@ -766,37 +768,45 @@ public class ManualService {
 						}
 					} else if (c == 1) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							orderId = value.trim();
+							orderId = value;
 						}
 					} else if (c == 4) {
 						// 运单号
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							waybill = value.replaceAll(" ", "");
+						}else{
+							String msg = "【表格】第" + (r + 1) + "行-->运单号不能为空,请核对信息!";
+							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
+							continue;
 						}
 					} else if (c == 8) {
 						// 运输方式
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							transportModel = value.trim();
+							transportModel = value;
 						} else {
 							transportModel = "4";
 						}
 					} else if (c == 10) {
 						// 包装种类
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							packageType = Integer.parseInt(value.trim());
+							packageType = Integer.parseInt(value);
 						} else {
 							packageType = 4;
 						}
 					} else if (c == 13) {
 						// 净重
-						netWt = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							netWt = Double.parseDouble(value);
+						}
 					} else if (c == 14) {
 						// 毛重
-						grossWt = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							grossWt = Double.parseDouble(value);
+						}
 					} else if (c == 15) {
 						// 箱件数
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							numOfPackages = Integer.parseInt(value.trim());
+							numOfPackages = Integer.parseInt(value);
 						}
 					} else if (c == 16) {
 						// 商品名
@@ -811,10 +821,10 @@ public class ManualService {
 						}
 					} else if (c == 21) {
 						// 收货地址
-						RecipientAddr = value.trim();
+						RecipientAddr = value;
 					} else if (c == 22) {
 						// 收货人电话
-						RecipientTel = value.trim();
+						RecipientTel = value;
 					} else if (c == 24) {
 						// 收货人身份证
 						RecipientID = value.trim().replace("x", "X");
@@ -836,17 +846,19 @@ public class ManualService {
 					} else if (c == 35) {
 						// 计量单位
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							value = goodsRecordTransaction.findUnit(value.trim());
+							value = goodsRecordTransaction.findUnit(value);
 							if (StringEmptyUtils.isNotEmpty(value)) {
 								unit = value;
 							}
 						}
 					} else if (c == 36) {
 						// 数量
-						total_count = Integer.parseInt(value.trim());
+						total_count = Integer.parseInt(value);
 					} else if (c == 40) {
 						// 单价
-						price = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							price = Double.parseDouble(value);
+						}
 					} else if (c == 39) {
 						// HS编码
 						hsCode = value.trim();
@@ -855,7 +867,7 @@ public class ManualService {
 					} else if (c == 51) {
 						// 第一法定数量
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							firstLegalCount = Double.parseDouble(value.trim());
+							firstLegalCount = Double.parseDouble(value);
 						} else {
 							firstLegalCount = 0.0;
 						}
@@ -867,7 +879,7 @@ public class ManualService {
 					} else if (c == 53) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							// 第二法定数量
-							secondLegalCount = Double.parseDouble(value.trim());
+							secondLegalCount = Double.parseDouble(value);
 						} else {
 							secondLegalCount = 0.0;
 						}
@@ -897,10 +909,12 @@ public class ManualService {
 				}
 				if (netWt > grossWt) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
+
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 5);
 				}
 				if (!IdcardValidator.isValidate18Idcard(RecipientID)) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
+					String str = "运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
+					String msg = "【表格】第" + (r + 1) + "行-->" + str;
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
 				}
 				Map<String, Object> provinceMap = searchProvinceCityArea(RecipientAddr);
@@ -1048,14 +1062,14 @@ public class ManualService {
 					&& StringEmptyUtils.isNotEmpty(provinceMap.get("areaCode"))) {// 如果未找到区域编码及区域名称,则沿用省份的编码
 				areaCode = provinceMap.get("areaCode") + "";
 				areaName = provinceMap.get("areaName") + "";
-			} else if(StringEmptyUtils.isNotEmpty(provinceMap.get("cityCode"))
-					&& StringEmptyUtils.isNotEmpty(provinceMap.get("cityName"))){
+			} else if (StringEmptyUtils.isNotEmpty(provinceMap.get("cityCode"))
+					&& StringEmptyUtils.isNotEmpty(provinceMap.get("cityName"))) {
 				areaCode = provinceMap.get("cityCode") + "";
-				areaName = provinceMap.get("cityCode") + "";
-			}else{
+				areaName = provinceMap.get("cityName") + "";
+			} else {
 				areaCode = provinceMap.get("provinceCode") + "";
 				areaName = provinceMap.get("provinceName") + "";
-				
+
 			}
 			statusMap.put("areaCode", areaCode);
 			statusMap.put("areaName", areaName);
@@ -1315,6 +1329,9 @@ public class ManualService {
 		String serialNo = "";
 		if ((int) reqMap.get("status") == 1) {
 			List<String> list = (List<String>) reqMap.get("datas");
+			if(list.isEmpty()){
+				return ReturnInfoUtils.errorInfo("文件上传失败,请重试!");
+			}
 			File file = new File("/gadd-excel/" + list.get(0));
 			ExcelUtil excel = new ExcelUtil(file);
 			excel.open();
@@ -1328,7 +1345,8 @@ public class ManualService {
 			if (columnTotalCount == 14) { // 企邦模板表格长度(增加了序号列)
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+				Merchant merchantInfo = (Merchant) currentUser.getSession()
+						.getAttribute(LoginType.MERCHANTINFO.toString());
 				String merchantId = merchantInfo.getMerchantId();
 				String merchantName = merchantInfo.getMerchantName();
 				// 用于前台区分哪家批次号
@@ -1355,6 +1373,7 @@ public class ManualService {
 
 	/**
 	 * 根据最初的国宗订单导入模板进行表单校验
+	 * 
 	 * @param excel
 	 * @return boolean
 	 */
@@ -1576,6 +1595,7 @@ public class ManualService {
 					break;
 				}
 				for (int c = 0; c < totalColumnCount; c++) {
+
 					String value = excel.getCell(sheet, r, c);
 					if (c == 0 && "".equals(value)) {
 						break;
@@ -1586,42 +1606,50 @@ public class ManualService {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "checkGZOrderImport", 1);
+							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
 							continue;
 						}
 					} else if (c == 1) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							orderId = value.trim();
+							orderId = value;
 						}
 					} else if (c == 4) {
 						// 运单号
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							waybill = value.replaceAll(" ", "");
+						}else{
+							String msg = "【表格】第" + (r + 1) + "行-->运单号不能为空,请核对信息!";
+							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
+							continue;
 						}
 					} else if (c == 8) {
 						// 运输方式
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							transportModel = value.trim();
+							transportModel = value;
 						} else {
 							transportModel = "4";
 						}
 					} else if (c == 10) {
 						// 包装种类
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							packageType = Integer.parseInt(value.trim());
+							packageType = Integer.parseInt(value);
 						} else {
 							packageType = 4;
 						}
 					} else if (c == 13) {
 						// 净重
-						netWt = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							netWt = Double.parseDouble(value);
+						}
 					} else if (c == 14) {
 						// 毛重
-						grossWt = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							grossWt = Double.parseDouble(value);
+						}
 					} else if (c == 15) {
 						// 箱件数
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							numOfPackages = Integer.parseInt(value.trim());
+							numOfPackages = Integer.parseInt(value);
 						}
 					} else if (c == 16) {
 						// 商品名
@@ -1636,10 +1664,10 @@ public class ManualService {
 						}
 					} else if (c == 21) {
 						// 收货地址
-						RecipientAddr = value.trim();
+						RecipientAddr = value;
 					} else if (c == 22) {
 						// 收货人电话
-						RecipientTel = value.trim();
+						RecipientTel = value;
 					} else if (c == 24) {
 						// 收货人身份证
 						RecipientID = value.trim().replace("x", "X");
@@ -1661,17 +1689,19 @@ public class ManualService {
 					} else if (c == 35) {
 						// 计量单位
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							value = goodsRecordTransaction.findUnit(value.trim());
+							value = goodsRecordTransaction.findUnit(value);
 							if (StringEmptyUtils.isNotEmpty(value)) {
 								unit = value;
 							}
 						}
 					} else if (c == 36) {
 						// 数量
-						total_count = Integer.parseInt(value.trim());
+						total_count = Integer.parseInt(value);
 					} else if (c == 40) {
 						// 单价
-						price = Double.parseDouble(value.trim());
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							price = Double.parseDouble(value);
+						}
 					} else if (c == 39) {
 						// HS编码
 						hsCode = value.trim();
@@ -1680,7 +1710,7 @@ public class ManualService {
 					} else if (c == 51) {
 						// 第一法定数量
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							firstLegalCount = Double.parseDouble(value.trim());
+							firstLegalCount = Double.parseDouble(value);
 						} else {
 							firstLegalCount = 0.0;
 						}
@@ -1692,7 +1722,7 @@ public class ManualService {
 					} else if (c == 53) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
 							// 第二法定数量
-							secondLegalCount = Double.parseDouble(value.trim());
+							secondLegalCount = Double.parseDouble(value);
 						} else {
 							secondLegalCount = 0.0;
 						}
@@ -1811,6 +1841,7 @@ public class ManualService {
 			excelBufferUtils.writeCompletedRedis(errl, realRowCount, serialNo, "checkGZOrderImport");
 		}
 	}
+
 	/**
 	 * (预处理)企邦表单,暂默认为14列数据
 	 * 
@@ -1869,7 +1900,8 @@ public class ManualService {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "checkQBOrderImport", 1);
+							RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo,
+									"checkQBOrderImport", 1);
 							continue;
 						}
 					} else if (c == 1) {
@@ -2001,7 +2033,10 @@ public class ManualService {
 			excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "checkQBOrderImport");
 		}
 	}
-	
-	
-	
+
+	public Map<String, Object> managerDeleteMorderDatas(JSONArray json) {
+		
+		return morderService.managerDeleteMorderDatas(json);
+	}
+
 }

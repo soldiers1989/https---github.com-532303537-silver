@@ -59,7 +59,7 @@ public class InvokeTaskUtils {
 		List<Map<String, Object>> errl = new Vector();
 		// 开始行数
 		int startCount = 0;
-		if (flag == 2) {
+		if (flag == 2 || flag ==5) {
 			startCount = 1;
 		} else {
 			// 企邦表(银盟定义的模板)多了一行说明,所以开始行数为2

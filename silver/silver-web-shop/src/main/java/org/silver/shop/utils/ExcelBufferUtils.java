@@ -80,7 +80,6 @@ public class ExcelBufferUtils {
 	 */
 	public final void writeCompletedRedis(List<Map<String, Object>> errl, int totalCount, String serialNo,
 			String name) {
-		System.out.println("------------运行完成写入方法----------");
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
@@ -100,11 +99,12 @@ public class ExcelBufferUtils {
 				counter = new AtomicInteger(0);
 				statusCounter = new AtomicInteger(0);
 				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
-				datasMap.put("orderTotalAmount", reMap.get("orderTotalAmount"));
 				datasMap.put("fcy", reMap.get("fcy"));
-				datasMap.put(BaseCode.ERROR.toString(), reMap.get(BaseCode.ERROR.toString()));
+				datasMap.put("orderCount", reMap.get("orderCount"));
 				datasMap.remove("cpuCount");
 			}
+			datasMap.put(BaseCode.ERROR.toString(),SortUtil.sortList(errl));
+			datasMap.put("completed", counter.get());
 			datasMap.put("totalCount", totalCount);
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
@@ -133,19 +133,18 @@ public class ExcelBufferUtils {
 			break;
 		case "checkGZOrderImport":// 国宗订单导入预处理
 			 key = "Shop_Key_CheckGZOrder_List_" + serial;
-			return checkGZOrderImport(serialNo,SortUtil.sortList(errl),key);
+			return checkGZOrderImport(key);
 		case "checkQBOrderImport":
 			key = "Shop_Key_CheckQBOrder_List_" + serial;
-			return checkGZOrderImport(serialNo,SortUtil.sortList(errl),key);
+			return checkGZOrderImport(key);
 		default:
 			break;
 		}
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.ERROR.toString(), errl);
 		return statusMap;
 	}
 
-	private Map<String,Object> checkGZOrderImport(String serialNo, List<Map<String, Object>> errl, String key) {
+	private Map<String,Object> checkGZOrderImport(  String key) {
 		Map<String,Object> statusMap = new HashMap<>();
 		double orderTotalAmount = 0.0;
 		double fcy = 0.0;
@@ -161,8 +160,8 @@ public class ExcelBufferUtils {
 				// 总订单商品总金额
 				fcy += order.getFCY();
 			}
+			statusMap.put("orderCount",item.size());
 		}
-		statusMap.put("orderTotalAmount", orderTotalAmount);
 		statusMap.put("fcy", fcy);
 		return statusMap;
 	}

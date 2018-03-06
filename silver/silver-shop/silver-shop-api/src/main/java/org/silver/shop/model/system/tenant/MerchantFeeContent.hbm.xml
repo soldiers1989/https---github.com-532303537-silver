@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-3-6 17:11:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.MerchantFeeContent" table="ym_shop_merchant_fee_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" not-null="true"/>
+        </property>
+        <property name="tenantCode" type="java.lang.String">
+            <column name="tenantCode" not-null="true"/>
+        </property>
+        <property name="tenantName" type="java.lang.String">
+            <column name="tenantName" not-null="true"/>
+        </property>
+        <property name="provinceCode" type="java.lang.String">
+            <column name="provinceCode" not-null="true" />
+        </property>
+        <property name="provinceName" type="java.lang.String">
+            <column name="provinceName" not-null="true"/>
+        </property>
+        <property name="cityCode" type="java.lang.String">
+            <column name="cityCode" not-null="true" />
+        </property>
+        <property name="cityName" type="java.lang.String">
+            <column name="cityName" not-null="true"/>
+        </property>
+        <property name="customsPort" type="int">
+            <column name="customsPort" not-null="true"/>
+        </property>
+        <property name="customsPortName" type="java.lang.String">
+            <column name="customsPortName" not-null="true"/>
+        </property>
+        <property name="customsCode" type="java.lang.String">
+            <column name="customsCode" not-null="true"/>
+        </property>
+        <property name="customsName" type="java.lang.String">
+            <column name="customsName" not-null="true"/>
+        </property>
+        <property name="ciqOrgCode" type="java.lang.String">
+            <column name="ciqOrgCode" not-null="true"/>
+        </property>
+        <property name="ciqOrgName" type="java.lang.String">
+            <column name="ciqOrgName" not-null="true"/>
+        </property>
+        <property name="platformFee" type="double">
+            <column name="platformFee" not-null="true"/>
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" not-null="true"/>
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

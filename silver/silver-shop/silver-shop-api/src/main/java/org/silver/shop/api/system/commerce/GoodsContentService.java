@@ -46,11 +46,13 @@ public interface GoodsContentService {
 	public Map<String, Object> findAllGoodsInfo(String merchantName, int page, int size,String merchantId);
 
 	/**
-	 * 商户修改商品基本信息
-	 * 	
+	 *  商户修改商品基本信息
+	 * @param datasMap
+	 * @param merchantName
+	 * @param merchantId
 	 * @return
 	 */
-	public Map<String, Object> editGoodsBaseInfo(Map<String,Object> datasMap,List<Object> imgList,String merchantName,String merchantId);
+	public Map<String, Object> editGoodsBaseInfo(Map<String,Object> datasMap,String merchantName,String merchantId);
 
 	/**
 	 * 删除商品基本信息

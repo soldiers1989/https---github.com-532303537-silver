@@ -3,6 +3,7 @@ package org.silver.shop.api.system.manual;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public interface MorderService {
@@ -205,5 +206,12 @@ public interface MorderService {
 	 * @return Map
 	 */
 	public Map<String, Object> checkQBOrder(String merchantId, Map<String, Object> item, String merchantName);
+
+	/**
+	 * 管理员删除手工订单信息
+	 * @param json
+	 * @return Map
+	 */
+	public Map<String, Object> managerDeleteMorderDatas(JSONArray json);
 	
 }

@@ -60,13 +60,13 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Override
 	public Map<String, Object> addGoodsBaseInfo(String merchantId, String merchantName, Map<String, Object> params,
-		 int goodsYear, Date date) {
+			int goodsYear, Date date) {
 		Map<String, Object> statusMap = new HashMap<>();
 		GoodsContent goodsInfo = new GoodsContent();
 		goodsInfo.setGoodsId(params.get("goodsId") + "");
 		goodsInfo.setGoodsName(params.get("goodsName") + "");
 		goodsInfo.setGoodsMerchantName(merchantName);
-		goodsInfo.setGoodsImage(params.get("mainImg")+"");
+		goodsInfo.setGoodsImage(params.get("mainImg") + "");
 		goodsInfo.setGoodsFirstTypeId(params.get("goodsFirstTypeId") + "");
 		goodsInfo.setGoodsFirstTypeName(params.get("goodsFirstTypeName") + "");
 		goodsInfo.setGoodsSecondTypeId(params.get("goodsSecondTypeId") + "");
@@ -126,16 +126,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> editGoodsBaseInfo(Map<String, Object> datasMap, List<Object> imgList,
-			String merchantName, String merchantId) {
+	public Map<String, Object> editGoodsBaseInfo(Map<String, Object> datasMap, String merchantName, String merchantId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date date = new Date();
-		String goodsImage = "";
-		// 拼接多张图片字符串
-		for (int i = 0; i < imgList.size(); i++) {
-			String imgStr = imgList.get(i) + "";
-			goodsImage += imgStr + ";";
-		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("goodsId", datasMap.get("goodsId") + "");
 		params.put("goodsMerchantName", merchantName);
@@ -144,9 +137,6 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		if (reList != null && !reList.isEmpty()) {
 			GoodsContent goodsInfo = (GoodsContent) reList.get(0);
 			goodsInfo = (GoodsContent) ConvertUtils.mapChangeToEntity(goodsInfo, datasMap);
-			if (StringEmptyUtils.isNotEmpty(goodsImage)) {
-				goodsInfo.setGoodsImage(goodsImage);
-			}
 			goodsInfo.setUpdateDate(date);
 			goodsInfo.setUpdateBy(merchantName);
 			goodsInfo.setDeleteFlag(0);

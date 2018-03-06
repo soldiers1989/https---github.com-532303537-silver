@@ -165,4 +165,12 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> managerDeleteTestOrder();
+
+	/**
+	 * 用户删除商城下单信息
+	 * @param entOrderNo 订单Id
+	 * @param memberName 用户名称
+	 * @return	Map
+	 */
+	public Map<String,Object> memberDeleteOrderInfo(String entOrderNo, String memberName);
 }

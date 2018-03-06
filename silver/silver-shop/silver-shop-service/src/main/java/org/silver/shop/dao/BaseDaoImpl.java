@@ -632,7 +632,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				}
 				hql += " 1=1 Order By id DESC";
 			}
-			Query query = session.createQuery(hql).setLockMode("model", LockMode.UPGRADE);
+			Query query = session.createQuery(hql).setLockMode("model",LockMode.UPGRADE); // 加锁  
 			if (!list.isEmpty()) {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));

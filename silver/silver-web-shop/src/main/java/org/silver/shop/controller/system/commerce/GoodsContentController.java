@@ -223,8 +223,4 @@ public class GoodsContentController {
 		Map<String, Object> statusMap = goodsContentTransaction.merchantGetGoodsBaseInfo(goodsId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	public static void main(String[] args) {
-		int i =2 / 6;
-		System.out.println(i);
-	}
 }

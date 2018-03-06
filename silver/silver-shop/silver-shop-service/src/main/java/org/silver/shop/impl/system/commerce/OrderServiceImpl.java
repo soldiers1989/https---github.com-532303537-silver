@@ -89,25 +89,20 @@ public class OrderServiceImpl implements OrderService {
 		RecipientContent recInfo = (RecipientContent) reRecMap.get(BaseCode.DATAS.toString());
 		int gacOrderTypeId = 2;
 		// 生成对应海关订单ID
-		Map<String, Object> entOrderNoMap = createOrderId(gacOrderTypeId);
-		if (!"1".equals(entOrderNoMap.get(BaseCode.STATUS.toString()))) {
-			return entOrderNoMap;
-		}
-		String entOrderNo = entOrderNoMap.get(BaseCode.DATAS.toString()) + "";
+		String entOrderNo = createOrderId(gacOrderTypeId);
 		// 校验订单商品信息及创建订单
 		Map<String, Object> reMap = checkOrderGoodsInfo(jsonList, memberName, memberId, recInfo, entOrderNo);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		String reEntOrderNo = reMap.get("entOrderNo") + "";
 		double totalPrice = Double.parseDouble(reMap.get("goodsTotalPrice") + "");
 		// 订单结算
-		Map<String, Object> reStatusMap = liquidation(memberId, type, jsonList, totalPrice, reEntOrderNo, memberName);
+		Map<String, Object> reStatusMap = liquidation(memberId, type, jsonList, totalPrice, entOrderNo, memberName);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
 			return reStatusMap;
 		}
 		// 返回海关订单编号
-		reStatusMap.put("entOrderNo", reMap.get("entOrderNo"));
+		reStatusMap.put("entOrderNo", entOrderNo);
 		return reStatusMap;
 	}
 
@@ -118,31 +113,22 @@ public class OrderServiceImpl implements OrderService {
 	 *            1-商城自用订单、2-用于发往支付与海关的总订单头
 	 * @return Map
 	 */
-	private final Map<String, Object> createOrderId(int type) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Calendar cl = Calendar.getInstance();
-		int year = cl.get(Calendar.YEAR);
-		String property = "";
+	private final String createOrderId(int type) {
 		String topStr = "";
+		String name = "";
 		if (type == 1) {
-			topStr = "OR_";
-			property = "orderId";
-		} else {
+			// 商城自用订单抬头
+			topStr = "YMDS";
+			// 查询缓存中商城自用订单自增数关键字
+			name = "shopOrder";
+		} else if (type == 2) {
 			// 用于发往支付与海关的总订单头
-			topStr = "GAC_";
-			property = "entOrderNo";
+			topStr = "YMGAC";
+			name = "totalShopOrder";
 		}
-		long orderIdCount = orderDao.findSerialNoCount(OrderContent.class, property, year);
-		if (orderIdCount < 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else {
-			String serialNo = SerialNoUtils.getSerialNo(topStr, year, orderIdCount);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), serialNo);
-			return statusMap;
-		}
+		// 查询缓存中商城下单自增Id
+		int count = SerialNoUtils.getRedisIdCount(name);
+		return SerialNoUtils.getSerialNo(topStr, count);
 	}
 
 	// 校验前台传递订单商品信息
@@ -151,14 +137,9 @@ public class OrderServiceImpl implements OrderService {
 		double goodsTotalPrice = 0.0;
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
-		Map<String, Object> warehouseMap = new HashMap<>();
-		int orderId = 1;
-		// 生成订单ID
-		Map<String, Object> newOrderIdMap = createOrderId(orderId);
-		if (!"1".equals(newOrderIdMap.get(BaseCode.STATUS.toString()))) {
-			return newOrderIdMap;
-		}
-		String newOrderId = newOrderIdMap.get(BaseCode.DATAS.toString()) + "";
+		// 商城自用订单
+		int orderIdType = 1;
+		String newOrderId = createOrderId(orderIdType);
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> paramsMap = (Map<String, Object>) jsonList.get(i);
 			int count = Integer.parseInt(paramsMap.get("count") + "");
@@ -167,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
 			params.put("entGoodsNo", entGoodsNo);
 			// 根据商品ID查询存库中商品信息
 			List<Object> stockList = orderDao.findByProperty(StockContent.class, params, 1, 1);
-			if (stockList != null && stockList.size() > 0) {
+			if (stockList != null && !stockList.isEmpty()) {
 				StockContent stock = (StockContent) stockList.get(0);
 				/*
 				 * if (warehouseMap != null &&
@@ -331,7 +312,22 @@ public class OrderServiceImpl implements OrderService {
 		return statusMap;
 	}
 
-	// 支付完成后根据类型进行业务处理
+	/**
+	 * 支付完成后根据类型进行业务处理
+	 * 
+	 * @param memberId
+	 *            用户Id
+	 * @param type
+	 *            类型:1-余额支付,2-跳转至银盛
+	 * @param jsonList
+	 * @param totalPrice
+	 *            订单商品总金额
+	 * @param reEntOrderNo
+	 *            海关订单编号
+	 * @param memberName
+	 *            用户名称
+	 * @return Nao
+	 */
 	private Map<String, Object> liquidation(String memberId, int type, List jsonList, double totalPrice,
 			String reEntOrderNo, String memberName) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -450,7 +446,17 @@ public class OrderServiceImpl implements OrderService {
 		return statusMap;
 	}
 
-	// 更新订单状态及删除用户购物车数据
+	/**
+	 * 更新订单状态及删除用户购物车数据
+	 * 
+	 * @param memberId
+	 *            用户Id
+	 * @param jsonList
+	 *            商品数据
+	 * @param reEntOrderNo
+	 *            海关订单Id
+	 * @return Map
+	 */
 	private Map<String, Object> updateOrderStatusAndShopCar(String memberId, List<Object> jsonList,
 			String reEntOrderNo) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -643,6 +649,7 @@ public class OrderServiceImpl implements OrderService {
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		String descParams = "createDate";
 		params.put("memberId", memberId);
+		params.put("deleteFlag", 0);
 		List<OrderContent> reOrderList = orderDao.findByPropertyDesc(OrderContent.class, params, descParams, page,
 				size);
 		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
@@ -930,5 +937,30 @@ public class OrderServiceImpl implements OrderService {
 			ReturnInfoUtils.successInfo();
 		}
 		return null;
+	}
+
+	@Override
+	public Map<String, Object> memberDeleteOrderInfo(String entOrderNo, String memberName) {
+		if (StringEmptyUtils.isNotEmpty(entOrderNo)) {
+			Map<String,Object> params = new HashMap<>();
+			params.put("entOrderNo", entOrderNo);
+			List<OrderContent> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
+			if(orderList !=null && !orderList.isEmpty()){
+				OrderContent order = orderList.get(0);
+				//订单状态：1-待付款
+				if(order.getStatus() == 1){
+					order.setDeleteFlag(1);
+					order.setDeleteBy(memberName);
+					order.setDeleteDate(new Date());
+					if(!orderDao.update(order)){
+						return ReturnInfoUtils.errorInfo("订单删除失败,请重试!");
+					}
+					return ReturnInfoUtils.successInfo();
+				}else{
+					return ReturnInfoUtils.errorInfo("订单当前状态不允许删除!");
+				}
+			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 }

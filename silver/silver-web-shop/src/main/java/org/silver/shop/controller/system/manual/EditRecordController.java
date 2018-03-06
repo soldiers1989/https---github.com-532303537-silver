@@ -30,6 +30,7 @@ import org.silver.util.AppUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.alibaba.fastjson.JSON;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @RestController
@@ -99,6 +101,7 @@ public class EditRecordController {
 
 	/**
 	 * 商户查询手工订单信息
+	 * 
 	 * @param resp
 	 * @param req
 	 * @param page
@@ -426,7 +429,6 @@ public class EditRecordController {
 	 * @param response
 	 * @return
 	 */
-	@RequiresRoles("Merchant")
 	@RequestMapping(value = "/readExcelRedisInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户查询缓存中Excel读取进度")
@@ -529,7 +531,7 @@ public class EditRecordController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/updateManualOrderGoodsInfo",method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/updateManualOrderGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("更新已备案成功的手工订单商品进备案信息")
 	@RequiresRoles("Merchant")
@@ -552,8 +554,10 @@ public class EditRecordController {
 		Map<String, Object> statusMap = manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
 	/**
 	 * 管理员查询手工订单信息
+	 * 
 	 * @param resp
 	 * @param req
 	 * @param page
@@ -571,12 +575,9 @@ public class EditRecordController {
 		Map<String, Object> reqMap = manualService.managerLoadMorderDatas(page, size, req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
-	
-	
+
 	/**
-	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。
-	 * 批量导入手工订单 暂只支持有国宗
-	 * 、企邦(将作为对外统一模板)
+	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。 批量导入手工订单 暂只支持有国宗 、企邦(将作为对外统一模板)
 	 * 
 	 * @param resp
 	 * @param req
@@ -592,11 +593,9 @@ public class EditRecordController {
 		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
-	
-	
+
 	/**
-	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。
-	 * 批量导入手工订单 企邦(将作为对外统一模板)需要登陆商户,已便于校验商品
+	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。 批量导入手工订单 企邦(将作为对外统一模板)需要登陆商户,已便于校验商品
 	 * 
 	 * @param resp
 	 * @param req
@@ -613,4 +612,33 @@ public class EditRecordController {
 		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
+
+	/**
+	 * 管理员批量删除手工订单信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	@RequestMapping(value = "/managerDeleteMorderDatas", produces = "application/json; charset=utf-8")
+	@RequiresRoles("Manager")
+	public String managerDeleteMorderDatas(HttpServletResponse resp, HttpServletRequest req,String orderIdPack) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		JSONArray json = null;
+		try{
+			json = JSONArray.fromObject(orderIdPack);
+		}catch (Exception e) {
+			e.printStackTrace();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
+		}
+		Map<String, Object> reqMap = manualService.managerDeleteMorderDatas( json);
+		return JSONObject.fromObject(reqMap).toString();
+	}
+
 }

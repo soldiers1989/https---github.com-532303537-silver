@@ -73,6 +73,7 @@
 				/login=anon
 				/member/*=anon
 				/proxy/*=anon
+				/merchantFee/*=anon
 				/proxyWallet/*=anon
 				/errorLogs/*=anon
 				/managerWallet/*=anon

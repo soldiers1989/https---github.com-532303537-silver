@@ -21,7 +21,7 @@ public class OrderRecordContent implements Serializable {
 	private String entPayNo;// 支付交易编号
 	private String entOrderNo;// 电商平台的原始订单编号
 	private int orderStatus;// 电子订单状态0-订单确认,1-订单完成,2-订单取消
-	private int payStatus;// 支付状态0-已付款,1-未付款(待支付) 2：支付失败，3：支付超时
+	private int payStatus;// 支付状态0-已付款,1-未付款(待支付) 2-支付失败，3-支付超时
 	private Double orderGoodTotal;// 订单商品总金额
 	private String orderGoodTotalCurr;// 订单商品总额币制-参照币制代码表
 	private Double freight;// 运费：运杂费，无则填“0”
@@ -65,8 +65,12 @@ public class OrderRecordContent implements Serializable {
 	
 	private String reOrderSerialNo;//订单备案信息接受后返回流水号
 	private String reNote;//返回信息
-	private String recipientCityCode;//城市编码(数据库无字段)
-	private String recipientAreaCode;//区域编码(数据库无字段)
+	private String recipientCityCode;//城市编码
+	private String recipientAreaCode;//区域编码
+	
+	private String waybillNo;//(快递单号)运单编号
+	private int ehsStatus;// 物流状态：0-未发货1-已发货3-已签收
+	private String expressCompany;//快递公司
 	public long getId() {
 		return id;
 	}
@@ -379,6 +383,24 @@ public class OrderRecordContent implements Serializable {
 	}
 	public void setRecipientAreaCode(String recipientAreaCode) {
 		this.recipientAreaCode = recipientAreaCode;
+	}
+	public String getWaybillNo() {
+		return waybillNo;
+	}
+	public void setWaybillNo(String waybillNo) {
+		this.waybillNo = waybillNo;
+	}
+	public int getEhsStatus() {
+		return ehsStatus;
+	}
+	public void setEhsStatus(int ehsStatus) {
+		this.ehsStatus = ehsStatus;
+	}
+	public String getExpressCompany() {
+		return expressCompany;
+	}
+	public void setExpressCompany(String expressCompany) {
+		this.expressCompany = expressCompany;
 	}
 	
 }

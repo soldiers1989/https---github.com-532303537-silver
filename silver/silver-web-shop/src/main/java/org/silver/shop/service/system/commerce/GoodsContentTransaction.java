@@ -48,7 +48,7 @@ public class GoodsContentTransaction {
 			Map<String, Object> params = new HashMap<>();
 			Calendar cl = Calendar.getInstance();
 			int goodsYear = cl.get(Calendar.YEAR);
-			params.put("mainImg",req.getParameter("mainImg")+"");
+			params.put("mainImg", req.getParameter("mainImg") + "");
 			params.put("goodsId", reMap.get(BaseCode.DATAS.toString()) + "");
 			params.put("goodsName", req.getParameter("goodsName"));
 			params.put("goodsFirstTypeId", req.getParameter("goodsFirstTypeId"));
@@ -64,7 +64,7 @@ public class GoodsContentTransaction {
 			params.put("goodsRegPrice", req.getParameter("goodsRegPrice"));
 			params.put("goodsOriginCountry", req.getParameter("goodsOriginCountry"));
 			params.put("goodsBarCode", req.getParameter("goodsBarCode"));
-			return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params,  goodsYear, date);
+			return goodsContentService.addGoodsBaseInfo(merchantId, merchantName, params, goodsYear, date);
 		}
 		return ReturnInfoUtils.errorInfo("服务器查询ID繁忙,请重试!");
 	}
@@ -88,22 +88,13 @@ public class GoodsContentTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req,
-				"/opt/www/img/merchant/" + merchantId + "/goods/", ".jpg", false, 800, 800, null);
-		String status = imgMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if ("1".equals(status)) {
-			List<Object> imgList = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
-			Enumeration<String> iskey = req.getParameterNames();
-			while (iskey.hasMoreElements()) {
-				String key = iskey.nextElement();
-				String value = req.getParameter(key);
-				datasMap.put(key, value);
-			}
-			return goodsContentService.editGoodsBaseInfo(datasMap, imgList, merchantName, merchantId);
+		Enumeration<String> iskey = req.getParameterNames();
+		while (iskey.hasMoreElements()) {
+			String key = iskey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), "上传图片失败,请重试！");
-		return statusMap;
+		return goodsContentService.editGoodsBaseInfo(datasMap,  merchantName, merchantId);
 	}
 
 	// 删除商品基本信息

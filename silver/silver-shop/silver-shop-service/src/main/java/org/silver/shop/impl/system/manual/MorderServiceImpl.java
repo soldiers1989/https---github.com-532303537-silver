@@ -69,8 +69,6 @@ public class MorderServiceImpl implements MorderService {
 	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
-	private InvokeTaskUtils invokeTaskUtils;
-	@Autowired
 	private BufferUtils bufferUtils;
 
 	// 海关币制默认为人名币
@@ -424,7 +422,7 @@ public class MorderServiceImpl implements MorderService {
 		// params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
 		params.put("merchant_no", merchant_no);
-		List<Morder> ml = morderDao.synFindByProperty(Morder.class, params, 1, 1);
+		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml == null) {
 			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!");
 		} else if (!ml.isEmpty()) {
@@ -485,7 +483,6 @@ public class MorderServiceImpl implements MorderService {
 			return statusMap;
 		}
 		return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单存储失败，请稍后重试!");
-
 	}
 
 	/**
@@ -883,6 +880,7 @@ public class MorderServiceImpl implements MorderService {
 		paramMap.put("order_id", order_id);
 		paramMap.put("EntGoodsNo", entGoodsNo);
 		paramMap.put("merchant_no", merchantId);
+		paramMap.put("seqNo", Integer.parseInt(strArr[25]));
 		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			MorderSub goodsInfo = reOrderSubList.get(0);
@@ -1685,5 +1683,17 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("order_id", morder.getOrder_id());
 			return statusMap;
 		}
+	}
+
+	@Override
+	public Map<String, Object> managerDeleteMorderDatas(JSONArray json) {
+		if (json != null && !json.isEmpty()) {
+			for (int i = 0; i < json.size(); i++) {
+				String orderId = String.valueOf(json.get(i));
+				Map<String,Object> params = new HashMap<>();
+				
+			}
+		}
+		return null;
 	}
 }

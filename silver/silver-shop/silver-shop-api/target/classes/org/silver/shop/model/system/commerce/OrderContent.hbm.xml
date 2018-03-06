@@ -108,5 +108,9 @@
         <property name="entOrderNo" type="java.lang.String">
         	<column name="entOrderNo"/>
         </property>
+        
+           <property name="waybillNo" type="java.lang.String">
+        	<column name="waybillNo"/>
+        </property>
     </class>
 </hibernate-mapping>

@@ -441,11 +441,11 @@ public class IdcardValidator {
 	public static void main(String[] args) throws Exception {
 		
 		String idcard15 = "142431199001145";//15位
-		String idcard18 = "321087780530001XXX";//18位
+		String idcard18 = "211202199109270528";//18位
 		//IdcardValidator iv = new IdcardValidator();
 		//System.out.println(isValidatedAllIdcard(idcard15));
 		System.out.println(isValidatedAllIdcard(idcard18));
-		if ( !IdcardValidator.isValidate18Idcard("430703199302291340")) {
+		if ( !IdcardValidator.isValidate18Idcard("211202199109270528")) {
 			System.out.println("------------");
 		}
 		System.out.println("222222222222222222222");

@@ -139,4 +139,13 @@ public class OrderTransaction {
 	public Map<String,Object> managerDeleteTestOrder() {
 		return orderService.managerDeleteTestOrder();
 	}
+
+	//用户删除订单信息
+	public Object memberDeleteOrderInfo(String entOrderNo) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberName = memberInfo.getMemberName();
+		return orderService.memberDeleteOrderInfo(entOrderNo,memberName);
+	}
 }

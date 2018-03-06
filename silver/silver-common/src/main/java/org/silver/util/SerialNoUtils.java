@@ -116,10 +116,10 @@ public class SerialNoUtils {
 	}
 
 	/**
-	 * 根据抬头获取当天自增数
+	 * 根据(自编抬头)抬头获取当天缓存中的自增数
 	 * 
-	 * @param topStr
-	 * @return
+	 * @param topStr 自编抬头
+	 * @return int 
 	 */
 	public static final int getSerialNo(String topStr) {
 		String dateSign = DateUtil.format(new Date(), "yyyyMMdd");
@@ -157,6 +157,7 @@ public class SerialNoUtils {
 			strCount = "0" + strCount;
 		}
 		String time = DateUtil.formatDate(date, "yyyyMMdd");
+		//自增数已经超过99999的时候,随机数减1
 		if (strCount.length() > 5) {
 			randomNumber = 3;
 		}

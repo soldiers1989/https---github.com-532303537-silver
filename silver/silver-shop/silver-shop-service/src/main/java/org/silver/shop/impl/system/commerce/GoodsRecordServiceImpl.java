@@ -880,13 +880,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	public Map<String, Object> editMerchantRecordGoodsDetailInfo(String merchantId, String merchantName,
 			Map<String, Object> paramMap, int type) {
 		Map<String, Object> params = new HashMap<>();
-		List<Object> imgList = (List<Object>) paramMap.get("imgList");
-		String goodsImage = "";
-		// 拼接多张图片字符串
-		for (int i = 0; i < imgList.size(); i++) {
-			String imgStr = imgList.get(i) + "";
-			goodsImage = goodsImage + imgStr + ";";
-		}
 		params.put("entGoodsNo", paramMap.get("entGoodsNo"));
 		params.put("goodsMerchantId", merchantId);
 		// 根据商品ID查询商品基本信息
@@ -896,7 +889,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		} else if (!reGoodsList.isEmpty()) {
 			GoodsRecordDetail goodsRecordInfo = reGoodsList.get(0);
 			//
-			paramMap.put("goodsImage", goodsImage);
+			paramMap.put("goodsImage",paramMap.get("spareGoodsImage"));
 			paramMap.put("merchantName", merchantName);
 			// type 1-全部修改,2-修改商品信息(价格除外),3-只修改商品价格(商品基本信息不修改)
 			switch (type) {
