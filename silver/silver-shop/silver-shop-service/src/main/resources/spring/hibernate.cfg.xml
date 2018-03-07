@@ -110,6 +110,8 @@
 		<mapping resource="org/silver/shop/model/system/log/ErrorLogInfo.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantFeeContent.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/tenant/SubMerchantContent.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

@@ -49,6 +49,7 @@ import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = PaymentService.class)
 public class PaymentServiceImpl implements PaymentService {
@@ -359,18 +360,16 @@ public class PaymentServiceImpl implements PaymentService {
 		List<Object> reList = paymentDao.findByPropertyLike(Mpay.class, paramMap, null, page, size);
 		long tatolCount = paymentDao.findByPropertyLikeCount(Mpay.class, paramMap, null);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 			statusMap.put(BaseCode.DATAS.toString(), reList);
 			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
+			return statusMap;
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -382,7 +381,9 @@ public class PaymentServiceImpl implements PaymentService {
 			if(StringEmptyUtils.isNotEmpty(merchantId)){
 				paramsMap.put("merchantId", merchantId);
 			}
-			paramsMap.put("merchantName", merchantName);
+			if(StringEmptyUtils.isNotEmpty(merchantName)){
+				paramsMap.put("merchantName", merchantName);
+			}
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
 			Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
@@ -563,8 +564,37 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
 			 String merchantName) {
-
 		return getMerchantPaymentReport(null, merchantName, page, size, startDate, endDate);
 	}
 
+	@Override
+	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+	//	paramMap.put("del_flag", 0);
+		List<Mpay> reList = paymentDao.findByPropertyLike(Mpay.class, paramMap, null, page, size);
+		long tatolCount = paymentDao.findByPropertyLikeCount(Mpay.class, paramMap, null);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), reList);
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
+			return statusMap;
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> managerEditMpayInfo(JSONObject json) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static void main(String[] args) {
+		System.out.println("GAC_20180002015199758417456482".length());
+	}
 }

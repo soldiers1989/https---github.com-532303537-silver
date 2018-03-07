@@ -116,7 +116,7 @@ public class PaymentController {
 	}
 
 	/**
-	 * 查询商户支付单信息
+	 * 查询商户手工支付单信息
 	 * 
 	 * @param resp
 	 * @param req
@@ -212,5 +212,58 @@ public class PaymentController {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	/**
+	 * 管理员查询所有商户手工支付单信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/managerGetMpayInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String managerGetMpayRecordInfo(HttpServletResponse resp, HttpServletRequest req, @RequestParam("page") int page,
+			@RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> params = new HashMap<>();
+		Enumeration<String> iskey= req.getParameterNames();
+		while (iskey.hasMoreElements()) {
+			String key =  iskey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		return JSONObject.fromObject(paytemTransaction.managerGetMpayInfo(params, page, size)).toString();
+	}
+	
+	
+	/**
+	 * 管理员修改商户手工支付单信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/managerEditMpayInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String managerEditMpayInfo(HttpServletResponse resp, HttpServletRequest req,  String manualPayPack) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		try {
+			JSONObject json = JSONObject.fromObject(manualPayPack);
+			return JSONObject.fromObject(paytemTransaction.managerEditMpayInfo(json )).toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

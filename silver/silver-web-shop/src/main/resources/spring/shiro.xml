@@ -72,8 +72,10 @@
 				/regin=anon 
 				/login=anon
 				/member/*=anon
+				/gac/*=anon
 				/proxy/*=anon
 				/merchantFee/*=anon
+				/subMerchant/*=anon
 				/proxyWallet/*=anon
 				/errorLogs/*=anon
 				/managerWallet/*=anon

@@ -165,7 +165,7 @@ public class MdataService {
 	 */
 	private Map<String, Object> doWrite(JSONArray arr, String filePath) {
 		Map<String, Object> statusMap = new HashMap<>();
-		if (arr != null && arr.size() > 0) {
+		if (arr != null && !arr.isEmpty()) {
 			File f = new File(filePath);
 			ExcelUtil excel = new ExcelUtil(f);
 			excel.open();
@@ -256,20 +256,12 @@ public class MdataService {
 						OrderDocTel, OrderDate, trade_no, dateSign, waybill, create_date, senderName, senderCountry,
 						senderAreaCode, senderAddress, senderTel, postal, RecipientProvincesName, RecipientCityName,
 						RecipientAreaName, EntGoodsNo, HSCode, GoodsName, CusGoodsNo, CIQGoodsNo, OriginCountry,
-						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date;
-				double FCY = 0.0;
-				double Tax = 0.0;
-				double ActualAmountPaid = 0.0;
-				int serial = 0;
+						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date,pierCode;
 				int Qty = 0;
 				double Price = 0.0;
 				double Total = 0.0;
-				double netWt = 0.0;
-				double grossWt = 0.0;
 				double firstLegalCount = 0.0;
 				double secLegalCount = 0.0;
-				int numOfPackages = 0;
-				int packageType = 0;
 				// Row rowIndex = lr.get(i);
 				JSONObject rowIndex = JSONObject.fromObject(arr.get(i));
 				rowIndex.getString("senderAddress").substring(10, rowIndex.getString("senderAddress").length() - 2);
@@ -350,6 +342,7 @@ public class MdataService {
 
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
 
+				pierCode =  rowIndex.getString("pierCode").replace("{\"value\":\"", "").replace("\"}", "");
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 1, c, i + 1);
@@ -424,8 +417,7 @@ public class MdataService {
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
 					} else if (c == 52) {
-						// 进出口口岸2018-02-05 要求填写5141
-						excel.writCell(0, i + 1, c, "5141");
+						excel.writCell(0, i + 1, c, pierCode);
 					} else if (c == 53) {
 						// 快递公司
 						excel.writCell(0, i + 1, c, "邮政快递");

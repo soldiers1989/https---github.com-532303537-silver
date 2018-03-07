@@ -30,7 +30,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			String sql = "SELECT t1.*, t2.orderId,t2.entOrderNo,t2.freight,t2.consolidatedTax,t2.orderTotalPrice,t2.recipientName,t2.recipientCardId,t2.recipientTel,t2.recipientAddr,t2.recipientCountryCode,t2.recProvincesCode,t2.recCityCode, t2.recAreaCode "
 					+ "FROM ym_shop_order_goods_content	 t1 LEFT JOIN ym_shop_order_content t2 ON t1.orderId = t2.orderId "
 					+ "and t1.merchantId = ?";
-			List<Object> sqlParams = new ArrayList<>();
+			List<Object> sqlParams = new ArrayList<>();	
 			sqlParams.add(merchantId);
 			session = getSession();
 			Table t = null;
@@ -104,7 +104,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String sql = "SELECT count(t1.order_id) AS orderCount, sum(t1.FCY) as total,(sum(t1.FCY) * 0.001)  AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date FROM ym_shop_manual_morder t1 "
-					+ "WHERE (t1.order_record_status = '3' OR t1.order_record_status = '2') ";
+					+ "WHERE (t1.order_record_status = '3' OR t1.order_record_status = '2')  AND t1.del_flag = '0' ";
 			String merchantId = paramsMap.get("merchantId") + "";
 			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sql += " AND t1.merchant_no = ? ";

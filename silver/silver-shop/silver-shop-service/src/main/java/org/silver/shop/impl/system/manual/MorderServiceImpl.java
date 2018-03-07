@@ -477,6 +477,7 @@ public class MorderServiceImpl implements MorderService {
 		morder.setRecipientAreaName(areaName);
 		String randomDate = DateUtil.randomCreateDate();
 		morder.setOrderDate(randomDate);
+		morder.setPierCode(goodsInfo.get("pierCode")+"");
 		if (morderDao.add(morder)) {
 			statusMap.put("status", 1);
 			statusMap.put("order_id", newOrderId);
@@ -1485,9 +1486,6 @@ public class MorderServiceImpl implements MorderService {
 				}
 			}
 			Morder morder = new Morder();
-			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("checkOrder");
-			morder.setOrder_id(SerialNoUtils.getSerialNo("YM", count));
 			// 原导入表中的订单编号
 			morder.setOldOrderId(orderId);
 			morder.setFCY(FCY);
@@ -1537,9 +1535,10 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	/**
-	 * 根据缓存中找出的订单信息,更新订单商品总金额与订单实际支付金额
+	 * 根据缓存中找出的订单信息,更新国宗订单商品总金额与订单实际支付金额
 	 * 
 	 * @param item
+	 *            缓存中订单信息
 	 * @param FCY
 	 *            订单商品金额
 	 * @param Tax
@@ -1560,20 +1559,17 @@ public class MorderServiceImpl implements MorderService {
 		order.setFCY(newFcy);
 		double newActualAmountPaid = newFcy + Tax;
 		order.setActualAmountPaid(newActualAmountPaid);
-		System.out.println("运单号-->" + order.getWaybill() + ";--商品金额>>" + FCY + ";--订单商品总金额--->" + newFcy);
+		System.out.println("运单号-->" + waybill + ";商品金额>>" + FCY + ";订单商品总金额--->" + newFcy);
 		// 覆盖原来的值
 		newList.add(order);
 		item.put(waybill, newList);
 		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(item), 1800);
 		if (newFcy > 2000) {// 当订单金额超过2000时
 			statusMap.put(BaseCode.STATUS.toString(), "10");
-			statusMap.put("order_id", order.getOrder_id());
-			statusMap.put(BaseCode.MSG.toString(), "运单号[" + order.getWaybill() + "]<--关联商品总计金额超过2000,请核对金额!");
+			statusMap.put(BaseCode.MSG.toString(), "运单号[" + waybill + "]<--关联商品总计金额超过2000,请核对金额!");
 			return statusMap;
 		}
-		statusMap.put("status", 1);
-		statusMap.put("order_id", order.getOrder_id());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -1613,29 +1609,7 @@ public class MorderServiceImpl implements MorderService {
 			if (redisByte != null && redisByte.length > 0) {
 				concurrentMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
 				if (item.containsKey(orderId)) {
-					List<Morder> newList = new ArrayList();
-					List<Morder> mOrderList = (List<Morder>) concurrentMap.get(orderId);
-					Morder order = mOrderList.get(0);
-					double newFcy = order.getFCY() + orderTotalPrice;
-					order.setFCY(newFcy);
-					double newActualAmountPaid = newFcy + tax;
-					order.setActualAmountPaid(newActualAmountPaid);
-					System.out.println(
-							"订单号-->" + order.getOrder_id() + ";--商品金额>>" + orderTotalPrice + ";--订单商品总金额--->" + newFcy);
-					// 覆盖原来的值
-					newList.add(order);
-					concurrentMap.put(orderId, newList);
-					JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(concurrentMap), 1800);
-					if (newFcy > 2000) {// 当订单金额超过2000时
-						statusMap.put(BaseCode.STATUS.toString(), "10");
-						statusMap.put("order_id", order.getOrder_id());
-						statusMap.put(BaseCode.MSG.toString(),
-								"订单号[" + order.getOrder_id() + "]<--关联商品总计金额超过2000,请核对金额!");
-						return statusMap;
-					}
-					statusMap.put("status", 1);
-					statusMap.put("order_id", order.getOrder_id());
-					return statusMap;
+					return updateQBRedisInfo(item, orderTotalPrice, tax, orderId, key);
 				}
 			}
 			Morder morder = new Morder();
@@ -1679,10 +1653,42 @@ public class MorderServiceImpl implements MorderService {
 			mOrderList.add(morder);
 			concurrentMap.put(orderId, mOrderList);
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(concurrentMap), 1800);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put("order_id", morder.getOrder_id());
+			return ReturnInfoUtils.successInfo();
+		}
+	}
+
+	/**
+	 * 根据缓存中找出的订单信息,更新启邦订单商品总金额与订单实际支付金额
+	 * 
+	 * @param item 缓存中订单信息
+	 * @param orderTotalPrice 订单商品总金额
+	 * 			
+	 * @param tax 税费
+	 * @param orderId 订单Id
+	 * @param key 缓存Key
+	 * @return Map
+	 */
+	private Map<String, Object> updateQBRedisInfo(Map<String, Object> item, double orderTotalPrice, double tax,
+			String orderId, String key) {
+		Map<String, Object> statusMap = new HashMap<>();
+		List<Morder> newList = new ArrayList();
+		List<Morder> mOrderList = (List<Morder>) item.get(orderId);
+		Morder order = mOrderList.get(0);
+		double newFcy = order.getFCY() + orderTotalPrice;
+		order.setFCY(newFcy);
+		double newActualAmountPaid = newFcy + tax;
+		order.setActualAmountPaid(newActualAmountPaid);
+		System.out.println("订单号-->" + orderId + ";--商品金额>>" + orderTotalPrice + ";--订单商品总金额--->" + newFcy);
+		// 覆盖原来的值
+		newList.add(order);
+		item.put(orderId, newList);
+		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(item), 1800);
+		if (newFcy > 2000) {// 当订单金额超过2000时
+			statusMap.put(BaseCode.STATUS.toString(), "10");
+			statusMap.put(BaseCode.MSG.toString(), "订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
 			return statusMap;
 		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -1690,8 +1696,8 @@ public class MorderServiceImpl implements MorderService {
 		if (json != null && !json.isEmpty()) {
 			for (int i = 0; i < json.size(); i++) {
 				String orderId = String.valueOf(json.get(i));
-				Map<String,Object> params = new HashMap<>();
-				
+				Map<String, Object> params = new HashMap<>();
+
 			}
 		}
 		return null;

@@ -3,6 +3,8 @@ package org.silver.shop.api.system.cross;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONObject;
+
 public interface PaymentService {
 
 	public Map<String,Object> updatePaymentStatus(Map<String, Object> datasMap);
@@ -80,4 +82,20 @@ public interface PaymentService {
 	 */
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
 			 String merchantName);
+
+	/**
+	 * 管理员查询所有商户手工支付单信息
+	 * @param params 参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
+	 */
+	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size);
+
+	/**
+	 * 管理员修改商户手工支付单信息
+	 * @param json
+	 * @return Map
+	 */
+	public Map<String, Object> managerEditMpayInfo(JSONObject json);
 }

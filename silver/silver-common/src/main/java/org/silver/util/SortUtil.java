@@ -127,6 +127,7 @@ public class SortUtil {
 					String msg = o1.get("msg") + "";
 					//当截取时段为-1时,则证明消息不需要截取后排序,直接返回即可
 					if (msg.indexOf("第") < 0 && msg.indexOf("行") < 0) {
+						System.out.println("---------------");
 						return 0;
 					}
 					String index1 = msg.substring(msg.indexOf("第") + 1, msg.indexOf("行"));
@@ -143,13 +144,13 @@ public class SortUtil {
 	}
 
 	public static void main(String[] args) {
-		List<Map<Object, Object>> list = new ArrayList<>();
-		Map<Object, Object> map = new HashMap<>();
-		Map<Object, Object> map1 = new HashMap<>();
-		Map<Object, Object> map2 = new HashMap<>();
-		Map<Object, Object> map3 = new HashMap<>();
+		List<Map<String, Object>> list = new ArrayList<>();
+		Map<String, Object> map = new HashMap<>();
+		Map<String, Object> map1 = new HashMap<>();
+		Map<String, Object> map2 = new HashMap<>();
+		Map<String, Object> map3 = new HashMap<>();
 		map.put("number", "第" + 11 + "行");
-		map1.put("number", "第" + 2 + "行");
+		map1.put("number", "排序");
 		map2.put("number", "第" + 4 + "行");
 		map3.put("number", "第" + 3 + "行");
 		/*
@@ -161,7 +162,7 @@ public class SortUtil {
 		list.add(map2);
 		list.add(map3);
 		// map = new SortUtil().sortList(list);
-		// System.out.println(SortUtil.sortList(list));
+		 System.out.println(SortUtil.sortList(list));
 		// OrderByUtil.sortList(list, "sqlNo", "ASC");
 	}
 

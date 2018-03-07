@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
+import net.sf.json.JSONObject;
+
 @Service
 public class PaymentTransaction {
 
@@ -87,5 +89,16 @@ public class PaymentTransaction {
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
 			 String merchantName) {
 		return paymentService.managerGetPaymentReport(page,size,startDate,endDate,merchantName);
+	}
+
+	
+	//管理员查询所有商户手工支付单信息
+	public Map<String,Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
+		return paymentService.managerGetMpayInfo(params,page,size);
+	}
+
+	//管理员修改商户手工支付单信息
+	public Map<String,Object> managerEditMpayInfo(JSONObject json) {
+		return paymentService.managerEditMpayInfo(json);
 	}
 }
