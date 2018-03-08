@@ -113,6 +113,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 					for (int i = 0; i < jsonObject.size(); i++) {
 						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
 						// 由于取出来是row数据,所以需要截取字符串
+						//查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码—_区域名称
 						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
 								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
 										"")

@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-3-8 15:21:12 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.organization.AgentDetailContent" table="ym_shop_agent_detail_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="agentParentId" type="java.lang.String">
+            <column name="agentParentId" />
+        </property>
+        <property name="agentPrivinceCode" type="java.lang.String">
+            <column name="agentPrivinceCode" />
+        </property>
+        <property name="agentPrivinceName" type="java.lang.String">
+            <column name="agentPrivinceName" />
+        </property>
+        <property name="cityCode" type="java.lang.String">
+            <column name="cityCode" />
+        </property>
+        <property name="cityName" type="java.lang.String">
+            <column name="cityName" />
+        </property>
+        <property name="agentTaxNo" type="java.lang.String">
+            <column name="agentTaxNo" />
+        </property>
+        <property name="agentIndustryNo" type="java.lang.String">
+            <column name="agentIndustryNo" />
+        </property>
+        <property name="agentOrgAdd" type="java.lang.String">
+            <column name="agentOrgAdd" />
+        </property>
+        <property name="agentLegalName" type="java.lang.String">
+            <column name="agentLegalName" />
+        </property>
+        <property name="agentLegalCardType" type="java.lang.String">
+            <column name="agentLegalCardType" />
+        </property>
+        <property name="agentLegalCardNo" type="java.lang.String">
+            <column name="agentLegalCardNo" />
+        </property>
+        <property name="agentAgreementStart" type="java.util.Date">
+            <column name="agentAgreementStart" />
+        </property>
+        <property name="agentAgreementEnd" type="java.util.Date">
+            <column name="agentAgreementEnd" />
+        </property>
+        <property name="agentRegMoney" type="long">
+            <column name="agentRegMoney" />
+        </property>
+        <property name="agentSafeguardMoney" type="long">
+            <column name="agentSafeguardMoney" />
+        </property>
+        <property name="agentBussinessAdd" type="java.lang.String">
+            <column name="agentBussinessAdd" />
+        </property>
+        <property name="agentLinkPhone" type="java.lang.String">
+            <column name="agentLinkPhone" />
+        </property>
+        <property name="agentAccountCheckName" type="java.lang.String">
+            <column name="agentAccountCheckName" />
+        </property>
+        <property name="agentAccountCheckAdd" type="java.lang.String">
+            <column name="agentAccountCheckAdd" />
+        </property>
+        <property name="agentAccountCheckMail" type="java.lang.String">
+            <column name="agentAccountCheckMail" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+    </class>
+</hibernate-mapping>

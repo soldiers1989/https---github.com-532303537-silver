@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 商家下的子商户实体类
+ * 商家下的子商户实体,用于存放商城所有商户的子商户信息字典
  *
  */
 public class SubMerchantContent implements Serializable{

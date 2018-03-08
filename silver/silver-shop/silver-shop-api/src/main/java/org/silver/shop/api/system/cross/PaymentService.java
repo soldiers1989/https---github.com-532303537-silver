@@ -92,10 +92,15 @@ public interface PaymentService {
 	 */
 	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size);
 
+	
 	/**
 	 * 管理员修改商户手工支付单信息
-	 * @param json
+	 * @param datasMap 参数
+	 * @param managerId 管理员Id
+	 * @param managerName 管理员名称
 	 * @return Map
 	 */
-	public Map<String, Object> managerEditMpayInfo(JSONObject json);
+	public Map<String, Object> managerEditMpayInfo(Map<String, Object> datasMap, String managerId, String managerName);
+
+	
 }

@@ -53,7 +53,7 @@ public class ReturnInfoUtils {
 	 *            总数
 	 * @return Map
 	 */
-	public static final Map<String, Object> successDataInfo(Object datas, int count) {
+	public static final Map<String, Object> successDataInfo(Object datas, long count) {
 		Map<String, Object> statusMap = new HashMap<>();
 		if (datas == null || count < 0) {
 			return null;
@@ -61,9 +61,7 @@ public class ReturnInfoUtils {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		statusMap.put(BaseCode.DATAS.toString(), datas);
-		if (count >= 0) {
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
-		}
+		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
 		return statusMap;
 	}
 }

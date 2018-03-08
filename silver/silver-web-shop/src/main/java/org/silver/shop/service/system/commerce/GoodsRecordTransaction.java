@@ -122,7 +122,7 @@ public class GoodsRecordTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-	
+
 		Enumeration<String> isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
 			String key = isKey.nextElement();
@@ -301,8 +301,8 @@ public class GoodsRecordTransaction {
 					}
 					break;
 				case 13:
-					if (StringUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(findCountry(value))) {
-						originCountry = value;
+					if (StringUtils.isNotEmpty(value)) {
+						originCountry = findCountry(value);
 					}
 					break;
 				case 14:
@@ -875,8 +875,8 @@ public class GoodsRecordTransaction {
 					}
 					break;
 				case 22:
-					if (StringEmptyUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(findCountry(value))) {
-						originCountry = value;
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						originCountry = findCountry(value);
 					} else {
 						Map<String, Object> errMap = new HashMap<>();
 						errMap.put(BaseCode.MSG.toString(), "【已备案商品详情表】第" + (r + 1) + "行,---->原产国填写错误,请核对信息!");
@@ -969,7 +969,7 @@ public class GoodsRecordTransaction {
 				}
 				goodsRecordDetail.setSpareParams(json.toString());
 			}
-			
+
 			goodsRecordDetail.setEntGoodsNo(entGoodsNo);
 			goodsRecordDetail.setEbEntNo(ebEntNo);
 			goodsRecordDetail.setEbEntName(ebEntName);

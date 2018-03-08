@@ -11,6 +11,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.common.base.CustomsPortTransaction;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +31,8 @@ public class CustomsPortController {
 
 	@Autowired
 	private CustomsPortTransaction customsPortTransaction;
-
+	
+	
 	/**
 	 * 查询所有已开通的口岸及关联的海关
 	 * 
@@ -78,28 +80,25 @@ public class CustomsPortController {
 	@ResponseBody
 	@ApiOperation("添加已开通的海关及智检")
 	@RequiresRoles("Manager")
-	public String addCustomsPort(@RequestParam("provinceName") String provinceName,
-			@RequestParam("provinceCode") String provinceCode, @RequestParam("cityName") String cityName,
-			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
-			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsCode") String customsCode,
-			@RequestParam("customsName") String customsName, @RequestParam("ciqOrgCode") String ciqOrgCode,
-			@RequestParam("ciqOrgName") String ciqOrgName, HttpServletRequest req, HttpServletResponse response) {
+	public String addCustomsPort( HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = null;
-		statusMap = customsPortTransaction.addCustomsPort(provinceName, provinceCode, cityName, cityCode, customsPort,
-				customsPortName, customsCode, customsName, ciqOrgCode, ciqOrgName);
-		if (statusMap != null && statusMap.size() > 0) {
-			return JSONObject.fromObject(statusMap).toString();
-		} else {
-			statusMap = new HashMap<>();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+		Map<String,Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key =  isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
 		}
-		return JSONObject.fromObject(statusMap).toString();
+		int customsPort = Integer.parseInt(params.get("customsPort")+"");
+		String customsPortName = params.get("customsPortName")+"";
+		if (customsPort == 1 && customsPortName.equals("电子口岸") || customsPort == 2 && customsPortName.equals("智检")) {
+			return JSONObject.fromObject(customsPortTransaction.addCustomsPort(params)).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("口岸信息错误,请重新输入")).toString();
 	}
 
 	/**
@@ -161,10 +160,10 @@ public class CustomsPortController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		Enumeration<String> isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
-			String key =  isKey.nextElement();
+			String key = isKey.nextElement();
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}

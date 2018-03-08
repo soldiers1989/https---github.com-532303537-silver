@@ -55,7 +55,7 @@ public class ProvinceCityAreaTransaction {
 	}
 
 	/**
-	 * 查询省市区(不封装对应三级联动)
+	 * 查询省市区封装成Map集合key=区域编码
 	 * 
 	 * @return
 	 */

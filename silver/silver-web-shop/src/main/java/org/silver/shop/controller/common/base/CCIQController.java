@@ -18,7 +18,7 @@ import net.sf.json.JSONObject;
 /**
  * 国家出入境检验检疫局:简称国检机构
  */
-@RequestMapping("cciq")
+@RequestMapping("/cciq")
 @Controller
 public class CCIQController {
 	

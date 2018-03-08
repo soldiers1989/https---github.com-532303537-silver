@@ -901,28 +901,30 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> dataMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 
-		List<Morder> orderList = orderDao.findByProperty(Morder.class, null, page, size);
-		long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		List<Map<String, Object>> list = new ArrayList<>();
-		for (Morder order : orderList) {
-			Map<String, Object> item = new HashMap<>();
-			String orderId = order.getOrder_id();
-			paramMap.clear();
-			paramMap.put("order_id", orderId);
-			List<MorderSub> goodsList = orderDao.findByProperty(MorderSub.class, null, 0, 0);
-			item.put("head", order);
-			item.put("content", goodsList);
-			list.add(item);
+		List<Morder> orderList = orderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
+		Long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
+		if(orderList == null ){
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		}else if(!orderList.isEmpty()){
+			List<Map<String, Object>> list = new ArrayList<>();
+			for (Morder order : orderList) {
+				Map<String, Object> item = new HashMap<>();
+				String orderId = order.getOrder_id();
+				paramMap.clear();
+				paramMap.put("order_id", orderId);
+				List<MorderSub> goodsList = orderDao.findByProperty(MorderSub.class, paramMap, 0, 0);
+				item.put("head", order);
+				item.put("content", goodsList);
+				list.add(item);
+			}
+			return ReturnInfoUtils.successDataInfo(list, count);
+		}else{
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.DATAS.toString(), list);
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
-		return statusMap;
+		
 	}
 
 	@Override

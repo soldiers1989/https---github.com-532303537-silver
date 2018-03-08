@@ -144,7 +144,7 @@ public class MorderServiceImpl implements MorderService {
 
 	@Override
 	public Map<String, Object> pageFindRecords(Map<String, Object> dataMap, int page, int size) {
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("merchant_no", dataMap.get("merchant_no") + "".trim());
 		paramMap.put("del_flag", 0);
@@ -153,7 +153,7 @@ public class MorderServiceImpl implements MorderService {
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
-		if (mlist != null && mlist.size() > 0) {
+		if (mlist != null && !mlist.isEmpty()) {
 			paramMap.clear();
 			for (Morder m : mlist) {
 				paramMap.put("order_id", m.getOrder_id());

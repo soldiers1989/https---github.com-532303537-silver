@@ -14,9 +14,13 @@ public enum LoginType {
 	 */
 	MERCHANT("Merchant"),
 	/**
-	 * 代理
+	 * （临时旧数据）代理
 	 */
 	PROXY("Proxy"),
+	/**
+	 * 代理商
+	 */
+	AGENT("Agent"),
 	/**
 	 * 商户的info
 	 */
@@ -30,9 +34,14 @@ public enum LoginType {
 	 */
 	MEMBERINFO(MEMBER+"_info"),
 	/**
-	 * 代理的info
+	 * （临时旧数据）代理的info
 	 */
-	PROXYINFO(PROXY+"_info");
+	PROXYINFO(PROXY+"_info"),
+	/**
+	 * 代理商的info
+	 */
+	AGENTINFO(AGENT+"_info")
+	;
 	
     private String type;
 

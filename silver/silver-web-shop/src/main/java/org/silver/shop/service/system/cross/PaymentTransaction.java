@@ -11,6 +11,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
@@ -98,7 +99,12 @@ public class PaymentTransaction {
 	}
 
 	//管理员修改商户手工支付单信息
-	public Map<String,Object> managerEditMpayInfo(JSONObject json) {
-		return paymentService.managerEditMpayInfo(json);
+	public Map<String,Object> managerEditMpayInfo(Map<String,Object> params) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return paymentService.managerEditMpayInfo(params,managerId,managerName);
 	}
 }

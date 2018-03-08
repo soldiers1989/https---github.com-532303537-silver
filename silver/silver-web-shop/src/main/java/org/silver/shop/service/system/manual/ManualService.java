@@ -547,7 +547,7 @@ public class ManualService {
 						}
 					} else if (c == 1) {
 						// 订单Id
-						orderId = value.trim();
+						orderId = value;
 					} else if (c == 2) {
 						// 商品自编号
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -598,7 +598,7 @@ public class ManualService {
 						orderDocName = value;
 					} else if (c == 11) {
 						// 身份证号码
-						orderDocId = value.trim().replace("x", "X");
+						orderDocId = value.replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 12) {
 						// 承运商
 						ehsEntName = value;
@@ -764,7 +764,7 @@ public class ManualService {
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
 							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
-							continue;
+							break;
 						}
 					} else if (c == 1) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -777,7 +777,7 @@ public class ManualService {
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->运单号不能为空,请核对信息!";
 							RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 1);
-							continue;
+							break;
 						}
 					} else if (c == 8) {
 						// 运输方式
@@ -827,7 +827,7 @@ public class ManualService {
 						RecipientTel = value;
 					} else if (c == 24) {
 						// 收货人身份证
-						RecipientID = value.trim().replace("x", "X");
+						RecipientID = value.trim().replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 26) {
 						senderName = value; // 发货人姓名
 					} else if (c == 27) {
@@ -1676,7 +1676,7 @@ public class ManualService {
 						RecipientTel = value;
 					} else if (c == 24) {
 						// 收货人身份证
-						RecipientID = value.replace("x", "X");
+						RecipientID = value.replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 26) {
 						senderName = value; // 发货人姓名
 					} else if (c == 27) {

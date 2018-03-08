@@ -353,7 +353,7 @@ public class PaymentServiceImpl implements PaymentService {
 	public Object getMpayRecordInfo(String merchantId, String merchantName, Map<String, Object> params, int page,
 			int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> reDatasMap = SearchUtils.universalMPaymentSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("merchant_no", merchantId);
 		paramMap.put("del_flag", 0);
@@ -378,10 +378,10 @@ public class PaymentServiceImpl implements PaymentService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
-			if(StringEmptyUtils.isNotEmpty(merchantId)){
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				paramsMap.put("merchantId", merchantId);
 			}
-			if(StringEmptyUtils.isNotEmpty(merchantName)){
+			if (StringEmptyUtils.isNotEmpty(merchantName)) {
 				paramsMap.put("merchantName", merchantName);
 			}
 			paramsMap.put("startDate", startDate);
@@ -563,16 +563,15 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			 String merchantName) {
+			String merchantName) {
 		return getMerchantPaymentReport(null, merchantName, page, size, startDate, endDate);
 	}
 
 	@Override
 	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> reDatasMap = SearchUtils.universalMPaymentSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-	//	paramMap.put("del_flag", 0);
 		List<Mpay> reList = paymentDao.findByPropertyLike(Mpay.class, paramMap, null, page, size);
 		long tatolCount = paymentDao.findByPropertyLikeCount(Mpay.class, paramMap, null);
 		if (reList == null) {
@@ -589,12 +588,36 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> managerEditMpayInfo(JSONObject json) {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<String, Object> managerEditMpayInfo(Map<String, Object> datasMap, String managerId, String managerName) {
+		if (datasMap != null && !datasMap.isEmpty()) {
+			Map<String, Object> params = new HashMap<>();
+			String tradeNo = datasMap.get("trade_no") + "";
+			params.put("trade_no", tradeNo);
+			List<Mpay> mPayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
+			if (mPayList != null && !mPayList.isEmpty()) {
+				Mpay pay = mPayList.get(0);
+				double payAmount = 0.0;
+				try {
+					 payAmount = Double.parseDouble(datasMap.get("pay_amount") + "");
+				} catch (Exception e) {
+					e.printStackTrace();
+					return ReturnInfoUtils.errorInfo("交易金额错误,请重新输入!");
+				}
+				pay.setPay_amount(payAmount);
+				pay.setPayer_name(datasMap.get("payer_name")+"");
+				pay.setPayer_document_number(datasMap.get("payer_document_number")+"");
+				pay.setPayer_phone_number(datasMap.get("payer_phone_number")+"");
+				pay.setDel_flag(Integer.parseInt(datasMap.get("del_flag")+""));
+				pay.setUpdate_by(managerName);
+				pay.setUpdate_date(new Date());
+				if(paymentDao.update(pay)){
+					return ReturnInfoUtils.successInfo();
+				}
+				return ReturnInfoUtils.errorInfo("更新支付单失败,服务器繁忙!");
+			}
+			return ReturnInfoUtils.errorInfo("支付单信息未找到,请核实信息!");
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
-	public static void main(String[] args) {
-		System.out.println("GAC_20180002015199758417456482".length());
-	}
 }

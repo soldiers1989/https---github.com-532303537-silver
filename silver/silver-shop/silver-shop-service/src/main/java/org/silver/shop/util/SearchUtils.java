@@ -18,6 +18,11 @@ import org.silver.util.StringEmptyUtils;
  *
  */
 public final class SearchUtils {
+	
+	/**
+	 * 手工订单生成的支付流水号字段名称
+	 */
+	private final static String TRADENO = "trade_no";
 	/**
 	 * 通用检索方法
 	 * 
@@ -72,21 +77,24 @@ public final class SearchUtils {
 				break;
 			case "startDate":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					/*Calendar cal = Calendar.getInstance();
-					cal.setTime(DateUtil.parseDate(value + ""));
-					Date startDate = cal.getTime();*/
+					/*
+					 * Calendar cal = Calendar.getInstance();
+					 * cal.setTime(DateUtil.parseDate(value + "")); Date
+					 * startDate = cal.getTime();
+					 */
 					paramMap.put(key, DateUtil.parseDate2(value + ""));
 				}
 				break;
 			case "endDate":
 				if (StringEmptyUtils.isNotEmpty(value)) {
-				/*	Calendar cal = Calendar.getInstance();
-					cal.setTime(DateUtil.parseDate(value + ""));
-					cal.set(Calendar.HOUR, 23);
-					cal.set(Calendar.MINUTE, 59);
-					cal.set(Calendar.SECOND, 59);
-					cal.set(Calendar.MILLISECOND, 999);
-					Date endDate = cal.getTime();*/
+					/*
+					 * Calendar cal = Calendar.getInstance();
+					 * cal.setTime(DateUtil.parseDate(value + ""));
+					 * cal.set(Calendar.HOUR, 23); cal.set(Calendar.MINUTE, 59);
+					 * cal.set(Calendar.SECOND, 59);
+					 * cal.set(Calendar.MILLISECOND, 999); Date endDate =
+					 * cal.getTime();
+					 */
 					paramMap.put(key, DateUtil.parseDate2(value + ""));
 				}
 				break;
@@ -171,11 +179,6 @@ public final class SearchUtils {
 					return statusMap;
 				}
 				break;
-			case "order_record_status":
-				if (StringEmptyUtils.isNotEmpty(value) && Integer.parseInt(value) > 0) {
-					paramMap.put("order_record_status", Integer.parseInt(value));
-				}
-				break;
 			case "startTime":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put("startTime", DateUtil.parseDate2(value));
@@ -184,38 +187,6 @@ public final class SearchUtils {
 			case "endTime":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put("endTime", DateUtil.parseDate2(value));
-				}
-				break;
-
-			case "order_id":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "trade_no":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "pay_record_status":
-				if (StringEmptyUtils.isNotEmpty(value) && Integer.parseInt(value) > 0) {
-					paramMap.put("pay_record_status", Integer.parseInt(value));
-				}
-				break;
-			case "morder_id":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "tradeNoFlag":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					if ("1".equals(value)) {
-						// 支付流水为空
-						paramMap.put(key, " IS NULL");
-					} else if ("2".equals(value)) {
-						// 支付流水不为空
-						paramMap.put(key, " IS NOT NULL ");
-					}
 				}
 				break;
 			case "type":
@@ -230,11 +201,6 @@ public final class SearchUtils {
 				}
 				break;
 			case "serialNo":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "waybill":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value);
 				}
@@ -254,6 +220,162 @@ public final class SearchUtils {
 					paramMap.put(key, Integer.parseInt(value));
 				}
 				break;
+			case "merchant_no":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	/**
+	 * 通用手工订单信息检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalMOrderSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "order_id":
+				paramMap.put(key, value);
+				break;
+			case TRADENO:
+				paramMap.put(key, value);
+				break;
+			case "waybill":
+				paramMap.put(key, value);
+				break;
+			case "startTime":
+				paramMap.put("startTime", DateUtil.parseDate2(value));
+				break;
+			case "endTime":
+				paramMap.put("endTime", DateUtil.parseDate2(value));
+				break;
+			case "tradeNoFlag":
+				if ("1".equals(value)) {
+					// 支付流水为空
+					paramMap.put(key, " IS NULL");
+				} else if ("2".equals(value)) {
+					// 支付流水不为空
+					paramMap.put(key, " IS NOT NULL ");
+				}
+				break;
+			case "order_record_status":
+				paramMap.put("order_record_status", Integer.parseInt(value));
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	/**
+	 * 通用手工支付单信息检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalMPaymentSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "order_id":
+				paramMap.put(key, value);
+				break;
+			case TRADENO:
+				paramMap.put(key, value);
+				break;
+			case "waybill":
+				paramMap.put(key, value);
+				break;
+			case "startTime":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "endTime":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "pay_record_status":
+				paramMap.put(key, Integer.parseInt(value));
+				break;
+			case "morder_id":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value);
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	/**
+	 * 通用代理商检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalAgentSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			switch (key) {
+			case "agentName":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
+				break;
+			case "agentStatus":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
+				break;
+
 			default:
 				break;
 			}

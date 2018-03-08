@@ -12,9 +12,9 @@ public interface ProvinceCityAreaService {
 	public Map<String, Object> getProvinceCityArea();
 
 	/**
-	 * 不封装对应三级联动
+	 * 查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码—_区域名称
 	 * 
-	 * @return
+	 * @return Map
 	 */
 	public Map<String, Object> getProvinceCityArea2();
 
