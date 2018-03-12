@@ -39,7 +39,7 @@ public class MemberTransaction {
 		if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 			return datasMap;
 		}
-		if (!IdcardValidator.is18Idcard(memberIdCard)) {
+		if (!IdcardValidator.validate18Idcard(memberIdCard)) {
 			return ReturnInfoUtils.errorInfo("身份证号码输入错误,请重新输入");
 		}
 		String memberId = datasMap.get(BaseCode.DATAS.toString()) + "";

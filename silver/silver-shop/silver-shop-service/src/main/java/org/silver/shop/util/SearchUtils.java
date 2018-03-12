@@ -13,16 +13,29 @@ import org.silver.common.StatusCode;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 
+import com.alibaba.dubbo.container.Main;
+
 /**
  * 商城通用检索类
  *
  */
 public final class SearchUtils {
-	
+
 	/**
 	 * 手工订单生成的支付流水号字段名称
 	 */
-	private final static String TRADENO = "trade_no";
+	private static final String TRADENO = "trade_no";
+
+	/**
+	 * 兼容另一种命名-开始时间
+	 */
+	private static final String STARTTIME = "startTime";
+
+	/**
+	 * 兼容另一种命名-结束时间
+	 */
+	private static final String ENDTIME = "endTime";
+
 	/**
 	 * 通用检索方法
 	 * 
@@ -179,14 +192,14 @@ public final class SearchUtils {
 					return statusMap;
 				}
 				break;
-			case "startTime":
+			case STARTTIME:
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put("startTime", DateUtil.parseDate2(value));
+					paramMap.put(key, DateUtil.parseDate2(value));
 				}
 				break;
-			case "endTime":
+			case ENDTIME:
 				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put("endTime", DateUtil.parseDate2(value));
+					paramMap.put(key, DateUtil.parseDate2(value));
 				}
 				break;
 			case "type":
@@ -220,12 +233,6 @@ public final class SearchUtils {
 					paramMap.put(key, Integer.parseInt(value));
 				}
 				break;
-			case "merchant_no":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value.trim());
-				}
-				break;
-
 			default:
 				break;
 			}
@@ -266,11 +273,11 @@ public final class SearchUtils {
 			case "waybill":
 				paramMap.put(key, value);
 				break;
-			case "startTime":
-				paramMap.put("startTime", DateUtil.parseDate2(value));
+			case STARTTIME:
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
-			case "endTime":
-				paramMap.put("endTime", DateUtil.parseDate2(value));
+			case ENDTIME:
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "tradeNoFlag":
 				if ("1".equals(value)) {
@@ -282,7 +289,12 @@ public final class SearchUtils {
 				}
 				break;
 			case "order_record_status":
-				paramMap.put("order_record_status", Integer.parseInt(value));
+				paramMap.put(key, Integer.parseInt(value));
+				break;
+			case "merchant_no":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
 				break;
 			default:
 				break;
@@ -338,6 +350,11 @@ public final class SearchUtils {
 					paramMap.put(key, value);
 				}
 				break;
+			case "merchant_no":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, value.trim());
+				}
+				break;
 			default:
 				break;
 			}
@@ -364,24 +381,74 @@ public final class SearchUtils {
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
 			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
 			switch (key) {
 			case "agentName":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value.trim());
-				}
+				paramMap.put(key, value);
 				break;
 			case "agentStatus":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value.trim());
-				}
+				paramMap.put(key, value);
 				break;
-
 			default:
 				break;
 			}
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	/**
+	 * 商家商家后台订单通用检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalMerchantOrderSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> viceParams = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String, Object>> lm = new ArrayList<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "entOrderNo":
+				paramMap.put(key, value);
+				viceParams.put("order_id", value);
+				break;
+			case "createDate":
+				paramMap.put(key, value);
+				viceParams.put("OrderDate", value);
+				break;
+			case "endDate":
+				paramMap.put(key, value);
+				viceParams.put("OrderDate", value);
+				break;
+			case "merchantId":
+				paramMap.put(key, value);
+				viceParams.put("merchant_no", value);
+				break;
+		/*	case "deleteFlag":
+				paramMap.put(key, value);
+				viceParams.put("del_flag", value);
+				break;*/
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("viceParams", viceParams);
 		statusMap.put("error", lm);
 		return statusMap;
 	}

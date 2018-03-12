@@ -32,6 +32,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
+/**
+ * 代理商control层
+ *
+ */
 @RequestMapping("agent")
 @Controller
 public class AgentController {
@@ -112,13 +116,13 @@ public class AgentController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 检查代理商是否登录
 	 */
 	@RequestMapping(value = "/checkAgentLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("检查管理员是否登录")
+	@ApiOperation("检查代理商是否登录")
 	public String checkAgentLogin(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -138,13 +142,13 @@ public class AgentController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/getAllAgentInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员查询所有代理商信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String getAllAgentInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
+	public String getAllAgentInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("page") int page,
+			@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -157,12 +161,28 @@ public class AgentController {
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
-		params.remove("page");
-		params.remove("size");
-		if(!params.isEmpty()){
-			return JSONObject.fromObject(agentTransaction.getAllAgentInfo(params, page, size)).toString();
+		return JSONObject.fromObject(agentTransaction.getAllAgentInfo(params, page, size)).toString();
+	}
+	
+	@RequestMapping(value = "/setAgentSubMerchant", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员为代理商设置子商户")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String setAgentSubMerchant(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
 		}
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数错误!")).toString();
+		return null;
+		//return JSONObject.fromObject(agentTransaction.getAllAgentInfo(params, page, size)).toString();
 	}
 	
 }

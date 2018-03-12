@@ -332,4 +332,11 @@ public class OrderController {
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
 	}
 
+	public static void main(String[] args) {
+		double d = 200.00;
+		int i = 1;
+		int consolidatedTax = 119;
+		System.out.println((consolidatedTax / 1000d));
+		System.out.println( d * (consolidatedTax / 1000d));
+	}
 }

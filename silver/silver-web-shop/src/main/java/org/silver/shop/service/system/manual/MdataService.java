@@ -126,8 +126,8 @@ public class MdataService {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String proxyParentId = merchantInfo.getProxyParentId();
-		String proxyParentName = merchantInfo.getProxyParentName();
+		String proxyParentId = merchantInfo.getAgentParentId();
+		String proxyParentName = merchantInfo.getAgentParentName();
 		return mpayService.sendMorderRecord(merchantId, customsMap, orderNoPack, proxyParentId, merchantName,
 				proxyParentName);
 	}
@@ -256,7 +256,7 @@ public class MdataService {
 						OrderDocTel, OrderDate, trade_no, dateSign, waybill, create_date, senderName, senderCountry,
 						senderAreaCode, senderAddress, senderTel, postal, RecipientProvincesName, RecipientCityName,
 						RecipientAreaName, EntGoodsNo, HSCode, GoodsName, CusGoodsNo, CIQGoodsNo, OriginCountry,
-						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date,pierCode;
+						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date,customsCode;
 				int Qty = 0;
 				double Price = 0.0;
 				double Total = 0.0;
@@ -342,7 +342,7 @@ public class MdataService {
 
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
 
-				pierCode =  rowIndex.getString("pierCode").replace("{\"value\":\"", "").replace("\"}", "");
+				customsCode =  rowIndex.getString("customsCode").replace("{\"value\":\"", "").replace("\"}", "");
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 1, c, i + 1);
@@ -417,7 +417,7 @@ public class MdataService {
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
 					} else if (c == 52) {
-						excel.writCell(0, i + 1, c, pierCode);
+						excel.writCell(0, i + 1, c, customsCode);
 					} else if (c == 53) {
 						// 快递公司
 						excel.writCell(0, i + 1, c, "邮政快递");

@@ -38,8 +38,8 @@ public class PaymentTransaction {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String proxyParentId = merchantInfo.getProxyParentId();
-		String proxyParentName = merchantInfo.getProxyParentName();
+		String proxyParentId = merchantInfo.getAgentParentId();
+		String proxyParentName = merchantInfo.getAgentParentName();
 		return paymentService.sendMpayByRecord(merchantId, recordMap, tradeNoPack, proxyParentId, merchantName,
 				proxyParentName);
 	}

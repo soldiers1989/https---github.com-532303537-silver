@@ -166,8 +166,8 @@
 		<property name="spareParams">
 			<column name="spareParams" />
 		</property>
-		<property name="pierCode">
-			<column name="pierCode" />
+		<property name="customsCode">
+			<column name="customsCode" />
 		</property>
 		
 	</class>

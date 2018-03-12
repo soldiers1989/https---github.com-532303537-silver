@@ -13,19 +13,10 @@ public interface MerchantService {
 
 	/**
 	 * 保存商戶基本信息与备案信息
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param loginPassword 登录密码
-	 * @param merchantIdCard 身份证号码
-	 * @param merchantIdCardName 真实姓名
-	 * @param recordInfoPack 商户备案信息包
-	 * @param type  类型：1-银盟商户注册,2-第三方商户注册	
-	 * @param createBy 创建人
-	 * @param phone 
+	 * @param Map 参数
 	 * @return Map
 	 */
-	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type,String createBy, String phone);
+	public Map<String, Object> merchantRegister(Map<String,Object> datasMap);
 
 	/**
 	 * 检查商户名是否重复

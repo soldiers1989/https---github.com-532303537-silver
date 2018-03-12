@@ -26,6 +26,7 @@ import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
+import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
@@ -151,6 +152,8 @@ public class MorderServiceImpl implements MorderService {
 
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
+		
+	
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && !mlist.isEmpty()) {
@@ -477,7 +480,7 @@ public class MorderServiceImpl implements MorderService {
 		morder.setRecipientAreaName(areaName);
 		String randomDate = DateUtil.randomCreateDate();
 		morder.setOrderDate(randomDate);
-		morder.setPierCode(goodsInfo.get("pierCode")+"");
+		morder.setCustomsCode(goodsInfo.get("customsCode")+"");
 		if (morderDao.add(morder)) {
 			statusMap.put("status", 1);
 			statusMap.put("order_id", newOrderId);
@@ -978,37 +981,36 @@ public class MorderServiceImpl implements MorderService {
 		order.setTax(tax);
 		order.setActualAmountPaid(totalprice + tax);
 		order.setRecipientName(strArr[5]);
-		order.setRecipientAddr(strArr[6]);
-		order.setRecipientID(strArr[7]);
-		order.setRecipientTel(strArr[8]);
-		order.setRecipientProvincesCode(strArr[9]);
-		order.setRecipientCityCode(strArr[10]);
-		order.setRecipientAreaCode(strArr[11]);
-		order.setOrderDocAcount(strArr[12]);
-		order.setOrderDocName(strArr[13]);
-		order.setOrderDocType(strArr[14]);
+		
+		order.setRecipientID(strArr[6]);
+		order.setRecipientTel(strArr[7]);
+		order.setRecipientProvincesName(strArr[8]);
+		order.setRecipientProvincesCode(strArr[9]);		
+		order.setRecipientCityName(strArr[10]);
+		order.setRecipientCityCode(strArr[11]);		
+		order.setRecipientAreaName(strArr[12]);
+		order.setRecipientAreaCode(strArr[13]);		
+		order.setRecipientAddr(strArr[14]);
 		order.setOrderDocId(strArr[15]);
-		order.setOrderDocTel(strArr[16]);
-		// order.setOrderDate(strArr[17]);
-
-		// order.setTrade_no(strArr[18]);
-		// order.setDateSign(strArr[19]);
-		order.setWaybill(strArr[20]);
+		order.setOrderDocName(strArr[16]);
+		order.setOrderDocType(strArr[17]);
+		order.setOrderDocAcount(strArr[18]);
+		order.setOrderDocTel(strArr[19]);
+		order.setWaybill(strArr[22]);
+		order.setSenderName(strArr[23]);
+		
+		
 		// order.setStatus(orderMap.get(""));
-		order.setSenderName(strArr[21]);
-		order.setSenderCountry(strArr[22]);
-		order.setSenderAreaCode(strArr[23]);
-		order.setSenderAddress(strArr[24]);
-		order.setSenderTel(strArr[25]);
-		order.setPostal(strArr[26]);
-		order.setRecipientProvincesName(strArr[27]);
-		order.setRecipientCityName(strArr[28]);
-		order.setRecipientAreaName(strArr[29]);
-		order.setOldOrderId(strArr[30]);
+		order.setSenderCountry(strArr[24]);
+		order.setSenderAreaCode(strArr[25]);
+		order.setSenderAddress(strArr[26]);
+		order.setSenderTel(strArr[27]);
+		order.setPostal(strArr[28]);
+		order.setOldOrderId(strArr[29]);
 		order.setUpdate_date(new Date());
 		order.setUpdate_by(merchantName);
 		try {
-			order.setSerial(Integer.parseInt(strArr[32]));
+			order.setSerial(Integer.parseInt(strArr[31]));
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
 		}

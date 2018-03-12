@@ -28,13 +28,13 @@ public class AgentTransaction {
 	@Autowired
 	private AgentService agentService;
 	
-	public Map<String,Object> addAgentBaseInfo(Map<String, Object> params) {
+	public Map<String,Object> addAgentBaseInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return agentService.addAgentBaseInfo(params,managerId,managerName);
+		return agentService.addAgentBaseInfo(datasMap,managerId,managerName);
 	}
 
 	

@@ -37,6 +37,7 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.IdcardValidator;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -324,8 +325,8 @@ public class PaymentServiceImpl implements PaymentService {
 				pay.setPay_record_status(3);
 				// 进行钱包扣款
 				Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchant.getMerchantId(),
-						merchant.getMerchantName(), pay.getTrade_no(), merchant.getProxyParentId(), pay.getPay_amount(),
-						merchant.getProxyParentName());
+						merchant.getMerchantName(), pay.getTrade_no(), merchant.getAgentParentId(), pay.getPay_amount(),
+						merchant.getAgentParentName());
 				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
 					return reUpdateWalletMap;
 				}
@@ -408,13 +409,13 @@ public class PaymentServiceImpl implements PaymentService {
 			int realRowCount, List<Map<String, Object>> errorList) {
 		Map<String, Object> statusMap = new HashMap<>();
 		String merchantName = "";
-		if (merchantId != null && orderIDs != null && orderIDs.size() > 0) {
+		if (merchantId != null && orderIDs != null && !orderIDs.isEmpty()) {
 			for (String order_id : orderIDs) {
 				Map<String, Object> params = new HashMap<>();
 				params.put("merchant_no", merchantId);
 				params.put("order_id", order_id);
 				List<Morder> morder = paymentDao.findByProperty(Morder.class, params, 1, 1);
-				if (morder != null && morder.size() > 0) {
+				if (morder != null && !morder.isEmpty()) {
 					merchantName = morder.get(0).getCreate_by();
 					params.clear();
 					params.put("morder_id", order_id);
@@ -424,17 +425,21 @@ public class PaymentServiceImpl implements PaymentService {
 						RedisInfoUtils.commonErrorInfo(msg, errorList, realRowCount, serialNo, "createPaymentId", 1);
 						continue;
 					}
+					String orderDocId = morder.get(0).getOrderDocId();
+					if (!IdcardValidator.validate18Idcard(orderDocId)) {
+						String msg = "订单号[" + order_id + "]实名认证不通过,请核实身份证与姓名信息!";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, realRowCount, serialNo, "createPaymentId", 1);
+						continue;
+					}
 					//
 					params.clear();
 					int count = SerialNoUtils.getRedisIdCount("paymentId");
-					String trade_no = createTradeNo("01O", (count + 1), new Date());
+					String tradeNo = createTradeNo("01O", (count + 1), new Date());
 					String orderDate = morder.get(0).getOrderDate();
-					Date pay_time = DateUtil.randomPaymentDate(orderDate);
-
-					if (addEntity(merchantId, trade_no, order_id, morder.get(0).getActualAmountPaid(),
-							morder.get(0).getOrderDocName(), morder.get(0).getOrderDocId(),
-							morder.get(0).getOrderDocTel(), pay_time, morder.get(0).getCreate_by())
-							&& updateOrderPayNo(merchantId, order_id, trade_no)) {
+					Date payTime = DateUtil.randomPaymentDate(orderDate);
+					if (addEntity(merchantId, tradeNo, order_id, morder.get(0).getActualAmountPaid(),
+							morder.get(0).getOrderDocName(), orderDocId, morder.get(0).getOrderDocTel(), payTime,
+							morder.get(0).getCreate_by()) && updateOrderPayNo(merchantId, order_id, tradeNo)) {
 						// 当创建完支付流水号之后
 						bufferUtils.writeRedis(errorList, realRowCount, serialNo, "createPaymentId");
 						continue;
@@ -598,19 +603,19 @@ public class PaymentServiceImpl implements PaymentService {
 				Mpay pay = mPayList.get(0);
 				double payAmount = 0.0;
 				try {
-					 payAmount = Double.parseDouble(datasMap.get("pay_amount") + "");
+					payAmount = Double.parseDouble(datasMap.get("pay_amount") + "");
 				} catch (Exception e) {
 					e.printStackTrace();
 					return ReturnInfoUtils.errorInfo("交易金额错误,请重新输入!");
 				}
 				pay.setPay_amount(payAmount);
-				pay.setPayer_name(datasMap.get("payer_name")+"");
-				pay.setPayer_document_number(datasMap.get("payer_document_number")+"");
-				pay.setPayer_phone_number(datasMap.get("payer_phone_number")+"");
-				pay.setDel_flag(Integer.parseInt(datasMap.get("del_flag")+""));
+				pay.setPayer_name(datasMap.get("payer_name") + "");
+				pay.setPayer_document_number(datasMap.get("payer_document_number") + "");
+				pay.setPayer_phone_number(datasMap.get("payer_phone_number") + "");
+				pay.setDel_flag(Integer.parseInt(datasMap.get("del_flag") + ""));
 				pay.setUpdate_by(managerName);
 				pay.setUpdate_date(new Date());
-				if(paymentDao.update(pay)){
+				if (paymentDao.update(pay)) {
 					return ReturnInfoUtils.successInfo();
 				}
 				return ReturnInfoUtils.errorInfo("更新支付单失败,服务器繁忙!");

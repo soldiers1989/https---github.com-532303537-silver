@@ -806,8 +806,8 @@ public class MpayServiceImpl implements MpayService {
 			merchant = reMerchantList.get(0);
 			// 商户钱包扣钱进代理商钱包
 			Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(),
-					merchant.getMerchantName(), orderId, merchant.getProxyParentId(), price,
-					merchant.getProxyParentName());
+					merchant.getMerchantName(), orderId, merchant.getAgentParentId(), price,
+					merchant.getAgentParentName());
 			if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
 				return reUpdateWalletMap;
 			}

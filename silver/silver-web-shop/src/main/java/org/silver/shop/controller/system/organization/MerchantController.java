@@ -1,6 +1,7 @@
 package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,24 +107,26 @@ public class MerchantController {
 	 */
 	@RequestMapping(value = "/register", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String merchantRegister(@RequestParam("account") String account,
-			@RequestParam("loginPassword") String loginPassword,
-			@RequestParam("merchantIdCardName") String merchantIdCardName,
-			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") String type, String phone, HttpServletResponse response) {
+	public String merchantRegister(HttpServletResponse response, HttpServletRequest req) {
 		response.setHeader("Access-Control-Allow-Origin", "*");
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> iskey = req.getParameterNames();
+		while (iskey.hasMoreElements()) {
+			String key = iskey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		String type = datasMap.get("type") + "";
+		String merchantIdCard = datasMap.get("merchantIdCard") + "";
 		Map<String, Object> statusMap = new HashMap<>();
 		if (!IdcardValidator.isValidatedAllIdcard(merchantIdCard)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("身份证号码错误,请重新输入!")).toString();
 		}
-		if ("1".equals(type) && account != null && loginPassword != null && merchantIdCardName != null) {// 1-银盟商户注册
-			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
-					recordInfoPack, type,phone);
+		if ("1".equals(type)) {// 1-银盟商户注册
+			statusMap = merchantTransaction.merchantRegister(datasMap);
 			return JSONObject.fromObject(statusMap).toString();
-		} else if ("2".equals(type) && recordInfoPack != null && account != null && loginPassword != null
-				&& merchantIdCardName != null) {// 2-第三方商户注册
-			statusMap = merchantTransaction.merchantRegister(account, loginPassword, merchantIdCard, merchantIdCardName,
-					recordInfoPack, type,phone);
+		} else if ("2".equals(type)) {// 2-第三方商户注册
+			statusMap = merchantTransaction.merchantRegister(datasMap);
 			return JSONObject.fromObject(statusMap).toString();
 		}
 		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());

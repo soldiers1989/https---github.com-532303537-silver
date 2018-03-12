@@ -89,7 +89,7 @@ public class IdCardServiceImpl implements IdCardService {
 				idCard.setName(name);
 				idCard.setIdNumber(id);
 				//类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-				if(IdcardValidator.is18Idcard(id)){
+				if(IdcardValidator.validate18Idcard(id)){
 					idCard.setType(3);
 				}else{
 					idCard.setType(5);
@@ -101,7 +101,7 @@ public class IdCardServiceImpl implements IdCardService {
 				params.put("idNumber", id);
 				List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 1, 1);
 				if (idCardList != null && !idCardList.isEmpty()) {
-					if(!IdcardValidator.is18Idcard(idCardList.get(0).getIdNumber())){
+					if(!IdcardValidator.validate18Idcard(idCardList.get(0).getIdNumber())){
 						idCard.setType(5);
 					}
 					continue;

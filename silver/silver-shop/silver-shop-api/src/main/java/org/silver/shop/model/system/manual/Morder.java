@@ -55,7 +55,7 @@ public class Morder implements Serializable {
 	private String RecipientAreaName;//收货人区域名称
 	private String oldOrderId;//原导入表单中订单Id
 	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
-	private String pierCode;//对应国宗表单中-码头/货场代码(导出表中-进/出口岸)
+	private String customsCode;//海关关区代码(导出表中-进/出口岸)
 	public long getId() {
 		return id;
 	}
@@ -418,13 +418,14 @@ public class Morder implements Serializable {
 		this.spareParams = spareParams;
 	}
 
-	public String getPierCode() {
-		return pierCode;
+	public String getCustomsCode() {
+		return customsCode;
 	}
 
-	public void setPierCode(String pierCode) {
-		this.pierCode = pierCode;
+	public void setCustomsCode(String customsCode) {
+		this.customsCode = customsCode;
 	}
+
 
 
 }

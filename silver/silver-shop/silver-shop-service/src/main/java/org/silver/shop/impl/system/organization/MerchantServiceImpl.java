@@ -124,14 +124,20 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String, Object> merchantRegister(String merchantId, String merchantName, String loginPassword,
-			String merchantIdCard, String merchantIdCardName, String recordInfoPack, String type, String createBy,
-			String phone) {
+	public Map<String, Object> merchantRegister(Map<String,Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
 		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
+		String type = datasMap.get("type")+"";
+		String merchantId = datasMap.get("merchantId")+"";
+		String merchantName = datasMap.get("merchantName")+"";
+		String loginPassword = datasMap.get("loginPassword")+"";
+		String merchantIdCard = datasMap.get("merchantIdCard")+"";
+		String merchantIdCardName = datasMap.get("merchantIdCardName")+"";
+		String managerName = datasMap.get("managerName")+"";
+		String phone = datasMap.get("phone")+"";
 		if ("1".equals(type)) {// 1-银盟商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("YM_" + merchantId);
@@ -140,14 +146,14 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(createBy);
+			merchant.setCreateBy(managerName);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			merchant.setProxyParentId("prxoy_00001");
-			merchant.setProxyParentName("银盟");
+			merchant.setAgentParentId("prxoy_00001");
+			merchant.setAgentParentName("银盟");
 			merchant.setMerchantPhone(phone);
 			recordInfo.setMerchantId(merchantId);
-			recordInfo.setCreateBy(createBy);
+			recordInfo.setCreateBy(managerName);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 
@@ -170,14 +176,15 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantIdCard(merchantIdCard);
 			merchant.setMerchantIdCardName(merchantIdCardName);
 			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(createBy);
+			merchant.setCreateBy(managerName);
 			merchant.setCreateDate(dateTime);
 			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			merchant.setProxyParentId("prxoy_00001");
-			merchant.setProxyParentName("银盟");
+			merchant.setAgentParentId("prxoy_00001");
+			merchant.setAgentParentName("银盟");
 			merchant.setMerchantPhone(phone);
 			// 商戶基本信息实例化
 			if (merchantDao.add(merchant)) {
+				String recordInfoPack = datasMap.get("recordInfoPack")+"";
 				JSONArray jsonList = null;
 				try {
 					jsonList = JSONArray.fromObject(recordInfoPack);
@@ -221,7 +228,7 @@ public class MerchantServiceImpl implements MerchantService {
 					recordInfo.setCustomsPortName(listMap.get(PORTNAME) + "");
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
-					recordInfo.setCreateBy(createBy);
+					recordInfo.setCreateBy(managerName);
 					recordInfo.setCreateDate(dateTime);
 					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 					// 保存商户对应的电商平台名称(及编码)

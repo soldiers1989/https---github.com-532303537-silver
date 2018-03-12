@@ -105,11 +105,11 @@
          <property name="merchantIdCardName" type="java.lang.String">
             <column name="merchantIdCardName" />
         </property>
-          <property name="proxyParentId" type="java.lang.String">
-            <column name="proxyParentId" />
+          <property name="agentParentId" type="java.lang.String">
+            <column name="agentParentId" />
         </property>
-            <property name="proxyParentName" type="java.lang.String">
-            <column name="proxyParentName" />
+            <property name="agentParentName" type="java.lang.String">
+            <column name="agentParentName" />
         </property>
     </class>
 </hibernate-mapping>

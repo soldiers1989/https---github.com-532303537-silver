@@ -606,7 +606,7 @@ public class ManualService {
 						waybillNo = value;
 					}
 				}
-				if (!IdcardValidator.isValidate18Idcard(orderDocId)) {
+				if (!IdcardValidator.validate18Idcard(orderDocId)) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "orderImport", 4);
 				}
@@ -744,7 +744,7 @@ public class ManualService {
 		String senderAddress = "";// 发货人地址
 		String senderTel = "";// 发货人电话
 		String brand = "";// 品牌
-		String pierCode = "";// (海关关区)码头代码
+		String customsCode = "";// (海关关区)码头代码
 		System.out.println("--------------开始循环表单中数据-----------");
 		int totalColumnCount = excel.getColumnCount(0);
 		try {
@@ -811,7 +811,10 @@ public class ManualService {
 					} else if (c == 16) {
 						// 商品名
 						goodsName = value;
-					} else if (c == 18) {
+					} else if(c  == 17){
+						//海关关区代码
+						customsCode = value;
+					}	else if (c == 18) {
 						// 收货人姓名
 						RecipientName = value.replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 20) {
@@ -864,11 +867,6 @@ public class ManualService {
 						}
 					} else if (c == 41) {// 币制
 						currCode = value;
-					} else if (c == 48) {
-						// 码头/货场代码
-						if (StringEmptyUtils.isNotEmpty(value)) {
-							pierCode = value;
-						}
 					} else if (c == 51) {
 						// 第一法定数量
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -917,7 +915,7 @@ public class ManualService {
 
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 5);
 				}
-				if (!IdcardValidator.isValidate18Idcard(RecipientID)) {
+				if (!IdcardValidator.validate18Idcard(RecipientID)) {
 					String str = "运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
 					String msg = "【表格】第" + (r + 1) + "行-->" + str;
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "orderImport", 4);
@@ -975,7 +973,7 @@ public class ManualService {
 				goodsInfo.put("seqNo", seqNo);
 				goodsInfo.put("merchantId", merchantId);
 				goodsInfo.put("merchantName", merchantName);
-				goodsInfo.put("pierCode", pierCode);
+				goodsInfo.put("customsCode", customsCode);
 				String[] str = serialNo.split("_");
 				int serial = Integer.parseInt(str[1]);
 				Map<String, Object> reGoodsMap = checkGoodsInfo(goodsInfo);
@@ -1759,7 +1757,7 @@ public class ManualService {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "checkGZOrderImport", 5);
 				}
-				if (!IdcardValidator.isValidate18Idcard(RecipientID)) {
+				if (!IdcardValidator.validate18Idcard(RecipientID)) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, realRowCount, serialNo, "checkGZOrderImport", 4);
 				}
@@ -1971,7 +1969,7 @@ public class ManualService {
 						waybillNo = value;
 					}
 				}
-				if (!IdcardValidator.isValidate18Idcard(orderDocId)) {
+				if (!IdcardValidator.validate18Idcard(orderDocId)) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "checkQBOrderImport", 4);
 				}

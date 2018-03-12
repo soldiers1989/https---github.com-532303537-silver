@@ -47,8 +47,8 @@ public class Merchant implements Serializable {
 	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
 	private String merchantIdCardName; // 身份证名字
 
-	private String proxyParentId ; //代理商Id
-	private String proxyParentName ;// 代理商名称
+	private String agentParentId ; //代理商Id
+	private String agentParentName ;// 代理商名称
 	public Long getId() {
 		return id;
 	}
@@ -320,20 +320,21 @@ public class Merchant implements Serializable {
 		this.merchantIdCardName = merchantIdCardName;
 	}
 
-	public String getProxyParentId() {
-		return proxyParentId;
+	public String getAgentParentId() {
+		return agentParentId;
 	}
 
-	public void setProxyParentId(String proxyParentId) {
-		this.proxyParentId = proxyParentId;
+	public String getAgentParentName() {
+		return agentParentName;
 	}
 
-	public String getProxyParentName() {
-		return proxyParentName;
+	public void setAgentParentId(String agentParentId) {
+		this.agentParentId = agentParentId;
 	}
 
-	public void setProxyParentName(String proxyParentName) {
-		this.proxyParentName = proxyParentName;
+	public void setAgentParentName(String agentParentName) {
+		this.agentParentName = agentParentName;
 	}
+
 	
 }

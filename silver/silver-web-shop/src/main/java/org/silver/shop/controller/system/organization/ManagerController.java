@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.organization;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.ezmorph.object.SwitchingMorpher;
 import net.sf.json.JSONObject;
 
 /**
@@ -285,17 +287,24 @@ public class ManagerController {
 			@RequestParam("loginPassword") String loginPassword,
 			@RequestParam("merchantIdCardName") String merchantIdCardName,
 			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") int type, @RequestParam("imgLength") int imgLength, String phone,HttpServletRequest req,
+			@RequestParam("type") int type, String phone,HttpServletRequest req,
 			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Enumeration<String> iskey= req.getParameterNames();
+		Map<String,Object> datasMap = new HashMap<>();
+		while (iskey.hasMoreElements()) {
+			String key = iskey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
 		Map<String, Object> statusMap = new HashMap<>();
+		int imgLength = Integer.parseInt(datasMap.get("imgLength")+"");
 		if (type == 1 || type == 2 && imgLength > 0) {
-			statusMap = managerTransaction.managerAddMerchantInfo(merchantName, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type, imgLength, req,phone);
+			statusMap = managerTransaction.managerAddMerchantInfo(req,datasMap);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());

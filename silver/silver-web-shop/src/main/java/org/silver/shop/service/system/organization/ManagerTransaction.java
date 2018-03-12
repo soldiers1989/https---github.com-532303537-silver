@@ -135,8 +135,7 @@ public class ManagerTransaction {
 	}
 
 	// 管理员添加商户
-	public Map<String, Object> managerAddMerchantInfo(String merchantName, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, int type, int imgLength, HttpServletRequest req,String phone) {
+	public Map<String, Object> managerAddMerchantInfo(HttpServletRequest req,Map<String,Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
@@ -147,15 +146,17 @@ public class ManagerTransaction {
 		if (!"1".equals(status)) {
 			return reIdMap;
 		}
+		int imgLength = Integer.parseInt(datasMap.get("imgLength")+"");
 		String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
+		datasMap.put("merchantId", merchantId);
+		datasMap.put("managerName", managerName);
 		// 添加商户
-		Map<String, Object> registerMap = merchantService.merchantRegister(merchantId, merchantName, loginPassword,
-				merchantIdCard, merchantIdCardName, recordInfoPack, Integer.toString(type), managerName,phone);
+		Map<String, Object> registerMap = merchantService.merchantRegister(datasMap);
 		if (!"1".equals(registerMap.get(BaseCode.STATUS.toString()))) {
 			return registerMap;
 		}
 		// 图片上传路径
-		String path = "/opt/www/img/" + merchantName + "/";
+		String path = "/opt/www/img/" + merchantId + "/";
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
 		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()) + "")) {
 			return imgMap;

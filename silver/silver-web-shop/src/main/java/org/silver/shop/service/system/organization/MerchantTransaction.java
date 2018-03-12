@@ -40,17 +40,16 @@ public class MerchantTransaction {
 	}
 
 	// 商戶注册
-	public Map<String, Object> merchantRegister(String account, String loginPassword, String merchantIdCard,
-			String merchantIdCardName, String recordInfoPack, String type, String phone) {
+	public Map<String, Object> merchantRegister(Map<String,Object> datasMap) {
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
 		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
 		if (status.equals("1")) {// 从数据库获取ID成功
 			// 获取返回来的商户ID
 			String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
+			datasMap.put("merchantId", merchantId);
 			// 商户注册
-			return merchantService.merchantRegister(merchantId, account, loginPassword, merchantIdCard,
-					merchantIdCardName, recordInfoPack, type, account,phone);
+			return merchantService.merchantRegister(datasMap);
 		}
 		return reIdMap;
 	}

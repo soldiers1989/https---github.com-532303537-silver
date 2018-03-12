@@ -112,5 +112,9 @@
            <property name="waybillNo" type="java.lang.String">
         	<column name="waybillNo"/>
         </property>
+        
+        <property name="tax" type="java.lang.Double">
+			<column name="tax" default="0.0" />
+		</property>
     </class>
 </hibernate-mapping>

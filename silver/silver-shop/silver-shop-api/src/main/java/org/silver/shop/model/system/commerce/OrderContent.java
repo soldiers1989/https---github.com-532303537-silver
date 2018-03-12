@@ -47,7 +47,7 @@ public class OrderContent implements Serializable{
 	private String reMark;//
 	
 	private String waybillNo;//(快递单号)运单编号
-	
+	private double tax;//税费
 	public long getId() {
 		return id;
 	}
@@ -260,6 +260,12 @@ public class OrderContent implements Serializable{
 	}
 	public void setWaybillNo(String waybillNo) {
 		this.waybillNo = waybillNo;
+	}
+	public double getTax() {
+		return tax;
+	}
+	public void setTax(double tax) {
+		this.tax = tax;
 	}
 	
 }

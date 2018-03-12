@@ -11,6 +11,7 @@ import org.silver.shop.api.system.organization.AgentService;
 import org.silver.shop.dao.system.organization.AgentDao;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -76,14 +77,30 @@ public class AgentServiceImpl implements AgentService {
 
 	@Override
 	public Map<String, Object> getAllAgentInfo(Map<String, Object> datasMap, int page, int size) {
-		if (datasMap != null && !datasMap.isEmpty() && page >= 0 && size >= 0) {
+		if (datasMap != null  && page >= 0 && size >= 0) {
 			Map<String, Object> reDatasMap = SearchUtils.universalAgentSearch(datasMap);
 			Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 			List<AgentBaseContent> reList = agentDao.findByProperty(AgentBaseContent.class, paramMap, page, size);
-			long totalCount = agentDao.findByPropertyCount(AgentBaseContent.class, null);
-			
-			
+			long totalCount = agentDao.findByPropertyCount(AgentBaseContent.class, paramMap);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			} else if (!reList.isEmpty()) {
+				Map<String,Object> item = new HashMap<>();
+				Map<String, Object> params = new HashMap<>();
+				for (AgentBaseContent agentBase : reList) {
+					params.clear();
+					String agentId = agentBase.getAgentId();
+					agentBase.setLoginPassword("");
+					params.put("agentParentId", agentId);
+					List<Merchant> reMerchantLis = agentDao.findByProperty(Merchant.class, params, 0, 0);
+					item.put("head", agentBase);
+					item.put("content", reMerchantLis);
+				}
+				return ReturnInfoUtils.successDataInfo(item, totalCount);
+			} else {
+				return ReturnInfoUtils.errorInfo("暂无数据!");
+			}
 		}
-		return null;
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 }

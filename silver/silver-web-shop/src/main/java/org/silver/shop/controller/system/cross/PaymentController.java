@@ -258,7 +258,7 @@ public class PaymentController {
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> params = new HashMap<>();
-		Enumeration<String> iskey = req.getAttributeNames();
+		Enumeration<String> iskey = req.getParameterNames();
 		while (iskey.hasMoreElements()) {
 			String key = iskey.nextElement();
 			String value = req.getParameter(key);
