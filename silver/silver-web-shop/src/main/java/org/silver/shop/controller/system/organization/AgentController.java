@@ -181,8 +181,20 @@ public class AgentController {
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
-		return null;
-		//return JSONObject.fromObject(agentTransaction.getAllAgentInfo(params, page, size)).toString();
+		return JSONObject.fromObject(agentTransaction.setAgentSubMerchant(params)).toString();
+	}
+	
+	@RequestMapping(value = "/getSubMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("代理商查询旗下所有子商户")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String getSubMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(agentTransaction.getSubMerchantInfo()).toString();
 	}
 	
 }

@@ -77,7 +77,7 @@ public class AgentServiceImpl implements AgentService {
 
 	@Override
 	public Map<String, Object> getAllAgentInfo(Map<String, Object> datasMap, int page, int size) {
-		if (datasMap != null  && page >= 0 && size >= 0) {
+		if (datasMap != null && page >= 0 && size >= 0) {
 			Map<String, Object> reDatasMap = SearchUtils.universalAgentSearch(datasMap);
 			Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 			List<AgentBaseContent> reList = agentDao.findByProperty(AgentBaseContent.class, paramMap, page, size);
@@ -85,7 +85,7 @@ public class AgentServiceImpl implements AgentService {
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 			} else if (!reList.isEmpty()) {
-				Map<String,Object> item = new HashMap<>();
+				Map<String, Object> item = new HashMap<>();
 				Map<String, Object> params = new HashMap<>();
 				for (AgentBaseContent agentBase : reList) {
 					params.clear();
@@ -100,6 +100,48 @@ public class AgentServiceImpl implements AgentService {
 			} else {
 				return ReturnInfoUtils.errorInfo("暂无数据!");
 			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	@Override
+	public Map<String, Object> setAgentSubMerchant(Map<String, Object> datasMap) {
+		if (!datasMap.isEmpty()) {
+			Map<String, Object> params = new HashMap<>();
+			String agentId = String.valueOf(datasMap.get("agentId"));
+			String agentName = String.valueOf(datasMap.get("agentName"));
+			params.put("agentId",agentId);
+			params.put("agentName",agentName);
+			List<AgentBaseContent> reAgentList = agentDao.findByProperty(AgentBaseContent.class, params, 0, 0);
+			if (reAgentList != null && !reAgentList.isEmpty()) {
+				params.put("merchantId", datasMap.get("merchantId"));
+				List<Merchant> reMerchantLis = agentDao.findByProperty(Merchant.class, params, 0, 0);
+				if (reMerchantLis != null && !reMerchantLis.isEmpty()) {
+					Merchant merchant  = reMerchantLis.get(0);
+					merchant.setAgentParentId(agentId);
+					merchant.setAgentParentName(agentName);
+					if(!agentDao.update(merchant)){
+						return ReturnInfoUtils.errorInfo("设置代理商子商户失败,服务器繁忙!");
+					}
+					return ReturnInfoUtils.successInfo();
+				}
+				return ReturnInfoUtils.errorInfo("商户信息不存在!");
+			}
+			return ReturnInfoUtils.errorInfo("代理商信息不存在!");
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	@Override
+	public Map<String, Object> getSubMerchantInfo(String agentId, String agentName) {
+		if(StringEmptyUtils.isNotEmpty(agentId)){
+			Map<String,Object> params = new HashMap<>();
+			params.put("agentParentId", agentId);
+			List<Merchant> reMerchantLis = agentDao.findByProperty(Merchant.class, params, 0, 0);
+			if (reMerchantLis != null && !reMerchantLis.isEmpty()) {
+				return ReturnInfoUtils.successDataInfo(reMerchantLis, 0);
+			}
+			return ReturnInfoUtils.errorInfo("商户信息不存在!");
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}

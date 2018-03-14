@@ -675,7 +675,7 @@ public class OrderServiceImpl implements OrderService {
 		List<OrderContent> reOrderList = orderDao.findByPropertyDesc(OrderContent.class, params, descParams, page,
 				size);
 		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
-		if (reOrderList != null && reOrderList.size() > 0) {
+		if (reOrderList != null && !reOrderList.isEmpty()) {
 			for (OrderContent orderInfo : reOrderList) {
 				String orderId = orderInfo.getOrderId();
 				params.put("orderId", orderId);
@@ -964,22 +964,24 @@ public class OrderServiceImpl implements OrderService {
 		if (StringEmptyUtils.isNotEmpty(entOrderNo)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("entOrderNo", entOrderNo);
-			List<OrderContent> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
+			List<OrderContent> orderList = orderDao.findByProperty(OrderContent.class, params, 0, 0);
 			if (orderList != null && !orderList.isEmpty()) {
-				OrderContent order = orderList.get(0);
-				// 订单状态：1-待付款
-				if (order.getStatus() == 1) {
-					order.setDeleteFlag(1);
-					order.setDeleteBy(memberName);
-					order.setDeleteDate(new Date());
-					if (!orderDao.update(order)) {
-						return ReturnInfoUtils.errorInfo("订单删除失败,请重试!");
+				for(OrderContent order : orderList){
+					// 订单状态：1-待付款
+					if (order.getStatus() == 1) {
+						order.setDeleteFlag(1);
+						order.setDeleteBy(memberName);
+						order.setDeleteDate(new Date());
+						if (!orderDao.update(order)) {
+							return ReturnInfoUtils.errorInfo("订单删除失败,请重试!");
+						}
+						return ReturnInfoUtils.successInfo();
+					} else {
+						return ReturnInfoUtils.errorInfo("订单当前状态不允许删除!");
 					}
-					return ReturnInfoUtils.successInfo();
-				} else {
-					return ReturnInfoUtils.errorInfo("订单当前状态不允许删除!");
 				}
 			}
+			return ReturnInfoUtils.errorInfo("订单信息不存在!");
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}

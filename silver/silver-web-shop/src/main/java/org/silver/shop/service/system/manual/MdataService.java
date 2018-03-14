@@ -256,7 +256,7 @@ public class MdataService {
 						OrderDocTel, OrderDate, trade_no, dateSign, waybill, create_date, senderName, senderCountry,
 						senderAreaCode, senderAddress, senderTel, postal, RecipientProvincesName, RecipientCityName,
 						RecipientAreaName, EntGoodsNo, HSCode, GoodsName, CusGoodsNo, CIQGoodsNo, OriginCountry,
-						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date,customsCode;
+						GoodsStyle, BarCode, Brand, Unit, stdUnit, secUnit, transportModel, exit_date, customsCode;
 				int Qty = 0;
 				double Price = 0.0;
 				double Total = 0.0;
@@ -342,7 +342,7 @@ public class MdataService {
 
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
 
-				customsCode =  rowIndex.getString("customsCode").replace("{\"value\":\"", "").replace("\"}", "");
+				customsCode = rowIndex.getString("customsCode").replace("{\"value\":\"", "").replace("\"}", "");
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 1, c, i + 1);
@@ -354,6 +354,12 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, create_date);
 					} else if (c == 3) {
 						excel.writCell(0, i + 1, c, create_date);
+					} else if (c == 4) {
+						// 运费
+						excel.writCell(0, i + 1, c, "0.00");
+					} else if (c == 5) {
+						// 收件人所在国家
+						excel.writCell(0, i + 1, c, "142");
 					} else if (c == 6) {
 						excel.writCell(0, i + 1, c, RecipientProvincesName);
 					} else if (c == 7) {
@@ -408,9 +414,27 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, "银盛支付服务股份有限公司");
 					} else if (c == 39) {
 						excel.writCell(0, i + 1, c, trade_no);
+					} else if (c == 40) {
+						// 电子订单状态
+						excel.writCell(0, i + 1, c, "1");
+					} else if (c == 41) {
+						// 支付状态
+						excel.writCell(0, i + 1, c, "0");
+					} else if (c == 42) {
+						// 其他费用
+						excel.writCell(0, i + 1, c, "0");
+					} else if (c == 43) {
+						// 支付交易类型
+						excel.writCell(0, i + 1, c, "M");
 					} else if (c == 44) {
 						// 出仓进境日期
 						excel.writCell(0, i + 1, c, create_date);
+					} else if (c == 45) {
+						// 货物存放地
+						excel.writCell(0, i + 1, c, "国外直邮");
+					} else if (c == 47) {
+						// 电子运单状态
+						excel.writCell(0, i + 1, c, "A");
 					} else if (c == 50) {
 						// 物流订单号
 						excel.writCell(0, i + 1, c, order_Id);

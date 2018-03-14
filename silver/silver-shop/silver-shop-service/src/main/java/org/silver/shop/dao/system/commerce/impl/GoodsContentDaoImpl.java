@@ -28,28 +28,25 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	public boolean update(GoodsContent entity) {
 		return super.update(entity);
 	}
-	
+
 	@Override
-	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size) {
+	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
 		Session session = null;
 		String queryString = null;
 		Connection conn = null;
 		try {
-			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
-					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ";			
+			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2"
+					+ " on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ";
 			List<Object> sqlParams = new ArrayList<>();
-			if(firstType >0 && secndType > 0 && thirdType > 0){
-				sqlParams.add(firstType);
-				sqlParams.add(secndType);
+			if (thirdType > 0) {
 				sqlParams.add(thirdType);
-				queryString = queryString  +" and t1.goodsFirstTypeId = ?  and t1.goodsSecondTypeId = ? and t1.goodsThirdTypeId = ? ";
-			}else if(firstType >0 && secndType > 0){
-				sqlParams.add(firstType);
+				queryString += "  and t1.spareGoodsThirdTypeId = ? ";
+			} else if (secndType > 0) {
 				sqlParams.add(secndType);
-				queryString = queryString  +" and t1.goodsFirstTypeId = ? and t1.goodsSecondTypeId = ? ";
-			}else if(firstType > 0){
+				queryString += "  and t1.spareGoodsSecondTypeId = ? ";
+			} else if (firstType > 0) {
 				sqlParams.add(firstType);
-				queryString = queryString  +" and t1.goodsFirstTypeId = ? ";
+				queryString = queryString + " and t1.spareGoodsFirstTypeId = ? ";
 			}
 			session = getSession();
 			Table l = null;
@@ -63,12 +60,12 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			session.close();
 			// Transform.tableToJson(l);
 			return l;
-		} catch (Exception  re) {
+		} catch (Exception re) {
 			re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
-				if(conn!=null){
+				if (conn != null) {
 					try {
 						conn.close();
 					} catch (SQLException e) {
@@ -81,17 +78,17 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	}
 
 	@Override
-	public Table getBlurryRecordGoodsInfo( String goodsName,int page, int size) {
+	public Table getBlurryRecordGoodsInfo(String goodsName, int page, int size) {
 		Session session = null;
 		String queryString = null;
 		Connection conn = null;
 		try {
-			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2" 
-					+" on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 ";			
+			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2"
+					+ " on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 ";
 			List<Object> sqlParams = new ArrayList<>();
-			if(StringEmptyUtils.isNotEmpty(goodsName)){
-				queryString+=" AND t1.spareGoodsName LIKE ?";
-				sqlParams.add("%"+goodsName+"%");
+			if (StringEmptyUtils.isNotEmpty(goodsName)) {
+				queryString += " AND t1.spareGoodsName LIKE ?";
+				sqlParams.add("%" + goodsName + "%");
 			}
 			session = getSession();
 			Table l = null;
@@ -105,12 +102,12 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			session.close();
 			// Transform.tableToJson(l);
 			return l;
-		} catch (Exception  re) {
+		} catch (Exception re) {
 			re.printStackTrace();
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
-				if(conn!=null){
+				if (conn != null) {
 					try {
 						conn.close();
 					} catch (SQLException e) {
@@ -121,5 +118,5 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			}
 		}
 	}
-	
+
 }

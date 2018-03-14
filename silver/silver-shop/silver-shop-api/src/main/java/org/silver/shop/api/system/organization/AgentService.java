@@ -30,6 +30,21 @@ public interface AgentService {
 	 */
 	public Map<String, Object> getAllAgentInfo(Map<String, Object> datasMap, int page, int size);
 
+	/**
+	 * 添加代理商下子商户
+	 * @param params
+	 * @return Map
+	 */
+	public Map<String,Object> setAgentSubMerchant(Map<String, Object> datasMap);
+
+	/**
+	 * 查询代理商下所有子商户信息
+	 * @param agentId 代理商Id
+	 * @param agentName 代理商名称
+	 * @return Map
+	 */
+	public Map<String, Object> getSubMerchantInfo(String agentId, String agentName);
+
 	
 
 }

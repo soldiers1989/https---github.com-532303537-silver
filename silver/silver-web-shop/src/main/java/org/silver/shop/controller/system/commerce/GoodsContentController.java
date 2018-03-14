@@ -10,6 +10,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.commerce.GoodsContentTransaction;
+import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -130,13 +131,13 @@ public class GoodsContentController {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		if (firstType == null || "".equals(firstType)) {
+		if (StringEmptyUtils.isEmpty(firstType)) {
 			firstType = "0";
 		}
-		if (secndType == null || "".equals(secndType)) {
+		if (StringEmptyUtils.isEmpty(secndType)) {
 			secndType = "0";
 		}
-		if (thirdType == null || "".equals(thirdType)) {
+		if (StringEmptyUtils.isEmpty(thirdType)) {
 			thirdType = "0";
 		}
 		Map<String, Object> statusMap = goodsContentTransaction.getShowGoodsBaseInfo(Integer.valueOf(firstType),

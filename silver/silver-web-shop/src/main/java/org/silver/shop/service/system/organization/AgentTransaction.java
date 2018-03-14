@@ -64,5 +64,27 @@ public class AgentTransaction {
 	public Map<String,Object> getAllAgentInfo(Map<String, Object> params, int page, int size) {
 		return agentService.getAllAgentInfo(params,page,size);
 	}
+
+	//管理员设置代理商下子商户信息
+	public Map<String,Object> setAgentSubMerchant(Map<String, Object> params) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		String agentId = agentBaseContent.getAgentId();
+		String agentName = agentBaseContent.getAgentName();
+		params.put("agentId", agentId);
+		params.put("agentName", agentName);
+		return agentService.setAgentSubMerchant(params);
+	}
+
+	//代理商查询所有子商户信息
+	public Map<String,Object> getSubMerchantInfo() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		String agentId = agentBaseContent.getAgentId();
+		String agentName = agentBaseContent.getAgentName();
+		return agentService.getSubMerchantInfo(agentId,agentName);
+	}
 	
 }

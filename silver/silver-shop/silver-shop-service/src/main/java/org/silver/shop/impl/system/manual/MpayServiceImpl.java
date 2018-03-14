@@ -449,7 +449,7 @@ public class MpayServiceImpl implements MpayService {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-			}finally {
+			} finally {
 				bufferUtils.writeRedis(errorList, totalCount, serialNo, "orderRecord");
 			}
 		}
@@ -719,27 +719,43 @@ public class MpayServiceImpl implements MpayService {
 			if (StringEmptyUtils.isEmpty(note)) {
 				note = "";
 			}
+			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
 			if ("1".equals(status)) {
-				System.out.println("-------备案成功,更新状态-----");
-				order.setOrder_record_status(3);
+				//已经返回过一次备案成功后
+				if (note.contains("新增申报成功") && order.getOrder_record_status() == 3) {
+					System.out.println("------重复申报成功拦截------");
+					return ReturnInfoUtils.successInfo();
+				}
 				findOrderGoodsInfo(orderId, merchantId);
-
+				order.setOrder_record_status(3);
 			} else {
 				// 备案失败
-				if (reMsg.contains("旧报文数据") || reMsg.contains("订单数据已存在")) {
-					return ReturnInfoUtils.successInfo();
+				if (reMsg.contains("旧报文数据") || reMsg.contains("订单数据已存在") || reMsg.contains("重复申报")) {
+					return updateOldOrderInfo(order);
 				}
 				order.setOrder_record_status(4);
 			}
-			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
-			order.setUpdate_date(new Date());
-			if (!morderDao.update(order)) {
-				return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
-			}
-			return ReturnInfoUtils.successInfo();
+			return updateOrderRecordInfo(order);
 		} else {
 			return ReturnInfoUtils.errorInfo("根据订单Id与msgId未找到数据,请核对信息!");
 		}
+	}
+
+	private Map<String, Object> updateOldOrderInfo(Morder order) {
+		if (order.getOrder_record_status() == 4) {
+			System.out.println("-------旧报文备案失败修改为成功--");
+			order.setOrder_record_status(3);
+			return updateOrderRecordInfo(order);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> updateOrderRecordInfo(Morder order) {
+		order.setUpdate_date(new Date());
+		if (!morderDao.update(order)) {
+			return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	private void findOrderGoodsInfo(String orderId, String merchantId) {
@@ -761,7 +777,7 @@ public class MpayServiceImpl implements MpayService {
 				int count = goods.getQty();
 				updateStockDoneCount(entGoodsNo, count, merchantId);
 			}
-		}else{
+		} else {
 			System.out.println("---------订单商品未找到----------");
 		}
 	}

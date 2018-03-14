@@ -321,6 +321,12 @@ public class PaymentServiceImpl implements PaymentService {
 				note = "";
 			}
 			if ("1".equals(status)) {
+				// 已经返回过一次备案成功后
+				if (note.contains("保存成功") || note.contains("入库成功")
+						|| note.contains("新增申报成功") && pay.getPay_record_status() == 3) {
+					System.out.println("------重复申报成功拦截------");
+					return ReturnInfoUtils.successInfo();
+				}
 				// 支付单备案状态修改为成功
 				pay.setPay_record_status(3);
 				// 进行钱包扣款
@@ -332,22 +338,46 @@ public class PaymentServiceImpl implements PaymentService {
 				}
 			} else {
 				// 备案失败
+				if (reMsg.contains("旧报文数据") || reMsg.contains("支付数据已存在") || reMsg.contains("重复申报")) {
+					return updateOldPaymentInfo(pay);
+				}
+				// 备案失败
 				pay.setPay_record_status(4);
 			}
 			pay.setPay_re_note(note + defaultDate + ":" + reMsg + ";");
-			pay.setUpdate_date(new Date());
-			if (!paymentDao.update(pay)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "异步更新支付单信息错误!");
-				return statusMap;
-			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return updatePaymentRecordInfo(pay);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
 		return statusMap;
+	}
+
+	/**
+	 * 重复回执后更新旧手工支付单备案状态,如果为备案失败则修改为备案成功
+	 * @param pay
+	 * @return
+	 */
+	private Map<String, Object> updateOldPaymentInfo(Mpay pay) {
+		if (pay.getPay_record_status() == 4) {
+			System.out.println("-------旧报文备案失败修改为成功--");
+			pay.setPay_record_status(3);
+			return updatePaymentRecordInfo(pay);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 更新手工支付单状态
+	 * @param pay
+	 * @return
+	 */
+	private Map<String, Object> updatePaymentRecordInfo(Mpay pay) {
+		pay.setUpdate_date(new Date());
+		if (!paymentDao.update(pay)) {
+			return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override

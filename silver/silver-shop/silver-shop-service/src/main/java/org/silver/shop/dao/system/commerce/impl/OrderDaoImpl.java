@@ -1,10 +1,8 @@
 package org.silver.shop.dao.system.commerce.impl;
 
 import java.math.BigInteger;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +13,6 @@ import org.hibernate.Transaction;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
-import org.silver.shop.model.system.manual.Morder;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
@@ -203,7 +200,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	/**
-	 * 拼接前半部分商城自用订单信息表
+	 * 并集查询手工订单与商城订单信息,拼接前半部分商城自用订单信息表
 	 * 
 	 * @param sbSQL
 	 *            sql字符串语句
@@ -270,7 +267,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	/**
-	 * 拼接后半段部分手工订单信息表
+	 * 并集查询手工订单与商城订单信息,拼接后半段部分手工订单信息表
 	 * 
 	 * @param sbSQL
 	 *            sql字符串语句
@@ -286,7 +283,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	private void unionMorderInfo(StringBuilder sbSQL, Map<String, Object> viceParams, List<Object> list, int page,
 			int size) {
 		sbSQL.append(
-				"SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s'),merchant_no,create_by,del_flag from ym_shop_manual_morder ");
+				" SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s'),merchant_no,create_by,del_flag from ym_shop_manual_morder ");
 		if (viceParams != null && viceParams.size() > 0) {
 			sbSQL.append(" WHERE ");
 			String property;
@@ -304,7 +301,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			}
 			sbSQL.append(" 1 = 1 ");
 			// 查询分页
-			sbSQL.append(" LIMIT " + (page - 1) + " , " + size);
+			sbSQL.append(" ORDER BY createDate DESC LIMIT " + (page - 1) + " , " + size);
 		}
 	}
 
@@ -331,7 +328,6 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				}
 			}
 			BigInteger bi = (BigInteger) query.uniqueResult();
-			// Long count = (Long);
 			session.close();
 			return bi.longValue();
 		} catch (Exception re) {
@@ -344,6 +340,12 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 		}
 	}
 
+	/**
+	 * 并集查询手工订单与商城订单信息统计总数,后半段拼接手工订单语句
+	 * @param sbSQL
+	 * @param viceParams
+	 * @param list
+	 */
 	private void unionMorderCount(StringBuilder sbSQL, Map<String, Object> viceParams, List<Object> list) {
 		sbSQL.append(" SELECT order_id  from ym_shop_manual_morder ");
 		if (viceParams != null && viceParams.size() > 0) {
@@ -366,6 +368,12 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	}
 
+	/**
+	 * 并集查询手工订单与商城订单信息统计总数,前半段查询商城语句
+	 * @param sbSQL sql语句
+	 * @param params 参数
+	 * @param list 参数集合
+	 */
 	private void unionShopOrderCount(StringBuilder sbSQL, Map<String, Object> params, List<Object> list) {
 		sbSQL.append(" SELECT entOrderNo  from ym_shop_order_record_content  ");
 		if (params != null && params.size() > 0) {

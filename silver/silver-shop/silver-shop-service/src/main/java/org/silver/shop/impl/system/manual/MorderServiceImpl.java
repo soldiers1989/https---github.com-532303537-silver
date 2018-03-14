@@ -424,7 +424,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> params = new HashMap<>();
 		// params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
-		params.put("merchant_no", merchant_no);
+		//params.put("merchant_no", merchant_no);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml == null) {
 			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!");
@@ -605,7 +605,7 @@ public class MorderServiceImpl implements MorderService {
 			return statusMap;
 		}
 		params.clear();
-		params.put("merchant_no", merchantId);
+		//params.put("merchant_no", merchantId);
 		params.put("order_id", orderId);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml != null && !ml.isEmpty()) {
@@ -842,6 +842,7 @@ public class MorderServiceImpl implements MorderService {
 	private Map<String, Object> updateOrderAmount(Morder order, String merchantName) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("order_id", order.getOrder_id());
+		params.put("deleteFlag", 0);
 		List<MorderSub> reOrderSubList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
 		if (reOrderSubList != null && !reOrderSubList.isEmpty()) {
 			double totalAmount = 0.0;

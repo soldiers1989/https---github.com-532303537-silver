@@ -1,5 +1,7 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -48,9 +50,11 @@ public class WarehousController {
 	}
 
 	public static void main(String[] args) {
-		List<Object> l = new ArrayList<>();
-		if (l == null || l.isEmpty()) {
-			System.out.println("----------");
-		}
+		int i = 2;
+		double x = 0.102;
+		double d = i * x;
+		BigDecimal bg = BigDecimal.valueOf(d);
+		double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+		System.out.println(f1);
 	}
 }

@@ -1460,9 +1460,9 @@ public class ManualService {
 		if (!excel.getCell(0, 0, 24).contains("收件人证件号码")) {
 			return false;
 		}
-		if (!excel.getCell(0, 0, 25).contains("包裹单号")) {
+	/*	if (!excel.getCell(0, 0, 25).contains("包裹单号")) {
 			return false;
-		}
+		}*/
 		if (!excel.getCell(0, 0, 26).contains("发货人名称")) {
 			return false;
 		}
