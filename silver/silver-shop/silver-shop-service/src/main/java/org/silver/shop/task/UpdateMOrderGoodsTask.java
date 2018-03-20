@@ -57,7 +57,11 @@ public class UpdateMOrderGoodsTask implements Callable<Object> {
 
 	@Override
 	public Object call() throws Exception {
-		morderServiceImpl.saveGoodsRecordContent(dataList, merchantId, merchantName, errorList, totalCount, serialNo,goodsRecordHeadSerialNo);
+		try{
+			morderServiceImpl.saveGoodsRecordContent(dataList, merchantId, merchantName, errorList, totalCount, serialNo,goodsRecordHeadSerialNo);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		return null;
 	}
 	

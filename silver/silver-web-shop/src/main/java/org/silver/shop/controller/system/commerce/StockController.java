@@ -136,30 +136,33 @@ public class StockController {
 	@ApiOperation("商户查询当前仓库下商品库存信息")
 	@RequiresRoles("Merchant")
 	public String getMerchantGoodsStockInfo(@RequestParam("page") int page, @RequestParam("size") int size,
-			@RequestParam("warehouseCode")String warehouseCode,HttpServletRequest req, HttpServletResponse response) {
+			@RequestParam("warehouseCode") String warehouseCode, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size,warehouseCode);
+		Map<String, Object> statusMap = stockTransaction.getGoodsStockInfo(page, size, warehouseCode);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**
 	 * 商户批量与单个商品上/下架状态修改
-	 * @param goodsInfoPack  商品信息包
-	 * @param type 上下架标识：1-上架,2-下架
+	 * 
+	 * @param goodsInfoPack
+	 *            商品信息包
+	 * @param type
+	 *            上下架标识：1-上架,2-下架
 	 * @param req
 	 * @param response
-	 * @return 
+	 * @return
 	 */
 	@RequestMapping(value = "/merchantSetGoodsSellAndStopSelling", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户批量与单个商品上/下架状态修改")
 	@RequiresRoles("Merchant")
-	public String merchantSetGoodsSellAndStopSelling(@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
-			HttpServletRequest req, HttpServletResponse response) {
+	public String merchantSetGoodsSellAndStopSelling(@RequestParam("goodsInfoPack") String goodsInfoPack,
+			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -177,6 +180,7 @@ public class StockController {
 
 	/**
 	 * 商户批量与单个修改商品库存与上架数量
+	 * 
 	 * @param goodsInfoPack
 	 * @param type
 	 * @param req
@@ -203,35 +207,35 @@ public class StockController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	@RequestMapping(value = "/searchGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("根据指定信息搜索库存商品信息")
 	@RequiresRoles("Merchant")
-	public String searchGoodsStockInfo(HttpServletRequest req, HttpServletResponse response, 
-			@RequestParam("page") int page,@RequestParam("size") int size) {
+	public String searchGoodsStockInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if(page >0 && size >0){
-			 statusMap = stockTransaction.searchGoodsStockInfo(req,page,size);
-		}else{
+		if (page > 0 && size > 0) {
+			statusMap = stockTransaction.searchGoodsStockInfo(req, page, size);
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	/**
 	 * 商户批量与单个修改商品售卖价或市场价
+	 * 
 	 * @param goodsInfoPack
-	 * @param type 修改类型:1-市场价,2-销售价
-	 * @param req 
+	 * @param type
+	 *            修改类型:1-市场价,2-销售价
+	 * @param req
 	 * @param response
 	 * @return
 	 */
@@ -254,5 +258,13 @@ public class StockController {
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	public static void main(String[] args) {
+		// double tax = goodsTotalPrice* (consolidatedTax / 1000d);
+		double d = 100;
+		int count = 1;
+		double c =0;
+		System.out.println(d * (c / 1000d));
 	}
 }

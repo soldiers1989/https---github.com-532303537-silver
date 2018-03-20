@@ -13,25 +13,21 @@ import org.silver.util.TaskUtils;
  */
 public class GroupPaymentTask extends TaskUtils {
 
-	private String merchantId;// 商户Id
-	private String serialNo;// 流水号
 	private PaymentServiceImpl paymentServiceImpl;//
 	private List dataList; //
-	private int realRowCount;// 总行数
 	private List<Map<String, Object>> errorList;// 错误信息
+	private Map<String, Object> paramsMap;//
 
-	public GroupPaymentTask(List dataList, String merchantId, PaymentServiceImpl paymentServiceImpl, String serialNo,
-			int realRowCount, List<Map<String, Object>> errorList) {
+	public GroupPaymentTask(List dataList, PaymentServiceImpl paymentServiceImpl, List<Map<String, Object>> errorList,
+			Map<String, Object> paramsMap) {
 		this.dataList = dataList;
-		this.merchantId = merchantId;
 		this.paymentServiceImpl = paymentServiceImpl;
-		this.serialNo = serialNo;
-		this.realRowCount = realRowCount;
 		this.errorList = errorList;
+		this.paramsMap = paramsMap;
 	}
 
 	@Override
 	public Map<String, Object> call() {
-		return paymentServiceImpl.groupCreateMpay(merchantId, dataList, serialNo, realRowCount, errorList);
+		return paymentServiceImpl.groupCreateMpay( dataList,   errorList,paramsMap);
 	}
 }

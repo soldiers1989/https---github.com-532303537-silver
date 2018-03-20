@@ -16,6 +16,7 @@ import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -87,6 +88,7 @@ public class MerchantTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantName + "/";
 		// 海关注册编码
@@ -105,20 +107,15 @@ public class MerchantTransaction {
 		for (int i = 0; i < imgLength; i++) {
 			array[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
 		}
-		Map<String, Object> datasMap = merchantService.editBusinessInfo(merchantInfo, imglist, array,
-				customsregistrationCode, organizationCode, checktheRegistrationCode);
-		boolean reFlag = (boolean) datasMap.get(BaseCode.STATUS.getBaseCode());
-		if (reFlag) {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), 1);
-			datasMap.put(BaseCode.MSG.getBaseCode(), "更新成功,待审核！");
-			Merchant reMerchantInfo = (Merchant) datasMap.get("datas");
+		Map<String, Object> reMap = merchantService.editBusinessInfo(merchantId, imglist, array,
+				customsregistrationCode, organizationCode, checktheRegistrationCode,merchantName);
+		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+			//Merchant reMerchantInfo = (Merchant) reMap.get("datas");
 			// 更新session中的实体数据
-			WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reMerchantInfo);
-			return datasMap;
+		//	WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reMerchantInfo);
+			return reMap;
 		}
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-		return datasMap;
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
 	// 修改登录密码

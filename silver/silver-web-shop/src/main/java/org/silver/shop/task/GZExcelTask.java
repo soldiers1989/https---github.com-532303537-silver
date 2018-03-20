@@ -13,74 +13,35 @@ import org.silver.util.TaskUtils;
  */
 public class GZExcelTask extends TaskUtils {
 
-	private int sheet;//
 	private ExcelUtil excel;//
 	private List<Map<String, Object>> errorList;//
-	private String merchantId;// 商户Id
-	private int startCount;// 开始行数
-	private int endCount;// 结束行数
 	private ManualService manualService;//
-	private String serialNo;// 流水号
-	private int realRowCount;// 总行数
-	private String merchantName;// 商户名称
+	private Map<String, Object> params;//
 
 	/**
 	 * excel多任务读取
 	 * 
-	 * @param sheet
-	 * @param excel
-	 * @param errl
-	 * @param merchantId
-	 * @param startCount
-	 * @param endCount
-	 * @param manualService
-	 * @param merchantName
 	 */
-	public GZExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl, String merchantId, int startCount,
-			int endCount, ManualService manualService, String serialNo, int realRowCount, String merchantName) {
-		this.sheet = sheet;
+	public GZExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, ManualService manualService,
+			Map<String, Object> params) {
 		this.excel = excel;
 		this.errorList = errl;
-		this.merchantId = merchantId;
-		this.startCount = startCount;
-		this.endCount = endCount;
 		this.manualService = manualService;
-		this.serialNo = serialNo;
-		this.realRowCount = realRowCount;
-		this.merchantName = merchantName;
+		this.params = params;
 	}
 
-	/**
-	 * excel多任务预处理
-	 * 
-	 * @param sheet
-	 * @param excel
-	 * @param errl
-	 * @param startCount
-	 * @param endCount
-	 * @param manualService
-	 */
-	public GZExcelTask(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,   int startCount,
-			int endCount, ManualService manualService, String serialNo, int realRowCount) {
-		this.sheet = sheet;
-		this.excel = excel;
-		this.errorList = errl;
-		this.startCount = startCount;
-		this.endCount = endCount;
-		this.manualService = manualService;
-		this.serialNo = serialNo;
-		this.realRowCount = realRowCount;
-	}
-	
+
 	@Override
 	public Map<String, Object> call() {
 		try {
 			excel.open();
-			if(StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)){
-				manualService.readGZSheet(sheet, excel, errorList, merchantId, startCount, endCount, serialNo, realRowCount,
-						merchantName);
-			}else{
-				manualService.pretreatmentGZTable(sheet, excel, errorList, startCount, endCount, serialNo, realRowCount);
+			if (StringEmptyUtils.isNotEmpty(params.get("merchantId") + "")
+					&& StringEmptyUtils.isNotEmpty(params.get("merchantName") + "")) {
+				// excel表索引
+				params.put("sheet", 0);
+				manualService.readGZSheet(excel, errorList, params);
+			} else {
+				manualService.pretreatmentGZTable(excel, errorList, params);
 			}
 			return null;
 		} catch (Exception e) {

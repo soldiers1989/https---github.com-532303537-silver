@@ -172,8 +172,8 @@ public class ExcelUtil {
 					book = new XSSFWorkbook(f);
 				} catch (Exception e) {
 					// e.printStackTrace();
-					book = new HSSFWorkbook(new POIFSFileSystem(fls));
-					// book = new HSSFWorkbook(new FileInputStream(f));
+					//book = new HSSFWorkbook(new POIFSFileSystem(fls));
+					 book = new HSSFWorkbook(new FileInputStream(f));
 				}
 				fls.close();
 				System.out.println("文件存在，读取内容");
@@ -481,7 +481,13 @@ public class ExcelUtil {
 			switch (row.getCell(cellNum).getCellType()) {
 			case Cell.CELL_TYPE_FORMULA:
 				// cell = "FORMULA";
-				cell = String.valueOf(formulaEvaluation(row.getCell(cellNum)).getNumberValue());
+				String str = formulaEvaluation(row.getCell(cellNum)).getStringValue();
+				if(StringEmptyUtils.isNotEmpty(str)){
+					cell = formulaEvaluation(row.getCell(cellNum)).getStringValue().trim();
+				}else{
+					//当出现null时采用double类型获取
+					cell = String.valueOf(formulaEvaluation(row.getCell(cellNum)).getNumberValue());
+				}
 				break;
 			case Cell.CELL_TYPE_NUMERIC:
 				//cell = String.valueOf(row.getCell(cellNum).getNumericCellValue());

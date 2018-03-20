@@ -4,25 +4,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
 import org.silver.shop.impl.system.cross.PaymentServiceImpl;
-import org.silver.shop.impl.system.manual.MorderServiceImpl;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
-import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.OrderRecordTask;
 import org.silver.shop.task.PaymentRecordTask;
-import org.silver.shop.task.UpdateMOrderGoodsTask;
 import org.silver.util.CalculateCpuUtils;
+import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JsonConfig;
 
 /**
  * 用于service层计算生成支付单、推送订单、推送支付单统一计算与调用
@@ -35,8 +34,6 @@ public class InvokeTaskUtils {
 	private MpayServiceImpl mpayServiceImpl;
 	@Autowired
 	private PaymentServiceImpl paymentServiceImpl;
-	@Autowired
-	private MorderServiceImpl morderServiceImpl;
 
 	/**
 	 * 统一计算多线程后调用对应的方法
@@ -71,9 +68,16 @@ public class InvokeTaskUtils {
 		if (flag > 0 && totalCount >= 0 && jsonList != null && errorList != null
 				&& StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)
 				&& StringEmptyUtils.isNotEmpty(serialNo)) {
+			// 完成数量
+			AtomicInteger counter = new AtomicInteger(0);
+			// 线程完成状态次数
+			AtomicInteger threadCounter = new AtomicInteger(0);
+			paramMap.put("counter", counter);
+			paramMap.put("threadCounter", threadCounter);
+			paramMap.put("totalCount", totalCount);
 			int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
 			if (cpuCount == 1) {
-				chooseTask(flag, jsonList, errorList, customsMap, totalCount, threadPool, paramMap);
+				chooseTask(flag, jsonList, errorList, customsMap, threadPool, paramMap);
 			} else {
 				// 分批处理
 				Map<String, Object> reMap = SplitListUtils.batchList(jsonList, cpuCount);
@@ -84,8 +88,7 @@ public class InvokeTaskUtils {
 				List dataList = (List) reMap.get(BaseCode.DATAS.toString());
 				for (int i = 0; i < dataList.size(); i++) {
 					List newList = (List) dataList.get(i);
-					chooseTask(flag, JSONArray.fromObject(newList), errorList, customsMap, totalCount, threadPool,
-							paramMap);
+					chooseTask(flag, JSONArray.fromObject(newList), errorList, customsMap, threadPool, paramMap);
 				}
 			}
 			threadPool.shutdown();
@@ -95,30 +98,25 @@ public class InvokeTaskUtils {
 	}
 
 	private void chooseTask(int flag, JSONArray jsonList, List<Map<String, Object>> errorList,
-			Map<String, Object> customsMap, int totalCount, ExecutorService threadPool, Map<String, Object> paramMap) {
-		String merchantId = paramMap.get("merchantId") + "";
-		String merchantName = paramMap.get("merchantName") + "";
-		String tok = paramMap.get("tok") + "";
-		String serialNo = paramMap.get("serialNo") + "";
+			Map<String, Object> customsMap, ExecutorService threadPool, Map<String, Object> paramsMap) {
 		switch (flag) {
 		case 1:
-			GroupPaymentTask task = new GroupPaymentTask(jsonList, merchantId, paymentServiceImpl, serialNo, totalCount,
-					errorList);
-			threadPool.submit(task);
+			GroupPaymentTask groupPaymentTask = new GroupPaymentTask(jsonList, paymentServiceImpl, errorList,
+					paramsMap);
+			threadPool.submit(groupPaymentTask);
 			break;
 		case 2:
-			OrderRecordTask orderRecordask = new OrderRecordTask(jsonList, merchantId, merchantName, errorList,
-					customsMap, tok, totalCount, serialNo, mpayServiceImpl);
+			OrderRecordTask orderRecordask = new OrderRecordTask(jsonList, errorList, customsMap, mpayServiceImpl,
+					paramsMap);
 			threadPool.submit(orderRecordask);
 			break;
 		case 3:
-			PaymentRecordTask paymentRecordTask = new PaymentRecordTask(jsonList, merchantId, merchantName, errorList,
-					customsMap, tok, totalCount, serialNo, paymentServiceImpl);
+			PaymentRecordTask paymentRecordTask = new PaymentRecordTask(jsonList, errorList, customsMap,
+					paymentServiceImpl, paramsMap);
 			threadPool.submit(paymentRecordTask);
 			break;
 		default:
 			break;
 		}
 	}
-
 }

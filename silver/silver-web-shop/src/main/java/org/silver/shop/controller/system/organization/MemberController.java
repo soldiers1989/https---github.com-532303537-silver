@@ -26,6 +26,7 @@ import org.silver.shop.service.system.organization.MemberTransaction;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.RandomUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
@@ -74,21 +75,18 @@ public class MemberController {
 	public String memberRegister(@RequestParam("account") String account, @RequestParam("loginPass") String loginPass,
 			@RequestParam("memberIdCardName") String memberIdCardName,
 			@RequestParam("memberIdCard") String memberIdCard, @RequestParam("memberTel") String memberTel,
-			@RequestParam("verificationCode") int verificationCode, HttpServletRequest req,
-			HttpServletResponse response) {
+			String verificationCode, HttpServletRequest req, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		Map<String, Object> statusMap = new HashMap<>();
+		boolean result = verificationCode.matches("[0-9]+");
 		if (account != null && loginPass != null && memberIdCardName != null && memberIdCard != null
-				&& memberTel != null && verificationCode > 0) {
-			statusMap = memberTransaction.memberRegister(account, loginPass, memberIdCardName, memberIdCard, memberTel,
-					verificationCode);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.FORMAT_ERR.getMsg());
+				&& memberTel != null && result) {
+			Map<String, Object> statusMap = memberTransaction.memberRegister(account, loginPass, memberIdCardName,
+					memberIdCard, memberTel, Integer.parseInt(verificationCode));
+			return JSONObject.fromObject(statusMap).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重新输入!")).toString();
 	}
 
 	/**
@@ -284,7 +282,6 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
 		if (phone.length() == 11) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
@@ -292,26 +289,21 @@ public class MemberController {
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
-				json.put("time", new Date().getTime() + "");
+				json.put("time", new Date().getTime());
 				json.put("code", code);
 				System.out.println("-------->>>>>" + code);
 				// 将查询出来的省市区放入到redis缓存中
 				JedisUtil.setListDatas("Shop_Key_MemberRegisterCode_" + phone, 900, json);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				return JSONObject.fromObject(statusMap).toString();
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
+				json = JSONObject.fromObject(redisCode);
 				long time = Long.parseLong(json.get("time") + "");
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
 				if (time - new Date().getTime() < 50000) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "已获取过验证码,请勿重复获取!");
-					return JSONObject.fromObject(statusMap).toString();
+					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
 				}
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), "手机号码输入不正确,请重新输入!");
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码输入不正确,请重新输入!")).toString();
 	}
 }

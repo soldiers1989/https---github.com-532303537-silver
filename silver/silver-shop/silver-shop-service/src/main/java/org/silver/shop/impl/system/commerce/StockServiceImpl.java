@@ -19,6 +19,7 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -348,32 +349,19 @@ public class StockServiceImpl implements StockService {
 	@Override
 	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalStockSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
-		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
-		paramMap.put("merchantId", merchantId);
-		paramMap.put("warehouseCode", datasMap.get("warehouseCode") + "");
 		paramMap.put("deleteFlag", 0);
+		paramMap.put("merchantId", merchantId);
 		List<Object> reList = stockDao.findByPropertyLike(StockContent.class, paramMap, blurryMap, page, size);
 		long totalCount = stockDao.findByPropertyLikeCount(StockContent.class, paramMap, blurryMap);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			statusMap.put(BaseCode.ERROR.toString(), errorList);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, totalCount);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 

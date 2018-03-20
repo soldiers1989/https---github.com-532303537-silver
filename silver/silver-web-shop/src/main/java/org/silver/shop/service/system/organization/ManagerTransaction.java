@@ -211,16 +211,16 @@ public class ManagerTransaction {
 		// 前端有上传图片
 		if (!imglist.isEmpty() && imgLength > 0) {
 			// 创建一个与前台图片数量一样长度的字符串数组
-			int[] arrayInt = new int[imgLength];
+			String[] arrayStr = new String[imgLength];
 			// 获取前台传递图片对应的下标值
 			for (int i = 0; i < imgLength; i++) {
 				if (StringEmptyUtils.isNotEmpty(req.getParameter("img[" + i + "]"))) {
-					arrayInt[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
+					arrayStr[i] = req.getParameter("img[" + i + "]") ;
 				} else {
-					arrayInt[i] = -1;
+					arrayStr[i] = "-1";
 				}
 			}
-			return managerService.editMerhcnatBusinessInfo(managerId, managerName, imglist, arrayInt, merchantId);
+			return managerService.editMerhcnatBusinessInfo(managerId, managerName, imglist, arrayStr, merchantId);
 		}
 		return null;
 	}

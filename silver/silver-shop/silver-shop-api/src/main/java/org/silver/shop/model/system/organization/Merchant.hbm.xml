@@ -42,33 +42,6 @@
         <property name="merchantTransport" type="java.lang.String">
             <column name="merchantTransport" />
         </property>
-        <property name="merchantBusinessLicenseLink" type="java.lang.String">
-            <column name="merchantBusinessLicenseLink" />
-        </property>
-        <property name="merchantCustomsregistrationCodeLink" type="java.lang.String">
-            <column name="merchantCustomsregistrationCodeLink" />
-        </property>
-        <property name="merchantOrganizationCodeLink" type="java.lang.String">
-            <column name="merchantOrganizationCodeLink" />
-        </property>
-        <property name="merchantChecktheRegistrationCodeLink" type="java.lang.String">
-            <column name="merchantChecktheRegistrationCodeLink" />
-        </property>
-        <property name="merchantTaxRegistrationCertificateLink" type="java.lang.String">
-            <column name="merchantTaxRegistrationCertificateLink" />
-        </property>
-        <property name="merchantSpecificIndustryLicenseLink" type="java.lang.String">
-            <column name="merchantSpecificIndustryLicenseLink" />
-        </property>
-        <property name="merchantCustomsregistrationCode" type="java.lang.String">
-            <column name="merchantCustomsregistrationCode" />
-        </property>
-        <property name="merchantOrganizationCode" type="java.lang.String">
-            <column name="merchantOrganizationCode" />
-        </property>
-        <property name="merchantChecktheRegistrationCode" type="java.lang.String">
-            <column name="merchantChecktheRegistrationCode" />
-        </property>
         <property name="merchantLevel" type="int">
             <column name="merchantLevel" default="0" />
         </property>

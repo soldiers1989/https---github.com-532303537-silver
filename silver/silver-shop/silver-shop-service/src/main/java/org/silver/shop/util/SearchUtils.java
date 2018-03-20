@@ -37,6 +37,21 @@ public final class SearchUtils {
 	private static final String ENDTIME = "endTime";
 
 	/**
+	 * 下划线命名商户Id
+	 */
+	private static final String MERCHANT_NO = "merchant_no";
+
+	/**
+	 * 下划线命名订单Id
+	 */
+	private static final String ORDER_ID = "order_id";
+
+	/**
+	 * 下划线命名删除标识
+	 */
+	private static final String DEL_FLAG = "del_flag";
+
+	/**
 	 * 通用检索方法
 	 * 
 	 * @param datasMap
@@ -47,7 +62,6 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -130,20 +144,6 @@ public final class SearchUtils {
 					paramMap.put(key, value);
 				}
 				break;
-			case "sellFlag":
-				int sellFlag = 0;
-				try {
-					sellFlag = Integer.parseInt(value);
-				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "上/下架标识参数错误,请重新输入!");
-					return statusMap;
-				}
-				if (sellFlag > 0) {
-					paramMap.put(key, sellFlag);
-				}
-				break;
-
 			case "customsPort":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value);
@@ -228,7 +228,7 @@ public final class SearchUtils {
 					paramMap.put(key, value.trim());
 				}
 				break;
-			case "del_flag":
+			case DEL_FLAG:
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, Integer.parseInt(value));
 				}
@@ -239,7 +239,6 @@ public final class SearchUtils {
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
-		statusMap.put("error", lm);
 		return statusMap;
 	}
 
@@ -254,8 +253,8 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
+
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
 			String value = datasMap.get(key) + "".trim();
@@ -264,7 +263,7 @@ public final class SearchUtils {
 				continue;
 			}
 			switch (key) {
-			case "order_id":
+			case ORDER_ID:
 				paramMap.put(key, value);
 				break;
 			case TRADENO:
@@ -291,10 +290,8 @@ public final class SearchUtils {
 			case "order_record_status":
 				paramMap.put(key, Integer.parseInt(value));
 				break;
-			case "merchant_no":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value.trim());
-				}
+			case MERCHANT_NO:
+				paramMap.put(key, value.trim());
 				break;
 			default:
 				break;
@@ -302,7 +299,6 @@ public final class SearchUtils {
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
-		statusMap.put("error", lm);
 		return statusMap;
 	}
 
@@ -317,7 +313,6 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -327,7 +322,7 @@ public final class SearchUtils {
 				continue;
 			}
 			switch (key) {
-			case "order_id":
+			case ORDER_ID:
 				paramMap.put(key, value);
 				break;
 			case TRADENO:
@@ -346,14 +341,13 @@ public final class SearchUtils {
 				paramMap.put(key, Integer.parseInt(value));
 				break;
 			case "morder_id":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
+				paramMap.put(key, value);
 				break;
-			case "merchant_no":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value.trim());
-				}
+			case MERCHANT_NO:
+				paramMap.put(key, value.trim());
+				break;
+			case DEL_FLAG:
+				paramMap.put(key, Integer.parseInt(value.trim()));
 				break;
 			default:
 				break;
@@ -361,7 +355,6 @@ public final class SearchUtils {
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
-		statusMap.put("error", lm);
 		return statusMap;
 	}
 
@@ -376,7 +369,6 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -398,7 +390,6 @@ public final class SearchUtils {
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("blurry", blurryMap);
-		statusMap.put("error", lm);
 		return statusMap;
 	}
 
@@ -413,7 +404,6 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String, Object>> lm = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -425,31 +415,83 @@ public final class SearchUtils {
 			switch (key) {
 			case "entOrderNo":
 				paramMap.put(key, value);
-				viceParams.put("order_id", value);
+				viceParams.put(ORDER_ID, value);
 				break;
 			case "createDate":
-				paramMap.put(key, value);
-				viceParams.put("OrderDate", value);
+				doDate(paramMap, viceParams, key, value);
 				break;
 			case "endDate":
-				paramMap.put(key, value);
-				viceParams.put("OrderDate", value);
+				doDate(paramMap, viceParams, key, value);
 				break;
 			case "merchantId":
 				paramMap.put(key, value);
-				viceParams.put("merchant_no", value);
+				viceParams.put(MERCHANT_NO, value);
 				break;
-		/*	case "deleteFlag":
-				paramMap.put(key, value);
-				viceParams.put("del_flag", value);
-				break;*/
 			default:
 				break;
 			}
 		}
 		statusMap.put("param", paramMap);
 		statusMap.put("viceParams", viceParams);
-		statusMap.put("error", lm);
+		return statusMap;
+	}
+
+	private static void doDate(Map<String, Object> paramMap, Map<String, Object> viceParams, String key, String value) {
+		paramMap.put(key, value);
+		viceParams.put("OrderDate", value);
+	}
+
+	/**
+	 * 商城商家后台库存通用检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalStockSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> viceParams = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "sellFlag":
+				int sellFlag = 0;
+				try {
+					sellFlag = Integer.parseInt(value);
+				} catch (Exception e) {
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), "上/下架标识参数错误,请重新输入!");
+					return statusMap;
+				}
+				if (sellFlag > 0) {
+					paramMap.put(key, sellFlag);
+				}
+				break;
+			case "merchantId":
+				paramMap.put(key, value);
+				break;
+			case "entGoodsNo":
+				paramMap.put(key, value);
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("viceParams", viceParams);
 		return statusMap;
 	}
 }

@@ -1165,8 +1165,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
 		paramMap.put("goodsMerchantId", merchantId);
 		paramMap.put("deleteFlag", 0);
-		Table reListCount = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, 0, 0);
 		Table reList = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, page, size);
+		Table reListCount = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, 0, 0);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());

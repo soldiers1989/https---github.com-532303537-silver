@@ -8,8 +8,14 @@ import java.util.Map;
  */
 public interface AccessTokenService {
 	/**
-	 * 获取AccessToken
+	 * 向服务器请求获取AccessToken
 	 * @return String
 	 */
 	public Map<String, Object> getAccessToken();
+	
+	/**
+	 * 获取缓存中的tok
+	 * @return
+	 */
+	public Map<String,Object> getRedisToks();
 }

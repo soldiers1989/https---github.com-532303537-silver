@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Resource;
 
@@ -75,7 +76,7 @@ public class MorderServiceImpl implements MorderService {
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";
 
-	private static final String LOCK = "lock";
+	private static final Object LOCK = "lock";
 
 	@Override
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body) {
@@ -147,13 +148,10 @@ public class MorderServiceImpl implements MorderService {
 	public Map<String, Object> pageFindRecords(Map<String, Object> dataMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		paramMap.put("merchant_no", dataMap.get("merchant_no") + "".trim());
 		paramMap.put("del_flag", 0);
-
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		
-	
+
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && !mlist.isEmpty()) {
@@ -171,6 +169,7 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("datas", lMap);
 			statusMap.put("count", count);
 			return statusMap;
+
 		}
 		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
@@ -424,7 +423,7 @@ public class MorderServiceImpl implements MorderService {
 		Map<String, Object> params = new HashMap<>();
 		// params.put("dateSign", dateSign);
 		params.put("waybill", waybill);
-		//params.put("merchant_no", merchant_no);
+		// params.put("merchant_no", merchant_no);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml == null) {
 			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!");
@@ -480,7 +479,7 @@ public class MorderServiceImpl implements MorderService {
 		morder.setRecipientAreaName(areaName);
 		String randomDate = DateUtil.randomCreateDate();
 		morder.setOrderDate(randomDate);
-		morder.setCustomsCode(goodsInfo.get("customsCode")+"");
+		morder.setCustomsCode(goodsInfo.get("customsCode") + "");
 		if (morderDao.add(morder)) {
 			statusMap.put("status", 1);
 			statusMap.put("order_id", newOrderId);
@@ -605,7 +604,7 @@ public class MorderServiceImpl implements MorderService {
 			return statusMap;
 		}
 		params.clear();
-		//params.put("merchant_no", merchantId);
+		// params.put("merchant_no", merchantId);
 		params.put("order_id", orderId);
 		List<Morder> ml = morderDao.findByProperty(Morder.class, params, 1, 1);
 		if (ml != null && !ml.isEmpty()) {
@@ -982,15 +981,15 @@ public class MorderServiceImpl implements MorderService {
 		order.setTax(tax);
 		order.setActualAmountPaid(totalprice + tax);
 		order.setRecipientName(strArr[5]);
-		
+
 		order.setRecipientID(strArr[6]);
 		order.setRecipientTel(strArr[7]);
 		order.setRecipientProvincesName(strArr[8]);
-		order.setRecipientProvincesCode(strArr[9]);		
+		order.setRecipientProvincesCode(strArr[9]);
 		order.setRecipientCityName(strArr[10]);
-		order.setRecipientCityCode(strArr[11]);		
+		order.setRecipientCityCode(strArr[11]);
 		order.setRecipientAreaName(strArr[12]);
-		order.setRecipientAreaCode(strArr[13]);		
+		order.setRecipientAreaCode(strArr[13]);
 		order.setRecipientAddr(strArr[14]);
 		order.setOrderDocId(strArr[15]);
 		order.setOrderDocName(strArr[16]);
@@ -999,8 +998,7 @@ public class MorderServiceImpl implements MorderService {
 		order.setOrderDocTel(strArr[19]);
 		order.setWaybill(strArr[22]);
 		order.setSenderName(strArr[23]);
-		
-		
+
 		// order.setStatus(orderMap.get(""));
 		order.setSenderCountry(strArr[24]);
 		order.setSenderAreaCode(strArr[25]);
@@ -1201,6 +1199,7 @@ public class MorderServiceImpl implements MorderService {
 			Long totalCountT = morderDao.getMOrderAndMGoodsInfoCount(merchantId, startTime, endTime, 0, 0);
 			// 获取总数
 			int totalCount = totalCountT.intValue();
+			System.out.println("--------未备案总数-->>>>>>>>>" + totalCount);
 			if (totalCount <= 0) {
 				return ReturnInfoUtils.errorInfo("没有需要更新的订单信息!");
 			}
@@ -1243,10 +1242,12 @@ public class MorderServiceImpl implements MorderService {
 	 */
 	private void startTask(int totalCount, String merchantId, String merchantName, String startTime, String endTime,
 			String serialNo, String goodsRecordHeadSerialNo, ExecutorService threadPool) {
-		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
+		// 由于服务器CPU数量过多,故而写死为6线程
+		int cpuCount = 6;
 		int page = 1;
 		int size = totalCount / cpuCount;
 		long start = System.currentTimeMillis();
+		Vector errorList = new Vector<>();
 		for (int i = 0; i < cpuCount; i++) {
 			Table table = morderDao.getMOrderAndMGoodsInfo(merchantId, startTime, endTime, page, size);
 			if (table != null && !table.getRows().isEmpty()) {
@@ -1260,7 +1261,6 @@ public class MorderServiceImpl implements MorderService {
 					lr2 = table2.getRows();
 					reOrderList.addAll(lr2);
 				}
-				Vector errorList = new Vector<>();
 				UpdateMOrderGoodsTask updateMOrderGoodsTask = new UpdateMOrderGoodsTask(reOrderList, merchantId,
 						merchantName, errorList, totalCount, serialNo, this, goodsRecordHeadSerialNo);
 				threadPool.submit(updateMOrderGoodsTask);
@@ -1302,7 +1302,7 @@ public class MorderServiceImpl implements MorderService {
 					0);
 			if (reGoodsContentList == null) {
 				String msg = "订单号[" + orderId + "]查询信息失败,服务器繁忙!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+				//RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 				continue;
 			} else if (!reGoodsContentList.isEmpty()) {
 				// 由于查询出来的总数已检索了未添加至备案商品信息表中,故无需添加记录,否则会造成计数错误
@@ -1363,13 +1363,13 @@ public class MorderServiceImpl implements MorderService {
 				}
 				if (!morderDao.add(goodsRecordDetail)) {
 					String msg = "订单号[" + orderId + "]更新商品信息失败,未知错误!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
+					//RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "updateMOrderGoods", 6);
 					continue;
 				}
 			}
-			bufferUtils.writeRedis(errorList, totalCount, serialNo, "updateMOrderGoods");
+			//bufferUtils.writeRedis(errorList, totalCount, serialNo, "updateMOrderGoods");
 		}
-		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "updateMOrderGoods", merchantId, merchantName);
+	//	bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "updateMOrderGoods", merchantId, merchantName);
 	}
 
 	/**
@@ -1447,9 +1447,8 @@ public class MorderServiceImpl implements MorderService {
 
 	@Override
 	public Map<String, Object> managerLoadMorderDatas(Map<String, Object> params, int page, int size) {
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(params);
+		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		Long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
 		List<Map<String, Object>> lMap = new ArrayList<>();
@@ -1478,7 +1477,6 @@ public class MorderServiceImpl implements MorderService {
 			JSONObject goodsInfo) {
 		//
 		String key = "Shop_Key_CheckGZOrder_List_" + serial;
-		Map<String, Object> statusMap = new HashMap<>();
 		ConcurrentMap<String, Object> item = new ConcurrentHashMap<>();
 		synchronized (LOCK) {
 			byte[] redisByte = JedisUtil.get(key.getBytes());
@@ -1488,9 +1486,8 @@ public class MorderServiceImpl implements MorderService {
 					return updateRedisInfo(item, FCY, Tax, waybill, key);
 				}
 			}
+
 			Morder morder = new Morder();
-			// 原导入表中的订单编号
-			morder.setOldOrderId(orderId);
 			morder.setFCY(FCY);
 			morder.setTax(Tax);
 			morder.setActualAmountPaid(ActualAmountPaid);
@@ -1507,11 +1504,6 @@ public class MorderServiceImpl implements MorderService {
 			morder.setDateSign(dateSign);
 			morder.setSerial(serial);
 			morder.setWaybill(waybill);
-			morder.setDel_flag(0);
-			// 订单备案状态
-			morder.setOrder_record_status(1);
-			morder.setCreate_date(new Date());
-			morder.setCreate_by(goodsInfo.get("merchantName") + "");
 			morder.setFcode(FCODE);
 			morder.setSenderName(senderName);
 			morder.setSenderCountry(senderCountry);
@@ -1525,15 +1517,11 @@ public class MorderServiceImpl implements MorderService {
 			morder.setRecipientProvincesName(provinceName);
 			morder.setRecipientCityName(cityName);
 			morder.setRecipientAreaName(areaName);
-			String randomDate = DateUtil.randomCreateDate();
-			morder.setOrderDate(randomDate);
 			List<Morder> mOrderList = new ArrayList();
 			mOrderList.add(morder);
 			item.put(waybill, mOrderList);
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(item), 1800);
-			statusMap.put("status", 1);
-			statusMap.put("order_id", morder.getOrder_id());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		}
 	}
 
@@ -1663,12 +1651,17 @@ public class MorderServiceImpl implements MorderService {
 	/**
 	 * 根据缓存中找出的订单信息,更新启邦订单商品总金额与订单实际支付金额
 	 * 
-	 * @param item 缓存中订单信息
-	 * @param orderTotalPrice 订单商品总金额
-	 * 			
-	 * @param tax 税费
-	 * @param orderId 订单Id
-	 * @param key 缓存Key
+	 * @param item
+	 *            缓存中订单信息
+	 * @param orderTotalPrice
+	 *            订单商品总金额
+	 * 
+	 * @param tax
+	 *            税费
+	 * @param orderId
+	 *            订单Id
+	 * @param key
+	 *            缓存Key
 	 * @return Map
 	 */
 	private Map<String, Object> updateQBRedisInfo(Map<String, Object> item, double orderTotalPrice, double tax,

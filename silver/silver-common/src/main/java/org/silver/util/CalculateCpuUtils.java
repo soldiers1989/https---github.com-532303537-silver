@@ -19,8 +19,11 @@ public class CalculateCpuUtils {
 		if (totalCount <= cpuCount) {
 			return 1;
 		} else if (totalCount <= (cpuCount * 2)) {
-			// cpuCount=3
-			return cpuCount / 9;
+			//处理余数为0时
+			if(cpuCount / 10 == 0){
+				return 1;
+			}
+			return cpuCount / 10;
 		} else if (totalCount >= (cpuCount * 2) && totalCount <= (cpuCount * 4)) {
 			// cpuCount = 6
 			return cpuCount / 5;
@@ -39,6 +42,10 @@ public class CalculateCpuUtils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("--->>>"+calculateCpu(811));
+		/*for(int i=0 ; i < 200; i++){
+			
+		System.out.println("--->>>"+calculateCpu(i));
+		}*/
+		System.out.println("--->>>"+calculateCpu(40));
 	}
 }

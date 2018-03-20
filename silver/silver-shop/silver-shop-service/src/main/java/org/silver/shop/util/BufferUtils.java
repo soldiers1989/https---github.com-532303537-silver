@@ -26,14 +26,14 @@ public class BufferUtils {
 	@Autowired
 	private ErrorLogsService errorLogsService;
 
-	// 完成数量
-	private static AtomicInteger counter = new AtomicInteger(0);
-	// 线程完成状态次数
-	private static AtomicInteger statusCounter = new AtomicInteger(0);
-
 	// 创建一个静态钥匙
-	private static Object lock = "lock";// 值是任意的
+	private static Object LOCK = "lock";// 值是任意的
 
+	/**
+	 * 总行数
+	 */
+	private static final String TOTAL_COUNT = "totalCount";
+	
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
@@ -48,20 +48,18 @@ public class BufferUtils {
 	 * @param name
 	 *            名称标识
 	 */
-	public void writeRedis(List<Map<String, Object>> errl, int totalCount, String serialNo, String name) {
+	public void writeRedis(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
-		synchronized (lock) {
-			if (errl != null && totalCount > 0 && StringEmptyUtils.isNotEmpty(serialNo)
-					&& StringEmptyUtils.isNotEmpty(name)) {
-				datasMap.put("completed", counter.getAndIncrement());
-				datasMap.put(BaseCode.STATUS.toString(), "1");
-				datasMap.put(BaseCode.ERROR.toString(), errl);
-				datasMap.put("totalCount", totalCount);
-				// 将数据放入到缓存中
-				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
-			}
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
+		synchronized (LOCK) {
+			AtomicInteger counter = (AtomicInteger) paramsMap.get("counter");
+			datasMap.put("completed", counter.getAndIncrement());
+			datasMap.put(BaseCode.STATUS.toString(), "1");
+			datasMap.put(BaseCode.ERROR.toString(), errl);
+			datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+			// 将数据放入到缓存中
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
 	}
 
@@ -81,31 +79,33 @@ public class BufferUtils {
 	 * @param merchantName
 	 * @param merchantId
 	 */
-	public void writeCompletedRedis(List<Map<String, Object>> errl, int totalCount, String serialNo, String name,
-			String merchantId, String merchantName) {
+	public void writeCompletedRedis(List<Map<String, Object>> errl, Map<String,Object> paramsMap) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String name = paramsMap.get("name")+"";
+		String serialNo = paramsMap.get("serialNo")+"";
+		String merchantId = paramsMap.get("merchantId")+"";
+		String merchantName = paramsMap.get("merchantName")+"";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
-		synchronized (lock) {
+		synchronized (LOCK) {
+			AtomicInteger threadCounter = (AtomicInteger) paramsMap.get("threadCounter");
+			int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
 			int cpuCount = getRedisCPUCount(key, totalCount);
 			if (cpuCount == 1) {
-				statusCounter.set(cpuCount);
+				threadCounter.set(cpuCount);
 			} else {
-				datasMap.put("count", statusCounter.getAndIncrement());
+				datasMap.put("count", threadCounter.getAndIncrement());
 				datasMap.put(BaseCode.STATUS.toString(), "1");
 			}
-			if (statusCounter.get() == cpuCount) {// 当最后一次线程时
+			if (threadCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
 				datasMap.remove("count");
 				datasMap.remove("startTime");
-				// 重置计数器
-				counter = new AtomicInteger(0);
-				statusCounter = new AtomicInteger(0);
 				errorLogsService.addErrorLogs(errl, totalCount, serialNo, merchantId, merchantName, name);
 			}
 			datasMap.put(BaseCode.ERROR.toString(), errl);
-			datasMap.put("totalCount", totalCount);
+			datasMap.put(TOTAL_COUNT, totalCount);
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
@@ -122,5 +122,12 @@ public class BufferUtils {
 			}
 		}
 		return CalculateCpuUtils.calculateCpu(totalCount);
+	}
+
+	public static void main(String[] args) {
+		AtomicInteger counter = new AtomicInteger(0);
+		for(int i=0; i<100;i++){
+			System.out.println(counter.getAndIncrement());
+		}
 	}
 }

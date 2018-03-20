@@ -56,9 +56,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public Table getMOrderAndMGoodsInfo(String merchantId, String startDate, String endDate, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "SELECT * from ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.order_id = t2.order_id "
-					+ " WHERE  t1.order_record_status = 3 AND t1.del_flag = 0 AND t2.deleteFlag = 0  "
-					+ " AND t1.merchant_no = ?  and t1.create_date >= ? AND t1.create_date <= ? "
+			String sql = "SELECT * from ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON (t1.order_id = t2.order_id AND t2.deleteFlag = 0) "
+					+ " WHERE  t1.order_record_status = 3 AND t1.del_flag = 0  AND t1.merchant_no = ?  and t1.create_date >= ? AND t1.create_date <= ? "
 					+ " GROUP BY t2.EntGoodsNo";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(merchantId);
@@ -90,9 +89,11 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public long getMOrderAndMGoodsInfoCount(String merchantId, String startDate, String endDate, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "SELECT COUNT(m.EntGoodsNo) AS count FROM(SELECT t2.order_id,t2.Seq,t2.EntGoodsNo,t2.CIQGoodsNo,t2.CusGoodsNo,t2.HSCode,t2.GoodsName,t2.GoodsStyle,t2.OriginCountry,t2.BarCode,t2.Brand,t2.Qty,t2.Unit,t2.Price,t2.Total,t2.netWt,t2.grossWt,t2.firstLegalCount,t2.secondLegalCount,t2.stdUnit,t2.numOfPackages,t2.packageType,t2.transportModel,t2.seqNo FROM 	ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.order_id = t2.order_id "
-					+ "WHERE t1.order_record_status = 3 AND t1.del_flag = 0 AND t2.deleteFlag = 0 AND t1.merchant_no = ? AND t1.create_date >= ? AND t1.create_date <= ? GROUP BY t2.EntGoodsNo ) m "
-					+ "LEFT JOIN ym_shop_goods_record_detail t3 ON m.EntGoodsNo = t3.entGoodsNo WHERE t3.entGoodsNo IS NULL";
+			String sql = "SELECT	COUNT(m.EntGoodsNo) AS count FROM 	"
+					+ "( SELECT t2.order_id,t2.EntGoodsNo	FROM ym_shop_manual_morder t1	LEFT JOIN ym_shop_manual_morder_sub t2 ON (	t1.order_id = t2.order_id AND t2.deleteFlag = 0	 )	"
+					+ " WHERE   t1.del_flag = 0 AND t1.order_record_status = 3  AND t1.merchant_no = ?	AND t1.create_date >= ?		AND t1.create_date <= ?	GROUP BY	t2.EntGoodsNo	"
+					+ ") m LEFT JOIN ym_shop_goods_record_detail t3 ON m.EntGoodsNo = t3.entGoodsNo "
+					+ "WHERE 	t3.entGoodsNo IS NULL";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(merchantId);
 			sqlParams.add(startDate + " 00:00:00");

@@ -12,8 +12,10 @@ import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,20 +126,20 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String, Object> merchantRegister(Map<String,Object> datasMap) {
+	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		Merchant merchant = new Merchant();
 		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 		MD5 md5 = new MD5();
-		String type = datasMap.get("type")+"";
-		String merchantId = datasMap.get("merchantId")+"";
-		String merchantName = datasMap.get("merchantName")+"";
-		String loginPassword = datasMap.get("loginPassword")+"";
-		String merchantIdCard = datasMap.get("merchantIdCard")+"";
-		String merchantIdCardName = datasMap.get("merchantIdCardName")+"";
-		String managerName = datasMap.get("managerName")+"";
-		String phone = datasMap.get("phone")+"";
+		String type = datasMap.get("type") + "";
+		String merchantId = datasMap.get("merchantId") + "";
+		String merchantName = datasMap.get("merchantName") + "";
+		String loginPassword = datasMap.get("loginPassword") + "";
+		String merchantIdCard = datasMap.get("merchantIdCard") + "";
+		String merchantIdCardName = datasMap.get("merchantIdCardName") + "";
+		String managerName = datasMap.get("managerName") + "";
+		String phone = datasMap.get("phone") + "";
 		if ("1".equals(type)) {// 1-银盟商户注册
 			merchant.setMerchantId(merchantId);
 			merchant.setMerchantCusNo("YM_" + merchantId);
@@ -184,7 +186,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setMerchantPhone(phone);
 			// 商戶基本信息实例化
 			if (merchantDao.add(merchant)) {
-				String recordInfoPack = datasMap.get("recordInfoPack")+"";
+				String recordInfoPack = datasMap.get("recordInfoPack") + "";
 				JSONArray jsonList = null;
 				try {
 					jsonList = JSONArray.fromObject(recordInfoPack);
@@ -253,51 +255,57 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	@Override
-	public Map<String, Object> editBusinessInfo(Object merchantInfo, List<Object> imglist, int[] array,
-			String customsregistrationCode, String organizationCode, String checktheRegistrationCode) {
+	public Map<String, Object> editBusinessInfo(String merchantId, List<Object> imglist, int[] array,
+			String customsregistrationCode, String organizationCode, String checktheRegistrationCode,String merchantName) {
 		Date data = new Date();
-		Merchant mInfo = (Merchant) merchantInfo;
-		Map<String, Object> entityMap = new HashMap<>();
-		boolean flag = false;
-		for (int i = 0; i < array.length; i++) {
-			int picIndex = array[i];
-			switch (picIndex) {
-			case 1:
-				mInfo.setMerchantBusinessLicenseLink(imglist.get(i) + "");
-				break;
-			case 2:
-				mInfo.setMerchantCustomsregistrationCodeLink(imglist.get(i) + "");
-				break;
-			case 3:
-				mInfo.setMerchantOrganizationCodeLink(imglist.get(i) + "");
-				break;
-			case 4:
-				mInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(i) + "");
-				break;
-			case 5:
-				mInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(i) + "");
-				break;
-			case 6:
-				mInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(i) + "");
-				break;
-			default:
-				logger.info("没有要更新的图片!");
-				break;
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		List<MerchantDetail> reList = merchantDao.findByProperty(MerchantDetail.class, params, 1, 1);
+		if (reList != null && !reList.isEmpty()) {
+			MerchantDetail merchantDetail = reList.get(0);
+			for (int i = 0; i < array.length; i++) {
+				int picIndex = array[i];
+				switch (picIndex) {
+				case 1:
+					merchantDetail.setMerchantBusinessLicenseLink(imglist.get(i) + "");
+					break;
+				case 2:
+					merchantDetail.setMerchantCustomsregistrationCodeLink(imglist.get(i) + "");
+					break;
+				case 3:
+					merchantDetail.setMerchantOrganizationCodeLink(imglist.get(i) + "");
+					break;
+				case 4:
+					merchantDetail.setMerchantChecktheRegistrationCodeLink(imglist.get(i) + "");
+					break;
+				case 5:
+					merchantDetail.setMerchantTaxRegistrationCertificateLink(imglist.get(i) + "");
+					break;
+				case 6:
+					merchantDetail.setMerchantSpecificIndustryLicenseLink(imglist.get(i) + "");
+					break;
+				default:
+					logger.info("没有要更新的图片!");
+					break;
+				}
 			}
-		}
 
-		mInfo.setMerchantCustomsregistrationCode(customsregistrationCode);
-		mInfo.setMerchantOrganizationCode(organizationCode);
-		mInfo.setMerchantChecktheRegistrationCode(checktheRegistrationCode);
-		// 将商户状态修改为审核状态
-		mInfo.setMerchantStatus("3");
-		mInfo.setUpdateDate(data);
-		mInfo.setUpdateBy(mInfo.getUpdateBy());
-		// 更新实体
-		flag = merchantDao.update(mInfo);
-		entityMap.put(BaseCode.STATUS.getBaseCode(), flag);
-		entityMap.put(BaseCode.DATAS.getBaseCode(), mInfo);
-		return entityMap;
+			merchantDetail.setMerchantCustomsregistrationCode(customsregistrationCode);
+			merchantDetail.setMerchantOrganizationCode(organizationCode);
+			merchantDetail.setMerchantChecktheRegistrationCode(checktheRegistrationCode);
+			// 将商户状态修改为审核状态
+			//mInfo.setMerchantStatus("3");
+			merchantDetail.setUpdateDate(data);
+			merchantDetail.setUpdateBy(merchantName);
+			// 更新实体
+			if(merchantDao.update(merchantDetail)){
+				return ReturnInfoUtils.successInfo();
+			}
+			return ReturnInfoUtils.errorInfo("更新商户详情失败,服务器繁忙!");
+		} else {
+			return ReturnInfoUtils.errorInfo("查询商户详细信息失败,服务器繁忙!");
+		}
+		
 	}
 
 	@Override

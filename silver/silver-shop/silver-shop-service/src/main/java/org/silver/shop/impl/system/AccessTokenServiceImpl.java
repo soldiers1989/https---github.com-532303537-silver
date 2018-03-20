@@ -11,6 +11,7 @@ import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.impl.system.manual.AppkeyServiceImpl;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.stereotype.Service;
@@ -91,5 +92,25 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		 */
 		System.out.println(as.getAccessToken());
 
+	}
+
+	@Override
+	public Map<String, Object> getRedisToks() {
+		// 缓存中的键
+		String redisKey = "Shop_Key_PushRecord_Tok";
+		String redisTok = JedisUtil.get(redisKey);
+		// 当缓存中已有tok时
+		if (StringEmptyUtils.isNotEmpty(redisTok)) {
+			return ReturnInfoUtils.successDataInfo(redisTok.replaceAll("\"", ""), 0);
+		} else {
+			// 请求获取tok
+			Map<String, Object> tokMap = getAccessToken();
+			if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
+				return tokMap;
+			}
+			// 由于服务器缓存时间为3小时,为岔开时间故而商城为2.5小时
+			JedisUtil.set(redisKey, 9000, tokMap.get(BaseCode.DATAS.toString()));
+			return tokMap;
+		}
 	}
 }

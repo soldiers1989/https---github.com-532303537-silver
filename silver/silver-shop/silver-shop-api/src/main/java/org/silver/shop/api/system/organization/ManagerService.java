@@ -84,11 +84,11 @@ public interface ManagerService {
 	 * @param managerId
 	 * @param managerName
 	 * @param imglist
-	 * @param arrayInt
+	 * @param arrayStr
 	 * @return
 	 */
 	public Map<String, Object> editMerhcnatBusinessInfo(String managerId, String managerName, List<Object> imglist,
-			int[] arrayInt,String merchantId);
+			String[] arrayStr,String merchantId);
 
 	/**
 	 * 添加商户业务信息(图片)

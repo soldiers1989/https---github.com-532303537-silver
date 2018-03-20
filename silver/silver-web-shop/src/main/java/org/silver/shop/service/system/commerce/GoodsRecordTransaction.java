@@ -206,8 +206,8 @@ public class GoodsRecordTransaction {
 		return reqMap;
 	}
 
-	public void batchAddNotRecordGoodsInfo(ExcelUtil excel, List<Map<String, Object>> errl, String merchantId,
-			String serialNo, int startCount, int endCount, int realRowCount, String merchantName) {
+	public void batchAddNotRecordGoodsInfo(ExcelUtil excel, List<Map<String, Object>> errl,
+			Map<String, Object> params) {
 		String shelfGName = ""; // 上架品名 在电商平台上的商品名称
 		String ncadCode = ""; // 行邮税号 商品综合分类表(NCAD)
 		String hsCode = ""; // HS编码
@@ -231,7 +231,12 @@ public class GoodsRecordTransaction {
 		String additiveflag = "";// 超范围使用食品添加剂
 		String poisonflag = "";// 含有毒害物质
 		int totalColumnCount = excel.getColumnCount(0);
-		// for (int r = 2; r <= excel.getRowCount(); r++) {
+		String merchantId = params.get("merchantId") + "";
+		int startCount = Integer.parseInt(params.get("startCount") + "");
+		int endCount = Integer.parseInt(params.get("endCount") + "");
+		String merchantName = params.get("merchantName") + "";
+		//未备案商品导入key
+		params.put("name", "notRGImport");
 		for (int r = startCount; r <= endCount; r++) {
 			if (excel.getColumnCount(r) == 0) {
 				break;
@@ -368,7 +373,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				continue;
 			}
 			param.put("giftFlag", giftFlag);
@@ -381,7 +386,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				continue;
 			}
 			try {
@@ -389,7 +394,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				continue;
 			}
 			param.put("notes", notes);
@@ -399,7 +404,7 @@ public class GoodsRecordTransaction {
 			Map<String, Object> reGoodsMap = checkGoodsInfo(JSONObject.fromObject(param));
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				continue;
 			}
 			GoodsRecordDetail goodsInfo = null;
@@ -418,13 +423,13 @@ public class GoodsRecordTransaction {
 					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg");
-				RedisInfoUtils.commonErrorInfo(msg, errl, (realRowCount - 1), serialNo, "notRGImport", 1);
+				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				continue;
 			}
-			excelBufferUtils.writeRedis(errl, (realRowCount - 1), serialNo, "notRGImport");
+			excelBufferUtils.writeRedis(errl, params);
 		}
 		excel.closeExcel();
-		excelBufferUtils.writeCompletedRedis(errl, (realRowCount - 1), serialNo, "notRGImport");
+		excelBufferUtils.writeCompletedRedis(errl, params);
 	}
 
 	/**

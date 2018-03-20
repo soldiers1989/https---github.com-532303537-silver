@@ -10,8 +10,7 @@
 	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
 		<property name="maxIdle" value="${redis.maxIdle}" />
 		<property name="minIdle" value="${redis.minIdle}" />
-		<property name="maxTotal" value="${redis.maxTotal}" />
-	
+		<property name="maxTotal" value="${redis.maxTotal}" />    	
 		<property name="testOnBorrow" value="true" />
 	</bean>
 	<bean id="jedisShardInfo" class="redis.clients.jedis.JedisShardInfo">

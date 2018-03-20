@@ -30,14 +30,15 @@ public class ExcelBufferUtils {
 	@Autowired
 	private ErrorLogsTransaction errorLogs;
 
-	// 完成数量
-	private static AtomicInteger counter = new AtomicInteger(0);
-	// 线程完成状态次数
-	private static AtomicInteger statusCounter = new AtomicInteger(0);
 
 	// 创建一个静态钥匙
 	private static Object lock = "lock";// 值是任意的
-
+	/**
+	 * 总行数
+	 */
+	private static final String TOTAL_COUNT = "totalCount";
+	
+	
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
@@ -52,15 +53,16 @@ public class ExcelBufferUtils {
 	 * @param name
 	 *            名称标识
 	 */
-	public final void writeRedis(List<Map<String, Object>> errl, int totalCount, String serialNo, String name) {
+	public final void writeRedis(List<Map<String, Object>> errl, Map<String, Object> params) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + params.get("name") + "_" + params.get("serialNo");
 		synchronized (lock) {
+			AtomicInteger counter = (AtomicInteger) params.get("counter");
 			datasMap.put("completed", counter.getAndIncrement());
 			datasMap.put(BaseCode.STATUS.toString(), "1");
 			datasMap.put(BaseCode.ERROR.toString(), errl);
-			datasMap.put("totalCount", totalCount);
+			datasMap.put(TOTAL_COUNT, params.get(TOTAL_COUNT));
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
@@ -78,34 +80,35 @@ public class ExcelBufferUtils {
 	 * @param name
 	 *            名称
 	 */
-	public final void writeCompletedRedis(List<Map<String, Object>> errl, int totalCount, String serialNo,
-			String name) {
+	public final void writeCompletedRedis(List<Map<String, Object>> errl, Map<String, Object> params) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String name = params.get("name") + "";
+		String serialNo = params.get("serialNo") + "";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
 		synchronized (lock) {
+			AtomicInteger threadCounter = (AtomicInteger) params.get("statusCounter");
+			AtomicInteger counter = (AtomicInteger) params.get("counter");
+			int totalCount = Integer.parseInt(params.get(TOTAL_COUNT) + "");
 			int cpuCount = getRedisCPUCount(key, totalCount);
 			if (cpuCount == 1) {
-				statusCounter.set(cpuCount);
+				threadCounter.set(cpuCount);
 			} else {
-				datasMap.put("count", statusCounter.getAndIncrement());
+				datasMap.put("count", threadCounter.getAndIncrement());
 			}
 			datasMap.put("cpuCount", cpuCount);
 			datasMap.put(BaseCode.STATUS.toString(), "1");
-			if (statusCounter.get() == cpuCount) {// 当最后一次线程时
+			if (threadCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
-				// 重置计数器
-				counter = new AtomicInteger(0);
-				statusCounter = new AtomicInteger(0);
 				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
 				datasMap.put("fcy", reMap.get("fcy"));
 				datasMap.put("orderCount", reMap.get("orderCount"));
 				datasMap.remove("cpuCount");
 			}
-			datasMap.put(BaseCode.ERROR.toString(),SortUtil.sortList(errl));
+			datasMap.put(BaseCode.ERROR.toString(), SortUtil.sortList(errl));
 			datasMap.put("completed", counter.get());
-			datasMap.put("totalCount", totalCount);
+			datasMap.put(TOTAL_COUNT, totalCount);
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
@@ -122,9 +125,9 @@ public class ExcelBufferUtils {
 			String name) {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 截取批次号数字
-				String[] str = serialNo.split("_");
-				int serial = Integer.parseInt(str[1]);
-				String key = "";
+		String[] str = serialNo.split("_");
+		int serial = Integer.parseInt(str[1]);
+		String key = "";
 		switch (name) {
 		case "orderImport":
 			// 删除文件夹下所有复制文件
@@ -132,7 +135,7 @@ public class ExcelBufferUtils {
 			errorLogs.addErrorLogs(SortUtil.sortList(errl), totalCount, serialNo, name);
 			break;
 		case "checkGZOrderImport":// 国宗订单导入预处理
-			 key = "Shop_Key_CheckGZOrder_List_" + serial;
+			key = "Shop_Key_CheckGZOrder_List_" + serial;
 			return checkGZOrderImport(key);
 		case "checkQBOrderImport":
 			key = "Shop_Key_CheckQBOrder_List_" + serial;
@@ -144,9 +147,8 @@ public class ExcelBufferUtils {
 		return statusMap;
 	}
 
-	private Map<String,Object> checkGZOrderImport(  String key) {
-		Map<String,Object> statusMap = new HashMap<>();
-		double orderTotalAmount = 0.0;
+	private Map<String, Object> checkGZOrderImport(String key) {
+		Map<String, Object> statusMap = new HashMap<>();
 		double fcy = 0.0;
 		byte[] redisByte = JedisUtil.get(key.getBytes());
 		if (redisByte != null && redisByte.length > 0) {
@@ -155,12 +157,10 @@ public class ExcelBufferUtils {
 			for (Map.Entry<String, Object> entry : item.entrySet()) {
 				List<Morder> mOrderList = (List<Morder>) entry.getValue();
 				Morder order = mOrderList.get(0);
-				// 总订单实际支付金额
-				orderTotalAmount += order.getActualAmountPaid();
 				// 总订单商品总金额
 				fcy += order.getFCY();
 			}
-			statusMap.put("orderCount",item.size());
+			statusMap.put("orderCount", item.size());
 		}
 		statusMap.put("fcy", fcy);
 		return statusMap;

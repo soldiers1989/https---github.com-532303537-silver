@@ -21,7 +21,6 @@ public class SplitListUtils {
 	 * @return Map
 	 */
 	public static Map<String, Object> batchList(List dataList, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		// 分批处理
 		if (null != dataList && !dataList.isEmpty()) {
 			Map<String, Object> datasMap = new HashMap<>();
@@ -32,7 +31,6 @@ public class SplitListUtils {
 			// 判断是否有必要分批
 			if (size < totalSize) {
 				int part = totalSize / size;// 分批数
-				System.out.println("共有 ： " + totalSize + "条，！" + " 每一次的长度 ：" + part );
 				//遍历需要创建List的长度
 				for (int i = 0; i < size; i++) {
 					if (i > 0 && size > 0) {
@@ -47,7 +45,6 @@ public class SplitListUtils {
 						end = (i + 1) * part;
 					}
 					List<Object> listPage = dataList.subList(start, end);
-					System.out.println("--->"+listPage);
 					list.add(listPage);
 				}
 				datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -55,9 +52,7 @@ public class SplitListUtils {
 				return datasMap;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("拆分List错误,参数错误!");
 	}
 
 	public static void main(String[] args) {

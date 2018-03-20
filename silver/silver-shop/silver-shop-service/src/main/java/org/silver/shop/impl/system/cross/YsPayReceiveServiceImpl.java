@@ -171,11 +171,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return reOrderRecordGoodsMap;
 				}
 				// 请求获取tok
-				Map<String, Object> tokMap = accessTokenService.getAccessToken();
-				if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
-					return tokMap;
+				Map<String, Object> reTokMap = accessTokenService.getRedisToks();
+				if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
+					return reTokMap;
 				}
-				String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+				String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 				Map<String, Object> recordMap = new HashMap<>();
 				recordMap.put("ebpEntNo", goodsRecordInfo.getEbpEntNo());
 				recordMap.put("ebpEntName", goodsRecordInfo.getEbpEntName());

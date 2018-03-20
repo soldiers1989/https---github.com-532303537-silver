@@ -10,6 +10,11 @@ public class RedisInfoUtils {
 	/**
 	 * 公共缓存执行方法
 	 * 
+	 * @param params
+	 * @param errl
+	 * @param msg
+	 * @param msg
+	 * 
 	 * @param msg
 	 *            错误信息
 	 * @param errorList
@@ -21,17 +26,19 @@ public class RedisInfoUtils {
 	 * @param name
 	 *            名称(标识)
 	 * @param type
-	 *            1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重....待续
+	 *            类型:1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重....待续
 	 */
-	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, int totalCount,
-			String serialNo, String name, int type) {
-		Map<String, Object> errMap = new HashMap<>();
-		errMap.put(BaseCode.MSG.toString(), msg);
-		errMap.put("type", type);
-		errorList.add(errMap);
+	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errl, int type,
+			Map<String, Object> params) {
+		Map<String, Object> err = new HashMap<>();
+		err.put(BaseCode.MSG.toString(), msg);
+		err.put("type", type);
+		errl.add(err);
 		ExcelBufferUtils excelBufferUtils = new ExcelBufferUtils();
-		if(type == 1){
-			excelBufferUtils.writeRedis(errorList, totalCount, serialNo, name);
+		//
+		if (type == 1) {
+			excelBufferUtils.writeRedis(errl, params);
 		}
 	}
+
 }

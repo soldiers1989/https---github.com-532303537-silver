@@ -15,25 +15,16 @@ public class Merchant implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private String merchantName;// 商户名称
+	private String merchantName;// 商户名称(兼登陆账号)
 	private String merchantCusNo;// 商户第三方编号
 	private String loginPassword;// 商户登录密码
 	private String merchantAvatar;// 商户头像
 	private String merchantPhone;// 商户手机号码
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱
-	private String merchantIdCard;// 商户身份证号码
+	private String merchantIdCard;// 商户法人证件号
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
-	private String merchantBusinessLicenseLink;// 企业营业执照(图片地址)
-	private String merchantCustomsregistrationCodeLink;// 海关注册代码(图片地址)
-	private String merchantOrganizationCodeLink;// 组织机构代码(图片地址)
-	private String merchantChecktheRegistrationCodeLink;// 报检注册代码(图片地址)
-	private String merchantTaxRegistrationCertificateLink;// 税务登记证(图片地址)
-	private String merchantSpecificIndustryLicenseLink;// 特定行业经营许可证(图片地址)
-	private String merchantCustomsregistrationCode;// 海关注册编码
-	private String merchantOrganizationCode;// 组织机构编码
-	private String merchantChecktheRegistrationCode;// 报检注册编码
 	private int merchantLevel;// 商户等级
 	private long merchantProfit;// 平台服务费(原分润),按0.0X算
 	private String merchantStatus;// 商户状态：1-启用，2-禁用，3-审核
@@ -45,10 +36,13 @@ public class Merchant implements Serializable {
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
-	private String merchantIdCardName; // 身份证名字
+	private String merchantIdCardName; // 商户法人代表名称
 
 	private String agentParentId ; //代理商Id
 	private String agentParentName ;// 代理商名称
+	private String companyName;//公司名称
+	private String marCode;//(名称来源自启邦)商户在银盟商城平台唯一标识
+	private String sku;//(名称来源自启邦)
 	public Long getId() {
 		return id;
 	}
@@ -146,78 +140,7 @@ public class Merchant implements Serializable {
 		this.merchantTransport = merchantTransport;
 	}
 
-	public String getMerchantBusinessLicenseLink() {
-		return merchantBusinessLicenseLink;
-	}
-
-	public void setMerchantBusinessLicenseLink(String merchantBusinessLicenseLink) {
-		this.merchantBusinessLicenseLink = merchantBusinessLicenseLink;
-	}
-
-	public String getMerchantCustomsregistrationCodeLink() {
-		return merchantCustomsregistrationCodeLink;
-	}
-
-	public void setMerchantCustomsregistrationCodeLink(String merchantCustomsregistrationCodeLink) {
-		this.merchantCustomsregistrationCodeLink = merchantCustomsregistrationCodeLink;
-	}
-
-	public String getMerchantOrganizationCodeLink() {
-		return merchantOrganizationCodeLink;
-	}
-
-	public void setMerchantOrganizationCodeLink(String merchantOrganizationCodeLink) {
-		this.merchantOrganizationCodeLink = merchantOrganizationCodeLink;
-	}
-
-	public String getMerchantChecktheRegistrationCodeLink() {
-		return merchantChecktheRegistrationCodeLink;
-	}
-
-	public void setMerchantChecktheRegistrationCodeLink(String merchantChecktheRegistrationCodeLink) {
-		this.merchantChecktheRegistrationCodeLink = merchantChecktheRegistrationCodeLink;
-	}
-
-	public String getMerchantTaxRegistrationCertificateLink() {
-		return merchantTaxRegistrationCertificateLink;
-	}
-
-	public void setMerchantTaxRegistrationCertificateLink(String merchantTaxRegistrationCertificateLink) {
-		this.merchantTaxRegistrationCertificateLink = merchantTaxRegistrationCertificateLink;
-	}
-
-	public String getMerchantSpecificIndustryLicenseLink() {
-		return merchantSpecificIndustryLicenseLink;
-	}
-
-	public void setMerchantSpecificIndustryLicenseLink(String merchantSpecificIndustryLicenseLink) {
-		this.merchantSpecificIndustryLicenseLink = merchantSpecificIndustryLicenseLink;
-	}
-
-	public String getMerchantCustomsregistrationCode() {
-		return merchantCustomsregistrationCode;
-	}
-
-	public void setMerchantCustomsregistrationCode(String merchantCustomsregistrationCode) {
-		this.merchantCustomsregistrationCode = merchantCustomsregistrationCode;
-	}
-
-	public String getMerchantOrganizationCode() {
-		return merchantOrganizationCode;
-	}
-
-	public void setMerchantOrganizationCode(String merchantOrganizationCode) {
-		this.merchantOrganizationCode = merchantOrganizationCode;
-	}
-
-	public String getMerchantChecktheRegistrationCode() {
-		return merchantChecktheRegistrationCode;
-	}
-
-	public void setMerchantChecktheRegistrationCode(String merchantChecktheRegistrationCode) {
-		this.merchantChecktheRegistrationCode = merchantChecktheRegistrationCode;
-	}
-
+	
 	public int getMerchantLevel() {
 		return merchantLevel;
 	}
@@ -334,6 +257,30 @@ public class Merchant implements Serializable {
 
 	public void setAgentParentName(String agentParentName) {
 		this.agentParentName = agentParentName;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public String getMarCode() {
+		return marCode;
+	}
+
+	public String getSku() {
+		return sku;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public void setMarCode(String marCode) {
+		this.marCode = marCode;
+	}
+
+	public void setSku(String sku) {
+		this.sku = sku;
 	}
 
 	

@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
@@ -15,6 +16,7 @@ import org.silver.shop.impl.system.commerce.StockServiceImpl;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
@@ -118,7 +120,7 @@ public class ManagerServiceImpl implements ManagerService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
-				Merchant merchantInfo =  reList.get(i);
+				Merchant merchantInfo = reList.get(i);
 				merchantInfo.setLoginPassword("");
 				item.add(merchantInfo);
 			}
@@ -316,9 +318,10 @@ public class ManagerServiceImpl implements ManagerService {
 			merchantInfo.setMerchantIdCardName(merchantIdCardName);
 			merchantInfo.setMerchantAddress(merchantAddress);
 			merchantInfo.setMerchantStatus(merchantStatus);
-			merchantInfo.setMerchantCustomsregistrationCode(merchantCustomsregistrationCode);
+
+			/*merchantInfo.setMerchantCustomsregistrationCode(merchantCustomsregistrationCode);
 			merchantInfo.setMerchantOrganizationCode(merchantOrganizationCode);
-			merchantInfo.setMerchantChecktheRegistrationCode(merchantChecktheRegistrationCode);
+			merchantInfo.setMerchantChecktheRegistrationCode(merchantChecktheRegistrationCode);*/
 			if (!managerDao.update(merchantInfo)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), "服务器繁忙!");
@@ -336,98 +339,60 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> editMerhcnatBusinessInfo(String managerId, String managerName, List<Object> imglist,
-			int[] arrayInt, String merchantId) {
-		Map<String, Object> statusMap = new HashMap<>();
+			String[] arrayStr, String merchantId) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("merchantId", merchantId);
-		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
+		List<MerchantDetail> reList = managerDao.findByProperty(MerchantDetail.class, paramMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			Merchant merchantInfo = (Merchant) reList.get(0);
-			int imgKey = 0;
-			for (int i = 0; i < arrayInt.length; i++) {
-				int picIndex = arrayInt[i];
-				switch (picIndex) {
-				case 0:
-					merchantInfo.setMerchantAvatar(imglist.get(imgKey) + "");
-					break;
-				case 1:
-					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(imgKey) + "");
-					break;
-				case 2:
-					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(imgKey) + "");
-					break;
-				case 3:
-					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(imgKey) + "");
-					break;
-				case 4:
-					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(imgKey) + "");
-					break;
-				case 5:
-					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(imgKey) + "");
-					break;
-				case 6:
-					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(imgKey) + "");
-					break;
-				default:
-					break;
-				}
-				if (picIndex >= 0) {
-					imgKey++;
-				}
-			}
-			if (!managerDao.update(merchantInfo)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "服务器繁忙!");
-				return statusMap;
-			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			MerchantDetail merchantDetail = reList.get(0);
+			return updateMerchantDetail(merchantDetail, arrayStr, imglist);
 		}
+		return ReturnInfoUtils.errorInfo("未找到商户详情信息!");
 	}
 
 	@Override
 	public Map<String, Object> addMerchantBusinessInfo(String merchantId, String[] arrayStr, List<Object> imglist) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("merchantId", merchantId);
-		List<Merchant> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (!reList.isEmpty()) {
-			Merchant merchantInfo = reList.get(0);
+		MerchantDetail merchantDetail = new MerchantDetail();
+		merchantDetail.setMerchantId(merchantId);
+		return updateMerchantDetail(merchantDetail, arrayStr, imglist);
+	}
+
+	/**
+	 * 更新商户详细信息
+	 * 
+	 * @param merchantDetail
+	 *            商户详情信息实体类
+	 * @param arrayStr
+	 * @param imglist
+	 * @return Map
+	 */
+	private Map<String, Object> updateMerchantDetail(MerchantDetail merchantDetail, String[] arrayStr,
+			List<Object> imglist) {
+		if (arrayStr.length > 0 && !imglist.isEmpty()) {
 			// 创建图片List下标值
 			int imgIndex = 0;
 			for (int i = 0; i < arrayStr.length; i++) {
 				String picIndex = arrayStr[i];
 				switch (picIndex) {
 				case "1":
-					merchantInfo.setMerchantBusinessLicenseLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantBusinessLicenseLink(imglist.get(imgIndex) + "");
 					break;
 				case "2":
-					merchantInfo.setMerchantCustomsregistrationCodeLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantCustomsregistrationCodeLink(imglist.get(imgIndex) + "");
 					break;
 				case "3":
-					merchantInfo.setMerchantOrganizationCodeLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantOrganizationCodeLink(imglist.get(imgIndex) + "");
 					break;
 				case "4":
-					merchantInfo.setMerchantChecktheRegistrationCodeLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantChecktheRegistrationCodeLink(imglist.get(imgIndex) + "");
 					break;
 				case "5":
-					merchantInfo.setMerchantTaxRegistrationCertificateLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantTaxRegistrationCertificateLink(imglist.get(imgIndex) + "");
 					break;
 				case "6":
-					merchantInfo.setMerchantSpecificIndustryLicenseLink(imglist.get(imgIndex) + "");
+					merchantDetail.setMerchantSpecificIndustryLicenseLink(imglist.get(imgIndex) + "");
 					break;
 				default:
 					break;
@@ -437,19 +402,12 @@ public class ManagerServiceImpl implements ManagerService {
 					imgIndex++;
 				}
 			}
-			if (!managerDao.update(merchantInfo)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "服务器繁忙!");
-				return statusMap;
+			if (!managerDao.update(merchantDetail)) {
+				return ReturnInfoUtils.errorInfo("修改商户详情信息失败,服务器繁忙!");
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		}
+		return ReturnInfoUtils.errorInfo("调用修改商户详情方法参数错误!");
 	}
 
 	@Override
@@ -679,7 +637,7 @@ public class ManagerServiceImpl implements ManagerService {
 					if (reList != null && !reList.isEmpty()) {
 						Merchant merchant = reList.get(0);
 						merchant.setMerchantStatus(status);
-						if(!managerDao.update(merchant)){
+						if (!managerDao.update(merchant)) {
 							return ReturnInfoUtils.errorInfo("更新失败,请重试!");
 						}
 					}
@@ -700,7 +658,7 @@ public class ManagerServiceImpl implements ManagerService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			Merchant merchant =  reList.get(0);
+			Merchant merchant = reList.get(0);
 			// 默认为：888888
 			merchant.setLoginPassword("21218CCA77804D2BA1922C33E0151105");
 			if (!managerDao.update(merchant)) {

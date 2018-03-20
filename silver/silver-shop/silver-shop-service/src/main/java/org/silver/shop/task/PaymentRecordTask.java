@@ -24,7 +24,9 @@ public class PaymentRecordTask implements Callable<Object> {
 	private int totalCount;// 总数
 	private String serialNo;// 批次号
 	private PaymentServiceImpl paymentServiceImpl;//
-
+	private Map<String,Object> paramsMap;//
+	
+	
 	/**
 	 * 推送支付单信息
 	 * 
@@ -46,24 +48,18 @@ public class PaymentRecordTask implements Callable<Object> {
 	 * @param paymentServiceImpl
 	 *            实现类
 	 */
-	public PaymentRecordTask(JSONArray dataList, String merchantId, String merchantName,
-			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
-			String serialNo, PaymentServiceImpl paymentServiceImpl) {
+	public PaymentRecordTask(JSONArray dataList, List<Map<String, Object>> errorList, Map<String, Object> customsMap,
+			PaymentServiceImpl paymentServiceImpl,Map<String,Object> paramsMap) {
 		this.dataList = dataList;
-		this.merchantId = merchantId;
-		this.merchantName = merchantName;
 		this.errorList = errorList;
 		this.customsMap = customsMap;
-		this.tok = tok;
-		this.totalCount = totalCount;
-		this.serialNo = serialNo;
 		this.paymentServiceImpl = paymentServiceImpl;
+		this.paramsMap = paramsMap;
 	}
 
 	@Override
 	public Object call() throws Exception {
-		paymentServiceImpl.startSendPaymentRecord(dataList, merchantId, merchantName, errorList, customsMap, tok,
-				totalCount, serialNo);
+		paymentServiceImpl.startSendPaymentRecord(dataList,  errorList, customsMap, paramsMap);
 		return null;
 	}
 

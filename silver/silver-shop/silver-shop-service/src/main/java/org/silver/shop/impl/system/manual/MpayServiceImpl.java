@@ -39,10 +39,12 @@ import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.SortUtil;
 import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
@@ -331,11 +333,11 @@ public class MpayServiceImpl implements MpayService {
 		customsMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
 
 		// 请求获取tok
-		Map<String, Object> tokMap = accessTokenService.getAccessToken();
-		if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
-			return tokMap;
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks();
+		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
+			return reTokMap;
 		}
-		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		// 获取流水号
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		// 总数
@@ -376,9 +378,12 @@ public class MpayServiceImpl implements MpayService {
 	 *            批次号
 	 * @param threadPool
 	 */
-	public final void startSendOrderRecord(JSONArray dataList, String merchantId, String merchantName,
-			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
-			String serialNo) {
+	public final void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
+			Map<String, Object> customsMap, Map<String, Object> paramsMap) {
+		String merchantId = paramsMap.get("merchantId") + "";
+		String merchantName = paramsMap.get("merchantName") + "";
+		String tok = paramsMap.get("tok") + "";
+		paramsMap.put("name", "orderRecord");
 		// 累计金额
 		double cumulativeAmount = 0.0;
 		for (int i = 0; i < dataList.size(); i++) {
@@ -395,18 +400,18 @@ public class MpayServiceImpl implements MpayService {
 				List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 				if (orderList == null || orderSubList == null) {
 					String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 					continue;
 				} else {
 					Morder order = orderList.get(0);
 					if (order.getFCY() > 2000) {
 						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 						continue;
 					}
 					if (!checkProvincesCityAreaCode(order)) {
 						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 						continue;
 					}
 
@@ -427,14 +432,13 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
 					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
 						String msg = checkMap.get(BaseCode.MSG.toString()) + "";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 						continue;
 					}
 					Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
-					System.out.println("->>>>>>>>>>>" + reOrderMap);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 						continue;
 					} else {
 						String reOrderMessageID = reOrderMap.get("messageID") + "";
@@ -442,7 +446,7 @@ public class MpayServiceImpl implements MpayService {
 						Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
 						if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
 							String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
-							RedisInfoUtils.commonErrorInfo(msg, errorList, totalCount, serialNo, "orderRecord", 1);
+							RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 							continue;
 						}
 					}
@@ -450,10 +454,10 @@ public class MpayServiceImpl implements MpayService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				bufferUtils.writeRedis(errorList, totalCount, serialNo, "orderRecord");
+				bufferUtils.writeRedis(errorList, paramsMap);
 			}
 		}
-		bufferUtils.writeCompletedRedis(errorList, totalCount, serialNo, "orderRecord", merchantId, merchantName);
+		bufferUtils.writeCompletedRedis(errorList, paramsMap);
 	}
 
 	private boolean checkProvincesCityAreaCode(Morder order) {
@@ -705,7 +709,7 @@ public class MpayServiceImpl implements MpayService {
 		orMap.put("order_serial_no", datasMap.get("messageID") + "");
 		orMap.put("order_id", datasMap.get("entOrderNo") + "");
 		String reMsg = datasMap.get("msg") + "";
-		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 0, 0);
+		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 1, 1);
 		if (reList != null && !reList.isEmpty()) {
 			Morder order = reList.get(0);
 			String orderId = order.getOrder_id();
@@ -721,11 +725,12 @@ public class MpayServiceImpl implements MpayService {
 			}
 			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
 			if ("1".equals(status)) {
-				//已经返回过一次备案成功后
+				// 已经返回过一次备案成功后
 				if (note.contains("新增申报成功") && order.getOrder_record_status() == 3) {
 					System.out.println("------重复申报成功拦截------");
 					return ReturnInfoUtils.successInfo();
 				}
+				//
 				findOrderGoodsInfo(orderId, merchantId);
 				order.setOrder_record_status(3);
 			} else {
@@ -758,6 +763,14 @@ public class MpayServiceImpl implements MpayService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 根据商户Id与订单Id查询到订单下所有商品信息
+	 * 
+	 * @param orderId
+	 *            订单Id
+	 * @param merchantId
+	 *            商户Id
+	 */
 	private void findOrderGoodsInfo(String orderId, String merchantId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("order_id", orderId);
@@ -768,6 +781,7 @@ public class MpayServiceImpl implements MpayService {
 				System.out.println("--------遍历所有订单下的商品-----");
 				String entGoodsNo = goods.getEntGoodsNo();
 				String spareParams = goods.getSpareParams();
+				// 当是第三方商户提供的商品信息时
 				if (StringEmptyUtils.isNotEmpty(spareParams)) {
 					JSONObject json = JSONObject.fromObject(spareParams);
 					String marCode = json.get("marCode") + "";
@@ -782,6 +796,16 @@ public class MpayServiceImpl implements MpayService {
 		}
 	}
 
+	/**
+	 * 根据商户Id与商品自编号，查询出来的订单商品数量更新库存售卖数量
+	 * 
+	 * @param entGoodsNo
+	 *            商品自编号
+	 * @param count
+	 *            数量
+	 * @param merchantId
+	 *            商户Id
+	 */
 	private void updateStockDoneCount(String entGoodsNo, int count, String merchantId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("entGoodsNo", entGoodsNo);
@@ -789,7 +813,6 @@ public class MpayServiceImpl implements MpayService {
 		List<StockContent> reStockList = morderDao.findByProperty(StockContent.class, params, 1, 1);
 		if (reStockList != null && !reStockList.isEmpty()) {
 			for (StockContent stock : reStockList) {
-				System.out.println("------开始遍历库存中商品---");
 				int oldDoneCount = stock.getDoneCount();
 				int oldReadIngCount = stock.getReadingCount();
 				stock.setDoneCount(oldDoneCount + count);

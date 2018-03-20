@@ -16,14 +16,10 @@ import net.sf.json.JSONArray;
 public class OrderRecordTask implements Callable<Object> {
 
 	private JSONArray dataList;//
-	private String merchantId;// 商户Id
-	private String merchantName; // 商户名称
 	private List<Map<String, Object>> errorList;// 错误信息
 	private Map<String, Object> customsMap;// 海关信息
-	private String tok;//
-	private int totalCount;// 总数
-	private String serialNo;// 批次号
 	private MpayServiceImpl mpayServiceImpl;//
+	private Map<String, Object> paramsMap;//
 
 	/**
 	 * 推送订单信息
@@ -47,25 +43,19 @@ public class OrderRecordTask implements Callable<Object> {
 	 *            实现类
 	 * @param threadPool
 	 */
-	public OrderRecordTask(JSONArray dataList, String merchantId, String merchantName,
-			List<Map<String, Object>> errorList, Map<String, Object> customsMap, String tok, int totalCount,
-			String serialNo, MpayServiceImpl mpayServiceImpl) {
+	public OrderRecordTask(JSONArray dataList, List<Map<String, Object>> errorList, Map<String, Object> customsMap,
+			MpayServiceImpl mpayServiceImpl, Map<String, Object> paramsMap) {
 		this.dataList = dataList;
-		this.merchantId = merchantId;
-		this.merchantName = merchantName;
 		this.errorList = errorList;
 		this.customsMap = customsMap;
-		this.tok = tok;
-		this.totalCount = totalCount;
-		this.serialNo = serialNo;
 		this.mpayServiceImpl = mpayServiceImpl;
+		this.paramsMap = paramsMap;
 	}
 
 	@Override
 	public Object call() throws Exception {
 		try {
-			mpayServiceImpl.startSendOrderRecord(dataList, merchantId, merchantName, errorList, customsMap, tok, totalCount,
-					serialNo);
+			mpayServiceImpl.startSendOrderRecord(dataList, errorList, customsMap, paramsMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
