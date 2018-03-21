@@ -1,6 +1,7 @@
 package org.silver.shop.dao.system.cross;
 
 
+import java.util.List;
 import java.util.Map;
 
 import org.silver.shop.dao.BaseDao;
@@ -19,5 +20,12 @@ public interface PaymentDao  extends BaseDao{
 	 * @return
 	 */
 	public Table getPaymentReport(Class<Morder> class1, Map<String, Object> paramsMap, int page, int size);
+
+	/**
+	 * 查询统计手工支付单总金额
+	 * @param list 支付单Id集合
+	 * @return double 总金额
+	 */
+	public double statisticalManualPaymentAmount(List<Object> list);
 	
 }

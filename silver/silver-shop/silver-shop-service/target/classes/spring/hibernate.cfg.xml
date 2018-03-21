@@ -116,7 +116,12 @@
 			resource="org/silver/shop/model/system/organization/AgentBaseContent.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/organization/AgentDetailContent.hbm.xml" />
-			<mapping resource="org/silver/shop/model/system/organization/MerchantDetail.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/organization/MerchantDetail.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/manual/OldManualOrder.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/manual/OldManualOrderSub.hbm.xml" />
+
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

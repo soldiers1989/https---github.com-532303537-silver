@@ -16,18 +16,7 @@ public class PretreatmentQBExcelTask extends TaskUtils {
 	private ManualService manualService;//
 	private Map<String, Object> params;//
 
-	/**
-	 * excel多任务读取
-	 * 
-	 * @param sheet
-	 * @param excel
-	 * @param errl
-	 * @param merchantId
-	 * @param startCount
-	 * @param endCount
-	 * @param manualService
-	 * @param merchantName
-	 */
+	
 	public PretreatmentQBExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, ManualService manualService,
 			Map<String, Object> params) {
 		this.excel = excel;

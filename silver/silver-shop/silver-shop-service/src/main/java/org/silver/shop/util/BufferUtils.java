@@ -37,16 +37,8 @@ public class BufferUtils {
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
-	 * @param status
-	 *            状态：1-进行中,2-已完成
 	 * @param errl
 	 *            错误信息
-	 * @param totalCount
-	 *            总数
-	 * @param completed
-	 *            已完成数量
-	 * @param name
-	 *            名称标识
 	 */
 	public void writeRedis(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		Map<String, Object> datasMap = new HashMap<>();
@@ -66,18 +58,8 @@ public class BufferUtils {
 	/**
 	 * 线程执行完成时写入缓存
 	 * 
-	 * @param status
-	 *            2-已完成
 	 * @param errl
 	 *            错误信息
-	 * @param totalCount
-	 *            总数
-	 * @param serialNo
-	 *            批次号
-	 * @param name
-	 *            名称
-	 * @param merchantName
-	 * @param merchantId
 	 */
 	public void writeCompletedRedis(List<Map<String, Object>> errl, Map<String,Object> paramsMap) {
 		Map<String, Object> datasMap = new HashMap<>();

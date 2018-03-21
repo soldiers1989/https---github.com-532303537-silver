@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Resource;
 
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -59,6 +60,7 @@ import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = MpayService.class)
 public class MpayServiceImpl implements MpayService {
@@ -90,48 +92,6 @@ public class MpayServiceImpl implements MpayService {
 
 	@Autowired
 	private MerchantUtils merchantUtils;
-
-	/**
-	 * 查询商户钱包余额是否有足够的钱
-	 * 
-	 * @param type
-	 *            1-支付,2-订单
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
-	 * @param treadeNo
-	 *            交易流水号
-	 * @param payAmount
-	 *            金额
-	 * @return Map
-	 */
-	public Map<String, Object> checkWallet(int type, String merchantId, String merchantName, String serialNo,
-			double payAmount) {
-		Map<String, Object> statusMap = new HashMap<>();
-		// 查询商户钱包余额是否有足够的钱
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
-		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		double merchantBalance = merchantWallet.getBalance();
-		// 平台服务费
-		double serviceFee = payAmount * 0.002;
-		if (merchantBalance - serviceFee < 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.UNKNOWN.getStatus());
-			if (type == 1) {
-				statusMap.put(BaseCode.MSG.toString(), "支付号[" + serialNo + "]推送失败,钱包余额不足,请续费后重试!");
-			} else if (type == 2) {
-				statusMap.put(BaseCode.MSG.toString(), "订单[" + serialNo + "]推送失败,钱包余额不足,请续费后重试!");
-			}
-			return statusMap;
-		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
-	}
 
 	/**
 	 * 更新钱包日志
@@ -332,6 +292,11 @@ public class MpayServiceImpl implements MpayService {
 		customsMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
 		customsMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
 
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchantId, merchantName);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+
 		// 请求获取tok
 		Map<String, Object> reTokMap = accessTokenService.getRedisToks();
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
@@ -347,15 +312,47 @@ public class MpayServiceImpl implements MpayService {
 		params.put("merchantName", merchantName);
 		params.put("tok", tok);
 		params.put("serialNo", serialNo);
+
 		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
 				params);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		statusMap.put("status", 1);
-		statusMap.put("msg", "执行成功,开始推送订单备案.......");
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
 		statusMap.put("serialNo", serialNo);
 		return statusMap;
+	}
+
+	/**
+	 * 计算商户钱包余额是否足够推送此次手工订单
+	 * 
+	 * @param jsonList
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @return Map
+	 */
+	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, String merchantId, String merchantName) {
+		// 查询商户钱包余额是否有足够的钱
+		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return ReturnInfoUtils.errorInfo("创建钱包失败!");
+		}
+		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
+		double merchantBalance = merchantWallet.getBalance();
+		double totalAmountPaid = morderDao
+				.statisticalManualOrderAmount(JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
+		if (totalAmountPaid < 0) {
+			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
+		}
+		// 平台服务费
+		double serviceFee = totalAmountPaid * 0.001;
+		if (merchantBalance - serviceFee < 0) {
+			return ReturnInfoUtils.errorInfo("推送订单失败,余额不足,请先充值后再进行操作!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -381,11 +378,9 @@ public class MpayServiceImpl implements MpayService {
 	public final void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap) {
 		String merchantId = paramsMap.get("merchantId") + "";
-		String merchantName = paramsMap.get("merchantName") + "";
 		String tok = paramsMap.get("tok") + "";
 		paramsMap.put("name", "orderRecord");
 		// 累计金额
-		double cumulativeAmount = 0.0;
 		for (int i = 0; i < dataList.size(); i++) {
 			try {
 				Map<String, Object> orderMap = (Map<String, Object>) dataList.get(i);
@@ -424,18 +419,7 @@ public class MpayServiceImpl implements MpayService {
 					 * BufferUtils.writeRedis("1", errorList, (realRowCount -
 					 * 1), serialNo, "order") continue; }
 					 */
-
-					// 订单商品总额
-					double fcy = order.getFCY();
-					// 将每个订单商品总额进行累加,计算当前金额下是否有足够的余额支付费用
-					cumulativeAmount = fcy += cumulativeAmount;
-					Map<String, Object> checkMap = checkWallet(2, merchantId, merchantName, orderNo, cumulativeAmount);
-					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-						String msg = checkMap.get(BaseCode.MSG.toString()) + "";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
-						continue;
-					}
-					Map<String, Object> reOrderMap = sendOrder(merchantId, customsMap, orderSubList, tok, order);
+					Map<String, Object> reOrderMap = sendOrder(customsMap, orderSubList, tok, order);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
@@ -514,8 +498,8 @@ public class MpayServiceImpl implements MpayService {
 	 * @param orderRecordInfo
 	 * @return
 	 */
-	private final Map<String, Object> sendOrder(String merchantId, Map<String, Object> recordMap,
-			List<MorderSub> orderSubList, String tok, Morder order) {
+	private final Map<String, Object> sendOrder(Map<String, Object> recordMap, List<MorderSub> orderSubList, String tok,
+			Morder order) {
 		String timestamp = String.valueOf(System.currentTimeMillis());
 		Map<String, Object> statusMap = new HashMap<>();
 		List<JSONObject> goodsList = new ArrayList<>();

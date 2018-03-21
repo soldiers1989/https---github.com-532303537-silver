@@ -618,13 +618,11 @@ public class EditRecordController {
 	 * 
 	 * @param resp
 	 * @param req
-	 * @param page
-	 * @param size
 	 * @return
 	 */
-	@RequestMapping(value = "/managerDeleteMorderDatas", produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/managerDeleteMorder", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Manager")
-	public String managerDeleteMorderDatas(HttpServletResponse resp, HttpServletRequest req,String orderIdPack) {
+	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,String orderIdPack,String note) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -637,7 +635,7 @@ public class EditRecordController {
 			e.printStackTrace();
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
 		}
-		Map<String, Object> reqMap = manualService.managerDeleteMorderDatas( json);
+		Map<String, Object> reqMap = manualService.managerDeleteMorder( json,note);
 		return JSONObject.fromObject(reqMap).toString();
 	}
 

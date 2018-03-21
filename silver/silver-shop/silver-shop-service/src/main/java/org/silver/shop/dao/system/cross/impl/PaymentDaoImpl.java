@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.cross.PaymentDao;
@@ -59,6 +60,37 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 		} catch (Exception re) {
 			re.printStackTrace();
 			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public double statisticalManualPaymentAmount(List<Object> list) {
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT SUM(t1.pay_amount)   FROM ym_shop_manual_mpay t1 WHERE trade_no IN ( ");
+			for (int i = 0; i < list.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			//删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < list.size(); i++) {
+				Map<String, Object> treadeMap = (Map<String, Object>) list.get(i);
+				query.setString(i, treadeMap.get("treadeNo") + "");
+			}
+			List resources = query.list();
+			session.close();
+			return (double) resources.get(0);
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();

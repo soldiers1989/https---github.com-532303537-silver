@@ -1,19 +1,13 @@
 package org.silver.shop.util;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
-
-import com.alibaba.dubbo.container.Main;
 
 /**
  * 商城通用检索类
@@ -159,15 +153,6 @@ public final class SearchUtils {
 					paramMap.put(key, value);
 				}
 				break;
-			case "warehouseCode":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					int one = value.indexOf('_');
-					int two = value.indexOf('_', one + 1);
-					// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
-					String code = value.substring(two + 1);
-					paramMap.put(key, code);
-				}
-				break;
 			case "merchantName":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value.trim());
@@ -232,6 +217,13 @@ public final class SearchUtils {
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, Integer.parseInt(value));
 				}
+				break;
+			case "warehouseCode":
+				int one = value.indexOf('_');
+				int two = value.indexOf('_', one + 1);
+				// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
+				String code = value.substring(two + 1);
+				paramMap.put(key, code);
 				break;
 			default:
 				break;
@@ -484,6 +476,9 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "entGoodsNo":
+				paramMap.put(key, value);
+				break;
+			case "warehouseCode":
 				paramMap.put(key, value);
 				break;
 			default:

@@ -80,20 +80,6 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		return statusMap;
 	}
 
-	public static void main(String[] args) {
-		AccessTokenServiceImpl as = new AccessTokenServiceImpl();
-		/*
-		 * System.out.println(as.createRecord("银盟通网网关", "YM", "020-85668893",
-		 * "123", "广州银盟信息科技有限公司", "http://www.191ec.com"));
-		 * //{msg=生成成功,请注意保护好您的密钥, appKey=4a5de70025a7425dabeef6e8ea752976,
-		 * appSecret=
-		 * NeMs1DFG8xFARwZeSlRZwlT22ayY5oIbkgZg1uCziQ3LfSgqcPN4qGydAt7s3jMW,
-		 * status=1} JedisUtil.set("".getBytes(), "value".getBytes(), 3600*5);
-		 */
-		System.out.println(as.getAccessToken());
-
-	}
-
 	@Override
 	public Map<String, Object> getRedisToks() {
 		// 缓存中的键

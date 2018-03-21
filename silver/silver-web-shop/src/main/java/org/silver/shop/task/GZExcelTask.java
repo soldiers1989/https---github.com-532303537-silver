@@ -18,10 +18,6 @@ public class GZExcelTask extends TaskUtils {
 	private ManualService manualService;//
 	private Map<String, Object> params;//
 
-	/**
-	 * excel多任务读取
-	 * 
-	 */
 	public GZExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, ManualService manualService,
 			Map<String, Object> params) {
 		this.excel = excel;
@@ -29,7 +25,6 @@ public class GZExcelTask extends TaskUtils {
 		this.manualService = manualService;
 		this.params = params;
 	}
-
 
 	@Override
 	public Map<String, Object> call() {

@@ -20,7 +20,6 @@ import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.service.system.organization.AgentTransaction;
-import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

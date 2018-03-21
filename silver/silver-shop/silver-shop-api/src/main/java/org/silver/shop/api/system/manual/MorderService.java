@@ -210,8 +210,13 @@ public interface MorderService {
 	/**
 	 * 管理员删除手工订单信息
 	 * @param json
+	 * @param managerName 
+	 * @param managerId 
+	 * @param note 
+	 * @param managerName 
+	 * @param managerId 
 	 * @return Map
 	 */
-	public Map<String, Object> managerDeleteMorderDatas(JSONArray json);
+	public Map<String, Object> managerDeleteMorderDatas(JSONArray json, String note, String managerId, String managerName );
 	
 }

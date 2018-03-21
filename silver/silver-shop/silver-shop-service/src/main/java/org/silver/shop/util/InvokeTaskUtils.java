@@ -44,18 +44,9 @@ public class InvokeTaskUtils {
 	 *            总数
 	 * @param jsonList
 	 *            参数集合
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
 	 * @param errorList
 	 *            错误集合
 	 * @param customsMap
-	 * @param tok
-	 * @param serialNo
-	 *            批次号
-	 * @param threadPool
-	 *            线程池
 	 * @return Map
 	 */
 	public Map<String, Object> commonInvokeTask(int flag, int totalCount, JSONArray jsonList,

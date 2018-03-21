@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.manual.MorderDao;
@@ -120,4 +122,36 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			}
 		}
 	}
+
+	@Override
+	public double statisticalManualOrderAmount(List<Object> itemList) {
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT SUM(t1.ActualAmountPaid) AS ActualAmountPaid FROM ym_shop_manual_morder t1 WHERE order_id IN ( ");
+			for (int i = 0; i < itemList.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			//删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < itemList.size(); i++) {
+				Map<String, Object> orderMap = (Map<String, Object>) itemList.get(i);
+				query.setString(i, orderMap.get("orderNo") + "");
+			}
+			List resources = query.list();
+			session.close();
+			return (double) resources.get(0);
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 }

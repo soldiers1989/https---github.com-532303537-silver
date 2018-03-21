@@ -27,11 +27,4 @@ import net.sf.json.JSONObject;
 @RequestMapping("/walletLog")
 public class WalletLogController {
 	
-	public static void main(String[] args) {
-		File file = new File("C:/Users/Lenovo/Desktop/国宗表单/国宗原订单/2018-02/78428656574申报资料 -溢装1件.xlsx");
-		ExcelUtil excel = new ExcelUtil();
-		excel.open(file);
-		String value = excel.getCell(0, 1, 54);
-		System.out.println(value);
-	}
 }

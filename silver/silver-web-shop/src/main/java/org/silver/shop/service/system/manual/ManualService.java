@@ -19,6 +19,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
@@ -2083,9 +2084,13 @@ public class ManualService {
 		}
 	}
 
-	public Map<String, Object> managerDeleteMorderDatas(JSONArray json) {
-
-		return morderService.managerDeleteMorderDatas(json);
+	public Map<String, Object> managerDeleteMorder(JSONArray json, String note) {
+		Subject currentUser = SecurityUtils.getSubject();  
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		return morderService.managerDeleteMorderDatas(json,note,managerId,managerName);
 	}
 
 }

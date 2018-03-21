@@ -1,24 +1,17 @@
 package org.silver.shop.impl.system.cross;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.PaymentService;
-import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
@@ -29,21 +22,17 @@ import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
-import org.silver.shop.model.system.tenant.MerchantWalletLog;
-import org.silver.shop.task.GroupPaymentTask;
-import org.silver.shop.task.PaymentRecordTask;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
-import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,7 +41,7 @@ import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = PaymentService.class)
 public class PaymentServiceImpl implements PaymentService {
@@ -74,6 +63,8 @@ public class PaymentServiceImpl implements PaymentService {
 	private InvokeTaskUtils invokeTaskUtils;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -145,6 +136,11 @@ public class PaymentServiceImpl implements PaymentService {
 		recordMap.put("ebEntName", merchantRecordInfo.getEbEntName());
 		recordMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
 		recordMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
+
+		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
 		// 请求获取tok
 		Map<String, Object> reTokMap = accessTokenService.getRedisToks();
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
@@ -165,13 +161,41 @@ public class PaymentServiceImpl implements PaymentService {
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		// startSendPaymentRecord(jsonList, merchantId, merchantName, errorList,
-		// recordMap, tok, totalCount, serialNo);
 		statusMap.clear();
 		statusMap.put("status", 1);
 		statusMap.put("msg", "执行成功,开始推送支付单备案.......");
 		statusMap.put("serialNo", serialNo);
 		return statusMap;
+	}
+
+	/**
+	 * 计算商户余额是否有足够的钱支付本次推送支付单手续费
+	 * @param jsonList 支付流水号集合
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @return Map
+	 */
+	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId,
+			String merchantName) {
+		// 查询商户钱包
+		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return ReturnInfoUtils.errorInfo("创建钱包失败!");
+		}
+		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
+		double merchantBalance = merchantWallet.getBalance();
+		// 所有支付单总金额
+		double totalAmountPaid = paymentDao
+				.statisticalManualPaymentAmount(JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
+		if (totalAmountPaid < 0) {
+			return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
+		}
+		// 支付单平台服务费
+		double serviceFee = totalAmountPaid * 0.002;
+		if (merchantBalance - serviceFee < 0) {
+			return ReturnInfoUtils.errorInfo("推送支付单失败,余额不足,请先充值后再进行操作!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -194,13 +218,11 @@ public class PaymentServiceImpl implements PaymentService {
 	 */
 	public final void startSendPaymentRecord(JSONArray jsonList, List<Map<String, Object>> errorList,
 			Map<String, Object> recordMap, Map<String, Object> paramsMap) {
-		String merchantId =paramsMap.get("merchantId")+"";
-		String merchantName =paramsMap.get("merchantName")+"";
-		String tok = paramsMap.get("tok")+"";
-		paramsMap.put("name","paymentRecord");
+		String merchantId = paramsMap.get("merchantId") + "";
+		String merchantName = paramsMap.get("merchantName") + "";
+		String tok = paramsMap.get("tok") + "";
+		paramsMap.put("name", "paymentRecord");
 		Map<String, Object> param = new HashMap<>();
-		
-		double cumulativeAmount = 0.0;
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> treadeMap = (Map<String, Object>) jsonList.get(i);
 			String treadeNo = treadeMap.get("treadeNo") + "";
@@ -221,16 +243,6 @@ public class PaymentServiceImpl implements PaymentService {
 					 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
 					 * "]已备案成功无需再次发起!"); errorList.add(errMap); continue; }
 					 */
-					double payAmount = payInfo.getPay_amount();
-					// 将每个支付单总额进行累加,计算当前金额下是否有足够的余额支付费用
-					cumulativeAmount = payAmount += cumulativeAmount;
-					Map<String, Object> checkMap = mpayServiceImpl.checkWallet(1, merchantId, merchantName, treadeNo,
-							cumulativeAmount);
-					if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
-						String msg = "支付流水号[" + treadeNo + "]推送失败,钱包余额不足!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
-						continue;
-					}
 					Map<String, Object> paymentInfoMap = new HashMap<>();
 					paymentInfoMap.put("EntPayNo", payInfo.getTrade_no());
 					paymentInfoMap.put("PayStatus", payInfo.getPay_status());
@@ -263,14 +275,14 @@ public class PaymentServiceImpl implements PaymentService {
 					RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 					continue;
 				}
-				bufferUtils.writeRedis(errorList,paramsMap );
+				bufferUtils.writeRedis(errorList, paramsMap);
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
 			}
 		}
-		bufferUtils.writeCompletedRedis(errorList,paramsMap );
+		bufferUtils.writeCompletedRedis(errorList, paramsMap);
 	}
 
 	// 更新支付单返回信息
@@ -565,9 +577,12 @@ public class PaymentServiceImpl implements PaymentService {
 	/**
 	 * 模拟银盛生成支付流水号
 	 * 
-	 * @param sign 日期标识
-	 * @param id 自增Id数
-	 * @param date 日期
+	 * @param sign
+	 *            日期标识
+	 * @param id
+	 *            自增Id数
+	 * @param date
+	 *            日期
 	 * @return String
 	 */
 	private String createTradeNo(String sign, long id, Date date) {

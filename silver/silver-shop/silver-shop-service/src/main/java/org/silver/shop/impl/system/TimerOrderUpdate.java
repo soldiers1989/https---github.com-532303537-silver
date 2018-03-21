@@ -72,7 +72,6 @@ public class TimerOrderUpdate {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 		}
-		System.out.println("Time's up!----------------->>>>>" + reOrderList.size());
 		return null;
 	}
 

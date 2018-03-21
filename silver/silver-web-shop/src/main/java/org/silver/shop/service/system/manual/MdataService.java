@@ -483,13 +483,13 @@ public class MdataService {
 						excel.writCell(0, i + 1, c, Price);
 					} else if (c == 68) {
 						excel.writCell(0, i + 1, c, Total);
-					}else if (c == 69) {
-						excel.writCell(0, i + 1, c, "");
+					} else if (c == 69) {
+						// 商品批次号
+						excel.writCell(0, i + 1, c, "123456");
 					} else if (c == 70) {
-						excel.writCell(0, i + 1, c, "");
-					}
-					
-					else if (c == 76) {
+						// 抵付金额
+						excel.writCell(0, i + 1, c, "0.0");
+					} else if (c == 76) {
 						// 第一法定数
 						excel.writCell(0, i + 1, c, firstLegalCount);
 					} else if (c == 77) {
