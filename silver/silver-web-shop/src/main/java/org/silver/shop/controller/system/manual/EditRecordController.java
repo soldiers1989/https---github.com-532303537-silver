@@ -556,27 +556,6 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 管理员查询手工订单信息
-	 * 
-	 * @param resp
-	 * @param req
-	 * @param page
-	 * @param size
-	 * @return
-	 */
-	@RequestMapping(value = "/managerLoadMorderDatas", produces = "application/json; charset=utf-8")
-	@RequiresRoles("Manager")
-	public String managerLoadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
-		String originHeader = req.getHeader("Origin");
-		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		resp.setHeader("Access-Control-Allow-Credentials", "true");
-		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = manualService.managerLoadMorderDatas(page, size, req);
-		return JSONObject.fromObject(reqMap).toString();
-	}
-
-	/**
 	 * 预处理接口,用于提供给客户自己去导入校验手工订单信息是否准确。 批量导入手工订单 暂只支持有国宗 、企邦(将作为对外统一模板)
 	 * 
 	 * @param resp
@@ -620,22 +599,24 @@ public class EditRecordController {
 	 * @param req
 	 * @return
 	 */
-	@RequestMapping(value = "/managerDeleteMorder", produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/managerDeleteMorder", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@RequiresRoles("Manager")
-	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,String orderIdPack,String note) {
+	@ApiOperation("管理员删除手工订单信息")
+	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("orderIdPack") String orderIdPack,@RequestParam("note") String note) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		JSONArray json = null;
-		try{
+		try {
 			json = JSONArray.fromObject(orderIdPack);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
 		}
-		Map<String, Object> reqMap = manualService.managerDeleteMorder( json,note);
+		Map<String, Object> reqMap = manualService.managerDeleteMorder(json, note);
 		return JSONObject.fromObject(reqMap).toString();
 	}
 

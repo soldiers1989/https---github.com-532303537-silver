@@ -3,8 +3,6 @@ package org.silver.shop.impl.system.manual;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -12,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Resource;
 
@@ -23,7 +20,6 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MorderSubDao;
 import org.silver.shop.dao.system.manual.MuserDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
-import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -43,6 +39,7 @@ import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CalculateCpuUtils;
+import org.silver.util.CopyUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
@@ -1000,7 +997,6 @@ public class MorderServiceImpl implements MorderService {
 		order.setOrderDocTel(strArr[19]);
 		order.setWaybill(strArr[22]);
 		order.setSenderName(strArr[23]);
-
 		// order.setStatus(orderMap.get(""));
 		order.setSenderCountry(strArr[24]);
 		order.setSenderAreaCode(strArr[25]);
@@ -1010,11 +1006,21 @@ public class MorderServiceImpl implements MorderService {
 		order.setOldOrderId(strArr[29]);
 		order.setUpdate_date(new Date());
 		order.setUpdate_by(merchantName);
+		
 		try {
 			order.setSerial(Integer.parseInt(strArr[31]));
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
 		}
+		//备用字段
+		String spareParams = strArr[32];
+		if(StringEmptyUtils.isNotEmpty(spareParams)){
+			JSONObject json = JSONObject.fromObject(spareParams);
+			order.setSpareParams(json.toString());
+			String ehsEntName = json.get("ehsEntName")+"";
+			
+		}
+		
 		if (!morderDao.update(order)) {
 			return ReturnInfoUtils.errorInfo("更新订单备案信息错误!");
 		}
@@ -1451,27 +1457,6 @@ public class MorderServiceImpl implements MorderService {
 		return morderDao.add(goodsRecord);
 	}
 
-	@Override
-	public Map<String, Object> managerLoadMorderDatas(Map<String, Object> params, int page, int size) {
-		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(params);
-		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
-		Long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		List<Map<String, Object>> lMap = new ArrayList<>();
-		if (mlist != null && !mlist.isEmpty()) {
-			paramMap.clear();
-			for (Morder m : mlist) {
-				paramMap.put("order_id", m.getOrder_id());
-				List<MorderSub> mslist = morderSubDao.findByProperty(paramMap, 0, 0);
-				Map<String, Object> item = new HashMap<>();
-				item.put("head", m);
-				item.put("content", mslist);
-				lMap.add(item);
-			}
-			return ReturnInfoUtils.successDataInfo(lMap, count.intValue());
-		}
-		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
-	}
 
 	@Override
 	public Map<String, Object> checkGZOrder(String waybill, int serial, String dateSign, String OrderDate, Double FCY,
@@ -1701,31 +1686,51 @@ public class MorderServiceImpl implements MorderService {
 				String orderId = String.valueOf(json.get(i));
 				Map<String, Object> params = new HashMap<>();
 				params.put("order_id", orderId);
-				List<Object> reMOrderList = morderDao.findByProperty(Morder.class, params, 1, 1);
-				List<Object> reMOrderSubList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
+				List<Morder> reMOrderList = morderDao.findByProperty(Morder.class, params, 1, 1);
+				List<MorderSub> reMOrderSubList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
 				if (reMOrderList != null && !reMOrderList.isEmpty() && reMOrderSubList != null) {
-					Map<String, Object> reMOrderMap = transferMOrder(reMOrderList);
+					OldManualOrder oldManualOrder = new OldManualOrder();
+					Morder mOrder = reMOrderList.get(0);
+					try {
+						CopyUtils.copy(mOrder, oldManualOrder);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					// 注明删除原因
+					oldManualOrder.setRemarks(note);
+					Map<String, Object> reMOrderMap = transferMOrder(oldManualOrder);
 					if (!"1".equals(reMOrderMap.get(BaseCode.STATUS.toString()))) {
 						return reMOrderMap;
 					}
-					Map<String, Object> reMOrderSubMap = transferMOrderSub(reMOrderList, reMOrderSubList);
+					Map<String, Object> reMOrderSubMap = transferMOrderSub(oldManualOrder, reMOrderSubList);
 					if (!"1".equals(reMOrderSubMap.get(BaseCode.STATUS.toString()))) {
 						return reMOrderMap;
 					}
-					Map<String, Object> reMOrder = deleteMOrder(reMOrderList);
-					if (!"1".equals(reMOrder.get(BaseCode.STATUS.toString()))) {
-						return reMOrder;
+					Map<String, Object> redelMOrder = deleteMOrder(mOrder);
+					if (!"1".equals(redelMOrder.get(BaseCode.STATUS.toString()))) {
+						return redelMOrder;
 					}
-					return deleteMOrderSub(reMOrderList);
+					Map<String, Object> redelMOrderSub = deleteMOrderSub(reMOrderSubList);
+					if (!"1".equals(redelMOrderSub.get(BaseCode.STATUS.toString()))) {
+						return redelMOrderSub;
+					}
 				}
+				return ReturnInfoUtils.errorInfo("查询订单信息或订单商品信息失败,服务器繁忙!");
 			}
+			return ReturnInfoUtils.successInfo();
 		}
-		return null;
+		return ReturnInfoUtils.errorInfo("请求参数错误！");
 	}
 
-	private Map<String, Object> deleteMOrderSub(List<Object> reMOrderList) {
-		for (int i = 0; i < reMOrderList.size(); i++) {
-			MorderSub mOrderSub = (MorderSub) reMOrderList.get(i);
+	/**
+	 * 真实删除手工订单关联商品信息
+	 * 
+	 * @param reMOrderSubList
+	 * @return Map
+	 */
+	private Map<String, Object> deleteMOrderSub(List<MorderSub> reMOrderSubList) {
+		for (int i = 0; i < reMOrderSubList.size(); i++) {
+			MorderSub mOrderSub = reMOrderSubList.get(i);
 			if (!morderDao.delete(mOrderSub)) {
 				return ReturnInfoUtils.errorInfo("删除订单商品信息失败,服务器繁忙!");
 			}
@@ -1733,9 +1738,15 @@ public class MorderServiceImpl implements MorderService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	private Map<String, Object> deleteMOrder(List<Object> reMOrderList) {
-		OldManualOrder oldManualOrder = (OldManualOrder) reMOrderList.get(0);
-		if (!morderDao.delete(oldManualOrder)) {
+	/**
+	 * 真实删除手工订单信息
+	 * 
+	 * @param mOrder
+	 *            手工订单信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> deleteMOrder(Morder mOrder) {
+		if (!morderDao.delete(mOrder)) {
 			return ReturnInfoUtils.errorInfo("删除订单信息失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -1744,12 +1755,12 @@ public class MorderServiceImpl implements MorderService {
 	/**
 	 * 转移手工订单信息
 	 * 
-	 * @param reMOrderList
+	 * @param oldManualOrder
 	 *            手工订单实体集合
 	 * @return Map
+	 * @throws Exception
 	 */
-	private Map<String, Object> transferMOrder(List<Object> reMOrderList) {
-		OldManualOrder oldManualOrder = (OldManualOrder) reMOrderList.get(0);
+	private Map<String, Object> transferMOrder(OldManualOrder oldManualOrder) {
 		if (!morderDao.add(oldManualOrder)) {
 			if (morderDao.delete(oldManualOrder)) {
 				return ReturnInfoUtils.errorInfo("回滚订单信息失败,服务器繁忙!");
@@ -1762,18 +1773,25 @@ public class MorderServiceImpl implements MorderService {
 	/**
 	 * 转移手工订单关联商品信息
 	 * 
-	 * @param reMOrderSubList
 	 * @param reMOrderList
 	 * @param reMOrderSubList
 	 *            手工订单商品实体集合
 	 * @return Map
 	 */
-	private Map<String, Object> transferMOrderSub(List<Object> mOrderList, List<Object> mOrderSubList) {
+	private Map<String, Object> transferMOrderSub(OldManualOrder oldManualOrder, List<MorderSub> mOrderSubList) {
+		List<OldManualOrderSub> cacheList = new ArrayList<>();
 		for (int i = 0; i < mOrderSubList.size(); i++) {
-			OldManualOrderSub oldManualOrderSub = (OldManualOrderSub) mOrderSubList.get(0);
-			if (!morderDao.add(oldManualOrderSub)) {
-				return rollBackOldManualOrderSub(mOrderList, mOrderSubList);
+			MorderSub manualOrderSub = mOrderSubList.get(0);
+			OldManualOrderSub oldManualOrderSub = new OldManualOrderSub();
+			try {
+				CopyUtils.copy(manualOrderSub, oldManualOrderSub);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+			if (!morderDao.add(oldManualOrderSub)) {
+				return rollBackOldManualOrderSub(oldManualOrder, cacheList);
+			}
+			cacheList.add(oldManualOrderSub);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -1781,23 +1799,24 @@ public class MorderServiceImpl implements MorderService {
 	/**
 	 * 当手工订单关联商品信息向历史记录表中添加数据时,发生错误,则先进行商品信息回滚(删除),后进行订单回滚(删除)
 	 * 
-	 * @param mOrderList
-	 *            手工订单实体(集合)
-	 * @param mOrderSubList
+	 * @param oldManualOrder
+	 *            (旧数据)手工订单实体实体
+	 * @param cacheList
 	 *            手工订单关联商品信息(集合)
 	 * @return Map
 	 */
-	private Map<String, Object> rollBackOldManualOrderSub(List<Object> mOrderList, List<Object> mOrderSubList) {
-		for (int i = 0; i < mOrderSubList.size(); i++) {
-			OldManualOrderSub oldManualOrderSub = (OldManualOrderSub) mOrderSubList.get(0);
+	private Map<String, Object> rollBackOldManualOrderSub(OldManualOrder oldManualOrder,
+			List<OldManualOrderSub> cacheList) {
+		for (int i = 0; i < cacheList.size(); i++) {
+			OldManualOrderSub oldManualOrderSub = cacheList.get(0);
 			if (!morderDao.delete(oldManualOrderSub)) {
 				return ReturnInfoUtils.errorInfo("回滚订单商品信息失败,服务器繁忙!");
 			}
 		}
-		OldManualOrder oldManualOrder = (OldManualOrder) mOrderList.get(0);
 		if (!morderDao.delete(oldManualOrder)) {
 			return ReturnInfoUtils.errorInfo("回滚订单信息失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.errorInfo("手工订单与商品信息回滚成功!!");
 	}
+
 }

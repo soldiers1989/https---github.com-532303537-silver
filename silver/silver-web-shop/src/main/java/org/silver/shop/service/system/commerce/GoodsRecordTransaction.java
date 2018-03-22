@@ -34,6 +34,7 @@ import org.silver.util.CheckDatasUtil;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
@@ -235,7 +236,7 @@ public class GoodsRecordTransaction {
 		int startCount = Integer.parseInt(params.get("startCount") + "");
 		int endCount = Integer.parseInt(params.get("endCount") + "");
 		String merchantName = params.get("merchantName") + "";
-		//未备案商品导入key
+		// 未备案商品导入key
 		params.put("name", "notRGImport");
 		for (int r = startCount; r <= endCount; r++) {
 			if (excel.getColumnCount(r) == 0) {
@@ -558,18 +559,20 @@ public class GoodsRecordTransaction {
 	}
 
 	// 商户修改备案商品信息(局限于未备案与备案失败的商品)
-	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req, int length) {
+	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req  ) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String[] str = new String[length];
-		for (int i = 0; i < length; i++) {
-			String value = req.getParameter(Integer.toString(i));
-			str[i] = value.trim();
+		Map<String,Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
 		}
-		return goodsRecordService.merchantEditGoodsRecordInfo(merchantId, merchantName, str);
+		return goodsRecordService.merchantEditGoodsRecordInfo(merchantId, merchantName, params);
 	}
 
 	// 管理员查询商品备案信息
@@ -601,7 +604,7 @@ public class GoodsRecordTransaction {
 			ExcelUtil excel = new ExcelUtil();
 			excel.open(file);
 			String serialNo = "RecordGoods_" + SerialNoUtils.getSerialNo("RecordGoods");
-			return readRecordGoodsInfo(0, excel, errl, merchantId, merchantName, file, serialNo);
+			return readRecordGoodsInfo(0, excel, errl, merchantId, merchantName);
 			/*
 			 * excel.closeExcel(); if (!file.delete()) {
 			 * System.out.println("--------excel文件没有删除-----"); } reqMap.clear();
@@ -617,7 +620,7 @@ public class GoodsRecordTransaction {
 	}
 
 	private Map<String, Object> readRecordGoodsInfo(int sheet, ExcelUtil excel, List<Map<String, Object>> errl,
-			String merchantId, String merchantName, File file, String serialNo) {
+			String merchantId, String merchantName) {
 		Map<String, Object> item = readRecordGoodsHeadSheed(sheet, excel, errl, merchantId, merchantName);
 		if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 			return item;
@@ -1140,10 +1143,11 @@ public class GoodsRecordTransaction {
 			item = goodsRecordService.batchCreateRecordGoodsHead(merchantId, merchantName, customsPort, customsPortName,
 					customsCode, customsName, ciqOrgCode, ciqOrgName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
-				Map<String, Object> errMap = new HashMap<>();
-				errMap.put(BaseCode.MSG.toString(),
-						"【已备案商品信息头】第" + (r + 1) + "行,----> " + item.get(BaseCode.MSG.toString()));
-				errl.add(errMap);
+				headMap.clear();
+				headMap.put(BaseCode.STATUS.toString(), StatusCode.LOSS_SESSION.getStatus());
+				headMap.put(BaseCode.ERROR.toString(),
+						"【已备案商品信息头】第" + (r + 1) + "行,--> " + item.get(BaseCode.MSG.toString()));
+				return headMap;
 			}
 		}
 		headMap.clear();

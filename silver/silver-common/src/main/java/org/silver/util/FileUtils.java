@@ -11,6 +11,13 @@ import java.nio.channels.FileChannel;
  * 文件操作工具类
  */
 public class FileUtils {
+	
+	/**
+	 * 复制文件
+	 * @param source 源文件
+	 * @param dest 复制后文件
+	 * @throws IOException
+	 */
 	public static void copyFileUsingFileChannels(File source, File dest) throws IOException {
 		FileChannel inputChannel = null;
 		FileChannel outputChannel = null;
@@ -35,7 +42,6 @@ public class FileUtils {
 	 */
 	public static void deleteFile(File oldPath) {
 		if (oldPath.isDirectory()) {
-			System.out.println(oldPath + "是文件夹--");
 			File[] files = oldPath.listFiles();
 			for (File file : files) {
 				deleteFile(file);

@@ -49,12 +49,4 @@ public class WarehousController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	public static void main(String[] args) {
-		int i = 2;
-		double x = 0.102;
-		double d = i * x;
-		BigDecimal bg = BigDecimal.valueOf(d);
-		double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
-		System.out.println(f1);
-	}
 }

@@ -213,11 +213,7 @@ public final class SearchUtils {
 					paramMap.put(key, value.trim());
 				}
 				break;
-			case DEL_FLAG:
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, Integer.parseInt(value));
-				}
-				break;
+		
 			case "warehouseCode":
 				int one = value.indexOf('_');
 				int two = value.indexOf('_', one + 1);
@@ -284,6 +280,11 @@ public final class SearchUtils {
 				break;
 			case MERCHANT_NO:
 				paramMap.put(key, value.trim());
+				break;
+			case DEL_FLAG:
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					paramMap.put(key, Integer.parseInt(value));
+				}
 				break;
 			default:
 				break;

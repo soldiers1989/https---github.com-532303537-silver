@@ -129,12 +129,12 @@ public interface GoodsRecordService {
 
 	/**
 	 * 商户修改备案商品信息(局限于未备案的商品)
-	 * @param managerId 管理员Id
-	 * @param managerName 管理员名称
-	 * @param str[] 参数
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param datasMap 参数
 	 * @return
 	 */
-	public Map<String, Object> merchantEditGoodsRecordInfo(String managerId, String managerName, String[] str);
+	public Map<String, Object> merchantEditGoodsRecordInfo(String merchantId, String merchantName, Map<String, Object> datasMap);
 
 	/**
 	 * 管理员查询商品备案信息

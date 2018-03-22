@@ -157,7 +157,7 @@ public class SerialNoUtils {
 			strCount = "0" + strCount;
 		}
 		String time = DateUtil.formatDate(date, "yyyyMMdd");
-		//自增数已经超过99999的时候,随机数减1
+		//自增数已经超过99999的时候,随机数减1位
 		if (strCount.length() > 5) {
 			randomNumber = 3;
 		}
@@ -170,6 +170,7 @@ public class SerialNoUtils {
 		String str = "YT201802228377126678";
 		Map<String, Object> map = new HashMap<>();
 		map.put("str", str);
+		System.out.println("YM20180320022081798".length());
 		System.out.println(map);
 		System.out.println(map.toString());
 	}

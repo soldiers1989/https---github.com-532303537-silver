@@ -98,7 +98,7 @@ public class ManualService {
 
 	public Map<String, Object> loadDatas(int page, int size, HttpServletRequest req) {
 		Map<String, Object> params = new HashMap<>();
-		Subject currentUser = SecurityUtils.getSubject();  
+		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
@@ -490,10 +490,10 @@ public class ManualService {
 				try {
 					value = excel.getCell(0, r, c);
 				} catch (Exception e) {
-					e.printStackTrace();
+					//由于异常过多,暂不打印错误信息
+					// e.printStackTrace();
 					continue;
 				}
-
 				// 判断序号是否有值
 				if (c == 0 && StringEmptyUtils.isNotEmpty(value)) {
 					try {
@@ -552,12 +552,12 @@ public class ManualService {
 		int sheet = Integer.parseInt(params.get("sheet") + "");
 		String merchantId = params.get(MERCHANT_ID) + "";
 		String serialNo = params.get("serialNo") + "";
-		
+
 		int startCount = Integer.parseInt(params.get(START_COUNT) + "");
 		int endCount = Integer.parseInt(params.get("endCount") + "");
 		int totalCount = Integer.parseInt(params.get(TOTAL_COUNT) + "");
-		//由于启邦属于银盟自定义模板,故而多了一行说明，总数需要减1
-		params.put(TOTAL_COUNT, (totalCount -1));
+		// 由于启邦属于银盟自定义模板,故而多了一行说明，总数需要减1
+		params.put(TOTAL_COUNT, (totalCount - 1));
 		String merchantName = params.get(MERCHANT_NAME) + "";
 		//
 		params.put("name", "orderImport");
@@ -1353,19 +1353,6 @@ public class ManualService {
 		return morderService.updateManualOrderGoodsInfo(startTime, endTime, merchantId, merchantName, customsMap);
 	}
 
-	public Map<String, Object> managerLoadMorderDatas(int page, int size, HttpServletRequest req) {
-		Map<String, Object> params = new HashMap<>();
-		Enumeration<String> isKey = req.getParameterNames();
-		while (isKey.hasMoreElements()) {
-			String key = isKey.nextElement();
-			String value = req.getParameter(key);
-			params.put(key, value);
-		}
-		params.remove("page");
-		params.remove("size");
-		return morderService.managerLoadMorderDatas(params, page, size);
-	}
-
 	public Map<String, Object> pretreatmentGroupAddOrder(HttpServletRequest req) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reqMap = fileUpLoadService.universalDoUpload(req, "/gadd-excel/", ".xls", false, 400, 400,
@@ -1637,7 +1624,7 @@ public class ManualService {
 		params.put("name", "checkGZOrderImport");
 		try {
 			for (int r = startCount; r <= endCount; r++) {
-				
+
 				if (excel.getColumnCount(0, r) == 0) {
 					break;
 				}
@@ -1925,7 +1912,7 @@ public class ManualService {
 		String orderDocId = "";// 下单人身份证号码
 		String ehsEntName = "";// 承运商
 		String waybillNo = "";// 运单编号
-		
+
 		int totalColumnCount = excel.getColumnCount(0);
 		int sheet = Integer.parseInt(params.get("sheet") + "");
 		String merchantId = params.get(MERCHANT_ID) + "";
@@ -1933,7 +1920,7 @@ public class ManualService {
 		int startCount = Integer.parseInt(params.get("startCount") + "");
 		int endCount = Integer.parseInt(params.get("endCount") + "");
 		String merchantName = params.get(MERCHANT_NAME) + "";
-		//key
+		// key
 		params.put("name", "checkQBOrderImport");
 		try {
 			for (int r = startCount; r <= endCount; r++) {
@@ -2085,12 +2072,12 @@ public class ManualService {
 	}
 
 	public Map<String, Object> managerDeleteMorder(JSONArray json, String note) {
-		Subject currentUser = SecurityUtils.getSubject();  
+		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return morderService.managerDeleteMorderDatas(json,note,managerId,managerName);
+		return morderService.managerDeleteMorderDatas(json, note, managerId, managerName);
 	}
 
 }

@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -41,5 +43,5 @@ public class CCIQController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(cciqTransaction.getCCIQInfo()).toString();
 	}
-	
+
 }

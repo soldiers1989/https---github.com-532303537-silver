@@ -281,7 +281,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.merchantEditGoodsRecordInfo(req, length);
+		Map<String, Object> statusMap = goodsRecordTransaction.merchantEditGoodsRecordInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
