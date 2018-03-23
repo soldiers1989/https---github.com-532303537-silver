@@ -11,6 +11,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.silver.common.LoginType;
 import org.silver.shiro.CustomizedToken;
+import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.service.system.organization.AgentTransaction;
 import org.silver.shop.service.system.organization.ManagerTransaction;
@@ -23,9 +24,9 @@ public class AgentRealm extends AuthorizingRealm{
 	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		Manager manager = (Manager) WebUtil.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		AgentBaseContent agentBaseContent = (AgentBaseContent) WebUtil.getSession().getAttribute(LoginType.AGENTINFO.toString());
 		SimpleAuthorizationInfo info = null;
-		if (manager != null) {
+		if (agentBaseContent != null) {
 			info = new SimpleAuthorizationInfo();
 			info.addRole(LoginType.AGENT.toString());
 		}

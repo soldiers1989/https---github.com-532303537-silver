@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
@@ -98,7 +99,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public Table getOrderDailyReport(Class class1, Map paramsMap, int page, int size) {
+	public Table getOrderDailyReport(Map paramsMap, int page, int size) {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();
@@ -342,6 +343,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	/**
 	 * 并集查询手工订单与商城订单信息统计总数,后半段拼接手工订单语句
+	 * 
 	 * @param sbSQL
 	 * @param viceParams
 	 * @param list
@@ -370,9 +372,13 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	/**
 	 * 并集查询手工订单与商城订单信息统计总数,前半段查询商城语句
-	 * @param sbSQL sql语句
-	 * @param params 参数
-	 * @param list 参数集合
+	 * 
+	 * @param sbSQL
+	 *            sql语句
+	 * @param params
+	 *            参数
+	 * @param list
+	 *            参数集合
 	 */
 	private void unionShopOrderCount(StringBuilder sbSQL, Map<String, Object> params, List<Object> list) {
 		sbSQL.append(" SELECT entOrderNo  from ym_shop_order_record_content  ");
@@ -394,5 +400,49 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			sbSQL.append(" 1 = 1");
 		}
 
+	}
+
+	@Override
+	public Table getAgentOrderReport( Map<String, Object> datasMap) {
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			String startDate = datasMap.get("startDate") + "";
+			String endDate = datasMap.get("endDate") + "";
+
+			String sql = "SELECT DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.order_id) as orderCount,SUM(t1.ActualAmountPaid) AS amount,(SUM(t1.ActualAmountPaid) * 0.001) AS Fee,t2.merchantId,t2.merchantName,t2.agentParentId,t2.agentParentName FROM ym_shop_manual_morder t1 "
+					+ "LEFT JOIN ym_shop_merchant t2 ON t1.merchant_no = t2.merchantId WHERE (t1.order_record_status = 3 or t1.order_record_status = 2 AND t1.del_flag = 0 )";
+			String merchantId = datasMap.get("merchantId") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				sql += " AND t2.merchantId = ? ";
+				sqlParams.add(merchantId);
+			}
+			String agentParentId = datasMap.get("agentParentId") + "";
+			if (StringEmptyUtils.isNotEmpty(agentParentId)) {
+				sql += " AND t2.agentParentId = ? ";
+				sqlParams.add(merchantId);
+			}
+			if (StringEmptyUtils.isNotEmpty(startDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(startDate);
+			}
+			if (StringEmptyUtils.isNotEmpty(endDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(endDate);
+			}
+			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'),t2.merchantName ";
+			session = getSession();
+			Table t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
 	}
 }

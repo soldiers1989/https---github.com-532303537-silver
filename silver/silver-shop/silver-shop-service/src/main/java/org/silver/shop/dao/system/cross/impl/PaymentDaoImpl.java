@@ -97,5 +97,49 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			}
 		}
 	}
+
+	@Override
+	public Table getAgentPaymentReport(Map<String, Object> datasMap) {
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			String startDate = datasMap.get("startDate") + "";
+			String endDate = datasMap.get("endDate") + "";
+
+			String sql = "SELECT DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) as paymentCount,SUM(t1.pay_amount) AS amount,(SUM(t1.pay_amount) * 0.002	) AS Fee,t2.merchantId,t2.merchantName,t2.agentParentId,t2.agentParentName FROM	ym_shop_manual_mpay t1 "
+					+ " LEFT JOIN ym_shop_merchant t2 ON t1.merchant_no = t2.merchantId WHERE 	(t1.pay_record_status = 3 or t1.pay_record_status = 2 AND t1.del_flag = 0 )";
+			String merchantId = datasMap.get("merchantId") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				sql += " AND t2.merchantId = ? ";
+				sqlParams.add(merchantId);
+			}
+			String agentParentId = datasMap.get("agentParentId") + "";
+			if (StringEmptyUtils.isNotEmpty(agentParentId)) {
+				sql += " AND t2.agentParentId = ? ";
+				sqlParams.add(merchantId);
+			}
+			if (StringEmptyUtils.isNotEmpty(startDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(startDate);
+			}
+			if (StringEmptyUtils.isNotEmpty(endDate)) {
+				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ";
+				sqlParams.add(endDate);
+			}
+			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'),t2.merchantName ";
+			session = getSession();
+			Table t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
 	
 }

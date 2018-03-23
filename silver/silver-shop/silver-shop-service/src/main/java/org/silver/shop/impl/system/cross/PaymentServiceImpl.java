@@ -678,4 +678,19 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
+	@Override
+	public Map<String, Object> getAgentPaymentReport(Map<String, Object> datasMap) {
+		if (datasMap != null && !datasMap.isEmpty()) {
+			Table reTable = paymentDao.getAgentPaymentReport(datasMap);
+			if (reTable == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			}else if(!reTable.getRows().isEmpty()){
+				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"), 0);
+			}else{
+				return ReturnInfoUtils.errorInfo("暂无数据");
+			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误！");
+	}
+
 }

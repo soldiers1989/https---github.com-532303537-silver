@@ -135,4 +135,11 @@ public interface PaymentService {
 	 */
 	public Map<String, Object> managerEditMpayInfo(Map<String, Object> datasMap, String managerId, String managerName);
 
+	/**
+	 * 代理商获取所有支付单报表信息
+	 * @param datasMap
+	 * @return Map
+	 */
+	public Map<String,Object> getAgentPaymentReport(Map<String, Object> datasMap);
+
 }

@@ -490,7 +490,7 @@ public class ManualService {
 				try {
 					value = excel.getCell(0, r, c);
 				} catch (Exception e) {
-					//由于异常过多,暂不打印错误信息
+					// 由于异常过多,暂不打印错误信息
 					// e.printStackTrace();
 					continue;
 				}
@@ -1245,16 +1245,17 @@ public class ManualService {
 			String cityName = a[1].split("_")[1].trim();
 			String areaCode = a[2].split("_")[0].trim();
 			String areaName = a[2].split("_")[1].trim();
-			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)) {
-				statusMap.put("areaCode", areaCode);
-				statusMap.put("areaName", areaName);
-				statusMap.put("cityCode", cityCode);
-				statusMap.put("cityName", cityName);
-				statusMap.put("provinceCode", provinceCode);
-				statusMap.put("provinceName", provinceName);
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				return statusMap;
+			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)
+				&& recipientAddr.contains(cityName)	&& !recipientAddr.contains("市辖区") ) {
+					statusMap.put("areaCode", areaCode);
+					statusMap.put("areaName", areaName);
+					statusMap.put("cityCode", cityCode);
+					statusMap.put("cityName", cityName);
+					statusMap.put("provinceCode", provinceCode);
+					statusMap.put("provinceName", provinceName);
+					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+					return statusMap;
 			} else if (recipientAddr.contains(areaName) && recipientAddr.contains(cityName)) {
 				statusMap.put("areaCode", areaCode);
 				statusMap.put("areaName", areaName);

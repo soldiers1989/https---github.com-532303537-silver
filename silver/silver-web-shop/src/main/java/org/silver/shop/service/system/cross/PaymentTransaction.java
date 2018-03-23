@@ -11,6 +11,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
+import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
@@ -106,5 +107,18 @@ public class PaymentTransaction {
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return paymentService.managerEditMpayInfo(params,managerId,managerName);
+	}
+
+	//
+	public Object getAgentPaymentReport(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession()
+				.getAttribute(LoginType.AGENTINFO.toString());
+		String agentId = agentBaseContent.getAgentId();
+		String agentName = agentBaseContent.getAgentName();
+		// datasMap.put("agentId", agentId);
+		// datasMap.put("agentName", agentName);
+		return paymentService.getAgentPaymentReport(datasMap);
 	}
 }

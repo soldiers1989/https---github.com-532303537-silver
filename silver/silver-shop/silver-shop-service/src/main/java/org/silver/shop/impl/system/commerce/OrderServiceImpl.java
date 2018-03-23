@@ -647,13 +647,13 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("查询商品税率失败,服务器繁忙!");
 		} else if (!reGoodsThirdList.isEmpty()) {
 			GoodsThirdType thirdInfo = (GoodsThirdType) reGoodsThirdList.get(0);
-			//综合税率 
+			// 综合税率
 			double consolidatedTax = thirdInfo.getConsolidatedTax();
-			
-			double goodsTotalPrice =  regPrice * count ;
-			
-			//税费 = 购买单价 × 件数 × 跨境电商综合税率
-			double tax = goodsTotalPrice* (consolidatedTax / 1000d);
+
+			double goodsTotalPrice = regPrice * count;
+
+			// 税费 = 购买单价 × 件数 × 跨境电商综合税率
+			double tax = goodsTotalPrice * (consolidatedTax / 1000d);
 			total = goodsTotalPrice + tax;
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), total);
@@ -782,8 +782,8 @@ public class OrderServiceImpl implements OrderService {
 			paramsMap.put("merchantName", merchantName);
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
-			Table reList = orderDao.getOrderDailyReport(Morder.class, paramsMap, page, size);
-			Table totalCount = orderDao.getOrderDailyReport(Morder.class, paramsMap, 0, 0);
+			Table reList = orderDao.getOrderDailyReport(paramsMap, page, size);
+			Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("服务器繁忙!");
 			} else if (!reList.getRows().isEmpty()) {
@@ -966,7 +966,7 @@ public class OrderServiceImpl implements OrderService {
 			params.put("entOrderNo", entOrderNo);
 			List<OrderContent> orderList = orderDao.findByProperty(OrderContent.class, params, 0, 0);
 			if (orderList != null && !orderList.isEmpty()) {
-				for(OrderContent order : orderList){
+				for (OrderContent order : orderList) {
 					// 订单状态：1-待付款
 					if (order.getStatus() == 1) {
 						order.setDeleteFlag(1);
@@ -984,5 +984,20 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("订单信息不存在!");
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	@Override
+	public Map<String, Object> getAgentOrderReport(Map<String, Object> datasMap) {
+		if (datasMap != null && !datasMap.isEmpty()) {
+			Table reTable = orderDao.getAgentOrderReport(datasMap);
+			if (reTable == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			}else if(!reTable.getRows().isEmpty()){
+				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"), 0);
+			}else{
+				return ReturnInfoUtils.errorInfo("暂无数据");
+			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误！");
 	}
 }

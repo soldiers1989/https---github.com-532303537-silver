@@ -15,6 +15,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.cross.PaymentTransaction;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -265,5 +266,31 @@ public class PaymentController {
 			params.put(key, value);
 		}
 		return JSONObject.fromObject(paytemTransaction.managerEditMpayInfo(params)).toString();
+	}
+	
+	@RequestMapping(value = "/getAgentPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Agent")
+	@ApiOperation("代理商查询旗下所有商户支付单报表信息")
+	public String getAgentPaymentReport(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		datasMap.put("startDate", startDate);
+		datasMap.put("endDate", endDate);
+		if (!datasMap.isEmpty()) {
+			return JSONObject.fromObject(paytemTransaction.getAgentPaymentReport(datasMap)).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 	}
 }

@@ -173,4 +173,11 @@ public interface OrderService {
 	 * @return	Map
 	 */
 	public Map<String,Object> memberDeleteOrderInfo(String entOrderNo, String memberName);
+
+	/**
+	 * 代理商查询订单报表信息
+	 * @param datasMap 参数
+	 * @return Map 
+	 */
+	public Map<String,Object> getAgentOrderReport(Map<String, Object> datasMap);
 }

@@ -27,5 +27,12 @@ public interface PaymentDao  extends BaseDao{
 	 * @return double 总金额
 	 */
 	public double statisticalManualPaymentAmount(List<Object> list);
+
+	/**
+	 * 代理商查询旗下所有商户支付单报表信息
+	 * @param datasMap
+	 * @return
+	 */
+	public Table getAgentPaymentReport(Map<String, Object> datasMap);
 	
 }

@@ -36,7 +36,7 @@ public interface OrderDao extends BaseDao{
 	 * @param size
 	 * @return 
 	 */
-	public Table getOrderDailyReport(Class class1, Map<String, Object> paramsMap, int page, int size);
+	public Table getOrderDailyReport(  Map<String, Object> paramsMap, int page, int size);
 
 
 	/**
@@ -51,6 +51,21 @@ public interface OrderDao extends BaseDao{
 	 */
 	public List<OrderRecordContent> merchantuUnionOrderInfo(Class entity, Map<String, Object> paramsMap,Map<String,Object> viceParams,int page,int size);
 
-	public long merchantuUnionOrderCount(Class<OrderRecordContent> class1, Map<String, Object> paramMap,
+	/**
+	 * 商城商家后台并集查询所有手工订单及商城订单统计总数
+	 * @param entity 实体类
+	 * @param paramMap
+	 * @param viceParams
+	 * @return
+	 */
+	public long merchantuUnionOrderCount(Class<OrderRecordContent> entity, Map<String, Object> paramMap,
 			Map<String, Object> viceParams);
+
+	/**
+	 * 代理商获取订单报表信息
+	 * @param datasMap
+	 * @return
+	 */
+	public Table getAgentOrderReport(Map<String, Object> datasMap);
+
 }
