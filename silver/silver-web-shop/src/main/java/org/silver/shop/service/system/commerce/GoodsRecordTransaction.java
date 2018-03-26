@@ -487,8 +487,8 @@ public class GoodsRecordTransaction {
 	 * 根据编码查询计量单位
 	 * 
 	 * @param reList
-	 * @param value
-	 * @return
+	 * @param value 计量单位编码
+	 * @return String
 	 */
 	private String getNumericByUnit(List reList, String value) {
 		for (int i = 0; i < reList.size(); i++) {
@@ -504,14 +504,14 @@ public class GoodsRecordTransaction {
 	/**
 	 * 根据中文名称查询计量单位
 	 * 
-	 * @param list
-	 * @param value
-	 * @return
+	 * @param list 
+	 * @param name 计量单位中文名称
+	 * @return String
 	 */
-	private String getChineseByUnit(List list, String value) {
+	private String getChineseByUnit(List list, String name) {
 		for (int i = 0; i < list.size(); i++) {
 			Metering metering = (Metering) list.get(i);
-			if (value.equals(metering.getMeteringName())) {
+			if (name.equals(metering.getMeteringName())) {
 				return metering.getMeteringCode();
 			}
 		}

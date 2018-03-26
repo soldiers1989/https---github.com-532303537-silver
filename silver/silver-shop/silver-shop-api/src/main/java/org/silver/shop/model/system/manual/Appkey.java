@@ -17,13 +17,13 @@ public class Appkey implements Serializable{
 	private String user_name;//申请人姓名
 	private String user_mobile;//联系电话
 	private String user_id;//身份证
-	private String merchant_cus_no;//商户编号
-	
 	private int del_flag;//0正常   1删除
 	private Date create_date; //创建时间
 	private String create_by; //创建人
 	private Date update_date; //更新时间
 	private String update_by;//更新人
+	private String merchant_Id;//商户Id
+	private String merchant_name;//商户名称
 	private String remarks;//备注
 	public long getId() {
 		return id;
@@ -103,11 +103,19 @@ public class Appkey implements Serializable{
 	public void setUser_id(String user_id) {
 		this.user_id = user_id;
 	}
-	public String getMerchant_cus_no() {
-		return merchant_cus_no;
+	public String getMerchant_name() {
+		return merchant_name;
 	}
-	public void setMerchant_cus_no(String merchant_cus_no) {
-		this.merchant_cus_no = merchant_cus_no;
+	public void setMerchant_name(String merchant_name) {
+		this.merchant_name = merchant_name;
 	}
+	public String getMerchant_Id() {
+		return merchant_Id;
+	}
+	public void setMerchant_Id(String merchant_Id) {
+		this.merchant_Id = merchant_Id;
+	}
+	
+	
 	
 }

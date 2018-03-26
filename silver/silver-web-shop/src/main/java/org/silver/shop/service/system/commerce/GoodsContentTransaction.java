@@ -116,8 +116,8 @@ public class GoodsContentTransaction {
 	}
 
 	// 前台获取展示商品信息
-	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
-		return goodsContentService.getShowGoodsBaseInfo(firstType, secndType, thirdType, page, size);
+	public Map<String, Object> getShowGoodsBaseInfo(Map<String,Object> datasMap, int page, int size) {
+		return goodsContentService.getShowGoodsBaseInfo(datasMap, page, size);
 	}
 
 	// 前台根据商品ID查询商品基本信息
@@ -125,16 +125,6 @@ public class GoodsContentTransaction {
 		return goodsContentService.goodsContentService(entGoodsNo);
 	}
 
-	// 商城根据商品类型搜索商品
-	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, Integer page,
-			int size) {
-		return goodsContentService.getCategoryGoods(firstType, secndType, thirdType, page, size);
-	}
-
-	// 商城根据商品名搜索商品
-	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
-		return goodsContentService.searchGoodsInfo(goodsName, page, size);
-	}
 
 	// 根据指定信息搜索商品信息
 	public Map<String, Object> searchMerchantGoodsDetailInfo(HttpServletRequest req, int page, int size) {

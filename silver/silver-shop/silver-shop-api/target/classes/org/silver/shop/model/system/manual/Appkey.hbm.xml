@@ -44,8 +44,11 @@
 		<property name="remarks">
 			<column name="remarks" />
 		</property>
-		<property name="merchant_cus_no">
-			<column name="merchant_cus_no" not-null="true"/>
+		<property name="merchant_Id">
+			<column name="merchant_Id" not-null="true" unique="true"/>
+		</property>
+		<property name="merchant_name">
+			<column name="merchant_name" not-null="true" unique="true"/>
 		</property>
 	</class>
 </hibernate-mapping>

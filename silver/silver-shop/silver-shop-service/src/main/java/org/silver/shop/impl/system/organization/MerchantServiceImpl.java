@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
+import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
@@ -16,6 +17,7 @@ import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
 
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	private AppkeyService appkeyService;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
@@ -42,7 +45,7 @@ public class MerchantServiceImpl implements MerchantService {
 	// 电商平台企业编号
 	private static final String EBPENTNO = "ebpEntNo";
 	// 电商平台名称
-	private static final String EBPENTNAME = "EBPEntName";
+	private static final String EBPENTNAME = "ebpEntName";
 
 	//
 	static List<Map<String, Object>> list = null;
@@ -129,122 +132,128 @@ public class MerchantServiceImpl implements MerchantService {
 	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
-		Merchant merchant = new Merchant();
-		MerchantRecordInfo recordInfo = new MerchantRecordInfo();
-		MD5 md5 = new MD5();
-		String type = datasMap.get("type") + "";
+		int type = Integer.parseInt(datasMap.get("type") + "");
+		String loginPassword = datasMap.get("loginPassword") + "";
 		String merchantId = datasMap.get("merchantId") + "";
 		String merchantName = datasMap.get("merchantName") + "";
-		String loginPassword = datasMap.get("loginPassword") + "";
-		String merchantIdCard = datasMap.get("merchantIdCard") + "";
-		String merchantIdCardName = datasMap.get("merchantIdCardName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
-		if ("1".equals(type)) {// 1-银盟商户注册
-			merchant.setMerchantId(merchantId);
-			merchant.setMerchantCusNo("YM_" + merchantId);
-			merchant.setMerchantName(merchantName);
-			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
-			merchant.setMerchantIdCard(merchantIdCard);
-			merchant.setMerchantIdCardName(merchantIdCardName);
-			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(managerName);
-			merchant.setCreateDate(dateTime);
-			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			merchant.setAgentParentId("prxoy_00001");
-			merchant.setAgentParentName("银盟");
-			merchant.setMerchantPhone(phone);
+		if (type == 1) {// 1-银盟商户注册
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone)) {
+				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
+			}
+			MerchantRecordInfo recordInfo = new MerchantRecordInfo();
 			recordInfo.setMerchantId(merchantId);
 			recordInfo.setCreateBy(managerName);
 			recordInfo.setCreateDate(dateTime);
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-
-			if (!merchantDao.add(merchant)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "注册失败,服务器繁忙!");
-				return statusMap;
-			}
 			// 保存商户对应的电商平台名称(及编码)
 			if (!addMerchantRecordInfo(recordInfo, "1")) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 				statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品备案信息失败,服务器繁忙!");
 				return statusMap;
 			}
-		} else {// 2-第三方商户注册
-			merchant.setMerchantId(merchantId);
-			merchant.setMerchantCusNo("TP_" + merchantId);
-			merchant.setMerchantName(merchantName);
-			merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
-			merchant.setMerchantIdCard(merchantIdCard);
-			merchant.setMerchantIdCardName(merchantIdCardName);
-			merchant.setMerchantStatus("3");// 商户状态：1-启用，2-禁用，3-审核
-			merchant.setCreateBy(managerName);
-			merchant.setCreateDate(dateTime);
-			merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-			merchant.setAgentParentId("prxoy_00001");
-			merchant.setAgentParentName("银盟");
-			merchant.setMerchantPhone(phone);
-			// 商戶基本信息实例化
-			if (merchantDao.add(merchant)) {
-				String recordInfoPack = datasMap.get("recordInfoPack") + "";
-				JSONArray jsonList = null;
-				try {
-					jsonList = JSONArray.fromObject(recordInfoPack);
-				} catch (Exception e) {
-					e.getStackTrace();
-					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-					statusMap.put(BaseCode.MSG.getBaseCode(), "信息错误,请检查商户备案信息是否正确！");
-					return statusMap;
-				}
-				// 取出前台打包好的商户备案信息
-				for (int x = 0; x < jsonList.size(); x++) {
-					Map<String, Object> packMap = (Map) jsonList.get(x);
-					Map<String, Object> listMap = new HashMap<>();
-					int eport = 0;
-					try {
-						eport = Integer.parseInt((packMap.get(EPORT) + ""));
-					} catch (Exception e) {
-						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), "口岸参数错误！");
-						return statusMap;
-					}
-					switch (eport) {
-					case 1:
-						listMap = list.get(0);
-						recordInfo.setEbpEntNo(listMap.get(EBPENTNO) + "");
-						recordInfo.setEbpEntName(listMap.get(EBPENTNAME) + "");
-						break;
-					case 2:
-						listMap = list.get(1);
-						recordInfo.setEbpEntNo(listMap.get(EBPENTNO) + "");
-						recordInfo.setEbpEntName(listMap.get(EBPENTNAME) + "");
-						break;
-					default:
-						break;
-					}
-					String ebEntNo = packMap.get(EBENTNO) + "";
-					String ebEntName = packMap.get(EBENTNAME) + "";
-					recordInfo.setMerchantId(merchantId);
-					// 1-广州电子口岸2-南沙智检
-					recordInfo.setCustomsPort(eport);
-					recordInfo.setCustomsPortName(listMap.get(PORTNAME) + "");
-					recordInfo.setEbEntNo(ebEntNo);
-					recordInfo.setEbEntName(ebEntName);
-					recordInfo.setCreateBy(managerName);
-					recordInfo.setCreateDate(dateTime);
-					recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-					// 保存商户对应的电商平台名称(及编码)
-					if (!addMerchantRecordInfo(recordInfo, "2")) {
-						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), listMap.get(PORTNAME) + "商户备案信息错误,保存失败！");
-						return statusMap;
-					}
-				}
+		} else if (type == 2) {// 2-第三方商户注册
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone)) {
+				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
+			}
+			Map<String,Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId, managerName);
+			if (!"1".equals(reRecordMap.get(BaseCode.STATUS.toString()))) {
+				return reRecordMap;
+			}
+			Map<String, Object> reAppkeyMap = appkeyService.createRecord("银盟跨境商城-授权网关", "YM", phone, merchantId,
+					merchantName);
+			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
+				return reAppkeyMap;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), "注册成功！");
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 保存商户备案信息
+	 * @param recordInfoPack 商户备案信息
+	 * @param merchantId 商户Id
+	 * @param managerName 管理员名称
+	 * @return Map
+	 */
+	private Map<String, Object> createMerchantRecord(String recordInfoPack, String merchantId, String managerName) {
+		if (StringEmptyUtils.isEmpty(recordInfoPack)) {
+			return ReturnInfoUtils.errorInfo("商户备案信息错误,请核对信息!");
+		}
+		JSONArray jsonList = null;
+		try {
+			jsonList = JSONArray.fromObject(recordInfoPack);
+		} catch (Exception e) {
+			e.getStackTrace();
+			return ReturnInfoUtils.errorInfo("商户备案信息错误,请核对信息！");
+		}
+		for (int i = 0; i < jsonList.size(); i++) {
+			MerchantRecordInfo recordInfo = new MerchantRecordInfo();
+			Map<String, Object> recordMap = (Map<String, Object>) jsonList.get(0);
+			String ebpEntNo = recordMap.get(EBPENTNO) + "";
+			String ebpEntName = recordMap.get(EBPENTNAME) + "";
+			String ebEntNo = recordMap.get(EBENTNO) + "";
+			String ebEntName = recordMap.get(EBENTNAME) + "";
+			recordInfo.setMerchantId(merchantId);
+			// 1-广州电子口岸2-南沙智检
+			int eport = Integer.parseInt(recordMap.get(EPORT) + "");
+			recordInfo.setCustomsPort(eport);
+			recordInfo.setCustomsPortName(recordMap.get(PORTNAME) + "");
+			recordInfo.setEbpEntNo(ebpEntNo);
+			recordInfo.setEbpEntName(ebpEntName);
+			recordInfo.setEbEntNo(ebEntNo);
+			recordInfo.setEbEntName(ebEntName);
+			recordInfo.setCreateBy(managerName);
+			recordInfo.setCreateDate(new Date());
+			// 删除标识:0-未删除,1-已删除
+			recordInfo.setDeleteFlag(0);
+			// 保存商户对应的电商平台名称(及编码)
+			if (!addMerchantRecordInfo(recordInfo, "2")) {
+				return ReturnInfoUtils.errorInfo(recordMap.get(PORTNAME) + "商户备案信息错误,保存失败！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 创建商户基本信息
+	 * 
+	 * @param phone
+	 *            手机号码
+	 * @param managerName
+	 *            管理员名称
+	 * @param loginPassword
+	 *            登陆密码
+	 * @param merchantName
+	 *            商户名称
+	 * @param merchantId
+	 *            商户Id
+	 * @param type
+	 *            商户类型 1-银盟自营、2-第三方商城平台
+	 * @return boolean
+	 */
+	private boolean createMerchantInfo(int type, String merchantId, String merchantName, String loginPassword,
+			String managerName, String phone) {
+		MD5 md5 = new MD5();
+		Merchant merchant = new Merchant();
+		merchant.setMerchantId(merchantId);
+		// merchant.setMerchantCusNo("YM_" + merchantId);
+		merchant.setMerchantName(merchantName);
+		merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
+		// 商户状态：1-启用，2-禁用，3-审核
+		merchant.setMerchantStatus("3");
+		merchant.setCreateBy(managerName);
+		merchant.setCreateDate(new Date());
+		merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
+		merchant.setAgentParentId("prxoy_00001");
+		merchant.setAgentParentName("银盟");
+		merchant.setMerchantPhone(phone);
+		// 标识
+		merchant.setThirdPartyFlag(type);
+		MerchantDetail merchantDetail = new MerchantDetail();
+		merchantDetail.setMerchantId(merchantId);
+		return merchantDao.add(merchant) && merchantDao.add(merchantDetail);
 	}
 
 	@Override
@@ -256,7 +265,8 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> editBusinessInfo(String merchantId, List<Object> imglist, int[] array,
-			String customsregistrationCode, String organizationCode, String checktheRegistrationCode,String merchantName) {
+			String customsregistrationCode, String organizationCode, String checktheRegistrationCode,
+			String merchantName) {
 		Date data = new Date();
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
@@ -294,18 +304,18 @@ public class MerchantServiceImpl implements MerchantService {
 			merchantDetail.setMerchantOrganizationCode(organizationCode);
 			merchantDetail.setMerchantChecktheRegistrationCode(checktheRegistrationCode);
 			// 将商户状态修改为审核状态
-			//mInfo.setMerchantStatus("3");
+			// mInfo.setMerchantStatus("3");
 			merchantDetail.setUpdateDate(data);
 			merchantDetail.setUpdateBy(merchantName);
 			// 更新实体
-			if(merchantDao.update(merchantDetail)){
+			if (merchantDao.update(merchantDetail)) {
 				return ReturnInfoUtils.successInfo();
 			}
 			return ReturnInfoUtils.errorInfo("更新商户详情失败,服务器繁忙!");
 		} else {
 			return ReturnInfoUtils.errorInfo("查询商户详细信息失败,服务器繁忙!");
 		}
-		
+
 	}
 
 	@Override

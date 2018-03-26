@@ -360,20 +360,10 @@ public class MpayServiceImpl implements MpayService {
 	 * 
 	 * @param dataList
 	 *            订单信息
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
 	 * @param errorList
 	 *            错误信息
 	 * @param customsMap
 	 *            海关信息
-	 * @param tok
-	 * @param totalCount
-	 *            总行数
-	 * @param serialNo
-	 *            批次号
-	 * @param threadPool
 	 */
 	public final void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap) {

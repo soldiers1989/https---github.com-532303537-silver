@@ -359,4 +359,27 @@ public class OrderController {
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 	}
 
+	@RequestMapping(value = "/getAlreadyDelOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("根据指定信息搜索商户订单信息")
+	@RequiresRoles("Merchant")
+	public String getAlreadyDelOrderInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		datasMap.remove("page");
+		datasMap.remove("size");
+		return JSONObject.fromObject(orderTransaction.getAlreadyDelOrderInfo(req, page, size)).toString();
+	}
+
 }

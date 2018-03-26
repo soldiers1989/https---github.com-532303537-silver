@@ -18,6 +18,7 @@ import org.silver.shop.model.system.manual.Appkey;
 import org.silver.util.AppUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -31,23 +32,23 @@ public class AppkeyServiceImpl implements AppkeyService {
 	private static AppkeyDaoImpl appkeyDao = new AppkeyDaoImpl();
 
 	@Override
-	public Map<String, String> createRecord(String app_name, String user_name, String user_mobile,
-			String merchant_cus_no, String company_name, String website) {
-		Map<String, String> map = new HashMap<>();
-		if (StringEmptyUtils.isNotEmpty(user_mobile) && StringEmptyUtils.isNotEmpty(merchant_cus_no)) {
+	public Map<String, Object> createRecord(String app_name, String user_name, String user_mobile,
+			String merchant_Id, String merchant_name ) {
+		Map<String, Object> map = new HashMap<>();
+		if (StringEmptyUtils.isNotEmpty(user_mobile) && StringEmptyUtils.isNotEmpty(merchant_Id)) {
 			Appkey entity = new Appkey();
 			String appKey = AppUtil.generateAppKey();
 			String appSecret = AppUtil.generateAppSecret();
 			entity.setApp_name(app_name);
 			entity.setUser_name(user_name);
 			entity.setUser_mobile(user_mobile);
-			// entity.setUser_id(user_id);
 			entity.setApp_key(appKey);
-			entity.setMerchant_cus_no(merchant_cus_no);
+			entity.setMerchant_Id(merchant_Id);
 			entity.setApp_secret(appSecret);
 			entity.setDel_flag(0);
 			entity.setCreate_date(new Date());
 			entity.setCreate_by("system");
+			entity.setMerchant_name(merchant_name);
 			if (appkeyDao.add(entity)) {
 				map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				map.put("msg", "生成成功,请注意保护好您的密钥!");
@@ -55,13 +56,9 @@ public class AppkeyServiceImpl implements AppkeyService {
 				map.put("appSecret", appSecret);
 				return map;
 			}
-			map.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			map.put("msg", "存储密钥失败，服务器繁忙!");
-			return map;
+			return ReturnInfoUtils.errorInfo("存储密钥失败，服务器繁忙!");
 		}
-		map.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-		map.put("msg", "生成失败,参数不符,请核实所需参数!");
-		return map;
+		return ReturnInfoUtils.errorInfo("生成失败,参数不符,请核实所需参数!");
 	}
 
 	@Override

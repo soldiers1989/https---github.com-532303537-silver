@@ -30,65 +30,31 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 	}
 
 	@Override
-	public Table getAlreadyRecordGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
+	public Table getAlreadyRecordGoodsBaseInfo(Map<String, Object> datasMap, int page, int size) {
 		Session session = null;
 		String queryString = null;
 		Connection conn = null;
+		String goodsName = datasMap.get("goodsName")+"";
 		try {
 			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2"
 					+ " on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ";
 			List<Object> sqlParams = new ArrayList<>();
-			if (thirdType > 0) {
+			if (StringEmptyUtils.isNotEmpty(datasMap.get("thirdType"))) {
+				int thirdType = Integer.parseInt(datasMap.get("thirdType") + "");
 				sqlParams.add(thirdType);
 				queryString += "  and t1.spareGoodsThirdTypeId = ? ";
-			} else if (secndType > 0) {
+			} else if (StringEmptyUtils.isNotEmpty(datasMap.get("secndType"))) {
+				int secndType = Integer.parseInt(datasMap.get("secndType") + "");
 				sqlParams.add(secndType);
 				queryString += "  and t1.spareGoodsSecondTypeId = ? ";
-			} else if (firstType > 0) {
+			} else if (StringEmptyUtils.isNotEmpty(datasMap.get("firstType"))) {
+				int firstType = Integer.parseInt(datasMap.get("firstType") + "");
 				sqlParams.add(firstType);
 				queryString = queryString + " and t1.spareGoodsFirstTypeId = ? ";
 			}
-			session = getSession();
-			Table l = null;
-			if (page > 0 && size > 0) {
-				page = page - 1;
-				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, page * size, size);
-			} else {
-				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, null, null);
-			}
-			session.connection().close();
-			session.close();
-			// Transform.tableToJson(l);
-			return l;
-		} catch (Exception re) {
-			re.printStackTrace();
-			return null;
-		} finally {
-			if (session != null && session.isOpen()) {
-				if (conn != null) {
-					try {
-						conn.close();
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-				}
-				session.close();
-			}
-		}
-	}
-
-	@Override
-	public Table getBlurryRecordGoodsInfo(String goodsName, int page, int size) {
-		Session session = null;
-		String queryString = null;
-		Connection conn = null;
-		try {
-			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2"
-					+ " on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 AND t1.deleteFlag = 0 ";
-			List<Object> sqlParams = new ArrayList<>();
-			if (StringEmptyUtils.isNotEmpty(goodsName)) {
-				queryString += " AND t1.spareGoodsName LIKE ?";
-				sqlParams.add("%" + goodsName + "%");
+			if(StringEmptyUtils.isNotEmpty(goodsName)){
+				sqlParams.add("%"+goodsName+"%");
+				queryString = queryString + " and t1.spareGoodsName LIKE  ? ";
 			}
 			session = getSession();
 			Table l = null;

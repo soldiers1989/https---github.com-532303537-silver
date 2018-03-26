@@ -354,9 +354,13 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> addMerchantBusinessInfo(String merchantId, String[] arrayStr, List<Object> imglist) {
-		MerchantDetail merchantDetail = new MerchantDetail();
-		merchantDetail.setMerchantId(merchantId);
-		return updateMerchantDetail(merchantDetail, arrayStr, imglist);
+		Map<String,Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		List<MerchantDetail> reList = managerDao.findByProperty(MerchantDetail.class, params, 0, 0);
+		if(reList!=null && !reList.isEmpty()){
+			return updateMerchantDetail(reList.get(0), arrayStr, imglist);
+		}
+		return ReturnInfoUtils.errorInfo("商户详情信息查询失败！");
 	}
 
 	/**

@@ -69,12 +69,11 @@ public interface GoodsContentDao  extends BaseDao{
 	
 	/**
 	 * 商品前台默认搜索商品信息
-	 * @param merchantId 
 	 * @param page
 	 * @param size
 	 * @return
 	 */
-	public Table getAlreadyRecordGoodsBaseInfo( int firstType, int  secndType,int thirdType,int page, int size);
+	public Table getAlreadyRecordGoodsBaseInfo(Map<String,Object> datasMap,int page, int size);
 	
 	/**
 	 * 模糊查询总数
@@ -83,15 +82,5 @@ public interface GoodsContentDao  extends BaseDao{
 	 * @return
 	 */
 	long findByPropertyLikeCount(Class entity, Map params,Map blullyMap);
-	
-	
-	/**
-	 * 商品前台根据商品名称模糊搜索商品信息
-	 * @param merchantId 
-	 * @param page
-	 * @param size
-	 * @return
-	 */
-	public Table getBlurryRecordGoodsInfo(String goodsName,int page, int size);
 	
 }

@@ -43,6 +43,7 @@ public class Merchant implements Serializable {
 	private String companyName;//公司名称
 	private String marCode;//(名称来源自启邦)商户在银盟商城平台唯一标识
 	private String sku;//(名称来源自启邦)
+	private int thirdPartyFlag;//第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 	public Long getId() {
 		return id;
 	}
@@ -283,5 +284,12 @@ public class Merchant implements Serializable {
 		this.sku = sku;
 	}
 
-	
+	public int getThirdPartyFlag() {
+		return thirdPartyFlag;
+	}
+
+	public void setThirdPartyFlag(int thirdPartyFlag) {
+		this.thirdPartyFlag = thirdPartyFlag;
+	}
+
 }

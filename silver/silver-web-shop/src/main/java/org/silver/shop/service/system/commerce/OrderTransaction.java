@@ -163,4 +163,8 @@ public class OrderTransaction {
 		return orderService.getAgentOrderReport(datasMap);
 	}
 
+	public Object getAlreadyDelOrderInfo(HttpServletRequest req, int page, int size) {
+		return null;
+	}
+
 }

@@ -918,7 +918,10 @@ public class ManualService {
 					} else if (c == 52) {
 						// 第一法定计量单位
 						if (StringEmptyUtils.isNotEmpty(value)) {
-							stdUnit = value;
+							value = goodsRecordTransaction.findUnit(value);
+							if (StringEmptyUtils.isNotEmpty(value)) {
+								stdUnit = value;
+							}
 						}
 					} else if (c == 53) {
 						if (StringEmptyUtils.isNotEmpty(value)) {
@@ -1016,6 +1019,7 @@ public class ManualService {
 				goodsInfo.put("customsCode", customsCode);
 				String[] str = serialNo.split("_");
 				int serial = Integer.parseInt(str[1]);
+				//
 				Map<String, Object> reGoodsMap = checkGoodsInfo(goodsInfo);
 				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";

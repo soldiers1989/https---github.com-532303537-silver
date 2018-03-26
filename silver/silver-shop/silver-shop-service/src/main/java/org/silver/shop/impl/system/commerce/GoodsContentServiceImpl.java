@@ -173,10 +173,10 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 	}
 
 	@Override
-	public Map<String, Object> getShowGoodsBaseInfo(int firstType, int secndType, int thirdType, int page, int size) {
+	public Map<String, Object> getShowGoodsBaseInfo(Map<String,Object> datasMap, int page, int size) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType, secndType, thirdType, page, size);
-		Table tCount = goodsContentDao.getAlreadyRecordGoodsBaseInfo(firstType, secndType, thirdType, 0, 0);
+		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, page, size);
+		Table tCount = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, 0, 0);
 		if (t == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
@@ -218,57 +218,6 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-	}
-
-	@Override
-	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, int page,
-			int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		if (firstType != null && firstType > 0) {
-			paramMap.put("spareGoodsFirstTypeId", firstType + "");
-		} else if (secndType != null && secndType > 0) {
-			paramMap.put("spareGoodsSecondTypeId", secndType + "");
-		} else if (thirdType != null && thirdType > 0) {
-			paramMap.put("spareGoodsThirdTypeId", thirdType + "");
-		}
-		paramMap.put("deleteFlag", 0);
-		paramMap.put("status", 2);
-		List<Object> reGoodsRecordList = goodsContentDao.findByProperty(GoodsRecordDetail.class, paramMap, page, size);
-		long reGoodsRecordCount = goodsContentDao.findByPropertyCount(GoodsRecordDetail.class, paramMap);
-		if (reGoodsRecordList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (!reGoodsRecordList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), reGoodsRecordList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reGoodsRecordCount);
-			return statusMap;
-		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据!");
-		}
-	}
-
-	@Override
-	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size) {
-		if (page >= 0 && size >= 0) {
-			Map<String, Object> statusMap = new HashMap<>();
-			Table t = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, page, size);
-			Table tCount = goodsContentDao.getBlurryRecordGoodsInfo(goodsName, 0, 0);
-			if (t == null) {
-				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-			} else {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-				statusMap.put(BaseCode.DATAS.getBaseCode(), Transform.tableToJson(t));
-				statusMap.put(BaseCode.TOTALCOUNT.toString(), tCount.getRows().size());
-				return statusMap;
-			}
-		}
-		return ReturnInfoUtils.errorInfo("请求参数出错!");
-
 	}
 
 	@Override

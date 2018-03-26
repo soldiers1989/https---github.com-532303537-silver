@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +56,7 @@ public class GoodsContentController {
 
 	/**
 	 * 商户查询商品基本信息
+	 * 
 	 * @param page
 	 * @param size
 	 * @return
@@ -63,8 +65,8 @@ public class GoodsContentController {
 	@ResponseBody
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户查询商品基本信息")
-	public String findMerchantGoodsInfo(@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
-			HttpServletResponse response) {
+	public String findMerchantGoodsInfo(@RequestParam("page") int page, @RequestParam("size") int size,
+			HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -124,24 +126,22 @@ public class GoodsContentController {
 
 	@RequestMapping(value = "/getShowGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("前台获取展示商品信息")
-	public String getShowGoodsBaseInfo(String firstType, String secndType, String thirdType,
-			@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
-			HttpServletResponse response) {
+	@ApiOperation("商城前台获取展示商品信息")
+	public String getShowGoodsBaseInfo(@RequestParam("page") int page, @RequestParam("size") int size,
+			HttpServletRequest req, HttpServletResponse response) {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		if (StringEmptyUtils.isEmpty(firstType)) {
-			firstType = "0";
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key = isKey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
 		}
-		if (StringEmptyUtils.isEmpty(secndType)) {
-			secndType = "0";
-		}
-		if (StringEmptyUtils.isEmpty(thirdType)) {
-			thirdType = "0";
-		}
-		Map<String, Object> statusMap = goodsContentTransaction.getShowGoodsBaseInfo(Integer.valueOf(firstType),
-				Integer.valueOf(secndType), Integer.valueOf(thirdType), page, size);
+		datasMap.remove("page");
+		datasMap.remove("size");
+		Map<String, Object> statusMap = goodsContentTransaction.getShowGoodsBaseInfo(datasMap, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -154,7 +154,7 @@ public class GoodsContentController {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
-		
+
 		if (entGoodsNo != null) {
 			statusMap = goodsContentTransaction.getOneGoodsBaseInfo(entGoodsNo);
 			return JSONObject.fromObject(statusMap).toString();
@@ -164,47 +164,21 @@ public class GoodsContentController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/getCategoryGoods", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("商城根据商品类型搜索商品")
-	public String getCategoryGoods(@RequestParam("firstType") Integer firstType, Integer secndType, Integer thirdType,
-			@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
-			HttpServletResponse response) {
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		Map<String, Object> statusMap = goodsContentTransaction.getCategoryGoods(firstType, secndType, thirdType, page,
-				size);
-		return JSONObject.fromObject(statusMap).toString();
-	}
-
-	@RequestMapping(value = "/searchGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("商城根据商品名搜索商品")
-	public String searchGoodsInfo( String goodsName, @RequestParam("page") int page,
-			@RequestParam("size") int size, HttpServletRequest req, HttpServletResponse response) {
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		Map<String, Object> statusMap = goodsContentTransaction.searchGoodsInfo(goodsName, page, size);
-		return JSONObject.fromObject(statusMap).toString();
-	}
-	
 	@RequestMapping(value = "/searchMerchantGoodsDetailInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("根据指定信息搜索商品基本信息")
 	@RequiresRoles("Merchant")
-	public String searchMerchantGoodsDetailInfo(HttpServletRequest req, HttpServletResponse response, 
-			@RequestParam("page") int page,@RequestParam("size") int size) {
+	public String searchMerchantGoodsDetailInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if(page >0 && size >0){
-			 statusMap = goodsContentTransaction.searchMerchantGoodsDetailInfo(req,page,size);
-		}else{
+		if (page > 0 && size > 0) {
+			statusMap = goodsContentTransaction.searchMerchantGoodsDetailInfo(req, page, size);
+		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
 		}
@@ -215,7 +189,8 @@ public class GoodsContentController {
 	@ResponseBody
 	@ApiOperation("商户查询商品基本信息详情")
 	@RequiresRoles("Merchant")
-	public String merchantGetGoodsBaseInfo(@RequestParam("goodsId")String goodsId, HttpServletRequest req,	HttpServletResponse response) {
+	public String merchantGetGoodsBaseInfo(@RequestParam("goodsId") String goodsId, HttpServletRequest req,
+			HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

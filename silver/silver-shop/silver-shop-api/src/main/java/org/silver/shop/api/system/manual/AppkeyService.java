@@ -8,9 +8,11 @@ public interface AppkeyService {
      * @param app_name 应用名
      * @param user_name 用户名
      * @param user_mobile 用户联系电话
+     * @param merchant_id 商户Id
+     * @param merchant_name 商户名称
      * @return  map  appkey,appsecret
      */
-	public Map<String,String> createRecord(String app_name,String user_name,String user_mobile,String user_id,String company_name,String website);
+	public Map<String,Object> createRecord(String app_name,String user_name,String user_mobile,String merchant_id,String merchant_name );
 	/**
 	 * 认证签名
 	 * @param appKey  应用appkey

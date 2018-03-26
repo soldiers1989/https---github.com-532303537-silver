@@ -279,32 +279,28 @@ public class ManagerController {
 	 * @param response
 	 * @return JSON
 	 */
-	@RequestMapping(value = "/managerAddMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/addMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员添加商户")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String managerAddMerchantInfo(@RequestParam("merchantName") String merchantName,
-			@RequestParam("loginPassword") String loginPassword,
-			@RequestParam("merchantIdCardName") String merchantIdCardName,
-			@RequestParam("merchantIdCard") String merchantIdCard, String recordInfoPack,
-			@RequestParam("type") int type, String phone,HttpServletRequest req,
-			HttpServletResponse response) {
+	public String addMerchantInfo(String recordInfoPack, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Enumeration<String> iskey= req.getParameterNames();
-		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> iskey = req.getParameterNames();
+		Map<String, Object> datasMap = new HashMap<>();
 		while (iskey.hasMoreElements()) {
 			String key = iskey.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
+		int type = Integer.parseInt(datasMap.get("type")+"");
 		Map<String, Object> statusMap = new HashMap<>();
-		int imgLength = Integer.parseInt(datasMap.get("imgLength")+"");
+		int imgLength = Integer.parseInt(datasMap.get("imgLength") + "");
 		if (type == 1 || type == 2 && imgLength > 0) {
-			statusMap = managerTransaction.managerAddMerchantInfo(req,datasMap);
+			statusMap = managerTransaction.managerAddMerchantInfo(req, datasMap);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -571,6 +567,7 @@ public class ManagerController {
 
 		return JSONObject.fromObject(managerTransaction.managerAuditMerchantInfo(merchantPack)).toString();
 	}
+
 	/**
 	 * 管理员重置商户登录密码
 	 * 

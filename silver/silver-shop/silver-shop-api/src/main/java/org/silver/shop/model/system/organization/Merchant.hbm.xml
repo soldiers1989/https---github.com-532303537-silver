@@ -3,86 +3,100 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-8-28 14:47:55 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.organization.Merchant" table="ym_shop_merchant">
-        <id name="id" type="long">
-            <column name="id" />
-            <generator class="identity" />
-        </id>
-        <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" not-null="true" unique="true"/>
-        </property>
-        <property name="merchantAvatar" type="java.lang.String">
-            <column name="merchantAvatar" />
-        </property>
-        <property name="merchantCusNo" type="java.lang.String">
-            <column name="merchantCusNo" not-null="true" unique="true"/>
-        </property>
-        <property name="merchantName" type="java.lang.String">
-            <column name="merchantName" not-null="true" unique="true"/>
-        </property>
-        <property name="loginPassword" type="java.lang.String">
-            <column name="loginPassword" not-null="true"/>
-        </property>
-        <property name="merchantPhone" type="java.lang.String">
-            <column name="merchantPhone" />
-        </property>
-        <property name="merchantQQ" type="java.lang.String">
-            <column name="merchantQQ" />
-        </property>
-        <property name="merchantEmail" type="java.lang.String">
-            <column name="merchantEmail" />
-        </property>
-        <property name="merchantIdCard" type="java.lang.String">
-            <column name="merchantIdCard" />
-        </property>
-      
-        <property name="merchantAddress" type="java.lang.String">
-            <column name="merchantAddress" />
-        </property>
-        <property name="merchantTransport" type="java.lang.String">
-            <column name="merchantTransport" />
-        </property>
-        <property name="merchantLevel" type="int">
-            <column name="merchantLevel" default="0" />
-        </property>
-        <property name="merchantProfit" type="long">
-            <column name="merchantProfit" default="0"/>
-        </property>
-        <property name="merchantStatus" type="java.lang.String">
-            <column name="merchantStatus" not-null="true"/>
-        </property>
-        <property name="createBy" type="java.lang.String">
-            <column name="createBy" />
-        </property>
-        <property name="createDate" type="java.util.Date">
-            <column name="createDate" />
-        </property>
-        <property name="updateBy" type="java.lang.String">
-            <column name="updateBy" />
-        </property>
-        <property name="updateDate" type="java.util.Date">
-            <column name="updateDate" />
-        </property>
-        <property name="deleteFlag" type="int">
-            <column name="deleteFlag" not-null="true"/>
-        </property>
-        <property name="deleteBy" type="java.lang.String">
-            <column name="deleteBy" />
-        </property>
-        <property name="deleteDate" type="java.util.Date">
-            <column name="deleteDate" />
-        </property>
-        <property name="merchantRealName" type="int">
-            <column name="merchantRealName" />
-        </property>
-         <property name="merchantIdCardName" type="java.lang.String">
-            <column name="merchantIdCardName" />
-        </property>
-          <property name="agentParentId" type="java.lang.String">
-            <column name="agentParentId" />
-        </property>
-            <property name="agentParentName" type="java.lang.String">
-            <column name="agentParentName" />
-        </property>
-    </class>
+	<class name="org.silver.shop.model.system.organization.Merchant"
+		table="ym_shop_merchant">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="merchantId" type="java.lang.String">
+			<column name="merchantId" not-null="true" unique="true" />
+		</property>
+		<property name="merchantAvatar" type="java.lang.String">
+			<column name="merchantAvatar" />
+		</property>
+		<property name="merchantCusNo" type="java.lang.String">
+			<column name="merchantCusNo" unique="true" />
+		</property>
+		<property name="merchantName" type="java.lang.String">
+			<column name="merchantName" not-null="true" unique="true" />
+		</property>
+		<property name="loginPassword" type="java.lang.String">
+			<column name="loginPassword" not-null="true" />
+		</property>
+		<property name="merchantPhone" type="java.lang.String">
+			<column name="merchantPhone" />
+		</property>
+		<property name="merchantQQ" type="java.lang.String">
+			<column name="merchantQQ" />
+		</property>
+		<property name="merchantEmail" type="java.lang.String">
+			<column name="merchantEmail" />
+		</property>
+		<property name="merchantIdCard" type="java.lang.String">
+			<column name="merchantIdCard" />
+		</property>
+
+		<property name="merchantAddress" type="java.lang.String">
+			<column name="merchantAddress" />
+		</property>
+		<property name="merchantTransport" type="java.lang.String">
+			<column name="merchantTransport" />
+		</property>
+		<property name="merchantLevel" type="int">
+			<column name="merchantLevel" default="0" />
+		</property>
+		<property name="merchantProfit" type="long">
+			<column name="merchantProfit" default="0" />
+		</property>
+		<property name="merchantStatus" type="java.lang.String">
+			<column name="merchantStatus" not-null="true" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" not-null="true" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+		<property name="merchantRealName" type="int">
+			<column name="merchantRealName" />
+		</property>
+		<property name="merchantIdCardName" type="java.lang.String">
+			<column name="merchantIdCardName" />
+		</property>
+		<property name="agentParentId" type="java.lang.String">
+			<column name="agentParentId" />
+		</property>
+		<property name="agentParentName" type="java.lang.String">
+			<column name="agentParentName" />
+		</property>
+
+		<property name="companyName" type="java.lang.String">
+			<column name="companyName" />
+		</property>
+		<property name="marCode" type="java.lang.String">
+			<column name="marCode" />
+		</property>
+		<property name="sku" type="java.lang.String">
+			<column name="sku" />
+		</property>
+		<property name="thirdPartyFlag" type="int">
+			<column name="thirdPartyFlag"  />
+		</property>
+	</class>
 </hibernate-mapping>

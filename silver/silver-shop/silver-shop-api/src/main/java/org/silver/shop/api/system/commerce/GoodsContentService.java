@@ -70,7 +70,7 @@ public interface GoodsContentService {
 	 * @param merchantId 商户ID
 	 * @return 
 	 */
-	public Map<String,Object> getShowGoodsBaseInfo(int firstType, int  secndType,int thirdType,int page,int size);
+	public Map<String,Object> getShowGoodsBaseInfo(Map<String,Object> datasMap,int page,int size);
 
 	/**
 	 * 根据商品ID单独查询商品基本信息
@@ -79,25 +79,6 @@ public interface GoodsContentService {
 	 */
 	public Map<String, Object> goodsContentService(String entGoodsNo);
 
-	/**
-	 * 商城根据商品类型搜索商品
-	 * @param firstType
-	 * @param secndType
-	 * @param thirdType
-	 * @param page 
-	 * @param size
-	 * @return
-	 */
-	public Map<String, Object> getCategoryGoods(Integer firstType, Integer secndType, Integer thirdType, int page, int size);
-
-	/**
-	 * 商城根据商品名搜索商品
-	 * @param goodsName
-	 * @param page
-	 * @param size
-	 * @return
-	 */
-	public Map<String, Object> searchGoodsInfo(String goodsName, int page, int size);
 
 	/**
 	 * 根据指定信息搜索商品基本信息
