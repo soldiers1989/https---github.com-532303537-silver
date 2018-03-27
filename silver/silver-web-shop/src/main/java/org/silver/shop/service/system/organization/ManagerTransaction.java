@@ -292,4 +292,8 @@ public class ManagerTransaction {
 		return managerService.resetMerchantLoginPassword(merchantId,managerId,managerName);
 	}
 
+	public Map<String, Object> getMerchantBusinessInfo(String merchantId) {
+		return managerService.getMerchantBusinessInfo(merchantId);
+	}
+
 }

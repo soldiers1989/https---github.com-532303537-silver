@@ -21,6 +21,8 @@ import org.apache.poi.hssf.usermodel.HSSFHeader;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellValue;
@@ -29,6 +31,7 @@ import org.apache.poi.ss.usermodel.Header;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -148,7 +151,6 @@ public class ExcelUtil {
 				System.out.println("文件不存在，创建一个");
 				try {
 					HSSFWorkbook workbook = new HSSFWorkbook();
-
 					FileOutputStream fileOut = new FileOutputStream(f.getPath());
 					workbook.write(fileOut);
 					fileOut.close();
@@ -165,14 +167,12 @@ public class ExcelUtil {
 				header.setCenter("标题");
 			} else if (f.isDirectory()) {
 				System.out.println("文件路径被占用");
-
 			} else {
 				fls = new FileInputStream(f);
 				try {
 					book = new XSSFWorkbook(f);
 				} catch (Exception e) {
-					// e.printStackTrace();
-					//book = new HSSFWorkbook(new POIFSFileSystem(fls));
+					 e.printStackTrace();
 					 book = new HSSFWorkbook(new FileInputStream(f));
 				}
 				fls.close();
@@ -482,16 +482,17 @@ public class ExcelUtil {
 			case Cell.CELL_TYPE_FORMULA:
 				// cell = "FORMULA";
 				String str = formulaEvaluation(row.getCell(cellNum)).getStringValue();
-				if(StringEmptyUtils.isNotEmpty(str)){
+				if (StringEmptyUtils.isNotEmpty(str)) {
 					cell = formulaEvaluation(row.getCell(cellNum)).getStringValue().trim();
-				}else{
-					//当出现null时采用double类型获取
+				} else {
+					// 当出现null时采用double类型获取
 					cell = String.valueOf(formulaEvaluation(row.getCell(cellNum)).getNumberValue());
 				}
 				break;
 			case Cell.CELL_TYPE_NUMERIC:
-				//cell = String.valueOf(row.getCell(cellNum).getNumericCellValue());
-				//由于会产生浮点数,因此都转换为String类型
+				// cell =
+				// String.valueOf(row.getCell(cellNum).getNumericCellValue());
+				// 由于会产生浮点数,因此都转换为String类型
 				row.getCell(cellNum).setCellType(Cell.CELL_TYPE_STRING);
 				cell = row.getCell(cellNum).getStringCellValue().trim();
 				break;
@@ -534,11 +535,11 @@ public class ExcelUtil {
 		// List<Object> stuL = null;//std.findByProperty("school_id",
 		// "11010001");
 
-		File f = new File("C:\\Users\\Administrator\\Desktop\\ysTest.xls");
+		File f = new File("C:\\Users\\Lenovo\\Desktop\\Work\\国宗表单\\国宗原订单\\2018-03\\客户订单导入模板78428598356，22件，总货值10824最终申报表(银盟).xlsx");
 
 		ExcelUtil excel = new ExcelUtil(f);
 		excel.open();
-		System.out.println(excel.getCell(1, 0));
+		System.out.println(excel.getCell(0, 0));
 		/*
 		 * for (int i = 0; i < 5; i++) {
 		 * 

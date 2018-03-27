@@ -39,6 +39,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.SearchUtils;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -992,12 +993,142 @@ public class OrderServiceImpl implements OrderService {
 			Table reTable = orderDao.getAgentOrderReport(datasMap);
 			if (reTable == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-			}else if(!reTable.getRows().isEmpty()){
+			} else if (!reTable.getRows().isEmpty()) {
 				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"), 0);
-			}else{
+			} else {
 				return ReturnInfoUtils.errorInfo("暂无数据");
 			}
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误！");
+	}
+
+	@Override
+	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap) {
+		if (datasMap != null && !datasMap.isEmpty()) {
+
+			Map<String, Object> reCheckOrderMap = checkOrderInfo(datasMap);
+			if (!"1".equals(reCheckOrderMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckOrderMap;
+			}
+			Map<String, Object> reCheckGoodsMap = checkGoodsInfo(datasMap);
+			if (!"1".equals(reCheckGoodsMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckGoodsMap;
+			}
+
+		}
+		return null;
+	}
+
+	private Map<String, Object> checkOrderInfo(Map<String, Object> datasMap) {
+		JSONObject orderJson = null;
+		// 获取订单信息
+		List<JSONObject> orderList = (List<JSONObject>) datasMap.get("datas");
+		if (orderList != null && !orderList.isEmpty()) {
+			orderJson = orderList.get(0);
+			return checkOrderInfo(orderJson);
+		}
+		return ReturnInfoUtils.errorInfo("订单信息不能为空,请核对信息!");
+	}
+
+	private Map<String, Object> checkOrderInfo(JSONObject orderJson) {
+		JSONArray datas = new JSONArray();
+		datas.add(orderJson);
+		List<String> noNullKeys = new ArrayList<>();
+		noNullKeys.add("EntOrderNo");
+		noNullKeys.add("OrderStatus");
+		noNullKeys.add("PayStatus");
+		noNullKeys.add("OrderGoodTotal");
+		noNullKeys.add("OrderGoodTotalCurr");
+		noNullKeys.add("Freight");
+		noNullKeys.add("Tax");
+		noNullKeys.add("OtherPayment");
+		noNullKeys.add("ActualAmountPaid");
+		noNullKeys.add("RecipientName");
+		noNullKeys.add("RecipientAddr");
+		noNullKeys.add("RecipientTel");
+		noNullKeys.add("RecipientCountry");
+		noNullKeys.add("ActualAmountPaid");
+		noNullKeys.add("RecipientName");
+		noNullKeys.add("RecipientAddr");
+		noNullKeys.add("RecipientTel");
+		noNullKeys.add("RecipientProvincesCode");
+		noNullKeys.add("OrderDocAcount");
+		noNullKeys.add("OrderDocName");
+		noNullKeys.add("OrderDocType");
+		noNullKeys.add("OrderDocId");
+		noNullKeys.add("OrderDocTel");
+		noNullKeys.add("OrderDate");
+		return CheckDatasUtil.changeOrderMsg(datas, noNullKeys);
+	}
+
+	/**
+	 * 检查商品信息
+	 * 
+	 * @param datasMap
+	 * @return Map
+	 */
+	private Map<String, Object> checkGoodsInfo(Map<String, Object> datasMap) {
+		JSONObject goodsJson = null;
+		String entOrderNo = datasMap.get("EntOrderNo") + "";
+		// 获取订单信息
+		List<JSONObject> orderList = (List<JSONObject>) datasMap.get("datas");
+		JSONObject orderJson = orderList.get(0);
+		// 获取订单信息中商品信息
+		List<JSONObject> orderGoodsList = (List<JSONObject>) orderJson.get("orderGoodsList");
+		if (!orderGoodsList.isEmpty()) {
+			for (int i = 0; i < orderGoodsList.size(); i++) {
+				goodsJson = (JSONObject) orderGoodsList.get(i);
+				goodsJson.get("Seq");
+				goodsJson.get("EntGoodsNo");
+				goodsJson.get("CIQGoodsNo");
+				goodsJson.get("CusGoodsNo");
+				// goodsJson.get("HSCode");
+				goodsJson.get("GoodsName");
+				goodsJson.get("GoodsStyle");
+				// goodsJson.get("GoodsDescribe");
+				goodsJson.get("OriginCountry");
+				// goodsJson.get("BarCode");
+				// goodsJson.get("Brand");
+				goodsJson.get("Qty");
+				goodsJson.get("Unit");
+				goodsJson.get("Price");
+				goodsJson.get("Total");
+				goodsJson.get("CurrCode");
+				// goodsJson.get("Notes");
+				Map<String, Object> reCheckGoodsMap = checkGoodsInfo(goodsJson);
+				if (!"1".equals(reCheckGoodsMap.get(BaseCode.STATUS.toString()))) {
+					return reCheckGoodsMap;
+				}
+			}
+		}
+		return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]关联订单商品信息不能为空,请核对信息!");
+
+	}
+
+	/**
+	 * 校验商品信息
+	 * 
+	 * @param goodsInfo
+	 *            商品信息
+	 * @return Map
+	 */
+	private Map<String, Object> checkGoodsInfo(JSONObject goodsInfo) {
+		JSONArray datas = new JSONArray();
+		datas.add(goodsInfo);
+		List<String> noNullKeys = new ArrayList<>();
+		noNullKeys.add("Seq");
+		noNullKeys.add("EntGoodsNo");
+		noNullKeys.add("CIQGoodsNo");
+		// noNullKeys.add("BarCode");
+		noNullKeys.add("CusGoodsNo");
+		noNullKeys.add("GoodsName");
+		noNullKeys.add("GoodsStyle");
+		noNullKeys.add("OriginCountry");
+		noNullKeys.add("Qty");
+		noNullKeys.add("Unit");
+		noNullKeys.add("Price");
+		noNullKeys.add("Total");
+		noNullKeys.add("CurrCode");
+		return CheckDatasUtil.changeMsg(datas, noNullKeys);
 	}
 }

@@ -180,4 +180,11 @@ public interface OrderService {
 	 * @return Map 
 	 */
 	public Map<String,Object> getAgentOrderReport(Map<String, Object> datasMap);
+
+	/**
+	 * 第三方商城平台传递订单信息接口
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap);
 }

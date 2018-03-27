@@ -1,11 +1,18 @@
 package org.silver.shop.model.system.organization;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * 商户详细资料信息实体类
  */
-public class MerchantDetail {
+public class MerchantDetail implements Serializable{
+	
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5244929470205954226L;
 	private long id ;//
 	private String merchantId;// 商户ID
 	private String merchantBusinessLicenseLink;// 企业营业执照(图片地址)

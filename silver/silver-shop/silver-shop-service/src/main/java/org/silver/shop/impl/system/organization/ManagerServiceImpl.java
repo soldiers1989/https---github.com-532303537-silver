@@ -346,8 +346,7 @@ public class ManagerServiceImpl implements ManagerService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			MerchantDetail merchantDetail = reList.get(0);
-			return updateMerchantDetail(merchantDetail, arrayStr, imglist);
+			return updateMerchantDetail(reList.get(0), arrayStr, imglist);
 		}
 		return ReturnInfoUtils.errorInfo("未找到商户详情信息!");
 	}
@@ -671,6 +670,31 @@ public class ManagerServiceImpl implements ManagerService {
 			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("商户信息未找到,请核对商户是否存在!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> getMerchantBusinessInfo(String merchantId) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchantId", merchantId);
+		List<MerchantDetail> reList = managerDao.findByProperty(MerchantDetail.class, paramMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList, 0);
+		} else {
+			List<Merchant> reMerchantList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
+			if(reMerchantList!=null && !reMerchantList.isEmpty()){
+				MerchantDetail merchantDetail = new MerchantDetail();
+				merchantDetail.setMerchantId(merchantId);
+				merchantDetail.setCreateDate(new Date());
+				merchantDetail.setCreateBy("system");
+				if(!managerDao.add(merchantDetail)){
+					return ReturnInfoUtils.errorInfo("服务器异常!");
+				}
+				return ReturnInfoUtils.successDataInfo(merchantDetail, 0);
+			}
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 

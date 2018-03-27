@@ -167,4 +167,9 @@ public class OrderTransaction {
 		return null;
 	}
 
+	//第三方商城平台传递订单信息入口
+	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap) {
+		return orderService.thirdPartyBusiness(datasMap);
+	}
+
 }

@@ -8,7 +8,7 @@
 	<url>http://maven.apache.org</url>
 	<parent>
 		<groupId>org.silver</groupId>
-		<artifactId>silver</artifactId> 
+		<artifactId>silver</artifactId>
 		<version>1.0.0</version>
 	</parent>
 	<properties>

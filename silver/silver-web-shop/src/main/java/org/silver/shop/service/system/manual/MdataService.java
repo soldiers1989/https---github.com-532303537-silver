@@ -341,8 +341,12 @@ public class MdataService {
 				secLegalCount = Double.parseDouble(strSecondLegalCount);
 
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
-
+				//海关编码
 				customsCode = rowIndex.getString("customsCode").replace("{\"value\":\"", "").replace("\"}", "");
+				
+				//
+				stdUnit = rowIndex.getString("stdUnit").replace("{\"value\":\"", "").replace("\"}", "");
+				
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 1, c, i + 1);
@@ -441,6 +445,7 @@ public class MdataService {
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
 					} else if (c == 52) {
+						//海关编码
 						excel.writCell(0, i + 1, c, customsCode);
 					} else if (c == 53) {
 						// 快递公司
@@ -501,6 +506,12 @@ public class MdataService {
 					} else if (c == 79) {
 						// 行邮税号
 						excel.writCell(0, i + 1, c, "27000000");
+					}
+					
+					//5157-顺德陈村港澳货柜车检查场
+					if("5157".equals(customsCode)){
+						excel.writCell(0, i + 1, 80, stdUnit);
+						//excel.writCell(0, i + 1, 81, customsCode);
 					}
 				}
 			}

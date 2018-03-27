@@ -161,11 +161,11 @@ public class MerchantServiceImpl implements MerchantService {
 			if (!"1".equals(reRecordMap.get(BaseCode.STATUS.toString()))) {
 				return reRecordMap;
 			}
-			Map<String, Object> reAppkeyMap = appkeyService.createRecord("银盟跨境商城-授权网关", "YM", phone, merchantId,
+			/*Map<String, Object> reAppkeyMap = appkeyService.createRecord("银盟跨境商城-授权网关", "YM", phone, merchantId,
 					merchantName);
 			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
 				return reAppkeyMap;
-			}
+			}*/
 		}
 		return ReturnInfoUtils.successInfo();
 	}

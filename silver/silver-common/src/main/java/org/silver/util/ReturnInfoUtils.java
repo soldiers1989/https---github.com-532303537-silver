@@ -66,11 +66,4 @@ public class ReturnInfoUtils {
 		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
 		return statusMap;
 	}
-	public static void main(String[] args) {
-		String str = "张䶮䶮";
-		JSONObject json = new JSONObject();
-		json.put("status", "1");
-		//int i = (int) json.get("status");
-		System.out.println(str);
-	}
 }

@@ -40,7 +40,7 @@
 		<dubbo.version>2.8.4</dubbo.version>
 		<fastjson.version>1.2.8</fastjson.version>
 		<!-- -->
-		<poi.version>3.9</poi.version>
+		<poi.version>3.11</poi.version>
 		<jxl.version>2.6.12</jxl.version>
 		<xfire.version>1.2.6</xfire.version>
 		<jsch.version>0.1.53</jsch.version>

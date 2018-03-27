@@ -18,7 +18,6 @@ import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Manager;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.organization.ManagerTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
-import net.sf.ezmorph.object.SwitchingMorpher;
 import net.sf.json.JSONObject;
 
 /**
@@ -149,7 +147,7 @@ public class ManagerController {
 	}
 
 	/**
-	 * 管理员查看商户详情
+	 * 管理员获取商户基本信息
 	 * 
 	 * @param req
 	 * @param response
@@ -157,11 +155,11 @@ public class ManagerController {
 	 *            商户Id
 	 * @return
 	 */
-	@RequestMapping(value = "/findMerchantDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	@ApiOperation("管理员查询商户详情")
-	public String findMerchantDetail(HttpServletRequest req, HttpServletResponse response,
+	@ApiOperation("管理员获取商户基本信息")
+	public String getMerchantInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -591,4 +589,38 @@ public class ManagerController {
 		Map<String, Object> statusMap = managerTransaction.resetMerchantLoginPassword(merchantId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	
+	/**
+	 * 管理员获取商户业务(详情)信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @param merchantId
+	 *            商户Id
+	 * @return
+	 */
+	@RequestMapping(value = "/getMerchantBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员获取商户业务(详情)信息")
+	public String getMerchantBusinessInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (merchantId != null) {
+			statusMap = managerTransaction.getMerchantBusinessInfo(merchantId);
+			return JSONObject.fromObject(statusMap).toString();
+		} else {
+			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
+			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(statusMap).toString();
+		}
+	}
+	
+	
 }

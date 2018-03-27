@@ -159,5 +159,12 @@ public interface ManagerService {
 	 */
 	public Map<String, Object> resetMerchantLoginPassword(String merchantId, String managerId, String managerName);
 
+	/**
+	 * 管理员获取商户业务(详情)信息
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	public Map<String, Object> getMerchantBusinessInfo(String merchantId);
+
 	
 }
