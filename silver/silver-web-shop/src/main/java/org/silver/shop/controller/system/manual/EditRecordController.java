@@ -551,8 +551,7 @@ public class EditRecordController {
 			String value = req.getParameter(key);
 			customsMap.put(key, value);
 		}
-		Map<String, Object> statusMap = manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap)).toString();
 	}
 
 	/**
@@ -569,8 +568,7 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(manualService.pretreatmentGroupAddOrder(req)).toString();
 	}
 
 	/**
@@ -588,8 +586,7 @@ public class EditRecordController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = manualService.pretreatmentGroupAddOrder(req);
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(manualService.pretreatmentGroupAddOrder(req)).toString();
 	}
 
 	/**
@@ -616,8 +613,14 @@ public class EditRecordController {
 			e.printStackTrace();
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
 		}
-		Map<String, Object> reqMap = manualService.managerDeleteMorder(json, note);
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(manualService.managerDeleteMorder(json, note)).toString();
 	}
 
+	
+	public static void main(String[] args) {
+		JSONArray json = new JSONArray();
+		Map<String,Object> map = new HashMap<>();
+		json.add("YM20180312014291674");
+		System.out.println(json.toString());
+	}
 }

@@ -1012,13 +1012,13 @@ public class MorderServiceImpl implements MorderService {
 			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
 		}
 		// 备用字段
-		String spareParams = strArr[32];
+	/*	String spareParams = strArr[32];
 		if (StringEmptyUtils.isNotEmpty(spareParams)) {
 			JSONObject json = JSONObject.fromObject(spareParams);
 			order.setSpareParams(json.toString());
 			String ehsEntName = json.get("ehsEntName") + "";
 
-		}
+		}*/ 
 
 		if (!morderDao.update(order)) {
 			return ReturnInfoUtils.errorInfo("更新订单备案信息错误!");
@@ -1712,8 +1712,9 @@ public class MorderServiceImpl implements MorderService {
 					if (!"1".equals(redelMOrderSub.get(BaseCode.STATUS.toString()))) {
 						return redelMOrderSub;
 					}
+				}else{
+					return ReturnInfoUtils.errorInfo("查询订单信息或订单商品信息失败,服务器繁忙!");
 				}
-				return ReturnInfoUtils.errorInfo("查询订单信息或订单商品信息失败,服务器繁忙!");
 			}
 			return ReturnInfoUtils.successInfo();
 		}

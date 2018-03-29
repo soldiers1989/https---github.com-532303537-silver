@@ -172,7 +172,7 @@ public class ExcelUtil {
 				try {
 					book = new XSSFWorkbook(f);
 				} catch (Exception e) {
-					 e.printStackTrace();
+					// e.printStackTrace();
 					 book = new HSSFWorkbook(new FileInputStream(f));
 				}
 				fls.close();
@@ -535,11 +535,18 @@ public class ExcelUtil {
 		// List<Object> stuL = null;//std.findByProperty("school_id",
 		// "11010001");
 
-		File f = new File("C:\\Users\\Lenovo\\Desktop\\Work\\国宗表单\\国宗原订单\\2018-03\\客户订单导入模板78428598356，22件，总货值10824最终申报表(银盟).xlsx");
+		File f = new File("C:\\Users\\Lenovo\\Desktop\\Work\\国宗表单\\回执\\2018-03\\佛山\\2018-03-28佛山1100213989520-1228单-银盟回执.xls");
 
 		ExcelUtil excel = new ExcelUtil(f);
 		excel.open();
-		System.out.println(excel.getCell(0, 0));
+		System.out.println(excel.getCell(0, 81));
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("--------------");
 		/*
 		 * for (int i = 0; i < 5; i++) {
 		 * 

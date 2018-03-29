@@ -1,8 +1,10 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +20,7 @@ import org.silver.shop.service.system.commerce.OrderTransaction;
 import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -361,8 +364,8 @@ public class OrderController {
 
 	@RequestMapping(value = "/getAlreadyDelOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("根据指定信息搜索商户订单信息")
-	@RequiresRoles("Merchant")
+	@ApiOperation("获取已删除的订单信息")
+	@RequiresRoles("Manager")
 	public String getAlreadyDelOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -392,13 +395,12 @@ public class OrderController {
 	@RequestMapping(value = "/thirdPartyBusiness", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("第三方商城平台传递订单信息入口")
-	public String thirdPartyBusiness(HttpServletRequest req, HttpServletResponse response) {
+	public String thirdPartyBusiness(HttpServletRequest req, HttpServletResponse response ) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
@@ -406,8 +408,82 @@ public class OrderController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
+		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
+		}
+		if( StringEmptyUtils.isEmpty(datasMap.get("datas"))){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单信息不能为空,请核对信息!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.thirdPartyBusiness(datasMap)).toString();
+	}
+	
+	
+	public static void main(String[] args) {
+		Map<String,Object> item = new HashMap<>();
+		List<JSONObject> orderGoodsList=  new ArrayList<>();
+		JSONObject order = new JSONObject();
+		JSONObject goods = new JSONObject();
+		JSONObject goods2 = new JSONObject();
+		order.element("EntOrderNo", "TEST1234");
+		order.element("OrderStatus","1");
+		order.element("PayStatus","1");
+		order.element("OrderGoodTotal",210);
+		order.element("OrderGoodTotalCurr","142");
+		order.element("Freight",0);
+		order.element("Tax",0);
+		order.element("OtherPayment","1");
+		order.element("ActualAmountPaid",210);
+		order.element("RecipientName","收货人姓名");
+		order.element("RecipientAddr","收货人地址");
+		order.element("RecipientID","37021119770918101");
+		order.element("RecipientTel","收货人电话");
+		order.element("RecipientCountry","116");
+		order.element("RecipientProvincesCode","110000");
+		order.element("OrderDocAcount","下单人账号");
+		order.element("OrderDocName","下单人姓名");
+		order.element("OrderDocType","1");
+		order.element("OrderDocId","37021119770918101X");
+		order.element("OrderDocTel","下单人电话");
+		order.element("OrderDate","订单日期");
 		
-		statusMap = orderTransaction.thirdPartyBusiness(datasMap);
-		return JSONObject.fromObject(statusMap).toString();
+		goods.element("Seq", 1);
+		goods.element("EntGoodsNo","TEst321");
+		goods.element("CIQGoodsNo","*");
+		// goods.element("BarCode");
+		goods.element("CusGoodsNo","*");
+		goods.element("GoodsName","商品名称");
+		goods.element("GoodsStyle","商品规格");
+		goods.element("OriginCountry","142");
+		goods.element("Qty",1);
+		goods.element("HSCode","HS编码");
+		goods.element("Unit","110");
+		goods.element("Price",110);
+		goods.element("Total" ,(1 * 110));
+		goods.element("CurrCode","142");
+		goods.element("Brand","品牌");
+		orderGoodsList.add(goods);
+		order.element("orderGoodsList", orderGoodsList);
+		
+		goods2.element("Seq", 1);
+		goods2.element("EntGoodsNo","TEst2");
+		goods2.element("CIQGoodsNo","*");
+		// goods.element("BarCode");
+		goods2.element("CusGoodsNo","*");
+		goods2.element("GoodsName","商品名称");
+		goods2.element("GoodsStyle","商品规格");
+		goods2.element("OriginCountry","142");
+		goods2.element("Qty",1);
+		goods2.element("HSCode","HS编码");
+		goods2.element("Unit","110");
+		goods2.element("Price","100");
+		goods2.element("Total" ,(1 * 100));
+		goods2.element("CurrCode","142");
+		goods2.element("Brand","品牌");
+		orderGoodsList.add(goods2);
+		order.element("orderGoodsList", orderGoodsList);
+		
+		item.put("datas", order);
+		item.put("merchantId", "MerchantId_00001");
+		YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item);
 	}
 }

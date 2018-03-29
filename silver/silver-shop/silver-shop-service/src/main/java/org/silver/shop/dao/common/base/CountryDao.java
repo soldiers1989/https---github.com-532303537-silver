@@ -1,8 +1,9 @@
 package org.silver.shop.dao.common.base;
 
-import java.util.List;
 
-public interface CountryDao {
+import org.silver.shop.dao.BaseDao;
+
+
+public interface CountryDao extends BaseDao{
 	
-	public List<Object> findAllCountry();
 }

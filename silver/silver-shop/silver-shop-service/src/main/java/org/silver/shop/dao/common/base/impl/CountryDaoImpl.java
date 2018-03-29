@@ -10,9 +10,4 @@ import org.springframework.stereotype.Repository;
 @Repository("countryDao")
 public class CountryDaoImpl extends BaseDaoImpl<Object> implements CountryDao {
 
-	@Override
-	public List<Object> findAllCountry() {
-		return super.findAll(Country.class, 0, 0);
-	}
-
 }

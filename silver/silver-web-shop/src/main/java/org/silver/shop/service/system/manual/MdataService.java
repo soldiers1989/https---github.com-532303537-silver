@@ -27,6 +27,7 @@ import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
 import org.silver.util.SerializeUtil;
 import org.silver.util.SplitListUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -507,12 +508,7 @@ public class MdataService {
 						// 行邮税号
 						excel.writCell(0, i + 1, c, "27000000");
 					}
-					
-					//5157-顺德陈村港澳货柜车检查场
-					if("5157".equals(customsCode)){
-						excel.writCell(0, i + 1, 80, stdUnit);
-						//excel.writCell(0, i + 1, 81, customsCode);
-					}
+					foShanBusiness(excel,customsCode,stdUnit,i);
 				}
 			}
 			excel.closeExcel();
@@ -522,6 +518,26 @@ public class MdataService {
 			return statusMap;
 		}
 		return null;
+	}
+
+	/**
+	 * 针对国宗佛山导出订单信息表做业务处理
+	 * @param excel 文件
+	 * @param customsCode 海关代码 
+	 * @param stdUnit 第一法定计量单位
+	 * @param rowNum excel写入行数
+	 */
+	private void foShanBusiness(ExcelUtil excel, String customsCode, String stdUnit,int rowNum) {
+		//5157-顺德陈村港澳货柜车检查场
+		if("5157".equals(customsCode)){
+			excel.writCell(0, rowNum + 1, 80, stdUnit);
+			String topUnit = excel.getCell(0, 80);
+			String topSecUnit  = excel.getCell(0, 81);
+			if(StringEmptyUtils.isEmpty(topUnit) || StringEmptyUtils.isEmpty(topSecUnit)){
+				excel.writCell(0, 0, 80, "法定单位");
+				excel.writCell(0, 0, 81, "第二单位");
+			}
+		}
 	}
 
 	// 读取缓存中excel导入实时数据
@@ -541,8 +557,10 @@ public class MdataService {
 	}
 
 	public static void main(String[] args) {
-		DecimalFormat df = new DecimalFormat("0.00");
-		double d = 1.043352;
-		System.out.println(df.format(d));
+		String str = "2018-03-28 11:32:58";
+		Date date= DateUtil.parseDate2(str);
+		String str2 = "2018-03-28 11:25:47";
+		Date date2 = DateUtil.parseDate2(str2);
+		System.out.println(date.getTime() - date2.getTime() );
 	}
 }

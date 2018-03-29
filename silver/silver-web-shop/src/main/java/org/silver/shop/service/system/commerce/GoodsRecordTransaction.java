@@ -487,7 +487,8 @@ public class GoodsRecordTransaction {
 	 * 根据编码查询计量单位
 	 * 
 	 * @param reList
-	 * @param value 计量单位编码
+	 * @param value
+	 *            计量单位编码
 	 * @return String
 	 */
 	private String getNumericByUnit(List reList, String value) {
@@ -504,8 +505,9 @@ public class GoodsRecordTransaction {
 	/**
 	 * 根据中文名称查询计量单位
 	 * 
-	 * @param list 
-	 * @param name 计量单位中文名称
+	 * @param list
+	 * @param name
+	 *            计量单位中文名称
 	 * @return String
 	 */
 	private String getChineseByUnit(List list, String name) {
@@ -526,15 +528,20 @@ public class GoodsRecordTransaction {
 	 * @return String
 	 */
 	private String findCountry(String value) {
-		List reList = countryTransaction.findAllCountry();
+		Map<String, Object> reMap = countryTransaction.findAllCountry();
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return null;
+		}
+		List<Country> reList = (List<Country>) reMap.get(BaseCode.DATAS.toString());
 		if (reList != null && !reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
-				Country country = (Country) reList.get(i);
+				Country country =  reList.get(i);
 				if (value.equals(country.getCountryName())) {
 					return country.getCountryCode();
 				}
 			}
 		}
+
 		return null;
 	}
 
@@ -559,13 +566,13 @@ public class GoodsRecordTransaction {
 	}
 
 	// 商户修改备案商品信息(局限于未备案与备案失败的商品)
-	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req  ) {
+	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
 			String key = isKeys.nextElement();

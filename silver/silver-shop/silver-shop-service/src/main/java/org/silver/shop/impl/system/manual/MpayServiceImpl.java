@@ -409,6 +409,7 @@ public class MpayServiceImpl implements MpayService {
 					 * BufferUtils.writeRedis("1", errorList, (realRowCount -
 					 * 1), serialNo, "order") continue; }
 					 */
+				
 					Map<String, Object> reOrderMap = sendOrder(customsMap, orderSubList, tok, order);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
@@ -425,6 +426,7 @@ public class MpayServiceImpl implements MpayService {
 						}
 					}
 				}
+			Thread.sleep(200);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -642,6 +644,7 @@ public class MpayServiceImpl implements MpayService {
 			// String resultStr2 =
 			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// orderMap);
+			
 			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);

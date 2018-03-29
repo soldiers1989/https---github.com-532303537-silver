@@ -276,6 +276,7 @@ public class PaymentServiceImpl implements PaymentService {
 					continue;
 				}
 				bufferUtils.writeRedis(errorList, paramsMap);
+				Thread.sleep(200);
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
