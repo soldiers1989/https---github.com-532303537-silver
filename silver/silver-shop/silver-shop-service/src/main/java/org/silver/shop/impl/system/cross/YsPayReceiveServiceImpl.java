@@ -52,10 +52,14 @@ import net.sf.json.JSONObject;
 
 @Service(interfaceClass = YsPayReceiveService.class)
 public class YsPayReceiveServiceImpl implements YsPayReceiveService {
-	// 进出境标志I-进，E-出
+	/**
+	 *  进出境标志I-进，E-出
+	 */
 	private static final String IEFLAG = "I";
 
-	// 币制默认为人民币
+	/**
+	 *  币制默认为人民币
+	 */
 	private static final String CURRCODE = "142";
 	protected static final Logger logger = LogManager.getLogger();
 
@@ -171,7 +175,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return reOrderRecordGoodsMap;
 				}
 				// 请求获取tok
-				Map<String, Object> reTokMap = accessTokenService.getRedisToks();
+				Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
 				if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
 					return reTokMap;
 				}
@@ -606,9 +610,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentList.add(json);
 			// 客戶端签名
 			String clientsign = "";
+			//YM APPKEY = "4a5de70025a7425dabeef6e8ea752976";
+			String appkey = recordMap.get("appkey")+"";
 			try {
 				clientsign = MD5.getMD5(
-						(YmMallConfig.APPKEY + tok + paymentList.toString() + notifyurl + timestamp).getBytes("UTF-8"));
+						(appkey + tok + paymentList.toString() + notifyurl + timestamp).getBytes("UTF-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -628,7 +634,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("currCode", CURRCODE);
 			Date date = new Date();
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
-			paymentMap.put("appkey", YmMallConfig.APPKEY.trim());
+			paymentMap.put("appkey", appkey);
 			// 商品发起备案(录入)日期
 			String inputDate = sdf.format(date);
 			paymentMap.put("inputDate", inputDate);
@@ -682,7 +688,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paymentMap.put("datas", paymentList2.toString());
 				try {
 					clientsign = MD5
-							.getMD5((YmMallConfig.APPKEY + tok + paymentList2.toString() + notifyurl + timestamp)
+							.getMD5((appkey+ tok + paymentList2.toString() + notifyurl + timestamp)
 									.getBytes("UTF-8"));
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();

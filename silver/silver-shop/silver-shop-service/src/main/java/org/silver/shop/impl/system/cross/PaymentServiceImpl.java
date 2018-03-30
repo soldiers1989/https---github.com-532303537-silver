@@ -18,6 +18,7 @@ import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.cross.PaymentContent;
+import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
@@ -122,9 +123,9 @@ public class PaymentServiceImpl implements PaymentService {
 		String ciqOrgCode = recordMap.get("ciqOrgCode") + "";
 		String customsCode = recordMap.get("customsCode") + "";
 		// 校验前台传递口岸、海关、智检编码
-		Map<String, Object> customsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
-		if (!"1".equals(customsMap.get(BaseCode.STATUS.toString()))) {
-			return customsMap;
+		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
+		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
+			return reCustomsMap;
 		}
 		// 获取商户在对应口岸的备案信息
 		Map<String, Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(merchantId, eport);
@@ -137,14 +138,37 @@ public class PaymentServiceImpl implements PaymentService {
 		recordMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
 		recordMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
 
+		// 获取商户在对应口岸的备案信息
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		int thirdPartyFlag = merchant.getThirdPartyFlag();
+		// 当商户标识为第三方平台商户时,则使用第三方appkey
+		if (thirdPartyFlag == 2) {
+			Map<String, Object> reAppkeyMap = merchantUtils.getMerchantAppkey(merchantId);
+			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
+				return reAppkeyMap;
+			}
+			Appkey appkey = (Appkey) reAppkeyMap.get(BaseCode.DATAS.toString());
+			// 打包至海关备案信息Map中
+			recordMap.put("appkey", appkey.getApp_key());
+			recordMap.put("appSecret", appkey.getApp_secret());
+		} else {
+			// 当不是第三方时则使用银盟商城appkey
+			recordMap.put("appkey", YmMallConfig.APPKEY);
+			recordMap.put("appSecret", YmMallConfig.APPSECRET);
+		}
 		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
 		// 请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks();
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(recordMap.get("appkey") + "",
+				recordMap.get("appSecret") + "");
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			return reTokMap;
+			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg") + "");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		// 获取流水号
@@ -170,9 +194,13 @@ public class PaymentServiceImpl implements PaymentService {
 
 	/**
 	 * 计算商户余额是否有足够的钱支付本次推送支付单手续费
-	 * @param jsonList 支付流水号集合
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
+	 * 
+	 * @param jsonList
+	 *            支付流水号集合
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
 	 * @return Map
 	 */
 	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId,
@@ -685,13 +713,40 @@ public class PaymentServiceImpl implements PaymentService {
 			Table reTable = paymentDao.getAgentPaymentReport(datasMap);
 			if (reTable == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-			}else if(!reTable.getRows().isEmpty()){
+			} else if (!reTable.getRows().isEmpty()) {
 				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"), 0);
-			}else{
+			} else {
 				return ReturnInfoUtils.errorInfo("暂无数据");
 			}
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误！");
+	}
+
+	@Override
+	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray,String managerName) {
+		if (jsonArray != null && !jsonArray.isEmpty()) {
+			Map<String, Object> params = new HashMap<>();
+			for (int i = 0; i < jsonArray.size(); i++) {
+				String tradeNo = jsonArray.get(i) + "";
+				params.put("trade_no", tradeNo);
+				List<Mpay>  reMpayList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
+				if(reMpayList == null){
+					return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]查询失败,服务器繁忙!");
+				}else if(!reMpayList.isEmpty()){
+					Mpay pay=  reMpayList.get(0);
+					pay.setDel_flag(1);
+					pay.setUpdate_by(managerName);
+					pay.setUpdate_date(new Date());
+					if(!paymentDao.update(pay)){
+						return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]修改状态失败,服务器繁忙!");
+					}
+				}else{
+					return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]未找到对应的支付单信息!");
+				}
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
 }

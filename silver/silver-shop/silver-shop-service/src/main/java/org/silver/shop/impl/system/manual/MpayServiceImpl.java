@@ -26,6 +26,7 @@ import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
@@ -265,7 +266,9 @@ public class MpayServiceImpl implements MpayService {
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
-		Map<String, Object> statusMap = new HashMap<>();
+
+		// 总参数
+		Map<String, Object> params = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
@@ -291,33 +294,56 @@ public class MpayServiceImpl implements MpayService {
 		customsMap.put("ebEntName", merchantRecordInfo.getEbEntName());
 		customsMap.put("ebpEntNo", merchantRecordInfo.getEbpEntNo());
 		customsMap.put("ebpEntName", merchantRecordInfo.getEbpEntName());
-
+		// 获取商户信息
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		int thirdPartyFlag = merchant.getThirdPartyFlag();
+		// 当商户标识为第三方平台商户时,则使用第三方appkey
+		if (thirdPartyFlag == 2) {
+			Map<String, Object> reAppkeyMap = merchantUtils.getMerchantAppkey(merchantId);
+			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
+				return reAppkeyMap;
+			}
+			Appkey appkey = (Appkey) reAppkeyMap.get(BaseCode.DATAS.toString());
+			// 打包至海关备案信息Map中
+			customsMap.put("appkey", appkey.getApp_key());
+			customsMap.put("appSecret", appkey.getApp_secret());
+		} else {
+			// 当不是第三方时则使用银盟商城appkey
+			customsMap.put("appkey", YmMallConfig.APPKEY);
+			customsMap.put("appSecret", YmMallConfig.APPSECRET);
+		}
 		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchantId, merchantName);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
 
 		// 请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks();
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(customsMap.get("appkey") + "",
+				customsMap.get("appSecret") + "");
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			return reTokMap;
+			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg")+"");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		// 获取流水号
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		// 总数
 		int totalCount = jsonList.size();
-		Map<String, Object> params = new HashMap<>();
+
 		params.put("merchantId", merchantId);
 		params.put("merchantName", merchantName);
 		params.put("tok", tok);
 		params.put("serialNo", serialNo);
-
+		//
 		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
 				params);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
+		Map<String, Object> statusMap = new HashMap<>();
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
 		statusMap.put("serialNo", serialNo);
@@ -349,7 +375,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 平台服务费
 		double serviceFee = totalAmountPaid * 0.001;
-		if (merchantBalance - serviceFee < 0) {
+		if ((merchantBalance - serviceFee) < 0) {
 			return ReturnInfoUtils.errorInfo("推送订单失败,余额不足,请先充值后再进行操作!");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -370,6 +396,7 @@ public class MpayServiceImpl implements MpayService {
 		String merchantId = paramsMap.get("merchantId") + "";
 		String tok = paramsMap.get("tok") + "";
 		paramsMap.put("name", "orderRecord");
+
 		// 累计金额
 		for (int i = 0; i < dataList.size(); i++) {
 			try {
@@ -400,16 +427,6 @@ public class MpayServiceImpl implements MpayService {
 						continue;
 					}
 
-					// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-					/*
-					 * if (order.getOrder_record_status() == 3) { Map<String,
-					 * Object> errMap = new HashMap<>();
-					 * errMap.put(BaseCode.MSG.toString(), "[" + orderNo +
-					 * "]订单已成功备案,无需再次发起!"); errorList.add(errMap);
-					 * BufferUtils.writeRedis("1", errorList, (realRowCount -
-					 * 1), serialNo, "order") continue; }
-					 */
-				
 					Map<String, Object> reOrderMap = sendOrder(customsMap, orderSubList, tok, order);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
@@ -426,7 +443,7 @@ public class MpayServiceImpl implements MpayService {
 						}
 					}
 				}
-			Thread.sleep(200);
+				Thread.sleep(200);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
@@ -480,18 +497,18 @@ public class MpayServiceImpl implements MpayService {
 	/**
 	 * 发起订单备案
 	 * 
-	 * @param goodsRecordInfo
-	 *            商品备案头信息实体类
-	 * @param reGoodsRecordDetailList
+	 * @param customsMap
+	 * 
+	 * @param orderSubList
 	 *            备案商品信息List
-	 * @param reOrderGoodsList
-	 *            订单商品List
 	 * @param tok
-	 * @param orderRecordInfo
+	 * 
+	 * @param order
+	 *            订单信息
 	 * @return
 	 */
-	private final Map<String, Object> sendOrder(Map<String, Object> recordMap, List<MorderSub> orderSubList, String tok,
-			Morder order) {
+	private final Map<String, Object> sendOrder(Map<String, Object> customsMap, List<MorderSub> orderSubList,
+			String tok, Morder order) {
 		String timestamp = String.valueOf(System.currentTimeMillis());
 		Map<String, Object> statusMap = new HashMap<>();
 		List<JSONObject> goodsList = new ArrayList<>();
@@ -574,9 +591,12 @@ public class MpayServiceImpl implements MpayService {
 		orderJsonList.add(orderJson);
 		// 客戶端签名
 		String clientsign = "";
+		// YM APPKEY = "4a5de70025a7425dabeef6e8ea752976";
+		String appkey = customsMap.get("appkey") + "";
 		try {
-			clientsign = MD5.getMD5((YmMallConfig.APPKEY + tok + orderJsonList.toString()
-					+ YmMallConfig.MANUALORDERNOTIFYURL + timestamp).getBytes("UTF-8"));
+			clientsign = MD5
+					.getMD5((appkey + tok + orderJsonList.toString() + YmMallConfig.MANUALORDERNOTIFYURL + timestamp)
+							.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -585,7 +605,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 0:商品备案 1:订单推送 2:支付单推送
 		orderMap.put("type", 1);
-		int eport = Integer.parseInt(recordMap.get("eport") + "");
+		int eport = Integer.parseInt(customsMap.get("eport") + "");
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
 		int businessType = eport == 1 ? 3 : 2;
@@ -611,9 +631,9 @@ public class MpayServiceImpl implements MpayService {
 			// 电商企业名称
 			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 		}
-		orderMap.put("ciqOrgCode", recordMap.get("ciqOrgCode"));
-		orderMap.put("customsCode", recordMap.get("customsCode"));
-		orderMap.put("appkey", YmMallConfig.APPKEY);
+		orderMap.put("ciqOrgCode", customsMap.get("ciqOrgCode"));
+		orderMap.put("customsCode", customsMap.get("customsCode"));
+		orderMap.put("appkey", appkey);
 		orderMap.put("clientsign", clientsign);
 		orderMap.put("timestamp", timestamp);
 		orderMap.put("datas", orderJsonList.toString());
@@ -644,7 +664,7 @@ public class MpayServiceImpl implements MpayService {
 			// String resultStr2 =
 			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// orderMap);
-			
+
 			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);

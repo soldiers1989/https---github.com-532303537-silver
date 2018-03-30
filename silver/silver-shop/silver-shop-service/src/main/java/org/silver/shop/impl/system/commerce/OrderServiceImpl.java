@@ -39,6 +39,8 @@ import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.manual.OldManualOrder;
+import org.silver.shop.model.system.manual.OldManualOrderSub;
 import org.silver.shop.model.system.manual.YMorder;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -822,11 +824,11 @@ public class OrderServiceImpl implements OrderService {
 		timestamp = System.currentTimeMillis() + "";
 		String str = amount + merchantCusNo + outTradeNo + notifyUrl + timestamp;
 		// 请求获取tok
-		Map<String, Object> tokMap = accessTokenService.getAccessToken();
-		if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
-			return tokMap;
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
+		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
+			return reTokMap;
 		}
-		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		System.out.println("拼接str--------->>>>>>>>>>>" + str);
 
 		// 客戶端签名
@@ -963,13 +965,6 @@ public class OrderServiceImpl implements OrderService {
 		return getMerchantOrderDailyReport("", merchantName, page, size, startDate, endDate);
 	}
 
-	@Override
-	public Map<String, Object> managerDeleteTestOrder() {
-		if (orderDao.managerDeleteTestOrder()) {
-			ReturnInfoUtils.successInfo();
-		}
-		return null;
-	}
 
 	@Override
 	public Map<String, Object> memberDeleteOrderInfo(String entOrderNo, String memberName) {
@@ -1486,5 +1481,31 @@ public class OrderServiceImpl implements OrderService {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public Map<String, Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size) {
+		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(datasMap);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		List<OldManualOrder> mlist = orderDao.findByPropertyLike(OldManualOrder.class, paramMap, null, page, size);
+		long count = orderDao.findByPropertyLikeCount(OldManualOrder.class, paramMap, null);
+		if (mlist == null) {
+			return ReturnInfoUtils.errorInfo("查询订单信息失败,服务器繁忙!");
+		} else if (!mlist.isEmpty()) {
+			List<Object> list = new ArrayList<>();
+			for (OldManualOrder manualOrder : mlist) {
+				Map<String, Object> item = new HashMap<>();
+				paramMap.clear();
+				paramMap.put("order_id", manualOrder.getOrder_id());
+				List<OldManualOrderSub> goodsList = orderDao.findByPropertyLike(OldManualOrderSub.class, paramMap, null,
+						page, size);
+				item.put("head", manualOrder);
+				item.put("content", goodsList);
+				list.add(item);
+			}
+			return ReturnInfoUtils.successDataInfo(list, count);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
 	}
 }

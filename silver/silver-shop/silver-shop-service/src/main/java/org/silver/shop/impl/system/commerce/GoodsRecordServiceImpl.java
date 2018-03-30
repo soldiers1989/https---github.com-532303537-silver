@@ -151,11 +151,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		Map<String, Object> mRecordMap = (Map<String, Object>) merchantInfoMap.get(BaseCode.DATAS.toString());
 		// 请求获取tok
-		Map<String, Object> tokMap = accessTokenService.getAccessToken();
-		if (!tokMap.get(BaseCode.STATUS.toString()).equals("1")) {
-			return tokMap;
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
+		if (!reTokMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			return reTokMap;
 		}
-		String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		// 验证前台传值
 		Map<String, Object> reGoodsMap = checkData(jsonList, port, 1);
 		if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
@@ -1266,11 +1266,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				break;
 			}
 			// 请求获取tok
-			Map<String, Object> tokMap = accessTokenService.getAccessToken();
-			if (!tokMap.get(BaseCode.STATUS.toString()).equals("1")) {
-				return tokMap;
+			Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
+			if (!reTokMap.get(BaseCode.STATUS.toString()).equals("1")) {
+				return reTokMap;
 			}
-			String tok = tokMap.get(BaseCode.DATAS.toString()) + "";
+			String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 			// 当商品没有备过案的时候
 			if (goodsInfo.getGoodsSerialNo() == null || "".equals(goodsInfo.getGoodsSerialNo())
 					|| "null".equals(goodsInfo.getGoodsSerialNo())) {

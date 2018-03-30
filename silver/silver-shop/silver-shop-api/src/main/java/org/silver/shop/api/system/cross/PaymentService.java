@@ -3,6 +3,7 @@ package org.silver.shop.api.system.cross;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public interface PaymentService {
@@ -141,5 +142,14 @@ public interface PaymentService {
 	 * @return Map
 	 */
 	public Map<String,Object> getAgentPaymentReport(Map<String, Object> datasMap);
+
+
+	/**
+	 * 管理员隐藏(对于商户=删除)手工支付单信息
+	 * @param jsonArray
+	 * @param managerName 
+	 * @return
+	 */
+	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray, String managerName);
 
 }

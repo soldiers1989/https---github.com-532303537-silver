@@ -159,12 +159,6 @@ public interface OrderService {
 	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate,
 			String merchantName);
 
-	/**
-	 * 临时用于管理员删除测试账号下所有数据
-	 * 
-	 * @return
-	 */
-	public Map<String, Object> managerDeleteTestOrder();
 
 	/**
 	 * 用户删除商城下单信息
@@ -187,4 +181,13 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap);
+
+	/**
+	 * 管理员获取已移除到历史记录(删除)表中的订单及订单商品信息
+	 * @param datasMap
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Map<String, Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size);
 }

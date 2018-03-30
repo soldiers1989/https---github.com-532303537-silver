@@ -9,13 +9,15 @@ import java.util.Map;
 public interface AccessTokenService {
 	/**
 	 * 向服务器请求获取AccessToken
-	 * @return String
+	 * @param appkey 银盟平台接入分配的key
+	 * @param appSecret 银盟平台接入分配的appSecret
+	 * @return Map
 	 */
-	public Map<String, Object> getAccessToken();
+	public Map<String, Object> getAccessToken(String appkey,String appSecret);
 	
 	/**
 	 * 获取缓存中的tok
 	 * @return
 	 */
-	public Map<String,Object> getRedisToks();
+	public Map<String,Object> getRedisToks(String appkey,String appSecret);
 }

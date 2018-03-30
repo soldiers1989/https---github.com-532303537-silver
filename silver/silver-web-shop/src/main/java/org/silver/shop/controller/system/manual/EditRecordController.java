@@ -32,6 +32,7 @@ import org.silver.util.ExcelUtil;
 import org.silver.util.FileUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -136,7 +137,7 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 删除手工订单信息
+	 * (隐藏)删除手工订单信息
 	 * 
 	 * @param resp
 	 * @param req
@@ -158,7 +159,7 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 删除手工订单关联的商品信息信息
+	 * (隐藏)删除手工订单关联的商品信息信息
 	 * 
 	 * @param resp
 	 * @param req
@@ -551,7 +552,8 @@ public class EditRecordController {
 			String value = req.getParameter(key);
 			customsMap.put(key, value);
 		}
-		return JSONObject.fromObject(manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap)).toString();
+		return JSONObject.fromObject(manualService.updateManualOrderGoodsInfo(startTime, endTime, customsMap))
+				.toString();
 	}
 
 	/**
@@ -590,7 +592,7 @@ public class EditRecordController {
 	}
 
 	/**
-	 * 管理员批量删除手工订单信息
+	 * 管理员批量删除手工订单信息 (将订单及订单商品信息移至历史记录表中)
 	 * 
 	 * @param resp
 	 * @param req
@@ -598,9 +600,9 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/managerDeleteMorder", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@RequiresRoles("Manager")
-	@ApiOperation("管理员删除手工订单信息")
+	@ApiOperation("管理员删除手工订单信息 (将订单及订单商品信息移至历史记录表中)")
 	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
-			@RequestParam("orderIdPack") String orderIdPack,@RequestParam("note") String note) {
+			@RequestParam("orderIdPack") String orderIdPack, @RequestParam("note") String note) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -614,13 +616,5 @@ public class EditRecordController {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
 		}
 		return JSONObject.fromObject(manualService.managerDeleteMorder(json, note)).toString();
-	}
-
-	
-	public static void main(String[] args) {
-		JSONArray json = new JSONArray();
-		Map<String,Object> map = new HashMap<>();
-		json.add("YM20180312014291674");
-		System.out.println(json.toString());
 	}
 }

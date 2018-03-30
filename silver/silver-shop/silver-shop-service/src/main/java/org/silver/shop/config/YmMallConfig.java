@@ -6,9 +6,13 @@ package org.silver.shop.config;
 public class YmMallConfig {
 	public static final String  TOPSTR = "http://192.168.1.116:8080";
 	public static final String  YM = "http://ym.191ec.com";
-	//
+	/**
+	 * 银盟商城对接接入网关key
+	 */
 	public static final String  APPKEY = "4a5de70025a7425dabeef6e8ea752976";
-	//
+	/**
+	 * 银盟商城对接接入网关的密钥
+	 */
 	public static final String APPSECRET ="NeMs1DFG8xFARwZeSlRZwlT22ayY5oIbkgZg1uCziQ3LfSgqcPN4qGydAt7s3jMW";
 	/**
 	 * 商品备案异步回调URL

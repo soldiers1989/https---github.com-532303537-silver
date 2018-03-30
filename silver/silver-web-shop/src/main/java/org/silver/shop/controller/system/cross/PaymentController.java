@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -267,7 +268,7 @@ public class PaymentController {
 		}
 		return JSONObject.fromObject(paytemTransaction.managerEditMpayInfo(params)).toString();
 	}
-	
+
 	@RequestMapping(value = "/getAgentPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Agent")
@@ -292,5 +293,41 @@ public class PaymentController {
 			return JSONObject.fromObject(paytemTransaction.getAgentPaymentReport(datasMap)).toString();
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+	}
+
+	/**
+	 * 管理员隐藏(对于商户=删除)手工支付单信息
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/managerHideMpayInfo", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员隐藏(对于商户=删除)手工支付单信息")
+	public String managerHideMpayInfo(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("paymentIdPack") String paymentIdPack) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		JSONArray jsonArray = null;
+		try {
+			jsonArray = JSONArray.fromObject(paymentIdPack);
+		} catch (Exception e) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数格式错误!")).toString();
+		}
+		if(!jsonArray.isEmpty()){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(paytemTransaction.managerHideMpayInfo(jsonArray)).toString();
+	}
+	
+	public static void main(String[] args) {
+		JSONArray json = new JSONArray();
+		json.add("aa11");
+		System.out.println(json.get(0));
 	}
 }

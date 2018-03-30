@@ -137,9 +137,6 @@ public class OrderTransaction {
 		return orderService.getOrderReport(page, size, startDate, endDate, merchantName);
 	}
 
-	public Map<String, Object> managerDeleteTestOrder() {
-		return orderService.managerDeleteTestOrder();
-	}
 
 	// 用户删除订单信息
 	public Object memberDeleteOrderInfo(String entOrderNo) {
@@ -163,8 +160,9 @@ public class OrderTransaction {
 		return orderService.getAgentOrderReport(datasMap);
 	}
 
-	public Object getAlreadyDelOrderInfo(HttpServletRequest req, int page, int size) {
-		return null;
+	public Map<String,Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size) {
+		
+		return orderService.getAlreadyDelOrderInfo(datasMap,page,size);
 	}
 
 	//第三方商城平台传递订单信息入口

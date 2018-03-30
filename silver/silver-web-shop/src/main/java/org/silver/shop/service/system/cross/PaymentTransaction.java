@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service
@@ -120,5 +121,13 @@ public class PaymentTransaction {
 		// datasMap.put("agentId", agentId);
 		// datasMap.put("agentName", agentName);
 		return paymentService.getAgentPaymentReport(datasMap);
+	}
+
+	public Map<String,Object> managerHideMpayInfo(JSONArray jsonArray) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerName = managerInfo.getManagerName();
+		return paymentService.managerHideMpayInfo(jsonArray,managerName);
 	}
 }

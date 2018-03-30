@@ -307,19 +307,6 @@ public class OrderController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	@RequestMapping(value = "/managerDeleteTestOrder", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@ApiOperation("临时接口,管理员删除测试账号下所有测试订单信息")
-	@RequiresRoles("Manager")
-	public String managerDeleteTestOrder(HttpServletRequest req, HttpServletResponse response) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(orderTransaction.managerDeleteTestOrder()).toString();
-	}
-
 	@RequestMapping(value = "/memberDeleteOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Member")
@@ -362,9 +349,15 @@ public class OrderController {
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 	}
 
+	/**
+	 * 管理员获取已移除到历史记录(删除)表中的订单及订单商品信息
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
 	@RequestMapping(value = "/getAlreadyDelOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("获取已删除的订单信息")
+	@ApiOperation("管理员获取已删除的订单信息")
 	@RequiresRoles("Manager")
 	public String getAlreadyDelOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
@@ -382,7 +375,7 @@ public class OrderController {
 		}
 		datasMap.remove("page");
 		datasMap.remove("size");
-		return JSONObject.fromObject(orderTransaction.getAlreadyDelOrderInfo(req, page, size)).toString();
+		return JSONObject.fromObject(orderTransaction.getAlreadyDelOrderInfo(datasMap, page, size)).toString();
 	}
 
 	/**
@@ -435,7 +428,7 @@ public class OrderController {
 		order.element("ActualAmountPaid",210);
 		order.element("RecipientName","收货人姓名");
 		order.element("RecipientAddr","收货人地址");
-		order.element("RecipientID","37021119770918101");
+		order.element("RecipientID","");
 		order.element("RecipientTel","收货人电话");
 		order.element("RecipientCountry","116");
 		order.element("RecipientProvincesCode","110000");
