@@ -1,5 +1,7 @@
 package org.silver.shop.impl.system.manual;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Resource;
 
@@ -40,6 +43,7 @@ import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.CalculateCpuUtils;
+import org.silver.util.CompressUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
@@ -325,7 +329,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> reTokMap = accessTokenService.getRedisToks(customsMap.get("appkey") + "",
 				customsMap.get("appSecret") + "");
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg")+"");
+			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg") + "");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		// 获取流水号
@@ -856,15 +860,20 @@ public class MpayServiceImpl implements MpayService {
 	@Override
 	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,
 			String date, String serialNo) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Table reList = morderDao.getOrderAndOrderGoodsInfo(merchantId, date, Integer.parseInt(serialNo));
-		if (reList != null && reList.getRows().size() > 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put("datas", Transform.tableToJson(reList).getJSONArray("rows"));
-			return statusMap;
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器异常!");
+		} else if (!reList.getRows().isEmpty()) {
+			String dataStr = Transform.tableToJson(reList).getJSONArray("rows") + "";
+			try {
+				dataStr = CompressUtils.compress(dataStr);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return ReturnInfoUtils.successDataInfo(dataStr, 0);
+		}else{
+			return ReturnInfoUtils.errorInfo("未找到订单数据！");
 		}
-		statusMap.put("status", -3);
-		return statusMap;
 	}
 
 }

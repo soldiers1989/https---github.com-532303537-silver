@@ -11,11 +11,11 @@ import com.justep.baas.data.Table;
 public interface MorderDao extends BaseDao {
 
 	/**
-	 * 
-	 * @param merchantId
-	 * @param date
-	 * @param serialNo
-	 * @return
+	 * 根据订单日期、商户Id、批次号查询订单及订单商品信息
+	 * @param merchantId 商户Id
+	 * @param date 日期
+	 * @param serialNo 批次号
+	 * @return Table
 	 */
 	public Table getOrderAndOrderGoodsInfo(String merchantId, String date, int serialNo);
 
@@ -54,4 +54,22 @@ public interface MorderDao extends BaseDao {
 	 * @return double
 	 */
 	public double statisticalManualOrderAmount(List<Object> itemList);
+
+	/**
+	 * 根据下单人身份证号码,查询日期下身份证号码出现的次数
+	 * @param orderDocId 身份号码
+	 * @param endDate 开始时间
+	 * @param startDate  结束时间
+	 * @return  Table
+	 */
+	public Table getIdCardCount(String orderDocId, String startDate, String endDate);
+
+	/**
+	 * 
+	 * @param recipientTel
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	public Table getPhoneCount(String recipientTel, String startDate, String endDate);
 }

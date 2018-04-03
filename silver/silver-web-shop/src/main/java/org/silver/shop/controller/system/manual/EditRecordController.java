@@ -3,35 +3,22 @@ package org.silver.shop.controller.system.manual;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.SecurityUtils;
+
+import org.apache.log4j.Logger;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
-import org.silver.util.AppUtil;
-import org.silver.util.DateUtil;
-import org.silver.util.ExcelUtil;
-import org.silver.util.FileUtils;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,8 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.alibaba.fastjson.JSON;
-
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -49,6 +34,8 @@ import net.sf.json.JSONObject;
 @RestController
 @RequestMapping(value = "/manual")
 public class EditRecordController {
+
+	private static Logger logger = Logger.getLogger(EditRecordController.class);
 
 	@Autowired
 	private ManualService manualService;
@@ -617,4 +604,35 @@ public class EditRecordController {
 		}
 		return JSONObject.fromObject(manualService.managerDeleteMorder(json, note)).toString();
 	}
+
+	/**
+	 * 测试错误日志是否正确记录之文本中
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/testLogs", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("测试错误日志是否正确记录之文本中")
+	public String testLogs(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		JSONArray json = null;
+		try {
+			json.size();
+
+		} catch (Exception e) {
+			logger.error("json错误！", e);
+			// logger.debug("Hello World!");
+			e.printStackTrace();
+		}
+
+		// return JSONObject.fromObject(manualService.managerDeleteMorder(json,
+		// note)).toString();
+		return "";
+	}
+
 }

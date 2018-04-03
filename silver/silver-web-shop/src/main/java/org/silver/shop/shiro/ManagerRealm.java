@@ -30,6 +30,7 @@ public class ManagerRealm extends AuthorizingRealm {
 		if (manager != null) {
 			info = new SimpleAuthorizationInfo();
 			info.addRole(LoginType.MANAGER.toString());
+			//info.addStringPermissions(permissions);
 		}
 		return info;
 	}

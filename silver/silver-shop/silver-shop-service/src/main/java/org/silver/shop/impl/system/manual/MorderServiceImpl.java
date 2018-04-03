@@ -1,6 +1,7 @@
 package org.silver.shop.impl.system.manual;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1012,13 +1013,15 @@ public class MorderServiceImpl implements MorderService {
 			return ReturnInfoUtils.errorInfo("批次号错误,请重新输入!");
 		}
 		// 备用字段
-	/*	String spareParams = strArr[32];
-		if (StringEmptyUtils.isNotEmpty(spareParams)) {
-			JSONObject json = JSONObject.fromObject(spareParams);
-			order.setSpareParams(json.toString());
-			String ehsEntName = json.get("ehsEntName") + "";
-
-		}*/ 
+		/*
+		 * String spareParams = strArr[32]; if
+		 * (StringEmptyUtils.isNotEmpty(spareParams)) { JSONObject json =
+		 * JSONObject.fromObject(spareParams);
+		 * order.setSpareParams(json.toString()); String ehsEntName =
+		 * json.get("ehsEntName") + "";
+		 * 
+		 * }
+		 */
 
 		if (!morderDao.update(order)) {
 			return ReturnInfoUtils.errorInfo("更新订单备案信息错误!");
@@ -1712,7 +1715,7 @@ public class MorderServiceImpl implements MorderService {
 					if (!"1".equals(redelMOrderSub.get(BaseCode.STATUS.toString()))) {
 						return redelMOrderSub;
 					}
-				}else{
+				} else {
 					return ReturnInfoUtils.errorInfo("查询订单信息或订单商品信息失败,服务器繁忙!");
 				}
 			}
@@ -1818,4 +1821,167 @@ public class MorderServiceImpl implements MorderService {
 		return ReturnInfoUtils.errorInfo("手工订单与商品信息回滚成功!!");
 	}
 
+	@Override
+	public Map<String, Object> checkIdCardCount(String orderDocId) {
+		if (StringEmptyUtils.isEmpty(orderDocId)) {
+			return ReturnInfoUtils.errorInfo("请求参数错误,身份证号码不能为空!");
+		}
+		Map<String, Object> reTodayMap = checkTodayIdCardCount(orderDocId);
+		if (!"1".equals(reTodayMap.get(BaseCode.STATUS.toString()))) {
+			return reTodayMap;
+		}
+		Map<String, Object> reWeekMap = checkWeekIdCardCount(orderDocId);
+		if (!"1".equals(reWeekMap.get(BaseCode.STATUS.toString()))) {
+			return reWeekMap;
+		}
+		
+		return checkMonthIdCardCount(orderDocId);
+	}
+
+	/**
+	 * 检查一个月以内身份证出现次数
+	 * @param orderDocId 身份证号码
+	 * @return Map
+	 */
+	private Map<String, Object> checkMonthIdCardCount(String orderDocId) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		calendar.add(Calendar.MONTH, -1); // 设置为一个月前
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		Table weekCountTable = morderDao.getIdCardCount(orderDocId, startDate, endDate);
+		if (weekCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询一个月内身份证号码出现次数失败,服务器繁忙！");
+		} else if (!weekCountTable.getRows().isEmpty()) {
+			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 10) {
+				return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]在->" + endDate + "至"+startDate+",已经有过10次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 检查一周内身份证出现次数
+	 * @param orderDocId 下单人身份证号码
+	 * @return Map
+	 */
+	private Map<String, Object> checkWeekIdCardCount(String orderDocId) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		calendar.add(Calendar.WEDNESDAY, -1); // 设置为一周前
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		Table weekCountTable = morderDao.getIdCardCount(orderDocId, startDate, endDate);
+		if (weekCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询一周内身份证号码出现次数失败,服务器繁忙！");
+		} else if (!weekCountTable.getRows().isEmpty()) {
+			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 5) {
+				return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]在->" + endDate + "至"+startDate+",已经有过5次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 校验当天身份证号码出现次数
+	 * 
+	 * @param orderDocId
+	 *            下单人身份证号码
+	 * @return Map
+	 */
+	private Map<String, Object> checkTodayIdCardCount(String orderDocId) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		Table todayCountTable = morderDao.getIdCardCount(orderDocId, startDate, endDate);
+		if (todayCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询当天身份证号码出现次数失败,服务器繁忙！");
+		} else if (!todayCountTable.getRows().isEmpty()) {
+			String strCount = todayCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 3) {
+				return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]在->" + startDate + ",已经有过3次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String,Object> checkRecipientTel(String recipientTel) {
+		if (StringEmptyUtils.isEmpty(recipientTel)) {
+			return ReturnInfoUtils.errorInfo("请求参数错误,收货人电话不能为空!");
+		}
+		Map<String, Object> reTodayMap = checkTodayPhoneCount(recipientTel);
+		if (!"1".equals(reTodayMap.get(BaseCode.STATUS.toString()))) {
+			return reTodayMap;
+		}
+		
+		Map<String, Object> reWeekMap = checkWeekPhoneCount(recipientTel);
+		if (!"1".equals(reWeekMap.get(BaseCode.STATUS.toString()))) {
+			return reWeekMap;
+		}
+		return checkMonthPhoneCount(recipientTel);
+	}
+
+	
+	private Map<String, Object> checkMonthPhoneCount(String recipientTel) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		calendar.add(Calendar.MONTH, -1); // 设置为一个月前
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		Table weekCountTable = morderDao.getPhoneCount(recipientTel, startDate, endDate);
+		if (weekCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询一个月内身份证号码出现次数失败,服务器繁忙！");
+		} else if (!weekCountTable.getRows().isEmpty()) {
+			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 10) {
+				return ReturnInfoUtils.errorInfo("收货人手机号码[" + recipientTel + "]在->" + endDate + "至"+startDate+",已经有过10次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> checkWeekPhoneCount(String recipientTel) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		calendar.add(Calendar.WEDNESDAY, -1); // 设置为一周前
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		Table weekCountTable = morderDao.getPhoneCount(recipientTel, startDate, endDate);
+		if (weekCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询当天收货人手机号码出现次数失败,服务器繁忙！");
+		} else if (!weekCountTable.getRows().isEmpty()) {
+			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 5) {
+				return ReturnInfoUtils.errorInfo("收货人手机号码[" + recipientTel + "]在->" + endDate + "至"+startDate+",已经有过5次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> checkTodayPhoneCount(String recipientTel) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		String startDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd");// 格式化当前时间
+		String endDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd ");// 格式化当前时间
+		Table todayCountTable = morderDao.getPhoneCount(recipientTel, startDate, endDate);
+		if (todayCountTable == null) {
+			return ReturnInfoUtils.errorInfo("查询当天收货人手机号码出现次数失败,服务器繁忙！");
+		} else if (!todayCountTable.getRows().isEmpty()) {
+			String strCount = todayCountTable.getRows().get(0).getValue("count") + "";
+			int idCardCount = Integer.parseInt(strCount);
+			if (idCardCount >= 3) {
+				return ReturnInfoUtils.errorInfo("收货人手机号码[" + recipientTel + "]在->" + startDate + "已经有过3次订单记录,请勿恶意刷单！");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
 }

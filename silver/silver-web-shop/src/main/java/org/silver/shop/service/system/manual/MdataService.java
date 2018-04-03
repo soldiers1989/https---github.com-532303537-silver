@@ -1,6 +1,7 @@
 package org.silver.shop.service.system.manual;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
@@ -21,6 +23,7 @@ import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.manual.MuserService;
 import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.CompressUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
@@ -41,7 +44,7 @@ public class MdataService {
 
 	@Reference
 	private MuserService muserService;
-	@Reference
+	@Reference(timeout = 20000)
 	private MpayService mpayService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
@@ -148,12 +151,19 @@ public class MdataService {
 		String merchantName = merchantInfo.getMerchantName();
 		String filePath = req.getSession().getServletContext().getRealPath("/") + "WEB-INF/" + date.trim() + "_"
 				+ serialNo + ".xls";
+
 		Map<String, Object> reOrderMap = mpayService.downOrderExcelByDateSerialNo(merchantId, merchantName, filePath,
 				date, serialNo);
 		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderMap;
 		}
-		JSONArray jarr = JSONArray.parseArray(reOrderMap.get(BaseCode.DATAS.toString()) + "");
+		String reDatas = null;
+		try {
+			reDatas = CompressUtils.unCompress(reOrderMap.get(BaseCode.DATAS.toString()) + "");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		JSONArray jarr = JSONArray.parseArray(reDatas);
 		return doWrite(jarr, filePath);
 	}
 
@@ -303,8 +313,6 @@ public class MdataService {
 				OrderDocId = OrderDocId.substring(10, OrderDocId.length() - 2);
 				OrderDocTel = rowIndex.getString("OrderDocTel") + "";
 				OrderDocTel = OrderDocTel.substring(10, OrderDocTel.length() - 2);
-				RecipientCityName = rowIndex.getString("RecipientCityName") + "";
-				RecipientCityName = RecipientCityName.substring(10, RecipientCityName.length() - 2);
 				trade_no = rowIndex.getString("trade_no").replace("{\"value\":\"", "").replace("\"}", "");
 				waybill = rowIndex.getString("waybill") + "";
 				waybill = waybill.substring(10, waybill.length() - 2);
@@ -342,12 +350,12 @@ public class MdataService {
 				secLegalCount = Double.parseDouble(strSecondLegalCount);
 
 				HSCode = rowIndex.getString("HSCode").replace("{\"value\":\"", "").replace("\"}", "");
-				//海关编码
+				// 海关编码
 				customsCode = rowIndex.getString("customsCode").replace("{\"value\":\"", "").replace("\"}", "");
-				
+
 				//
 				stdUnit = rowIndex.getString("stdUnit").replace("{\"value\":\"", "").replace("\"}", "");
-				
+
 				for (int c = 0; c < 81; c++) {
 					if (c == 0) {
 						excel.writCell(0, i + 1, c, i + 1);
@@ -446,7 +454,7 @@ public class MdataService {
 					} else if (c == 51) {
 						excel.writCell(0, i + 1, c, waybill);
 					} else if (c == 52) {
-						//海关编码
+						// 海关编码
 						excel.writCell(0, i + 1, c, customsCode);
 					} else if (c == 53) {
 						// 快递公司
@@ -508,7 +516,7 @@ public class MdataService {
 						// 行邮税号
 						excel.writCell(0, i + 1, c, "27000000");
 					}
-					foShanBusiness(excel,customsCode,stdUnit,i);
+					foShanBusiness(excel, customsCode, stdUnit, i);
 				}
 			}
 			excel.closeExcel();
@@ -522,18 +530,23 @@ public class MdataService {
 
 	/**
 	 * 针对国宗佛山导出订单信息表做业务处理
-	 * @param excel 文件
-	 * @param customsCode 海关代码 
-	 * @param stdUnit 第一法定计量单位
-	 * @param rowNum excel写入行数
+	 * 
+	 * @param excel
+	 *            文件
+	 * @param customsCode
+	 *            海关代码
+	 * @param stdUnit
+	 *            第一法定计量单位
+	 * @param rowNum
+	 *            excel写入行数
 	 */
-	private void foShanBusiness(ExcelUtil excel, String customsCode, String stdUnit,int rowNum) {
-		//5157-顺德陈村港澳货柜车检查场
-		if("5157".equals(customsCode)){
+	private void foShanBusiness(ExcelUtil excel, String customsCode, String stdUnit, int rowNum) {
+		// 5157-顺德陈村港澳货柜车检查场
+		if ("5157".equals(customsCode)) {
 			excel.writCell(0, rowNum + 1, 80, stdUnit);
 			String topUnit = excel.getCell(0, 80);
-			String topSecUnit  = excel.getCell(0, 81);
-			if(StringEmptyUtils.isEmpty(topUnit) || StringEmptyUtils.isEmpty(topSecUnit)){
+			String topSecUnit = excel.getCell(0, 81);
+			if (StringEmptyUtils.isEmpty(topUnit) || StringEmptyUtils.isEmpty(topSecUnit)) {
 				excel.writCell(0, 0, 80, "法定单位");
 				excel.writCell(0, 0, 81, "第二单位");
 			}
@@ -554,13 +567,5 @@ public class MdataService {
 			statusMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
 			return statusMap;
 		}
-	}
-
-	public static void main(String[] args) {
-		String str = "2018-03-28 11:32:58";
-		Date date= DateUtil.parseDate2(str);
-		String str2 = "2018-03-28 11:25:47";
-		Date date2 = DateUtil.parseDate2(str2);
-		System.out.println(date.getTime() - date2.getTime() );
 	}
 }

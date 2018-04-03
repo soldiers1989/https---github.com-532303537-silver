@@ -26,7 +26,7 @@ public class RedisInfoUtils {
 	 * @param name
 	 *            名称(标识)
 	 * @param type
-	 *            类型:1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重....待续
+	 *            类型:1-错误,2-订单超额,3-详细地址信息错误,4-身份证错误,5-超重,6-收货人手机号码超过使用次数...待续
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errl, int type,
 			Map<String, Object> params) {

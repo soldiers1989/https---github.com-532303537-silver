@@ -12,12 +12,8 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.silver.shop.component.ChooseDatasourceHandler;
-import org.silver.shop.model.common.base.CustomsPort;
-import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.organization.Proxy;
 
 /**
  * 提供数据访问层共用DAO方法

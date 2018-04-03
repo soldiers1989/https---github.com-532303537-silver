@@ -210,5 +210,19 @@ public interface MorderService {
 	 * @return Map
 	 */
 	public Map<String, Object> managerDeleteMorderDatas(JSONArray json, String note, String managerId, String managerName );
+
+	/**
+	 * 校验订单人身份证出现次数
+	 * @param orderDocId 下单人身份证号码
+	 * @return  Map
+	 */
+	public Map<String, Object> checkIdCardCount(String orderDocId);
+
+	/**
+	 * 校验收货人电话出现次数
+	 * @param recipientTel 收货人电话
+	 * @return  Map
+	 */
+	public Map<String, Object> checkRecipientTel(String recipientTel);
 	
 }

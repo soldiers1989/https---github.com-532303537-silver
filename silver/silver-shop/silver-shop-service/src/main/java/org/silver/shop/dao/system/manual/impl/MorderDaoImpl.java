@@ -24,12 +24,13 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 		Connection c = null;
 		Session session = null;
 		try {
-			String sql = "SELECT * FROM ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.order_id =t2.order_id "
-					+ "WHERE t1.create_date >= ?  AND t1.serial = ? AND t1.merchant_no = ? ORDER BY t2.seqNo";
-			// t1.create_date >= ? AND
+			String sql = "SELECT t1.order_id,t1.trade_no,t1.merchant_no,t1.Fcode,t1.FCY,t1.Tax,t1.ActualAmountPaid,t1.RecipientName,t1.RecipientAddr,t1.RecipientID,t1.RecipientTel,t1.RecipientProvincesCode,t1.OrderDocAcount,t1.OrderDocAcount,t1.OrderDocName,t1.OrderDocType,t1.OrderDocId,t1.OrderDocTel,t1.OrderDate,t1.waybill,t1.senderName,t1.senderCountry,t1.senderAreaCode,t1.senderAddress,t1.senderTel,t1.RecipientCityCode,t1.RecipientAreaCode,t1.postal,t1.RecipientProvincesName,t1.RecipientCityName,t1.RecipientAreaName,t1.customsCode,t2.EntGoodsNo,t2.CIQGoodsNo,t2.CusGoodsNo,t2.HSCode,t2.GoodsName,t2.GoodsStyle,t2.OriginCountry,t2.BarCode,t2.Brand,t2.Qty,t2.Unit,t2.Price,t2.Total,t2.netWt,t2.grossWt,t2.firstLegalCount,t2.secondLegalCount,t2.stdUnit,t2.numOfPackages,t2.packageType,t2.transportModel,t2.seqNo "
+					+ " FROM ym_shop_manual_morder t1 LEFT JOIN ym_shop_manual_morder_sub t2 ON t1.order_id =t2.order_id "
+					+ " WHERE DATE_FORMAT(t1.create_date ,'%Y-%m-%d') = DATE_FORMAT(? ,'%Y-%m-%d') AND t1.serial = ?  AND t1.merchant_no = ? ORDER BY t2.seqNo";
+			//
 			session = getSession();
 			List<Object> sqlParams = new ArrayList<>();
-			sqlParams.add(date + " 00:00:00");
+			sqlParams.add(date);
 			sqlParams.add(serialNo);
 			sqlParams.add(merchantId);
 			Table t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
@@ -132,7 +133,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			for (int i = 0; i < itemList.size(); i++) {
 				sbSQL.append(" ? , ");
 			}
-			//删除结尾的逗号
+			// 删除结尾的逗号
 			sbSQL.deleteCharAt(sbSQL.length() - 2);
 			sbSQL.append(" ) ");
 			session = getSession();
@@ -147,6 +148,60 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 		} catch (Exception re) {
 			re.printStackTrace();
 			return -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public Table getIdCardCount(String orderDocId, String startDate, String endDate) {
+		Session session = null;
+		try {
+			String sql = "SELECT 	n.*, t3.merchantName FROM (	SELECT	DocName,idCard,	count,merchantId,date	FROM (SELECT t1.OrderDocName AS DocName,t1.OrderDocId AS idCard,COUNT(t1.OrderDocId) AS count,t1.merchant_no AS merchantId,	t1.create_date AS date 	FROM ym_shop_manual_morder t1 WHERE t1.create_date >= ? AND t1.create_date <= ? AND t1.OrderDocId = ?  GROUP BY t1.OrderDocId ) m	)  n "
+					+ "LEFT JOIN ym_shop_merchant t3 ON (n.merchantId = t3.merchantId) ORDER BY n.count DESC";
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add(startDate + " 00:00:00");
+			sqlParams.add(endDate + " 23:59:59");
+			sqlParams.add(orderDocId);
+			session = getSession();
+			Table t = null;
+			t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			// log.error("查询数据出错！", re);
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public Table getPhoneCount(String recipientTel, String startDate, String endDate) {
+		Session session = null;
+		try {
+			String sql = "SELECT	n.*, t3.merchantName FROM (	SELECT	DocName,phone,count,merchantId,date	FROM(SELECT	t1.OrderDocName AS DocName,	t1.RecipientTel AS phone,COUNT(t1.RecipientTel) AS count,t1.merchant_no AS merchantId,t1.create_date AS date FROM ym_shop_manual_morder t1	WHERE t1.create_date >= ? AND t1.create_date <= ? AND t1.RecipientTel = ? GROUP BY 	t1.RecipientTel	) m	) n "
+					+ "LEFT JOIN ym_shop_merchant t3 ON (n.merchantId = t3.merchantId)";
+			List<Object> sqlParams = new ArrayList<>();
+			sqlParams.add(startDate + " 00:00:00");
+			sqlParams.add(endDate + " 23:59:59");
+			sqlParams.add(recipientTel);
+			session = getSession();
+			Table t = null;
+			t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			// log.error("查询数据出错！", re);
+			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();

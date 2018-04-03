@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -20,9 +19,6 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.StringEmptyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -31,7 +27,6 @@ import com.justep.baas.data.Transform;
 
 @Service(interfaceClass = GoodsContentService.class)
 public class GoodsContentServiceImpl implements GoodsContentService {
-	private Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired
 	private GoodsContentDao goodsContentDao;
 

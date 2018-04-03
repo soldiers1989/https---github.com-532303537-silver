@@ -13,12 +13,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
+import org.silver.shop.controller.system.manual.EditRecordController;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
@@ -45,6 +47,8 @@ import net.sf.json.JSONObject;
 
 @Service("manualService")
 public class ManualService {
+
+	private static Logger logger = Logger.getLogger(ManualService.class);
 
 	@Reference
 	private MorderService morderService;
@@ -641,6 +645,18 @@ public class ManualService {
 						waybillNo = value;
 					}
 				}
+				Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(orderDocId);
+				if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]"
+							+ reCheckIdCardMap.get(BaseCode.MSG.toString());
+					RedisInfoUtils.commonErrorInfo(msg, errl, 4, params);
+				}
+				Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
+				if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + orderId + "]"
+							+ reCheckPhoneMap.get(BaseCode.MSG.toString());
+					RedisInfoUtils.commonErrorInfo(msg, errl, 6, params);
+				}
 				if (!IdcardValidator.validate18Idcard(orderDocId)) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, 4, params);
@@ -706,7 +722,7 @@ public class ManualService {
 				excelBufferUtils.writeRedis(errl, params);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);
 			String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
 			RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 		} finally {
@@ -948,7 +964,18 @@ public class ManualService {
 						ciqGoodsNo = value;
 					}
 				}
-
+				Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(RecipientID);
+				if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]"
+							+ reCheckIdCardMap.get(BaseCode.MSG.toString());
+					RedisInfoUtils.commonErrorInfo(msg, errl, 4, params);
+				}
+				Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(RecipientTel);
+				if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
+					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]"
+							+ reCheckPhoneMap.get(BaseCode.MSG.toString());
+					RedisInfoUtils.commonErrorInfo(msg, errl, 6, params);
+				}
 				if (!checkEntGoodsNoLength(EntGoodsNo)) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
@@ -1051,7 +1078,7 @@ public class ManualService {
 				excelBufferUtils.writeRedis(errl, params);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
 			String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
 			RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 		} finally {
@@ -1250,16 +1277,16 @@ public class ManualService {
 			String areaCode = a[2].split("_")[0].trim();
 			String areaName = a[2].split("_")[1].trim();
 			if (recipientAddr.contains(areaName) && recipientAddr.contains(provinceName)
-				&& recipientAddr.contains(cityName)	&& !recipientAddr.contains("市辖区") ) {
-					statusMap.put("areaCode", areaCode);
-					statusMap.put("areaName", areaName);
-					statusMap.put("cityCode", cityCode);
-					statusMap.put("cityName", cityName);
-					statusMap.put("provinceCode", provinceCode);
-					statusMap.put("provinceName", provinceName);
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-					return statusMap;
+					&& recipientAddr.contains(cityName) && !recipientAddr.contains("市辖区")) {
+				statusMap.put("areaCode", areaCode);
+				statusMap.put("areaName", areaName);
+				statusMap.put("cityCode", cityCode);
+				statusMap.put("cityName", cityName);
+				statusMap.put("provinceCode", provinceCode);
+				statusMap.put("provinceName", provinceName);
+				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+				return statusMap;
 			} else if (recipientAddr.contains(areaName) && recipientAddr.contains(cityName)) {
 				statusMap.put("areaCode", areaCode);
 				statusMap.put("areaName", areaName);
@@ -1782,6 +1809,7 @@ public class ManualService {
 						ciqGoodsNo = value;
 					}
 				}
+
 				if (!checkEntGoodsNoLength(EntGoodsNo)) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
 					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
