@@ -108,7 +108,7 @@ public interface PaymentService {
 	 * @return
 	 */
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantName);
+			String merchantId);
 
 	/**
 	 * 管理员查询所有商户手工支付单信息

@@ -650,8 +650,8 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantName) {
-		return getMerchantPaymentReport(null, merchantName, page, size, startDate, endDate);
+			String merchantId) {
+		return getMerchantPaymentReport(merchantId, null, page, size, startDate, endDate);
 	}
 
 	@Override

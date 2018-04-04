@@ -213,7 +213,7 @@ public final class SearchUtils {
 					paramMap.put(key, value.trim());
 				}
 				break;
-		
+
 			case "warehouseCode":
 				int one = value.indexOf('_');
 				int two = value.indexOf('_', one + 1);
@@ -242,7 +242,6 @@ public final class SearchUtils {
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
-
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
 			String value = datasMap.get(key) + "".trim();
@@ -282,9 +281,13 @@ public final class SearchUtils {
 				paramMap.put(key, value.trim());
 				break;
 			case DEL_FLAG:
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, Integer.parseInt(value));
-				}
+				paramMap.put(key, Integer.parseInt(value));
+				break;
+			case "RecipientTel"://收货人电话
+				paramMap.put(key, value.trim());
+				break;
+			case "OrderDocId"://下单人身份证号码
+				paramMap.put(key, value.trim());
 				break;
 			default:
 				break;

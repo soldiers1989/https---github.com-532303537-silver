@@ -97,13 +97,13 @@ public interface OrderService {
 	/**
 	 * 获取商户每日订单报表
 	 * 
-	 * @param merchantId
-	 * @param merchantName
-	 * @param page
-	 * @param size
-	 * @param date
-	 * @param endDate
-	 * @return
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 * @param page 页数
+	 * @param size 数目
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return Map
 	 */
 	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
 			String startDate, String endDate);
@@ -178,7 +178,7 @@ public interface OrderService {
 	/**
 	 * 第三方商城平台传递订单信息接口
 	 * @param datasMap
-	 * @return
+	 * @return Map
 	 */
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap);
 

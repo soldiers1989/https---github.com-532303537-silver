@@ -159,8 +159,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public Table getIdCardCount(String orderDocId, String startDate, String endDate) {
 		Session session = null;
 		try {
-			String sql = "SELECT 	n.*, t3.merchantName FROM (	SELECT	DocName,idCard,	count,merchantId,date	FROM (SELECT t1.OrderDocName AS DocName,t1.OrderDocId AS idCard,COUNT(t1.OrderDocId) AS count,t1.merchant_no AS merchantId,	t1.create_date AS date 	FROM ym_shop_manual_morder t1 WHERE t1.create_date >= ? AND t1.create_date <= ? AND t1.OrderDocId = ?  GROUP BY t1.OrderDocId ) m	)  n "
-					+ "LEFT JOIN ym_shop_merchant t3 ON (n.merchantId = t3.merchantId) ORDER BY n.count DESC";
+			String sql = "SELECT DocName,idCard,count FROM (SELECT	t1.OrderDocName AS DocName,	t1.OrderDocId AS idCard,COUNT(t1.OrderDocId) AS count	FROM ym_shop_manual_morder t1 WHERE	t1.create_date >= ? AND t1.create_date <= ?	AND t1.OrderDocId = ? GROUP BY t1.OrderDocId ) m "
+					+ " WHERE count >= 3 ORDER BY count DESC";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(startDate + " 00:00:00");
 			sqlParams.add(endDate + " 23:59:59");
@@ -186,8 +186,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public Table getPhoneCount(String recipientTel, String startDate, String endDate) {
 		Session session = null;
 		try {
-			String sql = "SELECT	n.*, t3.merchantName FROM (	SELECT	DocName,phone,count,merchantId,date	FROM(SELECT	t1.OrderDocName AS DocName,	t1.RecipientTel AS phone,COUNT(t1.RecipientTel) AS count,t1.merchant_no AS merchantId,t1.create_date AS date FROM ym_shop_manual_morder t1	WHERE t1.create_date >= ? AND t1.create_date <= ? AND t1.RecipientTel = ? GROUP BY 	t1.RecipientTel	) m	) n "
-					+ "LEFT JOIN ym_shop_merchant t3 ON (n.merchantId = t3.merchantId)";
+			String sql = "SELECT DocName,phone,count FROM ( SELECT t1.OrderDocName AS DocName,t1.RecipientTel AS phone,	COUNT(t1.RecipientTel) AS count FROM ym_shop_manual_morder t1 WHERE t1.create_date >= ? AND t1.create_date <= ? AND t1.RecipientTel = ?	GROUP BY  t1.RecipientTel ) m "
+					+ " WHERE count >= 3 ORDER BY 	count DESC";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(startDate + " 00:00:00");
 			sqlParams.add(endDate + " 23:59:59");

@@ -75,7 +75,7 @@ public class YMorderController {
 		params2.put("timestamp", timestamp);
 		params2.put("type", "oauth_token");
 		JSONObject result = net.sf.json.JSONObject
-				.fromObject(YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/oauth/token", params2));
+				.fromObject(YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params2));
 		String accessToken = result.get("accessToken") + "";
 	
 		String str = merchant_cus_no + out_trade_no + amount + notify_url + timestamp;
@@ -86,7 +86,7 @@ public class YMorderController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "redirect:http://ym.191ec.com/silver-web/ympay/enter?merchant_cus_no=" + merchant_cus_no
+		return "redirect:https://ym.191ec.com/silver-web/ympay/enter?merchant_cus_no=" + merchant_cus_no
 				+ "&out_trade_no=" + out_trade_no + "&amount=" + amount + "&return_url=" + "www.baidu.com" + "&notify_url="
 				+ notify_url+"&client_sign="+client_sign+"&timestamp="+timestamp;
 	}

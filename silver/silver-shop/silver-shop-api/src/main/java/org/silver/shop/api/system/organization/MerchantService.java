@@ -95,4 +95,10 @@ public interface MerchantService {
 	 */
 	public Map<String, Object> getMerchantRecordInfo(String merchantId);
 
+	/**
+	 * 商城前台公开接口，用户查询商品时获取商户信息
+	 * @return
+	 */
+	public Map<String, Object> publicMerchantInfo(String merchantId);
+
 }

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
+import org.silver.shop.config.YmMallConfig;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -35,7 +36,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		
 		params.put("signature", signature);
 		params.put("type", "oauth_token");
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/oauth/token", params);
+		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params);
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			JSONObject json = JSONObject.fromObject(resultStr);
 			String status = json.get(BaseCode.STATUS.toString()) + "";
@@ -62,7 +63,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		params.put("timestamp", timestamp);
 		params.put("signature", signature);
 		params.put("type", "oauth_token");
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/oauth/token", params);
+		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params);
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			JSONObject json = JSONObject.fromObject(resultStr);
 			String status = json.get(BaseCode.STATUS.toString()) + "";
@@ -97,5 +98,22 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 			JedisUtil.set(redisKey, 2500, tokMap.get(BaseCode.DATAS.toString()));
 			return tokMap;
 		}
+	}
+	
+	public static void main(String[] args) {
+		Map<String, Object> params = new HashMap<>();
+		String timestamp = String.valueOf(System.currentTimeMillis());
+		String signature = "";
+		try {
+			signature = MD5.getMD5((YmMallConfig.APPKEY + YmMallConfig.APPSECRET + timestamp).getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		params.put("appkey", YmMallConfig.APPKEY);
+		params.put("timestamp", timestamp);
+		params.put("signature", signature);
+		params.put("type", "oauth_token");
+		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params);
+		System.out.println("---->?>>"+resultStr);
 	}
 }

@@ -653,7 +653,7 @@ public class ManualService {
 				}
 				Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
 				if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + orderId + "]"
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]"
 							+ reCheckPhoneMap.get(BaseCode.MSG.toString());
 					RedisInfoUtils.commonErrorInfo(msg, errl, 6, params);
 				}

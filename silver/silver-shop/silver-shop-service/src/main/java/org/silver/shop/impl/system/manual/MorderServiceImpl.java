@@ -151,7 +151,6 @@ public class MorderServiceImpl implements MorderService {
 		paramMap.put("del_flag", 0);
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && !mlist.isEmpty()) {
@@ -1834,13 +1833,15 @@ public class MorderServiceImpl implements MorderService {
 		if (!"1".equals(reWeekMap.get(BaseCode.STATUS.toString()))) {
 			return reWeekMap;
 		}
-		
+
 		return checkMonthIdCardCount(orderDocId);
 	}
 
 	/**
 	 * 检查一个月以内身份证出现次数
-	 * @param orderDocId 身份证号码
+	 * 
+	 * @param orderDocId
+	 *            身份证号码
 	 * @return Map
 	 */
 	private Map<String, Object> checkMonthIdCardCount(String orderDocId) {
@@ -1855,8 +1856,9 @@ public class MorderServiceImpl implements MorderService {
 		} else if (!weekCountTable.getRows().isEmpty()) {
 			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
 			int idCardCount = Integer.parseInt(strCount);
-			if (idCardCount >= 10) {
-				return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]在->" + endDate + "至"+startDate+",已经有过10次订单记录,请勿恶意刷单！");
+			if (idCardCount >= 8) {
+				return ReturnInfoUtils
+						.errorInfo("身份证号码[" + orderDocId + "]在->" + startDate + "至" + endDate + ",已经有过8次订单记录,请勿恶意刷单！");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
@@ -1864,7 +1866,9 @@ public class MorderServiceImpl implements MorderService {
 
 	/**
 	 * 检查一周内身份证出现次数
-	 * @param orderDocId 下单人身份证号码
+	 * 
+	 * @param orderDocId
+	 *            下单人身份证号码
 	 * @return Map
 	 */
 	private Map<String, Object> checkWeekIdCardCount(String orderDocId) {
@@ -1880,7 +1884,8 @@ public class MorderServiceImpl implements MorderService {
 			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
 			int idCardCount = Integer.parseInt(strCount);
 			if (idCardCount >= 5) {
-				return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]在->" + endDate + "至"+startDate+",已经有过5次订单记录,请勿恶意刷单！");
+				return ReturnInfoUtils
+						.errorInfo("身份证号码[" + orderDocId + "]在->" + startDate + "至" + endDate + ",已经有过5次订单记录,请勿恶意刷单！");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
@@ -1912,7 +1917,7 @@ public class MorderServiceImpl implements MorderService {
 	}
 
 	@Override
-	public Map<String,Object> checkRecipientTel(String recipientTel) {
+	public Map<String, Object> checkRecipientTel(String recipientTel) {
 		if (StringEmptyUtils.isEmpty(recipientTel)) {
 			return ReturnInfoUtils.errorInfo("请求参数错误,收货人电话不能为空!");
 		}
@@ -1920,7 +1925,7 @@ public class MorderServiceImpl implements MorderService {
 		if (!"1".equals(reTodayMap.get(BaseCode.STATUS.toString()))) {
 			return reTodayMap;
 		}
-		
+
 		Map<String, Object> reWeekMap = checkWeekPhoneCount(recipientTel);
 		if (!"1".equals(reWeekMap.get(BaseCode.STATUS.toString()))) {
 			return reWeekMap;
@@ -1928,7 +1933,11 @@ public class MorderServiceImpl implements MorderService {
 		return checkMonthPhoneCount(recipientTel);
 	}
 
-	
+	/**
+	 * 根据订单收货人电话号码查询今天至30天之前(一个月内)手机号码出现的次数
+	 * @param recipientTel 收货人手机号码
+	 * @return Map
+	 */
 	private Map<String, Object> checkMonthPhoneCount(String recipientTel) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
@@ -1941,13 +1950,19 @@ public class MorderServiceImpl implements MorderService {
 		} else if (!weekCountTable.getRows().isEmpty()) {
 			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
 			int idCardCount = Integer.parseInt(strCount);
-			if (idCardCount >= 10) {
-				return ReturnInfoUtils.errorInfo("收货人手机号码[" + recipientTel + "]在->" + endDate + "至"+startDate+",已经有过10次订单记录,请勿恶意刷单！");
+			if (idCardCount >= 8) {
+				return ReturnInfoUtils.errorInfo(
+						"收货人手机号码[" + recipientTel + "]在->" + startDate + "至" + endDate + ",已经有过8次订单记录,请勿恶意刷单！");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 根据订单收货人电话号码查询今天至7天之前(一周内)手机号码出现的次数
+	 * @param recipientTel 收货人手机号码
+	 * @return Map
+	 */
 	private Map<String, Object> checkWeekPhoneCount(String recipientTel) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
@@ -1961,12 +1976,18 @@ public class MorderServiceImpl implements MorderService {
 			String strCount = weekCountTable.getRows().get(0).getValue("count") + "";
 			int idCardCount = Integer.parseInt(strCount);
 			if (idCardCount >= 5) {
-				return ReturnInfoUtils.errorInfo("收货人手机号码[" + recipientTel + "]在->" + endDate + "至"+startDate+",已经有过5次订单记录,请勿恶意刷单！");
+				return ReturnInfoUtils.errorInfo(
+						"收货人手机号码[" + recipientTel + "]在->" + startDate + "至" + endDate + ",已经有过5次订单记录,请勿恶意刷单！");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 根据订单收货人电话号码查询今天内手机号码出现的次数
+	 * @param recipientTel 收货人手机号码
+	 * @return Map
+	 */
 	private Map<String, Object> checkTodayPhoneCount(String recipientTel) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());

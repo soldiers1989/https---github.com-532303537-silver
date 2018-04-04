@@ -90,8 +90,8 @@ public class PaymentTransaction {
 	}
 
 	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			 String merchantName) {
-		return paymentService.managerGetPaymentReport(page,size,startDate,endDate,merchantName);
+			 String merchantId) {
+		return paymentService.managerGetPaymentReport(page,size,startDate,endDate,merchantId);
 	}
 
 	

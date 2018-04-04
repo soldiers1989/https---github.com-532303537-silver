@@ -354,4 +354,23 @@ public class MerchantServiceImpl implements MerchantService {
 		return params;
 	}
 
+	@Override
+	public Map<String, Object> publicMerchantInfo(String merchantId) {
+		if(StringEmptyUtils.isNotEmpty(merchantId)){
+			Map<String, Object> params = new HashMap<>();
+			// key=表中列名,value=查询参数
+			params.put("merchantId", merchantId);
+			// 根据商户ID查询商户备案信息数据
+			List<Merchant> reList = merchantDao.findByProperty(Merchant.class, params, 0, 0);
+			if (reList != null && !reList.isEmpty()) {
+				Merchant merchant = reList.get(0);
+				merchant.setLoginPassword("");
+				return ReturnInfoUtils.successDataInfo(merchant, 0);
+			} else {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
+			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
 }

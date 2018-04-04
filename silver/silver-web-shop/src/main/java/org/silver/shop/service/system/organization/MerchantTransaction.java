@@ -152,4 +152,9 @@ public class MerchantTransaction {
 		
 		return merchantService.getMerchantRecordInfo(merchantId);
 	}
+
+	//
+	public Map<String,Object> publicMerchantInfo(String merchantId) {
+		return merchantService.publicMerchantInfo(merchantId);
+	}
 }

@@ -105,14 +105,9 @@ public class GoodsRecordTransaction {
 		return goodsRecordService.updateGoodsRecordInfo(datasMap);
 	}
 
-	// 商戶查询单个商品备案详情
-	public Map<String, Object> getMerchantGoodsRecordDetail(String entGoodsNo) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
-		String merchantName = merchantInfo.getMerchantName();
-		String merchantId = merchantInfo.getMerchantId();
-		return goodsRecordService.getMerchantGoodsRecordDetail(merchantId, merchantName, entGoodsNo);
+	//
+	public Map<String, Object> getGoodsRecordDetail(String entGoodsNo) {
+		return goodsRecordService.getGoodsRecordDetail( entGoodsNo);
 	}
 
 	// 商户修改备案商品中的商品基本信息
@@ -1164,11 +1159,6 @@ public class GoodsRecordTransaction {
 		return headMap;
 	}
 
-	// 管理员查看商品备案详情
-	public Map<String, Object> managerGetGoodsRecordDetail(String entGoodsNo) {
-		return goodsRecordService.managerGetGoodsRecordDetail(entGoodsNo);
-	}
-
 	// 商户删除商品备案信息
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -1177,10 +1167,5 @@ public class GoodsRecordTransaction {
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
 		return goodsRecordService.merchantDeleteGoodsRecordInfo(merchantId, merchantName, entGoodsNo);
-	}
-
-	public static void main(String[] args) {
-		String str = "GR20180227002638035";
-		System.out.println(str.length());
 	}
 }

@@ -151,7 +151,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		Map<String, Object> mRecordMap = (Map<String, Object>) merchantInfoMap.get(BaseCode.DATAS.toString());
 		// 请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
 		if (!reTokMap.get(BaseCode.STATUS.toString()).equals("1")) {
 			return reTokMap;
 		}
@@ -426,7 +426,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		params.put("goodsSerialNo", goodsSerialNo);
 		// 是否像海关发送
 		// params.put("uploadOrNot", false);
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", params);
+		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", params);
 		if (StringUtil.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		}
@@ -849,29 +849,26 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantGoodsRecordDetail(String merchantId, String merchantName, String entGoodsNo) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public Map<String, Object> getGoodsRecordDetail(String entGoodsNo) {
+		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
+			return ReturnInfoUtils.errorInfo("请求参数错误,商品自编号不能为空!");
+		}
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Object> itemList = new ArrayList<>();
 		paramMap.put("entGoodsNo", entGoodsNo);
 		List<Object> reGoodsRecordInfo = goodsRecordDao.findByProperty(GoodsRecordDetail.class, paramMap, 1, 1);
 		List<Object> reStockList = goodsRecordDao.findByProperty(StockContent.class, paramMap, 1, 1);
 		if (reGoodsRecordInfo == null || reStockList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reGoodsRecordInfo.isEmpty()) {
+			List<Object> itemList = new ArrayList<>();
 			paramMap.clear();
 			paramMap.put("goods", reGoodsRecordInfo);
 			paramMap.put("stock", reStockList);
 			itemList.add(paramMap);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), itemList);
+			return ReturnInfoUtils.successDataInfo(itemList);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo("查询失败,未找到商品备案信息!");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -1266,7 +1263,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				break;
 			}
 			// 请求获取tok
-			Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
+			Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
 			if (!reTokMap.get(BaseCode.STATUS.toString()).equals("1")) {
 				return reTokMap;
 			}
@@ -1845,23 +1842,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 	}
 
-	@Override
-	public Map<String, Object> managerGetGoodsRecordDetail(String entGoodsNo) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> param = new HashMap<>();
-		param.put("entGoodsNo", entGoodsNo);
-		List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);
-		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			return statusMap;
-		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据!");
-		}
-	}
 
 	@Override
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String merchantId, String merchantName,

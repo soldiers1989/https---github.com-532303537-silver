@@ -94,7 +94,7 @@ public class Uploader {
 								this.originalName = myFileName;
 								this.fileName = imgName;
 								this.type = this.getFileExt(this.fileName);
-								this.url =  "http://ym.191ec.com/img/" + this.fileName;
+								this.url =  "https://ym.191ec.com/img/" + this.fileName;
 								this.state = "SUCCESS";
 							}
 						} catch (IllegalStateException e) {

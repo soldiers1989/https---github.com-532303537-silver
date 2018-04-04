@@ -649,7 +649,7 @@ public class MpayServiceImpl implements MpayService {
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 		// orderMap);
-		String resultStr = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -669,7 +669,7 @@ public class MpayServiceImpl implements MpayService {
 			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// orderMap);
 
-			String resultStr2 = YmHttpUtil.HttpPost("http://ym.191ec.com/silver-web/Eport/Report", orderMap);
+			String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
 			} else {

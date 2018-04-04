@@ -124,8 +124,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.getMerchantGoodsRecordDetail(entGoodsNo);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject( goodsRecordTransaction.getGoodsRecordDetail(entGoodsNo)).toString();
 	}
 
 	/**
@@ -325,8 +324,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordDetail(entGoodsNo);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.getGoodsRecordDetail(entGoodsNo)).toString();
 	}
 
 	@RequestMapping(value = "/merchantDeleteGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

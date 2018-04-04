@@ -24,6 +24,7 @@ import org.silver.shop.service.system.organization.MerchantTransaction;
 import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -318,5 +319,20 @@ public class MerchantController {
 
 		Map<String, Object> statusMap = merchantTransaction.getMerchantRecordInfo();
 		return JSONObject.fromObject(statusMap).toString();
+	}
+	
+	@RequestMapping(value = "/publicMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商城前台公开获取商户信息")
+	public String publicMerchantInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("merchantId")String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空!")).toString();
+		}
+		return JSONObject.fromObject(merchantTransaction.publicMerchantInfo(merchantId)).toString();
 	}
 }

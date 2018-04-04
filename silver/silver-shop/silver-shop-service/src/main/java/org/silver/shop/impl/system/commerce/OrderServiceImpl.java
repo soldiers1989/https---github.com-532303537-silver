@@ -392,7 +392,7 @@ public class OrderServiceImpl implements OrderService {
 			return updateOrderStatusAndShopCar(memberId, jsonList, reEntOrderNo);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), "http://ym.191ec.com/silver-web-shop/yspay/dopay");
+			statusMap.put(BaseCode.DATAS.toString(), "https://ym.191ec.com/silver-web-shop/yspay/dopay");
 			return statusMap;
 		}
 
@@ -961,8 +961,8 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate,
-			String merchantName) {
-		return getMerchantOrderDailyReport("", merchantName, page, size, startDate, endDate);
+			String merchantId) {
+		return getMerchantOrderDailyReport(merchantId, null, page, size, startDate, endDate);
 	}
 
 
