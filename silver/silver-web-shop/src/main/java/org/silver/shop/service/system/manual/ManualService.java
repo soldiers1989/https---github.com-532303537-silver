@@ -1093,7 +1093,7 @@ public class ManualService {
 	 * @param goodsInfo
 	 * @return Map
 	 */
-	private Map<String, Object> checkGoodsInfo(JSONObject goodsInfo) {
+	public Map<String, Object> checkGoodsInfo(JSONObject goodsInfo) {
 		JSONArray datas = new JSONArray();
 		datas.add(goodsInfo);
 		List<String> noNullKeys = new ArrayList<>();
@@ -1128,7 +1128,7 @@ public class ManualService {
 	 * 
 	 * @param provinceMap
 	 */
-	private Map<String, Object> doProvinceCityArea(Map<String, Object> provinceMap) {
+	public Map<String, Object> doProvinceCityArea(Map<String, Object> provinceMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		String areaCode = "";
 		String areaName = "";
@@ -1306,7 +1306,7 @@ public class ManualService {
 		return statusMap;
 	}
 
-	private String getOrderDocAcount() {
+	public String getOrderDocAcount() {
 		return AppUtil.generateAppKey().substring(0, 6);
 	}
 

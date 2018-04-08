@@ -13,24 +13,41 @@
 		<description>JMS连接工厂</description>
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.spring.ActiveMQConnectionFactory">
-				<property name="brokerURL" value="${mq.brokerURL}" />
-				<property name="userName" value="${mq.userName}" />
-				<property name="password" value="${mq.password}" />
+				<property name="brokerURL" value="failover:(tcp://150.242.58.22:51616)" />
+				<property name="userName" value="" />
+				<property name="password" value="" />
 				<property name="trustAllPackages" value="true" />
 			</bean>
 		</property>
-		<property name="sessionCacheSize" value="${mq.sessionCacheSize}" />
+		<property name="sessionCacheSize" value="100" />
 	</bean>
 	<bean id="jmsQueueTemplate" class="org.springframework.jms.core.JmsTemplate">
 		<description>队列模式模型</description>
 		<constructor-arg ref="connectionFactory" />
-		<property name="receiveTimeout" value="${mq.receiveTimeout}" />
+		<property name="receiveTimeout" value="10000" />
 		<property name="pubSubDomain" value="false" />
 	</bean>
 	<bean id="jmsTopicTemplate" class="org.springframework.jms.core.JmsTemplate">
 		<description>发布/订阅模式模型</description>
 		<constructor-arg ref="connectionFactory" />
-		<property name="receiveTimeout" value="${mq.receiveTimeout}" />
+		<property name="receiveTimeout" value="10000" />
 		<property name="pubSubDomain" value="true" />
 	</bean>
+	
+	
+	<bean id="default" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">  
+        
+     </bean>
+	
+    <jms:listener-container destination-type="queue" container-type="default" connection-factory="connectionFactory" acknowledge="auto">
+        <jms:listener destination="excel-channel" ref="queueReceiver1"/>
+       <!--  <jms:listener destination="43242" ref="queueReceiver2"/>-->
+    </jms:listener-container>
+
+ <!-- 
+    <jms:listener-container destination-type="topic" container-type="default" connection-factory="connectionFactory" acknowledge="auto">
+        <jms:listener destination="test.topic" ref="topicReceiver1"/>
+        <jms:listener destination="test.topic" ref="topicReceiver2"/>
+    </jms:listener-container>
+     -->
 </beans>

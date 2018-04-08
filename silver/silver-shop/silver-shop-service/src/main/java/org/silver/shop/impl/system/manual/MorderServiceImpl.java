@@ -24,7 +24,6 @@ import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
-import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
@@ -35,11 +34,8 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.task.UpdateMOrderGoodsTask;
 import org.silver.shop.util.BufferUtils;
-import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
-import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
-import org.silver.util.CalculateCpuUtils;
 import org.silver.util.CopyUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
@@ -52,13 +48,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
-import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MorderService.class)
-public class MorderServiceImpl implements MorderService {
+public class MorderServiceImpl implements MorderService{
 
 	@Resource
 	private MorderDao morderDao;
@@ -432,6 +427,7 @@ public class MorderServiceImpl implements MorderService {
 				if (morder.getDel_flag() == 1) {
 					return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
 				}
+				
 				return judgmentOrderInfo(morder, goodsInfo, FCY, Tax, 1);
 			}
 			Morder morder = new Morder();
@@ -2005,4 +2001,5 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
 }

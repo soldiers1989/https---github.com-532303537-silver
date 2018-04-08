@@ -11,8 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
+import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.task.GZExcelTask;
+import org.silver.shop.task.GZExcelTaskMQ;
 import org.silver.shop.task.NotRGExcelTask;
 import org.silver.shop.task.PretreatmentQBExcelTask;
 import org.silver.shop.task.QBExcelTask;
@@ -35,6 +37,9 @@ public class InvokeTaskUtils {
 	@Autowired
 	private GoodsRecordTransaction goodsRecordTransaction;
 
+	@Autowired
+	private ManualOrderTransaction manualOrderTransaction;
+	
 	/**
 	 * 启动线程标识
 	 */
@@ -77,7 +82,7 @@ public class InvokeTaskUtils {
 	 * 
 	 * @param flag
 	 *            1-企邦(手工订单导入),2-国宗(手工订单导入),3-(批量导入未)备案商品,
-	 *            4-启邦(银盟统一模板)预处理手工订单导入,5-国宗(预处理手工订单导入)
+	 *            4-启邦(银盟统一模板)预处理手工订单导入,5-国宗(预处理手工订单导入) 10-国宗MQ测试
 	 * @param totalCount
 	 *            总行数
 	 * @param file
@@ -231,6 +236,9 @@ public class InvokeTaskUtils {
 		case 5:
 			invokePretreatmentGZExcelTask(excelC, errl, threadPool, params);
 			break;
+		case 10:
+			invokeGZExcelTaskMQ(excelC, errl, threadPool, params);
+			break;
 		default:
 			break;
 		}
@@ -271,4 +279,10 @@ public class InvokeTaskUtils {
 		threadPool.submit(task);
 	}
 
+	// 调用国宗多任务
+	private void invokeGZExcelTaskMQ(ExcelUtil excel, List<Map<String, Object>> errl, ExecutorService threadPool,
+			Map<String, Object> params) {
+		GZExcelTaskMQ task = new GZExcelTaskMQ(excel, errl, manualOrderTransaction, params);
+		threadPool.submit(task);
+	}
 }
