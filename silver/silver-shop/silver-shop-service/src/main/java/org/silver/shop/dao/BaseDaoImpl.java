@@ -366,7 +366,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			session.close();
 			return count;
 		} catch (Exception re) {
-			return (long) 0;
+			return (long) -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();

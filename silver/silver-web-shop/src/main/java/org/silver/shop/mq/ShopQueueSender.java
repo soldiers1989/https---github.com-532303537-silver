@@ -1,20 +1,12 @@
-package org.silver.shop.service.system.mq;
+package org.silver.shop.mq;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Serializable;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;  
 import javax.jms.Message;  
 import javax.jms.Session;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.BlobMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.springframework.beans.factory.annotation.Autowired;  
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,9 +17,11 @@ import org.springframework.jms.core.MessageCreator;
 import org.springframework.stereotype.Component;  
   
 
-@Component("queueSender")  
-public class QueueSender1 {  
-     
+/**
+ * 商城自用MQ消息队列发起类
+ */
+@Component("shopQueueSender")  
+public class ShopQueueSender {  
   
    @Autowired  
    @Qualifier("jmsQueueTemplate")  

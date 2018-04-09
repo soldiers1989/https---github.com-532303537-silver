@@ -75,6 +75,7 @@
 				/member/*=anon
 				/cciq/*=anon
 				/gac/*=anon
+				/MQ/*=anon
 				/agent/*=anon
 				/proxy/*=anon
 				/merchantFee/*=anon

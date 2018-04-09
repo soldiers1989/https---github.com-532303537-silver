@@ -104,7 +104,7 @@ public class InvokeTaskUtils {
 		// 线程完成状态次数
 		AtomicInteger statusCounter = new AtomicInteger(0);
 		// 错误信息集合
-		List<Map<String, Object>> errl = new Vector();
+		Vector  errl = new Vector();
 		// 开始行数
 		int startCount = 0;
 		if (flag == 2 || flag == 5) {

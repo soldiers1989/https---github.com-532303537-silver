@@ -53,7 +53,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MorderService.class)
-public class MorderServiceImpl implements MorderService{
+public class MorderServiceImpl implements MorderService {
 
 	@Resource
 	private MorderDao morderDao;
@@ -427,7 +427,7 @@ public class MorderServiceImpl implements MorderService{
 				if (morder.getDel_flag() == 1) {
 					return ReturnInfoUtils.errorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!");
 				}
-				
+
 				return judgmentOrderInfo(morder, goodsInfo, FCY, Tax, 1);
 			}
 			Morder morder = new Morder();
@@ -649,8 +649,10 @@ public class MorderServiceImpl implements MorderService{
 				statusMap.put("msg", "保存订单错误，请核对订单信息!");
 				return statusMap;
 			}
+
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put("order_id", morder.getOrder_id());
+			statusMap.put("date", randomDate);
 			statusMap.put("msg", "存储完毕");
 			return statusMap;
 		}
@@ -1931,7 +1933,9 @@ public class MorderServiceImpl implements MorderService{
 
 	/**
 	 * 根据订单收货人电话号码查询今天至30天之前(一个月内)手机号码出现的次数
-	 * @param recipientTel 收货人手机号码
+	 * 
+	 * @param recipientTel
+	 *            收货人手机号码
 	 * @return Map
 	 */
 	private Map<String, Object> checkMonthPhoneCount(String recipientTel) {
@@ -1956,7 +1960,9 @@ public class MorderServiceImpl implements MorderService{
 
 	/**
 	 * 根据订单收货人电话号码查询今天至7天之前(一周内)手机号码出现的次数
-	 * @param recipientTel 收货人手机号码
+	 * 
+	 * @param recipientTel
+	 *            收货人手机号码
 	 * @return Map
 	 */
 	private Map<String, Object> checkWeekPhoneCount(String recipientTel) {
@@ -1981,7 +1987,9 @@ public class MorderServiceImpl implements MorderService{
 
 	/**
 	 * 根据订单收货人电话号码查询今天内手机号码出现的次数
-	 * @param recipientTel 收货人手机号码
+	 * 
+	 * @param recipientTel
+	 *            收货人手机号码
 	 * @return Map
 	 */
 	private Map<String, Object> checkTodayPhoneCount(String recipientTel) {

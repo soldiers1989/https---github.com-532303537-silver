@@ -13,7 +13,7 @@
 			<column name="memberId" not-null="true" unique="true" />
 		</property>
 		<property name="memberName" type="java.lang.String">
-			<column name="memberName" not-null="true" unique="true"/>
+			<column name="memberName" not-null="true" />
 		</property>
 		<property name="loginPass" type="java.lang.String">
 			<column name="loginPass" not-null="true" />

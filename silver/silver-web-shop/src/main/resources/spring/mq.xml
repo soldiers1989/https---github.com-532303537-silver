@@ -14,8 +14,8 @@
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.spring.ActiveMQConnectionFactory">
 				<property name="brokerURL" value="failover:(tcp://150.242.58.22:51616)" />
-				<property name="userName" value="" />
-				<property name="password" value="" />
+				<property name="userName" value="ezo" />
+				<property name="password" value="ppxcat58" />
 				<property name="trustAllPackages" value="true" />
 			</bean>
 		</property>
@@ -35,14 +35,7 @@
 	</bean>
 	
 	
-	<bean id="default" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">  
-        
-     </bean>
 	
-    <jms:listener-container destination-type="queue" container-type="default" connection-factory="connectionFactory" acknowledge="auto">
-        <jms:listener destination="excel-channel" ref="queueReceiver1"/>
-       <!--  <jms:listener destination="43242" ref="queueReceiver2"/>-->
-    </jms:listener-container>
 
  <!-- 
     <jms:listener-container destination-type="topic" container-type="default" connection-factory="connectionFactory" acknowledge="auto">

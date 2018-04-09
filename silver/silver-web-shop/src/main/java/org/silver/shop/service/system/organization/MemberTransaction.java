@@ -21,6 +21,7 @@ import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -118,6 +119,11 @@ public class MemberTransaction {
 
 	public Map<String, Object> checkMerchantName(String account) {
 		return memberService.checkMerchantName(account);
+	}
+
+	//管理员批量注册会员
+	public Object batchRegisterMember(JSONArray jsonArr) {
+		return memberService.batchRegisterMember(jsonArr);
 	}
 
 }

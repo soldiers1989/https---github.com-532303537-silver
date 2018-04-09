@@ -2,6 +2,7 @@ package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.xml.sax.SAXException;
+
+import com.alibaba.dubbo.container.Main;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
@@ -305,5 +308,51 @@ public class MemberController {
 			}
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码输入不正确,请重新输入!")).toString();
+	}
+
+	@RequestMapping(value = "/batchRegisterMember", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "管理员批量注册会员")
+	@RequiresRoles("Manager")
+	public String batchRegisterMember(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("orderIdPack") String orderIdPack) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(orderIdPack)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
+		}
+		JSONArray jsonArr = null;
+		try {
+			jsonArr = JSONArray.fromObject(orderIdPack);
+		} catch (Exception e) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id参数格式错误!")).toString();
+		}
+		return JSONObject.fromObject(memberTransaction.batchRegisterMember(jsonArr)).toString();
+	}
+	
+	public static void main(String[] args) {
+		JSONArray json = new JSONArray();
+		json.add("SO1804090221615624039");
+		json.add("SO1804090221615498001");
+		
+		json.add("SO1804080221614764603");
+		json.add("SO1804080221614651882");
+		json.add("SO1804080221614823124");
+		json.add("SO1804080221614702206");
+		
+		json.add("SO1804080221614819380");
+		json.add("SO1804090221615480207");
+		json.add("SO1804090221615609255");
+		json.add("SO1804080221615010168");
+		json.add("SO1804080221614702062");
+		
+		
+		json.add("SO1804080221614756808");
+		json.add("SO1804090221615589555");
+		json.add("SO1804080221614715999");
+		System.out.println(json.toString());
 	}
 }

@@ -3,6 +3,8 @@ package org.silver.shop.api.system.organization;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
+
 public interface MemberService {
 
 	/**
@@ -67,4 +69,11 @@ public interface MemberService {
 	 * @return
 	 */
 	public Map<String, Object> checkMerchantName(String account);
+
+	/**
+	 * 管理员根据已备案成功的订单Id批量注册会员
+	 * @param josnArr 订单Id集合
+	 * @return Map
+	 */
+	public Map<String,Object> batchRegisterMember(JSONArray josnArr);
 }

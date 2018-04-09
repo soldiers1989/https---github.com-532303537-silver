@@ -9,6 +9,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,8 +21,10 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
+import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.controller.system.manual.EditRecordController;
 import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.common.base.ProvinceCityAreaTransaction;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
@@ -30,10 +33,13 @@ import org.silver.shop.utils.InvokeTaskUtils;
 import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.AppUtil;
 import org.silver.util.CheckDatasUtil;
+import org.silver.util.ChineseToPinyin;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
 import org.silver.util.IdcardValidator;
+import org.silver.util.MD5;
+import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -62,6 +68,7 @@ public class ManualService {
 	private ExcelBufferUtils excelBufferUtils;
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
+
 
 	/**
 	 * 商户Id
@@ -719,6 +726,9 @@ public class ManualService {
 					String msg = "【表格】第" + (r + 1) + "行-->" + orderSubMap.get("msg") + "";
 					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				}
+				// 获取到订单随机创建时间
+				//item.put("date", orderMap.get("date") + "");
+			//	registerMember(item);
 				excelBufferUtils.writeRedis(errl, params);
 			}
 		} catch (Exception e) {

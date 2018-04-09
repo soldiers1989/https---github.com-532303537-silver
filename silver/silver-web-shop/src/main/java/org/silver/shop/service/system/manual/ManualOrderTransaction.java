@@ -1,5 +1,7 @@
 package org.silver.shop.service.system.manual;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -17,6 +19,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.mq.ShopQueueSender;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
 import org.silver.shop.utils.ExcelBufferUtils;
 import org.silver.shop.utils.InvokeTaskUtils;
@@ -53,6 +56,8 @@ public class ManualOrderTransaction {
 	private ManualService manualService;
 	@Autowired
 	private ExcelBufferUtils excelBufferUtils;
+	@Autowired
+	private ShopQueueSender shopQueueSender;
 
 	/**
 	 * 商户Id
@@ -535,32 +540,37 @@ public class ManualOrderTransaction {
 				orderInfo.put("cityName", cityName);
 				orderInfo.put("areaName", areaName);
 				orderInfo.put("orderId", orderId);
+				orderInfo.put(MERCHANT_ID, merchantId);
+				orderInfo.put(MERCHANT_NAME, merchantName);
+				//商品信息
+				orderInfo.put("goodsInfo", goodsInfo);
+				//其他缓存参数
+				orderInfo.put("other", params);
+				orderInfo.put("errorList",errl);
+				// 发起队列,开始创建国宗订单
+				shopQueueSender.send("excel-channel", orderInfo.toString());
+				Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serial, dateSign, OrderDate,
+						orderTotalAmount, tax, actualAmountPaid, RecipientName, RecipientID, RecipientTel,
+						RecipientProvincesCode, RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
+						senderName, senderCountry, senderAreaCode, senderAddress, senderTel, areaCode, cityCode,
+						provinceCode, postal, provinceName, cityName, areaName, orderId, goodsInfo);
+				if ("10".equals(item.get("status") + "")) {// 当遇到超额时
+					String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
+					RedisInfoUtils.commonErrorInfo(msg, errl, 2, params);
+				} else if (!"1".equals(item.get("status") + "")) {
+					String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
+					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+					continue;
+				}
+				String order_id = item.get("order_id") + "";
+				goodsInfo.put("order_id", order_id); // 根据订单Id创建订单商品
+				Map<String, Object> goodsItem = morderService.createNewSub(goodsInfo);
+				if ((int) goodsItem.get("status") != 1) {
+					String msg = "【表格】第" + (r + 1) + "行商品-->" + goodsItem.get("msg");
+					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				}
+				excelBufferUtils.writeRedis(errl, params);
 
-				/*
-				 * // 创建国宗订单 Map<String, Object> item =
-				 * morderService.guoCreateNew(merchantId, waybill, serial,
-				 * dateSign, OrderDate, FCY, Tax, ActualAmountPaid,
-				 * RecipientName, RecipientID, RecipientTel,
-				 * RecipientProvincesCode, RecipientAddr, OrderDocAcount,
-				 * OrderDocName, OrderDocId, OrderDocTel, senderName,
-				 * senderCountry, senderAreaCode, senderAddress, senderTel,
-				 * areaCode, cityCode, provinceCode, postal, provinceName,
-				 * cityName, areaName, orderId, goodsInfo); if
-				 * ("10".equals(item.get("status") + "")) {// 当遇到超额时 String msg
-				 * = "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
-				 * RedisInfoUtils.commonErrorInfo(msg, errl, 2, params); } else
-				 * if (!"1".equals(item.get("status") + "")) { String msg =
-				 * "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
-				 * RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
-				 * continue; } String order_id = item.get("order_id") + "";
-				 * goodsInfo.put("order_id", order_id); // 根据订单Id创建订单商品
-				 * Map<String, Object> goodsItem =
-				 * morderService.createNewSub(goodsInfo); if ((int)
-				 * goodsItem.get("status") != 1) { String msg = "【表格】第" + (r +
-				 * 1) + "行商品-->" + goodsItem.get("msg");
-				 * RedisInfoUtils.commonErrorInfo(msg, errl, 1, params); }
-				 * excelBufferUtils.writeRedis(errl, params);
-				 */
 			}
 		} catch (Exception e) {
 			logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);

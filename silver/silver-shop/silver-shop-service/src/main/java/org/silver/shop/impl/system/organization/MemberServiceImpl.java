@@ -1,10 +1,14 @@
 package org.silver.shop.impl.system.organization;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -12,11 +16,15 @@ import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.dao.system.organization.MemberDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.ShopCarContent;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
-import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.util.ChineseToPinyin;
+import org.silver.util.DateUtil;
 import org.silver.util.MD5;
-import org.silver.util.SerialNoUtils;
+import org.silver.util.RandomUtils;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -28,9 +36,12 @@ public class MemberServiceImpl implements MemberService {
 
 	@Autowired
 	private MemberDao memberDao;
-
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	@Autowired
+	private MemberService memberService;
+
+	private static final Object LOCK = "lock";
 
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
@@ -47,9 +58,9 @@ public class MemberServiceImpl implements MemberService {
 		member.setCreateBy(account);
 		member.setMemberTel(memberTel);
 		member.setCreateDate(date);
-		//用户状态1-审核2-启用3-禁用
+		// 用户状态1-审核2-启用3-禁用
 		member.setMemberStatus(1);
-		//用户实名1-未实名,2-已实名
+		// 用户实名1-未实名,2-已实名
 		member.setMemberRealName(1);
 		if (!memberDao.add(member)) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -78,25 +89,29 @@ public class MemberServiceImpl implements MemberService {
 	@Override
 	public Map<String, Object> createMemberId() {
 		Map<String, Object> datasMap = new HashMap<>();
-		Calendar cal = Calendar.getInstance();
-		// 获取当前年份
-		int year = cal.get(Calendar.YEAR);
-		// 查询数据库字段名
-		String property = "memberId";
-		// 根据年份查询,当前年份下的id数量
-		long memberIdCount = memberDao.findSerialNoCount(Member.class, property, year);
-		// 当返回-1时,则查询数据库失败
-		if (memberIdCount < 0) {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+		synchronized (LOCK) {
+			//
+			long memberIdCount = memberDao.findLastId();
+			// 当返回-1时,则查询数据库失败
+			if (memberIdCount < 0) {
+				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
+				datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
+				return datasMap;
+			}
+			// 得出的总数上+1
+			long count = memberIdCount + 1;
+			String memberId = String.valueOf(count);
+			// 当商户ID没有5位数时,前面补0
+			while (memberId.length() < 5) {
+				memberId = "0" + memberId;
+			}
+			// 生成用户ID
+			memberId = "Member_" + memberId;
+			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
+			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
+			datasMap.put(BaseCode.DATAS.getBaseCode(), memberId);
 			return datasMap;
 		}
-		// 生成用户ID
-		String memberId = SerialNoUtils.getSerialNotTimestamp("Member_", year, memberIdCount);
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-		datasMap.put(BaseCode.DATAS.getBaseCode(), memberId);
-		return datasMap;
 	}
 
 	@Override
@@ -208,4 +223,147 @@ public class MemberServiceImpl implements MemberService {
 		}
 	}
 
+	@Override
+	public Map<String, Object> batchRegisterMember(JSONArray jsonArr) {
+		if (jsonArr == null || jsonArr.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数错误!");
+		}
+		List<String> errorList = new ArrayList<>();
+		Map<String, Object> params = new HashMap<>();
+		int successCount = 0;
+		for (int i = 0; i < jsonArr.size(); i++) {
+			String orderId = jsonArr.get(i) + "";
+			params.clear();
+			params.put("order_id", orderId);
+			List<Morder> reList = memberDao.findByProperty(Morder.class, params, 0, 0);
+			if (reList == null) {
+				errorList.add("订单[" + orderId + "]查询失败,服务器繁忙!");
+			} else if (!reList.isEmpty()) {
+				Morder order = reList.get(0);
+				if (order.getOrder_record_status() == 3) {
+					Map<String, Object> reMemberMap = registerMember(order);
+					if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+						errorList.add(reMemberMap.get(BaseCode.MSG.toString())+"");
+					}else{
+						successCount++;
+					}
+				} else {
+					errorList.add("订单[" + orderId + "]状态不允许生成会员信息!");
+				}
+			} else {
+				errorList.add("订单[" + orderId + "]未找到对应的订单信息!");
+			}
+		}
+		if(errorList.isEmpty()){
+			return ReturnInfoUtils.successInfo();
+		}
+		params.clear();
+		params.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
+		params.put(BaseCode.ERROR.toString(), errorList);
+		params.put("successCount", successCount);
+		return params;
+	}
+
+	/**
+	 * 注册用户
+	 * 
+	 * @param string
+	 */
+	private Map<String, Object> registerMember(Morder order) {
+		String orderDocId = order.getOrderDocId();
+		Map<String, Object> checkIdMap = checkIdCard(orderDocId);
+		if (!"1".equals(checkIdMap.get(BaseCode.STATUS.toString()))) {
+			return checkIdMap;
+		}
+		Member member = new Member();
+		Map<String, Object> reMemberIdMap = memberService.createMemberId();
+		if (!"1".equals(reMemberIdMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberIdMap;
+		}
+		member.setMemberId(reMemberIdMap.get(BaseCode.DATAS.toString()) + "");
+		//
+		member.setMemberName(randomCreateName(order));
+		MD5 md = new MD5();
+		member.setLoginPass(md.getMD5ofStr(Integer.toString(RandomUtils.getRandom(6))));
+		member.setMemberTel(order.getOrderDocTel());
+		member.setMemberIdCardName(order.getOrderDocName());
+		member.setMemberIdCard(order.getOrderDocId());
+		member.setMemberRealName(2);
+		member.setCreateBy(order.getOrderDocName());
+		// 获取随机生成的订单时间
+		String date = order.getOrderDate();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(DateUtil.parseDate(date, "yyyyMMddHHddss"));
+		// 在订单下单日期之前30分钟创建会员信息
+		calendar.add(Calendar.MINUTE, -30);
+		member.setCreateDate(calendar.getTime());
+		if (!memberDao.add(member)) {
+			return ReturnInfoUtils.errorInfo("保存用户失败,服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 检查身份证号码是否已注册
+	 * 
+	 * @param orderDocId
+	 * @return
+	 */
+	private Map<String, Object> checkIdCard(String orderDocId) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberIdCard", orderDocId);
+		List<Member> memberList = memberDao.findByProperty(Member.class, params, 0, 0);
+		if (memberList == null) {
+			return ReturnInfoUtils.errorInfo("查询会员信息失败！");
+		} else if (!memberList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]已注册过会员,请勿重复注册!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 
+	 * @param datas
+	 */
+	private String randomCreateName(Morder order) {
+		int count = RandomUtils.getRandom(1);
+		if (count <= 2) {// 当小于2时采用拼音全称+1-5位随机数
+			String orderDocName = order.getOrderDocName();
+			return randomMemberName(orderDocName);
+		} else if (count > 2 && count <= 5) {// 使用下单人电话号码
+			return order.getOrderDocTel();
+		} else {// 使用身份证
+			return order.getOrderDocId();
+		}
+	}
+
+	/**
+	 * 根据递归生成用户账号,避免重复
+	 * 
+	 * @param orderDocName
+	 *            下单人姓名
+	 * @return String 下单人账号
+	 */
+	private String randomMemberName(String orderDocName) {
+		Random rand = new Random();
+		// 下单人姓名
+		String pinyin = ChineseToPinyin.getPingYin(orderDocName.trim());
+		String memberName = pinyin + Integer.toString(rand.nextInt(10000) + 1);
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberName", memberName);
+		List<Member> reList = memberDao.findByProperty(Member.class, params, 0, 0);
+		if (reList == null) {
+			return randomMemberName(orderDocName);
+		} else if (reList.isEmpty()) {
+			return memberName;
+		} else {
+			return randomMemberName(orderDocName);
+		}
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(ChineseToPinyin.getPingYin("周婷婷"));
+		System.out.println(ChineseToPinyin.getPinYinHeadChar("何德志"));
+		System.out.println(ChineseToPinyin.getCnASCII("綦江县"));
+	}
 }
