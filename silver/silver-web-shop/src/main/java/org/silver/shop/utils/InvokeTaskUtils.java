@@ -18,6 +18,7 @@ import org.silver.shop.task.GZExcelTaskMQ;
 import org.silver.shop.task.NotRGExcelTask;
 import org.silver.shop.task.PretreatmentQBExcelTask;
 import org.silver.shop.task.QBExcelTask;
+import org.silver.shop.task.QBExcelTaskMQ;
 import org.silver.util.AppUtil;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.ExcelUtil;
@@ -39,7 +40,7 @@ public class InvokeTaskUtils {
 
 	@Autowired
 	private ManualOrderTransaction manualOrderTransaction;
-	
+
 	/**
 	 * 启动线程标识
 	 */
@@ -82,7 +83,7 @@ public class InvokeTaskUtils {
 	 * 
 	 * @param flag
 	 *            1-企邦(手工订单导入),2-国宗(手工订单导入),3-(批量导入未)备案商品,
-	 *            4-启邦(银盟统一模板)预处理手工订单导入,5-国宗(预处理手工订单导入) 10-国宗MQ测试
+	 *            4-启邦(银盟统一模板)预处理手工订单导入,5-国宗(预处理手工订单导入)、10-国宗(MQ手工订单导入)、11-启邦(MQ手工订单导入)
 	 * @param totalCount
 	 *            总行数
 	 * @param file
@@ -104,10 +105,10 @@ public class InvokeTaskUtils {
 		// 线程完成状态次数
 		AtomicInteger statusCounter = new AtomicInteger(0);
 		// 错误信息集合
-		Vector  errl = new Vector();
+		Vector errl = new Vector();
 		// 开始行数
 		int startCount = 0;
-		if (flag == 2 || flag == 5) {
+		if (flag == 2 || flag == 5 || flag == 10) {
 			startCount = 1;
 		} else {
 			// 企邦表(银盟定义的模板)多了一行说明,所以开始行数为2
@@ -239,6 +240,9 @@ public class InvokeTaskUtils {
 		case 10:
 			invokeGZExcelTaskMQ(excelC, errl, threadPool, params);
 			break;
+		case 11:
+			invokeQBExcelTaskMQ(excelC, errl, threadPool, params);
+			break;
 		default:
 			break;
 		}
@@ -272,7 +276,7 @@ public class InvokeTaskUtils {
 		threadPool.submit(task);
 	}
 
-	// 调用企邦多线程
+	// 调用企邦多任务
 	private void invokeQBExcelTask(ExcelUtil excel, List<Map<String, Object>> errl, ExecutorService threadPool,
 			Map<String, Object> params) {
 		QBExcelTask task = new QBExcelTask(excel, errl, manualService, params);
@@ -285,4 +289,11 @@ public class InvokeTaskUtils {
 		GZExcelTaskMQ task = new GZExcelTaskMQ(excel, errl, manualOrderTransaction, params);
 		threadPool.submit(task);
 	}
+	
+	// 调用企邦多线程
+		private void invokeQBExcelTaskMQ(ExcelUtil excel, List<Map<String, Object>> errl, ExecutorService threadPool,
+				Map<String, Object> params) {
+			QBExcelTaskMQ task = new QBExcelTaskMQ(excel, errl, manualOrderTransaction, params);
+			threadPool.submit(task);
+		}
 }

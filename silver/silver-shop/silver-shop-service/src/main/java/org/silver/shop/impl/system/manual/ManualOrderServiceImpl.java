@@ -1,11 +1,11 @@
 package org.silver.shop.impl.system.manual;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
@@ -13,12 +13,15 @@ import javax.jms.TextMessage;
 import org.apache.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.manual.ManualOrderService;
+import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.dao.system.manual.ManualOrderDao;
-import org.silver.shop.dao.system.manual.MorderSubDao;
+import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -37,35 +40,66 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 
 	@Autowired
 	private ManualOrderDao manualOrderDao;
+	@Autowired
+	private BufferUtils bufferUtils;
+	@Autowired
+	private MorderService morderService;
+	// 海关币制默认为人名币
+	private static final String FCODE = "142";
 
 	@Override
 	public void onMessage(Message message) {
 		TextMessage textmessage = (TextMessage) message;
-		System.out.println("----------------000000000000000000---------");
-		JSONObject json = null;
+		JSONObject jsonDatas = null;
 		try {
-			json = JSONObject.fromObject(textmessage.getText());
+			jsonDatas = JSONObject.fromObject(textmessage.getText());
 		} catch (Exception e) {
 			logger.error("--队列获取参数错误->", e);
 		}
+		//
+		chooseCreate(jsonDatas);
 
-		String type = json.get("type") + "";
+	}
+
+	private void chooseCreate(JSONObject jsonDatas) {
+		String type = jsonDatas.get("type") + "";
+		// 缓存参数
+		Map<String, Object> redisMap = (Map<String, Object>) jsonDatas.get("other");
 		switch (type) {
 		// 国宗excel表单订单导入
-		case "guozongExcelOrderImpl":
-			guoCreateNew(json);
+		case "guoZongExcelOrderImpl":
+			//
+			Map<String, Object> reCheckMap = checkGuoZongOrderInfo(jsonDatas);
+			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+				break;
+			}
+			guozongCreateOrder(jsonDatas);
+			break;
+		case "qiBangExcelOrderImpl":
+			//
+			Map<String, Object> reCheckMap2 = checkQiBangOrderInfo(jsonDatas);
+			if (!"1".equals(reCheckMap2.get(BaseCode.STATUS.toString()))) {
+				break;
+			}
+			qiBangCreateOrder(jsonDatas);
 			break;
 		default:
 			break;
 		}
+		bufferUtils.writeCompletedRedisMq(redisMap);
+
 	}
 
-	public void guoCreateNew(JSONObject datas) {
+	/**
+	 * 根据国宗excel表单信息,创建手工订单信息
+	 * 
+	 * @param datas
+	 * 
+	 */
+	public void guozongCreateOrder(JSONObject datas) {
 		String waybill = datas.get("waybill") + "";
 		// 缓存参数
 		Map<String, Object> params = (Map<String, Object>) datas.get("other");
-		// 错误信息
-		List<Map<String, Object>> errorList = (List<Map<String, Object>>) datas.get("errorList");
 		// 商品信息
 		JSONObject goodsInfo = JSONObject.fromObject(datas.get("goodsInfo") + "");
 		// 订单商品总金额
@@ -76,23 +110,26 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		paramsMap.put("waybill", waybill);
 		List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 0, 0);
 		if (ml == null) {
-			RedisInfoUtils.commonErrorInfo("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", errorList, 1, paramsMap);
+			RedisInfoUtils.errorInfoMq("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", 1, params);
 		} else if (!ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			// 删除标识0-未删除,1-已删除
 			if (morder.getDel_flag() == 1) {
-				RedisInfoUtils.commonErrorInfo(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", errorList, 1,
-						paramsMap);
+				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", 1, params);
 			}
 			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, goodsInfo, orderTotalAmount, tax, 1);
 			if ("10".equals(reCheckMap.get("status") + "")) {// 当遇到超额时
-				RedisInfoUtils.commonErrorInfo(reCheckMap.get("msg") + "", errorList, 2, paramsMap);
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", 2, params);
 			} else if (!"1".equals(reCheckMap.get("status") + "")) {
-				RedisInfoUtils.commonErrorInfo(reCheckMap.get("msg") + "", errorList, 1, paramsMap);
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", 1, params);
+			} else {
+				goodsInfo.put("order_id", reCheckMap.get("order_id")); // 根据订单Id创建订单商品
+				// 成功后、调用创建商品方法
+				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+				}
 			}
-			// 成功后、调用创建商品方法
-
-			// return judgmentOrderInfo(morder, goodsInfo, FCY, Tax, 1);
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
@@ -104,55 +141,129 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			morder.setFCY(orderTotalAmount);
 			morder.setTax(tax);
 			morder.setActualAmountPaid(orderTotalAmount + tax);
-			morder.setRecipientName(datas.get("recipientName")+"");
-			morder.setRecipientID(datas.get("recipientID")+"");
-			morder.setRecipientTel(datas.get("recipientTel")+"");
+			morder.setRecipientName(datas.get("recipientName") + "");
+			morder.setRecipientID(datas.get("recipientID") + "");
+			morder.setRecipientTel(datas.get("recipientTel") + "");
 			// 暂时默认为下单人姓名
-			morder.setRecipientAddr(datas.get("recipientAddr")+"");
-			morder.setOrderDocAcount(datas.get("orderDocAcount")+"");
-			morder.setOrderDocName(datas.get("orderDocName")+"");
+			morder.setRecipientAddr(datas.get("recipientAddr") + "");
+			morder.setOrderDocAcount(datas.get("orderDocAcount") + "");
+			morder.setOrderDocName(datas.get("orderDocName") + "");
 			morder.setOrderDocType("01");
 			// 身份证
-			morder.setOrderDocId(datas.get("orderDocId")+"");
-			morder.setOrderDocTel(datas.get("orderDocTel")+"");
-			morder.setMerchant_no(goodsInfo.get("merchantId")+"");
-			morder.setDateSign(DateUtil.formatDate(new Date(), "yyyyMMdd"));
-			morder.setSerial(Integer.parseInt(params.get("serialNo")+""));
+			morder.setOrderDocId(datas.get("orderDocId") + "");
+			morder.setOrderDocTel(datas.get("orderDocTel") + "");
+			morder.setMerchant_no(goodsInfo.get("merchantId") + "");
+			morder.setDateSign(datas.get("dateSign") + "");
+			morder.setSerial(Integer.parseInt(datas.get("serial") + ""));
 			morder.setWaybill(waybill);
-			//刪除标识
-			morder.setDel_flag(0); 
-			// 订单备案状态 
+			// 刪除标识
+			morder.setDel_flag(0);
+			// 订单备案状态
 			morder.setOrder_record_status(1);
 			morder.setCreate_date(new Date());
 			morder.setCreate_by(goodsInfo.get("merchantName") + "");
 			morder.setFcode("142");
-			morder.setSenderName(datas.get("senderName")+"");
-			morder.setSenderCountry(datas.get("senderCountry")+"");
-			morder.setSenderAreaCode(datas.get("senderAreaCode")+"");
-			morder.setSenderAddress(datas.get("senderAddress")+"");
-			morder.setSenderTel(datas.get("senderTel")+"");
+			morder.setSenderName(datas.get("senderName") + "");
+			morder.setSenderCountry(datas.get("senderCountry") + "");
+			morder.setSenderAreaCode(datas.get("senderAreaCode") + "");
+			morder.setSenderAddress(datas.get("senderAddress") + "");
+			morder.setSenderTel(datas.get("senderTel") + "");
 
-			morder.setPostal(datas.get("postal")+"");
-			morder.setRecipientProvincesCode(datas.get("provinceCode")+"");
-			morder.setRecipientProvincesName(datas.get("provinceName")+"");
-			morder.setRecipientCityCode(datas.get("cityCode")+"");
-			morder.setRecipientCityName(datas.get("cityName")+"");
-			morder.setRecipientAreaCode(datas.get("areaCode")+"");
-			morder.setRecipientAreaName(datas.get("areaName")+"");
+			morder.setPostal(datas.get("postal") + "");
+			morder.setRecipientProvincesCode(datas.get("provinceCode") + "");
+			morder.setRecipientProvincesName(datas.get("provinceName") + "");
+			morder.setRecipientCityCode(datas.get("cityCode") + "");
+			morder.setRecipientCityName(datas.get("cityName") + "");
+			morder.setRecipientAreaCode(datas.get("areaCode") + "");
+			morder.setRecipientAreaName(datas.get("areaName") + "");
 			String randomDate = DateUtil.randomCreateDate();
 			morder.setOrderDate(randomDate);
 			morder.setCustomsCode(goodsInfo.get("customsCode") + "");
 			if (manualOrderDao.add(morder)) {
-				//保存成功之后,进行商品实例化
-				
-				//statusMap.put("status", 1);
-				//statusMap.put("order_id", newOrderId);
-				//return statusMap;
+				goodsInfo.put("order_id", newOrderId);
+				// 保存成功之后,进行商品实例化
+				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+				}
+			} else {
+				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单存储失败，请重试!", 1, params);
 			}
-			//保存失败之后
-			RedisInfoUtils.commonErrorInfo(morder.getOrder_id() + "<--订单存储失败，请重试!", errorList, 1, paramsMap);
 		}
+		// 用于缓存辨别计算完成
+		params.put("type", 200);
+		bufferUtils.writeRedisMq(null, params);
+	}
 
+	/**
+	 * 校验国宗订单信息
+	 * 
+	 * @param datas
+	 * @return Map
+	 */
+	private Map<String, Object> checkGuoZongOrderInfo(JSONObject datas) {
+		// 缓存参数
+		Map<String, Object> params = (Map<String, Object>) datas.get("other");
+		// 商品信息
+		JSONObject goodsInfo = JSONObject.fromObject(datas.get("goodsInfo") + "");
+		//
+		String waybill = datas.get("waybill") + "";
+		//
+		String recipientID = datas.get("recipientID") + "";
+		Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(recipientID);
+		if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
+			String msg = "运单号[" + waybill + "]" + reCheckIdCardMap.get(BaseCode.MSG.toString());
+			RedisInfoUtils.errorInfoMq(msg, 4, params);
+		}
+		String recipientTel = datas.get("recipientTel") + "";
+		Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
+		if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
+			String msg = "运单号[" + waybill + "]" + reCheckPhoneMap.get(BaseCode.MSG.toString());
+			RedisInfoUtils.errorInfoMq(msg, 6, params);
+		}
+		String entGoodsNo = goodsInfo.get("entGoodsNo") + "";
+		if (!checkEntGoodsNoLength(entGoodsNo)) {
+			String msg = "运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
+			RedisInfoUtils.errorInfoMq(msg, 1, params);
+			return ReturnInfoUtils.errorInfo(msg);
+		}
+		if (!IdcardValidator.validate18Idcard(recipientID)) {
+			String msg = "运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
+			RedisInfoUtils.errorInfoMq(msg, 4, params);
+		}
+		//
+		double netWt = Double.parseDouble(goodsInfo.get("netWt") + "");
+		double grossWt = Double.parseDouble(goodsInfo.get("grossWt") + "");
+		if (netWt > grossWt) {
+			String msg = "运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
+			RedisInfoUtils.errorInfoMq(msg, 5, params);
+		}
+		//
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> checkQiBangOrderInfo(JSONObject jsonDatas) {
+		// 缓存参数
+		Map<String, Object> params = (Map<String, Object>) jsonDatas.get("other");
+		//
+		String orderId = jsonDatas.get("orderId") + "";
+		String orderDocId = jsonDatas.get("orderDocId") + "";
+		Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(orderDocId);
+		if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
+			String msg = "订单号[" + orderId + "]" + reCheckIdCardMap.get(BaseCode.MSG.toString());
+			RedisInfoUtils.errorInfoMq(msg, 4, params);
+		}
+		String recipientTel = jsonDatas.get("recipientTel") + "";
+		Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
+		if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
+			String msg = "订单号[" + orderId + "]" + reCheckPhoneMap.get(BaseCode.MSG.toString());
+			RedisInfoUtils.errorInfoMq(msg, 6, params);
+		}
+		if (!IdcardValidator.validate18Idcard(orderDocId)) {
+			String msg = "订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
+			RedisInfoUtils.errorInfoMq(msg, 4, params);
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -178,7 +289,6 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String orderId = morder.getOrder_id().trim();
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
 		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
-		// paramsMap.put("merchant_no", merchantId);
 		paramsMap.put("order_id", morder.getOrder_id());
 		List<MorderSub> ms = manualOrderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
 		if (ms == null) {
@@ -216,15 +326,22 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			return statusMap;
 		}
 	}
-	
+
+	/**
+	 * 创建订单商品信息
+	 * 
+	 * @param goodsInfo
+	 * @return
+	 */
 	public Map<String, Object> createNewSub(JSONObject goodsInfo) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		String orderId = goodsInfo.get("order_id") + "";
 		params.put("order_id", orderId);
 		Long count = manualOrderDao.findByPropertyCount(MorderSub.class, params);
+		if (count < 0) {
+			return ReturnInfoUtils.errorInfo("查询订单商品序列号错误,服务器繁忙!");
+		}
 		MorderSub mosb = new MorderSub();
-		
 		mosb.setSeq((count.intValue() + 1));
 		mosb.setOrder_id(orderId);
 		mosb.setEntGoodsNo(goodsInfo.get("entGoodsNo") + "");
@@ -299,12 +416,188 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		// 删除标识:0-未删除,1-已删除
 		mosb.setDeleteFlag(0);
 		if (manualOrderDao.add(mosb)) {
-			statusMap.put("status", 1);
-			statusMap.put("msg", "订单商品【" + goodsInfo.get("GoodsName") + "】存储成功");
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		}
-		statusMap.put("status", -1);
-		statusMap.put("msg", "订单商品【" + goodsInfo.get("GoodsName") + "】存储失败，请重试!");
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("订单商品【" + goodsInfo.get("GoodsName") + "】存储失败，请重试!");
+	}
+
+	/**
+	 * 校验商品自编号是否超过海关要求长度
+	 * 
+	 * @param entGoodsNo
+	 *            商品自编号
+	 * @return boolean
+	 */
+	private boolean checkEntGoodsNoLength(String entGoodsNo) {
+		return StringEmptyUtils.isNotEmpty(entGoodsNo) && entGoodsNo.length() <= 20;
+	}
+
+	/**
+	 * 启邦创建订单信息
+	 * 
+	 * @param datas
+	 * @return
+	 */
+	public void qiBangCreateOrder(JSONObject datas) {
+		// 缓存参数
+		Map<String, Object> params = (Map<String, Object>) datas.get("other");
+		//
+		String merchantId = datas.get("merchantId") + "";
+		String merchantName = datas.get("merchantName") + "";
+		double orderTotalAmount = Double.parseDouble(datas.get("orderTotalPrice") + "");
+		double tax = Double.parseDouble(datas.get("tax") + "");
+		double actualAmountPaid = Double.parseDouble(datas.get("actualAmountPaid") + "");
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String orderId = datas.get("orderId") + "";
+		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
+			// 查询缓存中订单自增Id
+			int count = SerialNoUtils.getRedisIdCount("order");
+			orderId = SerialNoUtils.getSerialNo("YM", count);
+		}
+		Map<String, Object> paramsMap = new HashMap<>();
+		// 校验企邦是否已经录入已备案商品信息
+		String entGoodsNo = datas.get("entGoodsNo") + "";
+		String marCode = datas.get("marCode") + "";
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
+			paramsMap.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		} else {
+			paramsMap.put("entGoodsNo", entGoodsNo.trim());
+		}
+		paramsMap.put("goodsMerchantId", merchantId);
+		List<GoodsRecordDetail> goodsList = manualOrderDao.findByProperty(GoodsRecordDetail.class, paramsMap, 1, 1);
+		if (goodsList == null || goodsList.isEmpty()) {
+			String msg = "商品编号[" + entGoodsNo.trim() + "]与商家平台号[" + marCode.trim() + "]-->对应商品不存在,请核实信息!";
+			RedisInfoUtils.errorInfoMq(msg, 1, params);
+		} else {
+			paramsMap.clear();
+			paramsMap.put("order_id", orderId);
+			List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 1, 1);
+			if (ml != null && !ml.isEmpty()) {
+				Morder morder = ml.get(0);
+				// 企邦的税费暂写死为0
+				Map<String, Object> reCheckMap = judgmentOrderInfo(morder, datas, orderTotalAmount, 0.0, 2);
+				if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
+					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", 2, params);
+				} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", 1, params);
+				} else {
+					// 成功后、调用创建商品方法
+					Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
+					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+					}
+				}
+			} else {
+				Morder morder = new Morder();
+				morder.setOrder_id(orderId);
+				morder.setMerchant_no(merchantId);
+				morder.setFCY(orderTotalAmount);
+				morder.setTax(tax);
+				morder.setActualAmountPaid(actualAmountPaid);
+				morder.setRecipientName(datas.get("recipientName") + "");
+				morder.setRecipientID(datas.get("orderDocId") + "");
+				morder.setRecipientTel(datas.get("recipientTel") + "");
+				morder.setRecipientProvincesCode(datas.get("provinceCode") + "");
+				morder.setRecipientProvincesName(datas.get("provinceName") + "");
+				morder.setRecipientCityCode(datas.get("cityCode") + "");
+				morder.setRecipientCityName(datas.get("cityName") + "");
+				morder.setRecipientAreaCode(datas.get("areaCode") + "");
+				morder.setRecipientAreaName(datas.get("areaName") + "");
+				morder.setRecipientAddr(datas.get("recipientAddr") + "");
+				morder.setOrderDocAcount(datas.get("orderDocAcount") + "");
+				morder.setOrderDocName(datas.get("orderDocName") + "");
+				morder.setOrderDocType("01");// 身份证
+				morder.setOrderDocId(datas.get("orderDocId") + "");
+				morder.setOrderDocTel(datas.get("orderDocTel") + "");
+				morder.setDateSign(dateSign);
+				morder.setSerial(Integer.parseInt(datas.get("serial") + ""));
+				morder.setWaybill(datas.get("waybillNo") + "");
+				morder.setDel_flag(0);
+				morder.setOrder_record_status(1);
+				morder.setCreate_date(new Date());
+				morder.setCreate_by(merchantName);
+				morder.setFcode(FCODE);
+				String randomDate = DateUtil.randomCreateDate();
+				morder.setOrderDate(randomDate);
+				String ehsEntName = datas.get("ehsEntName") + "";
+				if (StringEmptyUtils.isNotEmpty(ehsEntName)) {
+					JSONObject json = new JSONObject();
+					json.put("ehsEntName", ehsEntName);
+					morder.setSpareParams(json.toString());
+				}
+				if(manualOrderDao.add(morder)) {
+					// 保存成功调用保存商品
+					Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
+					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+					}
+				} else {
+					RedisInfoUtils.errorInfoMq("订单[" + orderId + "]保存失败,请核对订单信息!", 1, params);
+				}
+			}
+		}
+		// 用于缓存辨别计算完成
+		params.put("type", 200);
+		bufferUtils.writeRedisMq(null, params);
+	}
+
+	public Map<String, Object> createQBOrderSub(String merchantId, JSONObject item, String merchantName) {
+		Map<String, Object> params = new HashMap<>();
+		String entGoodsNo = item.get("entGoodsNo") + "";
+		String marCode = item.get("marCode") + "";
+		String goodsName = item.get("goodsName") + "";
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
+			params.put("entGoodsNo", entGoodsNo.trim() + "_" + marCode.trim());
+		} else {
+			params.put("entGoodsNo", entGoodsNo.trim());
+		}
+		params.put("goodsMerchantId", merchantId);
+		List<GoodsRecordDetail> goodsList = manualOrderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		if (goodsList != null && !goodsList.isEmpty()) {
+			GoodsRecordDetail goods = goodsList.get(0);
+			JSONObject goodsInfo = new JSONObject();
+			goodsInfo.put("order_id", item.get("orderId") + "");
+			String reEntGoodsNo = goods.getEntGoodsNo();
+			if (StringEmptyUtils.isNotEmpty(marCode)) {
+				String[] str = reEntGoodsNo.split("_");
+				reEntGoodsNo = str[0];
+			}
+			goodsInfo.put("entGoodsNo", reEntGoodsNo);
+			goodsInfo.put("HSCode", goods.getHsCode());
+			if (StringEmptyUtils.isEmpty(goods.getBrand())) {
+				goodsInfo.put("Brand", reEntGoodsNo);
+			} else {
+				goodsInfo.put("Brand", goods.getBrand());
+			}
+			goodsInfo.put("BarCode", goods.getBarCode());
+			goodsInfo.put("CusGoodsNo", goods.getCusGoodsNo());
+			goodsInfo.put("CIQGoodsNo", goods.getCiqGoodsNo());
+			goodsInfo.put("GoodsName", goods.getGoodsName());
+			goodsInfo.put("GoodsStyle", goods.getGoodsStyle());
+			goodsInfo.put("OriginCountry", goods.getOriginCountry());
+			goodsInfo.put("Unit", goods.getgUnit());
+			goodsInfo.put("Price", item.get("price") + "");
+			goodsInfo.put("Qty", item.get("count") + "");
+			goodsInfo.put("netWt", goods.getNetWt());
+			goodsInfo.put("grossWt", goods.getGrossWt());
+			goodsInfo.put("stdUnit", goods.getStdUnit());
+			goodsInfo.put("secUnit", goods.getSecUnit());
+			goodsInfo.put("ebEntNo", goods.getEbEntNo());
+			goodsInfo.put("ebEntName", goods.getEbEntName());
+			goodsInfo.put("DZKNNo", goods.getDZKNNo());
+			goodsInfo.put("seqNo", item.get("seqNo") + "");
+			goodsInfo.put("merchantId", merchantId);
+			goodsInfo.put("merchantName", merchantName);
+			String spareParam = goods.getSpareParams();
+			if (StringEmptyUtils.isNotEmpty(spareParam)) {
+				JSONObject json = JSONObject.fromObject(spareParam);
+				String sku = json.get("SKU") + "";
+				goodsInfo.put("SKU", sku);
+				goodsInfo.put("marCode", marCode.trim());
+			}
+			return createNewSub(goodsInfo);
+		} else {
+			return ReturnInfoUtils.errorInfo(goodsName + "-->该商品不存在,请核实信息!");
+		}
 	}
 }

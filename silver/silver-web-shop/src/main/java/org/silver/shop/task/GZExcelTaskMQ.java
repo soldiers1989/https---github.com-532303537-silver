@@ -27,6 +27,8 @@ public class GZExcelTaskMQ extends TaskUtils {
 	public Map<String, Object> call() {
 		try {
 			excel.open();
+			params.put("counter", 0);
+			params.put("statusCounter", 0);
 			manualOrderTransaction.readGZSheet(excel, errorList, params);
 			return null;
 		} catch (Exception e) {

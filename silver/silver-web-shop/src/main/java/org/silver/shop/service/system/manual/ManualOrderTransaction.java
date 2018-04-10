@@ -1,7 +1,5 @@
 package org.silver.shop.service.system.manual;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -68,13 +66,13 @@ public class ManualOrderTransaction {
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
 	/**
-	 * 总行数
-	 */
-	private static final String TOTAL_COUNT = "totalCount";
-	/**
 	 * 开始行数
 	 */
 	private static final String START_COUNT = "startCount";
+	/**
+	 * 总行数
+	 */
+	private static final String TOTAL_COUNT = "totalCount";
 
 	public Map<String, Object> excelImportOrder(HttpServletRequest req) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -103,12 +101,12 @@ public class ManualOrderTransaction {
 			if (realRowCount <= 0) {
 				return ReturnInfoUtils.errorInfo("导入失败,请检查是否有数据或序号符合要求!");
 			}
-			if (columnTotalCount == 14) { // 企邦模板表格长度(增加了序号列)
+			if (columnTotalCount == 14) { // 企邦模板表格长度
 				// 用于前台区分哪家批次号
 				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB");
 				// 多了一行说明
 				realRowCount += 1;
-				invokeTaskUtils.startTask(1, realRowCount, file, merchantId, serialNo, merchantName);
+				invokeTaskUtils.startTask(11, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else if (columnTotalCount == 71) {// 国宗订单模板长度(加上序号列)
 				// 用于前台区分哪家批次号
@@ -164,8 +162,6 @@ public class ManualOrderTransaction {
 				try {
 					value = excel.getCell(0, r, c);
 				} catch (Exception e) {
-					// 由于异常过多,暂不打印错误信息
-					// e.printStackTrace();
 					continue;
 				}
 				// 判断序号是否有值
@@ -219,7 +215,6 @@ public class ManualOrderTransaction {
 		String hsCode = "";// HS编码
 		String goodsStyle = "";// 规格型号
 		String originCountry = "";// 原产国
-		String RecipientProvincesCode = "";
 		String provinceCode = "";// 省份编码
 		String cityCode = "";// 城市编码
 		String areaCode = "";// 区域编码
@@ -234,7 +229,7 @@ public class ManualOrderTransaction {
 		double actualAmountPaid;
 		// 税费
 		double tax = 0.0;
-		int total_count = 0;// 商品数量
+		int goodsCount = 0;// 商品数量
 		double price = 0;
 		double netWt = 0.0; // 净重
 		double grossWt = 0.0;// 毛重
@@ -254,7 +249,6 @@ public class ManualOrderTransaction {
 		String brand = "";// 品牌
 		String customsCode = "";// (海关关区)码头代码
 		int totalColumnCount = excel.getColumnCount(0);
-		int sheet = Integer.parseInt(params.get("sheet") + "");
 		String merchantId = params.get(MERCHANT_ID) + "";
 		String serialNo = params.get("serialNo") + "";
 		int startCount = Integer.parseInt(params.get(START_COUNT) + "");
@@ -262,13 +256,13 @@ public class ManualOrderTransaction {
 		String merchantName = params.get(MERCHANT_NAME) + "";
 		//
 		params.put("name", "orderImport");
-		try {
-			for (int r = startCount; r <= endCount; r++) {
-				if (excel.getColumnCount(sheet, r) == 0) {
+		for (int r = startCount; r <= endCount; r++) {
+			try {
+				if (excel.getColumnCount(0, r) == 0) {
 					break;
 				}
 				for (int c = 0; c < totalColumnCount; c++) {
-					String value = excel.getCell(sheet, r, c);
+					String value = excel.getCell(0, r, c);
 					if (c == 0 && "".equals(value)) {
 						break;
 					}
@@ -278,7 +272,7 @@ public class ManualOrderTransaction {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, 1, params);
 							break;
 						}
 					} else if (c == 1) {
@@ -291,7 +285,7 @@ public class ManualOrderTransaction {
 							waybill = value.replaceAll(" ", "");
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->运单号不能为空,请核对信息!";
-							RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, 1, params);
 							break;
 						}
 					} else if (c == 8) {
@@ -371,7 +365,7 @@ public class ManualOrderTransaction {
 						}
 					} else if (c == 36) {
 						// 数量
-						total_count = Integer.parseInt(value);
+						goodsCount = Integer.parseInt(value);
 					} else if (c == 39) {
 						// HS编码
 						hsCode = value;
@@ -422,36 +416,10 @@ public class ManualOrderTransaction {
 						ciqGoodsNo = value;
 					}
 				}
-				Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(RecipientID);
-				if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]"
-							+ reCheckIdCardMap.get(BaseCode.MSG.toString());
-					RedisInfoUtils.commonErrorInfo(msg, errl, 4, params);
-				}
-				Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(RecipientTel);
-				if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]"
-							+ reCheckPhoneMap.get(BaseCode.MSG.toString());
-					RedisInfoUtils.commonErrorInfo(msg, errl, 6, params);
-				}
-				if (!checkEntGoodsNoLength(EntGoodsNo)) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
-					continue;
-				}
-				if (netWt > grossWt) {
-					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 5, params);
-				}
-				if (!IdcardValidator.validate18Idcard(RecipientID)) {
-					String str = "运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
-					String msg = "【表格】第" + (r + 1) + "行-->" + str;
-					RedisInfoUtils.commonErrorInfo(msg, errl, 4, params);
-				}
 				Map<String, Object> provinceMap = manualService.searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]收货人地址填写有误,请核对信息!";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 3, params);
+					RedisInfoUtils.errorInfoMq(msg, 3, params);
 				} else {
 					Map<String, Object> reProvinceCityAreaMap = manualService.doProvinceCityArea(provinceMap);
 					if (reProvinceCityAreaMap != null) {
@@ -469,7 +437,7 @@ public class ManualOrderTransaction {
 				// 目前都暂用下单人姓名
 				// OrderDocAcount = getOrderDocAcount();// 平台账号
 				OrderDocAcount = "";
-				orderTotalAmount = total_count * price;
+				orderTotalAmount = goodsCount * price;
 				actualAmountPaid = orderTotalAmount + tax;
 				OrderDate = sdf.format(new Date());
 				dateSign = OrderDate.substring(0, 8);
@@ -490,7 +458,7 @@ public class ManualOrderTransaction {
 				goodsInfo.put("GoodsStyle", goodsStyle);
 				goodsInfo.put("Unit", unit);
 				goodsInfo.put("Price", price);
-				goodsInfo.put("Qty", total_count);
+				goodsInfo.put("Qty", goodsCount);
 				goodsInfo.put("netWt", netWt);
 				goodsInfo.put("grossWt", grossWt);
 				goodsInfo.put("firstLegalCount", firstLegalCount);
@@ -510,7 +478,7 @@ public class ManualOrderTransaction {
 				Map<String, Object> reGoodsMap = manualService.checkGoodsInfo(goodsInfo);
 				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+					RedisInfoUtils.errorInfoMq(msg, 1, params);
 					continue;
 				}
 				JSONObject orderInfo = new JSONObject();
@@ -540,56 +508,204 @@ public class ManualOrderTransaction {
 				orderInfo.put("cityName", cityName);
 				orderInfo.put("areaName", areaName);
 				orderInfo.put("orderId", orderId);
+				orderInfo.put("dateSign", dateSign);
 				orderInfo.put(MERCHANT_ID, merchantId);
 				orderInfo.put(MERCHANT_NAME, merchantName);
-				//商品信息
+				// 商品信息
 				orderInfo.put("goodsInfo", goodsInfo);
-				//其他缓存参数
+				// 其他缓存参数
 				orderInfo.put("other", params);
-				orderInfo.put("errorList",errl);
+				// 标识区分
+				orderInfo.put("type", "guoZongExcelOrderImpl");
 				// 发起队列,开始创建国宗订单
 				shopQueueSender.send("excel-channel", orderInfo.toString());
-				Map<String, Object> item = morderService.guoCreateNew(merchantId, waybill, serial, dateSign, OrderDate,
-						orderTotalAmount, tax, actualAmountPaid, RecipientName, RecipientID, RecipientTel,
-						RecipientProvincesCode, RecipientAddr, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
-						senderName, senderCountry, senderAreaCode, senderAddress, senderTel, areaCode, cityCode,
-						provinceCode, postal, provinceName, cityName, areaName, orderId, goodsInfo);
-				if ("10".equals(item.get("status") + "")) {// 当遇到超额时
-					String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 2, params);
-				} else if (!"1".equals(item.get("status") + "")) {
-					String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg") + "";
-					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
-					continue;
-				}
-				String order_id = item.get("order_id") + "";
-				goodsInfo.put("order_id", order_id); // 根据订单Id创建订单商品
-				Map<String, Object> goodsItem = morderService.createNewSub(goodsInfo);
-				if ((int) goodsItem.get("status") != 1) {
-					String msg = "【表格】第" + (r + 1) + "行商品-->" + goodsItem.get("msg");
-					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
-				}
-				excelBufferUtils.writeRedis(errl, params);
-
+			} catch (Exception e) {
+				logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
+				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
+				//
+				RedisInfoUtils.errorInfoMq(msg, 1, params);
+				//
+				excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
-		} catch (Exception e) {
-			logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
-			String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
-			RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
-		} finally {
-			excel.closeExcel();
-			excelBufferUtils.writeCompletedRedis(errl, params);
 		}
+		excel.closeExcel();
 	}
 
 	/**
-	 * 校验商品自编号是否超过海关要求长度
+	 * 企邦表单,暂默认为14列数据
 	 * 
-	 * @param entGoodsNo
-	 *            商品自编号
-	 * @return boolean
+	 * @param excel
+	 *            工具类
+	 * @param errl
+	 *            错误信息
+	 * @param 参数
+	 * 
+	 * @return Map
 	 */
-	private boolean checkEntGoodsNoLength(String entGoodsNo) {
-		return StringEmptyUtils.isNotEmpty(entGoodsNo) && entGoodsNo.length() <= 20;
+	public void readQBSheet(ExcelUtil excel, List<Map<String, Object>> errl, Map<String, Object> params) {
+		int seqNo = 0;
+		String orderId = "";// 订单Id
+		String entGoodsNo = "";// 商品自编号
+		String goodsName = "";// 商品名称
+		double price = 0;// 单价
+		int count = 0;// 商品数量
+		String recipientName = "";// 收货人名称
+		String recipientTel = "";// 收货人电话
+		String recipientAddr = "";// 收货人详细地址
+		String marCode = "";// (启邦客户)商品归属商家代码
+		String orderDocName = "";// 下单人名称
+		String orderDocId = "";// 下单人身份证号码
+		String ehsEntName = "";// 承运商
+		String waybillNo = "";// 运单编号
+		int totalColumnCount = excel.getColumnCount(0);
+		String merchantId = params.get(MERCHANT_ID) + "";
+		String serialNo = params.get("serialNo") + "";
+		int startCount = Integer.parseInt(params.get(START_COUNT) + "");
+		int endCount = Integer.parseInt(params.get("endCount") + "");
+		int totalCount = Integer.parseInt(params.get(TOTAL_COUNT) + "");
+		// 由于启邦属于银盟自定义模板,故而多了一行说明，总数需要减1
+		params.put(TOTAL_COUNT, (totalCount - 1));
+		String merchantName = params.get(MERCHANT_NAME) + "";
+		//
+		params.put("name", "orderImport");
+		for (int r = startCount; r <= endCount; r++) {
+			if (excel.getColumnCount(0, r) == 0) {
+				break;
+			}
+			try {
+				for (int c = 0; c < totalColumnCount; c++) {
+					String value = excel.getCell(0, r, c);
+					if (c == 0 && "".equals(value)) {
+						break;
+					}
+					if (c == 0) {
+						// 序号
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							seqNo = Integer.parseInt(value);
+						} else {
+							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
+							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							break;
+						}
+					} else if (c == 1) {
+						// 订单Id
+						orderId = value;
+					} else if (c == 2) {
+						// 商品自编号
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							entGoodsNo = value;
+						}
+					} else if (c == 3) {
+						// 商品名称
+						if (StringEmptyUtils.isNotEmpty(value)) {
+							goodsName = value;
+						}
+					} else if (c == 4) {
+						// 商品单价
+						try {
+							if (StringEmptyUtils.isNotEmpty(value)) {
+								price = Double.parseDouble(value);
+							}
+						} catch (Exception e) {
+							String msg = "【表格】第" + (r + 1) + "行,商品单价输入错误!";
+							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							break;
+						}
+					} else if (c == 5) {
+						// 数量
+						try {
+							if (StringEmptyUtils.isNotEmpty(value)) {
+								count = Integer.parseInt(value);
+							}
+						} catch (Exception e) {
+							String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
+							RedisInfoUtils.errorInfoMq(msg, 1, params);
+						}
+					} else if (c == 6) {
+						// 收货人姓名
+						recipientName = value;
+					} else if (c == 7) {
+						// 收件人电话
+						recipientTel = value;
+					} else if (c == 8) {
+						// 收货人详细地址
+						recipientAddr = value;
+					} else if (c == 9) {
+						// (启邦客户)商品归属商家代码
+						marCode = value;
+					} else if (c == 10) {
+						orderDocName = value;
+					} else if (c == 11) {
+						// 身份证号码
+						orderDocId = value.replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
+					} else if (c == 12) {
+						// 承运商
+						ehsEntName = value;
+					} else if (c == 13) {
+						waybillNo = value;
+					}
+				}
+				JSONObject item = new JSONObject();
+				Map<String, Object> provinceMap = manualService.searchProvinceCityArea(recipientAddr);
+				if (provinceMap == null) {
+					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址不符合规范,请核对信息!";
+					RedisInfoUtils.errorInfoMq(msg, 3, params);
+				}
+				Map<String, Object> reProvinceCityAreaMap = manualService.doProvinceCityArea(provinceMap);
+				if (reProvinceCityAreaMap != null) {
+					item.put("areaCode", reProvinceCityAreaMap.get("areaCode") + "");
+					item.put("areaName", reProvinceCityAreaMap.get("areaName") + "");
+					item.put("cityCode", reProvinceCityAreaMap.get("cityCode") + "");
+					item.put("cityName", reProvinceCityAreaMap.get("cityName") + "");
+					item.put("provinceCode", reProvinceCityAreaMap.get("provinceCode") + "");
+					item.put("provinceName", reProvinceCityAreaMap.get("provinceName") + "");
+				}
+				item.put("seqNo", seqNo);
+				item.put("orderId", orderId);
+				item.put("entGoodsNo", entGoodsNo);
+				item.put("goodsName", goodsName);
+				item.put("price", price);
+				item.put("count", count);
+				double orderTotalPrice = count * price;
+				item.put("orderTotalPrice", orderTotalPrice);
+				// 实际支付金额
+				item.put("actualAmountPaid", orderTotalPrice);
+				// 税费
+				double tax = 0;
+				item.put("tax", tax);
+				item.put("recipientName", recipientName);
+				item.put("recipientTel", recipientTel);
+				item.put("recipientAddr", recipientAddr);
+				item.put("orderDocAcount", recipientName);
+				item.put("orderDocName", orderDocName);
+				item.put("orderDocId", orderDocId);
+				// 下单人电话
+				item.put("orderDocTel", recipientTel);
+				// 企邦订单承运商
+				item.put("ehsEntName", ehsEntName);
+				item.put("waybillNo", waybillNo);
+				String[] str = serialNo.split("_");
+				int serial = Integer.parseInt(str[1]);
+				// 企邦批次号
+				item.put("serial", serial);
+				item.put("marCode", marCode);
+				item.put(MERCHANT_ID, merchantId);
+				item.put(MERCHANT_NAME, merchantName);
+				// 其他缓存参数
+				item.put("other", params);
+				item.put("type", "qiBangExcelOrderImpl");
+				// 发起队列,开始创建国宗订单
+				shopQueueSender.send("excel-channel", item.toString());
+			} catch (Exception e) {
+				logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);
+				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
+				//
+				RedisInfoUtils.errorInfoMq(msg, 1, params);
+				//
+				excelBufferUtils.writeCompletedRedisMq(null, params);
+			}
+		}
+		excel.closeExcel();
 	}
+
 }

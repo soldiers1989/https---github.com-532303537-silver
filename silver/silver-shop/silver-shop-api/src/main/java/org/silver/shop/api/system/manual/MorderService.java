@@ -1,6 +1,5 @@
 package org.silver.shop.api.system.manual;
 
-import java.util.List;
 import java.util.Map;
 
 import net.sf.json.JSONArray;

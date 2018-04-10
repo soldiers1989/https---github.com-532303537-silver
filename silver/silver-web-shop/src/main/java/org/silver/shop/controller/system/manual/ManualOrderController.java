@@ -9,7 +9,9 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import net.sf.json.JSONObject;
 
@@ -33,6 +35,7 @@ public class ManualOrderController {
 	 */
 	@RequestMapping(value = "/excelImportOrder", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
+	@ResponseBody
 	public String excelImportOrder(HttpServletResponse resp, HttpServletRequest req) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

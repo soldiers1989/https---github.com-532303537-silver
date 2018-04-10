@@ -69,7 +69,6 @@ public class ManualService {
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
 
-
 	/**
 	 * 商户Id
 	 */
@@ -524,24 +523,12 @@ public class ManualService {
 	/**
 	 * 企邦表单,暂默认为14列数据
 	 * 
-	 * @param sheet
-	 *            工作表索引
 	 * @param excel
 	 *            工具类
 	 * @param errl
 	 *            错误信息
-	 * @param merchantId
-	 *            商户Id
-	 * @param serialNo
-	 *            批次号
-	 * @param startCount
-	 *            开始行数
-	 * @param endCount
-	 *            结束行数
-	 * @param realRowCount
-	 *            总行数
-	 * @param merchantName
-	 *            商户名称
+	 * @param 参数
+	 * 
 	 * @return Map
 	 */
 	public void readQBSheet(ExcelUtil excel, List<Map<String, Object>> errl, Map<String, Object> params) {
@@ -727,8 +714,8 @@ public class ManualService {
 					RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
 				}
 				// 获取到订单随机创建时间
-				//item.put("date", orderMap.get("date") + "");
-			//	registerMember(item);
+				// item.put("date", orderMap.get("date") + "");
+				// registerMember(item);
 				excelBufferUtils.writeRedis(errl, params);
 			}
 		} catch (Exception e) {

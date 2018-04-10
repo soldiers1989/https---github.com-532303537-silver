@@ -20,16 +20,15 @@ import org.silver.util.SerializeUtil;
 import org.silver.util.SortUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
- * 主要用于Excel导入时写入缓冲数据
+ * 主要用于Excel导入时写入缓冲数据 web层
  */
-@Service
+@Component
 public class ExcelBufferUtils {
 	@Autowired
 	private ErrorLogsTransaction errorLogs;
-
 
 	// 创建一个静态钥匙
 	private static Object lock = "lock";// 值是任意的
@@ -37,8 +36,7 @@ public class ExcelBufferUtils {
 	 * 总行数
 	 */
 	private static final String TOTAL_COUNT = "totalCount";
-	
-	
+
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
@@ -186,5 +184,71 @@ public class ExcelBufferUtils {
 			}
 		}
 		return CalculateCpuUtils.calculateCpu(totalCount);
+	}
+
+	/**
+	 * MQ版,将正在执行数据更新到缓存中 web层
+	 * 
+	 * @param errl
+	 *            错误信息
+	 */
+	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+		int counter = 0;
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
+		Map<String, Object> datasMap = new HashMap<>();
+		byte[] redisByte = JedisUtil.get(key.getBytes());
+		if (redisByte != null && redisByte.length > 0) {
+			Map<String, Object> redisMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
+			List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
+			if (!reErrl.isEmpty()) {
+				reErrl.add(errl.get(0));
+				datasMap.put(BaseCode.ERROR.toString(), reErrl);
+			}
+			counter = Integer.parseInt(redisMap.get("completed") + "");
+		} else {
+			datasMap.put(BaseCode.ERROR.toString(), errl);
+		}
+		//
+		int type = Integer.parseInt(paramsMap.get("type") + "");
+		// web层没有完成一说,故而没有200状态码
+		if (type == 1) {
+			counter++;
+		}
+		datasMap.put("completed", counter);
+		datasMap.put(BaseCode.STATUS.toString(), "1");
+		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+		// 将数据放入到缓存中
+		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+	}
+
+	/**
+	 * MQ版,线程执行完成时写入缓存
+	 * 
+	 * @param errl
+	 *            错误信息
+	 * @param 参数
+	 */
+	public void writeCompletedRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String name = paramsMap.get("name") + "";
+		String serialNo = paramsMap.get("serialNo") + "";
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
+		byte[] redisInfo = JedisUtil.get(key.getBytes());
+		if (redisInfo != null && redisInfo.length > 0) {
+			Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
+			int counter = Integer.parseInt(datasMap.get("completed") + "");
+			if (counter == totalCount) {
+				datasMap.put(BaseCode.MSG.toString(), "完成!");
+				datasMap.put(BaseCode.STATUS.toString(), "2");
+				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
+				datasMap.put("fcy", reMap.get("fcy"));
+				datasMap.put("orderCount", reMap.get("orderCount"));
+				datasMap.remove("cpuCount");
+				// 将数据放入到缓存中
+				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+			}
+		}
 	}
 }

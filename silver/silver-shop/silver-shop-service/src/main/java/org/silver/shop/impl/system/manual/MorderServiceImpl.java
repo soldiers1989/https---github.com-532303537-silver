@@ -65,8 +65,6 @@ public class MorderServiceImpl implements MorderService {
 	private GoodsRecordServiceImpl goodsRecordServiceImpl;
 	@Autowired
 	private MerchantUtils merchantUtils;
-	@Autowired
-	private BufferUtils bufferUtils;
 
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";

@@ -17,10 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * 用于批量生成支付单、发送支付单与订单时,缓冲数据
- *
+ * 用于批量生成支付单、发送支付单与订单时,缓冲数据 service层使用
  */
-@Component
+@Component("bufferUtils")
 public class BufferUtils {
 
 	@Autowired
@@ -33,7 +32,7 @@ public class BufferUtils {
 	 * 总行数
 	 */
 	private static final String TOTAL_COUNT = "totalCount";
-	
+
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
@@ -61,13 +60,13 @@ public class BufferUtils {
 	 * @param errl
 	 *            错误信息
 	 */
-	public void writeCompletedRedis(List<Map<String, Object>> errl, Map<String,Object> paramsMap) {
+	public void writeCompletedRedis(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String name = paramsMap.get("name")+"";
-		String serialNo = paramsMap.get("serialNo")+"";
-		String merchantId = paramsMap.get("merchantId")+"";
-		String merchantName = paramsMap.get("merchantName")+"";
+		String name = paramsMap.get("name") + "";
+		String serialNo = paramsMap.get("serialNo") + "";
+		String merchantId = paramsMap.get("merchantId") + "";
+		String merchantName = paramsMap.get("merchantName") + "";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
 		synchronized (LOCK) {
 			AtomicInteger threadCounter = (AtomicInteger) paramsMap.get("threadCounter");
@@ -106,10 +105,70 @@ public class BufferUtils {
 		return CalculateCpuUtils.calculateCpu(totalCount);
 	}
 
-	public static void main(String[] args) {
-		AtomicInteger counter = new AtomicInteger(0);
-		for(int i=0; i<100;i++){
-			System.out.println(counter.getAndIncrement());
+	/**
+	 * MQ版,将正在执行数据更新到缓存中
+	 * 
+	 * @param errl
+	 *            错误信息
+	 */
+	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+		int counter = 0;
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
+		Map<String, Object> datasMap = new HashMap<>();
+		byte[] redisByte = JedisUtil.get(key.getBytes());
+		if (redisByte != null && redisByte.length > 0) {
+			Map<String, Object> redisMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
+			List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
+			if (reErrl !=null && !reErrl.isEmpty()) { 
+				if(errl !=null && !errl.isEmpty()){
+					reErrl.add(errl.get(0));
+				}
+				datasMap.put(BaseCode.ERROR.toString(), reErrl);
+			}
+			counter = Integer.parseInt(redisMap.get("completed") + "");
+		} else {
+			datasMap.put(BaseCode.ERROR.toString(), errl);
+		}
+		//
+		int type = Integer.parseInt(paramsMap.get("type") + "");
+		//
+		if (type == 1 || type== 200) {
+			counter++;
+		}
+		datasMap.put("completed", counter);
+		datasMap.put(BaseCode.STATUS.toString(), "1");
+		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+		// 将数据放入到缓存中
+		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+	}
+
+	/**
+	 * 线程执行完成时写入缓存
+	 * 
+	 * @param errl
+	 *            错误信息
+	 */
+	public void writeCompletedRedisMq(Map<String, Object> paramsMap) {
+		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
+		String name = paramsMap.get("name") + "";
+		String serialNo = paramsMap.get("serialNo") + "";
+		String merchantId = paramsMap.get("merchantId") + "";
+		String merchantName = paramsMap.get("merchantName") + "";
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
+		byte[] redisInfo = JedisUtil.get(key.getBytes());
+		if (redisInfo != null && redisInfo.length > 0) {
+			Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
+			int counter = Integer.parseInt(datasMap.get("completed") + "");
+			if (counter == totalCount) {
+				datasMap.put(BaseCode.MSG.toString(), "完成!");
+				datasMap.put(BaseCode.STATUS.toString(), "2");
+				List<Map<String, Object>> reErrl = (List<Map<String, Object>>) datasMap.get(BaseCode.ERROR.toString());
+				errorLogsService.addErrorLogs(reErrl, totalCount, serialNo, merchantId, merchantName, name);
+				// 将数据放入到缓存中
+				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+			}
 		}
 	}
 }

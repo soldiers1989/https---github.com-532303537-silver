@@ -15,21 +15,31 @@
 		check="false" /> <dubbo:reference id="sysSessionProvider" interface="org.cloudx.provider.sys.SysSessionProvider" 
 		check="false" /> <dubbo:reference id="sysAuthorizeProvider" interface="org.cloudx.provider.sys.SysAuthorizeProvider" 
 		check="false" /> -->
-		
-	<dubbo:reference id="managerService" interface="org.silver.shop.api.system.organization.ManagerService" check="false" />
-    <dubbo:reference id="memberService" interface="org.silver.shop.api.system.organization.MemberService" check="false" />	
-    <dubbo:reference id="merchantService" interface="org.silver.shop.api.system.organization.MerchantService" check="false" />
-    
-    <dubbo:reference id="proxyService" interface="org.silver.shop.api.system.organization.ProxyService" check="false" />
-    <dubbo:reference id="AgentService" interface="org.silver.shop.api.system.organization.AgentService" check="false" />
+
+	<dubbo:reference id="managerService"
+		interface="org.silver.shop.api.system.organization.ManagerService"
+		check="false" />
+	<dubbo:reference id="memberService"
+		interface="org.silver.shop.api.system.organization.MemberService"
+		check="false" />
+	<dubbo:reference id="merchantService"
+		interface="org.silver.shop.api.system.organization.MerchantService"
+		check="false" />
+
+	<dubbo:reference id="proxyService"
+		interface="org.silver.shop.api.system.organization.ProxyService"
+		check="false" />
+	<dubbo:reference id="AgentService"
+		interface="org.silver.shop.api.system.organization.AgentService"
+		check="false" />
 	<!-- 配置Realm -->
-	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" /> 
+	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" />
 	<bean id="managerRealm" class="org.silver.shop.shiro.ManagerRealm" />
-    <bean id="merchantRealm" class="org.silver.shop.shiro.MerchantRealm" />
-    <bean id="proxyRealm" class="org.silver.shop.shiro.ProxyRealm" />
-    <bean id="agentRealm" class="org.silver.shop.shiro.AgentRealm" />
- 	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-		
+	<bean id="merchantRealm" class="org.silver.shop.shiro.MerchantRealm" />
+	<bean id="proxyRealm" class="org.silver.shop.shiro.ProxyRealm" />
+	<bean id="agentRealm" class="org.silver.shop.shiro.AgentRealm" />
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+
 		<property name="authenticator" ref="authenticator"></property>
 		<property name="realms">
 			<list>
@@ -41,10 +51,9 @@
 			</list>
 		</property>
 	</bean>
-	
-<!--	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-		<property name="realm" ref="realm" />
-	</bean> -->
+
+	<!-- <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"> 
+		<property name="realm" ref="realm" /> </bean> -->
 
 
 	<!-- 配置使用自定义认证器，可以实现多Realm认证，并且可以指定特定Realm处理特定类型的验证 -->
@@ -70,11 +79,12 @@
 		<property name="filterChainDefinitions">
 			<value>
 				/servlet/validateCodeServlet=anon
-				/regin=anon 
+				/regin=anon
 				/login=anon
 				/member/*=anon
 				/cciq/*=anon
 				/gac/*=anon
+				/manualOrder/*=anon
 				/MQ/*=anon
 				/agent/*=anon
 				/proxy/*=anon
