@@ -73,7 +73,11 @@ public class ManualOrderTransaction {
 	 * 总行数
 	 */
 	private static final String TOTAL_COUNT = "totalCount";
-
+	/**
+	 *  错误标识
+	 */
+	private static final String ERROR = "error";
+	
 	public Map<String, Object> excelImportOrder(HttpServletRequest req) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
@@ -183,26 +187,13 @@ public class ManualOrderTransaction {
 	/**
 	 * 读取国宗订单表
 	 * 
-	 * @param sheet
-	 *            子表数
 	 * @param excel
 	 *            文件
 	 * @param errl
 	 *            错误信息List
-	 * @param merchantId
-	 *            商户Id
-	 * @param startCount
-	 *            表单开始行数
-	 * @param endCount
-	 *            表单结束行数
-	 * @param serialNo
-	 *            批次号
-	 * @param realRowCount
-	 *            总行数
-	 * @param merchantName
 	 * @return Map
 	 */
-	public final void readGZSheet(ExcelUtil excel, List<Map<String, Object>> errl, Map<String, Object> params) {
+	public final void readGuoZongSheet(ExcelUtil excel, Map<String, Object> params) {
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYYMMDDHHMMSS");
 		String OrderDate = null, waybill = null, dateSign, RecipientName = null, RecipientID = null,
 				RecipientTel = null, RecipientAddr = null, OrderDocAcount, OrderDocName, OrderDocId, OrderDocTel,
@@ -272,7 +263,7 @@ public class ManualOrderTransaction {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
 					} else if (c == 1) {
@@ -285,7 +276,7 @@ public class ManualOrderTransaction {
 							waybill = value.replaceAll(" ", "");
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->运单号不能为空,请核对信息!";
-							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
 					} else if (c == 8) {
@@ -419,7 +410,7 @@ public class ManualOrderTransaction {
 				Map<String, Object> provinceMap = manualService.searchProvinceCityArea(RecipientAddr);
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->运单号[" + waybill + "]收货人地址填写有误,请核对信息!";
-					RedisInfoUtils.errorInfoMq(msg, 3, params);
+					RedisInfoUtils.errorInfoMq(msg, "address", params);
 				} else {
 					Map<String, Object> reProvinceCityAreaMap = manualService.doProvinceCityArea(provinceMap);
 					if (reProvinceCityAreaMap != null) {
@@ -478,7 +469,7 @@ public class ManualOrderTransaction {
 				Map<String, Object> reGoodsMap = manualService.checkGoodsInfo(goodsInfo);
 				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 					String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
-					RedisInfoUtils.errorInfoMq(msg, 1, params);
+					RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 					continue;
 				}
 				JSONObject orderInfo = new JSONObject();
@@ -511,6 +502,7 @@ public class ManualOrderTransaction {
 				orderInfo.put("dateSign", dateSign);
 				orderInfo.put(MERCHANT_ID, merchantId);
 				orderInfo.put(MERCHANT_NAME, merchantName);
+				orderInfo.put("currCode", currCode);
 				// 商品信息
 				orderInfo.put("goodsInfo", goodsInfo);
 				// 其他缓存参数
@@ -518,12 +510,13 @@ public class ManualOrderTransaction {
 				// 标识区分
 				orderInfo.put("type", "guoZongExcelOrderImpl");
 				// 发起队列,开始创建国宗订单
+				//shopQueueSender.send("local-excel-channel", orderInfo.toString());
 				shopQueueSender.send("excel-channel", orderInfo.toString());
 			} catch (Exception e) {
 				logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
 				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
 				//
-				RedisInfoUtils.errorInfoMq(msg, 1, params);
+				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
 				excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
@@ -532,7 +525,7 @@ public class ManualOrderTransaction {
 	}
 
 	/**
-	 * 企邦表单,暂默认为14列数据
+	 * 读取企邦表单,暂默认为14列数据
 	 * 
 	 * @param excel
 	 *            工具类
@@ -542,7 +535,7 @@ public class ManualOrderTransaction {
 	 * 
 	 * @return Map
 	 */
-	public void readQBSheet(ExcelUtil excel, List<Map<String, Object>> errl, Map<String, Object> params) {
+	public void readQiBangSheet(ExcelUtil excel, Map<String, Object> params) {
 		int seqNo = 0;
 		String orderId = "";// 订单Id
 		String entGoodsNo = "";// 商品自编号
@@ -584,7 +577,7 @@ public class ManualOrderTransaction {
 							seqNo = Integer.parseInt(value);
 						} else {
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
-							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
 					} else if (c == 1) {
@@ -608,7 +601,7 @@ public class ManualOrderTransaction {
 							}
 						} catch (Exception e) {
 							String msg = "【表格】第" + (r + 1) + "行,商品单价输入错误!";
-							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
 					} else if (c == 5) {
@@ -619,7 +612,7 @@ public class ManualOrderTransaction {
 							}
 						} catch (Exception e) {
 							String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
-							RedisInfoUtils.errorInfoMq(msg, 1, params);
+							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 						}
 					} else if (c == 6) {
 						// 收货人姓名
@@ -649,7 +642,7 @@ public class ManualOrderTransaction {
 				Map<String, Object> provinceMap = manualService.searchProvinceCityArea(recipientAddr);
 				if (provinceMap == null) {
 					String msg = "【表格】第" + (r + 1) + "行-->订单号[" + orderId + "]收货人地址不符合规范,请核对信息!";
-					RedisInfoUtils.errorInfoMq(msg, 3, params);
+					RedisInfoUtils.errorInfoMq(msg, "address", params);
 				}
 				Map<String, Object> reProvinceCityAreaMap = manualService.doProvinceCityArea(provinceMap);
 				if (reProvinceCityAreaMap != null) {
@@ -695,12 +688,13 @@ public class ManualOrderTransaction {
 				item.put("other", params);
 				item.put("type", "qiBangExcelOrderImpl");
 				// 发起队列,开始创建国宗订单
+				//shopQueueSender.send("local-excel-channel", item.toString());
 				shopQueueSender.send("excel-channel", item.toString());
 			} catch (Exception e) {
 				logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);
 				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
 				//
-				RedisInfoUtils.errorInfoMq(msg, 1, params);
+				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
 				excelBufferUtils.writeCompletedRedisMq(null, params);
 			}

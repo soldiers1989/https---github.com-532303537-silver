@@ -107,7 +107,7 @@
 		<mapping resource="org/silver/shop/model/common/base/IdCard.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/commerce/QuartetOrderContent.hbm.xml" />
-		<mapping resource="org/silver/shop/model/system/log/ErrorLogInfo.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/OrderImplLogs.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantFeeContent.hbm.xml" />
 		<mapping

@@ -10,17 +10,17 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
-import org.silver.shop.api.system.log.ErrorLogsService;
+import org.silver.shop.api.system.log.OrderImplLogsService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
 @Service
-public class ErrorLogsTransaction {
+public class OrderImplLogsTransaction {
 	
 	@Reference
-	private ErrorLogsService errorLogsService;
+	private OrderImplLogsService orderImplLogsService;
 
 	//添加错误日志
 	public Map<String,Object> addErrorLogs(List<Map<String, Object>> errorList, int totalCount, String serialNo,String action) {
@@ -30,7 +30,7 @@ public class ErrorLogsTransaction {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return errorLogsService.addErrorLogs(errorList,totalCount,serialNo,merchantId,merchantName,action);
+		return orderImplLogsService.addErrorLogs(errorList,totalCount,serialNo,merchantId,merchantName,action);
 	}
 
 	//获取商户日志
@@ -50,8 +50,7 @@ public class ErrorLogsTransaction {
 		}
 		params.remove("page");
 		params.remove("size");
-		
-		return errorLogsService.merchantGetErrorLogs(params,page,size,merchantId,merchantName); 
+		return orderImplLogsService.merchantGetErrorLogs(params,page,size,merchantId,merchantName); 
 	}
 	
 	

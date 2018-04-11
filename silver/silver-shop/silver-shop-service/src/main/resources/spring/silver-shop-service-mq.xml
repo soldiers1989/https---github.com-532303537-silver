@@ -37,7 +37,7 @@
 		container-type="default" connection-factory="connectionFactory"
 		acknowledge="auto">
 		<jms:listener destination="excel-channel" ref="manualOrderService" />
-		<!-- <jms:listener destination="43242" ref="queueReceiver2"/> -->
+		<!-- <jms:listener destination="local-excel-channel" ref="manualOrderService"/> -->
 	</jms:listener-container>
 
 	<!-- <jms:listener-container destination-type="topic" container-type="default" 

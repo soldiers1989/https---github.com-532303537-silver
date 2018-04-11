@@ -15,6 +15,7 @@ import org.silver.common.BaseCode;
 import org.silver.shop.api.system.manual.ManualOrderService;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.dao.system.manual.ManualOrderDao;
+import org.silver.shop.impl.system.organization.MemberServiceImpl;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
@@ -44,9 +45,32 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	private BufferUtils bufferUtils;
 	@Autowired
 	private MorderService morderService;
+	@Autowired
+	private MemberServiceImpl memberServiceImpl;
+
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";
-
+	/**
+	 * 错误标识
+	 */
+	private static final String ERROR = "error";
+	/**
+	 * 身份证标识-idCard
+	 */
+	private static final String IDCARD = "idCard";
+	/**
+	 * 商户Id
+	 */
+	private static final String MERCHANT_ID = "merchantId";
+	/**
+	 * 商户名称
+	 */
+	private static final String MERCHANT_NAME = "merchantName";
+	/**
+	 *下划线版订单Id
+	 */
+	private static final String ORDER_ID = "order_id";
+	
 	@Override
 	public void onMessage(Message message) {
 		TextMessage textmessage = (TextMessage) message;
@@ -58,7 +82,6 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		}
 		//
 		chooseCreate(jsonDatas);
-
 	}
 
 	private void chooseCreate(JSONObject jsonDatas) {
@@ -73,7 +96,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 				break;
 			}
-			guozongCreateOrder(jsonDatas);
+			guoZongCreateOrder(jsonDatas);
 			break;
 		case "qiBangExcelOrderImpl":
 			//
@@ -96,7 +119,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 * @param datas
 	 * 
 	 */
-	public void guozongCreateOrder(JSONObject datas) {
+	public void guoZongCreateOrder(JSONObject datas) {
 		String waybill = datas.get("waybill") + "";
 		// 缓存参数
 		Map<String, Object> params = (Map<String, Object>) datas.get("other");
@@ -110,26 +133,28 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		paramsMap.put("waybill", waybill);
 		List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 0, 0);
 		if (ml == null) {
-			RedisInfoUtils.errorInfoMq("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", 1, params);
+			RedisInfoUtils.errorInfoMq("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", ERROR, params);
 		} else if (!ml.isEmpty()) {
 			Morder morder = ml.get(0);
 			// 删除标识0-未删除,1-已删除
 			if (morder.getDel_flag() == 1) {
-				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", 1, params);
+				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
 			}
 			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, goodsInfo, orderTotalAmount, tax, 1);
-			if ("10".equals(reCheckMap.get("status") + "")) {// 当遇到超额时
-				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", 2, params);
-			} else if (!"1".equals(reCheckMap.get("status") + "")) {
-				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", 1, params);
+			if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", "orderExcess", params);
+			} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", ERROR, params);
 			} else {
-				goodsInfo.put("order_id", reCheckMap.get("order_id")); // 根据订单Id创建订单商品
+				goodsInfo.put(ORDER_ID, reCheckMap.get(ORDER_ID)); // 根据订单Id创建订单商品
 				// 成功后、调用创建商品方法
 				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
 				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
 				}
 			}
+			// 注册会员账号信息
+			memberServiceImpl.registerMember(morder);
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
@@ -152,7 +177,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			// 身份证
 			morder.setOrderDocId(datas.get("orderDocId") + "");
 			morder.setOrderDocTel(datas.get("orderDocTel") + "");
-			morder.setMerchant_no(goodsInfo.get("merchantId") + "");
+			morder.setMerchant_no(goodsInfo.get(MERCHANT_ID) + "");
 			morder.setDateSign(datas.get("dateSign") + "");
 			morder.setSerial(Integer.parseInt(datas.get("serial") + ""));
 			morder.setWaybill(waybill);
@@ -161,7 +186,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			// 订单备案状态
 			morder.setOrder_record_status(1);
 			morder.setCreate_date(new Date());
-			morder.setCreate_by(goodsInfo.get("merchantName") + "");
+			morder.setCreate_by(goodsInfo.get(MERCHANT_NAME) + "");
 			morder.setFcode("142");
 			morder.setSenderName(datas.get("senderName") + "");
 			morder.setSenderCountry(datas.get("senderCountry") + "");
@@ -180,18 +205,20 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			morder.setOrderDate(randomDate);
 			morder.setCustomsCode(goodsInfo.get("customsCode") + "");
 			if (manualOrderDao.add(morder)) {
-				goodsInfo.put("order_id", newOrderId);
+				goodsInfo.put(ORDER_ID, newOrderId);
 				// 保存成功之后,进行商品实例化
 				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
 				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
 				}
+				// 注册会员账号信息
+				memberServiceImpl.registerMember(morder);
 			} else {
-				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单存储失败，请重试!", 1, params);
+				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单存储失败，请重试!", ERROR, params);
 			}
 		}
 		// 用于缓存辨别计算完成
-		params.put("type", 200);
+		params.put("type", "success");
 		bufferUtils.writeRedisMq(null, params);
 	}
 
@@ -213,30 +240,30 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(recipientID);
 		if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
 			String msg = "运单号[" + waybill + "]" + reCheckIdCardMap.get(BaseCode.MSG.toString());
-			RedisInfoUtils.errorInfoMq(msg, 4, params);
+			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
 		String recipientTel = datas.get("recipientTel") + "";
 		Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
 		if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
 			String msg = "运单号[" + waybill + "]" + reCheckPhoneMap.get(BaseCode.MSG.toString());
-			RedisInfoUtils.errorInfoMq(msg, 6, params);
+			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		String entGoodsNo = goodsInfo.get("entGoodsNo") + "";
 		if (!checkEntGoodsNoLength(entGoodsNo)) {
 			String msg = "运单号[" + waybill + "]商品货号长度超过20,请核对商品货号是否正确!";
-			RedisInfoUtils.errorInfoMq(msg, 1, params);
+			RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 			return ReturnInfoUtils.errorInfo(msg);
 		}
 		if (!IdcardValidator.validate18Idcard(recipientID)) {
 			String msg = "运单号[" + waybill + "]实名认证不通过,请核实身份证与姓名信息!";
-			RedisInfoUtils.errorInfoMq(msg, 4, params);
+			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
 		//
 		double netWt = Double.parseDouble(goodsInfo.get("netWt") + "");
 		double grossWt = Double.parseDouble(goodsInfo.get("grossWt") + "");
 		if (netWt > grossWt) {
 			String msg = "运单号[" + waybill + "]商品净重大于毛重,请核实信息!";
-			RedisInfoUtils.errorInfoMq(msg, 5, params);
+			RedisInfoUtils.errorInfoMq(msg, "overweight", params);
 		}
 		//
 		return ReturnInfoUtils.successInfo();
@@ -251,17 +278,17 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(orderDocId);
 		if (!"1".equals(reCheckIdCardMap.get(BaseCode.STATUS.toString()))) {
 			String msg = "订单号[" + orderId + "]" + reCheckIdCardMap.get(BaseCode.MSG.toString());
-			RedisInfoUtils.errorInfoMq(msg, 4, params);
+			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
 		String recipientTel = jsonDatas.get("recipientTel") + "";
 		Map<String, Object> reCheckPhoneMap = morderService.checkRecipientTel(recipientTel);
 		if (!"1".equals(reCheckPhoneMap.get(BaseCode.STATUS.toString()))) {
 			String msg = "订单号[" + orderId + "]" + reCheckPhoneMap.get(BaseCode.MSG.toString());
-			RedisInfoUtils.errorInfoMq(msg, 6, params);
+			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
 			String msg = "订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
-			RedisInfoUtils.errorInfoMq(msg, 4, params);
+			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -289,15 +316,15 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String orderId = morder.getOrder_id().trim();
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
 		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
-		paramsMap.put("order_id", morder.getOrder_id());
+		paramsMap.put(ORDER_ID, morder.getOrder_id());
 		List<MorderSub> ms = manualOrderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
 		if (ms == null) {
-			return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]  <--查询订单商品信息失败!");
+			return ReturnInfoUtils.errorInfo("运单[" + waybill + "]<--查询订单商品信息失败!");
 		} else if (!ms.isEmpty()) {
 			if (flag == 1) {
-				return ReturnInfoUtils.errorInfo("运单号[" + waybill + "]  <--与商品信息已存在,无需重复导入!");
+				return ReturnInfoUtils.errorInfo("运单[" + waybill + "]<--与商品信息已存在,请勿需重复导入!");
 			}
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]  <--该订单与商品信息已存在,无需重复导入!");
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--该订单与商品信息已存在,请勿需重复导入!");
 		} else {
 			double reFCY = morder.getFCY();
 			double newFcy = reFCY + FCY;
@@ -308,18 +335,18 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
 			}
 			statusMap.put("status", 1);
-			statusMap.put("order_id", morder.getOrder_id());
+			statusMap.put(ORDER_ID, morder.getOrder_id());
 			if (newFcy >= 2000) {// 当订单金额超过2000时
 				if (flag == 1) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
-					statusMap.put("order_id", morder.getOrder_id());
+					statusMap.put(ORDER_ID, morder.getOrder_id());
 					statusMap.put(BaseCode.MSG.toString(),
 							"运单号[" + waybill + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
 				} else if (flag == 2) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
-					statusMap.put("order_id", morder.getOrder_id());
+					statusMap.put(ORDER_ID, morder.getOrder_id());
 					statusMap.put(BaseCode.MSG.toString(), "订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
 				}
 			}
@@ -335,8 +362,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 */
 	public Map<String, Object> createNewSub(JSONObject goodsInfo) {
 		Map<String, Object> params = new HashMap<>();
-		String orderId = goodsInfo.get("order_id") + "";
-		params.put("order_id", orderId);
+		String orderId = goodsInfo.get(ORDER_ID) + "";
+		params.put(ORDER_ID, orderId);
 		Long count = manualOrderDao.findByPropertyCount(MorderSub.class, params);
 		if (count < 0) {
 			return ReturnInfoUtils.errorInfo("查询订单商品序列号错误,服务器繁忙!");
@@ -411,8 +438,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			spareParams.put("DZKNNo", DZKNNo);
 			mosb.setSpareParams(spareParams.toString());
 		}
-		mosb.setMerchant_no(goodsInfo.get("merchantId") + "");
-		mosb.setCreateBy(goodsInfo.get("merchantName") + "");
+		mosb.setMerchant_no(goodsInfo.get(MERCHANT_ID) + "");
+		mosb.setCreateBy(goodsInfo.get(MERCHANT_NAME) + "");
 		// 删除标识:0-未删除,1-已删除
 		mosb.setDeleteFlag(0);
 		if (manualOrderDao.add(mosb)) {
@@ -442,8 +469,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		// 缓存参数
 		Map<String, Object> params = (Map<String, Object>) datas.get("other");
 		//
-		String merchantId = datas.get("merchantId") + "";
-		String merchantName = datas.get("merchantName") + "";
+		String merchantId = datas.get(MERCHANT_ID) + "";
+		String merchantName = datas.get(MERCHANT_NAME) + "";
 		double orderTotalAmount = Double.parseDouble(datas.get("orderTotalPrice") + "");
 		double tax = Double.parseDouble(datas.get("tax") + "");
 		double actualAmountPaid = Double.parseDouble(datas.get("actualAmountPaid") + "");
@@ -467,26 +494,28 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		List<GoodsRecordDetail> goodsList = manualOrderDao.findByProperty(GoodsRecordDetail.class, paramsMap, 1, 1);
 		if (goodsList == null || goodsList.isEmpty()) {
 			String msg = "商品编号[" + entGoodsNo.trim() + "]与商家平台号[" + marCode.trim() + "]-->对应商品不存在,请核实信息!";
-			RedisInfoUtils.errorInfoMq(msg, 1, params);
+			RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 		} else {
 			paramsMap.clear();
-			paramsMap.put("order_id", orderId);
+			paramsMap.put(ORDER_ID, orderId);
 			List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 1, 1);
 			if (ml != null && !ml.isEmpty()) {
 				Morder morder = ml.get(0);
 				// 企邦的税费暂写死为0
 				Map<String, Object> reCheckMap = judgmentOrderInfo(morder, datas, orderTotalAmount, 0.0, 2);
 				if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
-					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", 2, params);
+					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", "orderExcess", params);
 				} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
-					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", 1, params);
+					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
 				} else {
 					// 成功后、调用创建商品方法
 					Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
 					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
 					}
 				}
+				// 注册会员账号信息
+				memberServiceImpl.registerMember(morder);
 			} else {
 				Morder morder = new Morder();
 				morder.setOrder_id(orderId);
@@ -525,19 +554,21 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 					json.put("ehsEntName", ehsEntName);
 					morder.setSpareParams(json.toString());
 				}
-				if(manualOrderDao.add(morder)) {
+				if (manualOrderDao.add(morder)) {
 					// 保存成功调用保存商品
 					Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
 					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", 1, params);
+						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
 					}
+					// 注册会员账号信息
+					memberServiceImpl.registerMember(morder);
 				} else {
-					RedisInfoUtils.errorInfoMq("订单[" + orderId + "]保存失败,请核对订单信息!", 1, params);
+					RedisInfoUtils.errorInfoMq("订单[" + orderId + "]保存失败,请核对订单信息!", ERROR, params);
 				}
 			}
 		}
 		// 用于缓存辨别计算完成
-		params.put("type", 200);
+		params.put("type", "success");
 		bufferUtils.writeRedisMq(null, params);
 	}
 
@@ -556,7 +587,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (goodsList != null && !goodsList.isEmpty()) {
 			GoodsRecordDetail goods = goodsList.get(0);
 			JSONObject goodsInfo = new JSONObject();
-			goodsInfo.put("order_id", item.get("orderId") + "");
+			goodsInfo.put(ORDER_ID, item.get("orderId") + "");
 			String reEntGoodsNo = goods.getEntGoodsNo();
 			if (StringEmptyUtils.isNotEmpty(marCode)) {
 				String[] str = reEntGoodsNo.split("_");
@@ -586,8 +617,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			goodsInfo.put("ebEntName", goods.getEbEntName());
 			goodsInfo.put("DZKNNo", goods.getDZKNNo());
 			goodsInfo.put("seqNo", item.get("seqNo") + "");
-			goodsInfo.put("merchantId", merchantId);
-			goodsInfo.put("merchantName", merchantName);
+			goodsInfo.put(MERCHANT_ID, merchantId);
+			goodsInfo.put(MERCHANT_NAME, merchantName);
 			String spareParam = goods.getSpareParams();
 			if (StringEmptyUtils.isNotEmpty(spareParam)) {
 				JSONObject json = JSONObject.fromObject(spareParam);

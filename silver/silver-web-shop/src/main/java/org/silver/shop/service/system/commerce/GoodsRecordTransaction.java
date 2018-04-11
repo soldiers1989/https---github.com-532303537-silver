@@ -67,7 +67,10 @@ public class GoodsRecordTransaction {
 	private ExcelBufferUtils excelBufferUtils;
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
-
+	/**
+	 *  错误标识
+	 */
+	private static final String ERROR = "error";
 	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	public Map<String, Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
@@ -369,7 +372,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品单价数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				RedisInfoUtils.commonErrorInfo(msg, errl, ERROR, params);
 				continue;
 			}
 			param.put("giftFlag", giftFlag);
@@ -382,7 +385,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品净重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				RedisInfoUtils.commonErrorInfo(msg, errl, ERROR, params);
 				continue;
 			}
 			try {
@@ -390,7 +393,7 @@ public class GoodsRecordTransaction {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "【表格】第" + (r + 1) + "行-->" + "商品毛重数值有误,请核实是否填写正确数字!";
-				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				RedisInfoUtils.commonErrorInfo(msg, errl, ERROR, params);
 				continue;
 			}
 			param.put("notes", notes);
@@ -400,7 +403,7 @@ public class GoodsRecordTransaction {
 			Map<String, Object> reGoodsMap = checkGoodsInfo(JSONObject.fromObject(param));
 			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + reGoodsMap.get(BaseCode.MSG.toString()) + "";
-				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				RedisInfoUtils.commonErrorInfo(msg, errl,ERROR, params);
 				continue;
 			}
 			GoodsRecordDetail goodsInfo = null;
@@ -419,7 +422,7 @@ public class GoodsRecordTransaction {
 					merchantName);
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				String msg = "【表格】第" + (r + 1) + "行-->" + item.get("msg");
-				RedisInfoUtils.commonErrorInfo(msg, errl, 1, params);
+				RedisInfoUtils.commonErrorInfo(msg, errl,ERROR, params);
 				continue;
 			}
 			excelBufferUtils.writeRedis(errl, params);

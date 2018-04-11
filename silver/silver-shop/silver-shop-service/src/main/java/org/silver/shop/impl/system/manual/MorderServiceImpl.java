@@ -33,7 +33,6 @@ import org.silver.shop.model.system.manual.OldManualOrderSub;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.task.UpdateMOrderGoodsTask;
-import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CopyUtils;

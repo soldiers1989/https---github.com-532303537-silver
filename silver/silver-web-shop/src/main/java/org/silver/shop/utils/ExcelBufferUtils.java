@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.model.system.manual.Morder;
-import org.silver.shop.service.system.log.ErrorLogsTransaction;
+import org.silver.shop.service.system.log.OrderImplLogsTransaction;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.FileUtils;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExcelBufferUtils {
 	@Autowired
-	private ErrorLogsTransaction errorLogs;
+	private OrderImplLogsTransaction orderImplLogsTransaction;
 
 	// 创建一个静态钥匙
 	private static Object lock = "lock";// 值是任意的
@@ -130,7 +130,7 @@ public class ExcelBufferUtils {
 		case "orderImport":
 			// 删除文件夹下所有复制文件
 			FileUtils.deleteFile(new File("/gadd-excel/"));
-			errorLogs.addErrorLogs(SortUtil.sortList(errl), totalCount, serialNo, name);
+			orderImplLogsTransaction.addErrorLogs(SortUtil.sortList(errl), totalCount, serialNo, name);
 			break;
 		case "checkGZOrderImport":// 国宗订单导入预处理
 			key = "Shop_Key_CheckGZOrder_List_" + serial;
@@ -209,10 +209,10 @@ public class ExcelBufferUtils {
 		} else {
 			datasMap.put(BaseCode.ERROR.toString(), errl);
 		}
-		//
-		int type = Integer.parseInt(paramsMap.get("type") + "");
+		// 类型
+		String type = paramsMap.get("type") + "";
 		// web层没有完成一说,故而没有200状态码
-		if (type == 1) {
+		if ("error".equals(type)) {
 			counter++;
 		}
 		datasMap.put("completed", counter);

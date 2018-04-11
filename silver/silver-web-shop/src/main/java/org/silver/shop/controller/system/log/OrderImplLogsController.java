@@ -1,13 +1,12 @@
 package org.silver.shop.controller.system.log;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.silver.shop.service.system.log.ErrorLogsTransaction;
+import org.silver.shop.service.system.log.OrderImplLogsTransaction;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +20,14 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 错误日志
+ * 商户订单导入日志
  */
 @Controller
-@RequestMapping("/errorLogs")
-public class ErrorLogsController {
+@RequestMapping("/orderImplLogs")
+public class OrderImplLogsController {
 
 	@Autowired
-	private ErrorLogsTransaction errorLogsTransaction;
+	private OrderImplLogsTransaction orderImplLogsTransaction;
 
 	/**
 	 * 商户错误日志记录
@@ -48,7 +47,7 @@ public class ErrorLogsController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		if (errorList != null && totalCount >= 0 && StringEmptyUtils.isNotEmpty(serialNo)
 				&& StringEmptyUtils.isNotEmpty(action)) {
-			return JSONObject.fromObject(errorLogsTransaction.addErrorLogs(errorList, totalCount, serialNo, action))
+			return JSONObject.fromObject(orderImplLogsTransaction.addErrorLogs(errorList, totalCount, serialNo, action))
 					.toString();
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数出错,请核对信息!")).toString();
@@ -61,16 +60,16 @@ public class ErrorLogsController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/merchantGetErrorLogs", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getlogsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户查询错误日志记录")
-	public String merchantGetErrorLogs(HttpServletRequest req, HttpServletResponse response,
+	public String getlogsInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(errorLogsTransaction.merchantGetErrorLogs(req, page, size)).toString();
+		return JSONObject.fromObject(orderImplLogsTransaction.merchantGetErrorLogs(req, page, size)).toString();
 	}
 }

@@ -1,7 +1,5 @@
 package org.silver.shop.impl.system.organization;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,12 +17,11 @@ import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
-import org.silver.util.ChineseToPinyin;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
+import org.silver.util.PinyinUtil;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -243,8 +240,8 @@ public class MemberServiceImpl implements MemberService {
 				if (order.getOrder_record_status() == 3) {
 					Map<String, Object> reMemberMap = registerMember(order);
 					if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
-						errorList.add(reMemberMap.get(BaseCode.MSG.toString())+"");
-					}else{
+						errorList.add(reMemberMap.get(BaseCode.MSG.toString()) + "");
+					} else {
 						successCount++;
 					}
 				} else {
@@ -254,7 +251,7 @@ public class MemberServiceImpl implements MemberService {
 				errorList.add("订单[" + orderId + "]未找到对应的订单信息!");
 			}
 		}
-		if(errorList.isEmpty()){
+		if (errorList.isEmpty()) {
 			return ReturnInfoUtils.successInfo();
 		}
 		params.clear();
@@ -265,11 +262,16 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	/**
-	 * 注册用户
+	 * 根据(手工)订单信息注册会员信息
 	 * 
-	 * @param string
+	 * @param Morder
+	 *            手工订单实体信息
+	 * @return Map
 	 */
-	private Map<String, Object> registerMember(Morder order) {
+	public Map<String, Object> registerMember(Morder order) {
+		if (order == null) {
+			return ReturnInfoUtils.errorInfo("注册会员信息失败,请求参数错误!");
+		}
 		String orderDocId = order.getOrderDocId();
 		Map<String, Object> checkIdMap = checkIdCard(orderDocId);
 		if (!"1".equals(checkIdMap.get(BaseCode.STATUS.toString()))) {
@@ -290,7 +292,7 @@ public class MemberServiceImpl implements MemberService {
 		member.setMemberIdCard(order.getOrderDocId());
 		member.setMemberRealName(2);
 		member.setCreateBy(order.getOrderDocName());
-		// 获取随机生成的订单时间
+		// 获取随机下单(生成)订单时间
 		String date = order.getOrderDate();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(DateUtil.parseDate(date, "yyyyMMddHHddss"));
@@ -322,8 +324,11 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	/**
+	 * 采用随机算法生成会员名称,规则：随机生成一个1-9之间的数,当小于2时采用拼音全称+1-5位随机数,当大于2小于5时使用下单人电话号码,大于5时采用身份证号码
 	 * 
-	 * @param datas
+	 * @param order
+	 *            手工订单信息实体
+	 * @String name
 	 */
 	private String randomCreateName(Morder order) {
 		int count = RandomUtils.getRandom(1);
@@ -347,7 +352,7 @@ public class MemberServiceImpl implements MemberService {
 	private String randomMemberName(String orderDocName) {
 		Random rand = new Random();
 		// 下单人姓名
-		String pinyin = ChineseToPinyin.getPingYin(orderDocName.trim());
+		String pinyin = PinyinUtil.getPinYin(orderDocName.trim());
 		String memberName = pinyin + Integer.toString(rand.nextInt(10000) + 1);
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberName", memberName);
@@ -360,10 +365,9 @@ public class MemberServiceImpl implements MemberService {
 			return randomMemberName(orderDocName);
 		}
 	}
-	
+
 	public static void main(String[] args) {
-		System.out.println(ChineseToPinyin.getPingYin("周婷婷"));
-		System.out.println(ChineseToPinyin.getPinYinHeadChar("何德志"));
-		System.out.println(ChineseToPinyin.getCnASCII("綦江县"));
+		System.out.println(PinyinUtil.getPinYin("周婷婷"));
+		System.out.println(PinyinUtil.getPinYinHeadChar("何德志"));
 	}
 }

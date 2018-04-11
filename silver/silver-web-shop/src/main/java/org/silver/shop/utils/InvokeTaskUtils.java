@@ -238,10 +238,10 @@ public class InvokeTaskUtils {
 			invokePretreatmentGZExcelTask(excelC, errl, threadPool, params);
 			break;
 		case 10:
-			invokeGZExcelTaskMQ(excelC, errl, threadPool, params);
+			invokeGZExcelTaskMQ(excelC, threadPool, params);
 			break;
 		case 11:
-			invokeQBExcelTaskMQ(excelC, errl, threadPool, params);
+			invokeQBExcelTaskMQ(excelC, threadPool, params);
 			break;
 		default:
 			break;
@@ -283,17 +283,15 @@ public class InvokeTaskUtils {
 		threadPool.submit(task);
 	}
 
-	// 调用国宗多任务
-	private void invokeGZExcelTaskMQ(ExcelUtil excel, List<Map<String, Object>> errl, ExecutorService threadPool,
-			Map<String, Object> params) {
-		GZExcelTaskMQ task = new GZExcelTaskMQ(excel, errl, manualOrderTransaction, params);
+	// 调用国宗多任务-MQ
+	private void invokeGZExcelTaskMQ(ExcelUtil excel, ExecutorService threadPool, Map<String, Object> params) {
+		GZExcelTaskMQ task = new GZExcelTaskMQ(excel, manualOrderTransaction, params);
 		threadPool.submit(task);
 	}
-	
-	// 调用企邦多线程
-		private void invokeQBExcelTaskMQ(ExcelUtil excel, List<Map<String, Object>> errl, ExecutorService threadPool,
-				Map<String, Object> params) {
-			QBExcelTaskMQ task = new QBExcelTaskMQ(excel, errl, manualOrderTransaction, params);
-			threadPool.submit(task);
-		}
+
+	// 调用企邦多任务-MQ
+	private void invokeQBExcelTaskMQ(ExcelUtil excel, ExecutorService threadPool, Map<String, Object> params) {
+		QBExcelTaskMQ task = new QBExcelTaskMQ(excel, manualOrderTransaction, params);
+		threadPool.submit(task);
+	}
 }

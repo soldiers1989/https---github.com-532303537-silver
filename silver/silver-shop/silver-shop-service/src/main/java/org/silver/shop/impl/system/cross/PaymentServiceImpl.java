@@ -66,7 +66,10 @@ public class PaymentServiceImpl implements PaymentService {
 	private MerchantUtils merchantUtils;
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-
+	/**
+	 *  错误标识
+	 */
+	private static final String ERROR = "error";
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
 		Date date = new Date();
@@ -287,7 +290,7 @@ public class PaymentServiceImpl implements PaymentService {
 							tok, recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
 					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + paymentMap.get(BaseCode.MSG.toString());
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
 						continue;
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
@@ -295,12 +298,12 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
 					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentMap2.get(BaseCode.MSG.toString());
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
 						continue;
 					}
 				} else {
 					String msg = "支付流水号[" + treadeNo + "]查询支付单信息失败,请核实流水号!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+					RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
 					continue;
 				}
 				bufferUtils.writeRedis(errorList, paramsMap);
@@ -308,7 +311,7 @@ public class PaymentServiceImpl implements PaymentService {
 			} catch (Exception e) {
 				e.printStackTrace();
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+				RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
 			}
 		}
 		bufferUtils.writeCompletedRedis(errorList, paramsMap);
@@ -502,13 +505,13 @@ public class PaymentServiceImpl implements PaymentService {
 					List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 					if (mpayl != null && !mpayl.isEmpty()) {
 						String msg = "订单号[" + order_id + "]关联的支付单已经存在,无需重复生成!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 					String orderDocId = morder.get(0).getOrderDocId();
 					if (!IdcardValidator.validate18Idcard(orderDocId)) {
 						String msg = "订单号[" + order_id + "]实名认证不通过,请核实身份证与姓名信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 					//
@@ -525,11 +528,11 @@ public class PaymentServiceImpl implements PaymentService {
 						continue;
 					}
 					String msg = "订单号[" + order_id + "]生成支付单失败,请稍后重试!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 					continue;
 				}
 				String msg = "订单号[" + order_id + "]不存在,请核对信息!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 			}
 			bufferUtils.writeCompletedRedis(errorList, paramsMap);
 			return null;

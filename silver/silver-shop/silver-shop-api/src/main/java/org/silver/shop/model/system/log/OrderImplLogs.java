@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 用于记录商户操作的错误信息记录
+ * 用于记录商户(订单导入)操作的错误信息记录
  *
  */
-public class ErrorLogInfo implements Serializable {
+public class OrderImplLogs implements Serializable {
 
 	/**
 	 * 
@@ -30,7 +30,7 @@ public class ErrorLogInfo implements Serializable {
 
 	private String remark;//
 	
-	private int type ;//类型:1-错误,2-订单超额,3-详细地址信息错误,4-身份证错误,5-超重,6-收货人手机号码超过使用次数...待续
+	private String type ;//类型: error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员信息..待续
 	
 	private int readingSign;//阅读标识:1-未阅读,2-已阅读
 	
@@ -98,21 +98,16 @@ public class ErrorLogInfo implements Serializable {
 	public void setRemark(String remark) {
 		this.remark = remark;
 	}
-
-	public int getType() {
-		return type;
-	}
-
 	public int getReadingSign() {
 		return readingSign;
 	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
 	public void setReadingSign(int readingSign) {
 		this.readingSign = readingSign;
 	}
-
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
 }

@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2018-1-30 10:43:17 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.log.ErrorLogInfo" table="ym_shop_sys_error_log_info">
+    <class name="org.silver.shop.model.system.log.OrderImplLogs" table="ym_shop_sys_error_order_impl_log">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -30,7 +30,7 @@
             <column name="remark" />
         </property>
         
-        <property name="type" type="int">
+        <property name="type" type="java.lang.String">
             <column name="type" />
         </property>
          <property name="readingSign" type="int">

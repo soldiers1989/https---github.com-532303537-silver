@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
-import org.silver.shop.api.system.log.ErrorLogsService;
+import org.silver.shop.api.system.log.OrderImplLogsService;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 public class BufferUtils {
 
 	@Autowired
-	private ErrorLogsService errorLogsService;
+	private OrderImplLogsService orderImplLogsService;
 
 	// 创建一个静态钥匙
 	private static Object LOCK = "lock";// 值是任意的
@@ -83,7 +83,7 @@ public class BufferUtils {
 				datasMap.put(BaseCode.STATUS.toString(), "2");
 				datasMap.remove("count");
 				datasMap.remove("startTime");
-				errorLogsService.addErrorLogs(errl, totalCount, serialNo, merchantId, merchantName, name);
+				orderImplLogsService.addErrorLogs(errl, totalCount, serialNo, merchantId, merchantName, name);
 			}
 			datasMap.put(BaseCode.ERROR.toString(), errl);
 			datasMap.put(TOTAL_COUNT, totalCount);
@@ -110,37 +110,42 @@ public class BufferUtils {
 	 * 
 	 * @param errl
 	 *            错误信息
+	 * @param paramsMap
+	 * 			缓存参数           
 	 */
 	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		int counter = 0;
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
 		Map<String, Object> datasMap = new HashMap<>();
-		byte[] redisByte = JedisUtil.get(key.getBytes());
-		if (redisByte != null && redisByte.length > 0) {
-			Map<String, Object> redisMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
-			if (reErrl !=null && !reErrl.isEmpty()) { 
-				if(errl !=null && !errl.isEmpty()){
-					reErrl.add(errl.get(0));
+		synchronized (LOCK) {
+			byte[] redisByte = JedisUtil.get(key.getBytes());
+			if (redisByte != null && redisByte.length > 0) {
+				Map<String, Object> redisMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
+				List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
+				//
+				if (reErrl != null && !reErrl.isEmpty()) {
+					if (errl != null && !errl.isEmpty()) {
+						reErrl.add(errl.get(0));
+					}
+					datasMap.put(BaseCode.ERROR.toString(), reErrl);
 				}
-				datasMap.put(BaseCode.ERROR.toString(), reErrl);
+				counter = Integer.parseInt(redisMap.get("completed") + "");
+			} else {
+				datasMap.put(BaseCode.ERROR.toString(), errl);
 			}
-			counter = Integer.parseInt(redisMap.get("completed") + "");
-		} else {
-			datasMap.put(BaseCode.ERROR.toString(), errl);
+			// 类型
+			String type = paramsMap.get("type") + "";
+			//当成功后才进行计数
+			if ("success".equals(type)) {
+				counter++;
+			}
+			datasMap.put("completed", counter);
+			datasMap.put(BaseCode.STATUS.toString(), "1");
+			datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+			// 将数据放入到缓存中
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
-		//
-		int type = Integer.parseInt(paramsMap.get("type") + "");
-		//
-		if (type == 1 || type== 200) {
-			counter++;
-		}
-		datasMap.put("completed", counter);
-		datasMap.put(BaseCode.STATUS.toString(), "1");
-		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
-		// 将数据放入到缓存中
-		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 	}
 
 	/**
@@ -165,7 +170,7 @@ public class BufferUtils {
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
 				List<Map<String, Object>> reErrl = (List<Map<String, Object>>) datasMap.get(BaseCode.ERROR.toString());
-				errorLogsService.addErrorLogs(reErrl, totalCount, serialNo, merchantId, merchantName, name);
+				orderImplLogsService.addErrorLogs(reErrl, totalCount, serialNo, merchantId, merchantName, name);
 				// 将数据放入到缓存中
 				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 			}

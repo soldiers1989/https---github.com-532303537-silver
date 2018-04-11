@@ -91,7 +91,7 @@
 				/merchantFee/*=anon
 				/subMerchant/*=anon
 				/proxyWallet/*=anon
-				/errorLogs/*=anon
+				/orderImplLogs/*=anon
 				/managerWallet/*=anon
 				/idCard/*=anon
 				/manual/*=anon

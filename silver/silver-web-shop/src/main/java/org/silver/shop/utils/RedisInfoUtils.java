@@ -16,10 +16,10 @@ public class RedisInfoUtils {
 	 * @param errorList
 	 *            错误集合
 	 * @param type
-	 *            类型:1-错误,2-订单超额,3-详细地址信息错误,4-身份证错误,5-超重,6-收货人手机号码超过使用次数...待续
+	 *            error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员信息..待续
 	 * @param params
 	 */
-	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errl, int type,
+	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errl, String type,
 			Map<String, Object> params) {
 		Map<String, Object> err = new HashMap<>();
 		err.put(BaseCode.MSG.toString(), msg);
@@ -27,7 +27,7 @@ public class RedisInfoUtils {
 		errl.add(err);
 		ExcelBufferUtils excelBufferUtils = new ExcelBufferUtils();
 		//
-		if (type == 1) {
+		if ("error".equals(type)) {
 			excelBufferUtils.writeRedis(errl, params);
 		}
 	}
@@ -38,11 +38,11 @@ public class RedisInfoUtils {
 	 * @param msg
 	 *            信息
 	 * @param type
-	 *            1-错误,2-订单超额,3-详细地址信息错误,4-身份证校验不通过,5-超重,6-更新(已备案成功)手动订单商品..待续
+	 *            error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员信息..待续
 	 * @param paramsMap
 	 *            参数
 	 */
-	public static final void errorInfoMq(String msg, int type, Map<String, Object> paramsMap) {
+	public static final void errorInfoMq(String msg, String type, Map<String, Object> paramsMap) {
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		Map<String, Object> errMap = new HashMap<>();
 		errMap.put(BaseCode.MSG.toString(), msg);

@@ -192,17 +192,6 @@ public final class SearchUtils {
 					paramMap.put(key, Integer.parseInt(value));
 				}
 				break;
-
-			case "action":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
-			case "serialNo":
-				if (StringEmptyUtils.isNotEmpty(value)) {
-					paramMap.put(key, value);
-				}
-				break;
 			case "entGoodsNo":
 				if (StringEmptyUtils.isNotEmpty(value)) {
 					paramMap.put(key, value);
@@ -283,10 +272,10 @@ public final class SearchUtils {
 			case DEL_FLAG:
 				paramMap.put(key, Integer.parseInt(value));
 				break;
-			case "RecipientTel"://收货人电话
+			case "RecipientTel":// 收货人电话
 				paramMap.put(key, value.trim());
 				break;
-			case "OrderDocId"://下单人身份证号码
+			case "OrderDocId":// 下单人身份证号码
 				paramMap.put(key, value.trim());
 				break;
 			default:
@@ -484,6 +473,51 @@ public final class SearchUtils {
 				break;
 			case "warehouseCode":
 				paramMap.put(key, value);
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put("param", paramMap);
+		statusMap.put("viceParams", viceParams);
+		return statusMap;
+	}
+
+	/**
+	 * 商城商家后台订单导入错误日志通用检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalOrderImplLogSearch(Map<String, Object> datasMap) {
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> viceParams = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "type":
+					paramMap.put(key, value);
+				break;
+
+			case "action":
+					paramMap.put(key, value);
+				break;
+			case "serialNo":
+					paramMap.put(key, value);
 				break;
 			default:
 				break;

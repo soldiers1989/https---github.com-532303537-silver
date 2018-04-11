@@ -74,27 +74,27 @@ public class MpayServiceImpl implements MpayService {
 
 	// 币制默认为人民币
 	private static final String CURRCODE = "142";
+	/**
+	 *  错误标识
+	 */
+	private static final String ERROR = "error";
+	
 	@Resource
 	private MpayDao mpayDao;
 	@Resource
 	private MorderDao morderDao;
-
 	@Autowired
 	private AccessTokenService accessTokenService;
 	@Autowired
 	private GoodsRecordServiceImpl goodsRecordServiceImpl;
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-
 	@Autowired
 	private WalletLogService walletLogService;
-
 	@Autowired
 	private BufferUtils bufferUtils;
-
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
-
 	@Autowired
 	private MerchantUtils merchantUtils;
 
@@ -416,25 +416,25 @@ public class MpayServiceImpl implements MpayService {
 				List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 				if (orderList == null || orderSubList == null) {
 					String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 					continue;
 				} else {
 					Morder order = orderList.get(0);
 					if (order.getFCY() > 2000) {
 						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 					if (!checkProvincesCityAreaCode(order)) {
 						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 
 					Map<String, Object> reOrderMap = sendOrder(customsMap, orderSubList, tok, order);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					} else {
 						String reOrderMessageID = reOrderMap.get("messageID") + "";
@@ -442,7 +442,7 @@ public class MpayServiceImpl implements MpayService {
 						Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
 						if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
 							String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
-							RedisInfoUtils.commonErrorInfo(msg, errorList, 1, paramsMap);
+							RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 							continue;
 						}
 					}
