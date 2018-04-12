@@ -28,8 +28,8 @@ public class OrderImplLogsServiceImpl implements OrderImplLogsService {
 	@Override
 	public Map<String, Object> addErrorLogs(List<Map<String, Object>> errorList, int totalCount, String serialNo,
 			String merchantId, String merchantName, String action) {
-		System.out.println("---------------开始添加日志---------------");
 		if (errorList != null && totalCount >= 0 && StringEmptyUtils.isNotEmpty(serialNo)) {
+			System.out.println("---------------开始添加日志---------------");
 			String[] strArr = serialNo.split("_");
 			for (int i = 0; i < errorList.size(); i++) {
 				OrderImplLogs loginfo = new OrderImplLogs();

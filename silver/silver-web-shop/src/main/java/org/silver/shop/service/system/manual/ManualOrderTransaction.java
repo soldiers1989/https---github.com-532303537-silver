@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -74,10 +75,10 @@ public class ManualOrderTransaction {
 	 */
 	private static final String TOTAL_COUNT = "totalCount";
 	/**
-	 *  错误标识
+	 * 错误标识
 	 */
 	private static final String ERROR = "error";
-	
+
 	public Map<String, Object> excelImportOrder(HttpServletRequest req) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
@@ -247,6 +248,7 @@ public class ManualOrderTransaction {
 		String merchantName = params.get(MERCHANT_NAME) + "";
 		//
 		params.put("name", "orderImport");
+		System.out.println("----开始行数>>" + startCount + ";---结束行数->" + endCount);
 		for (int r = startCount; r <= endCount; r++) {
 			try {
 				if (excel.getColumnCount(0, r) == 0) {
@@ -509,9 +511,11 @@ public class ManualOrderTransaction {
 				orderInfo.put("other", params);
 				// 标识区分
 				orderInfo.put("type", "guoZongExcelOrderImpl");
+				AtomicInteger mqCounter = (AtomicInteger) params.get("mqCounter");
 				// 发起队列,开始创建国宗订单
-				//shopQueueSender.send("local-excel-channel", orderInfo.toString());
-				shopQueueSender.send("excel-channel", orderInfo.toString());
+				shopQueueSender.send("excel-channel-" + mqCounter.get(), orderInfo.toString());
+				params.put("type", "success");
+				excelBufferUtils.writeRedisMq(null, params);
 			} catch (Exception e) {
 				logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
 				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
@@ -688,7 +692,7 @@ public class ManualOrderTransaction {
 				item.put("other", params);
 				item.put("type", "qiBangExcelOrderImpl");
 				// 发起队列,开始创建国宗订单
-				//shopQueueSender.send("local-excel-channel", item.toString());
+				// shopQueueSender.send("local-excel-channel", item.toString());
 				shopQueueSender.send("excel-channel", item.toString());
 			} catch (Exception e) {
 				logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);

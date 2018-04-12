@@ -36,7 +36,17 @@
 	<jms:listener-container destination-type="queue"
 		container-type="default" connection-factory="connectionFactory"
 		acknowledge="auto">
-		<jms:listener destination="excel-channel" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-0" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-1" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-2" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-3" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-4" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-5" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-6" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-7" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-8" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-9" ref="manualOrderService" />
+		<jms:listener destination="excel-channel-10" ref="manualOrderService" />
 		<!-- <jms:listener destination="local-excel-channel" ref="manualOrderService"/> -->
 	</jms:listener-container>
 

@@ -1,6 +1,7 @@
 package org.silver.shop.controller.system.manual;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -44,5 +45,14 @@ public class ManualOrderController {
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = manualOrderTransaction.excelImportOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
+	}
+	
+	private static AtomicInteger counter = new AtomicInteger(0);
+	
+	public static void main(String[] args) {
+		for(int i =0 ;i <10 ; i ++){
+			System.out.println(counter);
+			System.out.println("自增数--->"+counter.getAndIncrement());
+		}
 	}
 }

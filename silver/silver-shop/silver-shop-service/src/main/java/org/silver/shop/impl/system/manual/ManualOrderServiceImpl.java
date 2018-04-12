@@ -67,10 +67,10 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
 	/**
-	 *下划线版订单Id
+	 * 下划线版订单Id
 	 */
 	private static final String ORDER_ID = "order_id";
-	
+
 	@Override
 	public void onMessage(Message message) {
 		TextMessage textmessage = (TextMessage) message;
@@ -85,32 +85,36 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	}
 
 	private void chooseCreate(JSONObject jsonDatas) {
-		String type = jsonDatas.get("type") + "";
-		// 缓存参数
-		Map<String, Object> redisMap = (Map<String, Object>) jsonDatas.get("other");
-		switch (type) {
-		// 国宗excel表单订单导入
-		case "guoZongExcelOrderImpl":
-			//
-			Map<String, Object> reCheckMap = checkGuoZongOrderInfo(jsonDatas);
-			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+		try {
+			String type = jsonDatas.get("type") + "";
+			// 缓存参数
+			Map<String, Object> redisMap = (Map<String, Object>) jsonDatas.get("other");
+			switch (type) {
+			// 国宗excel表单订单导入
+			case "guoZongExcelOrderImpl":
+				//
+				Map<String, Object> reCheckMap = checkGuoZongOrderInfo(jsonDatas);
+				if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+					break;
+				}
+				guoZongCreateOrder(jsonDatas);
+				break;
+			case "qiBangExcelOrderImpl":
+				//
+				Map<String, Object> reCheckMap2 = checkQiBangOrderInfo(jsonDatas);
+				if (!"1".equals(reCheckMap2.get(BaseCode.STATUS.toString()))) {
+					break;
+				}
+				qiBangCreateOrder(jsonDatas);
+				break;
+			default:
 				break;
 			}
-			guoZongCreateOrder(jsonDatas);
-			break;
-		case "qiBangExcelOrderImpl":
-			//
-			Map<String, Object> reCheckMap2 = checkQiBangOrderInfo(jsonDatas);
-			if (!"1".equals(reCheckMap2.get(BaseCode.STATUS.toString()))) {
-				break;
-			}
-			qiBangCreateOrder(jsonDatas);
-			break;
-		default:
-			break;
+			bufferUtils.writeCompletedRedisMq(redisMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error(Thread.currentThread().getName() + "--订单创建-->", e);
 		}
-		bufferUtils.writeCompletedRedisMq(redisMap);
-
 	}
 
 	/**

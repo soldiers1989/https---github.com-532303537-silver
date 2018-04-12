@@ -643,7 +643,8 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("datas", orderJsonList.toString());
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
-		orderMap.put("opType", "M");
+		//报文类型
+		//orderMap.put("opType", "M");
 		// 是否像海关发送
 		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案

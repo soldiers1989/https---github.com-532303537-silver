@@ -79,6 +79,11 @@ public class InvokeTaskUtils {
 	private static final String STATUS_COUNTER = "statusCounter";
 
 	/**
+	 * MQ通道计数器
+	 */
+	private static AtomicInteger mqCounter = new AtomicInteger(0);
+
+	/**
 	 * 启动线程,根据启动线程数量对应CPU数
 	 * 
 	 * @param flag
@@ -100,6 +105,7 @@ public class InvokeTaskUtils {
 	public void startTask(int flag, int totalCount, File file, String merchantId, String serialNo,
 			String merchantName) {
 		ExecutorService threadPool = Executors.newCachedThreadPool();
+
 		// 完成数量
 		AtomicInteger counter = new AtomicInteger(0);
 		// 线程完成状态次数
@@ -108,65 +114,72 @@ public class InvokeTaskUtils {
 		Vector errl = new Vector();
 		// 开始行数
 		int startCount = 0;
-		if (flag == 2 || flag == 5 || flag == 10) {
-			startCount = 1;
-		} else {
-			// 企邦表(银盟定义的模板)多了一行说明,所以开始行数为2
-			startCount = 2;
-		}
 		// 结束行数
 		int endCount = 0;
 		int cpuCount = CalculateCpuUtils.calculateCpu(totalCount);
 		if (cpuCount == 1) {// 不需要开辟多线程
 			File dest = copyFile(file);
 			ExcelUtil excelC = new ExcelUtil(dest);
-			Map<String, Object> params = setParams(flag, merchantId, merchantName, totalCount, startCount, serialNo,
-					counter, statusCounter);
+			Map<String, Object> redisMap = setParams(flag, merchantId, merchantName, totalCount, serialNo, counter,
+					statusCounter);
+			
+			redisMap.put("mqCounter", mqCounter);
 			// 当是单线程时,结束行数为总行数
-			params.put(END_COUNT, totalCount);
-			chooseTask(excelC, errl, threadPool, params);
+			redisMap.put(END_COUNT, totalCount);
+			chooseTask(excelC, errl, threadPool, redisMap);
 		} else {
 			for (int i = 0; i < cpuCount; i++) {
 				File dest = copyFile(file);
 				ExcelUtil excelC = new ExcelUtil(dest);
-				Map<String, Object> params = setParams(flag, merchantId, merchantName, totalCount, startCount, serialNo,
-						counter, statusCounter);
+				Map<String, Object> redisMap = setParams(flag, merchantId, merchantName, totalCount, serialNo, counter,
+						statusCounter);
+				//
+				redisMap.put("mqCounter", mqCounter);
 				if (i == 0) {// 第一次
 					endCount = totalCount / cpuCount;
 					// 当是第一次计算时的结束行数
-					params.put(END_COUNT, endCount);
-					chooseTask(excelC, errl, threadPool, params);
+					redisMap.put(END_COUNT, endCount);
+					chooseTask(excelC, errl, threadPool, redisMap);
 				} else {
 					startCount = endCount + 1;
 					// 循环计算后的开始行数
-					params.put(START_COUNT, startCount);
+					redisMap.put(START_COUNT, startCount);
 					endCount = startCount + (totalCount / cpuCount);
 					if (i == (cpuCount - 1)) {// 最后一次
 						// 最后一次的结束行数为总行数
-						params.put(END_COUNT, totalCount);
-						chooseTask(excelC, errl, threadPool, params);
+						redisMap.put(END_COUNT, totalCount);
+						chooseTask(excelC, errl, threadPool, redisMap);
 					} else {
-						params.put(END_COUNT, endCount);
-						chooseTask(excelC, errl, threadPool, params);
+						redisMap.put(END_COUNT, endCount);
+						chooseTask(excelC, errl, threadPool, redisMap);
 					}
 				}
 			}
 		}
 		threadPool.shutdown();
+		mqCounter.getAndIncrement();
+		if (mqCounter.get() == 10) {
+			mqCounter.set(0);
+		}
 	}
 
 	private Map<String, Object> setParams(int flag, String merchantId, String merchantName, int totalCount,
-			int startCount, String serialNo, AtomicInteger counter, AtomicInteger statusCounter) {
-		Map<String, Object> params = new HashMap<>();
-		params.put(FLAG, flag);
-		params.put(MERCHANT_ID, merchantId);
-		params.put(MERCHANT_NAME, merchantName);
-		params.put(TOTAL_COUNT, totalCount);
-		params.put(START_COUNT, startCount);
-		params.put(SERIAL_NO, serialNo);
-		params.put(COUNTER, counter);
-		params.put(STATUS_COUNTER, statusCounter);
-		return params;
+			String serialNo, AtomicInteger counter, AtomicInteger statusCounter) {
+		Map<String, Object> redisMap = new HashMap<>();
+		redisMap.put(FLAG, flag);
+		redisMap.put(MERCHANT_ID, merchantId);
+		redisMap.put(MERCHANT_NAME, merchantName);
+		redisMap.put(TOTAL_COUNT, totalCount);
+		if (flag == 2 || flag == 5 || flag == 10) {
+			redisMap.put(START_COUNT, 1);
+		} else {
+			// 企邦表(银盟定义的模板)多了一行说明,所以开始行数为2
+			redisMap.put(START_COUNT, 2);
+		}
+		redisMap.put(SERIAL_NO, serialNo);
+		redisMap.put(COUNTER, counter);
+		redisMap.put(STATUS_COUNTER, statusCounter);
+		return redisMap;
 
 	}
 

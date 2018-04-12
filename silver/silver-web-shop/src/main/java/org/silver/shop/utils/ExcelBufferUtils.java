@@ -1,10 +1,12 @@
 package org.silver.shop.utils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -100,9 +102,10 @@ public class ExcelBufferUtils {
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
 				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
-				datasMap.put("fcy", reMap.get("fcy"));
-				datasMap.put("orderCount", reMap.get("orderCount"));
-				datasMap.remove("cpuCount");
+				if ("checkGZOrderImport".equals(name) || "checkQBOrderImport".equals(name)) {
+					datasMap.put("fcy", reMap.get("fcy"));
+					datasMap.put("orderCount", reMap.get("orderCount"));
+				}
 			}
 			datasMap.put(BaseCode.ERROR.toString(), SortUtil.sortList(errl));
 			datasMap.put("completed", counter.get());
@@ -193,33 +196,93 @@ public class ExcelBufferUtils {
 	 *            错误信息
 	 */
 	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
-		int counter = 0;
-		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
-		Map<String, Object> datasMap = new HashMap<>();
-		byte[] redisByte = JedisUtil.get(key.getBytes());
-		if (redisByte != null && redisByte.length > 0) {
-			Map<String, Object> redisMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
-			if (!reErrl.isEmpty()) {
-				reErrl.add(errl.get(0));
-				datasMap.put(BaseCode.ERROR.toString(), reErrl);
+		String key = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_" + paramsMap.get("name")
+				+ "_" + paramsMap.get("serialNo") + "_Web";
+		synchronized (lock) {
+			byte[] redisByte = JedisUtil.get(key.getBytes());
+			if (redisByte != null && redisByte.length > 0) {
+				updateRedis(redisByte, key, errl, paramsMap);
+			} else {
+				notRedis(key, errl, paramsMap);
 			}
-			counter = Integer.parseInt(redisMap.get("completed") + "");
-		} else {
-			datasMap.put(BaseCode.ERROR.toString(), errl);
+		}
+	}
+
+	private void updateRedis(byte[] redisByte, String key, List<Map<String, Object>> errl,
+			Map<String, Object> paramsMap) {
+		ConcurrentMap<String, Object> redisMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
+		List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
+		if (reErrl != null && !reErrl.isEmpty()) {
+			if (errl != null && !errl.isEmpty()) {
+				reErrl.add(errl.get(0));
+			}
+			redisMap.put(BaseCode.ERROR.toString(), reErrl);
 		}
 		// 类型
 		String type = paramsMap.get("type") + "";
-		// web层没有完成一说,故而没有200状态码
-		if ("error".equals(type)) {
-			counter++;
+		int counter = 0;
+		int errCounter = 0;
+		// 发送至MQ队列成功数量
+		int sendCounter = 0;
+		switch (type) {
+		case "success":
+			sendCounter = Integer.parseInt(redisMap.get("sendCounter") + "");
+			sendCounter++;
+			redisMap.put("sendCounter", sendCounter);
+			break;
+		case "error":
+			errCounter = Integer.parseInt(redisMap.get("errCounter") + "");
+			// counter = Integer.parseInt(redisMap.get("completed") + "");
+			errCounter++;
+			// counter++;
+			redisMap.put("errCounter", errCounter);
+			// redisMap.put("completed", counter);
+			break;
+		default:
+			redisMap.put("errCounter", redisMap.get("errCounter"));
+			// redisMap.put("completed", redisMap.get("completed"));
+			redisMap.put("sendCounter", redisMap.get("sendCounter"));
+			break;
+		}
+		redisMap.put(BaseCode.STATUS.toString(), "1");
+		redisMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+		// 将数据放入到缓存中
+		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
+		//
+		//String oldKey = key.substring(0, key.length() - 4);
+		//JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
+	}
+
+	private void notRedis(String key, List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+		int counter = 0;
+		int errCounter = 0;
+		// 成功发送数量
+		int sendCounter = 0;
+		ConcurrentMap<String, Object> datasMap = new ConcurrentHashMap<>();
+		// 类型
+		String type = paramsMap.get("type") + "";
+		//
+		if ("success".equals(type)) {
+			sendCounter++;
+		} else if ("error".equals(type)) {
+			// counter++;
+			errCounter++;
+		}
+		//
+		if (errl != null && !errl.isEmpty()) {
+			datasMap.put(BaseCode.ERROR.toString(), errl);
+		} else {
+			datasMap.put(BaseCode.ERROR.toString(), new ArrayList<>());
 		}
 		datasMap.put("completed", counter);
+		datasMap.put("sendCounter", sendCounter);
+		datasMap.put("errCounter", errCounter);
 		datasMap.put(BaseCode.STATUS.toString(), "1");
 		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
 		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+		//String oldKey = key.substring(0, key.length() - 4);
+		//JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 	}
 
 	/**
@@ -233,22 +296,27 @@ public class ExcelBufferUtils {
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String name = paramsMap.get("name") + "";
 		String serialNo = paramsMap.get("serialNo") + "";
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo + "_Web";
 		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
 		byte[] redisInfo = JedisUtil.get(key.getBytes());
 		if (redisInfo != null && redisInfo.length > 0) {
 			Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
 			int counter = Integer.parseInt(datasMap.get("completed") + "");
-			if (counter == totalCount) {
+			int errCounter = Integer.parseInt(datasMap.get("errCounter") + "");
+			if ((counter + errCounter) == totalCount) {
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
 				Map<String, Object> reMap = finishProcessing(errl, totalCount, serialNo, name);
-				datasMap.put("fcy", reMap.get("fcy"));
-				datasMap.put("orderCount", reMap.get("orderCount"));
-				datasMap.remove("cpuCount");
+				if ("checkGZOrderImport".equals(name) || "checkQBOrderImport".equals(name)) {
+					datasMap.put("fcy", reMap.get("fcy"));
+					datasMap.put("orderCount", reMap.get("orderCount"));
+				}
 				// 将数据放入到缓存中
 				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+				String oldKey = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+				JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 			}
 		}
 	}
+
 }
