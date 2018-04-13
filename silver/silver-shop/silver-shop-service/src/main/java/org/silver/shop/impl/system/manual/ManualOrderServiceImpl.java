@@ -112,7 +112,6 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			}
 			bufferUtils.writeCompletedRedisMq(redisMap);
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(Thread.currentThread().getName() + "--订单创建-->", e);
 		}
 	}
@@ -273,6 +272,11 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 校验启邦订单信息
+	 * @param jsonDatas 订单信息
+	 * @return Map
+	 */
 	private Map<String, Object> checkQiBangOrderInfo(JSONObject jsonDatas) {
 		// 缓存参数
 		Map<String, Object> params = (Map<String, Object>) jsonDatas.get("other");

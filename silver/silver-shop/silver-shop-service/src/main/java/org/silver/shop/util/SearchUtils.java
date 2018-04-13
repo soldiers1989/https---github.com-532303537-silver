@@ -278,6 +278,9 @@ public final class SearchUtils {
 			case "OrderDocId":// 下单人身份证号码
 				paramMap.put(key, value.trim());
 				break;
+			case "thirdPartyId":// 第三方订单系统标识
+				paramMap.put(key, value.trim());
+				break;
 			default:
 				break;
 			}

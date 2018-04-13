@@ -38,6 +38,10 @@ public class ExcelBufferUtils {
 	 * 总行数
 	 */
 	private static final String TOTAL_COUNT = "totalCount";
+	/**
+	 * 完成数
+	 */
+	private static final String COMPLETED = "completed";
 
 	/**
 	 * 将正在执行数据更新到缓存中
@@ -59,7 +63,7 @@ public class ExcelBufferUtils {
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + params.get("name") + "_" + params.get("serialNo");
 		synchronized (lock) {
 			AtomicInteger counter = (AtomicInteger) params.get("counter");
-			datasMap.put("completed", counter.getAndIncrement());
+			datasMap.put(COMPLETED, counter.getAndIncrement());
 			datasMap.put(BaseCode.STATUS.toString(), "1");
 			datasMap.put(BaseCode.ERROR.toString(), errl);
 			datasMap.put(TOTAL_COUNT, params.get(TOTAL_COUNT));
@@ -108,7 +112,7 @@ public class ExcelBufferUtils {
 				}
 			}
 			datasMap.put(BaseCode.ERROR.toString(), SortUtil.sortList(errl));
-			datasMap.put("completed", counter.get());
+			datasMap.put(COMPLETED, counter.get());
 			datasMap.put(TOTAL_COUNT, totalCount);
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
@@ -116,11 +120,16 @@ public class ExcelBufferUtils {
 	}
 
 	/**
+	 * 线程完成时根据标识进行不同的业务处理
 	 * 
 	 * @param errl
+	 *            错误信息
 	 * @param totalCount
+	 *            总数
 	 * @param serialNo
+	 *            序号
 	 * @param name
+	 *            名称
 	 */
 	private Map<String, Object> finishProcessing(List<Map<String, Object>> errl, int totalCount, String serialNo,
 			String name) {
@@ -208,6 +217,18 @@ public class ExcelBufferUtils {
 		}
 	}
 
+	/**
+	 * MQ版,当缓存中有数据时,更新信息
+	 * 
+	 * @param redisByte
+	 *            缓存中的数据
+	 * @param key
+	 *            缓存键
+	 * @param errl
+	 *            错误信息集合
+	 * @param paramsMap
+	 *            缓存参数
+	 */
 	private void updateRedis(byte[] redisByte, String key, List<Map<String, Object>> errl,
 			Map<String, Object> paramsMap) {
 		ConcurrentMap<String, Object> redisMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
@@ -217,10 +238,13 @@ public class ExcelBufferUtils {
 				reErrl.add(errl.get(0));
 			}
 			redisMap.put(BaseCode.ERROR.toString(), reErrl);
+		} else {
+			if (errl != null ) {
+				redisMap.put(BaseCode.ERROR.toString(), errl);
+			}
 		}
 		// 类型
 		String type = paramsMap.get("type") + "";
-		int counter = 0;
 		int errCounter = 0;
 		// 发送至MQ队列成功数量
 		int sendCounter = 0;
@@ -232,15 +256,11 @@ public class ExcelBufferUtils {
 			break;
 		case "error":
 			errCounter = Integer.parseInt(redisMap.get("errCounter") + "");
-			// counter = Integer.parseInt(redisMap.get("completed") + "");
 			errCounter++;
-			// counter++;
 			redisMap.put("errCounter", errCounter);
-			// redisMap.put("completed", counter);
 			break;
 		default:
 			redisMap.put("errCounter", redisMap.get("errCounter"));
-			// redisMap.put("completed", redisMap.get("completed"));
 			redisMap.put("sendCounter", redisMap.get("sendCounter"));
 			break;
 		}
@@ -248,11 +268,19 @@ public class ExcelBufferUtils {
 		redisMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
 		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
-		//
-		//String oldKey = key.substring(0, key.length() - 4);
-		//JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
 	}
 
+	/**
+	 * Mq版,当第一次缓存中没有数据时，第一次存放数据
+	 * 
+	 * @param key
+	 *            键名
+	 * @param errl
+	 *            错误信息集合
+	 * @param paramsMap
+	 *            缓存参数
+	 * 
+	 */
 	private void notRedis(String key, List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		int counter = 0;
 		int errCounter = 0;
@@ -265,7 +293,6 @@ public class ExcelBufferUtils {
 		if ("success".equals(type)) {
 			sendCounter++;
 		} else if ("error".equals(type)) {
-			// counter++;
 			errCounter++;
 		}
 		//
@@ -274,15 +301,13 @@ public class ExcelBufferUtils {
 		} else {
 			datasMap.put(BaseCode.ERROR.toString(), new ArrayList<>());
 		}
-		datasMap.put("completed", counter);
+		datasMap.put(COMPLETED, counter);
 		datasMap.put("sendCounter", sendCounter);
 		datasMap.put("errCounter", errCounter);
 		datasMap.put(BaseCode.STATUS.toString(), "1");
 		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
 		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
-		//String oldKey = key.substring(0, key.length() - 4);
-		//JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 	}
 
 	/**
@@ -301,7 +326,7 @@ public class ExcelBufferUtils {
 		byte[] redisInfo = JedisUtil.get(key.getBytes());
 		if (redisInfo != null && redisInfo.length > 0) {
 			Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
-			int counter = Integer.parseInt(datasMap.get("completed") + "");
+			int counter = Integer.parseInt(datasMap.get(COMPLETED) + "");
 			int errCounter = Integer.parseInt(datasMap.get("errCounter") + "");
 			if ((counter + errCounter) == totalCount) {
 				datasMap.put(BaseCode.MSG.toString(), "完成!");

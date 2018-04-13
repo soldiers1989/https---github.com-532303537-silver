@@ -45,6 +45,7 @@ import org.silver.shop.model.system.manual.YMorder;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
@@ -57,6 +58,7 @@ import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alibaba.dubbo.common.json.JSON;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
@@ -80,6 +82,8 @@ public class OrderServiceImpl implements OrderService {
 	private CountryService countryService;
 	@Autowired
 	private AccessTokenService accessTokenService;
+	@Autowired
+	private MerchantUtils merchantUtils;
 
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
@@ -960,11 +964,9 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate,
-			String merchantId) {
+	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId) {
 		return getMerchantOrderDailyReport(merchantId, null, page, size, startDate, endDate);
 	}
-
 
 	@Override
 	public Map<String, Object> memberDeleteOrderInfo(String entOrderNo, String memberName) {
@@ -1012,7 +1014,7 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap) {
 		if (datasMap != null && !datasMap.isEmpty()) {
 			JSONObject orderJson = null;
-			Map<String, Object> reCheckMerchantMap = checkMerchantInfo(datasMap);
+			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId")+"");
 			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckMerchantMap;
 			}
@@ -1038,6 +1040,7 @@ public class OrderServiceImpl implements OrderService {
 			if (!"1".equals(reCheckAmountMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckAmountMap;
 			}
+			orderJson.put("thirdPartyId", datasMap.get("thirdPartyId"));
 			Map<String, Object> reSaveOrderMap = saveOrderInfo(merchant, orderJson);
 			if (!"1".equals(reSaveOrderMap.get(BaseCode.STATUS.toString()))) {
 				return reSaveOrderMap;
@@ -1051,24 +1054,6 @@ public class OrderServiceImpl implements OrderService {
 		return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 	}
 
-	/**
-	 * 校验商户信息
-	 * 
-	 * @param datasMap
-	 * @return
-	 */
-	private Map<String, Object> checkMerchantInfo(Map<String, Object> datasMap) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", datasMap.get("merchantId"));
-		List<Merchant> reList = orderDao.findByProperty(Merchant.class, params, 0, 0);
-		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("查询商户信息失败,服务器繁忙!");
-		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList.get(0), 0);
-		} else {
-			return ReturnInfoUtils.errorInfo("未找到该商户信息,请核对信息!");
-		}
-	}
 
 	/**
 	 * 保存订单商品信息
@@ -1165,6 +1150,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrder_record_status(1);
 			order.setDateSign(DateUtil.formatDate(new Date(), "yyyyMMdd"));
 			order.setRemarks(orderJson.get("Notes") + "");
+			order.setThirdPartyId(orderJson.get("thirdPartyId") + "");
 			if (!orderDao.add(order)) {
 				return ReturnInfoUtils.errorInfo("保存订单信息失败,服务器繁忙！");
 			}
@@ -1506,6 +1492,57 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.successDataInfo(list, count);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
+	}
+
+	@Override
+	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
+		if (datasMap != null && !datasMap.isEmpty()) {
+			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId")+"");
+			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+				return reMerchantMap;
+			}
+			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+
+			JSONObject json = new JSONObject();
+			try {
+				json = JSONObject.fromObject(datasMap.get(BaseCode.DATAS.toString()));
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("查询参数格式错误!");
+			}
+			return thirdPartyOrderInfo(json, merchant.getMerchantId());
+		}
+		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	}
+
+	/**
+	 * 第三方平获取订单信息
+	 * @param json 查询参数
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	private Map<String, Object> thirdPartyOrderInfo(JSONObject json, String merchantId) {
+		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(json);
+		Map<String, Object> params = (Map<String, Object>) reDatasMap.get("param");
+		params.put("merchant_no", merchantId);
+		List<Morder> reOrderList = orderDao.findByProperty(Morder.class, params, 1, 1);
+		if (reOrderList == null) {
+			return ReturnInfoUtils.errorInfo("查询订单信息失败,服务器繁忙!");
+		} else if (!reOrderList.isEmpty()) {
+			List<Object> list = new ArrayList<>();
+			for (Morder order : reOrderList) {
+				Map<String, Object> item = new HashMap<>();
+				String orderId = order.getOrder_id();
+				params.clear();
+				params.put("order_id", orderId);
+				List<MorderSub> goodsList = orderDao.findByProperty(MorderSub.class, params, 0, 0);
+				item.put("head", order);
+				item.put("content", goodsList);
+				list.add(item);
+			}
+			return ReturnInfoUtils.successDataInfo(list);
+		} else {
+			return ReturnInfoUtils.errorInfo("没有找到订单信息!");
 		}
 	}
 }

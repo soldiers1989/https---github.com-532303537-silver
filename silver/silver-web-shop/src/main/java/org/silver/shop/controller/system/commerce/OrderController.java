@@ -404,12 +404,43 @@ public class OrderController {
 		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
 		}
-		if( StringEmptyUtils.isEmpty(datasMap.get("datas"))){
+		if(StringEmptyUtils.isEmpty(datasMap.get("datas"))){
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单信息不能为空,请核对信息!")).toString();
+		}
+		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId"))){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("第三方订单Id(唯一标识)不能为空,请核对信息!")).toString();
 		}
 		return JSONObject.fromObject(orderTransaction.thirdPartyBusiness(datasMap)).toString();
 	}
 	
+	/**
+	 * 公开性第三方商城平台 查询订单信息入口
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("第三方商城平台传递订单信息入口")
+	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response ) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.getThirdPartyInfo(datasMap)).toString();
+	}
 	
 	public static void main(String[] args) {
 		Map<String,Object> item = new HashMap<>();
@@ -455,8 +486,6 @@ public class OrderController {
 		goods.element("CurrCode","142");
 		goods.element("Brand","品牌");
 		orderGoodsList.add(goods);
-		order.element("orderGoodsList", orderGoodsList);
-		
 		goods2.element("Seq", 1);
 		goods2.element("EntGoodsNo","TEst2");
 		goods2.element("CIQGoodsNo","*");
@@ -475,8 +504,8 @@ public class OrderController {
 		orderGoodsList.add(goods2);
 		order.element("orderGoodsList", orderGoodsList);
 		
-		item.put("datas", order);
-		item.put("merchantId", "MerchantId_00001");
-		YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item);
+		//item.put("datas", order);
+		item.put("thirdPartyKey", "a");
+		YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/getThirdPartyInfo", item);
 	}
 }

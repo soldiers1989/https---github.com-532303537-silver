@@ -177,17 +177,24 @@ public interface OrderService {
 
 	/**
 	 * 第三方商城平台传递订单信息接口
-	 * @param datasMap
+	 * @param datasMap 参数
 	 * @return Map
 	 */
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap);
 
 	/**
 	 * 管理员获取已移除到历史记录(删除)表中的订单及订单商品信息
-	 * @param datasMap
-	 * @param page
-	 * @param size
-	 * @return
+	 * @param datasMap 参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
 	 */
 	public Map<String, Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size);
+
+	/**
+	 * 第三方获取订单信息
+	 * @param datasMap
+	 * @return
+	 */
+	public Object getThirdPartyInfo(Map<String, Object> datasMap);
 }

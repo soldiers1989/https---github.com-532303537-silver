@@ -9,6 +9,7 @@ import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +52,9 @@ public class MerchantUtils {
 	 * @return Map
 	 */
 	public Map<String, Object> getMerchantInfo(String merchantId) {
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("商户Id不能为空!");
+		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		List<Merchant> merchantList = paymentDao.findByProperty(Merchant.class, params, 1, 1);

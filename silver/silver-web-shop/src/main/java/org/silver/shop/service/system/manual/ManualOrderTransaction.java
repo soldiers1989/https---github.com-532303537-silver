@@ -248,7 +248,6 @@ public class ManualOrderTransaction {
 		String merchantName = params.get(MERCHANT_NAME) + "";
 		//
 		params.put("name", "orderImport");
-		System.out.println("----开始行数>>" + startCount + ";---结束行数->" + endCount);
 		for (int r = startCount; r <= endCount; r++) {
 			try {
 				if (excel.getColumnCount(0, r) == 0) {
@@ -518,7 +517,7 @@ public class ManualOrderTransaction {
 				excelBufferUtils.writeRedisMq(null, params);
 			} catch (Exception e) {
 				logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
-				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
+				String msg = "【表格】第" + (r + 1) + "行-->数据不符合规范,请核对数据排序或格式是否正确!";
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
@@ -691,12 +690,14 @@ public class ManualOrderTransaction {
 				// 其他缓存参数
 				item.put("other", params);
 				item.put("type", "qiBangExcelOrderImpl");
-				// 发起队列,开始创建国宗订单
-				// shopQueueSender.send("local-excel-channel", item.toString());
-				shopQueueSender.send("excel-channel", item.toString());
+				// 发起队列,开始创建启邦订单
+				AtomicInteger mqCounter = (AtomicInteger) params.get("mqCounter");
+				shopQueueSender.send("excel-channel-" + mqCounter.get(), item.toString());
+				params.put("type", "success");
+				excelBufferUtils.writeRedisMq(null, params);
 			} catch (Exception e) {
 				logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);
-				String msg = "表格数据不符合规范,请核对所有数据排序是否正确!";
+				String msg = "【表格】第" + (r + 1) + "行-->数据不符合规范,请核对数据排序或格式是否正确!";
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//

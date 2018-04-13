@@ -169,7 +169,9 @@
 		<property name="customsCode">
 			<column name="customsCode" />
 		</property>
-		
+			<property name="thirdPartyId">
+			<column name="thirdPartyId" />
+		</property>
 	</class>
 
 </hibernate-mapping>

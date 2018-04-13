@@ -170,4 +170,9 @@ public class OrderTransaction {
 		return orderService.thirdPartyBusiness(datasMap);
 	}
 
+	//第三方查询订单信息
+	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
+		return orderService.getThirdPartyInfo(datasMap);
+	}
+
 }
