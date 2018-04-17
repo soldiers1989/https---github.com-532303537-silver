@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-4-16 13:43:25 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+	<class name="org.silver.shop.model.system.AuthorityRole" table="ym_shop_sys_authority_role">
+		<id name="id" type="java.lang.Long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="roleId" type="java.lang.String">
+			<column name="roleId" />
+		</property>
+		<property name="roleName" type="java.lang.String">
+			<column name="roleName" />
+		</property>
+		<property name="authorityId" type="java.lang.Long">
+			<column name="authorityId" />
+		</property>
+		<property name="authorityCode" type="java.lang.String">
+			<column name="authorityCode" />
+		</property>
+		<property name="status" type="java.lang.String">
+			<column name="status" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+	</class>
+</hibernate-mapping>

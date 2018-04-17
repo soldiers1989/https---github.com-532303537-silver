@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -123,6 +124,7 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation(value = "获取用户订单信息")
 	@RequiresRoles("Member")
+	//@RequiresPermissions("")
 	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");

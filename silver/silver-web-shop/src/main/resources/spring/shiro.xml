@@ -82,6 +82,7 @@
 				/regin=anon
 				/login=anon
 				/member/*=anon
+				/authority/*=anon
 				/cciq/*=anon
 				/gac/*=anon
 				/manualOrder/*=anon

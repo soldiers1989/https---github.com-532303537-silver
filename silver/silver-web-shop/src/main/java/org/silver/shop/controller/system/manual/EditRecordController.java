@@ -12,8 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.Logical;
+import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
@@ -97,7 +101,8 @@ public class EditRecordController {
 	 * @return
 	 */
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
-	@RequiresRoles("Merchant")
+	// @RequiresRoles("Merchant")
+	@RequiresPermissions("loadMorderDatas")
 	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -312,6 +317,7 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/downMOrderExcel")
 	@RequiresRoles("Merchant")
+	@RequiresPermissions("")
 	public void downMOrderExcel(HttpServletRequest req, HttpServletResponse response, String date, String serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -391,6 +397,7 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/editMorderInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
+	 @RequiresPermissions("editMorderInfo")
 	public String editMorderInfo(HttpServletRequest req, HttpServletResponse response, String morderInfoPack,
 			int length, int flag) {
 		String originHeader = req.getHeader("Origin");
@@ -398,6 +405,11 @@ public class EditRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		
+		//Subject currentUser = SecurityUtils.getSubject();
+		//if (!currentUser.isPermitted("editMorderInfo")) {
+			//return JSONObject.fromObject(ReturnInfoUtils.errorInfo("测试-没有权限操作")).toString();
+		//}
 		Map<String, Object> datasMap = new HashMap<>();
 		try {
 			JSONObject json = JSONObject.fromObject(morderInfoPack);

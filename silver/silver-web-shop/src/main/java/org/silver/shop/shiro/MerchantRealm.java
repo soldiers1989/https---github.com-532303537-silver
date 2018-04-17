@@ -1,6 +1,7 @@
 package org.silver.shop.shiro;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -10,6 +11,7 @@ import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.silver.common.LoginType;
@@ -34,6 +36,12 @@ public class MerchantRealm extends AuthorizingRealm implements Serializable {
 		if (merchant != null) {
 			info = new SimpleAuthorizationInfo();
 			info.addRole(LoginType.MERCHANT.toString());
+			//添加权限
+			List<String> roles = merchantTransaction.getMerchantAuthority();
+			System.out.println("--->>>"+roles);
+		//	info.addRoles(roles);
+			//@RequiresPermissions
+			info.addStringPermissions(roles);
 		}
 		return info;
 	}
@@ -46,6 +54,7 @@ public class MerchantRealm extends AuthorizingRealm implements Serializable {
 		String pass = new String(customizedToken.getPassword());
 		if (merchantTransaction.merchantLogin(account, pass) != null) {
 			authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MERCHANT.toString());
+			
 			return authcInfo;
 		}else{
 			throw new IncorrectCredentialsException();  

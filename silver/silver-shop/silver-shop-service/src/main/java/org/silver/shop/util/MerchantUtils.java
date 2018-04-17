@@ -61,7 +61,7 @@ public class MerchantUtils {
 		if (merchantList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户信息失败,服务器繁忙!");
 		} else if (!merchantList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(merchantList.get(0), 0);
+			return ReturnInfoUtils.successDataInfo(merchantList.get(0));
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到商户信息!");
 		}

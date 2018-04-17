@@ -70,7 +70,11 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 * 下划线版订单Id
 	 */
 	private static final String ORDER_ID = "order_id";
-
+	
+	/**
+	 * 运单号
+	 */
+	private static final String WAYBILL = "waybill";
 	@Override
 	public void onMessage(Message message) {
 		TextMessage textmessage = (TextMessage) message;
@@ -101,8 +105,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				break;
 			case "qiBangExcelOrderImpl":
 				//
-				Map<String, Object> reCheckMap2 = checkQiBangOrderInfo(jsonDatas);
-				if (!"1".equals(reCheckMap2.get(BaseCode.STATUS.toString()))) {
+				Map<String, Object> reCheckQiBangMap = checkQiBangOrderInfo(jsonDatas);
+				if (!"1".equals(reCheckQiBangMap.get(BaseCode.STATUS.toString()))) {
 					break;
 				}
 				qiBangCreateOrder(jsonDatas);
@@ -123,7 +127,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 * 
 	 */
 	public void guoZongCreateOrder(JSONObject datas) {
-		String waybill = datas.get("waybill") + "";
+		String waybill = datas.get(WAYBILL) + "";
 		// 缓存参数
 		Map<String, Object> params = (Map<String, Object>) datas.get("other");
 		// 商品信息
@@ -133,31 +137,13 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		// 税费
 		Double tax = Double.parseDouble(datas.get("tax") + "");
 		Map<String, Object> paramsMap = new HashMap<>();
-		paramsMap.put("waybill", waybill);
+		paramsMap.put(WAYBILL, waybill);
 		List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 0, 0);
 		if (ml == null) {
 			RedisInfoUtils.errorInfoMq("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", ERROR, params);
 		} else if (!ml.isEmpty()) {
 			Morder morder = ml.get(0);
-			// 删除标识0-未删除,1-已删除
-			if (morder.getDel_flag() == 1) {
-				RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
-			}
-			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, goodsInfo, orderTotalAmount, tax, 1);
-			if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
-				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", "orderExcess", params);
-			} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
-				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", ERROR, params);
-			} else {
-				goodsInfo.put(ORDER_ID, reCheckMap.get(ORDER_ID)); // 根据订单Id创建订单商品
-				// 成功后、调用创建商品方法
-				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
-				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
-				}
-			}
-			// 注册会员账号信息
-			memberServiceImpl.registerMember(morder);
+			checkExistedGuoZongOrder(morder, datas, params, orderTotalAmount,tax);
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
@@ -226,6 +212,44 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	}
 
 	/**
+	 * 校验国宗已存在的订单信息
+	 * @param morder 订单信息实体类
+	 * @param goodsInfo 商品信息
+	 * @param params 缓存参数
+	 * @param orderTotalAmount 订单商品总金额
+	 * @param tax 税费
+	 */
+	private void checkExistedGuoZongOrder(Morder morder, JSONObject goodsInfo, Map<String, Object> params,
+			Double orderTotalAmount, Double tax) {
+		// 删除标识0-未删除,1-已删除
+		if (morder.getDel_flag() == 1) {
+			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
+		}else{
+			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, goodsInfo, orderTotalAmount, tax, 1);
+			if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", "orderExcess", params);
+				goodsInfo.put(ORDER_ID, reCheckMap.get(ORDER_ID)); // 根据订单Id创建订单商品
+				// 成功后、调用创建商品方法
+				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
+				}
+			} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
+				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", ERROR, params);
+			} else {
+				goodsInfo.put(ORDER_ID, reCheckMap.get(ORDER_ID)); // 根据订单Id创建订单商品
+				// 成功后、调用创建商品方法
+				Map<String, Object> reGoodsMap = createNewSub(goodsInfo);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
+				}
+			}
+			// 注册会员账号信息
+			memberServiceImpl.registerMember(morder);
+		}
+	}
+
+	/**
 	 * 校验国宗订单信息
 	 * 
 	 * @param datas
@@ -237,7 +261,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		// 商品信息
 		JSONObject goodsInfo = JSONObject.fromObject(datas.get("goodsInfo") + "");
 		//
-		String waybill = datas.get("waybill") + "";
+		String waybill = datas.get(WAYBILL) + "";
 		//
 		String recipientID = datas.get("recipientID") + "";
 		Map<String, Object> reCheckIdCardMap = morderService.checkIdCardCount(recipientID);
@@ -274,7 +298,9 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 
 	/**
 	 * 校验启邦订单信息
-	 * @param jsonDatas 订单信息
+	 * 
+	 * @param jsonDatas
+	 *            订单信息
 	 * @return Map
 	 */
 	private Map<String, Object> checkQiBangOrderInfo(JSONObject jsonDatas) {
@@ -509,21 +535,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 1, 1);
 			if (ml != null && !ml.isEmpty()) {
 				Morder morder = ml.get(0);
-				// 企邦的税费暂写死为0
-				Map<String, Object> reCheckMap = judgmentOrderInfo(morder, datas, orderTotalAmount, 0.0, 2);
-				if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
-					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", "orderExcess", params);
-				} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
-					RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
-				} else {
-					// 成功后、调用创建商品方法
-					Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
-					if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
-						RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
-					}
-				}
-				// 注册会员账号信息
-				memberServiceImpl.registerMember(morder);
+				checkExistedQiBangOrder(morder, datas, params, orderTotalAmount, merchantId, merchantName);
 			} else {
 				Morder morder = new Morder();
 				morder.setOrder_id(orderId);
@@ -580,6 +592,51 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		bufferUtils.writeRedisMq(null, params);
 	}
 
+	/**
+	 * 启邦创建订单时,当订单已存在则进行业务处理
+	 * @param morder 订单实体类
+	 * @param datas 订单信息
+	 * @param params 缓存参数信息
+	 * @param orderTotalAmount 订单商品总金额
+	 * @param merchantId 商户Id
+	 * @param merchantName 商户名称
+	 */
+	private void checkExistedQiBangOrder(Morder morder, JSONObject datas, Map<String, Object> params, double orderTotalAmount,
+			String merchantId, String merchantName) {
+		// 删除标识0-未删除,1-已删除
+		if (morder.getDel_flag() == 1) {
+			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
+		} else {
+			// 企邦的税费暂写死为0
+			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, datas, orderTotalAmount, 0.0, 2);
+			if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
+				RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", "orderExcess", params);
+				// 成功后、调用创建商品方法
+				Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
+				}
+			} else if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
+				RedisInfoUtils.errorInfoMq(reCheckMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
+			} else {
+				// 成功后、调用创建商品方法
+				Map<String, Object> reGoodsMap = createQBOrderSub(merchantId, datas, merchantName);
+				if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()) + "")) {
+					RedisInfoUtils.errorInfoMq(reGoodsMap.get(BaseCode.MSG.toString()) + "", ERROR, params);
+				}
+			}
+			// 注册会员账号信息
+			memberServiceImpl.registerMember(morder);
+		}
+	}
+
+	/**
+	 * 准备开始创建启邦订单商品信息,根据商品自编号+平台号查询商品备案信息
+	 * @param merchantId 商户Id
+	 * @param item 商品信息
+	 * @param merchantName 商户名称
+	 * @return Map
+	 */
 	public Map<String, Object> createQBOrderSub(String merchantId, JSONObject item, String merchantName) {
 		Map<String, Object> params = new HashMap<>();
 		String entGoodsNo = item.get("entGoodsNo") + "";

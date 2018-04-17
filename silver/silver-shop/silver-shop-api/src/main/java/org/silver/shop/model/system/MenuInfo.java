@@ -15,7 +15,8 @@ public class MenuInfo implements Serializable{
 	private Long id;
 	private String menuName; // 菜单名称
 	private String menuLevel; // 菜单等级
-	private String menuParent; // 父菜单
+	private String menuParentId; // 父菜单Id
+	private String menuPath;//菜单路径
 	private String status;// 状态1-启用,2-禁用
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
@@ -50,9 +51,6 @@ public class MenuInfo implements Serializable{
 		this.menuLevel = menuLevel;
 	}
 
-	public void setMenuParent(String menuParent) {
-		this.menuParent = menuParent;
-	}
 
 	public String getStatus() {
 		return status;
@@ -61,10 +59,4 @@ public class MenuInfo implements Serializable{
 	public void setStatus(String status) {
 		this.status = status;
 	}
-
-	public String getMenuParent() {
-		return menuParent;
-	}
-
-
 }

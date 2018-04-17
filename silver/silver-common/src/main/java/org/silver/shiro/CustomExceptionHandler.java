@@ -17,22 +17,25 @@ public class CustomExceptionHandler implements HandlerExceptionResolver {
 	public ModelAndView resolveException(HttpServletRequest arg0, HttpServletResponse response, Object arg2,
 			Exception ex) {
 		ex.printStackTrace();
-		ModelAndView mv = new ModelAndView();	
+		ModelAndView mv = new ModelAndView();
 		response.setStatus(HttpStatus.OK.value()); // 设置状态码
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE); // 设置ContentType
 		response.setCharacterEncoding("UTF-8"); // 避免乱码
-		response.setHeader("Cache-Control", "no-cache, must-revalidate");
+		String originHeader = arg0.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		if (ex instanceof AuthorizationException) {
 			try {
 				response.getWriter().write("{\"success\":false,\"msg\":\"" + "没有权限操作" + "\"}");
 			} catch (IOException e) {
-
 			}
 		} else {
 			try {
 				response.getWriter().write("{\"success\":false,\"msg\":\"" + "请求参数出错" + "\"}");
 			} catch (IOException e) {
-e.printStackTrace();
+				e.printStackTrace();
 			}
 
 		}

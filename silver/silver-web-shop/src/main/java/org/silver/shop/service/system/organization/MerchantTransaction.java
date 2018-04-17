@@ -1,5 +1,6 @@
 package org.silver.shop.service.system.organization;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,10 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +44,7 @@ public class MerchantTransaction {
 	}
 
 	// 商戶注册
-	public Map<String, Object> merchantRegister(Map<String,Object> datasMap) {
+	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
 		// 获取商户ID
 		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
 		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
@@ -108,11 +111,12 @@ public class MerchantTransaction {
 			array[i] = Integer.parseInt(req.getParameter("img[" + i + "]") + "");
 		}
 		Map<String, Object> reMap = merchantService.editBusinessInfo(merchantId, imglist, array,
-				customsregistrationCode, organizationCode, checktheRegistrationCode,merchantName);
-		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
-			//Merchant reMerchantInfo = (Merchant) reMap.get("datas");
+				customsregistrationCode, organizationCode, checktheRegistrationCode, merchantName);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			// Merchant reMerchantInfo = (Merchant) reMap.get("datas");
 			// 更新session中的实体数据
-		//	WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reMerchantInfo);
+			// WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(),
+			// reMerchantInfo);
 			return reMap;
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
@@ -133,28 +137,46 @@ public class MerchantTransaction {
 			if (status.equals("1")) {
 				datasMap = merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
 				return datasMap;
-			} 
+			}
 		}
 		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 		datasMap.put(BaseCode.MSG.getBaseCode(), "原登录密码输入错误");
 		return datasMap;
 	}
 
-	//获取商户备案信息
+	// 获取商户备案信息
 	public Map<String, Object> getMerchantRecordInfo() {
-		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		
 		return merchantService.getMerchantRecordInfo(merchantId);
 	}
 
 	//
-	public Map<String,Object> publicMerchantInfo(String merchantId) {
+	public Map<String, Object> publicMerchantInfo(String merchantId) {
 		return merchantService.publicMerchantInfo(merchantId);
+	}
+
+	public List<String> getMerchantAuthority() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		String redisKey = "Shop_Key_Merchant_Authority_List__" + merchantId;
+		byte[] redisByte = JedisUtil.get(redisKey.getBytes());
+		if (redisByte != null && redisByte.length > 0) {
+			return (List<String>) SerializeUtil.toObject(redisByte);
+		} else {
+			Map<String, Object> reMap = merchantService.getMerchantAuthority(merchantId);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return null;
+			}
+			List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
+			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
+			return item;
+		}
 	}
 }

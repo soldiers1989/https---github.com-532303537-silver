@@ -101,4 +101,11 @@ public interface MerchantService {
 	 */
 	public Map<String, Object> publicMerchantInfo(String merchantId);
 
+	/**
+	 * 根据商户Id获取商户对应的权限信息
+	 * @param merchantId
+	 * @return 
+	 */
+	public Map<String, Object> getMerchantAuthority(String merchantId);
+
 }

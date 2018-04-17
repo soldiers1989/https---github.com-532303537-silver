@@ -12,6 +12,7 @@ import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
+import org.silver.shop.model.system.AuthorityRole;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
@@ -157,24 +158,31 @@ public class MerchantServiceImpl implements MerchantService {
 			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
-			Map<String,Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId, managerName);
+			Map<String, Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId,
+					managerName);
 			if (!"1".equals(reRecordMap.get(BaseCode.STATUS.toString()))) {
 				return reRecordMap;
 			}
-			/*Map<String, Object> reAppkeyMap = appkeyService.createRecord("银盟跨境商城-授权网关", "YM", phone, merchantId,
-					merchantName);
-			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
-				return reAppkeyMap;
-			}*/
+			/*
+			 * Map<String, Object> reAppkeyMap =
+			 * appkeyService.createRecord("银盟跨境商城-授权网关", "YM", phone,
+			 * merchantId, merchantName); if
+			 * (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
+			 * return reAppkeyMap; }
+			 */
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
 	 * 保存商户备案信息
-	 * @param recordInfoPack 商户备案信息
-	 * @param merchantId 商户Id
-	 * @param managerName 管理员名称
+	 * 
+	 * @param recordInfoPack
+	 *            商户备案信息
+	 * @param merchantId
+	 *            商户Id
+	 * @param managerName
+	 *            管理员名称
 	 * @return Map
 	 */
 	private Map<String, Object> createMerchantRecord(String recordInfoPack, String merchantId, String managerName) {
@@ -356,7 +364,7 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> publicMerchantInfo(String merchantId) {
-		if(StringEmptyUtils.isNotEmpty(merchantId)){
+		if (StringEmptyUtils.isNotEmpty(merchantId)) {
 			Map<String, Object> params = new HashMap<>();
 			// key=表中列名,value=查询参数
 			params.put("merchantId", merchantId);
@@ -371,6 +379,27 @@ public class MerchantServiceImpl implements MerchantService {
 			}
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	@Override
+	public Map<String, Object> getMerchantAuthority(String merchantId) {
+		if (StringEmptyUtils.isEmpty(merchantId)) {
+			return ReturnInfoUtils.errorInfo("商户Id不能为空");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("roleId", merchantId);
+		List<AuthorityRole> reList = merchantDao.findByProperty(AuthorityRole.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户权限信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			List<String> list = new ArrayList<>();
+			for (AuthorityRole authorityRole : reList) {
+				list.add(authorityRole.getAuthorityCode());
+			}
+			return ReturnInfoUtils.successDataInfo(list);
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到该商户权限信息!");
+		}
 	}
 
 }
