@@ -3,16 +3,16 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2018-4-16 13:43:25 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-	<class name="org.silver.shop.model.system.AuthorityRole" table="ym_shop_sys_authority_role">
+	<class name="org.silver.shop.model.system.AuthorityUser" table="ym_shop_sys_authority_user">
 		<id name="id" type="java.lang.Long">
 			<column name="id" />
 			<generator class="identity" />
 		</id>
-		<property name="roleId" type="java.lang.String">
-			<column name="roleId" />
+		<property name="userId" type="java.lang.String">
+			<column name="userId" />
 		</property>
-		<property name="roleName" type="java.lang.String">
-			<column name="roleName" />
+		<property name="userName" type="java.lang.String">
+			<column name="userName" />
 		</property>
 		<property name="authorityId" type="java.lang.Long">
 			<column name="authorityId" />

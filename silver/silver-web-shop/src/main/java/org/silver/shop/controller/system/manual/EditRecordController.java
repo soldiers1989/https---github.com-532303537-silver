@@ -101,8 +101,8 @@ public class EditRecordController {
 	 * @return
 	 */
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
-	// @RequiresRoles("Merchant")
-	@RequiresPermissions("loadMorderDatas")
+	@RequiresRoles("Merchant")
+	//@RequiresPermissions("loadMorderDatas")
 	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -397,7 +397,6 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/editMorderInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	 @RequiresPermissions("editMorderInfo")
 	public String editMorderInfo(HttpServletRequest req, HttpServletResponse response, String morderInfoPack,
 			int length, int flag) {
 		String originHeader = req.getHeader("Origin");
@@ -405,11 +404,6 @@ public class EditRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		
-		//Subject currentUser = SecurityUtils.getSubject();
-		//if (!currentUser.isPermitted("editMorderInfo")) {
-			//return JSONObject.fromObject(ReturnInfoUtils.errorInfo("测试-没有权限操作")).toString();
-		//}
 		Map<String, Object> datasMap = new HashMap<>();
 		try {
 			JSONObject json = JSONObject.fromObject(morderInfoPack);

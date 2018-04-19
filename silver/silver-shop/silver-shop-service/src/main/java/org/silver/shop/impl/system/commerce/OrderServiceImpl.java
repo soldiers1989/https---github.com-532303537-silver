@@ -407,13 +407,13 @@ public class OrderServiceImpl implements OrderService {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("reOrderSerialNo", datasMap.get("messageID") + "");
-		paramMap.put("entOrderNo", datasMap.get("entOrderNo") + "");
+		String entOrderNo = datasMap.get("entOrderNo") + "";
+		paramMap.put("entOrderNo", entOrderNo);
 		String reMsg = datasMap.get("errMsg") + "";
 		List<Object> reList = orderDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
-		if (reList != null && reList.size() > 0) {
+		if (reList != null && !reList.isEmpty()) {
 			OrderRecordContent order = (OrderRecordContent) reList.get(0);
 			String status = datasMap.get("status") + "";
 			String note = order.getReNote();
@@ -421,7 +421,7 @@ public class OrderServiceImpl implements OrderService {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				// 支付单备案状态修改为成功
+				//订单备案状态修改为成功
 				order.setOrderRecordStatus(2);
 			} else {
 				order.setOrderRecordStatus(3);
@@ -429,17 +429,12 @@ public class OrderServiceImpl implements OrderService {
 			order.setReNote(note + defaultDate + ":" + reMsg + ";");
 			order.setUpdateDate(date);
 			if (!orderDao.update(order)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "异步更新订单备案信息错误!");
-				return paramMap;
+				return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return ReturnInfoUtils.successInfo();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]未找到对应订单信息");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -791,7 +786,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
 			String startDate, String endDate) {
-		Map<String, Object> statusMap = new HashMap<>();
+		//Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
 			if (StringEmptyUtils.isNotEmpty(merchantId)) {
@@ -801,15 +796,11 @@ public class OrderServiceImpl implements OrderService {
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
 			Table reList = orderDao.getOrderDailyReport(paramsMap, page, size);
-			Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
+			//Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("服务器繁忙!");
 			} else if (!reList.getRows().isEmpty()) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
-				statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
-				return statusMap;
+				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
 			} else {
 				return ReturnInfoUtils.errorInfo("暂无数据!");
 			}
@@ -1014,7 +1005,7 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap) {
 		if (datasMap != null && !datasMap.isEmpty()) {
 			JSONObject orderJson = null;
-			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId")+"");
+			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
 			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckMerchantMap;
 			}
@@ -1053,7 +1044,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 	}
-
 
 	/**
 	 * 保存订单商品信息
@@ -1498,7 +1488,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
 		if (datasMap != null && !datasMap.isEmpty()) {
-			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId")+"");
+			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reMerchantMap;
 			}
@@ -1517,8 +1507,11 @@ public class OrderServiceImpl implements OrderService {
 
 	/**
 	 * 第三方平获取订单信息
-	 * @param json 查询参数
-	 * @param merchantId 商户Id
+	 * 
+	 * @param json
+	 *            查询参数
+	 * @param merchantId
+	 *            商户Id
 	 * @return Map
 	 */
 	private Map<String, Object> thirdPartyOrderInfo(JSONObject json, String merchantId) {

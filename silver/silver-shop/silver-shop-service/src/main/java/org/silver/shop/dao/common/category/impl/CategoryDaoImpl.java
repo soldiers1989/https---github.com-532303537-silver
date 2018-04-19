@@ -1,5 +1,8 @@
 package org.silver.shop.dao.common.category.impl;
 
+import java.util.Date;
+
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.common.category.CategoryDao;
@@ -53,5 +56,70 @@ public class CategoryDaoImpl extends BaseDaoImpl<Object> implements CategoryDao 
 				session.close();
 			}
 		}
+	}
+
+	@Override
+	public boolean updateGoodsRecordDetailSecondCategory(int firstId, String firstTypeName, long secondId,
+			String goodsSecondTypeName, String managerName) {
+		Session session = null;
+		try {
+			String sql = "update ym_shop_goods_record_detail  SET  spareGoodsFirstTypeId = ?  , spareGoodsFirstTypeName = ?   , spareGoodsSecondTypeName = ? , updateBy = ? , updateDate = ?"
+					+ " WHERE spareGoodsSecondTypeId = ? ";
+			session = getSession();
+			Query query = session.createSQLQuery(sql);
+			query.setInteger(0, firstId);
+			query.setString(1, firstTypeName.trim());
+			query.setString(2, goodsSecondTypeName.trim());
+			query.setString(3, managerName.trim());
+			query.setDate(4, new Date());
+			query.setLong(5, secondId);
+			int reStatus = query.executeUpdate();
+			session.close();
+			if (reStatus >= 0) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception re) {
+			re.printStackTrace();
+			return false;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public boolean updateGoodsBaseInfoSecondCategory(int firstId, String firstTypeName, long secondId,
+			String goodsSecondTypeName, String managerName) {
+		Session session = null;
+		try {
+			String sql = "update ym_shop_goods_content  SET  goodsFirstTypeId = ?  , goodsFirstTypeName = ?   , goodsSecondTypeName = ? , updateBy = ? , updateDate = ?"
+					+ " WHERE goodsSecondTypeId = ? ";
+			session = getSession();
+			Query query = session.createSQLQuery(sql);
+			query.setInteger(0, firstId);
+			query.setString(1, firstTypeName.trim());
+			query.setString(2, goodsSecondTypeName.trim());
+			query.setString(3, managerName.trim());
+			query.setDate(4, new Date());
+			query.setLong(5, secondId);
+			int reStatus = query.executeUpdate();
+			session.close();
+			if (reStatus >= 0) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception re) {
+			re.printStackTrace();
+			return false;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+
 	}
 }

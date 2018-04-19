@@ -8,11 +8,9 @@ import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
-import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
-import org.silver.shop.model.system.AuthorityRole;
+import org.silver.shop.model.system.AuthorityUser;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
@@ -26,13 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
-
-	@Autowired
-	private AppkeyService appkeyService;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
@@ -387,13 +381,13 @@ public class MerchantServiceImpl implements MerchantService {
 			return ReturnInfoUtils.errorInfo("商户Id不能为空");
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("roleId", merchantId);
-		List<AuthorityRole> reList = merchantDao.findByProperty(AuthorityRole.class, params, 0, 0);
+		params.put("userId", merchantId);
+		List<AuthorityUser> reList = merchantDao.findByProperty(AuthorityUser.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户权限信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			List<String> list = new ArrayList<>();
-			for (AuthorityRole authorityRole : reList) {
+			for (AuthorityUser authorityRole : reList) {
 				list.add(authorityRole.getAuthorityCode());
 			}
 			return ReturnInfoUtils.successDataInfo(list);

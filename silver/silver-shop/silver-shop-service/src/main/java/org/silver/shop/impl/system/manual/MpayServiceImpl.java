@@ -75,10 +75,10 @@ public class MpayServiceImpl implements MpayService {
 	// 币制默认为人民币
 	private static final String CURRCODE = "142";
 	/**
-	 *  错误标识
+	 * 错误标识
 	 */
 	private static final String ERROR = "error";
-	
+
 	@Resource
 	private MpayDao mpayDao;
 	@Resource
@@ -154,21 +154,15 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private Map<String, Object> saveProxyWalletLog(int type, String merchantId, String merchantName, String proxyId,
 			String proxyParentName, String serialNo, double serviceFee) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reMap2 = merchantWalletServiceImpl.checkWallet(3, proxyId, proxyParentName);
 		if (!"1".equals(reMap2.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
+			return reMap2;
 		}
 		ProxyWalletContent proxyWallet = (ProxyWalletContent) reMap2.get(BaseCode.DATAS.toString());
 		double balance = proxyWallet.getBalance();
 		proxyWallet.setBalance(balance + serviceFee);
 		if (!morderDao.update(proxyWallet)) {
-			statusMap.clear();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.LOSS_SESSION.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "钱包更新余额失败!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("钱包更新余额失败!");
 		}
 		JSONObject param = new JSONObject();
 		param.put("merchantId", merchantId);
@@ -189,15 +183,9 @@ public class MpayServiceImpl implements MpayService {
 		param.put("type", 1);
 		Map<String, Object> logMap = walletLogService.addWalletLog(3, param);
 		if (!"1".equals(logMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-			statusMap.put(BaseCode.MSG.toString(), "保存代理商钱包日志记录失败,服务器繁忙!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("保存代理商钱包日志记录失败,服务器繁忙!");
 		}
-		statusMap.clear();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
-
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -415,28 +403,38 @@ public class MpayServiceImpl implements MpayService {
 				param.put("deleteFlag", 0);
 				List<MorderSub> orderSubList = morderDao.findByProperty(MorderSub.class, param, 0, 0);
 				if (orderList == null || orderSubList == null) {
-					String msg = "订单号:[" + orderNo + "]订单查询失败,服务器繁忙!";
+					String msg = "订单号[" + orderNo + "]查询订单信息失败,服务器繁忙!";
 					RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 					continue;
 				} else {
 					Morder order = orderList.get(0);
 					if (order.getFCY() > 2000) {
-						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
+						String msg = "订单号[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 					if (!checkProvincesCityAreaCode(order)) {
-						String msg = "订单号:[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
+						String msg = "订单号[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 
 					Map<String, Object> reOrderMap = sendOrder(customsMap, orderSubList, tok, order);
 					if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
-						String msg = "订单号:[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
+						String msg = "订单号[" + orderNo + "]-->" + reOrderMap.get(BaseCode.MSG.toString()) + "";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					} else {
+						// 当订单状态为未备案时才进行订单服务费计算
+						if (order.getOrder_record_status() == 1) {
+							Map<String, Object> reOrderTollMap = orderToll(merchantId, order.getOrder_id(),
+									order.getFCY());
+							if (!"1".equals(reOrderTollMap.get(BaseCode.STATUS.toString()))) {
+								String msg = reOrderTollMap.get(BaseCode.MSG.toString()) + "";
+								RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+								continue;
+							}
+						}
 						String reOrderMessageID = reOrderMap.get("messageID") + "";
 						// 更新服务器返回订单Id
 						Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
@@ -468,7 +466,7 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	/**
-	 * 更新订单返回信息及订单状态
+	 * 更新订单返回信息、并且将订单状态修改为备案中
 	 * 
 	 * @param orderNo
 	 *            订单编号
@@ -490,9 +488,7 @@ public class MpayServiceImpl implements MpayService {
 					return ReturnInfoUtils.errorInfo("更新服务器返回messageID错误!");
 				}
 			}
-			paramMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return paramMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("更新支付订单返回messageID错误,服务器繁忙！");
 		}
@@ -643,8 +639,8 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("datas", orderJsonList.toString());
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
-		//报文类型
-		//orderMap.put("opType", "M");
+		// 报文类型
+		// orderMap.put("opType", "M");
 		// 是否像海关发送
 		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
@@ -717,10 +713,6 @@ public class MpayServiceImpl implements MpayService {
 			Morder order = reList.get(0);
 			String orderId = order.getOrder_id();
 			String merchantId = order.getMerchant_no();
-			Map<String, Object> reOrderMap = orderToll(merchantId, orderId, order.getFCY());
-			if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
-				return reOrderMap;
-			}
 			String status = datasMap.get("status") + "";
 			String note = order.getOrder_re_note();
 			if (StringEmptyUtils.isEmpty(note)) {
@@ -840,23 +832,22 @@ public class MpayServiceImpl implements MpayService {
 	 * @return Map
 	 */
 	private Map<String, Object> orderToll(String merchantId, String orderId, double price) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
-		List<Merchant> reMerchantList = morderDao.findByProperty(Merchant.class, params, 1, 1);
-		Merchant merchant = null;
-		if (reMerchantList != null && !reMerchantList.isEmpty()) {
-			merchant = reMerchantList.get(0);
-			// 商户钱包扣钱进代理商钱包
-			Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(),
-					merchant.getMerchantName(), orderId, merchant.getAgentParentId(), price,
-					merchant.getAgentParentName());
-			if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
-				return reUpdateWalletMap;
-			}
-			return ReturnInfoUtils.successInfo();
-		} else {
-			return ReturnInfoUtils.errorInfo("查询商户信息失败,请核对信息!");
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(orderId)
+				|| StringEmptyUtils.isEmpty(price)) {
+			return ReturnInfoUtils.errorInfo("清算订单服务费,请求参数不能为空！");
 		}
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		// 商户钱包扣钱进代理商钱包
+		Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(), merchant.getMerchantName(),
+				orderId, merchant.getAgentParentId(), price, merchant.getAgentParentName());
+		if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reUpdateWalletMap;
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -873,7 +864,7 @@ public class MpayServiceImpl implements MpayService {
 				e.printStackTrace();
 			}
 			return ReturnInfoUtils.successDataInfo(dataStr, 0);
-		}else{
+		} else {
 			return ReturnInfoUtils.errorInfo("未找到订单数据！");
 		}
 	}

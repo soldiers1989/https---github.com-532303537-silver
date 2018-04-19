@@ -167,9 +167,9 @@ public class MerchantTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String redisKey = "Shop_Key_Merchant_Authority_List__" + merchantId;
 		byte[] redisByte = JedisUtil.get(redisKey.getBytes());
-		if (redisByte != null && redisByte.length > 0) {
-			return (List<String>) SerializeUtil.toObject(redisByte);
-		} else {
+	//	if (redisByte != null && redisByte.length > 0) {
+			//return (List<String>) SerializeUtil.toObject(redisByte);
+		//} else {
 			Map<String, Object> reMap = merchantService.getMerchantAuthority(merchantId);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return null;
@@ -177,6 +177,6 @@ public class MerchantTransaction {
 			List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
 			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
 			return item;
-		}
+		//}
 	}
 }

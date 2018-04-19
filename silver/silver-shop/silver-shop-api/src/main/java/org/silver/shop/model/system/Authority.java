@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 权限
+ * 权限字典实体类
  */
 public class Authority implements Serializable {
 	/**

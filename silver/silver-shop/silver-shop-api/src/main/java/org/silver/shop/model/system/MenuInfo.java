@@ -13,11 +13,13 @@ public class MenuInfo implements Serializable{
 	 */
 	private static final long serialVersionUID = 9107594158406088296L;
 	private Long id;
-	private String menuName; // 菜单名称
-	private String menuLevel; // 菜单等级
-	private String menuParentId; // 父菜单Id
-	private String menuPath;//菜单路径
-	private String status;// 状态1-启用,2-禁用
+	private String firstName;// 第一级权限名称 order
+	private String firstCode;// 第一级权限代码
+	private String secondName;// 第二级权限名称
+	private String secondCode;// 第二级权代码
+	private String thirdName;// 第三级权限名称
+	private String thirdCode;// 第三级权限代码
+	private String groupName;//分组名称
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
@@ -26,37 +28,5 @@ public class MenuInfo implements Serializable{
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 	
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getMenuName() {
-		return menuName;
-	}
-
-	public void setMenuName(String menuName) {
-		this.menuName = menuName;
-	}
-
-
-	public String getMenuLevel() {
-		return menuLevel;
-	}
-
-	public void setMenuLevel(String menuLevel) {
-		this.menuLevel = menuLevel;
-	}
-
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
+	
 }

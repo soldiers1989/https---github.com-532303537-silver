@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.query.ReturnMetadata;
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.AuthorityService;
 import org.silver.shop.dao.system.AuthorityDao;
 import org.silver.shop.model.system.Authority;
 import org.silver.shop.model.system.AuthorityGroup;
-import org.silver.shop.model.system.AuthorityRole;
+import org.silver.shop.model.system.AuthorityUser;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.util.ReturnInfoUtils;
@@ -268,24 +271,89 @@ public class AuthorityServiceImpl implements AuthorityService {
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("参数格式错误!");
 		}
-		Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
-		if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reCheckMerchantMap;
+		String userId = "";
+		String userName = "";
+		String type = datasMap.get("type") + "";
+		switch (type) {
+		case "merchant":
+			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("userId") + "");
+			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckMerchantMap;
+			}
+			Merchant merchant = (Merchant) reCheckMerchantMap.get(BaseCode.DATAS.toString());
+			userId = merchant.getMerchantId();
+			userName = merchant.getMerchantName();
+			break;
+		case "manager":
+			Map<String, Object> reCheckManagerMap = getManagerInfo(datasMap.get("userId") + "");
+			if (!"1".equals(reCheckManagerMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckManagerMap;
+			}
+			Manager manager = (Manager) reCheckManagerMap.get(BaseCode.DATAS.toString());
+			userId = manager.getManagerId();
+			userName = manager.getManagerName();
+			break;
+		case "member":
+			break;
+		default:
+			break;
 		}
-		Merchant merchant = (Merchant) reCheckMerchantMap.get(BaseCode.DATAS.toString());
+		return addRoleAuthorityInfo(jsonArr, datasMap.get("managerName") + "", userId, userName);
+	}
+
+	/**
+	 * 获取管理员信息
+	 * @param managerId 管理员Id
+	 * @return Map
+	 */
+	private Map<String, Object> getManagerInfo(String managerId) {
+		if (StringEmptyUtils.isEmpty(managerId)) {
+			return ReturnInfoUtils.errorInfo("用户Id不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("managerId", managerId);
+		List<Manager> reList = authorityDao.findByProperty(Manager.class, params, 0, 0);
+		if(reList == null){
+			return ReturnInfoUtils.errorInfo("查询管理员信息失败,服务器繁忙!");
+		}else if(!reList.isEmpty()){
+			return ReturnInfoUtils.successDataInfo(reList.get(0));
+		}else{
+			return ReturnInfoUtils.errorInfo("未找到该管理员信息,请核对信息!");
+		}
+	}
+
+	/**
+	 * 添加权限信息
+	 * 
+	 * @param jsonArr
+	 *            权限信息
+	 * @param managerName
+	 *            管理员名称
+	 * @param userId
+	 *            用户Id
+	 * @param userName
+	 *            用户名称
+	 * @return Map
+	 */
+	private Map<String, Object> addRoleAuthorityInfo(JSONArray jsonArr, String managerName, String roleId,
+			String roleName) {
+		if (jsonArr == null || jsonArr.isEmpty() || StringEmptyUtils.isEmpty(roleId)
+				|| StringEmptyUtils.isEmpty(roleName)) {
+			return ReturnInfoUtils.errorInfo("权限参数不能为空!");
+		}
 		for (int i = 0; i < jsonArr.size(); i++) {
 			Map<String, Object> authorityMap = (Map<String, Object>) jsonArr.get(i);
-			AuthorityRole authorityRole = new AuthorityRole();
-			authorityRole.setRoleId(merchant.getMerchantId());
-			authorityRole.setRoleName(merchant.getMerchantName());
-			authorityRole.setAuthorityId(Long.parseLong(authorityMap.get("authorityId")+""));
-			authorityRole.setAuthorityCode(authorityMap.get("authorityCode")+"");
+			AuthorityUser authority = new AuthorityUser();
+			authority.setUserId(roleId);
+			authority.setUserName(roleName);
+			authority.setAuthorityId(Long.parseLong(authorityMap.get("authorityId") + ""));
+			authority.setAuthorityCode(authorityMap.get("authorityCode") + "");
 			//
-			authorityRole.setStatus("1");
-			authorityRole.setCreateBy(datasMap.get("managerName")+"");
-			authorityRole.setCreateDate(new Date());
-			if(!authorityDao.add(authorityRole)){
-				return ReturnInfoUtils.errorInfo("设置权限失败,服务器繁忙!");
+			authority.setStatus("1");
+			authority.setCreateBy(managerName);
+			authority.setCreateDate(new Date());
+			if (!authorityDao.add(authority)) {
+				return ReturnInfoUtils.errorInfo("设置权限信息失败,服务器繁忙!");
 			}
 		}
 		return ReturnInfoUtils.successInfo();

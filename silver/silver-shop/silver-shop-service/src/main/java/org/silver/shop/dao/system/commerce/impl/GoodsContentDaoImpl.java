@@ -24,10 +24,6 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 		return super.findLastId(GoodsContent.class);
 	}
 
-	@Override
-	public boolean update(GoodsContent entity) {
-		return super.update(entity);
-	}
 
 	@Override
 	public Table getAlreadyRecordGoodsBaseInfo(Map<String, Object> datasMap, int page, int size) {

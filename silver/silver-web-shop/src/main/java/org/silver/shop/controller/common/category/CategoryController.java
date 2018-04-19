@@ -78,7 +78,10 @@ public class CategoryController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商品类型")
-	public String editGoodsCategory(HttpServletRequest req, HttpServletResponse response) {
+	public String editGoodsCategory(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("type") String type, @RequestParam("goodsSecondTypeId") String goodsSecondTypeId,
+			@RequestParam("firstTypeId") String firstTypeId, @RequestParam("firstTypeName") String firstTypeName,
+			@RequestParam("goodsSecondTypeName") String goodsSecondTypeName,@RequestParam("serialNo")String serialNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -118,7 +121,7 @@ public class CategoryController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	/**
 	 * 根据等级查询商品类型
 	 * 
@@ -133,14 +136,15 @@ public class CategoryController {
 	@RequestMapping(value = "/searchCategoryInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String searchCategoryInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("type") int type) {
+	public String searchCategoryInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("type") int type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
-		if (type == 1 || type == 2 || type == 3 ) {
+		if (type == 1 || type == 2 || type == 3) {
 			statusMap = categoryTransaction.searchCategoryInfo(type);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());

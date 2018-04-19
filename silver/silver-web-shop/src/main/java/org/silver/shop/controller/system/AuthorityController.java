@@ -44,9 +44,9 @@ public class AuthorityController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员添加权限信息")
 	public String addAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("type") String type, @RequestParam("firstName") String firstName,
-			@RequestParam("secondName") String secondName, @RequestParam("firstCode") String firstCode,
-			@RequestParam("secondCode") String secondCode, @RequestParam("groupName") String groupName) {
+			@RequestParam("type") String type, @RequestParam("groupName") String groupName,
+			@RequestParam("firstName") String firstName, @RequestParam("firstCode") String firstCode,
+			@RequestParam("secondName") String secondName, @RequestParam("secondCode") String secondCode) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -121,7 +121,8 @@ public class AuthorityController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员设置角色权限信息")
 	public String setRoleAuthority(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId")String merchantId,@RequestParam("authorityPack")String authorityPack ) {
+			@RequestParam("type") String type, @RequestParam("userId") String userId,
+			@RequestParam("authorityPack") String authorityPack) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -139,17 +140,17 @@ public class AuthorityController {
 		}
 		return JSONObject.fromObject(authorityTransaction.setRoleAuthority(datasMap)).toString();
 	}
-	
+
 	public static void main(String[] args) {
 		JSONArray json = new JSONArray();
-		Map<String,Object> item = new HashMap<>();
-		item.put("authorityId", "2");
-		item.put("authorityCode", "loadMorderDatas");
-		Map<String,Object> item2 = new HashMap<>();
-		item2.put("authorityId", "3");
-		item2.put("authorityCode", "groupAddOrder");
+		Map<String, Object> item = new HashMap<>();
+		item.put("authorityId", "1");
+		item.put("authorityCode", "manager/findAllManagerInfo");
+		//Map<String, Object> item2 = new HashMap<>();
+		//item2.put("authorityId", "3");
+		//item2.put("authorityCode", "groupAddOrder");
 		json.add(item);
-		json.add(item2);
+	//	json.add(item2);
 		System.out.println(json.toString());
 	}
 }

@@ -78,7 +78,6 @@ public class ManagerController {
 	@ApiOperation("管理员查询所有用户信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
-
 	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -109,7 +108,7 @@ public class ManagerController {
 	@ApiOperation("创建管理员或运营管理员")
 	public String createManager(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("managerName") String managerName, @RequestParam("loginPassword") String loginPassword,
-			@RequestParam("managerMarks") int managerMarks) {
+			@RequestParam("managerMarks") int managerMarks,String description) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -117,7 +116,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (managerName != null && loginPassword != null && managerMarks == 1 || managerMarks == 2) {
-			statusMap = managerTransaction.createManager(managerName, loginPassword, managerMarks);
+			statusMap = managerTransaction.createManager(managerName, loginPassword, managerMarks,description);
 			return JSONObject.fromObject(statusMap).toString();
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
@@ -224,6 +223,7 @@ public class ManagerController {
 	@ApiOperation("超级管理员查询所有运营人员信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
+	//@RequiresPermissions("manager/findAllManagerInfo")
 	public String findAllManagerInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

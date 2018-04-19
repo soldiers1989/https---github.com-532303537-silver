@@ -25,10 +25,11 @@ public interface ManagerService {
 	 * @param loginPassword 登陆密码
 	 * @param managerMarks 管理员标识1-超级管理员2-运营管理员
 	 * @param reManagerName 当前管理员姓名
+	 * @param description 描述
 	 * @return
 	 */
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName);
+			String reManagerName, String description);
 
 	/**
 	 * 管理员查询所有商户信息
@@ -165,6 +166,13 @@ public interface ManagerService {
 	 * @return Map
 	 */
 	public Map<String, Object> getMerchantBusinessInfo(String merchantId);
+
+	/**
+	 * 查询管理员所有权限信息
+	 * @param managerId 管理员Id
+	 * @return Map
+	 */
+	public Map<String, Object> getManagerAuthority(String managerId);
 
 	
 }

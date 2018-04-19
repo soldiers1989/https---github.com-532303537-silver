@@ -1,6 +1,7 @@
 package org.silver.shop.shiro;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -30,7 +31,9 @@ public class ManagerRealm extends AuthorizingRealm {
 		if (manager != null) {
 			info = new SimpleAuthorizationInfo();
 			info.addRole(LoginType.MANAGER.toString());
-			//info.addStringPermissions(permissions);
+			//查询管理员权限
+			List<String> authorityList = managerTransaction.getManagerAuthority();
+			//info.addStringPermissions(authorityList);
 		}
 		return info;
 	}

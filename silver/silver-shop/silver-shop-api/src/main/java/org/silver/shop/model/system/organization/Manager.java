@@ -15,6 +15,7 @@ public class Manager implements Serializable {
 	private String managerName;// 管理员名称
 	private String loginPassword;// 登陆密码
 	private int managerMarks;// 管理员标识1-超级管理员2-运营管理员
+	private String description; // 描述
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
@@ -117,6 +118,14 @@ public class Manager implements Serializable {
 
 	public void setLoginPassword(String loginPassword) {
 		this.loginPassword = loginPassword;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }

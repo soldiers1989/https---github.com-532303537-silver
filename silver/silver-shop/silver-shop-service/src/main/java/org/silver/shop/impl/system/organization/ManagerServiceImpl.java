@@ -13,6 +13,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.dao.system.organization.ManagerDao;
 import org.silver.shop.impl.system.commerce.StockServiceImpl;
+import org.silver.shop.model.system.AuthorityUser;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
@@ -67,7 +68,7 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName) {
+			String reManagerName,String description) {
 		Date date = new Date();
 		Manager managerInfo = new Manager();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -99,6 +100,7 @@ public class ManagerServiceImpl implements ManagerService {
 		managerInfo.setCreateDate(date);
 		// 删除标识:0-未删除,1-已删除
 		managerInfo.setDeleteFlag(0);
+		managerInfo.setDescription(description);
 		if (!managerDao.add(managerInfo)) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), "创建管理员失败,服务器繁忙!");
@@ -695,6 +697,27 @@ public class ManagerServiceImpl implements ManagerService {
 				return ReturnInfoUtils.successDataInfo(merchantDetail, 0);
 			}
 			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> getManagerAuthority(String managerId) {
+		if (StringEmptyUtils.isEmpty(managerId)) {
+			return ReturnInfoUtils.errorInfo("管理员Id不能为空");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("userId", managerId);
+		List<AuthorityUser> reList = managerDao.findByProperty(AuthorityUser.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询管理员权限信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			List<String> list = new ArrayList<>();
+			for (AuthorityUser authorityRole : reList) {
+				list.add(authorityRole.getAuthorityCode());
+			}
+			return ReturnInfoUtils.successDataInfo(list);
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到该管理员权限信息!");
 		}
 	}
 

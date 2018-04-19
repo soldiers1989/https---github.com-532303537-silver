@@ -4,19 +4,19 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 角色管理表
+ * 用户权限信息实体类
  */
-public class AuthorityRole implements Serializable {
+public class AuthorityUser implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5688859813715680687L;
 	// 流水号
 	private Long id;
-	// 角色Id
-	private String roleId;
-	// 角色名称
-	private String roleName;
+	// 用户Id
+	private String userId;
+	// 用户名称
+	private String userName;
 	// 对应权限Id
 	private Long authorityId;
 	// 权限代码
@@ -29,14 +29,6 @@ public class AuthorityRole implements Serializable {
 
 	public Long getId() {
 		return id;
-	}
-
-	public String getRoleId() {
-		return roleId;
-	}
-
-	public String getRoleName() {
-		return roleName;
 	}
 
 	public String getStatus() {
@@ -61,14 +53,6 @@ public class AuthorityRole implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public void setRoleId(String roleId) {
-		this.roleId = roleId;
-	}
-
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
 	}
 
 	public void setStatus(String status) {
@@ -105,6 +89,22 @@ public class AuthorityRole implements Serializable {
 
 	public void setAuthorityCode(String authorityCode) {
 		this.authorityCode = authorityCode;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 }

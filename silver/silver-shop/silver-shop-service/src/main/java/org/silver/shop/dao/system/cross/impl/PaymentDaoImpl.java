@@ -25,8 +25,8 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			List<Object> sqlParams = new ArrayList<>();
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
-			String sql = "SELECT count(t1.trade_no) AS tradeCount,sum(t1.pay_amount) AS totalAmount,(sum(t1.pay_amount) * 0.002) AS price,DATE_FORMAT(t1.create_date, '%Y-%m-%d') as date FROM 	ym_shop_manual_mpay t1 "
-					+ " WHERE (t1.pay_record_status = '3' OR t1.pay_record_status = '2') AND t1.del_flag = '0' ";
+			String sql = "SELECT DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) as paymentCount,SUM(t1.pay_amount) AS amount,(SUM(t1.pay_amount) * 0.002	) AS Fee,t2.merchantId,t2.merchantName,t2.agentParentId,t2.agentParentName FROM	ym_shop_manual_mpay t1" 
+					 +" LEFT JOIN ym_shop_merchant t2 ON t1.merchant_no = t2.merchantId WHERE 	(t1.pay_record_status = 3 or t1.pay_record_status = 2 AND t1.del_flag = 0 )  ";
 			String merchantId = paramsMap.get("merchantId") + "";	
 			if(StringEmptyUtils.isNotEmpty(merchantId)){
 				sql += " AND t1.merchant_no = ? ";
@@ -45,7 +45,7 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 				sql += " AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ";
 				sqlParams.add(endDate);
 			}
-			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d') ";
+			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'),t2.merchantName  ";
 			session = getSession();
 			Table t = null;
 			if (page > 0 && size > 0) {

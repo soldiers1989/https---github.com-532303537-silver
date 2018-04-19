@@ -36,12 +36,10 @@ public class MerchantRealm extends AuthorizingRealm implements Serializable {
 		if (merchant != null) {
 			info = new SimpleAuthorizationInfo();
 			info.addRole(LoginType.MERCHANT.toString());
-			//添加权限
-			List<String> roles = merchantTransaction.getMerchantAuthority();
-			System.out.println("--->>>"+roles);
-		//	info.addRoles(roles);
+			//查询商户权限
+			List<String> authorityList = merchantTransaction.getMerchantAuthority();
 			//@RequiresPermissions
-			info.addStringPermissions(roles);
+			//info.addStringPermissions(authorityList);
 		}
 		return info;
 	}

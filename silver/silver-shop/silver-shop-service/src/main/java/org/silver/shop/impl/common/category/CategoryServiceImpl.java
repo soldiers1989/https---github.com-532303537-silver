@@ -18,6 +18,7 @@ import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -487,32 +488,27 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public Map<String, Object> editGoodsCategory(String managerId, String managerName, Map<String, Object> paramMap) {
-		Map<String, Object> statusMap = new HashMap<>();
-		List<Map<String, Object>> errorList = new ArrayList<>();
+		if (paramMap == null || paramMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
 		String type = paramMap.get("type") + "";
 		switch (type.trim()) {
 		case "1":
-			Map<String, Object> reAllCategoryMap = editFirstCategory(paramMap, errorList, managerId, managerName);
+			Map<String, Object> reAllCategoryMap = editFirstCategory(paramMap, managerName);
 			if (!"1".equals(reAllCategoryMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return reAllCategoryMap;
 			}
 			break;
 		case "2":
-			Map<String, Object> reSecondCategoryMap = editSecondCategory(paramMap, errorList, managerId, managerName);
+			Map<String, Object> reSecondCategoryMap = editSecondCategory(paramMap, managerName);
 			if (!"1".equals(reSecondCategoryMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return reSecondCategoryMap;
 			}
 			break;
 		case "3":
-			Map<String, Object> reThirdCategoryMap = editThirdCategory(paramMap, errorList, managerId, managerName);
+			Map<String, Object> reThirdCategoryMap = editThirdCategory(paramMap, managerName);
 			if (!"1".equals(reThirdCategoryMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return reThirdCategoryMap;
 			}
 			break;
 		default:
@@ -525,13 +521,10 @@ public class CategoryServiceImpl implements CategoryService {
 	 * 修改第三类型名称
 	 * 
 	 * @param paramMap
-	 * @param errorList
-	 * @param managerId
 	 * @param managerName
 	 * @return
 	 */
-	private Map<String, Object> editThirdCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
-			String managerId, String managerName) {
+	private Map<String, Object> editThirdCategory(Map<String, Object> paramMap, String managerName) {
 		Date date = new Date();
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -622,27 +615,20 @@ public class CategoryServiceImpl implements CategoryService {
 	 * 修改第二类型商品
 	 * 
 	 * @param paramMap
-	 * @param errorList
-	 * @param managerId
 	 * @param managerName
 	 * @return
 	 */
-	private Map<String, Object> editSecondCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
-			String managerId, String managerName) {
-		Date date = new Date();
+	private Map<String, Object> editSecondCategory(Map<String, Object> paramMap, String managerName) {
 		Map<String, Object> params = new HashMap<>();
-		Map<String, Object> statusMap = new HashMap<>();
 		long goodsSecondTypeId = 0;
 		try {
 			goodsSecondTypeId = Long.parseLong(paramMap.get("goodsSecondTypeId") + "");
 		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "参数错误,请重试!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("第二级商品类型Id参数格式错误!");
 		}
 		// 根据Id查询第一商品类型
 		params.put("id", goodsSecondTypeId);
-		List<Object> goodsSecondList = categoryDao.findByProperty(GoodsSecondType.class, params, 1, 1);
+		List<GoodsSecondType> goodsSecondList = categoryDao.findByProperty(GoodsSecondType.class, params, 1, 1);
 		params.clear();
 		// 根据Id查询商品基本信息表中是否有商品第一类型Id存在
 		params.put("goodsSecondTypeId", String.valueOf(goodsSecondTypeId));
@@ -650,56 +636,54 @@ public class CategoryServiceImpl implements CategoryService {
 		params.clear();
 		// 根据Id查询商品备案信息表中管理的商品第一类型Id
 		params.put("spareGoodsSecondTypeId", String.valueOf(goodsSecondTypeId));
-		List<Object> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		List<GoodsRecordDetail> reGoodsRecordDetailList = categoryDao.findByProperty(GoodsRecordDetail.class, params, 0,
+				0);
 		if (reGoodsRecordDetailList == null || reGoodsContentList == null || goodsSecondList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询第二级商品信息失败,服务器繁忙!");
 		} else if (!goodsSecondList.isEmpty()) {
-			String goodsSecondTypeName = paramMap.get("goodsSecondTypeName") + "";
-			int secondNo = 0;
-			try {
-				secondNo = Integer.parseInt(paramMap.get("serialNo") + "");
-			} catch (Exception e) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "参数错误,请重试!");
-				return statusMap;
-			}
-			GoodsSecondType goodsSecondType = (GoodsSecondType) goodsSecondList.get(0);
-			goodsSecondType.setGoodsSecondTypeName(goodsSecondTypeName);
-			goodsSecondType.setUpdateBy(managerName);
-			goodsSecondType.setUpdateDate(date);
-			goodsSecondType.setSerialNo(secondNo);
-			if (!categoryDao.update(goodsSecondType)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型错误,请重试！");
-				return statusMap;
-			}
-			for (int i = 0; i < reGoodsRecordDetailList.size(); i++) {
-				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(i);
-				goodsRecordInfo.setSpareGoodsSecondTypeName(goodsSecondTypeName);
-				if (!categoryDao.update(goodsRecordInfo)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型失败,请重试！");
-					return statusMap;
-				}
-			}
-			for (int i = 0; i < reGoodsContentList.size(); i++) {
-				GoodsContent goodsBaseInfo = (GoodsContent) reGoodsContentList.get(i);
-				goodsBaseInfo.setGoodsSecondTypeName(goodsSecondTypeName);
-				if (!categoryDao.update(goodsBaseInfo)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "修改商品第二类型失败,请重试！");
-					return statusMap;
-				}
-			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return statusMap;
+			GoodsSecondType goodsSecondType = goodsSecondList.get(0);
+			return updateSecondCategory(goodsSecondType, paramMap, managerName);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("未找到对应的第二级商品类型信息!");
 		}
+	}
+
+	private Map<String, Object> updateSecondCategory(GoodsSecondType goodsSecondType, Map<String, Object> paramMap,
+			String managerName) {
+		String goodsSecondTypeName = paramMap.get("goodsSecondTypeName") + "";
+		String firstTypeId = paramMap.get("firstTypeId") + "";
+		String firstTypeName = paramMap.get("firstTypeName") + "";
+		int firstId = 0;
+		if (StringEmptyUtils.isNotEmpty(firstTypeId)) {
+			firstId = Integer.parseInt(firstTypeId);
+		}
+		int secondNo = 0;
+		try {
+			secondNo = Integer.parseInt(paramMap.get("serialNo") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("序号参数格式错误!");
+		}
+		//
+		if (firstId > 0) {
+			goodsSecondType.setFirstTypeId(firstId);
+		}
+		goodsSecondType.setGoodsSecondTypeName(goodsSecondTypeName);
+		goodsSecondType.setUpdateBy(managerName);
+		goodsSecondType.setUpdateDate(new Date());
+		goodsSecondType.setSerialNo(secondNo);
+		if (!categoryDao.update(goodsSecondType)) {
+			return ReturnInfoUtils.errorInfo("修改商品第二类型错误,请重试！");
+		}
+		// 更新商品备案信息中第二级商品类型
+		if(!categoryDao.updateGoodsRecordDetailSecondCategory(firstId,firstTypeName,goodsSecondType.getId(),goodsSecondTypeName,managerName)){
+			return ReturnInfoUtils.errorInfo("更新商品备案信息中第二级商品类型失败!");
+		}
+		// 更新商品基本信息中对应商品类型
+		if(!categoryDao.updateGoodsBaseInfoSecondCategory(firstId,firstTypeName,goodsSecondType.getId(),goodsSecondTypeName,managerName)){
+			return ReturnInfoUtils.errorInfo("更新商品基本信息中第二级商品类型失败!");
+		}
+		return ReturnInfoUtils.successInfo();
+
 	}
 
 	/**
@@ -709,8 +693,7 @@ public class CategoryServiceImpl implements CategoryService {
 	 * @param errorList
 	 * @return
 	 */
-	private Map<String, Object> editFirstCategory(Map<String, Object> paramMap, List<Map<String, Object>> errorList,
-			String managerId, String managerName) {
+	private Map<String, Object> editFirstCategory(Map<String, Object> paramMap, String managerName) {
 		Date date = new Date();
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -855,9 +838,9 @@ public class CategoryServiceImpl implements CategoryService {
 		return null;
 	}
 
-	//搜索所有第三级商品类型
+	// 搜索所有第三级商品类型
 	private Map<String, Object> searchThirdCategory() {
-		Map<String,Object> statusMap = new HashMap<>();
+		Map<String, Object> statusMap = new HashMap<>();
 		List<Object> reList = categoryDao.findByProperty(GoodsThirdType.class, null, 0, 0);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
@@ -880,24 +863,24 @@ public class CategoryServiceImpl implements CategoryService {
 	 */
 	private Map<String, Object> searchSecondCategory() {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String,List<Object>> item = new LinkedMap();
+		Map<String, List<Object>> item = new LinkedMap();
 		Table t = categoryDao.searchSecondCategory();
 		if (t != null && !t.getRows().isEmpty()) {
 			List<Row> lr = t.getRows();
 			for (int i = 0; i < lr.size(); i++) {
-				String secId = lr.get(i).getValue("secId")+"";
-				String firstTypeId = lr.get(i).getValue("firstTypeId")+"";
-				String goodsSecondTypeName = lr.get(i).getValue("goodsSecondTypeName")+"";
-				String secondNo = lr.get(i).getValue("secondNo")+"";
-				String thirdId = lr.get(i).getValue("thirdId")+"";
-				String thirdName = lr.get(i).getValue("goodsThirdTypeName")+"";
-				String vat = lr.get(i).getValue("vat")+"";
-				String tariff = lr.get(i).getValue("tariff")+"";
-				String consolidatedTax = lr.get(i).getValue("consolidatedTax")+"";
-				String consumptionTax = lr.get(i).getValue("consumptionTax")+"";
-				String thirdNo = lr.get(i).getValue("thirdNo")+"";
-				if(item.get(secId+"_"+goodsSecondTypeName) !=null){		
-					Map<String,Object> thirdMap = new LinkedMap();
+				String secId = lr.get(i).getValue("secId") + "";
+				// String firstTypeId = lr.get(i).getValue("firstTypeId") + "";
+				String goodsSecondTypeName = lr.get(i).getValue("goodsSecondTypeName") + "";
+				// String secondNo = lr.get(i).getValue("secondNo") + "";
+				String thirdId = lr.get(i).getValue("thirdId") + "";
+				String thirdName = lr.get(i).getValue("goodsThirdTypeName") + "";
+				String vat = lr.get(i).getValue("vat") + "";
+				String tariff = lr.get(i).getValue("tariff") + "";
+				String consolidatedTax = lr.get(i).getValue("consolidatedTax") + "";
+				String consumptionTax = lr.get(i).getValue("consumptionTax") + "";
+				String thirdNo = lr.get(i).getValue("thirdNo") + "";
+				if (item.get(secId + "_" + goodsSecondTypeName) != null) {
+					Map<String, Object> thirdMap = new LinkedMap();
 					thirdMap.put("thirdId", thirdId);
 					thirdMap.put("thirdName", thirdName);
 					thirdMap.put("vat", vat);
@@ -905,10 +888,10 @@ public class CategoryServiceImpl implements CategoryService {
 					thirdMap.put("consolidatedTax", consolidatedTax);
 					thirdMap.put("consumptionTax", consumptionTax);
 					thirdMap.put("thirdNo", thirdNo);
-					item.get(secId+"_"+goodsSecondTypeName).add(thirdMap);
-				}else{
+					item.get(secId + "_" + goodsSecondTypeName).add(thirdMap);
+				} else {
 					List<Object> lit = new ArrayList<>();
-					Map<String,Object> thirdMap = new LinkedMap();
+					Map<String, Object> thirdMap = new LinkedMap();
 					thirdMap.put("thirdId", thirdId);
 					thirdMap.put("thirdName", thirdName);
 					thirdMap.put("vat", vat);
@@ -917,13 +900,10 @@ public class CategoryServiceImpl implements CategoryService {
 					thirdMap.put("consumptionTax", consumptionTax);
 					thirdMap.put("thirdNo", thirdNo);
 					lit.add(thirdMap);
-					item.put(secId+"_"+goodsSecondTypeName, lit);
+					item.put(secId + "_" + goodsSecondTypeName, lit);
 				}
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), item);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(item);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());

@@ -49,7 +49,7 @@ public class MerchantUtils {
 	/**
 	 * 根据商户Id查询商户信息
 	 * @param merchantId 商户Id
-	 * @return Map
+	 * @return Map 
 	 */
 	public Map<String, Object> getMerchantInfo(String merchantId) {
 		if(StringEmptyUtils.isEmpty(merchantId)){

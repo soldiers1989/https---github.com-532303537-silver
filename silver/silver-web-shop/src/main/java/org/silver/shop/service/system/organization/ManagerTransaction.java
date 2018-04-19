@@ -18,9 +18,12 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
+import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,12 +79,12 @@ public class ManagerTransaction {
 	}
 
 	// 创建管理员
-	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks) {
+	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks, String description) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String reManagerName = managerInfo.getManagerName();
-		return managerService.createManager(managerName, loginPassword, managerMarks, reManagerName);
+		return managerService.createManager(managerName, loginPassword, managerMarks, reManagerName,description);
 	}
 
 	// 管理员查询所有商户信息
@@ -117,11 +120,6 @@ public class ManagerTransaction {
 
 	// 查询所有管理员信息
 	public Map<String, Object> findAllManagerInfo() {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
-		String managerId = managerInfo.getManagerId();
-		String managerName = managerInfo.getManagerName();
 		return managerService.findAllManagerInfo();
 	}
 
@@ -294,6 +292,27 @@ public class ManagerTransaction {
 
 	public Map<String, Object> getMerchantBusinessInfo(String merchantId) {
 		return managerService.getMerchantBusinessInfo(merchantId);
+	}
+
+	public List<String> getManagerAuthority() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		String managerId = managerInfo.getManagerId();
+		//String managerName = managerInfo.getManagerName();
+		String redisKey = "Shop_Key_Manager_Authority_List__" + managerId;
+		byte[] redisByte = JedisUtil.get(redisKey.getBytes());
+	//	if (redisByte != null && redisByte.length > 0) {
+			//return (List<String>) SerializeUtil.toObject(redisByte);
+		//} else {
+			Map<String, Object> reMap = managerService.getManagerAuthority(managerId);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return null;
+			}
+			List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
+			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
+			return item;
+		//}
 	}
 
 }

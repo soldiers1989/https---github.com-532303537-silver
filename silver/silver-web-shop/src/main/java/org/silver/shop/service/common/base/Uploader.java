@@ -83,19 +83,27 @@ public class Uploader {
 				MultipartFile file = multiRequest.getFile(iter.next());
 				if (file != null) {
 					String myFileName = file.getOriginalFilename();
-				    this.size=file.getSize();
+					this.size = file.getSize();
 					CommonsMultipartFile cf = (CommonsMultipartFile) file;
 					DiskFileItem fi = (DiskFileItem) cf.getFileItem();
 					if (myFileName.trim() != "") {
 						String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + this.type;
 						try {
-							if (compressPic.compressPic(fi.getStoreLocation(), path, imgName, 800, 800, true)) {
-								this.originalName = myFileName;
-								this.fileName = imgName;
-								this.type = this.getFileExt(this.fileName);
-								this.url =  "https://ym.191ec.com/img/goodsContent/"+merchantId+"/" + this.fileName;
-								this.state = "SUCCESS";
+							File localFile = new File(path + imgName);
+							if (!localFile.exists()) {
+								localFile.mkdirs();
 							}
+							file.transferTo(localFile);
+							// strl.add(imgName);
+							// if
+							// (compressPic.compressPic(fi.getStoreLocation(),
+							// path, imgName, 0, 0, false)) {
+							this.originalName = myFileName;
+							this.fileName = imgName;
+							this.type = this.getFileExt(this.fileName);
+							this.url = "https://ym.191ec.com/img/goodsContent/" + merchantId + "/" + this.fileName;
+							this.state = "SUCCESS";
+							// }
 						} catch (IllegalStateException e) {
 							e.printStackTrace();
 							this.state = e.getMessage();

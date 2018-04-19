@@ -202,14 +202,6 @@ public final class SearchUtils {
 					paramMap.put(key, value.trim());
 				}
 				break;
-
-			case "warehouseCode":
-				int one = value.indexOf('_');
-				int two = value.indexOf('_', one + 1);
-				// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
-				String code = value.substring(two + 1);
-				paramMap.put(key, code);
-				break;
 			default:
 				break;
 			}
@@ -477,6 +469,9 @@ public final class SearchUtils {
 			case "warehouseCode":
 				paramMap.put(key, value);
 				break;
+			case "goodsName":
+				paramMap.put(key, value);
+				break;
 			default:
 				break;
 			}
@@ -513,14 +508,14 @@ public final class SearchUtils {
 				paramMap.put(key, DateUtil.parseDate2(value + ""));
 				break;
 			case "type":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 
 			case "action":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 			case "serialNo":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 			default:
 				break;

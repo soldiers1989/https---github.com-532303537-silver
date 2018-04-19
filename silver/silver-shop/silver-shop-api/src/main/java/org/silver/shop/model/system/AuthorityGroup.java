@@ -2,6 +2,9 @@ package org.silver.shop.model.system;
 
 import java.io.Serializable;
 
+/**
+ * 权限关联组实体类
+ */
 public class AuthorityGroup implements Serializable{
 
 	/**

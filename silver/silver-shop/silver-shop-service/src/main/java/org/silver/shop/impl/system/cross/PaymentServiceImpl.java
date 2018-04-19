@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -47,6 +48,7 @@ import net.sf.json.JsonConfig;
 @Service(interfaceClass = PaymentService.class)
 public class PaymentServiceImpl implements PaymentService {
 
+	private static Logger logger = Logger.getLogger(Object.class);
 	@Autowired
 	private PaymentDao paymentDao;
 	@Autowired
@@ -67,9 +69,10 @@ public class PaymentServiceImpl implements PaymentService {
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	/**
-	 *  错误标识
+	 * 错误标识
 	 */
 	private static final String ERROR = "error";
+
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
 		Date date = new Date();
@@ -233,24 +236,16 @@ public class PaymentServiceImpl implements PaymentService {
 	 * 开始发起支付单推送
 	 * 
 	 * @param jsonList
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
 	 * @param errorList
 	 *            错误信息
 	 * @param recordMap
 	 *            商户备案信息
-	 * @param tok
-	 * @param totalCount
-	 *            总数
-	 * @param serialNo
-	 *            批次号
+	 * @param paramsMap
+	 *            缓存参数
 	 */
 	public final void startSendPaymentRecord(JSONArray jsonList, List<Map<String, Object>> errorList,
 			Map<String, Object> recordMap, Map<String, Object> paramsMap) {
 		String merchantId = paramsMap.get("merchantId") + "";
-		String merchantName = paramsMap.get("merchantName") + "";
 		String tok = paramsMap.get("tok") + "";
 		paramsMap.put("name", "paymentRecord");
 		Map<String, Object> param = new HashMap<>();
@@ -264,16 +259,6 @@ public class PaymentServiceImpl implements PaymentService {
 				List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
 				if (payList != null && !payList.isEmpty()) {
 					Mpay payInfo = payList.get(0);
-					/*
-					 * if (payInfo.getPay_record_status() == 2) { Map<String,
-					 * Object> errMap = new HashMap<>();
-					 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
-					 * "]正在备案中无需再次发起!"); errorList.add(errMap); continue; } else
-					 * if (payInfo.getPay_record_status() == 3) { Map<String,
-					 * Object> errMap = new HashMap<>();
-					 * errMap.put(BaseCode.MSG.toString(), "支付流水号[" + treadeNo +
-					 * "]已备案成功无需再次发起!"); errorList.add(errMap); continue; }
-					 */
 					Map<String, Object> paymentInfoMap = new HashMap<>();
 					paymentInfoMap.put("EntPayNo", payInfo.getTrade_no());
 					paymentInfoMap.put("PayStatus", payInfo.getPay_status());
@@ -290,31 +275,71 @@ public class PaymentServiceImpl implements PaymentService {
 							tok, recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
 					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + paymentMap.get(BaseCode.MSG.toString());
-						RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
+					}
+					//当未备案时进行手续费清算
+					if(payInfo.getPay_record_status() == 1){
+						// 支付单服务费清算
+						Map<String, Object> rePaymentTollMap = paymentToll(merchantId, payInfo.getTrade_no(),
+								payInfo.getPay_amount());
+						if (!"1".equals(rePaymentTollMap.get(BaseCode.STATUS.toString()))) {
+							String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentTollMap.get(BaseCode.MSG.toString());
+							RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+							continue;
+						}
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
 					// 更新服务器返回支付Id
 					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
 					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentMap2.get(BaseCode.MSG.toString());
-						RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
 				} else {
 					String msg = "支付流水号[" + treadeNo + "]查询支付单信息失败,请核实流水号!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
+					RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 					continue;
 				}
 				bufferUtils.writeRedis(errorList, paramsMap);
 				Thread.sleep(200);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error(Thread.currentThread().getName()+"-->>>>", e);
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList,ERROR, paramsMap);
+				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 			}
 		}
 		bufferUtils.writeCompletedRedis(errorList, paramsMap);
+	}
+
+	/**
+	 * 当支付单状态为未备案时,第一次推送后进行支付单服务费清算
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param tradeNo
+	 *            交易流水号
+	 * @param price
+	 *            金额
+	 * @return Map
+	 */
+	private Map<String, Object> paymentToll(String merchantId, String tradeNo, double price) {
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(tradeNo)
+				|| StringEmptyUtils.isEmpty(price)) {
+			return ReturnInfoUtils.errorInfo("清算订单服务费,请求参数不能为空！");
+		}
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchantId, merchant.getMerchantName(),
+				tradeNo, merchant.getAgentParentId(), price, merchant.getAgentParentName());
+		if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reUpdateWalletMap;
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	// 更新支付单返回信息
@@ -350,21 +375,14 @@ public class PaymentServiceImpl implements PaymentService {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("pay_serial_no", datasMap.get("messageID") + "");
-		paramMap.put("trade_no", datasMap.get("entPayNo") + "");
+		String entPayNo = datasMap.get("entPayNo") + "";
+		paramMap.put("trade_no", entPayNo);
 		String reMsg = datasMap.get("msg") + "";
 		List<Mpay> reList = paymentDao.findByPropertyOr2(Mpay.class, paramMap, 0, 0);
 		if (reList != null && reList.size() > 0) {
 			Mpay pay = reList.get(0);
-			paramMap.clear();
-			paramMap.put("merchantId", pay.getMerchant_no());
-			List<Merchant> reMerchantList = paymentDao.findByProperty(Merchant.class, paramMap, 1, 1);
-			Merchant merchant = null;
-			if (reMerchantList != null && !reMerchantList.isEmpty()) {
-				merchant = reMerchantList.get(0);
-			}
 			String status = datasMap.get("status") + "";
 			String note = pay.getPay_re_note();
 			if ("null".equals(note) || note == null) {
@@ -374,18 +392,11 @@ public class PaymentServiceImpl implements PaymentService {
 				// 已经返回过一次备案成功后
 				if (note.contains("保存成功") || note.contains("入库成功")
 						|| note.contains("新增申报成功") && pay.getPay_record_status() == 3) {
-					System.out.println("------重复申报成功拦截------");
+					System.out.println("------重复申报支付单成功拦截------");
 					return ReturnInfoUtils.successInfo();
 				}
 				// 支付单备案状态修改为成功
 				pay.setPay_record_status(3);
-				// 进行钱包扣款
-				Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchant.getMerchantId(),
-						merchant.getMerchantName(), pay.getTrade_no(), merchant.getAgentParentId(), pay.getPay_amount(),
-						merchant.getAgentParentName());
-				if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
-					return reUpdateWalletMap;
-				}
 			} else {
 				// 备案失败
 				if (reMsg.contains("旧报文数据") || reMsg.contains("支付数据已存在") || reMsg.contains("重复申报")) {
@@ -397,10 +408,8 @@ public class PaymentServiceImpl implements PaymentService {
 			pay.setPay_re_note(note + defaultDate + ":" + reMsg + ";");
 			return updatePaymentRecordInfo(pay);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo("支付单[" + entPayNo + "]为找到对应信息,请核对信息!");
 		}
-		return statusMap;
 	}
 
 	/**
@@ -717,7 +726,7 @@ public class PaymentServiceImpl implements PaymentService {
 			if (reTable == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 			} else if (!reTable.getRows().isEmpty()) {
-				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"), 0);
+				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable).getJSONArray("rows"));
 			} else {
 				return ReturnInfoUtils.errorInfo("暂无数据");
 			}
@@ -726,25 +735,25 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray,String managerName) {
+	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray, String managerName) {
 		if (jsonArray != null && !jsonArray.isEmpty()) {
 			Map<String, Object> params = new HashMap<>();
 			for (int i = 0; i < jsonArray.size(); i++) {
 				String tradeNo = jsonArray.get(i) + "";
 				params.put("trade_no", tradeNo);
-				List<Mpay>  reMpayList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
-				if(reMpayList == null){
-					return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]查询失败,服务器繁忙!");
-				}else if(!reMpayList.isEmpty()){
-					Mpay pay=  reMpayList.get(0);
+				List<Mpay> reMpayList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
+				if (reMpayList == null) {
+					return ReturnInfoUtils.errorInfo("支付流水号[" + tradeNo + "]查询失败,服务器繁忙!");
+				} else if (!reMpayList.isEmpty()) {
+					Mpay pay = reMpayList.get(0);
 					pay.setDel_flag(1);
 					pay.setUpdate_by(managerName);
 					pay.setUpdate_date(new Date());
-					if(!paymentDao.update(pay)){
-						return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]修改状态失败,服务器繁忙!");
+					if (!paymentDao.update(pay)) {
+						return ReturnInfoUtils.errorInfo("支付流水号[" + tradeNo + "]修改状态失败,服务器繁忙!");
 					}
-				}else{
-					return ReturnInfoUtils.errorInfo("支付流水号["+tradeNo+"]未找到对应的支付单信息!");
+				} else {
+					return ReturnInfoUtils.errorInfo("支付流水号[" + tradeNo + "]未找到对应的支付单信息!");
 				}
 			}
 			return ReturnInfoUtils.successInfo();

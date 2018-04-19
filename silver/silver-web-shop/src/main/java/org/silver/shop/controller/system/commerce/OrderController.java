@@ -75,7 +75,7 @@ public class OrderController {
 	}
 
 	/**
-	 * 备案网关异步回馈订单备案信息
+	 * 备案网关异步回馈订单备案状态
 	 * 
 	 * @param req
 	 * @param response
@@ -89,9 +89,8 @@ public class OrderController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		logger.info("-----备案网关异步回馈订单备案信息---");
 		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put("status", req.getParameter("status") + "");
+		datasMap.put(BaseCode.STATUS.toString(), req.getParameter(BaseCode.STATUS.toString()) + "");
 		datasMap.put("errMsg", req.getParameter("errMsg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		Map<String, Object> statusMap = orderTransaction.updateOrderRecordInfo(datasMap);
