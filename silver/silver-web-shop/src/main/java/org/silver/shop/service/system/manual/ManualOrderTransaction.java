@@ -516,7 +516,7 @@ public class ManualOrderTransaction {
 				params.put("type", "success");
 				excelBufferUtils.writeRedisMq(null, params);
 			} catch (Exception e) {
-				logger.error("--国宗订单导入错误---线程--->" + Thread.currentThread().getName(), e);
+				logger.error("--国宗订单导入错误--线程-->" + Thread.currentThread().getName(), e);
 				String msg = "【表格】第" + (r + 1) + "行-->数据不符合规范,请核对数据排序或格式是否正确!";
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);

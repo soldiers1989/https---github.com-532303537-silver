@@ -760,14 +760,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				statusMap.put(BaseCode.MSG.toString(), "异步更新备案商品信息错误!");
 				return paramMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return ReturnInfoUtils.successInfo();
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
 			return statusMap;
 		}
-		return statusMap;
 	}
 
 	private Map<String, Object> cloneGoodsDetail(GoodsRecordDetail goodsRecord, String goodsDetailId) {
@@ -1537,9 +1535,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		try {
 			jsonList = JSONArray.fromObject(goodsPack);
 		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "商品备案信息包错误,请核对!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品备案信息包格式错误,请核对!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> goodsMap = (Map<String, Object>) jsonList.get(i);
@@ -1559,9 +1555,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			paramMap.put("entGoodsNo", goodsMap.get("entGoodsNo"));
 			List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, paramMap, 1, 1);
 			if (reList == null) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("查询备案商品信息失败,服务器繁忙!");
 			} else if (!reList.isEmpty()) {
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reList.get(0);
 				String goodsId = goodsRecordInfo.getGoodsDetailId();
@@ -1570,9 +1564,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				List<GoodsContent> reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, paramMap, 1, 1);
 				if (reGoodsList != null && !reGoodsList.isEmpty()) {
 					GoodsContent goodsInfo = reGoodsList.get(0);
-
 					// if (status == 2) {
 					goodsRecordInfo.setRecordFlag(status);
+					
 					goodsRecordInfo.setStatus(2);
 					goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
 					goodsRecordInfo.setSpareGoodsFirstTypeId(goodsInfo.getGoodsFirstTypeId());
@@ -1628,14 +1622,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					}
 				}
 			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("商品自编号["+goodsMap.get("entGoodsNo")+"]为找到对应商品信息,请重试!");
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -1814,12 +1804,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 	@Override
 	public Map<String, Object> batchCreateRecordGoodsDetail(GoodsRecordDetail goodsRecordDetail) {
-		Map<String, Object> statusMap = new HashMap<>();
 		goodsRecordDetail.setCreateDate(new Date());
 		if (!goodsRecordDao.add(goodsRecordDetail)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "添加已备案商品详情失败!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品编号[" + goodsRecordDetail.getEntGoodsNo() + "]保存失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -1841,7 +1828,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return ReturnInfoUtils.errorInfo("商品自编号长度不能超过20或不能为空!");
 		}
 	}
-
 
 	@Override
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String merchantId, String merchantName,

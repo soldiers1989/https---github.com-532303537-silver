@@ -169,19 +169,12 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Override
 	public Map<String, Object> getShowGoodsBaseInfo(Map<String,Object> datasMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, page, size);
 		Table tCount = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, 0, 0);
 		if (t == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询商品信息失败,服务器繁忙!");
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(t));
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), tCount.getRows().size());
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(t), tCount.getRows().size());
 		}
 	}
 

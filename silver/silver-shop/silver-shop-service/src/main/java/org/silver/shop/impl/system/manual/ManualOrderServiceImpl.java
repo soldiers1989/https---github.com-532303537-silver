@@ -70,11 +70,12 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 * 下划线版订单Id
 	 */
 	private static final String ORDER_ID = "order_id";
-	
+
 	/**
 	 * 运单号
 	 */
 	private static final String WAYBILL = "waybill";
+
 	@Override
 	public void onMessage(Message message) {
 		TextMessage textmessage = (TextMessage) message;
@@ -143,7 +144,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			RedisInfoUtils.errorInfoMq("运单号[" + waybill + "]查询订单信息失败,服务器繁忙!", ERROR, params);
 		} else if (!ml.isEmpty()) {
 			Morder morder = ml.get(0);
-			checkExistedGuoZongOrder(morder, datas, params, orderTotalAmount,tax);
+			checkExistedGuoZongOrder(morder, datas, params, orderTotalAmount, tax);
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
@@ -213,18 +214,24 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 
 	/**
 	 * 校验国宗已存在的订单信息
-	 * @param morder 订单信息实体类
-	 * @param goodsInfo 商品信息
-	 * @param params 缓存参数
-	 * @param orderTotalAmount 订单商品总金额
-	 * @param tax 税费
+	 * 
+	 * @param morder
+	 *            订单信息实体类
+	 * @param goodsInfo
+	 *            商品信息
+	 * @param params
+	 *            缓存参数
+	 * @param orderTotalAmount
+	 *            订单商品总金额
+	 * @param tax
+	 *            税费
 	 */
 	private void checkExistedGuoZongOrder(Morder morder, JSONObject goodsInfo, Map<String, Object> params,
 			Double orderTotalAmount, Double tax) {
 		// 删除标识0-未删除,1-已删除
 		if (morder.getDel_flag() == 1) {
 			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
-		}else{
+		} else {
 			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, goodsInfo, orderTotalAmount, tax, 1);
 			if ("10".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {// 当遇到超额时
 				RedisInfoUtils.errorInfoMq(reCheckMap.get("msg") + "", "orderExcess", params);
@@ -594,18 +601,28 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 
 	/**
 	 * 启邦创建订单时,当订单已存在则进行业务处理
-	 * @param morder 订单实体类
-	 * @param datas 订单信息
-	 * @param params 缓存参数信息
-	 * @param orderTotalAmount 订单商品总金额
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
+	 * 
+	 * @param morder
+	 *            订单实体类
+	 * @param datas
+	 *            订单信息
+	 * @param params
+	 *            缓存参数信息
+	 * @param orderTotalAmount
+	 *            订单商品总金额
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
 	 */
-	private void checkExistedQiBangOrder(Morder morder, JSONObject datas, Map<String, Object> params, double orderTotalAmount,
-			String merchantId, String merchantName) {
+	private void checkExistedQiBangOrder(Morder morder, JSONObject datas, Map<String, Object> params,
+			double orderTotalAmount, String merchantId, String merchantName) {
 		// 删除标识0-未删除,1-已删除
 		if (morder.getDel_flag() == 1) {
 			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
+		} else if (morder.getOrder_record_status() == 3) {// 备案状态：1-未备案,2-备案中,3-备案成功,4-备案失败
+			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单在[" + morder.getCreate_date() + "]已经备案成功,请勿重复导入!",
+					ERROR, params);
 		} else {
 			// 企邦的税费暂写死为0
 			Map<String, Object> reCheckMap = judgmentOrderInfo(morder, datas, orderTotalAmount, 0.0, 2);
@@ -627,14 +644,19 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			}
 			// 注册会员账号信息
 			memberServiceImpl.registerMember(morder);
+
 		}
 	}
 
 	/**
 	 * 准备开始创建启邦订单商品信息,根据商品自编号+平台号查询商品备案信息
-	 * @param merchantId 商户Id
-	 * @param item 商品信息
-	 * @param merchantName 商户名称
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param item
+	 *            商品信息
+	 * @param merchantName
+	 *            商户名称
 	 * @return Map
 	 */
 	public Map<String, Object> createQBOrderSub(String merchantId, JSONObject item, String merchantName) {

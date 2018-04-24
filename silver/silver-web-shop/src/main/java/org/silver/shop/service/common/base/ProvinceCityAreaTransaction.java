@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
@@ -14,6 +15,7 @@ import org.silver.shop.model.common.base.Area;
 import org.silver.shop.model.common.base.City;
 import org.silver.shop.model.common.base.Province;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,7 @@ import net.sf.json.JSONObject;
  */
 @Service("provinceCityAreaTransaction")
 public class ProvinceCityAreaTransaction {
-
+	private static Logger logger = Logger.getLogger(ProvinceCityAreaTransaction.class);
 	@Reference
 	private ProvinceCityAreaService provinceCityAreaService;
 
@@ -60,23 +62,24 @@ public class ProvinceCityAreaTransaction {
 	 * @return
 	 */
 	public Object getProvinceCityArea() {
-		Map<String, Object> datasMap = new HashMap<>();
 		Map<String, Object> province = null;
 		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
 		if (redisByte != null) {
 			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(province));
-			return datasMap;
+			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(province));
 		} else {
-			datasMap = provinceCityAreaService.getProvinceCityArea2();
-			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-			if ("1".equals(status)) {
-				return datasMap;
+			try{
+				Map<String, Object> datasMap = provinceCityAreaService.getProvinceCityArea2();
+				String status = datasMap.get(BaseCode.STATUS.toString()) + "";
+				if ("1".equals(status)) {
+					return datasMap;
+				}
+			}catch (Exception e) {
+				logger.error(Thread.currentThread().getName()+"-查询省市区信息->",e);
+				return ReturnInfoUtils.errorInfo("查询省市区失败,服务器繁忙!！");
 			}
+			return ReturnInfoUtils.errorInfo("查询省市区失败！");
 		}
-		return datasMap;
 	}
 
 	public Object editProvinceCityAreaInfo(HttpServletRequest req, int flag) {

@@ -354,7 +354,7 @@ public class IdcardValidator {
         // 15位身份证  
 //        System.out.println(isValidatedAllIdcard(idcard15));  
         // 18位身份证  
-        System.out.println(validate18Idcard("342101200011020226"));  
+        System.out.println(validate18Idcard("430981199304273018"));  
         // 15位身份证转18位身份证  
 //        System.out.println(convertIdcarBy15bit(idcard15));  
     }  

@@ -23,7 +23,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
- * 权限
+ * 权限Controller
  */
 @Controller
 @RequestMapping("/authority")

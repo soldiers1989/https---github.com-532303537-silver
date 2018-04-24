@@ -1,33 +1,32 @@
 package org.silver.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 
-
 /**
  * 通用信息返回工具类
- *
  */
 public class ReturnInfoUtils {
 
 	/**
-	 * 错误返回信息
+	 * 错误返回信息,注：该信息为单挑错误信息返回,并且错误信息在msg键中
 	 * 
-	 * @param msg
+	 * @param message
 	 *            提示信息
 	 * @return Map
 	 */
-	public static final Map<String, Object> errorInfo(String msg) {
-		if (StringEmptyUtils.isEmpty(msg)) {
+	public static final Map<String, Object> errorInfo(String message) {
+		if (StringEmptyUtils.isEmpty(message)) {
 			return null;
 		}
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), msg);
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		map.put(BaseCode.MSG.toString(), message);
+		return map;
 	}
 
 	/**
@@ -36,16 +35,16 @@ public class ReturnInfoUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> successInfo() {
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		return map;
 	}
 
 	/**
-	 * 返回成功信息,并带Data数据与总数
+	 * 返回成功信息,带Datas数据与总数
 	 * 
-	 * @param Datas
+	 * @param datas
 	 *            返回参数
 	 * @param count
 	 *            总数
@@ -55,29 +54,47 @@ public class ReturnInfoUtils {
 		if (datas == null || count < 0) {
 			return null;
 		}
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.DATAS.toString(), datas);
-		statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		map.put(BaseCode.DATAS.toString(), datas);
+		map.put(BaseCode.TOTALCOUNT.toString(), count);
+		return map;
 	}
-	
+
 	/**
 	 * 返回成功信息,单带Data数据
 	 * 
-	 * @param Datas
+	 * @param datas
 	 *            返回参数
 	 * @return Map
 	 */
 	public static final Map<String, Object> successDataInfo(Object datas) {
-		if (datas == null ) {
+		if (datas == null) {
 			return null;
 		}
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.DATAS.toString(), datas);
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		map.put(BaseCode.DATAS.toString(), datas);
+		return map;
+	}
+
+	/**
+	 * 多个错误信息返回工具类,注：通过List集合存放Map(错误信息)返回,并且错误信息在ERROR键中
+	 * 
+	 * @param errorList
+	 *			错误信息集合 
+	 * @return Map 
+	 */
+	public static final Map<String, Object> errorInfo(List<Map<String, Object>> errorList) {
+		if (errorList == null || errorList.isEmpty()) {
+			return null;
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.UNKNOWN.getMsg());
+		map.put(BaseCode.ERROR.toString(), errorList);
+		return map;
 	}
 }

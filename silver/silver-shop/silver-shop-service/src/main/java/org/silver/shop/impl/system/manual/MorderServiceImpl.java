@@ -37,6 +37,7 @@ import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CopyUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -69,7 +70,7 @@ public class MorderServiceImpl implements MorderService {
 	private static final String FCODE = "142";
 
 	private static final Object LOCK = "lock";
-	
+
 	@Override
 	public boolean saveRecord(String merchant_no, String[] head, int body_length, String[][] body) {
 		Date d = new Date();
@@ -954,6 +955,7 @@ public class MorderServiceImpl implements MorderService {
 	 * @param strArr
 	 *            修改信息
 	 * @param merchantName
+	 *            商户名称
 	 * @return Map
 	 */
 	private Map<String, Object> editMorderInfo(Morder order, String[] strArr, String merchantName) {
@@ -974,8 +976,10 @@ public class MorderServiceImpl implements MorderService {
 		order.setTax(tax);
 		order.setActualAmountPaid(totalprice + tax);
 		order.setRecipientName(strArr[5]);
-
 		order.setRecipientID(strArr[6]);
+		if (!IdcardValidator.validate18Idcard(strArr[6])) {
+			return ReturnInfoUtils.errorInfo("收货人身份证号错误,请核对信息!");
+		}
 		order.setRecipientTel(strArr[7]);
 		order.setRecipientProvincesName(strArr[8]);
 		order.setRecipientProvincesCode(strArr[9]);
@@ -984,6 +988,9 @@ public class MorderServiceImpl implements MorderService {
 		order.setRecipientAreaName(strArr[12]);
 		order.setRecipientAreaCode(strArr[13]);
 		order.setRecipientAddr(strArr[14]);
+		if (!IdcardValidator.validate18Idcard(strArr[15])) {
+			return ReturnInfoUtils.errorInfo("下单人身份证号,请核对信息!");
+		}
 		order.setOrderDocId(strArr[15]);
 		order.setOrderDocName(strArr[16]);
 		order.setOrderDocType(strArr[17]);

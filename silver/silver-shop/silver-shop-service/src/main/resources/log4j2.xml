@@ -2,12 +2,13 @@
 <configuration status="off">
 	<properties>
 		<!-- <property name="LOG_HOME">/opt/logs/</property> -->
-		<property name="LOG_HOME">D:\work\output\silver-service-shop\logs</property>
+		<!-- <property name="LOG_HOME">D:\work\output\silver-service-shop\logs</property> -->
+		<property name="LOG_HOME">/logs/silver-web-shop/</property>
 		<!-- 日志备份目录 -->
 		<property name="BACKUP_HOME">backup</property>
 		<property name="SERVER_NAME">silver-service-shop</property>
-		<property name="EVERY_FILE_SIZE">5M</property><!-- 日志切割的最小单位 -->
-		<property name="OUTPUT_LOG_LEVEL">DEBUG</property><!-- 日志输出级别 -->
+		<property name="EVERY_FILE_SIZE">10M</property><!-- 日志切割的最小单位 -->
+		<property name="OUTPUT_LOG_LEVEL">ERROR</property><!-- 日志输出级别 -->
 	</properties>
 	<appenders>
 		<Console name="Console" target="SYSTEM_OUT">
@@ -31,7 +32,7 @@
 		<RollingFile name="RollingFileError"
 			fileName="${LOG_HOME}/dev_${SERVER_NAME}_error.log"
 			filePattern="${LOG_HOME}/dev_${BACKUP_HOME}/dev_${SERVER_NAME}_error.%d{yyyy-MM-dd-HH}.log">
-			<PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} [%thread] %level [%C{36}.%M:%L] - %msg%xEx%n" />
+			<PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} [%thread] %level [%C{36}.%M:%L] - %msg%n%xEx%n" />
 			<Policies>  
                 <SizeBasedTriggeringPolicy size="${EVERY_FILE_SIZE}" />
                 <TimeBasedTriggeringPolicy interval="1" modulate="true" />

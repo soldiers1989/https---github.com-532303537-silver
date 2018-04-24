@@ -96,5 +96,12 @@
 		<property name="readingCount" type="int">
 			<column name="readingCount" />
 		</property>
+
+		<property name="sellDate" type="java.util.Date">
+			<column name="sellDate" />
+		</property>
+		<property name="dropOffDate" type="java.util.Date">
+			<column name="dropOffDate" />
+		</property>
 	</class>
 </hibernate-mapping>

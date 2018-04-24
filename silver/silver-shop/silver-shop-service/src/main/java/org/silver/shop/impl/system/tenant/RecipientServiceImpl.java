@@ -14,6 +14,7 @@ import org.silver.shop.api.system.tenant.RecipientService;
 import org.silver.shop.dao.system.tenant.RecipientDao;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.util.CheckDatasUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -127,11 +128,8 @@ public class RecipientServiceImpl implements RecipientService {
 		params.put("memberId", memberId);
 		params.put("memberName", memberName);
 		List<Object> reLsit = recipientDao.findByProperty(RecipientContent.class, params, 0, 0);
-		if (reLsit != null && reLsit.size() > 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), reLsit);
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
+		if (reLsit != null && !reLsit.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reLsit);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());

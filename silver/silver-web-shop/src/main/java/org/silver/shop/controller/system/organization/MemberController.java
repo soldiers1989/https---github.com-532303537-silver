@@ -2,9 +2,7 @@ package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,15 +19,12 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
-import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
-import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
-import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,8 +33,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.xml.sax.SAXException;
-
-import com.alibaba.dubbo.container.Main;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
@@ -120,16 +113,13 @@ public class MemberController {
 			customizedToken.setRememberMe(false);
 			try {
 				currentUser.login(customizedToken);
-				statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
-				statusMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} catch (IncorrectCredentialsException ice) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
-				statusMap.put(BaseCode.MSG.getBaseCode(), "账号不存在或密码错误");
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("账号不存在或密码错误!")).toString();
 			} catch (LockedAccountException lae) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
 				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");
 			} catch (AuthenticationException ae) {
-				System.out.println(ae.getMessage());
 				ae.printStackTrace();
 			}
 		}
@@ -146,8 +136,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.getMemberInfo();
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(memberTransaction.getMemberInfo()).toString();
 	}
 
 	/**
@@ -170,7 +159,6 @@ public class MemberController {
 		if (memberInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "用户已登陆！");
-
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
@@ -247,23 +235,26 @@ public class MemberController {
 	}
 
 	/**
-	 * 检查用户账号名是否重复
+	 * 检查用户注册信息是否重复
 	 * 
-	 * @param account
-	 *            用户账号
+	 * @param datas
+	 *            参数
+	 * @param type
+	 *            类型：memberName(用户名称),memberTel(手机号码),memberIdCard(身份证号)
 	 * @return Map
 	 */
-	@RequestMapping(value = "/checkMemberName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/checkRegisterInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String checkMemberName(@RequestParam("account") String account, HttpServletRequest req,
-			HttpServletResponse response) {
+	public String checkRegisterInfo(String datas, String type, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.checkMerchantName(account);
-		return JSONObject.fromObject(statusMap).toString();
+		if (StringEmptyUtils.isEmpty(type) || StringEmptyUtils.isEmpty(datas)) {
+			return JSONObject.fromObject("请求参数不能为空!").toString();
+		}
+		return JSONObject.fromObject(memberTransaction.checkRegisterInfo(datas, type)).toString();
 	}
 
 	/**
@@ -294,7 +285,7 @@ public class MemberController {
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
 				json.put("time", new Date().getTime());
 				json.put("code", code);
-				System.out.println("-------->>>>>" + code);
+				System.out.println("----注册验证码--->>" + code);
 				// 将查询出来的省市区放入到redis缓存中
 				JedisUtil.setListDatas("Shop_Key_MemberRegisterCode_" + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
@@ -333,23 +324,39 @@ public class MemberController {
 		return JSONObject.fromObject(memberTransaction.batchRegisterMember(jsonArr)).toString();
 	}
 	
+	@RequestMapping(value = "/realName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "会员实名认证")
+	@RequiresRoles("Member")
+	public String realName(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
+		}
+		return JSONObject.fromObject(memberTransaction.realName(memberId)).toString();
+	}
+
 	public static void main(String[] args) {
 		JSONArray json = new JSONArray();
 		json.add("SO1804090221615624039");
 		json.add("SO1804090221615498001");
-		
+
 		json.add("SO1804080221614764603");
 		json.add("SO1804080221614651882");
 		json.add("SO1804080221614823124");
 		json.add("SO1804080221614702206");
-		
+
 		json.add("SO1804080221614819380");
 		json.add("SO1804090221615480207");
 		json.add("SO1804090221615609255");
 		json.add("SO1804080221615010168");
 		json.add("SO1804080221614702062");
-		
-		
+
 		json.add("SO1804080221614756808");
 		json.add("SO1804090221615589555");
 		json.add("SO1804080221614715999");

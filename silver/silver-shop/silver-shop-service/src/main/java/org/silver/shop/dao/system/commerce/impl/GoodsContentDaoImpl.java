@@ -24,41 +24,25 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 		return super.findLastId(GoodsContent.class);
 	}
 
-
 	@Override
 	public Table getAlreadyRecordGoodsBaseInfo(Map<String, Object> datasMap, int page, int size) {
 		Session session = null;
-		String queryString = null;
+		StringBuilder queryString = new StringBuilder();
 		Connection conn = null;
-		String goodsName = datasMap.get("goodsName")+"";
 		try {
-			queryString = "SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice  from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2"
-					+ " on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ";
+			queryString
+					.append("SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice,t2.doneCount AS doneCount from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2 "
+							+ "	 on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ");
 			List<Object> sqlParams = new ArrayList<>();
-			if (StringEmptyUtils.isNotEmpty(datasMap.get("thirdType"))) {
-				int thirdType = Integer.parseInt(datasMap.get("thirdType") + "");
-				sqlParams.add(thirdType);
-				queryString += "  and t1.spareGoodsThirdTypeId = ? ";
-			} else if (StringEmptyUtils.isNotEmpty(datasMap.get("secndType"))) {
-				int secndType = Integer.parseInt(datasMap.get("secndType") + "");
-				sqlParams.add(secndType);
-				queryString += "  and t1.spareGoodsSecondTypeId = ? ";
-			} else if (StringEmptyUtils.isNotEmpty(datasMap.get("firstType"))) {
-				int firstType = Integer.parseInt(datasMap.get("firstType") + "");
-				sqlParams.add(firstType);
-				queryString = queryString + " and t1.spareGoodsFirstTypeId = ? ";
-			}
-			if(StringEmptyUtils.isNotEmpty(goodsName)){
-				sqlParams.add("%"+goodsName+"%");
-				queryString = queryString + " and t1.spareGoodsName LIKE  ? ";
-			}
+			appendSort(datasMap, queryString, sqlParams);
 			session = getSession();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
-				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, page * size, size);
+				l = DataUtils.queryData(session.connection(), queryString.toString(), sqlParams, null, page * size,
+						size);
 			} else {
-				l = DataUtils.queryData(session.connection(), queryString, sqlParams, null, null, null);
+				l = DataUtils.queryData(session.connection(), queryString.toString(), sqlParams, null, null, null);
 			}
 			session.connection().close();
 			session.close();
@@ -77,6 +61,60 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 					}
 				}
 				session.close();
+			}
+		}
+	}
+
+	/**
+	 * 拼接sql条件过滤字段
+	 * 
+	 * @param datasMap
+	 *            参数
+	 * @param queryString
+	 *            sql语句
+	 * @param sqlParams
+	 *            参数
+	 */
+	private void appendSort(Map<String, Object> datasMap, StringBuilder queryString, List<Object> sqlParams) {
+		String goodsName = datasMap.get("goodsName") + "";
+		if (StringEmptyUtils.isNotEmpty(goodsName)) {
+			sqlParams.add("%" + goodsName + "%");
+			queryString.append(" and t1.spareGoodsName LIKE  ? ");
+		}
+		if (StringEmptyUtils.isNotEmpty(datasMap.get("thirdType"))) {
+			int thirdType = Integer.parseInt(datasMap.get("thirdType") + "");
+			sqlParams.add(thirdType);
+			queryString.append("  and t1.spareGoodsThirdTypeId = ? ");
+		} else if (StringEmptyUtils.isNotEmpty(datasMap.get("secndType"))) {
+			int secndType = Integer.parseInt(datasMap.get("secndType") + "");
+			sqlParams.add(secndType);
+			queryString.append("  and t1.spareGoodsSecondTypeId = ? ");
+		} else if (StringEmptyUtils.isNotEmpty(datasMap.get("firstType"))) {
+			int firstType = Integer.parseInt(datasMap.get("firstType") + "");
+			sqlParams.add(firstType);
+			queryString.append(" and t1.spareGoodsFirstTypeId = ? ");
+		}
+		if (StringEmptyUtils.isNotEmpty(datasMap.get("sortType"))) {
+			String orderBy = "";
+			switch (datasMap.get("sortType") + "") {
+			case "doneCount":
+				orderBy = datasMap.get("orderBy") + "";
+				if("ASC".equals(orderBy)){
+					queryString.append(" ORDER BY doneCount ASC ");
+				}else if("DESC".equals(orderBy)){
+					queryString.append(" ORDER BY doneCount DESC ");
+				}
+				break;
+			case "sellPrice":
+				orderBy = datasMap.get("orderBy") + "";
+				if("ASC".equals(orderBy)){
+					queryString.append(" ORDER BY sellPrice ASC ");
+				}else if("DESC".equals(orderBy)){
+					queryString.append(" ORDER BY sellPrice DESC ");
+				}
+				break;
+			default:
+				break;
 			}
 		}
 	}

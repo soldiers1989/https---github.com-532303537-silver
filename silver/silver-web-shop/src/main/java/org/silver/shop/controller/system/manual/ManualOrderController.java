@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -22,11 +25,10 @@ import net.sf.json.JSONObject;
 @Controller
 @RequestMapping("/manualOrder")
 public class ManualOrderController {
-	
+
 	@Autowired
 	private ManualOrderTransaction manualOrderTransaction;
-	
-	
+
 	/**
 	 * excel批量导入手工订单 暂只支持有国宗、企邦(将作为对外统一模板)
 	 * 
@@ -45,5 +47,18 @@ public class ManualOrderController {
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> reqMap = manualOrderTransaction.excelImportOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
+	}
+
+	private static Logger logger2 = LogManager.getLogger("-aaa-a----a-a--");
+
+	public static void main(String[] args) {
+		JSONArray json = null;
+		try {
+			json.size();
+		} catch (Exception e) {
+			logger2.error("json错误！", e);
+			// logger.debug("Hello World!");
+			// e.printStackTrace();
+		}
 	}
 }

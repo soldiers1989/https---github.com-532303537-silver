@@ -16,7 +16,7 @@ public class OrderImplLogs implements Serializable {
 
 	private long id;
 
-	private String action; // 动作orderPush orderRecord paymentIn paymentRecord
+	private String action; // 动作:orderImport(手工订单导入),orderRecord(推送订单备案),paymentRecord(推送支付单备案),createPaymentId(生成支付单流水号)
 
 	private String note; // 操作说明
 

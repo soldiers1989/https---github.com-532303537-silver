@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
@@ -18,10 +19,15 @@ import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.util.DateUtil;
+import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
 import org.silver.util.PinyinUtil;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SerialNoUtils;
+import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
+import org.silver.util.YmMallOauth;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -60,9 +66,7 @@ public class MemberServiceImpl implements MemberService {
 		// 用户实名1-未实名,2-已实名
 		member.setMemberRealName(1);
 		if (!memberDao.add(member)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
 		// 创建用户钱包
 		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, account);
@@ -71,29 +75,41 @@ public class MemberServiceImpl implements MemberService {
 			statusMap.put(BaseCode.MSG.toString(), "用户创建钱包失败!");
 			return statusMap;
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
-	public List<Object> findMemberBy(String account) {
+	public List<Member> findMemberBy(String account) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberName", account);
-		return memberDao.findByProperty(Member.class, params, 0, 0);
+		List<Member> reMemberList = memberDao.findByProperty(Member.class, params, 0, 0);
+		if (reMemberList != null && !reMemberList.isEmpty()) {
+			return reMemberList;
+		} else {
+			params.clear();
+			params.put("memberTel", account);
+			List<Member> reMemberList2 = memberDao.findByProperty(Member.class, params, 0, 0);
+			if (reMemberList2 != null && !reMemberList2.isEmpty()) {
+				return reMemberList2;
+			}
+			params.clear();
+			params.put("memberIdCard", account);
+			List<Member> reMemberList3 = memberDao.findByProperty(Member.class, params, 0, 0);
+			if (reMemberList3 != null && !reMemberList3.isEmpty()) {
+				return reMemberList3;
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public Map<String, Object> createMemberId() {
-		Map<String, Object> datasMap = new HashMap<>();
 		synchronized (LOCK) {
 			//
 			long memberIdCount = memberDao.findLastId();
 			// 当返回-1时,则查询数据库失败
 			if (memberIdCount < 0) {
-				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-				return datasMap;
+				return ReturnInfoUtils.errorInfo("查询自增Id失败,服务器繁忙！");
 			}
 			// 得出的总数上+1
 			long count = memberIdCount + 1;
@@ -104,30 +120,23 @@ public class MemberServiceImpl implements MemberService {
 			}
 			// 生成用户ID
 			memberId = "Member_" + memberId;
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			datasMap.put(BaseCode.DATAS.getBaseCode(), memberId);
-			return datasMap;
+			return ReturnInfoUtils.successDataInfo(memberId);
 		}
 	}
 
 	@Override
-	public Map<String, Object> getMemberInfo(String memberId, String memberName) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public Map<String, Object> getMemberInfo(String memberId) {
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
-		params.put("memberName", memberName);
-		List<Object> reList = memberDao.findByProperty(Member.class, params, 1, 1);
-		if (reList != null && reList.size() > 0) {
-			Member member = (Member) reList.get(0);
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), member);
-			return statusMap;
+		List<Member> reList = memberDao.findByProperty(Member.class, params, 1, 1);
+		if (reList != null && !reList.isEmpty()) {
+			Member member = reList.get(0);
+			return ReturnInfoUtils.successDataInfo(member);
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "用戶不存在！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("未找到用户信息!");
 		}
 	}
 
@@ -177,9 +186,7 @@ public class MemberServiceImpl implements MemberService {
 				return statusMap;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -192,31 +199,83 @@ public class MemberServiceImpl implements MemberService {
 			return statusMap;
 		}
 		MemberWalletContent wallet = (MemberWalletContent) reMap.get(BaseCode.DATAS.toString());
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.DATAS.toString(), wallet);
-		return statusMap;
-
+		return ReturnInfoUtils.successDataInfo(wallet);
 	}
 
 	@Override
-	public Map<String, Object> checkMerchantName(String account) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public Map<String, Object> checkRegisterInfo(String datas, String type) {
+		if (StringEmptyUtils.isEmpty(datas) || StringEmptyUtils.isEmpty(type)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		switch (type) {
+		case "memberName":
+			return checkMemberNameExist(datas);
+		case "memberTel":
+			return checkMemberMobileExist(datas);
+		case "memberIdCard":
+			return checkMemberIdCardExist(datas);
+		default:
+			return ReturnInfoUtils.errorInfo("类型错误,请重新输入!");
+		}
+	}
+
+	/**
+	 * 校验用户身份证号码是否已存在
+	 * 
+	 * @param memberIdCard
+	 *            身份证号码
+	 * @return Map
+	 */
+	private Map<String, Object> checkMemberIdCardExist(String memberIdCard) {
 		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("memberName", account);
-		List<Object> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
+		paramMap.put("memberIdCard", memberIdCard);
+		List<Member> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (reList.size() == 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "用户名可以使用!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("身份证已注册,请重新输入!");
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "用户名已存在!");
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
+		}
+	}
+
+	/**
+	 * 校验用户手机号码是否已存在
+	 * 
+	 * @param memberTel
+	 *            手机号码
+	 * @return Map
+	 */
+	private Map<String, Object> checkMemberMobileExist(String memberTel) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("memberTel", memberTel);
+		List<Member> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("手机号码已存在,请重新输入!");
+		} else {
+			return ReturnInfoUtils.successInfo();
+		}
+	}
+
+	/**
+	 * 校验用户名称是否已存在
+	 * 
+	 * @param memberName
+	 *            用户名称
+	 * @return Map
+	 */
+	private Map<String, Object> checkMemberNameExist(String memberName) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("memberName", memberName);
+		List<Member> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("用户名已存在,请重新输入!");
+		} else {
+			return ReturnInfoUtils.successInfo();
 		}
 	}
 
@@ -237,6 +296,7 @@ public class MemberServiceImpl implements MemberService {
 				errorList.add("订单[" + orderId + "]查询失败,服务器繁忙!");
 			} else if (!reList.isEmpty()) {
 				Morder order = reList.get(0);
+				// 只有当订单状态为备案成功时才创建用户账号
 				if (order.getOrder_record_status() == 3) {
 					Map<String, Object> reMemberMap = registerMember(order);
 					if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
@@ -366,8 +426,44 @@ public class MemberServiceImpl implements MemberService {
 		}
 	}
 
-	public static void main(String[] args) {
-		System.out.println(PinyinUtil.getPinYin("周婷婷"));
-		System.out.println(PinyinUtil.getPinYinHeadChar("何德志"));
+	@Override
+	public Map<String, Object> realName(String memberId) {
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String, Object> reMemberMap = getMemberInfo(memberId);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
+		if(member.getMemberRealName() ==2){
+			return ReturnInfoUtils.errorInfo("用户已实名认证,无需重复认证!");
+		}
+		if (!StringUtil.isContainChinese(member.getMemberIdCardName())) {
+			return ReturnInfoUtils.errorInfo("错误,姓名必须为中文!");
+		}
+		if (!IdcardValidator.validate18Idcard(member.getMemberIdCard())) {
+			return ReturnInfoUtils.errorInfo("身份证号码错误!");
+		}
+		YmMallOauth oau = new YmMallOauth();
+		Calendar calendar = Calendar.getInstance();
+		String termTransID = SerialNoUtils.getSerialNo("YMID", calendar.get(Calendar.YEAR),
+				SerialNoUtils.getRedisIdCount("realName"));
+		Map<String, Object> reOauthMap = oau.oauthInfo(termTransID, "YS02", "", member.getMemberIdCardName(),
+				member.getMemberIdCard(), "", "");
+		if (!"1".equals(reOauthMap.get(BaseCode.STATUS.toString()))) {
+			return reOauthMap;
+		}
+		return updateMemberInfo(member);
+	}
+
+	private Map<String, Object> updateMemberInfo(Member member) {
+		member.setMemberRealName(2);
+		member.setUpdateDate(new Date());
+		member.setUpdateBy("system");
+		if (!memberDao.update(member)) {
+			return ReturnInfoUtils.errorInfo("实名认证状态更新失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

@@ -12,6 +12,8 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -108,7 +110,6 @@ public class GoodsRecordController {
 	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
-		logger.info("-----备案网关异步回馈备案商品信息---");
 		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(req);
 		return JSONObject.fromObject(statusMap).toString();
 	}
@@ -250,14 +251,10 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (goodsPack != null) {
-			statusMap = goodsRecordTransaction.editGoodsRecordStatus(goodsPack);
-			return JSONObject.fromObject(statusMap).toString();
+		if (StringEmptyUtils.isNotEmpty(goodsPack)) {
+			return JSONObject.fromObject(goodsRecordTransaction.editGoodsRecordStatus(goodsPack)).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品信息包不能为空,请核对信息!")).toString();
 		}
 	}
 
@@ -309,8 +306,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.batchAddRecordGoodsInfo(req);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.batchAddRecordGoodsInfo(req)).toString();
 	}
 
 	@RequestMapping(value = "/managerGetGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

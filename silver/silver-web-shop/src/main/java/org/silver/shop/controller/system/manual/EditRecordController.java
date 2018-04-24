@@ -12,18 +12,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.authz.annotation.Logical;
-import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -40,7 +37,6 @@ import net.sf.json.JSONObject;
 public class EditRecordController {
 
 	private static Logger logger = Logger.getLogger(EditRecordController.class);
-
 	@Autowired
 	private ManualService manualService;
 
@@ -102,7 +98,7 @@ public class EditRecordController {
 	 */
 	@RequestMapping(value = "/loadMorderDatas", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
-	//@RequiresPermissions("loadMorderDatas")
+	// @RequiresPermissions("loadMorderDatas")
 	public String loadMorderDatas(HttpServletResponse resp, HttpServletRequest req, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -641,4 +637,16 @@ public class EditRecordController {
 		return "";
 	}
 
+	public static void main(String[] args) {
+		//Logger logger2 = LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
+		JSONArray json = null;
+		try {
+			json.size();
+
+		} catch (Exception e) {
+			logger.error("json错误！", e);
+			// logger.debug("Hello World!");
+			// e.printStackTrace();
+		}
+	}
 }

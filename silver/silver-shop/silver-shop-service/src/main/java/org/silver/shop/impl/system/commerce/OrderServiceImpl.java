@@ -3,16 +3,12 @@ package org.silver.shop.impl.system.commerce;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CountryService;
@@ -41,7 +37,6 @@ import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.OldManualOrder;
 import org.silver.shop.model.system.manual.OldManualOrderSub;
-import org.silver.shop.model.system.manual.YMorder;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
@@ -58,7 +53,6 @@ import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alibaba.dubbo.common.json.JSON;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
@@ -88,16 +82,12 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
 			String recipientId) {
-		Map<String, Object> statusMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
 			logger.error("用户提交订单传递参数格式错误!", e);
-			e.printStackTrace();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("用户提交订单传递参数格式错误!");
 		}
 		// 校验前台传递的收货人ID查询信息
 		Map<String, Object> reRecMap = checkRecipient(recipientId);
@@ -234,8 +224,18 @@ public class OrderServiceImpl implements OrderService {
 		return statusMap;
 	}
 
-	// 创建订单头信息
-	private final Map<String, Object> createOrderHeadInfo(String memberId, String memberName, String orderId, int count,
+	/**
+	 *  创建订单头信息
+	 * @param memberId 用户Id
+	 * @param memberName 用户名称
+	 * @param orderId 订单Id
+	 * @param stock 商品库存实体类
+	 * @param entOrderNo 订单Id
+	 * @param recInfo 收货人信息实体类
+	 * @param feeMap 费率信息Map
+	 * @return Map
+	 */
+	private final Map<String, Object> createOrderHeadInfo(String memberId, String memberName, String orderId,
 			StockContent stock, String entOrderNo, RecipientContent recInfo, Map<String, Object> feeMap) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -343,8 +343,7 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.MSG.toString(), "修改 " + stock.getGoodsName() + "上架数量失败,请重试！");
 			return statusMap;
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -361,7 +360,7 @@ public class OrderServiceImpl implements OrderService {
 	 *            海关订单编号
 	 * @param memberName
 	 *            用户名称
-	 * @return Nao
+	 * @return Map
 	 */
 	private Map<String, Object> liquidation(String memberId, int type, List jsonList, double totalPrice,
 			String reEntOrderNo, String memberName) {
@@ -421,7 +420,7 @@ public class OrderServiceImpl implements OrderService {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				//订单备案状态修改为成功
+				// 订单备案状态修改为成功
 				order.setOrderRecordStatus(2);
 			} else {
 				order.setOrderRecordStatus(3);
@@ -548,7 +547,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 			return reGoodsMap;
 		} else {
-			Map<String, Object> reMap = createOrderHeadInfo(memberId, memberName, newOrderId, count, stock, entOrderNo,
+			Map<String, Object> reMap = createOrderHeadInfo(memberId, memberName, newOrderId, stock, entOrderNo,
 					recInfo, feeMap);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
@@ -564,7 +563,6 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
-		Map<String, Object> statusMap = new HashMap<>();
 		List<Object> cacheList = new ArrayList<>();
 		Map<String, Object> param = new HashMap<>();
 		JSONArray jsonList = null;
@@ -579,28 +577,23 @@ public class OrderServiceImpl implements OrderService {
 			param.clear();
 			param.put("entGoodsNo", entGoodsNo);
 			List<Object> reGoodsRecordDetailList = orderDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);
-			if (reGoodsRecordDetailList != null && reGoodsRecordDetailList.size() > 0) {
+			if (reGoodsRecordDetailList != null && !reGoodsRecordDetailList.isEmpty()) {
 				GoodsRecordDetail goodsInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(0);
 				param.clear();
 				param.put("goodsSerialNo", goodsInfo.getGoodsSerialNo());
 				List<Object> reGoodsRecordInfo = orderDao.findByProperty(GoodsRecord.class, param, 1, 1);
 				GoodsRecord goodsRecord = (GoodsRecord) reGoodsRecordInfo.get(0);
-				if (cacheList != null && cacheList.size() == 0) {
+				if (cacheList.isEmpty()) {
 					cacheList.add(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode());
 				} else if (!cacheList.contains(goodsRecord.getCustomsCode() + "_" + goodsRecord.getCiqOrgCode())) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "不同海关不能一并下单,请分开下单！");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("不同海关不能一并下单,请分开下单！");
 				}
 			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		// return checkRecipientInfo();
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -786,7 +779,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
 			String startDate, String endDate) {
-		//Map<String, Object> statusMap = new HashMap<>();
+		// Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
 		if (page >= 0 && size >= 0) {
 			if (StringEmptyUtils.isNotEmpty(merchantId)) {
@@ -796,7 +789,7 @@ public class OrderServiceImpl implements OrderService {
 			paramsMap.put("startDate", startDate);
 			paramsMap.put("endDate", endDate);
 			Table reList = orderDao.getOrderDailyReport(paramsMap, page, size);
-			//Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
+			// Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("服务器繁忙!");
 			} else if (!reList.getRows().isEmpty()) {

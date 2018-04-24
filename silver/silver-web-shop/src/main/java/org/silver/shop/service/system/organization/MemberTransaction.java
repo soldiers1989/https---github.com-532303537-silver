@@ -41,8 +41,9 @@ public class MemberTransaction {
 			return datasMap;
 		}
 		if (!IdcardValidator.validate18Idcard(memberIdCard)) {
-			return ReturnInfoUtils.errorInfo("身份证号码输入错误,请重新输入");
+			return ReturnInfoUtils.errorInfo("身份证号输入错误,请重新输入!");
 		}
+		
 		String memberId = datasMap.get(BaseCode.DATAS.toString()) + "";
 		//获取缓存中用户注册手机验证码
 		String redis = JedisUtil.get("Shop_Key_MemberRegisterCode_" + memberTel);
@@ -61,32 +62,25 @@ public class MemberTransaction {
 	// 用户登录
 	public Map<String, Object> memberLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
-		Map<String, Object> datasMap = new HashMap<>();
-		List<Object> reList = memberService.findMemberBy(account);
+		List<Member> reList = memberService.findMemberBy(account);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			Member member = (Member) reList.get(0);
-			String name = member.getMemberName();
+			Member member =  reList.get(0);
+			//String name = member.getMemberName();
 			String loginpas = member.getLoginPass();
 			String md5Pas = md5.getMD5ofStr(loginPassword);
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
-			if (account.equals(name) && md5Pas.equals(loginpas)) {
+			if ( md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取用户登录时,shiro存入在session中的数据
 				Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 				if (memberInfo == null) {
 					WebUtil.getSession().setAttribute(LoginType.MEMBERINFO.toString(), reList.get(0));
 				}
-				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
-				return datasMap;
+				return ReturnInfoUtils.successInfo();
 			}
-		} else {
-			datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			datasMap.put(BaseCode.MSG.getBaseCode(), "用户不存在");
-			return null;
-		}
+		} 
 		return null;
 	}
 
@@ -95,8 +89,8 @@ public class MemberTransaction {
 		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-		return memberService.getMemberInfo(memberId, memberName);
+	//	String memberName = memberInfo.getMemberName();
+		return memberService.getMemberInfo(memberId);
 	}
 
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
@@ -117,13 +111,18 @@ public class MemberTransaction {
 		return memberService.getMemberWalletInfo(memberId, memberName);
 	}
 
-	public Map<String, Object> checkMerchantName(String account) {
-		return memberService.checkMerchantName(account);
+	public Map<String, Object> checkRegisterInfo(String datas, String type) {
+		return memberService.checkRegisterInfo(datas,type);
 	}
 
 	//管理员批量注册会员
 	public Object batchRegisterMember(JSONArray jsonArr) {
 		return memberService.batchRegisterMember(jsonArr);
+	}
+
+	//会员实名认证
+	public Map<String,Object> realName(String memberId) {
+		return memberService.realName(memberId);
 	}
 
 }

@@ -36,7 +36,7 @@ public class StockServiceImpl implements StockService {
 
 	@Autowired
 	private StockDao stockDao;
-	
+
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
 			int size) {
@@ -194,34 +194,23 @@ public class StockServiceImpl implements StockService {
 				return statusMap;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
 	public Map<String, Object> getGoodsStockInfo(String merchantId, String merchantName, int page, int size,
 			String warehouseCode) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		params.put("warehouseCode", warehouseCode);
 		List<Object> reList = stockDao.findByProperty(StockContent.class, params, page, size);
 		long totalCount = stockDao.findByPropertyCount(StockContent.class, params);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, totalCount);
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 
@@ -229,17 +218,13 @@ public class StockServiceImpl implements StockService {
 	public Map<String, Object> setGoodsSellAndStopSelling(String merchantId, String merchantName, String goodsInfoPack,
 			int type) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
-			logger.error("--------商品上下架传递信息错误------");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品上下架信息包格式错误!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> errorMap = new HashMap<>();
@@ -248,16 +233,16 @@ public class StockServiceImpl implements StockService {
 			params.clear();
 			params.put("merchantId", merchantId);
 			params.put("entGoodsNo", entGoodsNo);
-			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
+			List<StockContent> reStockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
 			params.clear();
 			params.put("entGoodsNo", entGoodsNo);
 			params.put("goodsMerchantId", merchantId);
-			List<Object> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+			List<GoodsRecordDetail> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 			if (reStockList == null || reGoodsRecordList == null) {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]查询失败,服务器繁忙！");
 				errorList.add(errorMap);
 			} else if (!reStockList.isEmpty() && !reGoodsRecordList.isEmpty()) {
-				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordList.get(0);
+				GoodsRecordDetail goodsRecordInfo =  reGoodsRecordList.get(0);
 				String goodsFirstTypeId = goodsRecordInfo.getSpareGoodsFirstTypeId();
 				String goodsSecondTypeId = goodsRecordInfo.getSpareGoodsSecondTypeId();
 				String goodsThirdTypeId = goodsRecordInfo.getSpareGoodsThirdTypeId();
@@ -267,9 +252,12 @@ public class StockServiceImpl implements StockService {
 					errorList.add(errorMap);
 					continue;
 				}
-				StockContent stockInfo = (StockContent) reStockList.get(0);
-				if (type == 1 || type == 2) {
-					stockInfo.setSellFlag(type);
+				StockContent stockInfo =  reStockList.get(0);
+				stockInfo.setSellFlag(type);
+				if(type == 1){//当上架时添加商品上架时间
+					stockInfo.setSellDate(new Date());
+				}else if( type == 2){//当设置下架时添加商品下架时间
+					stockInfo.setDropOffDate(new Date());
 				}
 				stockInfo.setCreateBy(merchantName);
 				stockInfo.setCreateDate(date);
@@ -278,30 +266,23 @@ public class StockServiceImpl implements StockService {
 					errorList.add(errorMap);
 				}
 			} else {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为：" + entGoodsNo + "商品,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]未找到商品信息！");
 				errorList.add(errorMap);
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(errorList);
 	}
 
 	@Override
 	public Map<String, Object> setGoodsStorageAndSellCount(String merchantId, String merchantName, String goodsInfoPack,
 			int type) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorMsgList = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
-			logger.error("--------商品入库或上架传递信息错误------");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品信息包格式错误!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> params = new HashMap<>();
@@ -340,10 +321,7 @@ public class StockServiceImpl implements StockService {
 				errorMsgList.add(errorMap);
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorMsgList);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(errorMsgList);
 	}
 
 	@Override
@@ -365,25 +343,19 @@ public class StockServiceImpl implements StockService {
 		}
 	}
 
-	
-
 	@Override
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
 			String goodsInfoPack, int type) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorMsgList = new ArrayList<>();
-		Map<String, Object> errorMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
-			logger.error("--------商品入库或上架传递信息错误------");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品信息包格式错误!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			Map<String, Object> params = new HashMap<>();
 			String entGoodsNo = datasMap.get("entGoodsNo") + "";
@@ -419,9 +391,6 @@ public class StockServiceImpl implements StockService {
 				errorMsgList.add(errorMap);
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorMsgList);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(errorMsgList);
 	}
 }

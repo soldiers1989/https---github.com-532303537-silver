@@ -137,8 +137,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 					return ReturnInfoUtils.successDataInfo(item, 0);
 				}
 			} else {
-				reMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-				reMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+				return ReturnInfoUtils.errorInfo("未查询到省市区数据!");
 			}
 		}
 		return reMap;

@@ -273,8 +273,6 @@ public class BufferUtils {
 		int counter = Integer.parseInt(serviceMap.get(COMPLETED) + "");
 		int sendCounter = Integer.parseInt(webMap.get("sendCounter") + "");
 		int errCounter = Integer.parseInt(webMap.get("errCounter") + "");
-		System.out.println(
-				"--counter--->" + counter + ";---sendCounter->>>" + sendCounter + ";---errCounter->>" + errCounter);
 		// Mq队列完成数=web层的发送MQ队列成功数量,并且web层发送数量+错误信息数量=总数时则表示整个表单已经读取完成,更新信息至缓存
 		if (counter == sendCounter && (sendCounter + errCounter) == totalCount) {
 			Map<String, Object> datasMap = new HashMap<>();

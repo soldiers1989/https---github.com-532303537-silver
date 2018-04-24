@@ -43,6 +43,8 @@ public class StockContent implements Serializable {
 	private double salePrice;//商品(特卖)价格
 	private double memberPrice;//商品(会员)价格
 	private int readingCount;//商品浏览数量
+	private Date sellDate;// 商品上架时间
+	private Date dropOffDate;// 商品下架时间
 	private String reMark;//备用字段
 	public long getId() {
 		return id;
@@ -232,6 +234,17 @@ public class StockContent implements Serializable {
 	public void setReadingCount(int readingCount) {
 		this.readingCount = readingCount;
 	}
-	
+	public Date getSellDate() {
+		return sellDate;
+	}
+	public Date getDropOffDate() {
+		return dropOffDate;
+	}
+	public void setSellDate(Date sellDate) {
+		this.sellDate = sellDate;
+	}
+	public void setDropOffDate(Date dropOffDate) {
+		this.dropOffDate = dropOffDate;
+	}
 	
 }

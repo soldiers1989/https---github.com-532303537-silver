@@ -23,14 +23,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping("yspay-receive")
 public class YsPayReceiveController {
-	protected static final Logger logger = LogManager.getLogger();
+	private static Logger logger = LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
 	@Autowired
 	private YsPayReceiveTransaction ysPayReceiveTransaction;
 
 	@RequestMapping(value = "/ysPayReceive", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
-		logger.error("--------支付回调信息------");
 		Map datasMap = new HashMap<>();
 		datasMap.put("notify_type", req.getParameter("notify_type") + "");
 		
@@ -47,9 +46,9 @@ public class YsPayReceiveController {
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
 		Map<String, Object> statusMap=new HashMap<>(); 
-		//if(ApipaySubmit.verifySign(req, datasMap)){
+		if(ApipaySubmit.verifySign(req, datasMap)){
 			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
-		//}
+		}
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());

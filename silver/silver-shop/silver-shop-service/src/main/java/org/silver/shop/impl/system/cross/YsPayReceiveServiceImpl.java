@@ -17,6 +17,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
@@ -33,6 +34,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -53,15 +55,15 @@ import net.sf.json.JSONObject;
 @Service(interfaceClass = YsPayReceiveService.class)
 public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	/**
-	 *  进出境标志I-进，E-出
+	 * 进出境标志I-进，E-出
 	 */
 	private static final String IEFLAG = "I";
 
 	/**
-	 *  币制默认为人民币
+	 * 币制默认为人民币
 	 */
 	private static final String CURRCODE = "142";
-	protected static final Logger logger = LogManager.getLogger();
+	protected static final Logger logger = LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
 
 	@Autowired
 	private YsPayReceiveDao ysPayReceiveDao;
@@ -75,9 +77,13 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	@Autowired
 	private WalletLogService walletLogService;
 
+	@Autowired
+	private MemberService memberService;
+	@Autowired
+	private MerchantUtils merchantUtils;
+
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		Member memberInfo = null;
 		String reEntOrderNo = datasMap.get("out_trade_no") + "";
@@ -86,46 +92,30 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		List<Object> orderList = ysPayReceiveDao.findByProperty(OrderContent.class, params, 0, 0);
 		List<Object> orderGoodsList = ysPayReceiveDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
 		if (orderList == null || orderGoodsList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询订单失败,服务器繁忙!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询订单失败,服务器繁忙!");
 		} else if (!orderList.isEmpty() && !orderGoodsList.isEmpty()) {
-			OrderContent orderInfo = (OrderContent) orderList.get(0);
-			OrderGoodsContent orderGoodsContent = (OrderGoodsContent) orderGoodsList.get(0);
-			String merchantId = orderGoodsContent.getMerchantId();
-			params.clear();
-			params.put("merchantId", merchantId);
-			List<Object> merchantList = ysPayReceiveDao.findByProperty(Merchant.class, params, 1, 1);
-			String merchantPhone = "";
-			if (merchantList != null && !merchantList.isEmpty()) {
-				Merchant merchantInfo = (Merchant) merchantList.get(0);
-				merchantPhone = merchantInfo.getMerchantPhone();
-			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "查询订单商户信息失败!");
-				return statusMap;
-			}
 			try {
-				SendMsg.sendMsg(merchantPhone, "【银盟信息科技有限公司】您有一个订单需要处理,订单号" + reEntOrderNo);
-			} catch (ParserConfigurationException e) {
-				e.printStackTrace();
-			} catch (SAXException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			params.clear();
-			// 根据用户ID查询用户是否存在
-			params.put("memberId", orderInfo.getMemberId());
-			List<Object> memberList = ysPayReceiveDao.findByProperty(Member.class, params, 1, 1);
-			if (memberList != null && memberList.size() > 0) {
-				memberInfo = (Member) memberList.get(0);
+				OrderContent orderInfo = (OrderContent) orderList.get(0);
+				OrderGoodsContent orderGoodsContent = (OrderGoodsContent) orderGoodsList.get(0);
+				String merchantId = orderGoodsContent.getMerchantId();
+				Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+				if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+					return reMerchantMap;
+				}
+				Merchant merchantInfo = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+				SendMsg.sendMsg(merchantInfo.getMerchantPhone(), "【银盟信息科技有限公司】您有一个订单需要处理,订单号" + reEntOrderNo);
+
+				// 根据用户ID查询用户是否存在
+				Map<String, Object> reMemberMap = memberService.getMemberInfo(orderInfo.getMemberId());
+				if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+					return reMemberMap;
+				}
+				memberInfo = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 				// 保存支付单信息
 				Map<String, Object> rePaymentMap = addPaymentInfo(orderList, datasMap, memberInfo, orderGoodsContent);
 				if (!"1".equals(rePaymentMap.get(BaseCode.STATUS.toString()))) {
 					return rePaymentMap;
 				}
-
 				// 获取返回的实体
 				PaymentContent paymentInfo = (PaymentContent) rePaymentMap.get(BaseCode.DATAS.toString());
 				Map<String, Object> paymentInfoMap = new HashMap<>();
@@ -175,7 +165,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return reOrderRecordGoodsMap;
 				}
 				// 请求获取tok
-				Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,YmMallConfig.APPSECRET);
+				Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,
+						YmMallConfig.APPSECRET);
 				if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
 					return reTokMap;
 				}
@@ -215,16 +206,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return reOrderMap2;
 				}
 				return reOrderMap2;
-			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "查询订单用户信息失败!");
-				return statusMap;
+			} catch (Exception e) {
+				logger.error(Thread.currentThread().getName() + "--支付成功回调-->>", e);
 			}
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询订单不存在,参数不正确!");
-			return statusMap;
 		}
+		return ReturnInfoUtils.errorInfo("查询订单不存在,参数不正确!");
 	}
 
 	// 保存支付单信息
@@ -244,9 +230,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			return statusMap;
 		} else if (!rePayList.isEmpty()) {
 			PaymentContent rePaymentInfo = (PaymentContent) rePayList.get(0);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), rePaymentInfo);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(rePaymentInfo);
 		} else {
 			// 获取订单商品名称
 			String goodsName = orderGoodsContent.getGoodsName();
@@ -610,11 +594,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentList.add(json);
 			// 客戶端签名
 			String clientsign = "";
-			//YM APPKEY = "4a5de70025a7425dabeef6e8ea752976";
-			String appkey = recordMap.get("appkey")+"";
+			// YM APPKEY = "4a5de70025a7425dabeef6e8ea752976";
+			String appkey = recordMap.get("appkey") + "";
 			try {
-				clientsign = MD5.getMD5(
-						(appkey + tok + paymentList.toString() + notifyurl + timestamp).getBytes("UTF-8"));
+				clientsign = MD5
+						.getMD5((appkey + tok + paymentList.toString() + notifyurl + timestamp).getBytes("UTF-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -650,9 +634,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("notifyurl", notifyurl);
 			paymentMap.put("note", "");
 			// 是否像海关发送
-			//paymentMap.put("uploadOrNot", false);
+			// paymentMap.put("uploadOrNot", false);
 			// String resultStr =
-			//YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
+			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
 			// paymentMap);
 			String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
@@ -688,8 +672,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paymentMap.put("datas", paymentList2.toString());
 				try {
 					clientsign = MD5
-							.getMD5((appkey+ tok + paymentList2.toString() + notifyurl + timestamp)
-									.getBytes("UTF-8"));
+							.getMD5((appkey + tok + paymentList2.toString() + notifyurl + timestamp).getBytes("UTF-8"));
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -698,9 +681,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				}
 				paymentMap.put("clientsign", clientsign.trim());
 				System.out.println("------第二次发起支付单推送-------");
-			//	 String resultStr2 =
+				// String resultStr2 =
 				// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-				 //paymentMap);
+				// paymentMap);
 				String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					return JSONObject.fromObject(resultStr2);

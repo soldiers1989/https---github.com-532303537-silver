@@ -42,7 +42,17 @@ public class ExcelBufferUtils {
 	 * 完成数
 	 */
 	private static final String COMPLETED = "completed";
-
+	
+	/**
+	 * MQ发送数量
+	 */
+	private static final String SENDCOUNTER = "sendCounter";
+	
+	/**
+	 * 错误数
+	 */
+	private static final String ERRCOUNTER = "errCounter";
+	
 	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
@@ -218,7 +228,7 @@ public class ExcelBufferUtils {
 	}
 
 	/**
-	 * MQ版,当缓存中有数据时,更新信息
+	 * MQ版,当缓存中有数据时,取出已有信息,更新信息
 	 * 
 	 * @param redisByte
 	 *            缓存中的数据
@@ -250,18 +260,18 @@ public class ExcelBufferUtils {
 		int sendCounter = 0;
 		switch (type) {
 		case "success":
-			sendCounter = Integer.parseInt(redisMap.get("sendCounter") + "");
+			sendCounter = Integer.parseInt(redisMap.get(SENDCOUNTER) + "");
 			sendCounter++;
-			redisMap.put("sendCounter", sendCounter);
+			redisMap.put(SENDCOUNTER, sendCounter);
 			break;
 		case "error":
-			errCounter = Integer.parseInt(redisMap.get("errCounter") + "");
+			errCounter = Integer.parseInt(redisMap.get(ERRCOUNTER) + "");
 			errCounter++;
-			redisMap.put("errCounter", errCounter);
+			redisMap.put(ERRCOUNTER, errCounter);
 			break;
 		default:
-			redisMap.put("errCounter", redisMap.get("errCounter"));
-			redisMap.put("sendCounter", redisMap.get("sendCounter"));
+			redisMap.put(ERRCOUNTER, redisMap.get(ERRCOUNTER));
+			redisMap.put(SENDCOUNTER, redisMap.get(SENDCOUNTER));
 			break;
 		}
 		redisMap.put(BaseCode.STATUS.toString(), "1");
@@ -302,8 +312,8 @@ public class ExcelBufferUtils {
 			datasMap.put(BaseCode.ERROR.toString(), new ArrayList<>());
 		}
 		datasMap.put(COMPLETED, counter);
-		datasMap.put("sendCounter", sendCounter);
-		datasMap.put("errCounter", errCounter);
+		datasMap.put(SENDCOUNTER, sendCounter);
+		datasMap.put(ERRCOUNTER, errCounter);
 		datasMap.put(BaseCode.STATUS.toString(), "1");
 		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
@@ -327,7 +337,7 @@ public class ExcelBufferUtils {
 		if (redisInfo != null && redisInfo.length > 0) {
 			Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
 			int counter = Integer.parseInt(datasMap.get(COMPLETED) + "");
-			int errCounter = Integer.parseInt(datasMap.get("errCounter") + "");
+			int errCounter = Integer.parseInt(datasMap.get(ERRCOUNTER) + "");
 			if ((counter + errCounter) == totalCount) {
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");

@@ -4,6 +4,10 @@ import java.util.Collection;
 import java.util.Map;
 import net.sf.json.JSONNull;
 
+/**
+ * 字符串判断工具类
+ *
+ */
 public class StringEmptyUtils {
 	/**
 	 * 判断对象是否Empty(null或元素为0)<br>
