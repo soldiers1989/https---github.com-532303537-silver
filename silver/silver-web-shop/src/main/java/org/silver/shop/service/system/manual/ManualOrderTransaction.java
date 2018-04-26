@@ -27,7 +27,6 @@ import org.silver.util.AppUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
-import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -524,6 +523,7 @@ public class ManualOrderTransaction {
 				excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
+		excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
 
@@ -565,6 +565,7 @@ public class ManualOrderTransaction {
 		//
 		params.put("name", "orderImport");
 		for (int r = startCount; r <= endCount; r++) {
+			int errorCount = 0;
 			if (excel.getColumnCount(0, r) == 0) {
 				break;
 			}
@@ -575,10 +576,11 @@ public class ManualOrderTransaction {
 						break;
 					}
 					if (c == 0) {
-						// 序号
-						if (StringEmptyUtils.isNotEmpty(value)) {
+						try {
+							// 序号
 							seqNo = Integer.parseInt(value);
-						} else {
+						} catch (Exception e) {
+							errorCount++;
 							String msg = "【表格】第" + (r + 1) + "行-->表单序号错误,请核对信息!";
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
@@ -588,21 +590,16 @@ public class ManualOrderTransaction {
 						orderId = value;
 					} else if (c == 2) {
 						// 商品自编号
-						if (StringEmptyUtils.isNotEmpty(value)) {
 							entGoodsNo = value;
-						}
 					} else if (c == 3) {
 						// 商品名称
-						if (StringEmptyUtils.isNotEmpty(value)) {
 							goodsName = value;
-						}
 					} else if (c == 4) {
-						// 商品单价
 						try {
-							if (StringEmptyUtils.isNotEmpty(value)) {
-								price = Double.parseDouble(value);
-							}
+							// 商品单价
+							price = Double.parseDouble(value);
 						} catch (Exception e) {
+							errorCount++;
 							String msg = "【表格】第" + (r + 1) + "行,商品单价输入错误!";
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
@@ -610,12 +607,19 @@ public class ManualOrderTransaction {
 					} else if (c == 5) {
 						// 数量
 						try {
-							if (StringEmptyUtils.isNotEmpty(value)) {
+							if (Integer.parseInt(value) > 0) {
 								count = Integer.parseInt(value);
+							} else {
+								errorCount++;
+								String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
+								RedisInfoUtils.errorInfoMq(msg, ERROR, params);
+								break;
 							}
 						} catch (Exception e) {
+							errorCount++;
 							String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
+							break;
 						}
 					} else if (c == 6) {
 						// 收货人姓名
@@ -640,6 +644,9 @@ public class ManualOrderTransaction {
 					} else if (c == 13) {
 						waybillNo = value;
 					}
+				}
+				if (errorCount > 0) {
+					continue;
 				}
 				JSONObject item = new JSONObject();
 				Map<String, Object> provinceMap = manualService.searchProvinceCityArea(recipientAddr);
@@ -704,7 +711,7 @@ public class ManualOrderTransaction {
 				excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
+		excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
-
 }

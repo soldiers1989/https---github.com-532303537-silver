@@ -45,4 +45,12 @@ public class RecipientTransaction {
 		return recipientSerivce.deleteMemberRecipientInfo(memberId,memberName,recipientId);
 	}
 
+	public Map<String,Object> memberModify(String recipientInfoPack) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberName = memberInfo.getMemberName();
+		return recipientSerivce.modifyRecipientInfo(recipientInfoPack,memberName);
+	}
+
 }

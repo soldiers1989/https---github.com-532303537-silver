@@ -15,8 +15,6 @@ public class MerchantFeeContent implements Serializable {
 	private long id;
 	private String merchantId;// 商户Id
 	private String merchantName;// 商户名称
-	private String tenantCode;// 客户编码
-	private String tenantName;// 客户名称
 	private String provinceCode;// 省份编码
 	private String provinceName;// 省份名称
 	private String cityCode;// 城市编码
@@ -27,7 +25,10 @@ public class MerchantFeeContent implements Serializable {
 	private String customsName;// 主管海关代码名称
 	private String ciqOrgCode;// 检验检疫机构代码
 	private String ciqOrgName;// 检验检疫机构名称
-	private double platformFee;// 平台服务费-暂定为千分之几
+	private double goodsFee;// 商品备案服务费-暂定为千分之几
+	private double orderFee;// 订单服务费-暂定为千分之几
+	private double paymentFee;// 支付单服务费-暂定为千分之几
+	private String type; //类型：goodsRecord(商品备案)、orderRecord(订单备案)、()
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -48,13 +49,6 @@ public class MerchantFeeContent implements Serializable {
 		return merchantName;
 	}
 
-	public String getTenantCode() {
-		return tenantCode;
-	}
-
-	public String getTenantName() {
-		return tenantName;
-	}
 
 	public String getProvinceCode() {
 		return provinceCode;
@@ -96,9 +90,6 @@ public class MerchantFeeContent implements Serializable {
 		return ciqOrgName;
 	}
 
-	public double getPlatformFee() {
-		return platformFee;
-	}
 
 	public String getCreateBy() {
 		return createBy;
@@ -140,13 +131,6 @@ public class MerchantFeeContent implements Serializable {
 		this.merchantName = merchantName;
 	}
 
-	public void setTenantCode(String tenantCode) {
-		this.tenantCode = tenantCode;
-	}
-
-	public void setTenantName(String tenantName) {
-		this.tenantName = tenantName;
-	}
 
 	public void setProvinceCode(String provinceCode) {
 		this.provinceCode = provinceCode;
@@ -188,9 +172,6 @@ public class MerchantFeeContent implements Serializable {
 		this.ciqOrgName = ciqOrgName;
 	}
 
-	public void setPlatformFee(double platformFee) {
-		this.platformFee = platformFee;
-	}
 
 	public void setCreateBy(String createBy) {
 		this.createBy = createBy;

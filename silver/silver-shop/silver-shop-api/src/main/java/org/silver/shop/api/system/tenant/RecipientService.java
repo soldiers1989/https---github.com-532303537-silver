@@ -16,18 +16,28 @@ public interface RecipientService {
 	
 	/**
 	 * 获取用户收货地址信息
-	 * @param memberId
-	 * @param memberName
-	 * @return
+	 * @param memberId 用户Id
+	 * @param memberName 用户名称
+	 * @return Map
 	 */
 	public Map<String, Object> getMemberRecipientInfo(String memberId, String memberName);
 
 
 	/**
 	 * 根据用户Id删除用户收货地址信息
-	 * @param recipientId  s
-	 * @return
+	 * @param recipientId 收货地址Id
+	 * @param memberId   
+	 * @return Map
 	 */
 	public Map<String, Object> deleteMemberRecipientInfo(String memberId,String memberName,String recipientId);
+
+
+	/**
+	 * 修改收货人地址信息
+	 * @param recipientInfoPack
+	 * @param updateBy 更新人
+	 * @return
+	 */
+	public Map<String, Object> modifyRecipientInfo(String recipientInfoPack, String updateBy);
 
 }

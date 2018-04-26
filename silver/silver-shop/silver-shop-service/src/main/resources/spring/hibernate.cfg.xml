@@ -109,8 +109,6 @@
 			resource="org/silver/shop/model/system/commerce/QuartetOrderContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/OrderImplLogs.hbm.xml" />
 		<mapping
-			resource="org/silver/shop/model/system/tenant/MerchantFeeContent.hbm.xml" />
-		<mapping
 			resource="org/silver/shop/model/system/tenant/SubMerchantContent.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/organization/AgentBaseContent.hbm.xml" />

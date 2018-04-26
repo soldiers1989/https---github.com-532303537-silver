@@ -49,6 +49,9 @@ public class StringUtil {
 	 * @return
 	 */
 	public static boolean isChinese(String strName) {
+		if(StringEmptyUtils.isEmpty(strName)){
+			return false;
+		}
 		char[] ch = strName.toCharArray();
 		for (int i = 0; i < ch.length; i++) {
 			char c = ch[i];

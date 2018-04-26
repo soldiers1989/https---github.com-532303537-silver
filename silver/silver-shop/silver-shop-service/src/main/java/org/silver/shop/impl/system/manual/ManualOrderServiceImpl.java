@@ -23,6 +23,7 @@ import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
+import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -330,6 +331,10 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
 			String msg = "订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
 			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
+		}
+		if(!PhoneUtils.isPhone(recipientTel)){
+			String msg = "订单号[" + orderId + "]收件人电话错误,请核实信息!";
+			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
