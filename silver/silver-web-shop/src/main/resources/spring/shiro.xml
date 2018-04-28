@@ -52,7 +52,7 @@
 		</property>
 	</bean>
 
-	<!-- <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"> 
+<!-- 	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"> 
 		<property name="realm" ref="realm" /> </bean> -->
 
 
@@ -84,6 +84,7 @@
 				/member/*=anon
 				/authority/*=anon
 				/cciq/*=anon
+				/evaluation/*=anon
 				/gac/*=anon
 				/manualOrder/*=anon
 				/MQ/*=anon

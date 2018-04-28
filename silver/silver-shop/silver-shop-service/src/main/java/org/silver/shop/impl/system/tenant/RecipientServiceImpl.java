@@ -51,7 +51,7 @@ public class RecipientServiceImpl implements RecipientService {
 			recipient.setMemberId(memberId);
 			recipient.setMemberName(memberName);
 			String recipientName = recipientMap.get("recipientName") + "";
-			if (!StringUtil.isContainChinese("recipientName")) {
+			if (!StringUtil.isContainChinese(recipientName)) {
 				return ReturnInfoUtils.errorInfo("收货人姓名错误,请重新输入");
 			}
 			recipient.setRecipientName(recipientName);

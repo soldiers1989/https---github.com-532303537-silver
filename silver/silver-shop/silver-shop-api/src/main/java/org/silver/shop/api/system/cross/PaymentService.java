@@ -57,18 +57,14 @@ public interface PaymentService {
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            每页数目
 	 * @param startDate
 	 *            开始时间
 	 * @param endDate
 	 *            结束时间
 	 * @return Map
 	 */
-	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, int page, int size,
-			String startDate, String endDate);
+	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, String startDate,
+			String endDate);
 
 	/**
 	 * 根据订单id 批量生成相应支付单
@@ -98,19 +94,6 @@ public interface PaymentService {
 	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName);
 
 	/**
-	 * 管理员查询支付单报表信息
-	 * 
-	 * @param page
-	 * @param size
-	 * @param startDate
-	 * @param endDate
-	 * @param merchantName
-	 * @return
-	 */
-	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantId);
-
-	/**
 	 * 管理员查询所有商户手工支付单信息
 	 * 
 	 * @param params
@@ -138,16 +121,17 @@ public interface PaymentService {
 
 	/**
 	 * 代理商获取所有支付单报表信息
+	 * 
 	 * @param datasMap
 	 * @return Map
 	 */
-	public Map<String,Object> getAgentPaymentReport(Map<String, Object> datasMap);
-
+	public Map<String, Object> getAgentPaymentReport(Map<String, Object> datasMap);
 
 	/**
 	 * 管理员隐藏(对于商户=删除)手工支付单信息
+	 * 
 	 * @param jsonArray
-	 * @param managerName 
+	 * @param managerName
 	 * @return
 	 */
 	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray, String managerName);

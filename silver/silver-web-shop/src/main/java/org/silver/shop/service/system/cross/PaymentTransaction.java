@@ -70,13 +70,13 @@ public class PaymentTransaction {
 		return paymentService.getMpayRecordInfo(merchantId, merchantName, params, page, size);
 	}
 
-	public Map<String, Object> getMerchantPaymentReport(int page, int size, String startDate, String endDate) {
+	public Map<String, Object> getMerchantPaymentReport(String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return paymentService.getMerchantPaymentReport(merchantId, merchantName, page, size, startDate, endDate);
+		return paymentService.getMerchantPaymentReport(merchantId, merchantName, startDate, endDate);
 	}
 
 	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
@@ -86,28 +86,26 @@ public class PaymentTransaction {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		 return paymentService.splitStartPaymentId(orderIdList,merchantId,merchantName);
+		return paymentService.splitStartPaymentId(orderIdList, merchantId, merchantName);
 	}
 
-	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			 String merchantId) {
-		return paymentService.managerGetPaymentReport(page,size,startDate,endDate,merchantId);
+	public Map<String, Object> managerGetPaymentReport(String startDate, String endDate, String merchantId) {
+		return paymentService.getMerchantPaymentReport(merchantId, null, startDate, endDate);
 	}
 
-	
-	//管理员查询所有商户手工支付单信息
-	public Map<String,Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
-		return paymentService.managerGetMpayInfo(params,page,size);
+	// 管理员查询所有商户手工支付单信息
+	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
+		return paymentService.managerGetMpayInfo(params, page, size);
 	}
 
-	//管理员修改商户手工支付单信息
-	public Map<String,Object> managerEditMpayInfo(Map<String,Object> params) {
+	// 管理员修改商户手工支付单信息
+	public Map<String, Object> managerEditMpayInfo(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		return paymentService.managerEditMpayInfo(params,managerId,managerName);
+		return paymentService.managerEditMpayInfo(params, managerId, managerName);
 	}
 
 	//
@@ -123,11 +121,11 @@ public class PaymentTransaction {
 		return paymentService.getAgentPaymentReport(datasMap);
 	}
 
-	public Map<String,Object> managerHideMpayInfo(JSONArray jsonArray) {
+	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerName = managerInfo.getManagerName();
-		return paymentService.managerHideMpayInfo(jsonArray,managerName);
+		return paymentService.managerHideMpayInfo(jsonArray, managerName);
 	}
 }

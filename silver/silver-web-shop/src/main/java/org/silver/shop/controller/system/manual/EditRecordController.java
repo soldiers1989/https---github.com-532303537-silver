@@ -11,7 +11,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -20,7 +20,10 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.util.HttpUtil;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,7 +39,7 @@ import net.sf.json.JSONObject;
 @RequestMapping(value = "/manual")
 public class EditRecordController {
 
-	private static Logger logger = Logger.getLogger(EditRecordController.class);
+	private static Logger logger = LogManager.getLogger(EditRecordController.class);
 	@Autowired
 	private ManualService manualService;
 
@@ -448,8 +451,10 @@ public class EditRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = manualService.searchProvinceCityArea(recipientAddr);
-		return JSONObject.fromObject(statusMap).toString();
+		if(StringEmptyUtils.isEmpty(recipientAddr)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(manualService.searchProvinceCityArea(recipientAddr)).toString();
 	}
 
 	/**
@@ -638,15 +643,12 @@ public class EditRecordController {
 	}
 
 	public static void main(String[] args) {
-		//Logger logger2 = LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
-		JSONArray json = null;
-		try {
-			json.size();
-
-		} catch (Exception e) {
-			logger.error("json错误！", e);
-			// logger.debug("Hello World!");
-			// e.printStackTrace();
+		Thread t = new Thread();
+		Map<String,Object> item = new HashMap<>();
+		item.put("recipientAddr", "福建省厦门市思明区莲花五村龙盛里14号502室");
+		t.start();
+		for(int i =0;i<1000;i++){
+			System.out.println(i+"---->>"+YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web-shop/manual/readInfo2", item));
 		}
 	}
 }

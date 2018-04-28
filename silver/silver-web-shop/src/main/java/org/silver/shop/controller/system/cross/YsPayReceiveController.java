@@ -52,7 +52,6 @@ public class YsPayReceiveController {
 		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());
-			return null;
 		}
 		return "success";
 	}

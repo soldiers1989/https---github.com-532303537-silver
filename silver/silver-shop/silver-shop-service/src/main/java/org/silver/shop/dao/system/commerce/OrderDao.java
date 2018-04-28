@@ -36,13 +36,9 @@ public interface OrderDao extends BaseDao {
 	 * 
 	 * @param paramsMap
 	 *            查询参数
-	 * @param page
-	 *            页面
-	 * @param size
-	 *            数目
 	 * @return Table
 	 */
-	public Table getOrderDailyReport(Map<String, Object> paramsMap, int page, int size);
+	public Table getOrderDailyReport(Map<String, Object> paramsMap);
 
 	/**
 	 * 管理员临时删除测试账号下的所有数据

@@ -7,13 +7,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
-import org.silver.shop.model.common.base.Area;
-import org.silver.shop.model.common.base.City;
-import org.silver.shop.model.common.base.Province;
+import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
@@ -30,7 +28,8 @@ import net.sf.json.JSONObject;
  */
 @Service("provinceCityAreaTransaction")
 public class ProvinceCityAreaTransaction {
-	private static Logger logger = Logger.getLogger(ProvinceCityAreaTransaction.class);
+	
+	private static Logger logger = LogManager.getLogger(ProvinceCityAreaTransaction.class);
 	@Reference
 	private ProvinceCityAreaService provinceCityAreaService;
 
@@ -62,11 +61,9 @@ public class ProvinceCityAreaTransaction {
 	 * @return
 	 */
 	public Object getProvinceCityArea() {
-		Map<String, Object> province = null;
 		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
 		if (redisByte != null) {
-			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(province));
+			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {
 			try{
 				Map<String, Object> datasMap = provinceCityAreaService.getProvinceCityArea2();
@@ -75,7 +72,7 @@ public class ProvinceCityAreaTransaction {
 					return datasMap;
 				}
 			}catch (Exception e) {
-				logger.error(Thread.currentThread().getName()+"-查询省市区信息->",e);
+				logger.error(Thread.currentThread().getName()+"-查询省市区信息错误->",e);
 				return ReturnInfoUtils.errorInfo("查询省市区失败,服务器繁忙!！");
 			}
 			return ReturnInfoUtils.errorInfo("查询省市区失败！");

@@ -141,21 +141,14 @@ public class PaymentController {
 	@ResponseBody
 	@ApiOperation("商户查询支付单报表")
 	@RequiresRoles("Merchant")
-	public String getMerchantPaymentReport(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate) {
+	public String getMerchantPaymentReport(HttpServletRequest req, HttpServletResponse response, String startDate,
+			String endDate) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			statusMap = paytemTransaction.getMerchantPaymentReport(page, size, startDate, endDate);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(paytemTransaction.getMerchantPaymentReport(startDate, endDate)).toString();
 	}
 
 	/********************************** 模拟生成支付信息 *********************************/
@@ -198,22 +191,15 @@ public class PaymentController {
 	@ResponseBody
 	@ApiOperation("管理员查询支付单报表")
 	@RequiresRoles("Manager")
-	public String managerGetPaymentReport(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate,
-			String merchantId) {
+	public String managerGetPaymentReport(HttpServletRequest req, HttpServletResponse response, String startDate,
+			String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			statusMap = paytemTransaction.managerGetPaymentReport(page, size, startDate, endDate, merchantId);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(paytemTransaction.managerGetPaymentReport(startDate, endDate, merchantId))
+				.toString();
 	}
 
 	/**
@@ -319,12 +305,12 @@ public class PaymentController {
 		} catch (Exception e) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数格式错误!")).toString();
 		}
-		if(!jsonArray.isEmpty()){
+		if (!jsonArray.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(paytemTransaction.managerHideMpayInfo(jsonArray)).toString();
 	}
-	
+
 	public static void main(String[] args) {
 		JSONArray json = new JSONArray();
 		json.add("aa11");

@@ -278,8 +278,8 @@ public class PaymentServiceImpl implements PaymentService {
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
 					}
-					//当未备案时进行手续费清算
-					if(payInfo.getPay_record_status() == 1){
+					// 当未备案时进行手续费清算
+					if (payInfo.getPay_record_status() == 1) {
 						// 支付单服务费清算
 						Map<String, Object> rePaymentTollMap = paymentToll(merchantId, payInfo.getTrade_no(),
 								payInfo.getPay_amount());
@@ -305,7 +305,7 @@ public class PaymentServiceImpl implements PaymentService {
 				bufferUtils.writeRedis(errorList, paramsMap);
 				Thread.sleep(200);
 			} catch (Exception e) {
-				logger.error(Thread.currentThread().getName()+"-->>>>", e);
+				logger.error(Thread.currentThread().getName() + "-->>>>", e);
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 			}
@@ -465,34 +465,31 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, int page, int size,
-			String startDate, String endDate) {
+	public Map<String, Object> getMerchantPaymentReport(String merchantId, String merchantName, String startDate,
+			String endDate) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			if (StringEmptyUtils.isNotEmpty(merchantId)) {
-				paramsMap.put("merchantId", merchantId);
-			}
-			if (StringEmptyUtils.isNotEmpty(merchantName)) {
-				paramsMap.put("merchantName", merchantName);
-			}
-			paramsMap.put("startDate", startDate);
-			paramsMap.put("endDate", endDate);
-			Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, page, size);
-			Table totalCount = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
-			if (reList == null) {
-				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-			} else if (!reList.getRows().isEmpty()) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
-				statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
-				return statusMap;
-			} else {
-				return ReturnInfoUtils.errorInfo("暂无数据!");
-			}
+		if (StringEmptyUtils.isNotEmpty(merchantId)) {
+			paramsMap.put("merchantId", merchantId);
 		}
-		return ReturnInfoUtils.errorInfo("请求参数出错,请核实信息!");
+		if (StringEmptyUtils.isNotEmpty(merchantName)) {
+			paramsMap.put("merchantName", merchantName);
+		}
+		paramsMap.put("startDate", startDate);
+		paramsMap.put("endDate", endDate);
+		Table reList = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
+		Table totalCount = paymentDao.getPaymentReport(Morder.class, paramsMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList).getJSONArray("rows"));
+			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount.getRows().size());
+			return statusMap;
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
 	}
 
 	@Override
@@ -658,12 +655,6 @@ public class PaymentServiceImpl implements PaymentService {
 		statusMap.put("msg", "执行成功,正在生成支付流水号.......");
 		statusMap.put("serialNo", serialNo);
 		return statusMap;
-	}
-
-	@Override
-	public Map<String, Object> managerGetPaymentReport(int page, int size, String startDate, String endDate,
-			String merchantId) {
-		return getMerchantPaymentReport(merchantId, null, page, size, startDate, endDate);
 	}
 
 	@Override

@@ -25,10 +25,8 @@ public class MerchantFeeContent implements Serializable {
 	private String customsName;// 主管海关代码名称
 	private String ciqOrgCode;// 检验检疫机构代码
 	private String ciqOrgName;// 检验检疫机构名称
-	private double goodsFee;// 商品备案服务费-暂定为千分之几
-	private double orderFee;// 订单服务费-暂定为千分之几
-	private double paymentFee;// 支付单服务费-暂定为千分之几
-	private String type; //类型：goodsRecord(商品备案)、orderRecord(订单备案)、()
+	private double platformFee;// 平台服务费-暂定为千分之几
+	private String type; //类型：goodsRecord(商品备案)、orderRecord(订单备案)、paymentRecord(支付单备案)
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -201,8 +199,20 @@ public class MerchantFeeContent implements Serializable {
 		this.deleteDate = deleteDate;
 	}
 
-	public static void main(String[] args) {
-		double d = 2.5;
-		System.out.println(1000 * (d / 1000));
+	public double getPlatformFee() {
+		return platformFee;
 	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setPlatformFee(double platformFee) {
+		this.platformFee = platformFee;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
 }

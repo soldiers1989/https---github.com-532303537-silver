@@ -99,7 +99,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public Table getOrderDailyReport(Map paramsMap, int page, int size) {
+	public Table getOrderDailyReport(Map<String,Object> paramsMap) {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();
@@ -128,12 +128,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			sql += " GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'),t2.merchantName  ";
 			session = getSession();
 			Table t = null;
-			if (page > 0 && size > 0) {
-				page = page - 1;
-				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, page * size, size);
-			} else {
-				t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
-			}
+			t = DataUtils.queryData(session.connection(), sql, sqlParams, null, null, null);
 			session.connection().close();
 			session.close();
 			return t;
@@ -403,7 +398,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public Table getAgentOrderReport( Map<String, Object> datasMap) {
+	public Table getAgentOrderReport(Map<String, Object> datasMap) {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();

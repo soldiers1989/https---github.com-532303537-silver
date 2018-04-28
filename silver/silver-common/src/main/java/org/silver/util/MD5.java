@@ -1,50 +1,46 @@
 package org.silver.util;
 
 public class MD5 {
-	/** 
-	* MD5的算法在RFC1321 中定义 
-	* 在RFC 1321中，给出了Test suite用来检验你的实现是否正确： 
-	* MD5 ("") = d41d8cd98f00b204e9800998ecf8427e 
-	* MD5 ("a") = 0cc175b9c0f1b6a831c399e269772661 
-	* MD5 ("abc") = 900150983cd24fb0d6963f7d28e17f72 
-	* MD5 ("message digest") = f96b697d7cb7938d525a2f31aaf161d0 
-	* MD5 ("abcdefghijklmnopqrstuvwxyz") = c3fcd3d76192e4007dfb496cca67e13b 
-	* 
-	* @author haogj 
-	* 
-	* 传入参数：一个字节数组 
-	* 传出参数：字节数组的 MD5 结果字符串 
-	*/ 
+	/**
+	 * MD5的算法在RFC1321 中定义 在RFC 1321中，给出了Test suite用来检验你的实现是否正确： MD5 ("") =
+	 * d41d8cd98f00b204e9800998ecf8427e MD5 ("a") =
+	 * 0cc175b9c0f1b6a831c399e269772661 MD5 ("abc") =
+	 * 900150983cd24fb0d6963f7d28e17f72 MD5 ("message digest") =
+	 * f96b697d7cb7938d525a2f31aaf161d0 MD5 ("abcdefghijklmnopqrstuvwxyz") =
+	 * c3fcd3d76192e4007dfb496cca67e13b
+	 * 
+	 * @author haogj
+	 * 
+	 *         传入参数：一个字节数组 传出参数：字节数组的 MD5 结果字符串
+	 */
 
-	public static String getMD5(byte[] source) { 
-		String s = null; 
-		char hexDigits[] = { // 用来将字节转换成 16 进制表示的字符 
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}; 
-		try 
-		{ 
-			java.security.MessageDigest md = java.security.MessageDigest.getInstance( "MD5" ); 
-			md.update( source ); 
-			byte tmp[] = md.digest(); // MD5 的计算结果是一个 128 位的长整数， 
-			// 用字节表示就是 16 个字节 
-			char str[] = new char[16 * 2]; // 每个字节用 16 进制表示的话，使用两个字符， 
-			// 所以表示成 16 进制需要 32 个字符 
-			int k = 0; // 表示转换结果中对应的字符位置 
-			for (int i = 0; i < 16; i++) { // 从第一个字节开始，对 MD5 的每一个字节 
-			// 转换成 16 进制字符的转换 
-			byte byte0 = tmp[i]; // 取第 i 个字节 
-			str[k++] = hexDigits[byte0 >>> 4 & 0xf]; // 取字节中高 4 位的数字转换, 
-			// >>> 为逻辑右移，将符号位一起右移 
-			str[k++] = hexDigits[byte0 & 0xf]; // 取字节中低 4 位的数字转换 
-			} 
+	public static String getMD5(byte[] source) {
+		String s = null;
+		char hexDigits[] = { // 用来将字节转换成 16 进制表示的字符
+				'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+		try {
+			java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+			md.update(source);
+			byte tmp[] = md.digest(); // MD5 的计算结果是一个 128 位的长整数，
+			// 用字节表示就是 16 个字节
+			char str[] = new char[16 * 2]; // 每个字节用 16 进制表示的话，使用两个字符，
+			// 所以表示成 16 进制需要 32 个字符
+			int k = 0; // 表示转换结果中对应的字符位置
+			for (int i = 0; i < 16; i++) { // 从第一个字节开始，对 MD5 的每一个字节
+				// 转换成 16 进制字符的转换
+				byte byte0 = tmp[i]; // 取第 i 个字节
+				str[k++] = hexDigits[byte0 >>> 4 & 0xf]; // 取字节中高 4 位的数字转换,
+				// >>> 为逻辑右移，将符号位一起右移
+				str[k++] = hexDigits[byte0 & 0xf]; // 取字节中低 4 位的数字转换
+			}
 			s = new String(str); // 换后的结果转换为字符串
-	
-		}catch( Exception e ) 
-		{ 
-			e.printStackTrace(); 
-		} 
-		return s; 
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return s;
 	}
-	
+
 	/*
 	 * 下面这些S11-S44实际上是个4*4的矩阵，在原始的C实现中是用#define 实现的， 这里把他们实现成为static
 	 * final是表示了只读，切能在同一个进程空间内的多个 Instance间共享
@@ -69,10 +65,9 @@ public class MD5 {
 	static final int S43 = 15;
 	static final int S44 = 21;
 
-	static final byte[] PADDING = { -128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0 };
+	static final byte[] PADDING = { -128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0 };
 	/*
 	 * 下面的三个成员是MD5计算过程中用到的3个核心数据，在原始的C实现中 被定义到MD5_CTX结构中
 	 */
@@ -82,7 +77,7 @@ public class MD5 {
 	private byte[] buffer = new byte[64]; // input buffer
 
 	/*
-	 * digestHexStr是MD5的唯一一个公共成员，是最新一次计算结果的 　 16进制ASCII表示.
+	 * digestHexStr是MD5的唯一一个公共成员，是最新一次计算结果的 16进制ASCII表示.
 	 */
 	public String digestHexStr;
 
@@ -130,7 +125,7 @@ public class MD5 {
 
 	/*
 	 * F, G, H ,I 是4个基本的MD5函数，在原始的MD5的C实现中，由于他们是
-	 * 简单的位运算，可能出于效率的考虑把他们实现成了宏，在java中，我们把他们 　　实现成了private方法，名字保持了原来C中的。
+	 * 简单的位运算，可能出于效率的考虑把他们实现成了宏，在java中，我们把他们 实现成了private方法，名字保持了原来C中的。
 	 */
 
 	private long F(long x, long y, long z) {
@@ -246,12 +241,10 @@ public class MD5 {
 	}
 
 	/*
-	 * md5Memcpy是个内部使用的byte数组的块拷贝函数，从input的inpos开始把len长度的 　　　　　
-	 * 字节拷贝到output的outpos位置开始
+	 * md5Memcpy是个内部使用的byte数组的块拷贝函数，从input的inpos开始把len长度的 字节拷贝到output的outpos位置开始
 	 */
 
-	private void md5Memcpy(byte[] output, byte[] input, int outpos, int inpos,
-			int len) {
+	private void md5Memcpy(byte[] output, byte[] input, int outpos, int inpos, int len) {
 		int i;
 
 		for (i = 0; i < len; i++)
@@ -368,8 +361,8 @@ public class MD5 {
 		int i, j;
 
 		for (i = 0, j = 0; j < len; i++, j += 4)
-			output[i] = b2iu(input[j]) | (b2iu(input[j + 1]) << 8)
-					| (b2iu(input[j + 2]) << 16) | (b2iu(input[j + 3]) << 24);
+			output[i] = b2iu(input[j]) | (b2iu(input[j + 1]) << 8) | (b2iu(input[j + 2]) << 16)
+					| (b2iu(input[j + 3]) << 24);
 
 		return;
 	}
@@ -383,7 +376,7 @@ public class MD5 {
 
 	/*
 	 * byteHEX()，用来把一个byte类型的数转换成十六进制的ASCII表示，
-	 * 　因为java中的byte的toString无法实现这一点，我们又没有C语言中的 sprintf(outbuf,"%02X",ib)
+	 * 因为java中的byte的toString无法实现这一点，我们又没有C语言中的 sprintf(outbuf,"%02X",ib)
 	 */
 	public static String byteHEX(byte ib) {
 		char[] Digit = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
@@ -393,8 +386,10 @@ public class MD5 {
 		String s = new String(ob);
 		return s;
 	}
-	public static void main(String argv[])
-	{
+
+    
+	public static void main(String argv[]) {
+		String s = "21218cca77804d2ba1922c33e0151105";
 		System.out.println(MD5.getMD5("888888".getBytes()));
 	}
 }

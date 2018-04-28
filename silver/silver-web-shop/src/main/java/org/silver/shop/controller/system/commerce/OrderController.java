@@ -190,21 +190,13 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("商户查询订单每日报表")
 	@RequiresRoles("Merchant")
-	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate) {
+	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate, String endDate) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			statusMap = orderTransaction.getMerchantOrderReport(page, size, startDate, endDate);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(orderTransaction.getMerchantOrderReport( startDate, endDate)).toString();
 	}
 
 	/**
@@ -290,22 +282,14 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("管理员查询订单报表")
 	@RequiresRoles("Manager")
-	public String managerGetOrderReport(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size, String startDate, String endDate,
+	public String managerGetOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate, String endDate,
 			String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			statusMap = orderTransaction.managerGetOrderReport(page, size, startDate, endDate, merchantId);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(orderTransaction.managerGetOrderReport(  startDate, endDate, merchantId)).toString();
 	}
 
 	@RequestMapping(value = "/memberDeleteOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

@@ -1147,32 +1147,20 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> searchGoodsRecordInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
+		//
+		Map<String, Object> reDatasMap = SearchUtils.universalRecordGoodsSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
-		List<Map<String, Object>> errorList = (List<Map<String, Object>>) reDatasMap.get("error");
 		paramMap.put("goodsMerchantId", merchantId);
 		paramMap.put("deleteFlag", 0);
 		Table reList = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, page, size);
 		Table reListCount = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			statusMap.put(BaseCode.ERROR.toString(), errorList);
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.getRows().isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reList));
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reListCount.getRows().size());
-			statusMap.put(BaseCode.ERROR.toString(), errorList);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList), reListCount.getRows().size());
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			statusMap.put(BaseCode.ERROR.toString(), errorList);
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}
 

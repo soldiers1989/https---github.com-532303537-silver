@@ -97,16 +97,22 @@ public interface OrderService {
 	/**
 	 * 获取商户每日订单报表
 	 * 
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param page 页数
-	 * @param size 数目
-	 * @param startDate 开始日期
-	 * @param endDate 结束日期
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
+	 * @param startDate
+	 *            开始日期
+	 * @param endDate
+	 *            结束日期
 	 * @return Map
 	 */
-	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
-			String startDate, String endDate);
+	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, String startDate,
+			String endDate);
 
 	/**
 	 * 银盟电子订单下单
@@ -141,58 +147,52 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> params, int page, int size);
 
-	/**
-	 * 管理员查询商户订单报表
-	 * 
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数目
-	 * @param startDate
-	 *            开始时间
-	 * @param endDate
-	 *            结束时间
-	 * @param merchantName
-	 *            商户名称
-	 * @return Map
-	 */
-	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate,
-			String merchantName);
-
 
 	/**
 	 * 用户删除商城下单信息
-	 * @param entOrderNo 订单Id
-	 * @param memberName 用户名称
-	 * @return	Map
+	 * 
+	 * @param entOrderNo
+	 *            订单Id
+	 * @param memberName
+	 *            用户名称
+	 * @return Map
 	 */
-	public Map<String,Object> memberDeleteOrderInfo(String entOrderNo, String memberName);
+	public Map<String, Object> memberDeleteOrderInfo(String entOrderNo, String memberName);
 
 	/**
 	 * 代理商查询订单报表信息
-	 * @param datasMap 参数
-	 * @return Map 
+	 * 
+	 * @param datasMap
+	 *            参数
+	 * @return Map
 	 */
-	public Map<String,Object> getAgentOrderReport(Map<String, Object> datasMap);
+	public Map<String, Object> getAgentOrderReport(Map<String, Object> datasMap);
 
 	/**
 	 * 第三方商城平台传递订单信息接口
-	 * @param datasMap 参数
+	 * 
+	 * @param datasMap
+	 *            参数
 	 * @return Map
 	 */
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap);
 
 	/**
 	 * 管理员获取已移除到历史记录(删除)表中的订单及订单商品信息
-	 * @param datasMap 参数
-	 * @param page 页数
-	 * @param size 数目
+	 * 
+	 * @param datasMap
+	 *            参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
 	 * @return Map
 	 */
 	public Map<String, Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size);
 
 	/**
 	 * 第三方获取订单信息
+	 * 
 	 * @param datasMap
 	 * @return
 	 */

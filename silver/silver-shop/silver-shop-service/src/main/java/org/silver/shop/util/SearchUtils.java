@@ -7,6 +7,7 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.util.DateUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 
 /**
@@ -44,6 +45,11 @@ public final class SearchUtils {
 	 * 下划线命名删除标识
 	 */
 	private static final String DEL_FLAG = "del_flag";
+	/**
+	 * 参数名称
+	 */
+	private static final String PARAM = "param";
+	
 
 	/**
 	 * 通用检索方法
@@ -206,7 +212,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
 		return statusMap;
 	}
@@ -219,6 +225,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMOrderSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -277,7 +286,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
 		return statusMap;
 	}
@@ -333,7 +342,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
 		return statusMap;
 	}
@@ -346,6 +355,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalAgentSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -368,7 +380,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
 		return statusMap;
 	}
@@ -381,6 +393,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMerchantOrderSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -411,7 +426,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("viceParams", viceParams);
 		return statusMap;
 	}
@@ -429,6 +444,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalStockSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -476,7 +494,7 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("viceParams", viceParams);
 		return statusMap;
 	}
@@ -489,6 +507,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalOrderImplLogSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -521,8 +542,81 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put("param", paramMap);
+		statusMap.put(PARAM, paramMap);
 		statusMap.put("viceParams", viceParams);
+		return statusMap;
+	}
+
+	/**
+	 * 商城后台备案商品信息通用检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalRecordGoodsSearch(Map<String, Object> datasMap) {
+		if(datasMap ==null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				break;
+			case "goodsName":
+				blurryMap.put(key, "%" + value + "%");
+				break;
+			case "status":
+				try {
+					int status = Integer.parseInt(value);
+					paramMap.put(key, status);
+				} catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("status参数错误,请重新输入!");
+				}
+				break;
+			case "recordFlag":
+				try {
+					int recordFlag = Integer.parseInt(value);
+					paramMap.put(key, recordFlag);
+				} catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("recordFlag参数错误,请重新输入!");
+				}
+				break;
+
+			case "customsPort":
+				paramMap.put(key, value);
+				break;
+			case "spareGoodsFirstTypeId":
+					paramMap.put(key, value);
+				break;
+			case "spareGoodsSecondTypeId":
+					paramMap.put(key, value);
+				break;
+			case "spareGoodsThirdTypeId":
+					paramMap.put(key, value);
+				break;
+			case "barCode":
+				paramMap.put(key, value);
+			break;
+			default:
+				break;
+			}
+		}
+		statusMap.put(PARAM, paramMap);
+		statusMap.put("blurry", blurryMap);
 		return statusMap;
 	}
 }

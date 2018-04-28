@@ -11,7 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
@@ -40,7 +41,7 @@ import net.sf.json.JSONObject;
 @Service
 public class ManualOrderTransaction {
 
-	private static Logger logger = Logger.getLogger(Object.class);
+	private static Logger logger = LogManager.getLogger(ManualOrderTransaction.class);
 
 	@Reference
 	private MorderService morderService;

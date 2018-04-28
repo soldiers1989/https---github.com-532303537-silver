@@ -21,7 +21,7 @@ import net.sf.json.JSONObject;
 public class AccessTokenServiceImpl implements AccessTokenService {
 
 	@Override
-	public Map<String, Object> getAccessToken(String appkey,String appSecret) {
+	public Map<String, Object> getAccessToken(String appkey, String appSecret) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		String timestamp = String.valueOf(System.currentTimeMillis());
@@ -33,7 +33,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 		}
 		params.put("appkey", appkey);
 		params.put("timestamp", timestamp);
-		
+
 		params.put("signature", signature);
 		params.put("type", "oauth_token");
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params);
@@ -81,39 +81,40 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 	}
 
 	@Override
-	public Map<String, Object> getRedisToks(String appkey,String appSecret) {
+	public Map<String, Object> getRedisToks(String appkey, String appSecret) {
 		// 缓存中的键
-		String redisKey = "Shop_Key_PushRecord_Tok_"+appkey;
-		String redisTok = JedisUtil.get(redisKey);
+		String redisKey = "Shop_Key_PushRecord_Tok_" + appkey;
+		//String redisTok = JedisUtil.get(redisKey);
 		// 当缓存中已有tok时
-		if (StringEmptyUtils.isNotEmpty(redisTok)) {
-			return ReturnInfoUtils.successDataInfo(redisTok.replaceAll("\"", ""), 0);
-		} else {
+		//if (StringEmptyUtils.isNotEmpty(redisTok)) {
+		//	return ReturnInfoUtils.successDataInfo(redisTok.replaceAll("\"", ""));
+		//} else {
 			// 请求获取tok
-			Map<String, Object> tokMap = getAccessToken(appkey,appSecret);
+			Map<String, Object> tokMap = getAccessToken(appkey, appSecret);
 			if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
 				return tokMap;
 			}
+			System.out.println("--->>>"+tokMap.get(BaseCode.DATAS.toString()));
 			// 由于服务器缓存时间为1小时,为岔开时间故而商城为50分钟
 			JedisUtil.set(redisKey, 2500, tokMap.get(BaseCode.DATAS.toString()));
 			return tokMap;
-		}
+		//}
 	}
-	
+
 	public static void main(String[] args) {
-		Map<String, Object> params = new HashMap<>();
-		String timestamp = String.valueOf(System.currentTimeMillis());
-		String signature = "";
-		try {
-			signature = MD5.getMD5((YmMallConfig.APPKEY + YmMallConfig.APPSECRET + timestamp).getBytes("UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		params.put("appkey", YmMallConfig.APPKEY);
-		params.put("timestamp", timestamp);
-		params.put("signature", signature);
-		params.put("type", "oauth_token");
-		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token", params);
-		System.out.println("---->?>>"+resultStr);
+		/*
+		 * Map<String, Object> params = new HashMap<>(); String timestamp =
+		 * String.valueOf(System.currentTimeMillis()); String signature = "";
+		 * try { signature = MD5.getMD5((YmMallConfig.APPKEY +
+		 * YmMallConfig.APPSECRET + timestamp).getBytes("UTF-8")); } catch
+		 * (UnsupportedEncodingException e) { e.printStackTrace(); }
+		 * params.put("appkey", YmMallConfig.APPKEY); params.put("timestamp",
+		 * timestamp); params.put("signature", signature); params.put("type",
+		 * "oauth_token"); String resultStr =
+		 * YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/oauth/token",
+		 * params); System.out.println("---->?>>"+resultStr);
+		 */
+		AccessTokenServiceImpl a = new AccessTokenServiceImpl();
+		System.out.println(a.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET));
 	}
 }

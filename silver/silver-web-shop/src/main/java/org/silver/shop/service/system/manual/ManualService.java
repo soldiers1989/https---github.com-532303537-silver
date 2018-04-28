@@ -12,7 +12,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
@@ -45,8 +46,7 @@ import net.sf.json.JSONObject;
 
 @Service("manualService")
 public class ManualService {
-
-	private static Logger logger = Logger.getLogger(ManualService.class);
+	private static Logger logger = LogManager.getLogger(ManualService.class);
 
 	@Reference
 	private MorderService morderService;

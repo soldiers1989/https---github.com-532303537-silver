@@ -36,6 +36,7 @@ import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
@@ -51,6 +52,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.StringUtil;
 
 import net.sf.json.JSONObject;
+import redis.clients.jedis.Jedis;
 
 @Service(interfaceClass = YsPayReceiveService.class)
 public class YsPayReceiveServiceImpl implements YsPayReceiveService {
@@ -165,12 +167,15 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return reOrderRecordGoodsMap;
 				}
 				// 请求获取tok
+				//4a5de70025a7425dabeef6e8ea752976
 				Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY,
 						YmMallConfig.APPSECRET);
-				if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
+				if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reTokMap;
 				}
+
 				String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
+
 				Map<String, Object> recordMap = new HashMap<>();
 				recordMap.put("ebpEntNo", goodsRecordInfo.getEbpEntNo());
 				recordMap.put("ebpEntName", goodsRecordInfo.getEbpEntName());
@@ -181,6 +186,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				recordMap.put("ciqOrgCode", goodsRecordInfo.getCiqOrgCode());
 				recordMap.put("customsCode", goodsRecordInfo.getCustomsCode());
 				recordMap.put("eport", goodsRecordInfo.getCustomsPort());
+				//4a5de70025a7425dabeef6e8ea752976
+				recordMap.put("appkey", YmMallConfig.APPKEY);
 				// 发送支付单备案
 				Map<String, Object> rePayMap = sendPayment(merchantId, paymentInfoMap, tok, recordMap,
 						YmMallConfig.PAYMENTNOTIFYURL);
@@ -1042,5 +1049,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			statusMap.put(BaseCode.DATAS.toString(), serialNo);
 			return statusMap;
 		}
+	}
+
+	public static void main(String[] args) {
+		// 4a5de70025a7425dabeef6e8ea752976
+		// 4a5de70025a7425dabeef6e8ea752976;
+		// 缓存中的键
+		Jedis j = new Jedis("150.242.58.22", 6380);
+		j.auth("jugg");
+
+		String redisKey = "4a5de70025a7425dabeef6e8ea752976_accessToken";
+		String redisTok = j.get(redisKey);
+		System.out.println(redisTok);
 	}
 }

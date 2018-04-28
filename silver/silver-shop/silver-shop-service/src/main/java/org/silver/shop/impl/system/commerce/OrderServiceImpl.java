@@ -225,14 +225,22 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	/**
-	 *  创建订单头信息
-	 * @param memberId 用户Id
-	 * @param memberName 用户名称
-	 * @param orderId 订单Id
-	 * @param stock 商品库存实体类
-	 * @param entOrderNo 订单Id
-	 * @param recInfo 收货人信息实体类
-	 * @param feeMap 费率信息Map
+	 * 创建订单头信息
+	 * 
+	 * @param memberId
+	 *            用户Id
+	 * @param memberName
+	 *            用户名称
+	 * @param orderId
+	 *            订单Id
+	 * @param stock
+	 *            商品库存实体类
+	 * @param entOrderNo
+	 *            订单Id
+	 * @param recInfo
+	 *            收货人信息实体类
+	 * @param feeMap
+	 *            费率信息Map
 	 * @return Map
 	 */
 	private final Map<String, Object> createOrderHeadInfo(String memberId, String memberName, String orderId,
@@ -777,28 +785,23 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, int page, int size,
-			String startDate, String endDate) {
-		// Map<String, Object> statusMap = new HashMap<>();
+	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, String startDate,
+			String endDate) {
 		Map<String, Object> paramsMap = new HashMap<>();
-		if (page >= 0 && size >= 0) {
-			if (StringEmptyUtils.isNotEmpty(merchantId)) {
-				paramsMap.put("merchantId", merchantId);
-			}
-			paramsMap.put("merchantName", merchantName);
-			paramsMap.put("startDate", startDate);
-			paramsMap.put("endDate", endDate);
-			Table reList = orderDao.getOrderDailyReport(paramsMap, page, size);
-			// Table totalCount = orderDao.getOrderDailyReport(paramsMap, 0, 0);
-			if (reList == null) {
-				return ReturnInfoUtils.errorInfo("服务器繁忙!");
-			} else if (!reList.getRows().isEmpty()) {
-				return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
-			} else {
-				return ReturnInfoUtils.errorInfo("暂无数据!");
-			}
+		if (StringEmptyUtils.isNotEmpty(merchantId)) {
+			paramsMap.put("merchantId", merchantId);
 		}
-		return ReturnInfoUtils.errorInfo("请求参数出错,请核对信息!");
+		paramsMap.put("merchantName", merchantName);
+		paramsMap.put("startDate", startDate);
+		paramsMap.put("endDate", endDate);
+		Table reList = orderDao.getOrderDailyReport(paramsMap);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无报表数据!");
+		}
 	}
 
 	@Override
@@ -945,11 +948,6 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 
-	}
-
-	@Override
-	public Map<String, Object> getOrderReport(int page, int size, String startDate, String endDate, String merchantId) {
-		return getMerchantOrderDailyReport(merchantId, null, page, size, startDate, endDate);
 	}
 
 	@Override

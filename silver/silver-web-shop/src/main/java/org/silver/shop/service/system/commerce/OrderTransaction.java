@@ -100,13 +100,13 @@ public class OrderTransaction {
 	}
 
 	// 获取商户每日订单报表
-	public Map<String, Object> getMerchantOrderReport(int page, int size, String startDate, String endDate) {
+	public Map<String, Object> getMerchantOrderReport( String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return orderService.getMerchantOrderDailyReport(merchantId, merchantName, page, size, startDate, endDate);
+		return orderService.getMerchantOrderDailyReport(merchantId, merchantName,  startDate, endDate);
 	}
 
 	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
@@ -131,12 +131,9 @@ public class OrderTransaction {
 	}
 
 	// 管理员查询商户订单报表
-	public Map<String, Object> managerGetOrderReport(int page, int size, String startDate, String endDate,
-			String merchantId) {
-
-		return orderService.getOrderReport(page, size, startDate, endDate, merchantId);
+	public Map<String, Object> managerGetOrderReport(String startDate, String endDate, String merchantId) {
+		return orderService.getMerchantOrderDailyReport(merchantId, null, startDate, endDate);
 	}
-
 
 	// 用户删除订单信息
 	public Object memberDeleteOrderInfo(String entOrderNo) {
@@ -160,17 +157,17 @@ public class OrderTransaction {
 		return orderService.getAgentOrderReport(datasMap);
 	}
 
-	public Map<String,Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size) {
-		
-		return orderService.getAlreadyDelOrderInfo(datasMap,page,size);
+	public Map<String, Object> getAlreadyDelOrderInfo(Map<String, Object> datasMap, int page, int size) {
+
+		return orderService.getAlreadyDelOrderInfo(datasMap, page, size);
 	}
 
-	//第三方商城平台传递订单信息入口
+	// 第三方商城平台传递订单信息入口
 	public Map<String, Object> thirdPartyBusiness(Map<String, Object> datasMap) {
 		return orderService.thirdPartyBusiness(datasMap);
 	}
 
-	//第三方查询订单信息
+	// 第三方查询订单信息
 	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
 		return orderService.getThirdPartyInfo(datasMap);
 	}
