@@ -15,6 +15,8 @@ import org.silver.shop.model.common.category.HsCode;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service(interfaceClass = ShopCarService.class)
@@ -24,7 +26,6 @@ public class ShopCarServiceImpl implements ShopCarService {
 	private ShopCarDao shopCarDao;
 
 	public Map<String, Object> addGoodsToShopCar(String memberId, String memberName, String entGoodsNo, int count) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = new HashMap<>();
 		params.put("entGoodsNo", entGoodsNo);
 		// 根据前台传递的商品ID查询商品是否存在
@@ -36,9 +37,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 		params.put("entGoodsNo", entGoodsNo);
 		List<Object> reShopCart = this.shopCarDao.findByProperty(ShopCarContent.class, params, 1, 1);
 		if ((goodsRecordList == null) || (stockList == null) || (reShopCart == null)) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
 		}
 		if ((!goodsRecordList.isEmpty()) && (!stockList.isEmpty())) {
 			// 获取库存信息
@@ -46,9 +45,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 			int reSellCount = stock.getSellCount();
 			// 判断是否有足够的库存
 			if (count > reSellCount) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "库存不足,请重新输入");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("库存不足,请重新输入!");
 			}
 			GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsRecordList.get(0);
 			ShopCarContent shopCart = new ShopCarContent();
@@ -62,13 +59,9 @@ public class ShopCarServiceImpl implements ShopCarService {
 				Double price = Double.valueOf(oldShopCart.getRegPrice());
 				oldShopCart.setTotalPrice(newCount * price.doubleValue());
 				if (!this.shopCarDao.update(oldShopCart)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
 				}
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.successInfo();
 			}
 			shopCart.setMemberId(memberId);
 			shopCart.setMemberName(memberName);
@@ -76,7 +69,11 @@ public class ShopCarServiceImpl implements ShopCarService {
 			shopCart.setMerchantName(goodsRecord.getGoodsMerchantName());
 			shopCart.setGoodsBaseId(goodsRecord.getGoodsDetailId());
 			shopCart.setGoodsName(goodsRecord.getSpareGoodsName());
-			shopCart.setGoodsImage(goodsRecord.getSpareGoodsImage());
+			String image = goodsRecord.getSpareGoodsImage();
+			if(StringEmptyUtils.isNotEmpty(image)){
+				String[] strArr = image.split(";");
+				shopCart.setGoodsImage(strArr[0]);
+			}
 			shopCart.setGoodsStyle(goodsRecord.getSpareGoodsStyle());
 			shopCart.setCount(count);
 			// 购物车商品选中标识：1-选中,2-未选中
@@ -86,18 +83,12 @@ public class ShopCarServiceImpl implements ShopCarService {
 			shopCart.setTotalPrice(totalPrice.doubleValue());
 			shopCart.setEntGoodsNo(stock.getEntGoodsNo());
 			if (!this.shopCarDao.add(shopCart)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
 			}
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "商品不存在！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品不存在！");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	public Map<String, Object> getGoodsToShopCartInfo(String memberId, String memberName) {

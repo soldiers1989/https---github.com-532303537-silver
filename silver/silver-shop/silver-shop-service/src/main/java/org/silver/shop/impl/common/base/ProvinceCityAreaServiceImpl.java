@@ -94,13 +94,10 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	@Override
 	public Map<String, Object> getProvinceCityArea2() {
 		Map<String, Object> reMap = new HashMap<>();
-		Map<String, Object> province = null;
 		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
 		if (redisByte != null) {
-			province = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(province), 0);
+			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(SerializeUtil.toObject(redisByte)), 0);
 		} else {
-			// findProvinceCityArePostal();
 			// 查询省市区
 			Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
 			if (table != null && !table.getRows().isEmpty()) {
@@ -113,7 +110,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 					for (int i = 0; i < jsonObject.size(); i++) {
 						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
 						// 由于取出来是row数据,所以需要截取字符串
-						//查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码—_区域名称
+						// 查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码—_区域名称
 						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
 								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
 										"")
@@ -144,7 +141,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 	}
 
 	@Override
-	public Map<String, Object> editProvinceCityAreaInfo(Map<String,Object> params, int flag) {
+	public Map<String, Object> editProvinceCityAreaInfo(Map<String, Object> params, int flag) {
 		switch (flag) {
 		case 1:
 			Map<String, Object> provinceMap = editProvince(JSONObject.fromObject(params));
@@ -174,6 +171,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 
 	/**
 	 * 修改区域信息
+	 * 
 	 * @param datas
 	 * @return Map
 	 */
@@ -197,6 +195,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 
 	/**
 	 * 修改城市信息
+	 * 
 	 * @param datas
 	 * @return
 	 */

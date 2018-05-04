@@ -84,12 +84,14 @@ public class ReturnInfoUtils {
 	 * 多个错误信息返回工具类,注：通过List集合存放Map(错误信息)返回,并且错误信息在ERROR键中
 	 * 
 	 * @param errorList
-	 *			错误信息集合 
-	 * @return Map 
+	 *            错误信息集合
+	 * @return Map
 	 */
 	public static final Map<String, Object> errorInfo(List<Map<String, Object>> errorList) {
-		if (errorList == null || errorList.isEmpty()) {
+		if (errorList == null) {
 			return null;
+		}else if(errorList.isEmpty()){
+			return successInfo();
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());

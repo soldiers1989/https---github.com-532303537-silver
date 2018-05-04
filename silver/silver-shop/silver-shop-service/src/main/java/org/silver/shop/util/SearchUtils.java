@@ -225,7 +225,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMOrderSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -355,7 +355,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalAgentSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -393,7 +393,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMerchantOrderSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -444,7 +444,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalStockSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -507,7 +507,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalOrderImplLogSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -555,7 +555,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalRecordGoodsSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null || datasMap.isEmpty()){
+		if(datasMap ==null ){
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();

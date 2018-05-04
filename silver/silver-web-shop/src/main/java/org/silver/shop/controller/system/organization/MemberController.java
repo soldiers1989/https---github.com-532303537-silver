@@ -323,7 +323,7 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(memberTransaction.batchRegisterMember(jsonArr)).toString();
 	}
-	
+
 	@RequestMapping(value = "/realName", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "会员实名认证")
@@ -341,25 +341,26 @@ public class MemberController {
 		return JSONObject.fromObject(memberTransaction.realName(memberId)).toString();
 	}
 
-	public static void main(String[] args) {
-		JSONArray json = new JSONArray();
-		json.add("SO1804090221615624039");
-		json.add("SO1804090221615498001");
-
-		json.add("SO1804080221614764603");
-		json.add("SO1804080221614651882");
-		json.add("SO1804080221614823124");
-		json.add("SO1804080221614702206");
-
-		json.add("SO1804080221614819380");
-		json.add("SO1804090221615480207");
-		json.add("SO1804090221615609255");
-		json.add("SO1804080221615010168");
-		json.add("SO1804080221614702062");
-
-		json.add("SO1804080221614756808");
-		json.add("SO1804090221615589555");
-		json.add("SO1804080221614715999");
-		System.out.println(json.toString());
+	@RequestMapping(value = "/editPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "会员修改密码")
+	@RequiresRoles("Member")
+	public String editPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId, @RequestParam("oldPassword") String oldPassword,
+			@RequestParam("newPassword") String newPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
+		}
+		if (newPassword.length() < 6 || newPassword.length() > 18) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("新密码长度最少为6位,最长为18位!")).toString();
+		}
+		return JSONObject.fromObject(memberTransaction.editPassword(memberId, oldPassword, newPassword)).toString();
 	}
+	
+	
 }

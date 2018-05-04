@@ -28,9 +28,11 @@ import org.silver.util.AppUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.FileUtils;
+import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -106,21 +108,21 @@ public class ManualOrderTransaction {
 			if (realRowCount <= 0) {
 				return ReturnInfoUtils.errorInfo("导入失败,请检查是否有数据或序号符合要求!");
 			}
-			if (columnTotalCount == 14) { // 企邦模板表格长度
+			if (columnTotalCount == 14) { // 企邦模板表格长度 
 				// 用于前台区分哪家批次号
-				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB");
-				// 多了一行说明
+				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB"); // 多了一行说明
 				realRowCount += 1;
 				invokeTaskUtils.startTask(11, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else if (columnTotalCount == 71) {// 国宗订单模板长度(加上序号列)
-				// 用于前台区分哪家批次号
-				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
+				// 用于前台区分哪家批次号 serialNo = "GZ_" +
+				SerialNoUtils.getSerialNo("GZ");
 				invokeTaskUtils.startTask(10, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else {
-				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板是否符合规范!");
+				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板列数是否符合规范!");
 			}
+
 			excel.closeExcel();
 			statusMap.put("status", 1);
 			statusMap.put("msg", "执行成功,正在读取数据....");
@@ -153,37 +155,37 @@ public class ManualOrderTransaction {
 	 * @param rowTotalCount
 	 *            总行数
 	 * @param excel
+	 * 
+	 * @return int 最后一行序号值
 	 */
 	public static int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
 		int realRowCount = 0;
-		int totalColumnCount = excel.getColumnCount(0);
 		for (int r = rowTotalCount; r > 0; r--) {
 			if (excel.getColumnCount(0) == 0) {
 				continue;
 			}
-			// 默认只需要读取表单中的第一列(序号)
-			for (int c = 0; c < totalColumnCount; c++) {
-				String value = null;
+			String value = null;
+			try {
+				// 默认只需要读取表单中的第一列(序号)
+				value = excel.getCell(0, r, 0);
+			} catch (Exception e) {
+				continue;
+			}
+			// 判断序号是否有值
+			if (StringEmptyUtils.isNotEmpty(value)) {
 				try {
-					value = excel.getCell(0, r, c);
-				} catch (Exception e) {
-					continue;
-				}
-				// 判断序号是否有值
-				if (c == 0 && StringEmptyUtils.isNotEmpty(value)) {
-					try {
-						// 取最后一条数据的序号作为总行数
-						realRowCount = Integer.parseInt(value);
-					} catch (Exception e) {
-						e.printStackTrace();
-						return -1;
-					}
+					// 取最后一条数据的序号作为总行数
+					realRowCount = Integer.parseInt(value);
 					return realRowCount;
+				} catch (Exception e) {
+					logger.error("----导入excel表单读取序号错误----",e);
+					return -1;
 				}
 			}
 		}
 		return -1;
 	}
+
 
 	/**
 	 * 读取国宗订单表
@@ -591,34 +593,39 @@ public class ManualOrderTransaction {
 						orderId = value;
 					} else if (c == 2) {
 						// 商品自编号
-							entGoodsNo = value;
+						entGoodsNo = value;
 					} else if (c == 3) {
 						// 商品名称
-							goodsName = value;
+						goodsName = value;
 					} else if (c == 4) {
 						try {
 							// 商品单价
 							price = Double.parseDouble(value);
+							if (price <= 0) {
+								errorCount++;
+								String msg = "【表格】第" + (r + 1) + "行,商品单价不能为0,请重新输入!";
+								RedisInfoUtils.errorInfoMq(msg, ERROR, params);
+								break;
+							}
 						} catch (Exception e) {
 							errorCount++;
-							String msg = "【表格】第" + (r + 1) + "行,商品单价输入错误!";
+							String msg = "【表格】第" + (r + 1) + "行,商品单价格式错误!";
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
 					} else if (c == 5) {
 						// 数量
 						try {
-							if (Integer.parseInt(value) > 0) {
-								count = Integer.parseInt(value);
-							} else {
+							count = Integer.parseInt(value);
+							if (count <= 0) {
 								errorCount++;
-								String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
+								String msg = "【表格】第" + (r + 1) + "行,商品数量不能为0,请重新输入!!";
 								RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 								break;
 							}
 						} catch (Exception e) {
 							errorCount++;
-							String msg = "【表格】第" + (r + 1) + "行,商品数量输入错误!";
+							String msg = "【表格】第" + (r + 1) + "行,商品数量格式错误!";
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
@@ -635,6 +642,7 @@ public class ManualOrderTransaction {
 						// (启邦客户)商品归属商家代码
 						marCode = value;
 					} else if (c == 10) {
+						//订单人姓名
 						orderDocName = value;
 					} else if (c == 11) {
 						// 身份证号码
@@ -646,6 +654,7 @@ public class ManualOrderTransaction {
 						waybillNo = value;
 					}
 				}
+				//当出现错误时则不进行订单导入的业务逻辑,直接结束循环以下内容
 				if (errorCount > 0) {
 					continue;
 				}
@@ -704,7 +713,7 @@ public class ManualOrderTransaction {
 				params.put("type", "success");
 				excelBufferUtils.writeRedisMq(null, params);
 			} catch (Exception e) {
-				logger.error("--启邦订单导入错误--线程-->" + Thread.currentThread().getName(), e);
+				logger.error("--启邦订单导入错误--线程--" + Thread.currentThread().getName(), e);
 				String msg = "【表格】第" + (r + 1) + "行-->数据不符合规范,请核对数据排序或格式是否正确!";
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);

@@ -469,6 +469,13 @@ public class ExcelUtil {
 		return getCell(this.sheetNum, rowNum, cellNum);
 	}
 
+	/**
+	 * 根据excel字表中索引，行数，列数获取对应的值
+	 * @param sheetNum 工作表索引
+	 * @param rowNum 行数
+	 * @param cellNum 列数
+	 * @return String 值
+	 */
 	public String getCell(int sheetNum, int rowNum, int cellNum) {
 		if (sheetNum < 0 || rowNum < 0) {
 			return null;

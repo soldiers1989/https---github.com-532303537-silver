@@ -1,6 +1,5 @@
 package org.silver.shop.impl.system.manual;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +9,8 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.manual.ManualOrderService;
 import org.silver.shop.api.system.manual.MorderService;
@@ -27,6 +27,7 @@ import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,7 @@ import net.sf.json.JSONObject;
 @Component("manualOrderService")
 public class ManualOrderServiceImpl implements ManualOrderService, MessageListener {
 
-	private static Logger logger = Logger.getLogger(Object.class);
+	private static Logger logger = LogManager.getLogger(ManualOrderServiceImpl.class);
 
 	@Autowired
 	private ManualOrderDao manualOrderDao;
@@ -332,7 +333,20 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			String msg = "订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
 			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
-		if(!PhoneUtils.isPhone(recipientTel)){
+		// 收货人
+		String recipientName = jsonDatas.get("recipientName") + "";
+		// 订单人
+		String orderDocName = jsonDatas.get("orderDocName") + "";
+		// 娜地拉·艾孜拉提
+		if (!StringUtil.isChinese(recipientName) || recipientName.contains("先生") || recipientName.contains("女士")) {
+			String msg = "订单号[" + orderId + "]收货人姓名错误,请核对信息!";
+			RedisInfoUtils.errorInfoMq(msg, "name", params);
+		}
+		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")) {
+			String msg = "订单号[" + orderId + "]订单人姓名错误,请核对信息!";
+			RedisInfoUtils.errorInfoMq(msg, "name", params);
+		}
+		if (!PhoneUtils.isPhone(recipientTel)) {
 			String msg = "订单号[" + orderId + "]收件人电话错误,请核实信息!";
 			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}

@@ -1,6 +1,7 @@
 package org.silver.shop.model.system.commerce;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 购物车实体
@@ -34,6 +35,10 @@ public class ShopCarContent implements Serializable {
 	private int taxFlag;//计算税费标识：1-计算税费,2-不计税费
 	private int courierFeeFlag;//计算(国内快递)物流费标识：1-无运费,2-手动设置运费
 	private String reMark;//备用字段 
+	private String createBy;// 创建人
+	private Date createDate;// 创建时间
+	private String updateBy;// 更新人
+	private Date updateDate;// 更新时间
 	public long getId() {
 		return id;
 	}
@@ -215,6 +220,38 @@ public class ShopCarContent implements Serializable {
 
 	public void setCourierFeeFlag(int courierFeeFlag) {
 		this.courierFeeFlag = courierFeeFlag;
+	}
+
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	public Date getCreateDate() {
+		return createDate;
+	}
+
+	public String getUpdateBy() {
+		return updateBy;
+	}
+
+	public Date getUpdateDate() {
+		return updateDate;
+	}
+
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+
+	public void setUpdateBy(String updateBy) {
+		this.updateBy = updateBy;
+	}
+
+	public void setUpdateDate(Date updateDate) {
+		this.updateDate = updateDate;
 	}
 	
 }

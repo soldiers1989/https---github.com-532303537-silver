@@ -262,7 +262,6 @@ public class ExcelBufferUtils {
 		case "success":
 			sendCounter = Integer.parseInt(redisMap.get(SENDCOUNTER) + "");
 			sendCounter++;
-			System.out.println("---->>"+sendCounter);
 			redisMap.put(SENDCOUNTER, sendCounter);
 			break;
 		case "error":

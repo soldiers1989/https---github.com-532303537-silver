@@ -32,10 +32,6 @@ public class PaymentRecordTask implements Callable<Object> {
 	 * 
 	 * @param dataList
 	 *            订单信息
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
 	 * @param errorList
 	 *            错误信息
 	 * @param customsMap

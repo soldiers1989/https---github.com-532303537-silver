@@ -8,6 +8,9 @@
             <column name="id" />
             <generator class="identity" />
         </id>
+        <property name="merchantFeeId" type="java.lang.String">
+            <column name="merchantFeeId" />
+        </property>
         <property name="merchantId" type="java.lang.String">
             <column name="merchantId" not-null="true"/>
         </property>
@@ -70,6 +73,11 @@
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
+        </property>
+        
+           
+           <property name="status" type="java.lang.String">
+            <column name="status" />
         </property>
     </class>
 </hibernate-mapping>

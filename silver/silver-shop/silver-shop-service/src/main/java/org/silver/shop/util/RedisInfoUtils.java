@@ -42,7 +42,7 @@ public class RedisInfoUtils {
 	 *            错误集合
 	 * @param type
 	 *            错误类型:
-	 *            error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员信息..待续
+	 *            error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员,name-姓名.待续
 	 * @param paramsMap
 	 *            参数
 	 */

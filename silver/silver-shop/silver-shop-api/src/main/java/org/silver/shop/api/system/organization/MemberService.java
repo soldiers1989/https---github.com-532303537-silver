@@ -92,4 +92,13 @@ public interface MemberService {
 	 * @return Map
 	 */
 	public Map<String, Object> realName(String memberId);
+
+	/**
+	 * 根据用户Id，修改密码
+	 * @param memberId 用户Id
+	 * @param newPassword 新密码
+	 * @param oldPassword 原密码
+	 * @return 
+	 */
+	public Object editPassword(String memberId, String oldPassword, String newPassword);
 }

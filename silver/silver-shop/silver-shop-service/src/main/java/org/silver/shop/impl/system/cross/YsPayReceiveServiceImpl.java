@@ -465,7 +465,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	// 保存订单备案商品信息
 	private Map<String, Object> addOrderRecordGoodsInfo(List<Object> reGoodsRecordDetailList,
 			List<Object> reOrderGoodsList) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		String entOrderNo = "";
 		Date date = new Date();
@@ -480,15 +479,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		paramMap2.put("entOrderNo", entOrderNo);
 		List<Object> reOrderRecordGoodsList = ysPayReceiveDao.findByProperty(OrderRecordGoodsContent.class, paramMap2,
 				0, 0);
-		if (reOrderRecordGoodsList != null && reOrderRecordGoodsList.size() > 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return statusMap;
+		if (reOrderRecordGoodsList != null && !reOrderRecordGoodsList.isEmpty()) {
+			return ReturnInfoUtils.successInfo();
 		} else {
 			for (int i = 0; i < reGoodsRecordDetailList.size(); i++) {
 				OrderRecordGoodsContent orderRecordGoods = new OrderRecordGoodsContent();
 				GoodsRecordDetail goodsRecordDetail = (GoodsRecordDetail) reGoodsRecordDetailList.get(i);
 				String count = paramMap.get(goodsRecordDetail.getEntGoodsNo()) + "";
-				orderRecordGoods.setEntOrderNo(orderInfo.getEntOrderNo());
+				orderRecordGoods.setEntOrderNo(entOrderNo);
 				orderRecordGoods.setSeq(goodsRecordDetail.getSeq());
 				orderRecordGoods.setEntGoodsNo(goodsRecordDetail.getEntGoodsNo());
 				orderRecordGoods.setCiqGoodsNo(goodsRecordDetail.getCiqGoodsNo());
@@ -508,20 +506,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				double price = Double.parseDouble(strs[1]);
 				orderRecordGoods.setQty(goodsCount);
 				orderRecordGoods.setUnit(goodsRecordDetail.getgUnit());
-				orderRecordGoods.setPrice(goodsRecordDetail.getRegPrice());
+				orderRecordGoods.setPrice(price);
 				orderRecordGoods.setTotal(goodsCount * price);
 				orderRecordGoods.setCurrCode("142");
 				orderRecordGoods.setNotes("");
 				orderRecordGoods.setDeleteFlag(0);
 				orderRecordGoods.setCreateDate(date);
 				if (!ysPayReceiveDao.add(orderRecordGoods)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "保存备案订单商品信息失败,服务器繁忙!");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("保存备案订单商品信息失败,服务器繁忙!");
 				}
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		}
 
 	}
@@ -749,13 +744,19 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			goodsJson = new JSONObject();
 			GoodsRecordDetail goodsRecordDetail = (GoodsRecordDetail) reGoodsRecordDetailList.get(i);
 			String str = goodsMap.get(goodsRecordDetail.getGoodsName()) + "";
-			String[] strs = str.split("[#]");
+			String[] strs = str.split("#");
 			// 截取拼接在#之前的商品数量
 			int goodsCount = Integer.parseInt(strs[0]);
 			// 截取拼接在#之后的商品单价
 			double price = Double.parseDouble(strs[1]);
 			goodsJson.element("Seq", i + 1);
-			goodsJson.element("EntGoodsNo", goodsRecordDetail.getEntGoodsNo());
+			String entGoodsNo = goodsRecordDetail.getEntGoodsNo();
+			if(entGoodsNo.contains("_")){
+				String[]  s = entGoodsNo.split("_");
+				goodsJson.element("EntGoodsNo", s[0]);
+			}else{
+				goodsJson.element("EntGoodsNo", entGoodsNo);
+			}
 			goodsJson.element("CIQGoodsNo", goodsRecordDetail.getCiqGoodsNo());
 			goodsJson.element("CusGoodsNo", goodsRecordDetail.getCusGoodsNo());
 			goodsJson.element("HSCode", goodsRecordDetail.getHsCode());
@@ -884,7 +885,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			}
 			String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
-				JSONObject.fromObject(resultStr);
+				return JSONObject.fromObject(resultStr);
 			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), "服务器接受信息失败,服务器繁忙！");

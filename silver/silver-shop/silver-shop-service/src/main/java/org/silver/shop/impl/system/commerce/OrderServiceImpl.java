@@ -327,7 +327,11 @@ public class OrderServiceImpl implements OrderService {
 		orderGoods.setGoodsPrice(stock.getRegPrice());
 		orderGoods.setGoodsCount(count);
 		orderGoods.setGoodsTotalPrice(count * stock.getRegPrice());
-		orderGoods.setGoodsImage(goodsRecordInfo.getSpareGoodsImage());
+		String image = goodsRecordInfo.getSpareGoodsImage();
+		if(StringEmptyUtils.isNotEmpty(image)){
+			String[] strArr = image.split(";");
+			orderGoods.setGoodsImage(strArr[0]);
+		}
 		// 待定,暂时未0
 		orderGoods.setTax(0.0);
 		orderGoods.setLogisticsCosts(0.0);
@@ -926,7 +930,6 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> dataMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-
 		List<Morder> orderList = orderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		Long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
 		if (orderList == null) {

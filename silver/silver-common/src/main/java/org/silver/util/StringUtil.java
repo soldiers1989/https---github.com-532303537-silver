@@ -98,7 +98,7 @@ public class StringUtil {
 
 	public static void main(String[] args) {
 		// System.out.println(StringUtil.addPrefixZero("2356", 8));
-		System.out.println(isContainChinese("鵼隻1"));
+		System.out.println(isContainChinese("吾尔尼沙·阿不力米提".replace("·", "")));
 		//System.out.println(isNumeric("1中"));
 	}
 }

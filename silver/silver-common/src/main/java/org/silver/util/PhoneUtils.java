@@ -22,7 +22,7 @@ public class PhoneUtils {
 	 * @param 手机号码
 	 */
 	public static boolean isPhone(String phone) {
-		String regex = "^((13[0-9])|(14[5,7,9])|(15([0-3]|[5-9]))|(17[0,1,3,5,6,7,8])|(18[0-9])|(19[8|9]))\\d{8}$";
+		String regex = "^((13[0-9])|(14[5,7,9])|(15([0-3]|[5-9]))|(16([6]))|(17[0,1,3,5,6,7,8])|(18[0-9])|(19[8|9]))\\d{8}$";
 		if (StringEmptyUtils.isEmpty(phone) || phone.length() != 11) {
 			return false;
 		} else {
@@ -37,6 +37,6 @@ public class PhoneUtils {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(isPhone(null));
+		System.out.println(isPhone("16602709896"));
 	}
 }

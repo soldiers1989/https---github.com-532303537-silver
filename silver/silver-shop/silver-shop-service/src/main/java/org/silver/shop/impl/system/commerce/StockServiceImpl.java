@@ -151,6 +151,8 @@ public class StockServiceImpl implements StockService {
 			stock.setSellFlag(2);
 			// 商品备案Id
 			stock.setEntGoodsNo(goodsRecord.getEntGoodsNo());
+			stock.setCreateDate(new Date());
+			stock.setCreateBy(merchantName);
 			if (!stockDao.add(stock)) {
 				errorMap.put(BaseCode.MSG.toString(), "保存 " + goodsRecord.getGoodsName() + " 商品错误!");
 				lm.add(errorMap);
@@ -270,7 +272,11 @@ public class StockServiceImpl implements StockService {
 				errorList.add(errorMap);
 			}
 		}
-		return ReturnInfoUtils.errorInfo(errorList);
+		Map<String,Object> statusMap = new HashMap<>();
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		statusMap.put(BaseCode.ERROR.toString(), errorList);
+		return statusMap;
 	}
 
 	@Override

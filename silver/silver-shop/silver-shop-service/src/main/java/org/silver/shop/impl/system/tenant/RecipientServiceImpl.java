@@ -194,8 +194,8 @@ public class RecipientServiceImpl implements RecipientService {
 				return reMap;
 			}
 			RecipientContent recipient = (RecipientContent) reMap.get(BaseCode.DATAS.toString());
-			recipient.setRecipientCountryName(json.get("recipientCountryName") + "");
-			recipient.setRecipientCountryCode(json.get("recipientCountryCode") + "");
+			recipient.setRecipientCountryName("中国");
+			recipient.setRecipientCountryCode("142");
 			recipient.setRecProvincesName(json.get("recProvincesName") + "");
 			recipient.setRecProvincesCode(json.get("recProvincesCode") + "");
 			recipient.setRecCityName(json.get("recCityName") + "");
@@ -227,10 +227,7 @@ public class RecipientServiceImpl implements RecipientService {
 		}
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 	}
-
-	public static void main(String[] args) {
-		System.out.println();
-	}
+	
 	/**
 	 * 根据收货地址信息流水Id 查询对应的收货地址信息
 	 * 

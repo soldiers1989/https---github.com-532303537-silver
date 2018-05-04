@@ -49,16 +49,5 @@ public class ManualOrderController {
 		return JSONObject.fromObject(reqMap).toString();
 	}
 
-	private static Logger logger2 = LogManager.getLogger("-aaa-a----a-a--");
 
-	public static void main(String[] args) {
-		JSONArray json = null;
-		try {
-			json.size();
-		} catch (Exception e) {
-			logger2.error("json错误！", e);
-			// logger.debug("Hello World!");
-			// e.printStackTrace();
-		}
-	}
 }

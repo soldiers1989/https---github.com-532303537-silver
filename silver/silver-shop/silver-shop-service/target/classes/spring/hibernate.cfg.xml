@@ -125,7 +125,7 @@
 		<mapping resource="org/silver/shop/model/system/AuthorityUser.hbm.xml" />
 		
 		<mapping resource="org/silver/shop/model/system/tenant/EvaluationContent.hbm.xml" />
-		
+		<mapping resource="org/silver/shop/model/system/tenant/MerchantFeeContent.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

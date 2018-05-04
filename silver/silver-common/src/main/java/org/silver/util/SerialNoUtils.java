@@ -4,6 +4,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
+
 /**
  * 商城流水号生成工具类
  */
@@ -118,8 +121,9 @@ public class SerialNoUtils {
 	/**
 	 * 根据(自编抬头)抬头获取当天缓存中的自增数
 	 * 
-	 * @param topStr 自编抬头
-	 * @return int 
+	 * @param topStr
+	 *            自编抬头
+	 * @return int
 	 */
 	public static final int getSerialNo(String topStr) {
 		String dateSign = DateUtil.format(new Date(), "yyyyMMdd");
@@ -157,7 +161,7 @@ public class SerialNoUtils {
 			strCount = "0" + strCount;
 		}
 		String time = DateUtil.formatDate(date, "yyyyMMdd");
-		//自增数已经超过99999的时候,随机数减1位
+		// 自增数已经超过99999的时候,随机数减1位
 		if (strCount.length() > 5) {
 			randomNumber = 3;
 		}
@@ -173,5 +177,31 @@ public class SerialNoUtils {
 		System.out.println("YM20180320022081798".length());
 		System.out.println(map);
 		System.out.println(map.toString());
+	}
+
+	/**
+	 * 生成流水号不要后4位随机数
+	 *  流水号格式为:自编抬头+五位增长数(当天缓存自增数)
+	 * 
+	 * @param topStr
+	 *            自编抬头
+	 * @param id
+	 *            流水号数目
+	 * @return String
+	 */
+	public static String getNotRandomSerialNo(String topStr, long id) {
+		// 判断数据库查询出数据如果小于0,则中断程序,告诉异常
+		if (id < 0) {
+			return null;
+		}
+		// 得出的总数上+1
+		long count = id + 1;
+		String strId = String.valueOf(count);
+		// 当商户ID没有5位数时,前面补0
+		while (strId.length() < 5) {
+			strId = "0" + strId;
+		}
+		return topStr  + strId;
+
 	}
 }

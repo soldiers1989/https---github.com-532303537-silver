@@ -1,23 +1,17 @@
 package org.silver.shop.impl.system.manual;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Resource;
 
-import org.hibernate.loader.custom.Return;
+import org.apache.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -32,29 +26,21 @@ import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
-import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
-import org.silver.shop.task.OrderRecordTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
-import org.silver.util.CalculateCpuUtils;
 import org.silver.util.CompressUtils;
-import org.silver.util.DateUtil;
-import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.SerializeUtil;
 import org.silver.util.SortUtil;
-import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
-import org.silver.util.TaskUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -78,7 +64,7 @@ public class MpayServiceImpl implements MpayService {
 	 * 错误标识
 	 */
 	private static final String ERROR = "error";
-
+	private static Logger logger = Logger.getLogger(Object.class);
 	@Resource
 	private MpayDao mpayDao;
 	@Resource
@@ -582,7 +568,7 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocType", order.getOrderDocType());
 		orderJson.element("OrderDocId", order.getOrderDocId());
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
-		orderJson.element("OrderDate", order.getCreate_date());
+		orderJson.element("OrderDate", order.getOrderDate());
 		orderJson.element("entPayNo", order.getTrade_no());
 		orderJson.element("waybill", order.getWaybill());
 

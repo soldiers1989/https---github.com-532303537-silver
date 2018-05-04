@@ -83,7 +83,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	 *            国检编码
 	 * @return boolean
 	 */
-	private boolean checkCCIQ(String ciqOrgName, String ciqOrgCode) {
+	public boolean checkCCIQ(String ciqOrgName, String ciqOrgCode) {
 		if (StringEmptyUtils.isNotEmpty(ciqOrgName) && StringEmptyUtils.isNotEmpty(ciqOrgCode)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("CCIQName", ciqOrgName);
@@ -105,7 +105,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	 *            海关关区编码
 	 * @return boolean
 	 */
-	private boolean checkGAC(String customsName, String customsCode) {
+	public boolean checkGAC(String customsName, String customsCode) {
 		if (StringEmptyUtils.isNotEmpty(customsName) && StringEmptyUtils.isNotEmpty(customsCode)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("GACName", customsName);
@@ -127,7 +127,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	 *            城市编码
 	 * @return boolean
 	 */
-	private boolean checkCity(String cityName, String cityCode) {
+	public boolean checkCity(String cityName, String cityCode) {
 		if (StringEmptyUtils.isNotEmpty(cityName) && StringEmptyUtils.isNotEmpty(cityCode)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("cityName", cityName);
@@ -149,7 +149,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	 *            省份编码
 	 * @return boolean
 	 */
-	private boolean checkProvince(String provinceName, String provinceCode) {
+	public boolean checkProvince(String provinceName, String provinceCode) {
 		if (StringEmptyUtils.isNotEmpty(provinceName) && StringEmptyUtils.isNotEmpty(provinceCode)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("provinceName", provinceName);

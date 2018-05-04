@@ -47,6 +47,17 @@
         <property name="entGoodsNo" type="java.lang.String">
         	<column name="entGoodsNo" not-null="true"/>
         </property>
-       
+       	<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
     </class>
 </hibernate-mapping>

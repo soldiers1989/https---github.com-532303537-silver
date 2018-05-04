@@ -13,6 +13,7 @@ public class MerchantFeeContent implements Serializable {
 	 */
 	private static final long serialVersionUID = 3679696160927798741L;
 	private long id;
+	private String merchantFeeId;//商户费用流水Id
 	private String merchantId;// 商户Id
 	private String merchantName;// 商户名称
 	private String provinceCode;// 省份编码
@@ -27,6 +28,7 @@ public class MerchantFeeContent implements Serializable {
 	private String ciqOrgName;// 检验检疫机构名称
 	private double platformFee;// 平台服务费-暂定为千分之几
 	private String type; //类型：goodsRecord(商品备案)、orderRecord(订单备案)、paymentRecord(支付单备案)
+	private String status;//状态：1-正常/2-禁用
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -213,6 +215,22 @@ public class MerchantFeeContent implements Serializable {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getMerchantFeeId() {
+		return merchantFeeId;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setMerchantFeeId(String merchantFeeId) {
+		this.merchantFeeId = merchantFeeId;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 }

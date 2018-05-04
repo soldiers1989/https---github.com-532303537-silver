@@ -68,7 +68,7 @@ public class EvaluationController {
 	@RequestMapping(value = "/addInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商城用户进行商品评价")
-	// @RequiresRoles("Member")
+	@RequiresRoles("Member")
 	public String addInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("goodsId") String goodsId,
 			@RequestParam("content") String content, @RequestParam("level") double level, String memberId,
 			String memberName) {
@@ -103,7 +103,16 @@ public class EvaluationController {
 		return JSONObject.fromObject(evaluationTransaction.randomMember()).toString();
 	}
 
-	public static void main(String[] args) {
+	@RequestMapping(value = "/brushEvaluation", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("临时接口--评论商品")
+	public String brushEvaluation(HttpServletRequest req, HttpServletResponse response,@RequestParam("goodsId")String goodsId,
+			@RequestParam("content")String content) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		JSONObject json = JSONObject
 				.fromObject(YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/evaluation/randomMember", null));
 		if (!"1".equals(json.get(BaseCode.STATUS.toString()))) {
@@ -111,8 +120,10 @@ public class EvaluationController {
 		}
 		Map<String, Object> item = new HashMap<>();
 		Map<String, Object> map = (Map<String, Object>) json.get(BaseCode.DATAS.toString());
-		item.put("goodsId", "9344949001140_JZBG");
-		item.put("content", "没想到这么快就到了，以后还在这买");
+		//goodsId
+		//9344949001140_JZBG
+		item.put("goodsId", goodsId);
+		item.put("content", content);
 		Random random = new Random();
 		int s = random.nextInt(9) + 2;
 		String l = 4 + "." + s;
@@ -122,8 +133,7 @@ public class EvaluationController {
 		item.put("level", l);
 		item.put("memberId", map.get("memberId"));
 		item.put("memberName", map.get("memberName"));
-
-		System.out.println(
-				"--评论结果->>" + YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/evaluation/addInfo", item));
+		String resources =YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/evaluation/addInfo", item);
+		return JSONObject.fromObject(resources).toString();
 	}
 }

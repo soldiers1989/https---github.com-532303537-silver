@@ -1,5 +1,6 @@
 package org.silver.shop.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -298,5 +299,14 @@ public class BufferUtils {
 			// 更新web层使用的缓存,用于前台页面显示
 			JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
+	}
+
+	public static void main(String[] args) {
+		String res;
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		long lt = new Long("1524017149000");
+		Date date = new Date(lt);
+		res = simpleDateFormat.format(date);
+		System.out.println(res);
 	}
 }

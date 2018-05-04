@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -32,10 +33,12 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
+import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -48,7 +51,7 @@ import net.sf.json.JsonConfig;
 @Service(interfaceClass = PaymentService.class)
 public class PaymentServiceImpl implements PaymentService {
 
-	private static Logger logger = Logger.getLogger(Object.class);
+	private static Logger logger = LogManager.getLogger(PaymentServiceImpl.class);
 	@Autowired
 	private PaymentDao paymentDao;
 	@Autowired
@@ -264,7 +267,7 @@ public class PaymentServiceImpl implements PaymentService {
 					paymentInfoMap.put("PayStatus", payInfo.getPay_status());
 					paymentInfoMap.put("PayAmount", payInfo.getPay_amount());
 					paymentInfoMap.put("PayCurrCode", payInfo.getPay_currCode());
-					paymentInfoMap.put("PayTime", payInfo.getCreate_date());
+					paymentInfoMap.put("PayTime", payInfo.getPay_time());
 					paymentInfoMap.put("PayerName", payInfo.getPayer_name());
 					paymentInfoMap.put("PayerDocumentType", payInfo.getPayer_document_type());
 					paymentInfoMap.put("PayerDocumentNumber", payInfo.getPayer_document_number());
@@ -495,7 +498,6 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public final Map<String, Object> groupCreateMpay(List<String> orderIDs, List<Map<String, Object>> errorList,
 			Map<String, Object> paramsMap) {
-		Map<String, Object> statusMap = new HashMap<>();
 		String merchantId = paramsMap.get("merchantId") + "";
 		if (merchantId != null && orderIDs != null && !orderIDs.isEmpty()) {
 			//
@@ -516,9 +518,23 @@ public class PaymentServiceImpl implements PaymentService {
 					}
 					String orderDocId = morder.get(0).getOrderDocId();
 					if (!IdcardValidator.validate18Idcard(orderDocId)) {
-						String msg = "订单号[" + order_id + "]实名认证不通过,请核实身份证与姓名信息!";
+						String msg = "订单号[" + order_id + "]实名认证不通过,请核实身份证信息!";
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
+					}
+					if(!StringUtil.isContainChinese(morder.get(0).getOrderDocName().replace("·", ""))){
+						String msg = "订单号[" + order_id + "]下单人姓名错误,请核实信息!";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+						continue;
+					}
+					if(!StringUtil.isContainChinese(morder.get(0).getRecipientName().replace("·", ""))){
+						String msg = "订单号[" + order_id + "]收货人姓名错误,请核实信息!";
+						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+						continue;
+					}
+					if (!PhoneUtils.isPhone(morder.get(0).getRecipientTel())) {
+						String msg = "订单号[" + order_id + "]收件人电话错误,请核实信息!";
+						RedisInfoUtils.commonErrorInfo(msg,errorList, ERROR, params);
 					}
 					//
 					params.clear();
@@ -543,12 +559,9 @@ public class PaymentServiceImpl implements PaymentService {
 			bufferUtils.writeCompletedRedis(errorList, paramsMap);
 			return null;
 		} else {
-			statusMap.put("status", -3);
-			statusMap.put("msg", "非法请求");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 	}
-
 	/**
 	 * 保存支付单实体
 	 * 

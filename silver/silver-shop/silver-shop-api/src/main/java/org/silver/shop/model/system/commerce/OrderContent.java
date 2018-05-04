@@ -40,7 +40,7 @@ public class OrderContent implements Serializable{
 	private String recAreaName;//收货人城市区名称
 	private String recAreaCode;//收货人城市区代码
 	private String recipientAddr;//收货人详细地址
-	private int ehsStatus;// 物流状态：0-未发货1-已发货3-已签收
+	private int ehsStatus;// 物流状态：0-未发货1-已发货2-已签收
 	private String wbEhsentName;// 物流公司名称
 	private String wbEhsentNo;// 物流公司备案号
 	private String entOrderNo;//对接海关订单总编号
