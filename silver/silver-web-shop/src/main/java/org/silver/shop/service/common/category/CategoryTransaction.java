@@ -14,6 +14,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.common.category.CategoryService;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Service;
 
@@ -103,6 +104,9 @@ public class CategoryTransaction {
 			String key = isKey.nextElement();
 			String value = req.getParameter(key);
 			paramMap.put(key, value);
+		}
+		if(paramMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 		return categoryService.editGoodsCategory(managerId, managerName, paramMap);
 	}

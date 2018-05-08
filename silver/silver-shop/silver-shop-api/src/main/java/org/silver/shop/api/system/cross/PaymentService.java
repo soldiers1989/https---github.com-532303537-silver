@@ -73,12 +73,12 @@ public interface PaymentService {
 	 *            订单Id集合
 	 * @param errorList
 	 *            错误集合
-	 * @param paramsMap
-	 *            参数
+	 * @param redisMap
+	 *            缓存参数
 	 * @return Map
 	 */
 	public Map<String, Object> groupCreateMpay(List<String> orderIDs, List<Map<String, Object>> errorList,
-			Map<String, Object> paramsMap);
+			Map<String, Object> redisMap);
 
 	/**
 	 * 分批启动多线程创建支付单流水
@@ -135,5 +135,13 @@ public interface PaymentService {
 	 * @return
 	 */
 	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray, String managerName);
+
+	/**
+	 * 根据支付流水号 校验订单是否归属同一口岸
+	 * @param tradeNos 支付流水号集合 
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	public Map<String,Object> checkPaymentPort(List<String> tradeNos, String merchantId);
 
 }

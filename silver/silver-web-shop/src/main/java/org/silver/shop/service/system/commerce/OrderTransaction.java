@@ -2,6 +2,7 @@ package org.silver.shop.service.system.commerce;
 
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.YmHttpUtil;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -100,13 +102,13 @@ public class OrderTransaction {
 	}
 
 	// 获取商户每日订单报表
-	public Map<String, Object> getMerchantOrderReport( String startDate, String endDate) {
+	public Map<String, Object> getMerchantOrderReport(String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return orderService.getMerchantOrderDailyReport(merchantId, merchantName,  startDate, endDate);
+		return orderService.getMerchantOrderDailyReport(merchantId, merchantName, startDate, endDate);
 	}
 
 	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
@@ -172,4 +174,23 @@ public class OrderTransaction {
 		return orderService.getThirdPartyInfo(datasMap);
 	}
 
+	//
+	public Object checkOrderPort(List<String> orderIDs) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		return orderService.checkOrderPort(orderIDs,merchantId);
+	}
+
+	public static void main(String[] args) {
+		Map<String,Object> item = new HashMap<>();
+		//YM180125052191327
+		//YM180125052181629
+		//YM180125052176708
+		item.put("a", "YM180125052209119");
+		item.put("b", "YM180125052181629");
+		item.put("c", "YM180125052176708");
+		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/checkOrderPort", item));
+	}
 }

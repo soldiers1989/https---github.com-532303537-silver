@@ -16,6 +16,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.cross.PaymentTransaction;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -169,7 +170,6 @@ public class PaymentController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
 		Enumeration<String> itkeys = req.getParameterNames();
 		List<String> orderIDs = new ArrayList<>();
 		String key = "";
@@ -182,9 +182,7 @@ public class PaymentController {
 		if (!orderIDs.isEmpty()) {
 			return JSONObject.fromObject(paytemTransaction.groupCreateMpay(orderIDs)).toString();
 		}
-		reqMap.put("status", -3);
-		reqMap.put("msg", "缺少订单编号，生成失败");
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单Id不能为空!")).toString();
 	}
 
 	@RequestMapping(value = "/managerGetPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -310,10 +308,46 @@ public class PaymentController {
 		}
 		return JSONObject.fromObject(paytemTransaction.managerHideMpayInfo(jsonArray)).toString();
 	}
-
+	/**
+	 * 根据支付单流水号校验订单是否全部属于一个口岸
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/checkPaymentPort", produces = "application/json; charset=utf-8")
+	//@RequiresRoles("Merchant")
+	@ResponseBody
+	public String checkPaymentPort(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Enumeration<String> iskeys = req.getParameterNames();
+		List<String> tradeNos = new ArrayList<>();
+		String key = "";
+		while (iskeys.hasMoreElements()) {
+			key = iskeys.nextElement();
+			String value = req.getParameter(key).trim();
+			tradeNos.add(value);
+		}
+		if (!tradeNos.isEmpty()) {
+			return JSONObject.fromObject(paytemTransaction.checkPaymentPort(tradeNos)).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单Id不能为空!")).toString();
+	}
+	
 	public static void main(String[] args) {
-		JSONArray json = new JSONArray();
-		json.add("aa11");
-		System.out.println(json.get(0));
+		Map<String,Object> item = new HashMap<>();
+		//YM180125052191327
+		//YM180125052181629
+		//YM180125052176708
+		//item.put("a", "YM180125052209119");
+		//2
+		item.put("b", "01O180206003352760");
+		//1
+		item.put("c", "01O180507014605478");
+		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/checkPaymentPort", item));
 	}
 }

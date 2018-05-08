@@ -2,6 +2,7 @@ package org.silver.shop.controller.system.organization;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -362,5 +364,37 @@ public class MemberController {
 		return JSONObject.fromObject(memberTransaction.editPassword(memberId, oldPassword, newPassword)).toString();
 	}
 	
+	@RequestMapping(value = "/editInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "用户修改信息")
+	@RequiresRoles("Member")
+	public String editInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
+		}
+		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		datasMap.put("memberId", memberId);
+		return JSONObject.fromObject(memberTransaction.editInfo(datasMap)).toString();
+	}
 	
+	public static void main(String[] args) {
+		Map<String,Object> item = new HashMap<>();
+		item.put("memberId", "Member_2017000025928");
+		item.put("memberIdCardName", "杨汕");
+		item.put("memberIdCard", "441423198802121716");
+		
+		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo", item));
+	}
 }

@@ -33,6 +33,10 @@ public class Mpay implements Serializable {
 	private String pay_serial_no;//服务器接收成功后返回编号
 	private String pay_re_note;//服务器返回信息
 	private Date pay_time;//付款时间
+	private String eport;//口岸标识1-电子口岸,2-广东智检
+	private String customsCode;//海关关区代码(导出表中-进/出口岸)
+	private String ciqOrgCode;//国检机构代码
+	
 	public long getId() {
 		return id;
 	}
@@ -216,6 +220,30 @@ public class Mpay implements Serializable {
 
 	public void setPay_time(Date pay_time) {
 		this.pay_time = pay_time;
+	}
+
+	public String getEport() {
+		return eport;
+	}
+
+	public String getCustomsCode() {
+		return customsCode;
+	}
+
+	public String getCiqOrgCode() {
+		return ciqOrgCode;
+	}
+
+	public void setEport(String eport) {
+		this.eport = eport;
+	}
+
+	public void setCustomsCode(String customsCode) {
+		this.customsCode = customsCode;
+	}
+
+	public void setCiqOrgCode(String ciqOrgCode) {
+		this.ciqOrgCode = ciqOrgCode;
 	}
 
 }

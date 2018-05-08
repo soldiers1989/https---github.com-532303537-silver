@@ -98,8 +98,7 @@ public class ManualOrderTransaction {
 				return ReturnInfoUtils.errorInfo("文件上传失败,请重试!");
 			}
 			File file = new File("/gadd-excel/" + list.get(0));
-			File dest = copyFile(file);
-			ExcelUtil excel = new ExcelUtil(dest);
+			ExcelUtil excel = new ExcelUtil(file);
 			excel.open();
 			// 总列数
 			int columnTotalCount = excel.getColumnCount(0, 0);
@@ -108,45 +107,26 @@ public class ManualOrderTransaction {
 			if (realRowCount <= 0) {
 				return ReturnInfoUtils.errorInfo("导入失败,请检查是否有数据或序号符合要求!");
 			}
-			if (columnTotalCount == 14) { // 企邦模板表格长度 
+			if (columnTotalCount == 14) { // 企邦模板表格长度
 				// 用于前台区分哪家批次号
 				serialNo = "QB_" + SerialNoUtils.getSerialNo("QB"); // 多了一行说明
 				realRowCount += 1;
 				invokeTaskUtils.startTask(11, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else if (columnTotalCount == 71) {// 国宗订单模板长度(加上序号列)
-				// 用于前台区分哪家批次号 serialNo = "GZ_" +
-				SerialNoUtils.getSerialNo("GZ");
+				// 用于前台区分哪家批次号
+				serialNo = "GZ_" + SerialNoUtils.getSerialNo("GZ");
 				invokeTaskUtils.startTask(10, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else {
 				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板列数是否符合规范!");
 			}
-
 			excel.closeExcel();
 			statusMap.put("status", 1);
 			statusMap.put("msg", "执行成功,正在读取数据....");
 			return statusMap;
 		}
 		return ReturnInfoUtils.errorInfo("上传文件失败,服务器繁忙!");
-	}
-
-	/**
-	 * 复制原始文件
-	 * 
-	 * @param file
-	 * @return
-	 */
-	private File copyFile(File file) {
-		// 副本文件名
-		String imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + ".xlsx";
-		File dest = new File(file.getParentFile() + "/" + imgName);
-		try {
-			FileUtils.copyFileUsingFileChannels(file, dest);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return dest;
 	}
 
 	/**
@@ -161,31 +141,42 @@ public class ManualOrderTransaction {
 	public static int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
 		int realRowCount = 0;
 		for (int r = rowTotalCount; r > 0; r--) {
-			if (excel.getColumnCount(0) == 0) {
+			if (excel.getColumnCount(r) == 0) {
 				continue;
 			}
 			String value = null;
 			try {
 				// 默认只需要读取表单中的第一列(序号)
 				value = excel.getCell(0, r, 0);
-			} catch (Exception e) {
-				continue;
-			}
-			// 判断序号是否有值
-			if (StringEmptyUtils.isNotEmpty(value)) {
-				try {
-					// 取最后一条数据的序号作为总行数
-					realRowCount = Integer.parseInt(value);
-					return realRowCount;
-				} catch (Exception e) {
-					logger.error("----导入excel表单读取序号错误----",e);
-					return -1;
+				// 商品自编号
+				String endGoodsNo = excel.getCell(0, r, 2);
+				// 下单人身份证号码
+				String idCard = excel.getCell(0, r, 11);
+				// 判断序号,商家自编号,商家平台号是否有值
+				if (StringEmptyUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(endGoodsNo)
+						&& StringEmptyUtils.isNotEmpty(idCard)) {
+					try {
+						// 取最后一条数据的序号作为总行数
+						realRowCount = Integer.parseInt(value);
+						return realRowCount;
+					} catch (Exception e) {
+						logger.error("----导入excel表单读取序号错误----", e);
+						return -1;
+					}
 				}
+			} catch (Exception e) {
+				// continue;
 			}
 		}
 		return -1;
 	}
 
+	public static void main(String[] args) {
+		File file = new File("C:\\Users\\Lenovo\\Desktop\\4-27订单--家之宝-53单（启邦）.xlsx");
+		ExcelUtil excel = new ExcelUtil(file);
+		excel.open();
+		System.out.println("---->>>>" + excelRealRowCount(excel.getRowCount(0), excel));
+	}
 
 	/**
 	 * 读取国宗订单表
@@ -642,7 +633,7 @@ public class ManualOrderTransaction {
 						// (启邦客户)商品归属商家代码
 						marCode = value;
 					} else if (c == 10) {
-						//订单人姓名
+						// 订单人姓名
 						orderDocName = value;
 					} else if (c == 11) {
 						// 身份证号码
@@ -654,7 +645,7 @@ public class ManualOrderTransaction {
 						waybillNo = value;
 					}
 				}
-				//当出现错误时则不进行订单导入的业务逻辑,直接结束循环以下内容
+				// 当出现错误时则不进行订单导入的业务逻辑,直接结束循环以下内容
 				if (errorCount > 0) {
 					continue;
 				}

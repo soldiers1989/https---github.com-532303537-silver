@@ -86,18 +86,27 @@
 		<property name="pay_currCode">
 			<column name="pay_currCode" not-null="true" />
 		</property>
-		
+
 		<property name="pay_serial_no">
-			<column name="pay_serial_no"  />
+			<column name="pay_serial_no" />
 		</property>
 		<property name="pay_re_note">
-			<column name="pay_re_note"  />
+			<column name="pay_re_note" />
 		</property>
-			<property name="pay_record_status" type = "int">
-			<column name="pay_record_status"  />
+		<property name="pay_record_status" type="int">
+			<column name="pay_record_status" />
 		</property>
-			<property name="pay_time"  type="java.util.Date">
-			<column name="pay_time"  />
+		<property name="pay_time" type="java.util.Date">
+			<column name="pay_time" />
+		</property>
+		<property name="customsCode">
+			<column name="customsCode" />
+		</property>
+		<property name="eport">
+			<column name="eport" />
+		</property>
+		<property name="ciqOrgCode">
+			<column name="ciqOrgCode" />
 		</property>
 	</class>
 

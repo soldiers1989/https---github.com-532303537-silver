@@ -101,4 +101,11 @@ public interface MemberService {
 	 * @return 
 	 */
 	public Object editPassword(String memberId, String oldPassword, String newPassword);
+
+	/**
+	 * 修改用户信息
+	 * @param datasMap 参数
+	 * @return Map
+	 */
+	public Map<String,Object> editInfo(Map<String, Object> datasMap);
 }

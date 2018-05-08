@@ -18,18 +18,18 @@ public class RedisInfoUtils {
 	 * @param type
 	 *             错误类型:
 	 *            error-错误,orderExcess-订单超额,address-地址信息,idCard-身份证,overweight-超重,phone-手机号码,member-会员信息..待续
-	 * @param paramsMap
+	 * @param redisMap
 	 *            参数
 	 */
 	public static final void commonErrorInfo(String msg, List<Map<String, Object>> errorList, String type,
-			Map<String, Object> paramsMap) {
+			Map<String, Object> redisMap) {
 		Map<String, Object> errMap = new HashMap<>();
 		errMap.put(BaseCode.MSG.toString(), msg);
 		errMap.put("type", type);
 		errorList.add(errMap);
 		BufferUtils bufferUtils = new BufferUtils();
 		if ("error".equals(type)) {
-			bufferUtils.writeRedis(errorList, paramsMap);
+			bufferUtils.writeRedis(errorList, redisMap);
 		}
 	}
 

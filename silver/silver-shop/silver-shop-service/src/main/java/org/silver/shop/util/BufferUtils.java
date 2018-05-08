@@ -43,21 +43,26 @@ public class BufferUtils {
 	private static final String COMPLETED = "completed";
 
 	/**
+	 * 序号
+	 */
+	private static final String SERIAL_NO = "serialNo";
+	
+	/**
 	 * 将正在执行数据更新到缓存中
 	 * 
 	 * @param errl
 	 *            错误信息
 	 */
-	public void writeRedis(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+	public void writeRedis(List<Map<String, Object>> errl, Map<String, Object> redisMap) {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo");
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + redisMap.get("name") + "_" + redisMap.get(SERIAL_NO);
 		synchronized (LOCK) {
-			AtomicInteger counter = (AtomicInteger) paramsMap.get("counter");
+			AtomicInteger counter = (AtomicInteger) redisMap.get("counter");
 			datasMap.put(COMPLETED, counter.getAndIncrement());
 			datasMap.put(BaseCode.STATUS.toString(), "1");
 			datasMap.put(BaseCode.ERROR.toString(), errl);
-			datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+			datasMap.put(TOTAL_COUNT, redisMap.get(TOTAL_COUNT));
 			// 将数据放入到缓存中
 			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 		}
@@ -73,7 +78,7 @@ public class BufferUtils {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String name = paramsMap.get("name") + "";
-		String serialNo = paramsMap.get("serialNo") + "";
+		String serialNo = paramsMap.get(SERIAL_NO) + "";
 		String merchantId = paramsMap.get("merchantId") + "";
 		String merchantName = paramsMap.get("merchantName") + "";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
@@ -90,8 +95,6 @@ public class BufferUtils {
 			if (threadCounter.get() == cpuCount) {// 当最后一次线程时
 				datasMap.put(BaseCode.MSG.toString(), "完成!");
 				datasMap.put(BaseCode.STATUS.toString(), "2");
-				datasMap.remove("count");
-				datasMap.remove("startTime");
 				orderImplLogsService.addErrorLogs(errl, totalCount, serialNo, merchantId, merchantName, name);
 			}
 			datasMap.put(BaseCode.ERROR.toString(), errl);
@@ -133,7 +136,7 @@ public class BufferUtils {
 	 */
 	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get("serialNo")
+		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + paramsMap.get("name") + "_" + paramsMap.get(SERIAL_NO)
 				+ "_service";
 		byte[] redisByte = JedisUtil.get(key.getBytes());
 		if (redisByte != null && redisByte.length > 0) {
@@ -154,7 +157,7 @@ public class BufferUtils {
 	 */
 	private void updateWebRedis(byte[] redisByte, Map<String, Object> paramsMap) {
 		String webKey = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_" + paramsMap.get("name")
-				+ "_" + paramsMap.get("serialNo") + "_Web";
+				+ "_" + paramsMap.get(SERIAL_NO) + "_Web";
 		byte[] webRedisByte = JedisUtil.get(webKey.getBytes());
 		if (webRedisByte != null && webRedisByte.length > 0) {
 			ConcurrentMap<String, Object> redisMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
@@ -165,7 +168,7 @@ public class BufferUtils {
 			// 将web层的错误信息及service层的完成数量,更新进缓存
 			webRedisMap.put(COMPLETED, errCounter + completed);
 			String newKey = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_"
-					+ paramsMap.get("name") + "_" + paramsMap.get("serialNo");
+					+ paramsMap.get("name") + "_" + paramsMap.get(SERIAL_NO);
 			JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(webRedisMap), 3600);
 		}
 	}
@@ -252,7 +255,7 @@ public class BufferUtils {
 	public void writeCompletedRedisMq(Map<String, Object> paramsMap) {
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String name = paramsMap.get("name") + "";
-		String serialNo = paramsMap.get("serialNo") + "";
+		String serialNo = paramsMap.get(SERIAL_NO) + "";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo + "_service";
 		byte[] redisInfo = JedisUtil.get(key.getBytes());
 		String webKey = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo + "_Web";
@@ -265,7 +268,7 @@ public class BufferUtils {
 	private void updateCompletedRedis(byte[] redisInfo, byte[] webRedisInfo, Map<String, Object> paramsMap, String key,
 			String webKey) {
 		String name = paramsMap.get("name") + "";
-		String serialNo = paramsMap.get("serialNo") + "";
+		String serialNo = paramsMap.get(SERIAL_NO) + "";
 		String merchantId = paramsMap.get("merchantId") + "";
 		String merchantName = paramsMap.get("merchantName") + "";
 		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
@@ -301,12 +304,4 @@ public class BufferUtils {
 		}
 	}
 
-	public static void main(String[] args) {
-		String res;
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		long lt = new Long("1524017149000");
-		Date date = new Date(lt);
-		res = simpleDateFormat.format(date);
-		System.out.println(res);
-	}
 }

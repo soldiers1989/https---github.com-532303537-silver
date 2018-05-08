@@ -1,5 +1,6 @@
 package org.silver.shop.impl.common.base;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.mysql.fabric.xmlrpc.base.Array;
 
 @Service(interfaceClass = IdCardService.class)
 public class IdCardServiceImpl implements IdCardService {
@@ -26,7 +28,7 @@ public class IdCardServiceImpl implements IdCardService {
 
 	@Override
 	public Map<String, Object> getAllIdCard(String idName, String idNumber, int page, int size, String type) {
-		if (page >= 0 && size >= 0 ) {
+		if (page >= 0 && size >= 0) {
 			Map<String, Object> params = new HashMap<>();
 			if (StringEmptyUtils.isNotEmpty(idName)) {
 				params.put("name", idName);
@@ -77,42 +79,47 @@ public class IdCardServiceImpl implements IdCardService {
 
 	@Override
 	public Map<String, Object> firstUpdateIdCardInfo() {
+		int orderPage = 1;
+		int orderSize = 200;
 		Map<String, Object> params = new HashMap<>();
 		// 只有订单备案成功后,才导入进实名库
 		params.put("order_record_status", 3);
-		List<Morder> morderList = idCardDao.findByProperty(Morder.class, params, 0, 0);
-		if (morderList != null && !morderList.isEmpty()) {
-			for (Morder order : morderList) {
-				IdCard idCard = new IdCard();
-				String id = order.getOrderDocId();
-				String name = order.getOrderDocName();
-				idCard.setName(name);
-				idCard.setIdNumber(id);
-				//类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-				if(IdcardValidator.validate18Idcard(id)){
-					idCard.setType(3);
-				}else{
-					idCard.setType(5);
-				}
-				idCard.setCreateBy("system");
-				idCard.setCreateDate(new Date());
-				idCard.setDeleteFlag(0);
+		List<Morder> morderList = idCardDao.findByProperty(Morder.class, params, 1, 200);
+		while (morderList != null && !morderList.isEmpty() ) {
+			if (orderPage != 1) {
 				params.clear();
-				params.put("idNumber", id);
-				List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 1, 1);
-				if (idCardList != null && !idCardList.isEmpty()) {
-					if(!IdcardValidator.validate18Idcard(idCardList.get(0).getIdNumber())){
-						idCard.setType(5);
+				morderList = idCardDao.findByProperty(Morder.class, params, orderPage, orderSize);
+			}
+			if (!morderList.isEmpty()) {
+				for (Morder order : morderList) {
+					String idNumber = order.getOrderDocId();
+					params.clear();
+					params.put("idNumber", order.getOrderDocId());
+					List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 0, 0);
+					if (idCardList != null && idCardList.isEmpty()) {
+						IdCard idCard = new IdCard();
+						idCard.setName(order.getOrderDocName());
+						idCard.setIdNumber(idNumber);
+						// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
+						if (IdcardValidator.validate18Idcard(idNumber)) {
+							idCard.setType(3);
+						} else {
+							idCard.setType(5);
+						}
+						idCard.setCreateBy("system");
+						idCard.setCreateDate(new Date());
+						idCard.setDeleteFlag(0);
+						if(idCardDao.add(idCard)){
+							System.out.println(orderPage+"<<页数-------身份证信息保存成功---------");
+						}
+					}else {
+						System.out.println(orderPage+"<<页数-------身份证已存在无需重复导入---------");
 					}
-					continue;
-				}
-				if (!idCardDao.add(idCard)) {
-					return ReturnInfoUtils.errorInfo("姓名：" + name + ";号码" + id + ";保存失败,请重试!");
 				}
 			}
-			return ReturnInfoUtils.successInfo();
+			orderPage++;
+			System.out.println(orderPage+"<<页数----");
 		}
 		return ReturnInfoUtils.errorInfo("暂无数据!");
 	}
-
 }

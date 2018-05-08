@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -75,6 +76,10 @@ public class PaymentServiceImpl implements PaymentService {
 	 * 错误标识
 	 */
 	private static final String ERROR = "error";
+	/**
+	 * appkey键
+	 */
+	private static final String APPKEY = "appkey";
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -124,9 +129,7 @@ public class PaymentServiceImpl implements PaymentService {
 		try {
 			jsonList = JSONArray.fromObject(tradeNoPack);
 		} catch (Exception e) {
-			statusMap.put(BaseCode.MSG.toString(), "支付流水参数错误,请核实！");
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("支付流水号包格式错误,请核实信息！");
 		}
 		int eport = Integer.parseInt(recordMap.get("eport") + "");
 		String ciqOrgCode = recordMap.get("ciqOrgCode") + "";
@@ -162,11 +165,11 @@ public class PaymentServiceImpl implements PaymentService {
 			}
 			Appkey appkey = (Appkey) reAppkeyMap.get(BaseCode.DATAS.toString());
 			// 打包至海关备案信息Map中
-			recordMap.put("appkey", appkey.getApp_key());
+			recordMap.put(APPKEY, appkey.getApp_key());
 			recordMap.put("appSecret", appkey.getApp_secret());
 		} else {
 			// 当不是第三方时则使用银盟商城appkey
-			recordMap.put("appkey", YmMallConfig.APPKEY);
+			recordMap.put(APPKEY, YmMallConfig.APPKEY);
 			recordMap.put("appSecret", YmMallConfig.APPSECRET);
 		}
 		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName);
@@ -174,7 +177,7 @@ public class PaymentServiceImpl implements PaymentService {
 			return reCheckMap;
 		}
 		// 请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks(recordMap.get("appkey") + "",
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(recordMap.get(APPKEY) + "",
 				recordMap.get("appSecret") + "");
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
 			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg") + "");
@@ -294,7 +297,7 @@ public class PaymentServiceImpl implements PaymentService {
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
 					// 更新服务器返回支付Id
-					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID);
+					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID,recordMap);
 					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentMap2.get(BaseCode.MSG.toString());
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
@@ -345,8 +348,17 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	// 更新支付单返回信息
-	private Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID) {
+	/**
+	 *  更新支付单返回信息
+	 * @param entPayNo 交易流水号
+	 * @param rePayMessageID 服务端返回的流水Id
+	 * @param customsMap 前台传递的海关信息
+	 * @return Map
+	 */
+	private Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID, Map<String, Object> customsMap) {
+		String eport = customsMap.get("eport") + "";
+		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
+		String customsCode = customsMap.get("customsCode") + "";
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("trade_no", entPayNo);
 		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 0, 0);
@@ -356,20 +368,20 @@ public class PaymentServiceImpl implements PaymentService {
 				payment.setPay_serial_no(rePayMessageID);
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 				payment.setPay_record_status(2);
+				if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
+						&& StringEmptyUtils.isNotEmpty(customsCode)) {
+					payment.setEport(eport);
+					payment.setCiqOrgCode(ciqOrgCode);
+					payment.setCustomsCode(customsCode);
+				}
 				payment.setUpdate_date(new Date());
 				if (!paymentDao.update(payment)) {
-					paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					paramMap.put(BaseCode.MSG.toString(), "更新服务器返回messageID错误!");
-					return paramMap;
+					return ReturnInfoUtils.errorInfo("更新服务器返回messageID错误,服务器繁忙!");
 				}
 			}
-			paramMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return paramMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
-			paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), "更新支付单返回messageID错误,未找到支付流水号！");
-			return paramMap;
+			return ReturnInfoUtils.errorInfo("交易流水号["+entPayNo+"]未找到支付单信息!");
 		}
 	}
 
@@ -497,96 +509,107 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public final Map<String, Object> groupCreateMpay(List<String> orderIDs, List<Map<String, Object>> errorList,
-			Map<String, Object> paramsMap) {
-		String merchantId = paramsMap.get("merchantId") + "";
-		if (merchantId != null && orderIDs != null && !orderIDs.isEmpty()) {
+			Map<String, Object> redisMap) {
+		String merchantId = redisMap.get("merchantId") + "";
+		if (StringEmptyUtils.isNotEmpty(merchantId) && orderIDs != null && !orderIDs.isEmpty()) {
 			//
-			paramsMap.put("name", "createPaymentId");
+			redisMap.put("name", "createPaymentId");
 			for (String order_id : orderIDs) {
 				Map<String, Object> params = new HashMap<>();
 				params.put("merchant_no", merchantId);
 				params.put("order_id", order_id);
 				List<Morder> morder = paymentDao.findByProperty(Morder.class, params, 1, 1);
 				if (morder != null && !morder.isEmpty()) {
-					params.clear();
-					params.put("morder_id", order_id);
-					List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
-					if (mpayl != null && !mpayl.isEmpty()) {
-						String msg = "订单号[" + order_id + "]关联的支付单已经存在,无需重复生成!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+					Morder order = morder.get(0);
+					Map<String, Object> reCheckMap = checkPaymentInfo(order);
+					if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+						RedisInfoUtils.commonErrorInfo(reCheckMap.get(BaseCode.MSG.toString()) + "", errorList, ERROR,
+								redisMap);
 						continue;
-					}
-					String orderDocId = morder.get(0).getOrderDocId();
-					if (!IdcardValidator.validate18Idcard(orderDocId)) {
-						String msg = "订单号[" + order_id + "]实名认证不通过,请核实身份证信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
-						continue;
-					}
-					if(!StringUtil.isContainChinese(morder.get(0).getOrderDocName().replace("·", ""))){
-						String msg = "订单号[" + order_id + "]下单人姓名错误,请核实信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
-						continue;
-					}
-					if(!StringUtil.isContainChinese(morder.get(0).getRecipientName().replace("·", ""))){
-						String msg = "订单号[" + order_id + "]收货人姓名错误,请核实信息!";
-						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
-						continue;
-					}
-					if (!PhoneUtils.isPhone(morder.get(0).getRecipientTel())) {
-						String msg = "订单号[" + order_id + "]收件人电话错误,请核实信息!";
-						RedisInfoUtils.commonErrorInfo(msg,errorList, ERROR, params);
 					}
 					//
-					params.clear();
+					Map<String, Object> paymentMap = new HashMap<>();
+					paymentMap.put("merchantId", merchantId);
 					int count = SerialNoUtils.getRedisIdCount("paymentId");
 					String tradeNo = createTradeNo("01O", (count + 1), new Date());
-					String orderDate = morder.get(0).getOrderDate();
-					Date payTime = DateUtil.randomPaymentDate(orderDate);
-					if (addEntity(merchantId, tradeNo, order_id, morder.get(0).getActualAmountPaid(),
-							morder.get(0).getOrderDocName(), orderDocId, morder.get(0).getOrderDocTel(), payTime,
-							morder.get(0).getCreate_by()) && updateOrderPayNo(merchantId, order_id, tradeNo)) {
+					paymentMap.put("tradeNo", tradeNo);
+					paymentMap.put("orderId", order_id);
+					paymentMap.put("amount", order.getActualAmountPaid());
+					paymentMap.put("orderDocName", order.getOrderDocName());
+					paymentMap.put("orderDocId", order.getOrderDocId());
+					paymentMap.put("orderDocTel", order.getOrderDocTel());
+					paymentMap.put("orderDate", order.getOrderDate());
+					paymentMap.put("createBy", order.getCreate_by());
+
+					paymentMap.put("eport", order.getEport());
+					paymentMap.put("ciqOrgCode", order.getCiqOrgCode());
+					paymentMap.put("customsCode", order.getCustomsCode());
+
+					if (addEntity(paymentMap) && updateOrderPayNo(merchantId, order_id, tradeNo)) {
 						// 当创建完支付流水号之后
-						bufferUtils.writeRedis(errorList, paramsMap);
+						bufferUtils.writeRedis(errorList, redisMap);
 						continue;
 					}
-					String msg = "订单号[" + order_id + "]生成支付单失败,请稍后重试!";
-					RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+					RedisInfoUtils.commonErrorInfo("订单号[" + order_id + "]生成支付单失败,请稍后重试!", errorList, ERROR, redisMap);
 					continue;
 				}
-				String msg = "订单号[" + order_id + "]不存在,请核对信息!";
-				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
+				RedisInfoUtils.commonErrorInfo("订单号[" + order_id + "]不存在,请核对信息!", errorList, ERROR, redisMap);
 			}
-			bufferUtils.writeCompletedRedis(errorList, paramsMap);
+			bufferUtils.writeCompletedRedis(errorList, redisMap);
 			return null;
 		} else {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 	}
+
+	/**
+	 * 生成支付单时校验订单信息
+	 * 
+	 * @param order
+	 *            订单信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> checkPaymentInfo(Morder order) {
+		Map<String, Object> params = new HashMap<>();
+		String orderId = order.getOrder_id();
+		params.put("morder_id", orderId);
+		List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
+		if (mpayl != null && !mpayl.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]关联的支付单已经存在,无需重复生成!");
+		}
+		String orderDocId = order.getOrderDocId();
+		if (!IdcardValidator.validate18Idcard(orderDocId)) {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]实名认证不通过,请核实身份证信息!");
+		}
+		if (!StringUtil.isContainChinese(order.getOrderDocName().replace("·", ""))) {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人姓名错误,请核实信息!");
+		}
+		if (!StringUtil.isContainChinese(order.getRecipientName().replace("·", ""))) {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]收货人姓名错误,请核实信息!");
+		}
+		if (!PhoneUtils.isPhone(order.getRecipientTel())) {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]收件人电话错误,请核实信息!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
 	/**
 	 * 保存支付单实体
 	 * 
-	 * @param merchant_no
-	 * @param trade_no
-	 * @param morder_id
-	 * @param amount
-	 * @param payer_name
-	 * @param payer_document_number
-	 * @param payer_phone_number
-	 * @param pay_time
-	 * @param merchantName
+	 * @param paymentMap
+	 *            支付单信息集合
 	 * @return
 	 */
-	private boolean addEntity(String merchant_no, String trade_no, String morder_id, double amount, String payer_name,
-			String payer_document_number, String payer_phone_number, Date pay_time, String merchantName) {
+	private boolean addEntity(Map<String, Object> paymentMap) {
 		Mpay entity = new Mpay();
-		entity.setMerchant_no(merchant_no);
-		entity.setTrade_no(trade_no);
-		entity.setMorder_id(morder_id);
-		entity.setPay_amount(amount);
-		entity.setPayer_name(payer_name);
+		entity.setMerchant_no(paymentMap.get("merchantId") + "");
+		entity.setTrade_no(paymentMap.get("tradeNo") + "");
+		entity.setMorder_id(paymentMap.get("orderId") + "");
+		entity.setPay_amount(Double.parseDouble(paymentMap.get("amount") + ""));
+		entity.setPayer_name(paymentMap.get("orderDocName") + "");
 		entity.setPayer_document_type("01");
-		entity.setPayer_document_number(payer_document_number);
-		entity.setPayer_phone_number(payer_phone_number);
+		entity.setPayer_document_number(paymentMap.get("orderDocId") + "");
+		entity.setPayer_phone_number(paymentMap.get("orderDocTel") + "");
 		entity.setTrade_status("TRADE_SUCCESS");
 		entity.setDel_flag(0);
 		entity.setCreate_date(new Date());
@@ -594,9 +617,22 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
 		entity.setPay_record_status(1);
-		entity.setPay_time(pay_time);
-		entity.setCreate_by(merchantName);
-
+		String orderDate = paymentMap.get("orderDate") + "";
+		Date payTime = DateUtil.randomPaymentDate(orderDate);
+		entity.setPay_time(payTime);
+		entity.setCreate_by(paymentMap.get("createBy") + "");
+		// 口岸标识
+		String eport = paymentMap.get("eport") + "";
+		// 国检检疫编码
+		String ciqOrgCode = paymentMap.get("ciqOrgCode") + "";
+		// 海关关区编码
+		String customsCode = paymentMap.get("customsCode") + "";
+		if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
+				&& StringEmptyUtils.isNotEmpty(customsCode)) {
+			entity.setEport(eport);
+			entity.setCiqOrgCode(ciqOrgCode);
+			entity.setCustomsCode(customsCode);
+		}
 		return paymentDao.add(entity);
 	}
 
@@ -763,6 +799,82 @@ public class PaymentServiceImpl implements PaymentService {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
+	}
+
+	/**
+	 * 根据支付流水号更新支付单中海关信息
+	 * 
+	 * @param datasMap
+	 */
+	public Map<String, Object> updatePaymentPortInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		String eport = datasMap.get("eport") + "";
+		String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
+		String customsCode = datasMap.get("customsCode") + "";
+		String tradeNo = datasMap.get("tradeNo") + "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("trade_no", tradeNo);
+		List<Mpay> reMpayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
+		if (reMpayList == null) {
+			return ReturnInfoUtils.errorInfo("查询支付单失败,服务器繁忙!");
+		} else if (!reMpayList.isEmpty()) {
+			Mpay pay = reMpayList.get(0);
+			if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
+					&& StringEmptyUtils.isNotEmpty(customsCode)) {
+				pay.setEport(eport);
+				pay.setCiqOrgCode(ciqOrgCode);
+				pay.setCustomsCode(customsCode);
+			}
+			pay.setUpdate_by("system");
+			pay.setUpdate_date(new Date());
+			if (!paymentDao.update(pay)) {
+				return ReturnInfoUtils.errorInfo("更新支付单信息失败,服务器繁忙!");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> checkPaymentPort(List<String> tradeNos, String merchantId) {
+		if(tradeNos == null  || StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		
+		List<Mpay> cacheList = new ArrayList<>();
+		for (int i = 0; i < tradeNos.size(); i++) {
+			String tradeNo = tradeNos.get(i);
+			Map<String, Object> params = new HashMap<>();
+			params.put("trade_no", tradeNo);
+			params.put("merchant_no", merchantId);
+			List<Mpay> reList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("查询支付单信息失败,服务器繁忙!");
+			} else if (!reList.isEmpty()) {
+				Mpay payment = reList.get(0);
+				String eport = payment.getEport();
+				String ciqOrgCode = payment.getCiqOrgCode();
+				String customsCode = payment.getCustomsCode();
+				if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
+						&& StringEmptyUtils.isNotEmpty(customsCode)) {
+					cacheList.add(payment);
+				}
+				for (int c = 0; c < cacheList.size(); c++) {
+					Mpay cachePayment = cacheList.get(c);
+					String cacheEport = cachePayment.getEport();
+					String cacheCiqOrgCode = cachePayment.getCiqOrgCode();
+					String cacheCustomsCode = cachePayment.getCustomsCode();
+					if (!eport.equals(cacheEport) && !ciqOrgCode.equals(cacheCiqOrgCode)
+							&& !customsCode.equals(cacheCustomsCode)) {
+						return ReturnInfoUtils.errorInfo("所选支付单为多个不同的口岸/海关关区/国检检疫机构信息,请重新选择!");
+					}
+				}
+			}else{
+				return ReturnInfoUtils.errorInfo("支付单流水号["+tradeNo+"]未找到支付单信息,请重新选择!");
+			}
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 }

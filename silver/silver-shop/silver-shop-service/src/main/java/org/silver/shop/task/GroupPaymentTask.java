@@ -3,7 +3,8 @@ package org.silver.shop.task;
 import java.util.List;
 import java.util.Map;
 
-import org.silver.shop.api.system.cross.PaymentService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.shop.impl.system.cross.PaymentServiceImpl;
 import org.silver.util.TaskUtils;
 
@@ -12,7 +13,7 @@ import org.silver.util.TaskUtils;
  *
  */
 public class GroupPaymentTask extends TaskUtils {
-
+	private static Logger logger = LogManager.getLogger(GroupPaymentTask.class);
 	private PaymentServiceImpl paymentServiceImpl;//
 	private List dataList; //
 	private List<Map<String, Object>> errorList;// 错误信息
@@ -28,6 +29,12 @@ public class GroupPaymentTask extends TaskUtils {
 
 	@Override
 	public Map<String, Object> call() {
-		return paymentServiceImpl.groupCreateMpay( dataList,   errorList,paramsMap);
+		try {
+			paymentServiceImpl.groupCreateMpay(dataList, errorList, paramsMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("-----生成支付单错误-----", e);
+		}
+		return null;
 	}
 }

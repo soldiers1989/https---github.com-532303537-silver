@@ -635,11 +635,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			paymentMap.put("datas", paymentList.toString());
 			paymentMap.put("notifyurl", notifyurl);
 			paymentMap.put("note", "");
-			// 是否像海关发送
+			// 报文类型
+			String opType = recordMap.get("opType") + "";
+			if (StringEmptyUtils.isNotEmpty(opType)) {
+				//A-新增；M-修改；D-
+				paymentMap.put("opType", opType);
+			} else {
+				//当前台不传参数时默认
+				paymentMap.put("opType", "A");
+			}
+			// 是否向海关发送
 			// paymentMap.put("uploadOrNot", false);
-			// String resultStr =
-			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			// paymentMap);
 			String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
@@ -647,6 +653,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				Map<String, Object> paramsMap = new HashMap<>();
 				paramsMap.put("merchantId", merchantId);
 				paramsMap.put("customsPort", 1);
+				//检验检疫机构代码
+				paymentMap.put("ciqOrgCode", "443400");
 				List<Object> reMerchantList = ysPayReceiveDao.findByProperty(MerchantRecordInfo.class, paramsMap, 1, 1);
 				MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
 				JSONObject json2 = new JSONObject();
@@ -683,9 +691,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				}
 				paymentMap.put("clientsign", clientsign.trim());
 				System.out.println("------第二次发起支付单推送-------");
-				// String resultStr2 =
-				// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-				// paymentMap);
 				String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 					return JSONObject.fromObject(resultStr2);
@@ -696,14 +701,10 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			if (StringUtil.isNotEmpty(resultStr)) {
 				return JSONObject.fromObject(resultStr);
 			} else {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "服务器接受支付信息失败,服务器繁忙！");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("服务器接受支付信息失败,服务器繁忙！");
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), "支付参数错误！");
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("支付参数错误！");
 	}
 
 	/**

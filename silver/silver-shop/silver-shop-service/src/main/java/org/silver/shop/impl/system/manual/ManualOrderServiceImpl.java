@@ -476,17 +476,14 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (StringEmptyUtils.isNotEmpty(transportModel)) {
 			mosb.setTransportModel(transportModel);
 		}
-
 		// (启邦客户)商品归属商家代码
 		String marCode = goodsInfo.get("marCode") + "";
 		// (启邦客户)商品归属SKU
 		String sku = goodsInfo.get("SKU") + "";
-
 		//
 		String ebEntNo = goodsInfo.get("ebEntNo") + "";
 		String ebEntName = goodsInfo.get("ebEntName") + "";
 		String DZKNNo = goodsInfo.get("DZKNNo") + "";
-
 		if (StringEmptyUtils.isNotEmpty(sku) && StringEmptyUtils.isNotEmpty(marCode)
 				&& StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)
 				&& StringEmptyUtils.isNotEmpty(DZKNNo)) {

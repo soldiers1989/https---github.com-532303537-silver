@@ -11,7 +11,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -21,6 +22,7 @@ import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
+import org.silver.shop.impl.system.cross.PaymentServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
@@ -55,6 +57,9 @@ import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = MpayService.class)
 public class MpayServiceImpl implements MpayService {
+
+	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);
+
 	// 进出境标志I-进，E-出
 	private static final String IEFLAG = "I";
 
@@ -64,7 +69,10 @@ public class MpayServiceImpl implements MpayService {
 	 * 错误标识
 	 */
 	private static final String ERROR = "error";
-	private static Logger logger = Logger.getLogger(Object.class);
+	/**
+	 * 商户Id
+	 */
+	private static final String MERCHANT_ID = "merchantId";
 	@Resource
 	private MpayDao mpayDao;
 	@Resource
@@ -83,6 +91,8 @@ public class MpayServiceImpl implements MpayService {
 	private InvokeTaskUtils invokeTaskUtils;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private PaymentServiceImpl paymentServiceImpl;
 
 	/**
 	 * 更新钱包日志
@@ -151,7 +161,7 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("钱包更新余额失败!");
 		}
 		JSONObject param = new JSONObject();
-		param.put("merchantId", merchantId);
+		param.put(MERCHANT_ID, merchantId);
 		param.put("merchantName", merchantName);
 		param.put("proxyId", proxyId);
 		param.put("proxyName", proxyParentName);
@@ -213,7 +223,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 当更新钱包余额后,进行商户钱包日志记录
 		JSONObject param = new JSONObject();
-		param.put("merchantId", merchantId);
+		param.put(MERCHANT_ID, merchantId);
 		param.put("merchantName", merchantName);
 		if (type == 1) {
 			// 钱包交易日志流水名称
@@ -311,7 +321,7 @@ public class MpayServiceImpl implements MpayService {
 		// 总数
 		int totalCount = jsonList.size();
 
-		params.put("merchantId", merchantId);
+		params.put(MERCHANT_ID, merchantId);
 		params.put("merchantName", merchantName);
 		params.put("tok", tok);
 		params.put("serialNo", serialNo);
@@ -371,7 +381,7 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	public final void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap) {
-		String merchantId = paramsMap.get("merchantId") + "";
+		String merchantId = paramsMap.get(MERCHANT_ID) + "";
 		String tok = paramsMap.get("tok") + "";
 		paramsMap.put("name", "orderRecord");
 
@@ -423,9 +433,9 @@ public class MpayServiceImpl implements MpayService {
 						}
 						String reOrderMessageID = reOrderMap.get("messageID") + "";
 						// 更新服务器返回订单Id
-						Map<String, Object> reOrderMap2 = updateOrderInfo(orderNo, reOrderMessageID);
-						if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
-							String msg = reOrderMap2.get(BaseCode.MSG.toString()) + "";
+						Map<String, Object> reUpdateMap = updateOrderInfo(orderNo, reOrderMessageID, customsMap);
+						if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()) + "")) {
+							String msg = reUpdateMap.get(BaseCode.MSG.toString()) + "";
 							RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 							continue;
 						}
@@ -433,7 +443,7 @@ public class MpayServiceImpl implements MpayService {
 				}
 				Thread.sleep(200);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("--------推送订单信息错误-------", e);
 			} finally {
 				bufferUtils.writeRedis(errorList, paramsMap);
 			}
@@ -457,9 +467,16 @@ public class MpayServiceImpl implements MpayService {
 	 * @param orderNo
 	 *            订单编号
 	 * @param reOrderMessageID
+	 *            服务器返回流水Id
+	 * @param customsMap
+	 *            海关口岸信息包
 	 * @return Map
 	 */
-	private Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID) {
+	private Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID,
+			Map<String, Object> customsMap) {
+		String eport = customsMap.get("eport") + "";
+		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
+		String customsCode = customsMap.get("customsCode") + "";
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("order_id", orderNo);
 		List<Morder> reList = morderDao.findByProperty(Morder.class, paramMap, 0, 0);
@@ -470,6 +487,12 @@ public class MpayServiceImpl implements MpayService {
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 				order.setOrder_record_status(2);
 				order.setUpdate_date(new Date());
+				if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
+						&& StringEmptyUtils.isNotEmpty(customsCode)) {
+					order.setEport(eport);
+					order.setCiqOrgCode(ciqOrgCode);
+					order.setCustomsCode(customsCode);
+				}
 				if (!morderDao.update(order)) {
 					return ReturnInfoUtils.errorInfo("更新服务器返回messageID错误!");
 				}
@@ -626,13 +649,17 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
 		orderMap.put("note", "");
 		// 报文类型
-		// orderMap.put("opType", "M");
+		String opType = customsMap.get("opType") + "";
+		if (StringEmptyUtils.isNotEmpty(opType)) {
+			//A-新增；M-修改；D-
+			orderMap.put("opType", opType);
+		} else {
+			//当前台不传参数时默认
+			orderMap.put("opType", "A");
+		}
 		// 是否像海关发送
 		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		// String resultStr =
-		// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-		// orderMap);
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
@@ -649,10 +676,8 @@ public class MpayServiceImpl implements MpayService {
 				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
-			// String resultStr2 =
-			// YmHttpUtil.HttpPost("http://192.168.1.120:8080/silver-web/Eport/Report",
-			// orderMap);
-
+			// 检验检疫机构代码
+			orderMap.put("ciqOrgCode", "443400");
 			String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 			if (StringEmptyUtils.isNotEmpty(resultStr2)) {
 				return JSONObject.fromObject(resultStr2);
@@ -790,7 +815,7 @@ public class MpayServiceImpl implements MpayService {
 	private void updateStockDoneCount(String entGoodsNo, int count, String merchantId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("entGoodsNo", entGoodsNo);
-		params.put("merchantId", merchantId);
+		params.put(MERCHANT_ID, merchantId);
 		List<StockContent> reStockList = morderDao.findByProperty(StockContent.class, params, 1, 1);
 		if (reStockList != null && !reStockList.isEmpty()) {
 			for (StockContent stock : reStockList) {

@@ -124,6 +124,6 @@ public class YmMallOauth {
 
 	public static void main(String[] args) throws Exception {
 		YmMallOauth oau = new YmMallOauth();
-		//System.out.println(oau.oauthInfo("0001", "YS02", "", "", "", "", ""));
+		System.out.println("-->>"+oau.oauthInfo("0001", "YS02", "", "早热汗·买合木提", "362329198107170325", "", ""));
 	}
 }

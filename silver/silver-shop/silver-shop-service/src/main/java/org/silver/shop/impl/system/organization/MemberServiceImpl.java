@@ -79,7 +79,7 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	//@SuppressWarnings("unchecked")
+	// @SuppressWarnings("unchecked")
 	public List<Member> findMemberBy(String account) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberName", account);
@@ -457,10 +457,15 @@ public class MemberServiceImpl implements MemberService {
 		if (!"1".equals(reOauthMap.get(BaseCode.STATUS.toString()))) {
 			return reOauthMap;
 		}
-		return updateMemberInfo(member);
+		return updateRealFlag(member);
 	}
 
-	private Map<String, Object> updateMemberInfo(Member member) {
+	/**
+	 * 更新用户实名标识
+	 * @param member 用户信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> updateRealFlag(Member member) {
 		member.setMemberRealName(2);
 		member.setUpdateDate(new Date());
 		member.setUpdateBy("system");
@@ -482,13 +487,64 @@ public class MemberServiceImpl implements MemberService {
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		String loginPass = member.getLoginPass();
 		MD5 md5 = new MD5();
-		if(!loginPass.equals(md5.getMD5ofStr(oldPassword))){
+		if (!loginPass.equals(md5.getMD5ofStr(oldPassword))) {
 			return ReturnInfoUtils.errorInfo("旧密码错误,请重新输入!");
 		}
 		member.setLoginPass(md5.getMD5ofStr(newPassword));
-		if(memberDao.update(member)){
+		if (memberDao.update(member)) {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("修改密码失败,服务器繁忙!");
+	}
+
+	@Override
+	public Map<String, Object> editInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		String memberId = String.valueOf(datasMap.get("memberId"));
+		Map<String, Object> reMemberMap = getMemberInfo(memberId);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
+		return updateInfo(member,datasMap);
+		
+		
+	}
+
+	private Map<String, Object> updateInfo(Member member, Map<String, Object> datasMap) {
+		for (Map.Entry<String, Object> entry : datasMap.entrySet()) {
+			String key = entry.getKey();
+			switch (key) {
+			case "memberTel":
+				member.setMemberTel(String.valueOf(entry.getValue()));
+				break;
+			case "memberIdCardName":
+				if(member.getMemberRealName() == 2){
+					return ReturnInfoUtils.errorInfo("该用户已实名,不允许修改身份证信息,请联系管理员！");
+				}
+				if(!StringUtil.isContainChinese(String.valueOf(entry.getValue()).replace("·", ""))){
+					return ReturnInfoUtils.errorInfo("姓名输入错误,请重新输入!");
+				}
+				member.setMemberIdCardName(String.valueOf(entry.getValue()));
+				break;
+			case "memberIdCard":
+				if(member.getMemberRealName() == 2){
+					return ReturnInfoUtils.errorInfo("该用户已实名,不允许修改身份证信息,请联系管理员！");
+				}
+				if(!IdcardValidator.validate18Idcard(String.valueOf(entry.getValue()))){
+					return ReturnInfoUtils.errorInfo("身份证号码输入错误,请重新输入!");
+				}
+				member.setMemberIdCard(String.valueOf(entry.getValue()));
+				break;
+			default:
+				break;
+			}
+		}
+		if(!memberDao.update(member)){
+			return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

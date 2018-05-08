@@ -185,6 +185,12 @@ public class CheckDatasUtil {
 				msg = msg.replace("orderdoctel", "[OrderDocTel]下单人电话");
 			} else if (msg.contains("orderdate")) {
 				msg = msg.replace("orderdate", "[OrderDate]订单日期");
+			}else if (msg.contains("eport")) {
+				msg = msg.replace("eport", "[eport]口岸标识");
+			}else if (msg.contains("ciqorgcode")) {
+				msg = msg.replace("ciqorgcode", "[ciqOrgCode]国检检疫机构编码");
+			}else if (msg.contains("customscode")) {
+				msg = msg.replace("customscode", "[customsCode]海关关区编码");
 			}
 			reDataMap.put(BaseCode.MSG.toString(), msg);
 			return reDataMap;

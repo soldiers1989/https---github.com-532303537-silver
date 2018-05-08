@@ -280,6 +280,9 @@ public class EditRecordController {
 			String value = req.getParameter(key);
 			customsMap.put(key, value);
 		}
+		if (StringEmptyUtils.isEmpty(orderNoPack) || customsMap.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
 		return JSONObject.fromObject(mdataService.sendMorderRecord(customsMap, orderNoPack)).toString();
 	}
 
@@ -451,7 +454,7 @@ public class EditRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if(StringEmptyUtils.isEmpty(recipientAddr)){
+		if (StringEmptyUtils.isEmpty(recipientAddr)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(manualService.searchProvinceCityArea(recipientAddr)).toString();
@@ -644,11 +647,12 @@ public class EditRecordController {
 
 	public static void main(String[] args) {
 		Thread t = new Thread();
-		Map<String,Object> item = new HashMap<>();
+		Map<String, Object> item = new HashMap<>();
 		item.put("recipientAddr", "福建省厦门市思明区莲花五村龙盛里14号502室");
 		t.start();
-		for(int i =0;i<1000;i++){
-			System.out.println(i+"---->>"+YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web-shop/manual/readInfo2", item));
+		for (int i = 0; i < 1000; i++) {
+			System.out.println(
+					i + "---->>" + YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web-shop/manual/readInfo2", item));
 		}
 	}
 }

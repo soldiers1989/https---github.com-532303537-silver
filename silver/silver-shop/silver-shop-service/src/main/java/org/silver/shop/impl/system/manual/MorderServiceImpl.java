@@ -144,9 +144,8 @@ public class MorderServiceImpl implements MorderService {
 		paramMap.put("del_flag", 0);
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		Map<String, Object> statusMap = new HashMap<>();
-		List<Map<String, Object>> lMap = new ArrayList<>();
 		if (mlist != null && !mlist.isEmpty()) {
+			List<Map<String, Object>> lMap = new ArrayList<>();
 			paramMap.clear();
 			for (Morder m : mlist) {
 				paramMap.put("order_id", m.getOrder_id());
@@ -157,11 +156,11 @@ public class MorderServiceImpl implements MorderService {
 				item.put("content", mslist);
 				lMap.add(item);
 			}
+			Map<String,Object> statusMap = new HashMap<>();
 			statusMap.put("status", 1);
 			statusMap.put("datas", lMap);
 			statusMap.put("count", count);
 			return statusMap;
-
 		}
 		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
@@ -1210,7 +1209,6 @@ public class MorderServiceImpl implements MorderService {
 			Long totalCountT = morderDao.getMOrderAndMGoodsInfoCount(merchantId, startTime, endTime, 0, 0);
 			// 获取总数
 			int totalCount = totalCountT.intValue();
-			System.out.println("--------未备案总数-->>>>>>>>>" + totalCount);
 			if (totalCount <= 0) {
 				return ReturnInfoUtils.errorInfo("没有需要更新的订单信息!");
 			}

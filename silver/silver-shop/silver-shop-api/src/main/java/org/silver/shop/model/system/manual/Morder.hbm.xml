@@ -2,9 +2,9 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.silver.shop.model.system.manual" >
+<hibernate-mapping package="org.silver.shop.model.system.manual">
 
-	<class name="Morder" table="ym_shop_manual_morder" >
+	<class name="Morder" table="ym_shop_manual_morder">
 
 		<id name="id" type="long">
 			<column name="id" />
@@ -12,7 +12,6 @@
 
 			</generator>
 		</id>
-
 		<property name="order_id">
 			<column name="order_id" not-null="true" unique="true" />
 		</property>
@@ -26,7 +25,6 @@
 		<property name="Fcode">
 			<column name="Fcode" not-null="true" />
 		</property>
-
 
 		<property name="FCY" type="java.lang.Double">
 			<column name="FCY" not-null="true" />
@@ -169,8 +167,15 @@
 		<property name="customsCode">
 			<column name="customsCode" />
 		</property>
-			<property name="thirdPartyId">
+		<property name="thirdPartyId">
 			<column name="thirdPartyId" />
+		</property>
+
+		<property name="eport">
+			<column name="eport" />
+		</property>
+		<property name="ciqOrgCode">
+			<column name="ciqOrgCode" />
 		</property>
 	</class>
 

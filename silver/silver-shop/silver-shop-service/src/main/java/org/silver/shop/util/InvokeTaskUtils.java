@@ -97,9 +97,9 @@ public class InvokeTaskUtils {
 			threadPool.submit(groupPaymentTask);
 			break;
 		case 2:
-			OrderRecordTask orderRecordask = new OrderRecordTask(jsonList, errorList, customsMap, mpayServiceImpl,
+			OrderRecordTask orderRecordTask = new OrderRecordTask(jsonList, errorList, customsMap, mpayServiceImpl,
 					paramsMap);
-			threadPool.submit(orderRecordask);
+			threadPool.submit(orderRecordTask);
 			break;
 		case 3:
 			PaymentRecordTask paymentRecordTask = new PaymentRecordTask(jsonList, errorList, customsMap,

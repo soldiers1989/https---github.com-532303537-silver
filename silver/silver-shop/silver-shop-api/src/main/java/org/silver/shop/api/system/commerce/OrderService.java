@@ -1,5 +1,6 @@
 package org.silver.shop.api.system.commerce;
 
+import java.util.List;
 import java.util.Map;
 
 public interface OrderService {
@@ -197,4 +198,13 @@ public interface OrderService {
 	 * @return
 	 */
 	public Object getThirdPartyInfo(Map<String, Object> datasMap);
+
+	
+	/**
+	 * 根据订单Id校验订单是否归属同一口岸
+	 * @param orderIDs 订单Id集合
+	 * @param merchantId 
+	 * @return Map
+	 */
+	public Map<String,Object> checkOrderPort(List<String> orderIDs, String merchantId);
 }

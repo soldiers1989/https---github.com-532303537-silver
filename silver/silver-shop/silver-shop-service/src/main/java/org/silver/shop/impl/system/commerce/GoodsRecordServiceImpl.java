@@ -21,6 +21,7 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
+import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
@@ -231,16 +232,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			CustomsPort portInfo = customsPortList.get(i);
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 			int reCustomsPort = portInfo.getCustomsPort();
-			// 口岸中文名称
-			String reCustomsPortName = portInfo.getCustomsPortName();
 			// 主管海关代码
 			String reCustomsCode = portInfo.getCustomsCode();
-			// 主管海关名称
-			String reCustomsName = portInfo.getCustomsName();
 			// 检验检疫机构代码
 			String reCiqOrgCode = portInfo.getCiqOrgCode();
-			// 检验检疫机构名称
-			String reCiqOrgName = portInfo.getCiqOrgName();
 			// 判断前端传递的口岸端口、海关代码、智检代码是否正确
 			if (reCustomsPort == eport && reCustomsCode.trim().equals(customsCode.trim())
 					&& reCiqOrgCode.trim().equals(ciqOrgCode.trim())) {
@@ -250,6 +245,16 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			}
 		}
 		return ReturnInfoUtils.errorInfo("海关口岸、主管海关、检验检疫机构代码错误,请核对信息!");
+	}
+	
+	public static void main(String[] args) {
+		CustomsPortServiceImpl customsPortService = new CustomsPortServiceImpl();
+		Map<String,Object> paramsMap = customsPortService.findAllCustomsPort();
+		if (!paramsMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			//return paramsMap;
+		}
+		// 将查询出来的口岸数据放入缓存中
+		JedisUtil.set("Shop_Port_AllCustomsPort_List".getBytes(), SerializeUtil.toBytes(paramsMap.get(BaseCode.DATAS.toString())), 3600);
 	}
 
 	/**

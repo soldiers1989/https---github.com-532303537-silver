@@ -75,7 +75,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 	}
 
 	/**
-	 * 校验国检检疫信息是否真实存在
+	 * 根据国检名称,国检编码校验国检检疫信息是否正确
 	 * 
 	 * @param ciqOrgName
 	 *            国检名称
@@ -95,9 +95,26 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		}
 		return false;
 	}
-
 	/**
-	 * 校验海关关区信息是否真实存在
+	 * 根据国检编码校验国检检疫信息是否正确
+	 * 
+	 * @param ciqOrgCode
+	 *            国检编码
+	 * @return boolean
+	 */
+	public boolean checkCCIQ( String ciqOrgCode) {
+		if ( StringEmptyUtils.isNotEmpty(ciqOrgCode)) {
+			Map<String, Object> params = new HashMap<>();
+			params.put("code", ciqOrgCode);
+			List<CCIQ> cciqList = customsPortDao.findByProperty(CCIQ.class, params, 1, 1);
+			if (cciqList != null && !cciqList.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	/**
+	 * 根据海关关区名称,海关关区编码校验海关关区信息是否正确
 	 * 
 	 * @param customsName
 	 *            海关关区名称
@@ -118,6 +135,25 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		return false;
 	}
 
+	/**
+	 * 根据海关关区编码校验海关关区信息是否正确
+	 * 
+	 * @param customsCode
+	 *            海关关区编码
+	 * @return boolean
+	 */
+	public boolean checkGAC(  String customsCode) {
+		if ( StringEmptyUtils.isNotEmpty(customsCode)) {
+			Map<String, Object> params = new HashMap<>();
+			params.put("code", customsCode);
+			List<GAC> gacList = customsPortDao.findByProperty(GAC.class, params, 1, 1);
+			if (gacList != null && !gacList.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	/**
 	 * 校验城市名称与编码是否真实存在
 	 * 

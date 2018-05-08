@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration status="off">
 	<properties>
-		<property name="LOG_HOME">/logs/silver-shop-service/</property>
-		<!-- <property name="LOG_HOME">D:\work\output\silver-shop-service\logs</property> -->
+		<!-- <property name="LOG_HOME">/logs/silver-shop-service/</property> -->
+		<property name="LOG_HOME">D:\work\output\silver-shop-service\logs</property>
 		<!-- 日志备份目录 -->
 		<property name="BACKUP_HOME">backup</property>
 		<property name="SERVER_NAME">silver-shop-service</property>
 		<property name="EVERY_FILE_SIZE">10M</property><!-- 日志切割的最小单位 -->
 		<property name="OUTPUT_LOG_LEVEL">ERROR</property><!-- 日志输出级别 -->
+		
 	</properties>
 	<appenders>
 		<!-- <Console name="Console" target="SYSTEM_OUT">

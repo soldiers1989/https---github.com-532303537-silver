@@ -427,6 +427,37 @@ public class OrderController {
 		return JSONObject.fromObject(orderTransaction.getThirdPartyInfo(datasMap)).toString();
 	}
 	
+	/**
+	 * 推送订单时,根据订单号校验订单是否全部属于一个口岸
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/checkOrderPort", produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ResponseBody
+	public String checkOrderPort(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		Enumeration<String> iskeys = req.getParameterNames();
+		List<String> orderIDs = new ArrayList<>();
+		String key = "";
+		while (iskeys.hasMoreElements()) {
+			key = iskeys.nextElement();
+			String value = req.getParameter(key).trim();
+			orderIDs.add(value);
+		}
+		if (!orderIDs.isEmpty()) {
+			return JSONObject.fromObject(orderTransaction.checkOrderPort(orderIDs)).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
+	}
+	
+	
 	public static void main(String[] args) {
 		Map<String,Object> item = new HashMap<>();
 		List<JSONObject> orderGoodsList=  new ArrayList<>();
@@ -454,6 +485,10 @@ public class OrderController {
 		order.element("OrderDocId","37021119770918101X");
 		order.element("OrderDocTel","下单人电话");
 		order.element("OrderDate","订单日期");
+		order.element("eport","1");
+		order.element("ciqOrgCode","440300");
+		order.element("customsCode","5165");
+		
 		
 		goods.element("Seq", 1);
 		goods.element("EntGoodsNo","TEst321");
@@ -489,8 +524,9 @@ public class OrderController {
 		orderGoodsList.add(goods2);
 		order.element("orderGoodsList", orderGoodsList);
 		
-		//item.put("datas", order);
-		item.put("thirdPartyKey", "a");
-		YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/getThirdPartyInfo", item);
+		item.put("datas", order);
+		item.put("thirdPartyId", "a");
+		item.put("merchantId", "MerchantId_00001");
+		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item));
 	}
 }

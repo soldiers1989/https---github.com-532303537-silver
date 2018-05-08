@@ -134,4 +134,9 @@ public class MemberTransaction {
 		return memberService.editPassword(memberId,oldPassword,newPassword);
 	}
 
+	//用户修改信息
+	public Object editInfo(Map<String, Object> datasMap) {
+		return memberService.editInfo(datasMap);
+	}
+
 }

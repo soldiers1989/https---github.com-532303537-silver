@@ -282,6 +282,15 @@ public final class SearchUtils {
 			case "thirdPartyId":// 第三方订单系统标识
 				paramMap.put(key, value.trim());
 				break;
+			case "eport":// 口岸
+				paramMap.put(key, value.trim());
+				break;
+			case "ciqOrgCode":// 国检检疫机构代码
+				paramMap.put(key, value.trim());
+				break;
+			case "customsCode":// 海关关区代码
+				paramMap.put(key, value.trim());
+				break;
 			default:
 				break;
 			}
@@ -337,6 +346,15 @@ public final class SearchUtils {
 				break;
 			case DEL_FLAG:
 				paramMap.put(key, Integer.parseInt(value.trim()));
+				break;
+			case "eport":// 口岸
+				paramMap.put(key, value.trim());
+				break;
+			case "ciqOrgCode":// 国检检疫机构代码
+				paramMap.put(key, value.trim());
+				break;
+			case "customsCode":// 海关关区代码
+				paramMap.put(key, value.trim());
 				break;
 			default:
 				break;

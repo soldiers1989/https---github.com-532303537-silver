@@ -18,7 +18,7 @@
 			<props>
 				<prop key="dubbo.application.name">silver-web-shop</prop>
 				<!-- Web端常用数据缓存时间(秒) -->
-				<prop key="redis.expiration">1800</prop>
+				<prop key="redis.expiration">900</prop>
 			</props>
 		</property>
 	</bean>

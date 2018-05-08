@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import com.alibaba.dubbo.config.annotation.Reference;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 @Service
 public class PaymentTransaction {
@@ -127,5 +126,14 @@ public class PaymentTransaction {
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return paymentService.managerHideMpayInfo(jsonArray, managerName);
+	}
+
+	public Object checkPaymentPort(List<String> tradeNos) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		// 获取登录后的商户账号
+		//String merchantId = merchantInfo.getMerchantId();
+		return paymentService.checkPaymentPort(tradeNos, "MerchantId_00001");
 	}
 }

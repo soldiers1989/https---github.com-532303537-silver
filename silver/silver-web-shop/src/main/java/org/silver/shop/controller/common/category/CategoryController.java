@@ -78,17 +78,13 @@ public class CategoryController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商品类型")
-	public String editGoodsCategory(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("type") String type, @RequestParam("goodsSecondTypeId") String goodsSecondTypeId,
-			@RequestParam("firstTypeId") String firstTypeId, @RequestParam("firstTypeName") String firstTypeName,
-			@RequestParam("goodsSecondTypeName") String goodsSecondTypeName,@RequestParam("serialNo")String serialNo) {
+	public String editGoodsCategory(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = categoryTransaction.editGoodsCategory(req);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(categoryTransaction.editGoodsCategory(req)).toString();
 	}
 
 	/**

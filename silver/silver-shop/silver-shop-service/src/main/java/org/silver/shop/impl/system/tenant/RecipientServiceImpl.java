@@ -65,8 +65,8 @@ public class RecipientServiceImpl implements RecipientService {
 				return ReturnInfoUtils.errorInfo("手机号码不正确,请重新输入!");
 			}
 			recipient.setRecipientTel(recipientTel);
-			recipient.setRecipientCountryName(recipientMap.get("recipientCountryName") + "");
-			recipient.setRecipientCountryCode(recipientMap.get("recipientCountryCode") + "");
+			recipient.setRecipientCountryName("中国");
+			recipient.setRecipientCountryCode("142");
 			recipient.setRecProvincesName(recipientMap.get("recProvincesName") + "");
 			recipient.setRecProvincesCode(recipientMap.get("recProvincesCode") + "");
 			recipient.setRecCityName(recipientMap.get("recCityName") + "");
@@ -130,8 +130,6 @@ public class RecipientServiceImpl implements RecipientService {
 		noNullKeys.add("recipientName");
 		noNullKeys.add("recipientCardId");
 		noNullKeys.add("recipientTel");
-		noNullKeys.add("recipientCountryName");
-		noNullKeys.add("recipientCountryCode");
 		noNullKeys.add("recProvincesName");
 		noNullKeys.add("recProvincesCode");
 		noNullKeys.add("recCityName");
@@ -143,7 +141,6 @@ public class RecipientServiceImpl implements RecipientService {
 		if (!"1".equals(reDateMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reDateMap;
 		}
-
 		return ReturnInfoUtils.successInfo();
 	}
 

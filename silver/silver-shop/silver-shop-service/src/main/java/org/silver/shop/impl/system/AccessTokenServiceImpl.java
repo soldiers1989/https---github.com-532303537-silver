@@ -94,7 +94,6 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 			if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
 				return tokMap;
 			}
-			System.out.println("--->>>"+tokMap.get(BaseCode.DATAS.toString()));
 			// 由于服务器缓存时间为1小时,为岔开时间故而商城为50分钟
 			JedisUtil.set(redisKey, 2500, tokMap.get(BaseCode.DATAS.toString()));
 			return tokMap;
