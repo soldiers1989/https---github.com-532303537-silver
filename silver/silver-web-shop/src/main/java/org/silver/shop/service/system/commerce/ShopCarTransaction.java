@@ -55,5 +55,9 @@ public class ShopCarTransaction {
 		String memberName = memberInfo.getMemberName();
 		return shopCarService.editShopCarGoodsInfo(memberId,memberName,goodsInfo);
 	}
+
+	public Object temporaryUpdate() {
+		return shopCarService.temporaryUpdate();
+	}
 	
 }

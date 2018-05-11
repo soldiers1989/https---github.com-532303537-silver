@@ -59,5 +59,9 @@
 		<property name="updateDate" type="java.util.Date">
 			<column name="updateDate" />
 		</property>
+		
+		<property name="companyName" type="java.lang.String">
+            <column name="companyName" />
+        </property>
     </class>
 </hibernate-mapping>

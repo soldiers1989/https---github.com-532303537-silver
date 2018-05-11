@@ -109,4 +109,17 @@ public class ShopCarController {
 		Map<String, Object> statusMap = shopCarTransaction.editShopCarGoodsInfo(goodsInfo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/temporaryUpdate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation(value = "临时接口--修改旧用户购物车店铺信息")
+	//@RequiresRoles("Member")
+	public String temporaryUpdate(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(shopCarTransaction.temporaryUpdate()).toString();
+	}
 }

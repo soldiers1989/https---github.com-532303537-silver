@@ -43,12 +43,13 @@ public interface OrderService {
 	public Map<String, Object> getMerchantOrderRecordInfo(String merchantId, String merchantName, int page, int size);
 
 	/**
-	 * 检查订单商品是否都属于一个海关口岸
+	 * 检查订单商品是否都属于一个海关口岸,及收货人姓名与身份证号码是否与下单人一致
 	 * 
-	 * @param orderGoodsInfoPack
-	 * @return
+	 * @param orderGoodsInfoPack 订单商品Id信息包
+	 * @param recipientId  收货地址Id
+	 * @return Map
 	 */
-	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack);
+	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack, String recipientId);
 
 	/**
 	 * 用户查询订单信息

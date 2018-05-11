@@ -33,4 +33,5 @@
 	<import resource="spring/redis.xml"/>
 	<import resource="spring/session.xml"/>
 	<import resource="spring/shiro.xml"/>
+	<import resource="spring/captcha.xml"/>
 </beans>

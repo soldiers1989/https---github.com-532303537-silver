@@ -36,7 +36,7 @@ public class Mpay implements Serializable {
 	private String eport;//口岸标识1-电子口岸,2-广东智检
 	private String customsCode;//海关关区代码(导出表中-进/出口岸)
 	private String ciqOrgCode;//国检机构代码
-	
+	private String thirdPartyId;//第三方支付单唯一标识
 	public long getId() {
 		return id;
 	}
@@ -244,6 +244,14 @@ public class Mpay implements Serializable {
 
 	public void setCiqOrgCode(String ciqOrgCode) {
 		this.ciqOrgCode = ciqOrgCode;
+	}
+
+	public String getThirdPartyId() {
+		return thirdPartyId;
+	}
+
+	public void setThirdPartyId(String thirdPartyId) {
+		this.thirdPartyId = thirdPartyId;
 	}
 
 }

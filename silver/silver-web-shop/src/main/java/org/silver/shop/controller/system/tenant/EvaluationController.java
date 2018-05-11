@@ -68,7 +68,7 @@ public class EvaluationController {
 	@RequestMapping(value = "/addInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商城用户进行商品评价")
-	@RequiresRoles("Member")
+	//@RequiresRoles("Member")
 	public String addInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("goodsId") String goodsId,
 			@RequestParam("content") String content, @RequestParam("level") double level, String memberId,
 			String memberName) {

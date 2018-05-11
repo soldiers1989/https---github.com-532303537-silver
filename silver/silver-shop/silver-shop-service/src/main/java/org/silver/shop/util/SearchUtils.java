@@ -49,7 +49,6 @@ public final class SearchUtils {
 	 * 参数名称
 	 */
 	private static final String PARAM = "param";
-	
 
 	/**
 	 * 通用检索方法
@@ -225,7 +224,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMOrderSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -373,7 +372,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalAgentSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -411,7 +410,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMerchantOrderSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -462,7 +461,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalStockSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -478,10 +477,10 @@ public final class SearchUtils {
 			}
 			switch (key) {
 			case "startDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "endDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "sellFlag":
 				int sellFlag = 0;
@@ -525,7 +524,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalOrderImplLogSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -541,10 +540,10 @@ public final class SearchUtils {
 			}
 			switch (key) {
 			case "startDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "endDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "type":
 				paramMap.put(key, value);
@@ -573,7 +572,7 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalRecordGoodsSearch(Map<String, Object> datasMap) {
-		if(datasMap ==null ){
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
@@ -589,10 +588,10 @@ public final class SearchUtils {
 			}
 			switch (key) {
 			case "startDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "endDate":
-				paramMap.put(key, DateUtil.parseDate2(value + ""));
+				paramMap.put(key, DateUtil.parseDate2(value));
 				break;
 			case "goodsName":
 				blurryMap.put(key, "%" + value + "%");
@@ -618,17 +617,20 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "spareGoodsFirstTypeId":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 			case "spareGoodsSecondTypeId":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 			case "spareGoodsThirdTypeId":
-					paramMap.put(key, value);
+				paramMap.put(key, value);
 				break;
 			case "barCode":
 				paramMap.put(key, value);
-			break;
+				break;
+			case "entGoodsNo":
+				paramMap.put(key, value);
+				break;
 			default:
 				break;
 			}

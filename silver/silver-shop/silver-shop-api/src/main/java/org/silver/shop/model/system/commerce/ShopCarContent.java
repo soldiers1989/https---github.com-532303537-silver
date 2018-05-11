@@ -39,6 +39,7 @@ public class ShopCarContent implements Serializable {
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新时间
+	private String companyName;//公司名称对应店铺名称
 	public long getId() {
 		return id;
 	}
@@ -253,5 +254,12 @@ public class ShopCarContent implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 }

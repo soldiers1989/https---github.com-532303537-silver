@@ -316,7 +316,7 @@ public class PaymentController {
 	 * @return
 	 */
 	@RequestMapping(value = "/checkPaymentPort", produces = "application/json; charset=utf-8")
-	//@RequiresRoles("Merchant")
+	@RequiresRoles("Merchant")
 	@ResponseBody
 	public String checkPaymentPort(HttpServletResponse resp, HttpServletRequest req) {
 		String originHeader = req.getHeader("Origin");

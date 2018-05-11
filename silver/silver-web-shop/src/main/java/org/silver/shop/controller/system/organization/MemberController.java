@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.shiro.SecurityUtils;
@@ -23,6 +24,7 @@ import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.silver.util.JedisUtil;
+import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SendMsg;
@@ -35,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.xml.sax.SAXException;
+
+import com.google.code.kaptcha.Constants;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
@@ -271,14 +275,19 @@ public class MemberController {
 	 */
 	@RequestMapping(value = "/sendMemberRegisterCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String sendMemberRegisterCode(@RequestParam("phone") String phone, HttpServletRequest req,
-			HttpServletResponse response) throws ParserConfigurationException, SAXException, IOException {
+	public String sendMemberRegisterCode(String phone, HttpServletRequest req, HttpServletResponse response,
+			String captcha) throws ParserConfigurationException, SAXException, IOException {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (phone.length() == 11) {
+		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(captcha)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
 			String redisCode = JedisUtil.get("Shop_Key_MemberRegisterCode_" + phone);
@@ -300,7 +309,7 @@ public class MemberController {
 				}
 			}
 		}
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码输入不正确,请重新输入!")).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
 	}
 
 	@RequestMapping(value = "/batchRegisterMember", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -331,14 +340,19 @@ public class MemberController {
 	@ApiOperation(value = "会员实名认证")
 	@RequiresRoles("Member")
 	public String realName(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("memberId") String memberId) {
+			String memberId,String captcha) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (StringEmptyUtils.isEmpty(memberId)) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(memberId) || StringEmptyUtils.isEmpty(captcha)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id或验证码不能为空!")).toString();
+		}
+		if(!captcha.equalsIgnoreCase(captchaCode)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
 		}
 		return JSONObject.fromObject(memberTransaction.realName(memberId)).toString();
 	}
@@ -363,7 +377,7 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(memberTransaction.editPassword(memberId, oldPassword, newPassword)).toString();
 	}
-	
+
 	@RequestMapping(value = "/editInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户修改信息")
@@ -378,7 +392,7 @@ public class MemberController {
 		if (StringEmptyUtils.isEmpty(memberId)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
 		}
-		Map<String,Object> datasMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
 			String key = isKeys.nextElement();
@@ -388,13 +402,14 @@ public class MemberController {
 		datasMap.put("memberId", memberId);
 		return JSONObject.fromObject(memberTransaction.editInfo(datasMap)).toString();
 	}
-	
+
 	public static void main(String[] args) {
-		Map<String,Object> item = new HashMap<>();
+		Map<String, Object> item = new HashMap<>();
 		item.put("memberId", "Member_2017000025928");
 		item.put("memberIdCardName", "杨汕");
 		item.put("memberIdCard", "441423198802121716");
-		
-		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo", item));
+
+		System.out.println(
+				"------->>" + YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo", item));
 	}
 }

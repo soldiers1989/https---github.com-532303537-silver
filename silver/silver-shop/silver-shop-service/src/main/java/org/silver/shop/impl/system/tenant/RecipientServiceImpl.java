@@ -230,9 +230,9 @@ public class RecipientServiceImpl implements RecipientService {
 	 * 
 	 * @param recipientId
 	 *            收获地址信息流水Id
-	 * @return Map
+	 * @return Map 键datas=参数
 	 */
-	private Map<String, Object> getRecipientInfo(String recipientId) {
+	public Map<String, Object> getRecipientInfo(String recipientId) {
 		if (StringEmptyUtils.isEmpty(recipientId)) {
 			return ReturnInfoUtils.errorInfo("收货信息Id不能为空!");
 		}

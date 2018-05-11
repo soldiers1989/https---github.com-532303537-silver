@@ -109,14 +109,19 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("检查订单商品是否都属于一个海关口岸")
 	public String checkOrderGoodsCustoms(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("orderGoodsInfoPack") String orderGoodsInfoPack) {
+			 String orderGoodsInfoPack,String recipientId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.checkOrderGoodsCustoms(orderGoodsInfoPack);
-		return JSONObject.fromObject(statusMap).toString();
+		if(StringEmptyUtils.isEmpty(recipientId)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("收货人地址Id不能为空!")).toString();
+		}
+		if(StringEmptyUtils.isEmpty(orderGoodsInfoPack)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单商品信息包不能为空!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.checkOrderGoodsCustoms(orderGoodsInfoPack,recipientId)).toString();
 	}
 
 	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

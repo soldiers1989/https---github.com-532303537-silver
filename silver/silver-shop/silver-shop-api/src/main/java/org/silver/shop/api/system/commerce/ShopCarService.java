@@ -47,4 +47,10 @@ public interface ShopCarService {
 	 */
 	public Map<String, Object> editShopCarGoodsInfo(String memberId, String memberName, String goodsInfo);
 
+	/**
+	 * 临时接口
+	 * @return 
+	 */
+	public Object temporaryUpdate();
+
 }

@@ -20,6 +20,7 @@ import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
+import org.silver.shop.model.common.base.Postal;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
@@ -34,12 +35,15 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
+import org.silver.util.JedisUtil;
 import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -47,6 +51,7 @@ import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = PaymentService.class)
@@ -80,6 +85,15 @@ public class PaymentServiceImpl implements PaymentService {
 	 * appkey键
 	 */
 	private static final String APPKEY = "appkey";
+	/**
+	 * 同步锁
+	 */
+	private static final String LOCK = "lock";
+
+	/**
+	 * 返回第三方支付单信息缓存Key(键)
+	 */
+	private static final String RETURN_THIRD_PARTY_PAYMENT = "Shop_Key_ReturnThirdPartyPayment_Map";
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -297,7 +311,7 @@ public class PaymentServiceImpl implements PaymentService {
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
 					// 更新服务器返回支付Id
-					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID,recordMap);
+					Map<String, Object> rePaymentMap2 = updatePaymentInfo(treadeNo, rePayMessageID, recordMap);
 					if (!"1".equals(rePaymentMap2.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentMap2.get(BaseCode.MSG.toString());
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
@@ -349,13 +363,18 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 *  更新支付单返回信息
-	 * @param entPayNo 交易流水号
-	 * @param rePayMessageID 服务端返回的流水Id
-	 * @param customsMap 前台传递的海关信息
+	 * 更新支付单返回信息
+	 * 
+	 * @param entPayNo
+	 *            交易流水号
+	 * @param rePayMessageID
+	 *            服务端返回的流水Id
+	 * @param customsMap
+	 *            前台传递的海关信息
 	 * @return Map
 	 */
-	private Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID, Map<String, Object> customsMap) {
+	private Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID,
+			Map<String, Object> customsMap) {
 		String eport = customsMap.get("eport") + "";
 		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
 		String customsCode = customsMap.get("customsCode") + "";
@@ -381,7 +400,7 @@ public class PaymentServiceImpl implements PaymentService {
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {
-			return ReturnInfoUtils.errorInfo("交易流水号["+entPayNo+"]未找到支付单信息!");
+			return ReturnInfoUtils.errorInfo("交易流水号[" + entPayNo + "]未找到支付单信息!");
 		}
 	}
 
@@ -396,7 +415,7 @@ public class PaymentServiceImpl implements PaymentService {
 		paramMap.put("trade_no", entPayNo);
 		String reMsg = datasMap.get("msg") + "";
 		List<Mpay> reList = paymentDao.findByPropertyOr2(Mpay.class, paramMap, 0, 0);
-		if (reList != null && reList.size() > 0) {
+		if (reList != null && !reList.isEmpty()) {
 			Mpay pay = reList.get(0);
 			String status = datasMap.get("status") + "";
 			String note = pay.getPay_re_note();
@@ -421,9 +440,125 @@ public class PaymentServiceImpl implements PaymentService {
 				pay.setPay_record_status(4);
 			}
 			pay.setPay_re_note(note + defaultDate + ":" + reMsg + ";");
-			return updatePaymentRecordInfo(pay);
+
+			Map<String, Object> reUpdateMap = updatePaymentRecordInfo(pay);
+			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
+
+			}
+			//reThirdPartyPaymentInfo(pay, pay.getMerchant_no());
+			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("支付单[" + entPayNo + "]为找到对应信息,请核对信息!");
+		}
+	}
+
+	private Map<String, Object> reThirdPartyPaymentInfo(Mpay pay, String merchantId) {
+		System.out.println("---------返回第三方支付单信息----------");
+		if (StringEmptyUtils.isEmpty(merchantId) || pay == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
+		int thirdPartyFlag = merchant.getThirdPartyFlag();
+		if (thirdPartyFlag == 2) {
+			rePaymentInfo(pay);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 通过操纵缓存实现一个支付单重返10次
+	 */
+	private void resendPayment() {
+		List<Map<String, Object>> list = null;
+		try {
+			// 线程休眠一分钟
+			Thread.sleep(60000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		synchronized (LOCK) {
+			byte[] redisByte = JedisUtil.get(RETURN_THIRD_PARTY_PAYMENT.getBytes());
+			if (redisByte != null && redisByte.length > 0) {
+				//取出缓存中接收失败的支付单信息list(集合)
+				list = (List<Map<String, Object>>) SerializeUtil.toObject(redisByte);
+				for (int i = 0; i < list.size(); i++) {
+					Map<String, Object> item = list.get(i);
+					JSONObject payment = JSONObject.fromObject(item.get("payment"));
+					int resendCount = Integer.parseInt(item.get("resendCount") + "");
+					if (resendCount == 10) {//当重发次数达到10次时则移出缓存,不再返回
+						System.out.println(payment.get("EntPayNo") + "<-----支付单已重发10次-----");
+						list.remove(i);
+						JedisUtil.set(RETURN_THIRD_PARTY_PAYMENT.getBytes(), SerializeUtil.toBytes(list), 86400);
+						// 重调方法
+						resendPayment();
+					} else {
+						//计数器+1,再次发送
+						resendCount++;
+						item.put("resendCount", resendCount);
+						String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo",
+								item);
+						if ("success".equals(result)) {
+							list.remove(i);
+							JedisUtil.set(RETURN_THIRD_PARTY_PAYMENT.getBytes(), SerializeUtil.toBytes(list), 86400);
+							System.out.println(payment.get("EntPayNo") + "<-----支付单重发第" + resendCount + "次,接收成功-----");
+							// 重调方法
+							resendPayment();
+						} else {
+							list.add(i,item);
+							// 缓存一天时间
+							JedisUtil.set(RETURN_THIRD_PARTY_PAYMENT.getBytes(), SerializeUtil.toBytes(list), 86400);
+							// 重调方法
+							resendPayment();
+						}
+					}
+				}
+			}else{
+				System.out.println("------返回支付单缓存没有数据-------------");
+			}
+		}
+
+	}
+
+	/**
+	 * 返回给第三方支付单信息
+	 * @param pay 手工支付单实体类
+	 * @return Map
+	 */
+	private Map<String, Object> rePaymentInfo(Mpay pay) {
+		Map<String, Object> item = new HashMap<>();
+		JSONObject payment = new JSONObject();
+		payment.element("EntPayNo", pay.getTrade_no());
+		payment.element("PayStatus", pay.getPay_status());
+		payment.element("PayAmount", pay.getPay_amount());
+		payment.element("PayCurrCode", pay.getPay_currCode());
+		payment.element("PayTime", pay.getPay_time());
+		payment.element("PayerName", pay.getPayer_name());
+		payment.element("PayerDocumentType", pay.getPayer_document_type());
+		payment.element("PayerDocumentNumber", pay.getPayer_document_number());
+		payment.element("PayerPhoneNumber", pay.getPayer_phone_number());
+		payment.element("EntOrderNo", pay.getMorder_id());
+		payment.element("Notes", pay.getRemarks());
+		payment.element("merchantId", pay.getMerchant_no());
+		item.put("payment", payment.toString());
+		// 返回支付单信息次数
+		item.put("resendCount", 1);
+		String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo", item);
+
+		if ("success".equals(result)) {
+			System.out.println(pay.getTrade_no()+  "<-----支付单重发第1次,接收成功-----");
+			return ReturnInfoUtils.successInfo();
+		} else {
+			List<Map<String, Object>> list = new ArrayList<>();
+			list.add(item);
+			// 缓存一天时间
+			JedisUtil.set(RETURN_THIRD_PARTY_PAYMENT.getBytes(), SerializeUtil.toBytes(list), 86400);
+			resendPayment();
+			return ReturnInfoUtils.errorInfo(pay.getTrade_no()+"<--支付单接收失败---");
 		}
 	}
 
@@ -838,10 +973,10 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> checkPaymentPort(List<String> tradeNos, String merchantId) {
-		if(tradeNos == null  || StringEmptyUtils.isEmpty(merchantId)){
+		if (tradeNos == null || StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
-		
+
 		List<Mpay> cacheList = new ArrayList<>();
 		for (int i = 0; i < tradeNos.size(); i++) {
 			String tradeNo = tradeNos.get(i);
@@ -870,8 +1005,8 @@ public class PaymentServiceImpl implements PaymentService {
 						return ReturnInfoUtils.errorInfo("所选支付单为多个不同的口岸/海关关区/国检检疫机构信息,请重新选择!");
 					}
 				}
-			}else{
-				return ReturnInfoUtils.errorInfo("支付单流水号["+tradeNo+"]未找到支付单信息,请重新选择!");
+			} else {
+				return ReturnInfoUtils.errorInfo("支付单流水号[" + tradeNo + "]未找到支付单信息,请重新选择!");
 			}
 		}
 		return ReturnInfoUtils.successInfo();

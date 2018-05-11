@@ -15,6 +15,8 @@ import org.silver.shop.model.common.category.HsCode;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,13 @@ public class ShopCarServiceImpl implements ShopCarService {
 
 	@Autowired
 	private ShopCarDao shopCarDao;
+	@Autowired
+	private MerchantUtils merchantUtils;
 
 	public Map<String, Object> addGoodsToShopCar(String memberId, String memberName, String entGoodsNo, int count) {
+		if (StringEmptyUtils.isEmpty(entGoodsNo) || count < 0) {
+			return ReturnInfoUtils.errorInfo("请求参数错误!");
+		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("entGoodsNo", entGoodsNo);
 		// 根据前台传递的商品ID查询商品是否存在
@@ -37,7 +44,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 		params.put("entGoodsNo", entGoodsNo);
 		List<Object> reShopCart = this.shopCarDao.findByProperty(ShopCarContent.class, params, 1, 1);
 		if ((goodsRecordList == null) || (stockList == null) || (reShopCart == null)) {
-			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+			return ReturnInfoUtils.errorInfo("查询商品信息失败,服务器繁忙!");
 		}
 		if ((!goodsRecordList.isEmpty()) && (!stockList.isEmpty())) {
 			// 获取库存信息
@@ -48,7 +55,6 @@ public class ShopCarServiceImpl implements ShopCarService {
 				return ReturnInfoUtils.errorInfo("库存不足,请重新输入!");
 			}
 			GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsRecordList.get(0);
-			ShopCarContent shopCart = new ShopCarContent();
 			// 查询当前用户购物车中是否有该商品
 			if (!reShopCart.isEmpty()) {
 				ShopCarContent oldShopCart = (ShopCarContent) reShopCart.get(0);
@@ -59,34 +65,46 @@ public class ShopCarServiceImpl implements ShopCarService {
 				Double price = Double.valueOf(oldShopCart.getRegPrice());
 				oldShopCart.setTotalPrice(newCount * price.doubleValue());
 				if (!this.shopCarDao.update(oldShopCart)) {
-					return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
+					return ReturnInfoUtils.errorInfo("商品保存至购物车失败,服务器繁忙!");
 				}
 				return ReturnInfoUtils.successInfo();
 			}
-			shopCart.setMemberId(memberId);
-			shopCart.setMemberName(memberName);
-			shopCart.setMerchantId(goodsRecord.getGoodsMerchantId());
-			shopCart.setMerchantName(goodsRecord.getGoodsMerchantName());
-			shopCart.setGoodsBaseId(goodsRecord.getGoodsDetailId());
-			shopCart.setGoodsName(goodsRecord.getSpareGoodsName());
-			String image = goodsRecord.getSpareGoodsImage();
-			if(StringEmptyUtils.isNotEmpty(image)){
-				String[] strArr = image.split(";");
-				shopCart.setGoodsImage(strArr[0]);
-			}
-			shopCart.setGoodsStyle(goodsRecord.getSpareGoodsStyle());
-			shopCart.setCount(count);
-			// 购物车商品选中标识：1-选中,2-未选中
-			shopCart.setFlag(1);
-			shopCart.setRegPrice(stock.getRegPrice().doubleValue());
-			Double totalPrice = Double.valueOf(stock.getRegPrice().doubleValue() * count);
-			shopCart.setTotalPrice(totalPrice.doubleValue());
-			shopCart.setEntGoodsNo(stock.getEntGoodsNo());
-			if (!this.shopCarDao.add(shopCart)) {
-				return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-			}
+			return addShopGoods(goodsRecord, memberId, memberName, count, stock);
 		} else {
 			return ReturnInfoUtils.errorInfo("商品不存在！");
+		}
+	}
+
+	private Map<String, Object> addShopGoods(GoodsRecordDetail goodsRecord, String memberId, String memberName,
+			int count, StockContent stock) {
+		ShopCarContent shopCart = new ShopCarContent();
+		shopCart.setMemberId(memberId);
+		shopCart.setMemberName(memberName);
+		shopCart.setMerchantId(goodsRecord.getGoodsMerchantId());
+		shopCart.setMerchantName(goodsRecord.getGoodsMerchantName());
+		shopCart.setGoodsBaseId(goodsRecord.getGoodsDetailId());
+		shopCart.setGoodsName(goodsRecord.getSpareGoodsName());
+		String image = goodsRecord.getSpareGoodsImage();
+		if (StringEmptyUtils.isNotEmpty(image)) {
+			String[] strArr = image.split(";");
+			shopCart.setGoodsImage(strArr[0]);
+		}
+		shopCart.setGoodsStyle(goodsRecord.getSpareGoodsStyle());
+		shopCart.setCount(count);
+		// 购物车商品选中标识：1-选中,2-未选中
+		shopCart.setFlag(1);
+		shopCart.setRegPrice(stock.getRegPrice().doubleValue());
+		Double totalPrice = Double.valueOf(stock.getRegPrice().doubleValue() * count);
+		shopCart.setTotalPrice(totalPrice.doubleValue());
+		shopCart.setEntGoodsNo(stock.getEntGoodsNo());
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(goodsRecord.getGoodsMerchantId());
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		shopCart.setCompanyName(merchant.getCompanyName());
+		if (!shopCarDao.add(shopCart)) {
+			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -100,7 +118,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if (!carList.isEmpty()) {
+		} else if (!carList.isEmpty()) {
 			for (int i = 0; i < carList.size(); i++) {
 				ShopCarContent cart = (ShopCarContent) carList.get(i);
 				String entGoodsNo = cart.getEntGoodsNo();
@@ -117,19 +135,19 @@ public class ShopCarServiceImpl implements ShopCarService {
 				if ((!stockList.isEmpty()) && (!reGoodsRecordList.isEmpty())) {
 					StockContent stock = (StockContent) stockList.get(0);
 					GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordList.get(0);
-					//根据商品备案信息获取税率
+					// 根据商品备案信息获取税率
 					Map<String, Object> reTaxMap = getTax(goodsRecordInfo);
 					if (!"1".equals(reTaxMap.get(BaseCode.STATUS.toString()))) {
 						return reTaxMap;
 					}
 					Map<String, Object> taxMap = (Map<String, Object>) reTaxMap.get(BaseCode.DATAS.toString());
-					//增值税 
+					// 增值税
 					double vat = Double.parseDouble(taxMap.get("vat") + "");
-					//消费税
+					// 消费税
 					double consumptionTax = Double.parseDouble(taxMap.get("consumptionTax") + "");
-					//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+					// 综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 					double consolidatedTax = Double.parseDouble(taxMap.get("consolidatedTax") + "");
-					//关税	
+					// 关税
 					double tariff = Double.parseDouble(taxMap.get("tariff") + "");
 					cart.setVat(vat);
 					cart.setConsumptionTax(consumptionTax);
@@ -138,7 +156,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 					cart.setSellCount(stock.getSellCount());
 					cart.setCourierFeeFlag(goodsRecordInfo.getFreightFlag());
 					cart.setTaxFlag(goodsRecordInfo.getTaxFlag());
-					//上下架标识：1-上架,2-下架
+					// 上下架标识：1-上架,2-下架
 					cart.setReMark(Integer.toString(stock.getSellFlag()));
 				} else {
 					statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
@@ -158,8 +176,10 @@ public class ShopCarServiceImpl implements ShopCarService {
 
 	/**
 	 * 根据商品备案信息查询税率
-	 * @param goodsRecordInfo 商品备案信息实体
-	 * @return	Map
+	 * 
+	 * @param goodsRecordInfo
+	 *            商品备案信息实体
+	 * @return Map
 	 */
 	private Map<String, Object> getTax(GoodsRecordDetail goodsRecordInfo) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -171,16 +191,16 @@ public class ShopCarServiceImpl implements ShopCarService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if(!reHsCodeList.isEmpty()) {
+		} else if (!reHsCodeList.isEmpty()) {
 			HsCode hsCodeInfo = (HsCode) reHsCodeList.get(0);
 			Map<String, Object> datasMap = new HashMap<>();
-			//增值税 
+			// 增值税
 			datasMap.put("vat", hsCodeInfo.getVat());
-			//消费税 
+			// 消费税
 			datasMap.put("consumptionTax", hsCodeInfo.getConsumptionTax());
-			//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+			// 综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 			datasMap.put("consolidatedTax", hsCodeInfo.getConsolidatedTax());
-			//关税	
+			// 关税
 			datasMap.put("tariff", hsCodeInfo.getTariff());
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), datasMap);
@@ -192,8 +212,10 @@ public class ShopCarServiceImpl implements ShopCarService {
 
 	/**
 	 * 根据商品第三类型Id查询税率
-	 * @param goodsThirdTypeId 商品第三类型Id
- 	 * @return Map
+	 * 
+	 * @param goodsThirdTypeId
+	 *            商品第三类型Id
+	 * @return Map
 	 */
 	private Map<String, Object> getThirdTypeTax(String goodsThirdTypeId) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -204,16 +226,16 @@ public class ShopCarServiceImpl implements ShopCarService {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if(!reGoodsTypeList.isEmpty()) {
+		} else if (!reGoodsTypeList.isEmpty()) {
 			Map<String, Object> datasMap = new HashMap<>();
 			GoodsThirdType thirdTypeInfo = (GoodsThirdType) reGoodsTypeList.get(0);
-			//增值税 
+			// 增值税
 			datasMap.put("vat", thirdTypeInfo.getVat());
-			//消费税 
+			// 消费税
 			datasMap.put("consumptionTax", thirdTypeInfo.getConsumptionTax());
-			//综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
+			// 综合税 跨境电商综合税率 = （消费税率+增值税率）/（1-消费税率）×70%
 			datasMap.put("consolidatedTax", thirdTypeInfo.getConsolidatedTax());
-			//关税
+			// 关税
 			datasMap.put("tariff", thirdTypeInfo.getTariff());
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.DATAS.toString(), datasMap);
@@ -234,7 +256,7 @@ public class ShopCarServiceImpl implements ShopCarService {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
 			return statusMap;
-		}else if (!reList.isEmpty()) {
+		} else if (!reList.isEmpty()) {
 			ShopCarContent cart = (ShopCarContent) reList.get(0);
 			if (!shopCarDao.delete(cart)) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
@@ -309,5 +331,28 @@ public class ShopCarServiceImpl implements ShopCarService {
 		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
 		statusMap.put(BaseCode.ERROR.toString(), litMap);
 		return statusMap;
+	}
+
+	@Override
+	public Object temporaryUpdate() {
+		List<Object> reShopCarList = shopCarDao.findByProperty(ShopCarContent.class, null, 0, 0);
+		if (reShopCarList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reShopCarList.isEmpty()) {
+			for (int i = 0; i < reShopCarList.size(); i++) {
+				ShopCarContent shopCar = (ShopCarContent) reShopCarList.get(i);
+				Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(shopCar.getMerchantId());
+				if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+					return reMerchantMap;
+				}
+				Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+				shopCar.setCompanyName(merchant.getCompanyName());
+				if (!shopCarDao.update(shopCar)) {
+					return ReturnInfoUtils.errorInfo("更新失败,服务器繁忙!");
+				}
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("未知错误!");
 	}
 }

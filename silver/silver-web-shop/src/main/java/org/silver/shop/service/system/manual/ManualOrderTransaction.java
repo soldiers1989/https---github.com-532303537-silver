@@ -119,7 +119,7 @@ public class ManualOrderTransaction {
 				invokeTaskUtils.startTask(10, realRowCount, file, merchantId, serialNo, merchantName);
 				statusMap.put("serialNo", serialNo);
 			} else {
-				return ReturnInfoUtils.errorInfo("导入失败,请检查订单模板列数是否符合规范!");
+				return ReturnInfoUtils.errorInfo("导入失败,第一张工作表中第一行列数为[" + columnTotalCount + "],请检查订单模板列数是否符合规范!");
 			}
 			excel.closeExcel();
 			statusMap.put("status", 1);
@@ -139,43 +139,47 @@ public class ManualOrderTransaction {
 	 * @return int 最后一行序号值
 	 */
 	public static int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
-		int realRowCount = 0;
+		if(excel == null || rowTotalCount <= 0){
+			return -1;
+		}
 		for (int r = rowTotalCount; r > 0; r--) {
 			if (excel.getColumnCount(r) == 0) {
 				continue;
 			}
-			String value = null;
+			String serialNo = null;
+			String endGoodsNo = null;
+			String idCard = null;
 			try {
-				// 默认只需要读取表单中的第一列(序号)
-				value = excel.getCell(0, r, 0);
+				// 获取每一行的序号
+				serialNo = excel.getCell(0, r, 0);
 				// 商品自编号
-				String endGoodsNo = excel.getCell(0, r, 2);
+				endGoodsNo = excel.getCell(0, r, 2);
 				// 下单人身份证号码
-				String idCard = excel.getCell(0, r, 11);
-				// 判断序号,商家自编号,商家平台号是否有值
-				if (StringEmptyUtils.isNotEmpty(value) && StringEmptyUtils.isNotEmpty(endGoodsNo)
-						&& StringEmptyUtils.isNotEmpty(idCard)) {
-					try {
-						// 取最后一条数据的序号作为总行数
-						realRowCount = Integer.parseInt(value);
-						return realRowCount;
-					} catch (Exception e) {
-						logger.error("----导入excel表单读取序号错误----", e);
-						return -1;
-					}
-				}
+				idCard = excel.getCell(0, r, 11);
 			} catch (Exception e) {
 				// continue;
+			}
+			// 判断序号,商家自编号,下单人身份证号码是否有值如果都有值则说明是正确的数据,获取这行的序号
+			if (StringEmptyUtils.isNotEmpty(serialNo) && StringEmptyUtils.isNotEmpty(endGoodsNo)
+					&& StringEmptyUtils.isNotEmpty(idCard)) {
+				try {
+					// 取最后一条数据的序号作为总行数
+					return Integer.parseInt(serialNo);
+				} catch (Exception e) {
+					logger.error("----导入excel表单读取序号错误----", e);
+					return -1;
+				}
 			}
 		}
 		return -1;
 	}
 
 	public static void main(String[] args) {
-		File file = new File("C:\\Users\\Lenovo\\Desktop\\4-27订单--家之宝-53单（启邦）.xlsx");
+		File file = new File("C:\\Users\\Lenovo\\Desktop\\Work\\前海爱库\\1504订单模板(IK01)-20180228.xlsx");
 		ExcelUtil excel = new ExcelUtil(file);
 		excel.open();
-		System.out.println("---->>>>" + excelRealRowCount(excel.getRowCount(0), excel));
+		System.out.println("---第一行列数---->>>>" + excel.getColumnCount(0, 0));
+		System.out.println("---->>>>" + excelRealRowCount(excel.getRowCount(0), null));
 	}
 
 	/**

@@ -548,42 +548,41 @@ public class ManagerServiceImpl implements ManagerService {
 	@Override
 	public Map<String, Object> editMerchantRecordDetail(String managerId, String managerName, String merchantId,
 			String merchantRecordInfo) {
-		Map<String, Object> statusMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(merchantRecordInfo);
 		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "商户备案信息参数错误!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商户备案信息包格式错误!");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
-			Map<String, Object> paramMap = new HashMap<>();
 			String strId = datasMap.get("id") + "";
 			if (StringEmptyUtils.isNotEmpty(strId)) {// 当有商品备案Id时
 				long id = Long.parseLong(strId);
-				paramMap.put("id", id);
-				List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+				Map<String, Object> params = new HashMap<>();
+				params.put("id", id);
+				List<MerchantRecordInfo> reList = managerDao.findByProperty(MerchantRecordInfo.class, params, 0, 0);
 				if (reList != null && !reList.isEmpty()) {
 					MerchantRecordInfo recordInfo = reList.get(0);
 					int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+					String customsPortName = datasMap.get("customsPortName") + "";
 					String ebEntNo = datasMap.get("ebEntNo") + "";
 					String ebEntName = datasMap.get("ebEntName") + "";
 					String ebpEntNo = datasMap.get("ebpEntNo") + "";
 					String ebpEntName = datasMap.get("ebpEntName") + "";
 					recordInfo.setCustomsPort(customsPort);
+					recordInfo.setCustomsPortName(customsPortName);
 					recordInfo.setEbEntNo(ebEntNo);
 					recordInfo.setEbEntName(ebEntName);
 					recordInfo.setEbpEntNo(ebpEntNo);
 					recordInfo.setEbpEntName(ebpEntName);
+					recordInfo.setUpdateBy(managerName);
+					recordInfo.setUpdateDate(new Date());
 					if (!managerDao.update(recordInfo)) {
 						return ReturnInfoUtils.errorInfo("更新备案信息失败,服务器繁忙!");
 					}
 				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("商户备案信息查询失败,服务器繁忙!");
 				}
 			} else {// 当没有传Id时则为新建
 				MerchantRecordInfo recordInfo = new MerchantRecordInfo();

@@ -51,8 +51,8 @@ public class OrderTransaction {
 	}
 
 	// 检查订单商品是否都属于一个海关口岸
-	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack) {
-		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack);
+	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack, String recipientId) {
+		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack,recipientId);
 	}
 
 	public Map<String, Object> getMemberOrderInfo(int page, int size) {

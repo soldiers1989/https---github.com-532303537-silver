@@ -108,6 +108,9 @@
 		<property name="ciqOrgCode">
 			<column name="ciqOrgCode" />
 		</property>
+		<property name="thirdPartyId">
+			<column name="thirdPartyId" />
+		</property>
 	</class>
 
 </hibernate-mapping>

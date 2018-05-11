@@ -133,7 +133,7 @@ public class PaymentTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		// 获取登录后的商户账号
-		//String merchantId = merchantInfo.getMerchantId();
-		return paymentService.checkPaymentPort(tradeNos, "MerchantId_00001");
+		String merchantId = merchantInfo.getMerchantId();
+		return paymentService.checkPaymentPort(tradeNos,merchantId);
 	}
 }
