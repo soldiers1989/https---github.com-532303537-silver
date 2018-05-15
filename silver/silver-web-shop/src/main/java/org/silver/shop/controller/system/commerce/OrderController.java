@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,6 +51,7 @@ public class OrderController {
 	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
 			@RequestParam("recipientId") String recipientId) {
+	
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -99,7 +101,7 @@ public class OrderController {
 	}
 
 	/**
-	 * 检查订单商品是否都属于一个海关口岸
+	 * 用户下单时，检查订单商品是否都属于一个海关口岸
 	 * 
 	 * @param req
 	 * @param response
@@ -110,6 +112,8 @@ public class OrderController {
 	@ApiOperation("检查订单商品是否都属于一个海关口岸")
 	public String checkOrderGoodsCustoms(HttpServletRequest req, HttpServletResponse response,
 			 String orderGoodsInfoPack,String recipientId) {
+		HttpSession session = req.getSession();
+		System.out.println("----->>"+session.getId());
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -428,6 +432,10 @@ public class OrderController {
 		}
 		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
+		}
+		
+		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单第三方业务Id不能为空,请核对信息!")).toString();
 		}
 		return JSONObject.fromObject(orderTransaction.getThirdPartyInfo(datasMap)).toString();
 	}

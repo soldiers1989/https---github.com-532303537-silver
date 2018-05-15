@@ -54,13 +54,9 @@
 		<property name="year">
 			<column name="year" />
 		</property>
-
-
 		<property name="del_flag" type="java.lang.Integer">
 			<column name="del_flag" not-null="true" />
 		</property>
-
-
 		<property name="create_date" type="java.util.Date">
 			<column name="create_date" not-null="true" />
 		</property>
@@ -110,6 +106,12 @@
 		</property>
 		<property name="thirdPartyId">
 			<column name="thirdPartyId" />
+		</property>
+		<property name="resendCount" type="java.lang.Integer">
+			<column name="resendCount" default="0" />
+		</property>
+		<property name="resendStatus" >
+			<column name="resendStatus"  />
 		</property>
 	</class>
 

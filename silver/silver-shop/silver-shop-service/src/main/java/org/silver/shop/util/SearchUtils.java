@@ -346,6 +346,9 @@ public final class SearchUtils {
 			case DEL_FLAG:
 				paramMap.put(key, Integer.parseInt(value.trim()));
 				break;
+			case "thirdPartyId":// 第三方业务Id
+				paramMap.put(key, value.trim());
+				break;
 			case "eport":// 口岸
 				paramMap.put(key, value.trim());
 				break;

@@ -35,4 +35,12 @@ public interface PaymentDao  extends BaseDao{
 	 */
 	public Table getAgentPaymentReport(Map<String, Object> datasMap);
 	
+	
+	/**
+	 * 查询支付单回调失败的支付单信息
+	 * @param page
+	 * @param size
+	 * @return Table
+	 */
+	public List getFailPaymentInfo(Class entity, Map<String, Object> params, int page, int size);
 }

@@ -16,6 +16,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.cross.PaymentTransaction;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -114,8 +115,7 @@ public class PaymentController {
 		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entPayNo", req.getParameter("entPayNo") + "");
-		Map<String, Object> statusMap = paytemTransaction.updatePayRecordInfo(datasMap);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(paytemTransaction.updatePayRecordInfo(datasMap)).toString();
 	}
 
 	/**
@@ -338,6 +338,38 @@ public class PaymentController {
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单Id不能为空!")).toString();
 	}
 	
+	/**
+	 * 公开性第三方商城平台 查询支付单信息入口
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("第三方商城平台传递订单信息入口")
+	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response ) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
+		}
+		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单第三方业务Id不能为空,请核对信息!")).toString();
+		}
+		return JSONObject.fromObject(paytemTransaction.getThirdPartyInfo(datasMap)).toString();
+	
+	}
 	public static void main(String[] args) {
 		Map<String,Object> item = new HashMap<>();
 		//YM180125052191327

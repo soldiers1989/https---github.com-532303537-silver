@@ -1,5 +1,7 @@
 package org.silver.shop.service.system.cross;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +13,11 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
+import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -135,5 +139,15 @@ public class PaymentTransaction {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return paymentService.checkPaymentPort(tradeNos,merchantId);
+	}
+
+	public static void main(String[] args) {
+		Mpay pay = new  Mpay();
+		pay.setPay_time(new Date());
+		System.out.println("--->>"+DateUtil.formatDate(pay.getPay_time(), "yyyyMMddhhmmss"));
+	}
+
+	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
+		return paymentService.getThirdPartyInfo(datasMap);
 	}
 }

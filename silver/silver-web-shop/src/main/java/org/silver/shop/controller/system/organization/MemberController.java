@@ -81,6 +81,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Origin", "*");
+
 		boolean result = verificationCode.matches("[0-9]+");
 		if (account != null && loginPass != null && memberIdCardName != null && memberIdCard != null
 				&& memberTel != null && result) {
@@ -111,6 +112,8 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		System.out.println("--s登陆成功--->>"+session.getId());
 		Map<String, Object> statusMap = new HashMap<>();
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();

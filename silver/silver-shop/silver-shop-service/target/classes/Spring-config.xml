@@ -22,9 +22,9 @@
 			</props>
 		</property>
 	</bean>
-	<!-- <bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp"
+	<!-- <bean id="timerStartUp" class="org.silver.shop.component.TimerStartUp" 
 		lazy-init="false" destroy-method="close" /> -->
-	
+	<bean id="timerResendPayment" class="org.silver.shop.component.TimerResendPayment"	lazy-init="false"   />
 	<!-- 扫描注解 -->
 	<context:component-scan base-package="org.silver.shop">
 		<context:exclude-filter type="annotation"

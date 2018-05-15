@@ -649,7 +649,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
-				System.out.println("------第二次发起支付单推送------");
 				Map<String, Object> paramsMap = new HashMap<>();
 				paramsMap.put("merchantId", merchantId);
 				paramsMap.put("customsPort", 1);

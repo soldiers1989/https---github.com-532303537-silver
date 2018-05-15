@@ -26,17 +26,20 @@ public class Mpay implements Serializable {
 	private Date update_date; // 更新时间
 	private String update_by;// 更新人
 	private String remarks;// 备注
-	private String pay_status;//支付状态D-代扣(款项由消费者账户转至第三方支付企业账户)S-实扣(款项由消费者账户转至收款方账户)C-取消(退款)
-	private String pay_currCode;//支付币制
-	
-	private int pay_record_status;//备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-	private String pay_serial_no;//服务器接收成功后返回编号
-	private String pay_re_note;//服务器返回信息
-	private Date pay_time;//付款时间
-	private String eport;//口岸标识1-电子口岸,2-广东智检
-	private String customsCode;//海关关区代码(导出表中-进/出口岸)
-	private String ciqOrgCode;//国检机构代码
-	private String thirdPartyId;//第三方支付单唯一标识
+	private String pay_status;// 支付状态D-代扣(款项由消费者账户转至第三方支付企业账户)S-实扣(款项由消费者账户转至收款方账户)C-取消(退款)
+	private String pay_currCode;// 支付币制
+
+	private int pay_record_status;// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	private String pay_serial_no;// 服务器接收成功后返回编号
+	private String pay_re_note;// 服务器返回信息
+	private Date pay_time;// 付款时间
+	private String eport;// 口岸标识1-电子口岸,2-广东智检
+	private String customsCode;// 海关关区代码(导出表中-进/出口岸)
+	private String ciqOrgCode;// 国检机构代码
+	private String thirdPartyId;// 第三方支付单唯一标识
+	private String resendStatus;//重发状态：success-成功，false-失败
+	private int resendCount;// 第三方回调重发次数
+
 	public long getId() {
 		return id;
 	}
@@ -189,8 +192,6 @@ public class Mpay implements Serializable {
 		this.pay_currCode = pay_currCode;
 	}
 
-	
-
 	public int getPay_record_status() {
 		return pay_record_status;
 	}
@@ -210,6 +211,7 @@ public class Mpay implements Serializable {
 	public String getPay_re_note() {
 		return pay_re_note;
 	}
+
 	public void setPay_re_note(String pay_re_note) {
 		this.pay_re_note = pay_re_note;
 	}
@@ -252,6 +254,22 @@ public class Mpay implements Serializable {
 
 	public void setThirdPartyId(String thirdPartyId) {
 		this.thirdPartyId = thirdPartyId;
+	}
+
+	public int getResendCount() {
+		return resendCount;
+	}
+
+	public void setResendCount(int resendCount) {
+		this.resendCount = resendCount;
+	}
+
+	public String getResendStatus() {
+		return resendStatus;
+	}
+
+	public void setResendStatus(String resendStatus) {
+		this.resendStatus = resendStatus;
 	}
 
 }

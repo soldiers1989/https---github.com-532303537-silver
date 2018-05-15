@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.zookeeper.data.Stat;
@@ -59,6 +60,8 @@ public class ShopCarController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		System.out.println("--查询购物车-->>"+session.getId());
 		Map<String, Object> statusMap = shopCarTransaction.getGoodsToShopCartInfo();
 		return JSONObject.fromObject(statusMap).toString();
 	}
@@ -89,10 +92,6 @@ public class ShopCarController {
 	 * 
 	 * @param req
 	 * @param response
-	 * @param entGoodsNo
-	 *            商品备案Id
-	 * @param count
-	 *            商品数量
 	 * @return
 	 */
 	@RequestMapping(value = "/editShopCarGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

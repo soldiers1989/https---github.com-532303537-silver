@@ -630,6 +630,11 @@ public class OrderServiceImpl implements OrderService {
 		return checkRecipientInfo(recipientId);
 	}
 
+	/**
+	 * 检查收货人姓名与电话是否与用户信息一致
+	 * @param recipientId 收货地址Id
+	 * @return Map
+	 */
 	private Map<String, Object> checkRecipientInfo(String recipientId) {
 		Map<String, Object> reRecipientMap = recipientServiceImpl.getRecipientInfo(recipientId);
 		if (!"1".equals(reRecipientMap.get(BaseCode.STATUS.toString()))) {
@@ -646,10 +651,10 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("用户尚未实名,暂不能下单,请先实名认证!");
 		}
 		if(!(recipient.getRecipientName().trim()).equals(member.getMemberIdCardName())){
-			return ReturnInfoUtils.errorInfo("您输入的姓名与收货人姓名与下单人姓名不匹配,请核对信息!");
+			return ReturnInfoUtils.errorInfo("收货人姓名与用户真实姓名不匹配,请核对信息!");
 		}
 		if(!(recipient.getRecipientCardId()).trim().equals(member.getMemberIdCard())){
-			return ReturnInfoUtils.errorInfo("您输入的姓名与收货人身份证号码与下单人身份证号码不匹配,请核对信息!");
+			return ReturnInfoUtils.errorInfo("收货人身份证号码与用户身份证号码不匹配,请核对信息!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -1379,7 +1384,7 @@ public class OrderServiceImpl implements OrderService {
 				return ReturnInfoUtils.errorInfo("智检对应的国检检疫机构及海关代码错误,请核对信息!");
 			}
 		default:
-			return ReturnInfoUtils.errorInfo("口岸标识错误,请核对信息!");
+			return ReturnInfoUtils.errorInfo("口岸标识暂未支持["+eport+"],请核对信息!");
 		}
 	}
 
@@ -1598,31 +1603,23 @@ public class OrderServiceImpl implements OrderService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-
-			JSONObject json = new JSONObject();
-			try {
-				json = JSONObject.fromObject(datasMap.get(BaseCode.DATAS.toString()));
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("查询参数格式错误!");
-			}
-			return thirdPartyOrderInfo(json, merchant.getMerchantId());
+			String thirdPartyId =datasMap.get("thirdPartyId") + "" ;
+			return thirdPartyOrderInfo( merchant.getMerchantId(),thirdPartyId);
 		}
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 	}
 
 	/**
 	 * 第三方平获取订单信息
-	 * 
-	 * @param json
-	 *            查询参数
 	 * @param merchantId
 	 *            商户Id
+	 * @param thirdPartyId 
 	 * @return Map
 	 */
-	private Map<String, Object> thirdPartyOrderInfo(JSONObject json, String merchantId) {
-		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(json);
-		Map<String, Object> params = (Map<String, Object>) reDatasMap.get("param");
+	private Map<String, Object> thirdPartyOrderInfo (String merchantId, String thirdPartyId) {
+		Map<String,Object> params = new HashMap<>();
 		params.put("merchant_no", merchantId);
+		params.put("thirdPartyId", thirdPartyId);
 		List<Morder> reOrderList = orderDao.findByProperty(Morder.class, params, 1, 1);
 		if (reOrderList == null) {
 			return ReturnInfoUtils.errorInfo("查询订单信息失败,服务器繁忙!");

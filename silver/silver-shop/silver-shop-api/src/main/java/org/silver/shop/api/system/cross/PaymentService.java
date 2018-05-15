@@ -144,4 +144,11 @@ public interface PaymentService {
 	 */
 	public Map<String,Object> checkPaymentPort(List<String> tradeNos, String merchantId);
 
+	/**
+	 * 第三方商城平台传递订单信息入口
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String,Object> getThirdPartyInfo(Map<String, Object> datasMap);
+
 }
