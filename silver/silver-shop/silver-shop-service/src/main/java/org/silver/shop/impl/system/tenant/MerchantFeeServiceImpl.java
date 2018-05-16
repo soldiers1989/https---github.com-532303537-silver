@@ -97,13 +97,13 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	/**
-	 * 根据商户费用流水Id查询商户平台费用信息
+	 * 根据流水Id查询商户口岸费率信息
 	 * 
 	 * @param merchantFeeId
 	 *            流水Id
 	 * @return Map
 	 */
-	private Map<String, Object> getMerchantFeeInfo(String merchantFeeId) {
+	public   Map<String, Object> getMerchantFeeInfo(String merchantFeeId) {
 		if (StringEmptyUtils.isEmpty(merchantFeeId)) {
 			return ReturnInfoUtils.errorInfo("Id不能为空!");
 		}
@@ -120,19 +120,21 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantServiceFee(String merchantId) {
-		if (StringEmptyUtils.isEmpty(merchantId)) {
+	public Map<String, Object> getMerchantServiceFee(String merchantId, String type) {
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(type)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
+		params.put("type", type);
+		params.put("deleteFlag", 0);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
 		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("查询商户费用信息失败,服务器繁忙!");
+			return ReturnInfoUtils.errorInfo("查询已开通海关口岸信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(reList);
 		} else {
-			return ReturnInfoUtils.errorInfo("未找到商户费用信息!");
+			return ReturnInfoUtils.errorInfo("没有已开通海关口岸信息,请联系管理员!");
 		}
 	}
 
@@ -142,8 +144,8 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			return ReturnInfoUtils.errorInfo("请求参数错误!");
 		}
 		String merchantFeeId = datasMap.get("merchantFeeId") + "";
-		Map<String,Object> reMerchantFeeMap = getMerchantFeeInfo(merchantFeeId);
-		if(!"1".equals(reMerchantFeeMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reMerchantFeeMap = getMerchantFeeInfo(merchantFeeId);
+		if (!"1".equals(reMerchantFeeMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantFeeMap;
 		}
 		String provinceName = datasMap.get("provinceName") + "";
@@ -190,21 +192,19 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	@Override
-	public Map<String, Object> getServiceFee(String merchantId, String type) {
-		if(StringEmptyUtils.isEmpty(merchantId)|| StringEmptyUtils.isEmpty(type)){
+	public Map<String, Object> getServiceFee(String merchantId) {
+		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
-		params.put("type", type);
-		params.put("deleteFlag", 0);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户费用信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(reList);
 		} else {
-			return ReturnInfoUtils.errorInfo("商户没有开通口岸信息,请联系管理员!");
+			return ReturnInfoUtils.errorInfo("未找到商户费用信息!");
 		}
 	}
 

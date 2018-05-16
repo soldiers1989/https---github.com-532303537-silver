@@ -160,7 +160,7 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 					hql = hql + "model." + property + "=" + "?" + " and ";
 					list.add(params.get(property));
 				}
-				hql += " model.resendCount <=10 Order By id DESC";
+				hql += " model.resendCount < 10 Order By id DESC";
 			}
 			Query query = session.createQuery(hql);
 			if (!list.isEmpty()) {

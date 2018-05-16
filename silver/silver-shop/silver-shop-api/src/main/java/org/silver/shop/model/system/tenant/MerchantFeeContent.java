@@ -27,7 +27,7 @@ public class MerchantFeeContent implements Serializable {
 	private String ciqOrgCode;// 检验检疫机构代码
 	private String ciqOrgName;// 检验检疫机构名称
 	private double platformFee;// 平台服务费-暂定为千分之几
-	private String type; //类型：goodsRecord(商品备案)、orderRecord(订单备案)、paymentRecord(支付单备案)
+	private String type; //类型：goodsRecord-商品备案、orderRecord-订单备案、paymentRecord-支付单备案
 	private String status;//状态：1-正常/2-禁用
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间

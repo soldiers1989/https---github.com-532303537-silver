@@ -1720,7 +1720,7 @@ public class MorderServiceImpl implements MorderService {
 			}
 			return ReturnInfoUtils.successInfo();
 		}
-		return ReturnInfoUtils.errorInfo("请求参数错误！");
+		return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 	}
 
 	/**

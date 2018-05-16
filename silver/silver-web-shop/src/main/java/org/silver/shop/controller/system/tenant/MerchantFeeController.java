@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.tenant.MerchantFeeTransaction;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,9 +41,8 @@ public class MerchantFeeController {
 			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
-			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("managerName") String managerName,
-			@RequestParam("platformFee") double platformFee, @RequestParam("type") String type,
-			@RequestParam("status") String status) {
+			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("platformFee") double platformFee,
+			@RequestParam("type") String type, @RequestParam("status") String status) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -58,17 +59,23 @@ public class MerchantFeeController {
 	}
 
 	@RequestMapping(value = "/getMerchantServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("管理员获取商户口岸服务费信息")
+	@ApiOperation("商户获取口岸服务费信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresRoles("Merchant")
 	public String getMerchantServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId) {
+		 String merchantId,String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(merchantFeeTransaction.getMerchantServiceFee(merchantId)).toString();
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空!")).toString();
+		}
+		if(StringEmptyUtils.isEmpty(type)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户口岸费率类型不能为空!")).toString();
+		}
+		return JSONObject.fromObject(merchantFeeTransaction.getMerchantServiceFee(merchantId,type)).toString();
 	}
 
 	@RequestMapping(value = "/editServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -81,9 +88,8 @@ public class MerchantFeeController {
 			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
-			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("managerName") String managerName,
-			@RequestParam("platformFee") double platformFee, @RequestParam("type") String type,
-			@RequestParam("status") String status) {
+			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("platformFee") double platformFee,
+			@RequestParam("type") String type, @RequestParam("status") String status) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -100,16 +106,16 @@ public class MerchantFeeController {
 	}
 
 	@RequestMapping(value = "/getServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("商户获取口岸服务费信息")
+	@ApiOperation("管理员获取指定商户口岸服务费信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String getServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId, @RequestParam("type") String type) {
+			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(merchantFeeTransaction.getServiceFee(merchantId,type)).toString();
+		return JSONObject.fromObject(merchantFeeTransaction.getServiceFee(merchantId)).toString();
 	}
 }

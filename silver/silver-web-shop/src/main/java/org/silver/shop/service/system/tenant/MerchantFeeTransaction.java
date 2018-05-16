@@ -28,8 +28,8 @@ public class MerchantFeeTransaction {
 	}
 
 	//管理员查询商户口岸费率信息
-	public Map<String,Object> getMerchantServiceFee(String merchantId) {
-		return merchantFeeService.getMerchantServiceFee(merchantId);
+	public Map<String,Object> getMerchantServiceFee(String merchantId, String type) {
+		return merchantFeeService.getMerchantServiceFee(merchantId,type);
 	}
 
 	//管理员修改商户口岸费率信息
@@ -42,9 +42,9 @@ public class MerchantFeeTransaction {
 		return merchantFeeService.editMerchantServiceFee(params);
 	}
 
-	//商户获取口岸服务费信息
-	public Object getServiceFee(String merchantId, String type) {
-		return merchantFeeService.getServiceFee(merchantId,type);
+	//管理员获取指定商户口岸服务费信息
+	public Object getServiceFee(String merchantId) {
+		return merchantFeeService.getServiceFee(merchantId);
 	}
 
 }

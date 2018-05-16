@@ -14,9 +14,10 @@ public interface MerchantFeeService {
 	/**
 	 * 获取商户口岸及服务费信息
 	 * @param merchantId 商户Id
+	 * @param type 类型：goodsRecord-商品备案、orderRecord-订单备案、paymentRecord-支付单备案
 	 * @return Map
 	 */
-	public Map<String, Object> getMerchantServiceFee(String merchantId);
+	public Map<String, Object> getMerchantServiceFee(String merchantId, String type);
 
 	/**
 	 * 修改商户口岸及服务费信息
@@ -26,12 +27,11 @@ public interface MerchantFeeService {
 	public Map<String,Object> editMerchantServiceFee(Map<String, Object> params);
 
 	/**
-	 * 商户获取口岸服务费信息
+	 * 管理员获取指定商户口岸服务费信息
 	 * @param merchantId 商户Id
-	 * @param type 类型
 	 * @return Map
 	 */
-	public Map<String,Object> getServiceFee(String merchantId, String type);
+	public Map<String,Object> getServiceFee(String merchantId);
 	
 	
 }

@@ -1669,8 +1669,8 @@ public class OrderServiceImpl implements OrderService {
 					String cacheEport = cacheOrder.getEport();
 					String cacheCiqOrgCode = cacheOrder.getCiqOrgCode();
 					String cacheCustomsCode = cacheOrder.getCustomsCode();
-					if (!eport.equals(cacheEport) && !ciqOrgCode.equals(cacheCiqOrgCode)
-							&& !customsCode.equals(cacheCustomsCode)) {
+					if (!cacheEport.equals(eport) && !cacheCiqOrgCode.equals(ciqOrgCode)
+							&& !cacheCustomsCode.equals(customsCode)) {
 						return ReturnInfoUtils.errorInfo("所选订单为多个不同的口岸/海关关区/国检检疫机构信息,请重新选择!");
 					}
 				}

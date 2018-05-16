@@ -23,12 +23,14 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.cross.PaymentServiceImpl;
+import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
@@ -92,7 +94,7 @@ public class MpayServiceImpl implements MpayService {
 	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
-	private PaymentServiceImpl paymentServiceImpl;
+	private MerchantFeeServiceImpl merchantFeeServiceImpl;
 
 	/**
 	 * 更新钱包日志
@@ -304,7 +306,8 @@ public class MpayServiceImpl implements MpayService {
 			customsMap.put("appkey", YmMallConfig.APPKEY);
 			customsMap.put("appSecret", YmMallConfig.APPSECRET);
 		}
-		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchantId, merchantName);
+		String merchantFeeId = customsMap.get("merchantFeeId") + "";
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchantId, merchantName, merchantFeeId);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
@@ -320,7 +323,6 @@ public class MpayServiceImpl implements MpayService {
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		// 总数
 		int totalCount = jsonList.size();
-
 		params.put(MERCHANT_ID, merchantId);
 		params.put("merchantName", merchantName);
 		params.put("tok", tok);
@@ -342,13 +344,20 @@ public class MpayServiceImpl implements MpayService {
 	 * 计算商户钱包余额是否足够推送此次手工订单
 	 * 
 	 * @param jsonList
+	 *            订单Id
 	 * @param merchantId
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名称
+	 * @param merchantFeeId
+	 *            商户口岸费率流水Id
+	 * 
 	 * @return Map
 	 */
-	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, String merchantId, String merchantName) {
+	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, String merchantId, String merchantName,
+			String merchantFeeId) {
+		//初始化平台服务费
+		double fee ;
 		// 查询商户钱包余额是否有足够的钱
 		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
@@ -361,8 +370,18 @@ public class MpayServiceImpl implements MpayService {
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
 		}
+		if(StringEmptyUtils.isNotEmpty(merchantFeeId)){
+			Map<String,Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
+			if(!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))){
+				return reFeeMap;
+			}
+			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
+			fee = merchantFee.getPlatformFee();
+		}else{
+			fee = 0.001;
+		}
 		// 平台服务费
-		double serviceFee = totalAmountPaid * 0.001;
+		double serviceFee = totalAmountPaid * fee;
 		if ((merchantBalance - serviceFee) < 0) {
 			return ReturnInfoUtils.errorInfo("推送订单失败,余额不足,请先充值后再进行操作!");
 		}
@@ -651,10 +670,10 @@ public class MpayServiceImpl implements MpayService {
 		// 报文类型
 		String opType = customsMap.get("opType") + "";
 		if (StringEmptyUtils.isNotEmpty(opType)) {
-			//A-新增；M-修改；D-
+			// A-新增；M-修改；D-
 			orderMap.put("opType", opType);
 		} else {
-			//当前台不传参数时默认
+			// 当前台不传参数时默认
 			orderMap.put("opType", "A");
 		}
 		// 是否像海关发送
@@ -733,7 +752,7 @@ public class MpayServiceImpl implements MpayService {
 			if ("1".equals(status)) {
 				// 已经返回过一次备案成功后
 				if (note.contains("新增申报成功") && order.getOrder_record_status() == 3) {
-					System.out.println("------重复申报成功拦截------");
+					System.out.println("------重复订单回执拦截------");
 					return ReturnInfoUtils.successInfo();
 				}
 				//
@@ -784,7 +803,6 @@ public class MpayServiceImpl implements MpayService {
 		List<MorderSub> reGoodsList = morderDao.findByProperty(MorderSub.class, params, 0, 0);
 		if (reGoodsList != null && !reGoodsList.isEmpty()) {
 			for (MorderSub goods : reGoodsList) {
-				System.out.println("--------遍历所有订单下的商品-----");
 				String entGoodsNo = goods.getEntGoodsNo();
 				String spareParams = goods.getSpareParams();
 				// 当是第三方商户提供的商品信息时
@@ -853,6 +871,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 		// 商户钱包扣钱进代理商钱包
+		//deductionPlatformFee();
 		Map<String, Object> reUpdateWalletMap = updateWallet(2, merchant.getMerchantId(), merchant.getMerchantName(),
 				orderId, merchant.getAgentParentId(), price, merchant.getAgentParentName());
 		if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
@@ -860,6 +879,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
 
 	@Override
 	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,

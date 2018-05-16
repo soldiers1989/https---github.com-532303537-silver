@@ -58,6 +58,10 @@ public class OldManualOrder implements Serializable {
 	private String oldOrderId;//原导入表单中订单Id
 	private String spareParams;//备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
 	private String customsCode;//海关关区代码(导出表中-进/出口岸)
+	
+	private String eport;//口岸标识1-电子口岸,2-广东智检
+	private String ciqOrgCode;//国检机构代码
+	private String thirdPartyId;//第三方订单唯一标识
 	public long getId() {
 		return id;
 	}
@@ -428,6 +432,28 @@ public class OldManualOrder implements Serializable {
 		this.customsCode = customsCode;
 	}
 
+	public String getEport() {
+		return eport;
+	}
 
+	public String getCiqOrgCode() {
+		return ciqOrgCode;
+	}
+
+	public String getThirdPartyId() {
+		return thirdPartyId;
+	}
+
+	public void setEport(String eport) {
+		this.eport = eport;
+	}
+
+	public void setCiqOrgCode(String ciqOrgCode) {
+		this.ciqOrgCode = ciqOrgCode;
+	}
+
+	public void setThirdPartyId(String thirdPartyId) {
+		this.thirdPartyId = thirdPartyId;
+	}
 
 }

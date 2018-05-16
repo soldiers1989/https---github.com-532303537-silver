@@ -29,6 +29,7 @@ import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
+import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
@@ -443,7 +444,7 @@ public class PaymentServiceImpl implements PaymentService {
 				// 备案失败
 				pay.setPay_record_status(4);
 			}
-			if(StringEmptyUtils.isNotEmpty(reMsg)){
+			if (StringEmptyUtils.isNotEmpty(reMsg)) {
 				pay.setPay_re_note(note + defaultDate + ":" + reMsg + ";");
 			}
 			Map<String, Object> reUpdateMap = updatePaymentRecordInfo(pay);
@@ -457,7 +458,6 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	private Map<String, Object> reThirdPartyPaymentInfo(Mpay pay, String merchantId) {
-		System.out.println("---------返回第三方支付单信息----------");
 		if (StringEmptyUtils.isEmpty(merchantId) || pay == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
@@ -469,11 +469,11 @@ public class PaymentServiceImpl implements PaymentService {
 		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 		int thirdPartyFlag = merchant.getThirdPartyFlag();
 		if (thirdPartyFlag == 2) {
+			System.out.println("---------返回第三方支付单信息----------");
 			rePaymentInfo(pay);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
 
 	/**
 	 * 返回给第三方支付单信息
@@ -483,52 +483,114 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @return Map
 	 */
 	public void rePaymentInfo(Mpay pay) {
-		Map<String, Object> item = new HashMap<>();
-		JSONObject payment = new JSONObject();
-		payment.element("thirdPartyId", pay.getThirdPartyId());
-		payment.element("EntPayNo", pay.getTrade_no());
-		payment.element("PayStatus", pay.getPay_status());
-		payment.element("PayAmount", pay.getPay_amount());
-		payment.element("PayCurrCode", pay.getPay_currCode());
-		payment.element("PayTime", DateUtil.formatDate(pay.getPay_time(), "yyyyMMddhhmmss"));
-		payment.element("PayerName", pay.getPayer_name());
-		payment.element("PayerDocumentType", pay.getPayer_document_type());
-		payment.element("PayerDocumentNumber", pay.getPayer_document_number());
-		payment.element("PayerPhoneNumber", pay.getPayer_phone_number());
-		payment.element("EntOrderNo", pay.getMorder_id());
-		payment.element("Notes", pay.getRemarks());
-		payment.element("payRecordNote", pay.getPay_re_note());
-		payment.element("payRecordStatus", pay.getPay_record_status());
-		payment.element("merchantId", pay.getMerchant_no());
-		item.put("payment", payment.toString());
-		System.out.println(pay.getTrade_no() + "----支付单开始->第" + pay.getResendCount() + "次重发");
-		String result = YmHttpUtil.HttpPost("http://192.168.1.193:8080/silver-web/Eport/getway-callback", item);
-		if (StringEmptyUtils.isNotEmpty(result) && result.replace("\n", "").equalsIgnoreCase("success")) {
-			System.out.println(pay.getTrade_no() + "<--支付单重发第"+ pay.getResendCount()+"次,接收成功-----");
-			updateResendStatus(pay);
-		} else {
-			updateResendCount(pay);
-		}
-	}
-
-	private void updateResendCount(Mpay pay) {
-		int count = pay.getResendCount();
-		count++;
-		pay.setResendCount(count);
-		if (!paymentDao.update(pay)) {
-			logger.error("--异步更新支付单回调计数器失败--");
+		if(pay !=null){
+			Map<String, Object> item = new HashMap<>();
+			JSONObject payment = new JSONObject();
+			payment.element("thirdPartyId", pay.getThirdPartyId());
+			payment.element("EntPayNo", pay.getTrade_no());
+			payment.element("PayStatus", pay.getPay_status());
+			payment.element("PayAmount", pay.getPay_amount());
+			payment.element("PayCurrCode", pay.getPay_currCode());
+			payment.element("PayTime", DateUtil.formatDate(pay.getPay_time(), "yyyyMMddhhmmss"));
+			payment.element("PayerName", pay.getPayer_name());
+			payment.element("PayerDocumentType", pay.getPayer_document_type());
+			payment.element("PayerDocumentNumber", pay.getPayer_document_number());
+			payment.element("PayerPhoneNumber", pay.getPayer_phone_number());
+			payment.element("EntOrderNo", pay.getMorder_id());
+			payment.element("Notes", pay.getRemarks());
+			payment.element("payRecordNote", pay.getPay_re_note());
+			payment.element("payRecordStatus", pay.getPay_record_status());
+			payment.element("merchantId", pay.getMerchant_no());
+			payment.element("ciqOrgCode", pay.getCiqOrgCode());
+			payment.element("customsCode", pay.getCustomsCode());
+			item.put("payment", payment.toString());
+			String result = YmHttpUtil.HttpPost("https://www.191ec.com/silver-web/Eport/getway-callback", item);
+			// String result =
+			// YmHttpUtil.HttpPost("http://192.168.1.104:8080/silver-web/Eport/getway-callback",
+			// item);
+			if (StringEmptyUtils.isNotEmpty(result) && result.replace("\n", "").equalsIgnoreCase("success")) {
+				updateSuccessPaymentCallBack(pay);
+			} else {
+				// 当第三方接收支付单回执失败时,保存信息
+				savePaymentCallBack(pay);
+			}
 		}
 	}
 
 	/**
-	 * 当支付回调接收成功后更新状态
+	 * 更新成功的支付单第三方回调信息
+	 * 
+	 * @param Mpay 手工支付单实体类
+	 */
+	private void updateSuccessPaymentCallBack(Mpay pay) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("thirdPartyId", pay.getThirdPartyId());
+		params.put("merchantId", pay.getMerchant_no());
+		@SuppressWarnings("unchecked")
+		List<PaymentCallBack> rePaymentCallBackList = paymentDao.findByProperty(PaymentCallBack.class, params, 0, 0);
+		if (rePaymentCallBackList != null && !rePaymentCallBackList.isEmpty()) {
+			Date date = new Date();
+			PaymentCallBack paymentCallBack = rePaymentCallBackList.get(0);
+			paymentCallBack.setResendStatus("SUCCESS");
+			paymentCallBack.setUpdateBy("system");
+			paymentCallBack.setUpdateDate(date);
+			System.out.println(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 支付单重发第"
+					+ paymentCallBack.getResendCount() + "次,接收成功!");
+			paymentCallBack.setRemark(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 支付单重发第"
+					+ (paymentCallBack.getResendCount() + 1) + "次,接收成功!");
+			if (!paymentDao.update(paymentCallBack)) {
+				logger.error("--异步回调第三方支付单成功后保存信息失败--");
+			}
+			pay.setResendStatus("SUCCESS");
+			if (!paymentDao.update(pay)) {
+				logger.error("--异步回调第三方支付单成功后更新支付单状态失败--");
+			}
+		}
+	}
+
+	/**
+	 * 当第三方接收支付单回执失败时,保存进支付回调信息
+	 * 
 	 * @param pay
 	 */
-	private void updateResendStatus(Mpay pay) {
-		pay.setResendStatus("SUCCESS");
-		pay.setUpdate_date(new Date());
-		if (!paymentDao.update(pay)) {
-			logger.error("--异步更新支付单成功状态失败--");
+	private void savePaymentCallBack(Mpay pay) {
+		
+		Map<String, Object> params = new HashMap<>();
+		params.put("thirdPartyId", pay.getThirdPartyId());
+		params.put("tradeNo", pay.getTrade_no());
+		params.put("merchantId", pay.getMerchant_no());
+		List<PaymentCallBack> rePaymentCallBackList = paymentDao.findByProperty(PaymentCallBack.class, params, 0, 0);
+		if (rePaymentCallBackList != null && !rePaymentCallBackList.isEmpty()) {
+			// 更新支付单回传记录中的回传计数器
+			PaymentCallBack paymentCallBack = rePaymentCallBackList.get(0);
+			int count = paymentCallBack.getResendCount();
+			System.out.println(pay.getTrade_no() + "--支付单->第" + (count + 1) + "次重发接受失败");
+			if (count == 9) {
+				paymentCallBack.setRemark(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + ":支付单重发第10次,接收失败!");
+			}
+			count++;
+			paymentCallBack.setResendCount(count);
+			paymentCallBack.setResendStatus("FALSE");
+			if (!paymentDao.update(paymentCallBack)) {
+				logger.error("--异步更新第三方支付单计数器失败--");
+			}
+		} else {
+			PaymentCallBack paymentCallBack = new PaymentCallBack();
+			paymentCallBack.setMerchantId(pay.getMerchant_no());
+			paymentCallBack.setOrderId(pay.getMorder_id());
+			paymentCallBack.setTradeNo(pay.getTrade_no());
+			paymentCallBack.setThirdPartyId(pay.getThirdPartyId());
+			paymentCallBack.setCreateBy("system");
+			paymentCallBack.setCreateDate(new Date());
+			paymentCallBack.setResendCount(0);
+			paymentCallBack.setResendStatus("FALSE");
+			if (!paymentDao.add(paymentCallBack)) {
+				logger.error("--异步保存支付单第三方回调信息失败--");
+			}
+			pay.setResendStatus("FALSE");
+			if (!paymentDao.update(pay)) {
+				logger.error("--异步回调第三方支付单后更新支付单失败状态--");
+			}
 		}
 	}
 
@@ -997,9 +1059,10 @@ public class PaymentServiceImpl implements PaymentService {
 			return reMerchantMap;
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-		String thirdPartyId =datasMap.get("thirdPartyId") + "" ;
-		return thirdPartyPaymentInfo( merchant.getMerchantId(),thirdPartyId);
+		String thirdPartyId = datasMap.get("thirdPartyId") + "";
+		return thirdPartyPaymentInfo(merchant.getMerchantId(), thirdPartyId);
 	}
+
 	/**
 	 * 第三方平获取支付单信息
 	 * 
@@ -1007,17 +1070,17 @@ public class PaymentServiceImpl implements PaymentService {
 	 *            查询参数
 	 * @param merchantId
 	 *            商户Id
-	 * @param thirdPartyId 
+	 * @param thirdPartyId
 	 * @return Map
 	 */
 	private Map<String, Object> thirdPartyPaymentInfo(String merchantId, String thirdPartyId) {
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchant_no", merchantId);
 		params.put("thirdPartyId", thirdPartyId);
 		List<Mpay> rePayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (rePayList == null) {
 			return ReturnInfoUtils.errorInfo("查询支付单信息失败,服务器繁忙!");
-		} else if (!rePayList.isEmpty()) {			
+		} else if (!rePayList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(rePayList.get(0));
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到对应的支付单信息!");

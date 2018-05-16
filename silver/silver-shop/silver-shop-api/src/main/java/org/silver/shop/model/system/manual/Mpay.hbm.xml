@@ -9,7 +9,6 @@
 		<id name="id" type="long">
 			<column name="id" />
 			<generator class="identity">
-
 			</generator>
 		</id>
 
@@ -107,11 +106,8 @@
 		<property name="thirdPartyId">
 			<column name="thirdPartyId" />
 		</property>
-		<property name="resendCount" type="java.lang.Integer">
-			<column name="resendCount" default="0" />
-		</property>
-		<property name="resendStatus" >
-			<column name="resendStatus"  />
+		<property name="resendStatus" type="java.lang.String">
+			<column name="resendStatus" />
 		</property>
 	</class>
 

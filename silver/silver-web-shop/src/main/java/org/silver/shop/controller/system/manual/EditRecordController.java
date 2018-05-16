@@ -599,7 +599,7 @@ public class EditRecordController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除手工订单信息 (将订单及订单商品信息移至历史记录表中)")
 	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
-			@RequestParam("orderIdPack") String orderIdPack, @RequestParam("note") String note) {
+			@RequestParam("orderIdPack") String orderIdPack,  String note) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -610,7 +610,10 @@ public class EditRecordController {
 			json = JSONArray.fromObject(orderIdPack);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数错误,请重试!")).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数格式错误,请重试!")).toString();
+		}
+		if(StringEmptyUtils.isEmpty(note)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("备注说明不能为空!")).toString();
 		}
 		return JSONObject.fromObject(manualService.managerDeleteMorder(json, note)).toString();
 	}

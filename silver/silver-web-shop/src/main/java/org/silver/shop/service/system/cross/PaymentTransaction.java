@@ -18,6 +18,7 @@ import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.DateUtil;
+import org.silver.util.YmHttpUtil;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -26,8 +27,7 @@ import net.sf.json.JSONArray;
 
 @Service
 public class PaymentTransaction {
-
-	@Reference
+	@Reference(timeout = 20000)
 	private PaymentService paymentService;
 
 	//
@@ -142,9 +142,13 @@ public class PaymentTransaction {
 	}
 
 	public static void main(String[] args) {
-		Mpay pay = new  Mpay();
-		pay.setPay_time(new Date());
-		System.out.println("--->>"+DateUtil.formatDate(pay.getPay_time(), "yyyyMMddhhmmss"));
+		Map<String,Object> item = new HashMap<>();
+		item.put("status",  "1");
+		item.put("msg",  "");
+		item.put("messageID",  "");
+		item.put("entPayNo",  "01O180122002765938");
+		String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/rePayNotifyMsg", item);
+		System.out.println("---result->"+result);
 	}
 
 	public Object getThirdPartyInfo(Map<String, Object> datasMap) {

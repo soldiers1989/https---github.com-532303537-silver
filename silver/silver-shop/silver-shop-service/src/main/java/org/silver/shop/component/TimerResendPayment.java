@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.impl.system.cross.PaymentServiceImpl;
 import org.silver.shop.model.system.manual.Mpay;
+import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,8 +40,8 @@ public class TimerResendPayment implements InitializingBean {
 			public void run() {
 				resendPayment();
 			}
-			//项目启动后30秒开始扫描， 暂定循环为30秒启动一次
-		}, 60000, 30000);
+			//项目启动后90秒开始扫描， 暂定循环为30秒启动一次
+		}, 90000, 30000);
 	}
 
 	/**
@@ -51,10 +52,18 @@ public class TimerResendPayment implements InitializingBean {
 			System.out.println("---扫描返回次数10次以下-与状态为FALSE的支付单信息-");
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", "FALSE");
-			List<Mpay> paymentList = paymentDao.getFailPaymentInfo(Mpay.class, params, 1, 100);
+			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 100);
 			if (paymentList != null && !paymentList.isEmpty()) {
-				for (Mpay payment : paymentList) {
-					paymentServiceImpl.rePaymentInfo(payment);
+				for (PaymentCallBack paymentCallBack : paymentList) {
+					//根据交易流水号/订单Id/商户Id查询支付单信息
+					params.clear();
+					params.put("trade_no", paymentCallBack.getTradeNo());
+					params.put("morder_id", paymentCallBack.getOrderId());
+					params.put("merchant_no", paymentCallBack.getMerchantId());
+					List<Mpay> rePaymentList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
+					if(rePaymentList!=null && !rePaymentList.isEmpty()){
+						paymentServiceImpl.rePaymentInfo(rePaymentList.get(0));
+					}
 				}
 			}
 		} catch (Exception e) {
