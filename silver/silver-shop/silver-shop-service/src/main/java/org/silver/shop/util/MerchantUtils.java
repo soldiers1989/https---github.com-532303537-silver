@@ -7,6 +7,7 @@ import java.util.Map;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -82,6 +83,33 @@ public class MerchantUtils {
 			return ReturnInfoUtils.successDataInfo(appkeyList.get(0), 0);
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到商户appkey信息!");
+		}
+	}
+	
+	/**
+	 * 根据商户Id,海关/检验检疫机构代码,类型,查询商户口岸平台服务费 费率
+	 * @param merchantId 商户Id
+	 * @param customsCode 海关代码
+	 * @param ciqOrgCode 检验检疫机构代码
+	 * @param type 类型：goodsRecord-商品备案、orderRecord-订单备案、paymentRecord-支付单备案
+	 * @return Map  datas(Key)-商户口岸费率实体
+	 */
+	public Map<String,Object> getMerchantFeeInfo(String merchantId , String customsCode,String ciqOrgCode,String type){
+		if(StringEmptyUtils.isEmpty(merchantId)|| StringEmptyUtils.isEmpty(ciqOrgCode)|| StringEmptyUtils.isEmpty(customsCode)||StringEmptyUtils.isEmpty(type)){
+			return ReturnInfoUtils.errorInfo("查询商户服务费参数不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("customsCode", customsCode);
+		params.put("ciqOrgCode", ciqOrgCode);
+		params.put("type", type);
+		List<MerchantFeeContent> reList = paymentDao.findByProperty(MerchantFeeContent.class, params, 1, 1);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户口岸费率失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList.get(0));
+		} else {
+			return ReturnInfoUtils.errorInfo("商户尚未开通口岸,请联系管理员!");
 		}
 	}
 }

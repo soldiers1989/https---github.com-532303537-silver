@@ -13,7 +13,7 @@
 		<description>JMS连接工厂</description>
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.spring.ActiveMQConnectionFactory">
-				<property name="brokerURL" value="failover:(tcp://150.242.58.22:51616)" />
+				<property name="brokerURL" value="failover:(tcp://150.242.58.23:51616)" />
 				<property name="userName" value="ezo" />
 				<property name="password" value="ppxcat58" />
 				<property name="trustAllPackages" value="true" />

@@ -21,6 +21,8 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MorderSubDao;
 import org.silver.shop.dao.system.manual.MuserDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
+import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
+import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -31,7 +33,9 @@ import org.silver.shop.model.system.manual.Muser;
 import org.silver.shop.model.system.manual.OldManualOrder;
 import org.silver.shop.model.system.manual.OldManualOrderSub;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.task.UpdateMOrderGoodsTask;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
@@ -51,6 +55,7 @@ import com.justep.baas.data.Table;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = MorderService.class)
 public class MorderServiceImpl implements MorderService {
@@ -65,6 +70,10 @@ public class MorderServiceImpl implements MorderService {
 	private GoodsRecordServiceImpl goodsRecordServiceImpl;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	@Autowired
+	private MerchantFeeServiceImpl merchantFeeServiceImpl;
 
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";
@@ -156,7 +165,7 @@ public class MorderServiceImpl implements MorderService {
 				item.put("content", mslist);
 				lMap.add(item);
 			}
-			Map<String,Object> statusMap = new HashMap<>();
+			Map<String, Object> statusMap = new HashMap<>();
 			statusMap.put("status", 1);
 			statusMap.put("datas", lMap);
 			statusMap.put("count", count);
@@ -2011,5 +2020,4 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
 }

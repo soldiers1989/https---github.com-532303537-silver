@@ -37,6 +37,6 @@ public class PhoneUtils {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(isPhone("16602709896"));
+		System.out.println(isPhone("13558810388"));
 	}
 }

@@ -27,7 +27,6 @@ public class TimerResendPayment implements InitializingBean {
 	@Autowired
 	private PaymentServiceImpl paymentServiceImpl;
 
-
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		System.out.println("支付回调定时器启动-----");
@@ -35,13 +34,13 @@ public class TimerResendPayment implements InitializingBean {
 	}
 
 	public void reminder() {
-		Timer  timer = new Timer();
+		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			public void run() {
 				resendPayment();
 			}
-			//项目启动后90秒开始扫描， 暂定循环为30秒启动一次
-		}, 90000, 30000);
+			// 项目启动后90秒开始扫描， 暂定循环为30秒启动一次
+		}, 90000, 60000);
 	}
 
 	/**
@@ -52,16 +51,16 @@ public class TimerResendPayment implements InitializingBean {
 			System.out.println("---扫描返回次数10次以下-与状态为FALSE的支付单信息-");
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", "FALSE");
-			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 100);
+			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 200);
 			if (paymentList != null && !paymentList.isEmpty()) {
 				for (PaymentCallBack paymentCallBack : paymentList) {
-					//根据交易流水号/订单Id/商户Id查询支付单信息
+					// 根据交易流水号/订单Id/商户Id查询支付单信息
 					params.clear();
 					params.put("trade_no", paymentCallBack.getTradeNo());
 					params.put("morder_id", paymentCallBack.getOrderId());
 					params.put("merchant_no", paymentCallBack.getMerchantId());
 					List<Mpay> rePaymentList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
-					if(rePaymentList!=null && !rePaymentList.isEmpty()){
+					if (rePaymentList != null && !rePaymentList.isEmpty()) {
 						paymentServiceImpl.rePaymentInfo(rePaymentList.get(0));
 					}
 				}

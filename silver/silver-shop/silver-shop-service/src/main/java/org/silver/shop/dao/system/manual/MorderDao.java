@@ -1,8 +1,10 @@
 package org.silver.shop.dao.system.manual;
 
 import java.util.List;
+import java.util.Map;
 
 import org.silver.shop.dao.BaseDao;
+import org.silver.shop.model.system.manual.Morder;
 import org.springframework.stereotype.Repository;
 
 import com.justep.baas.data.Table;
@@ -49,9 +51,9 @@ public interface MorderDao extends BaseDao {
 	public long getMOrderAndMGoodsInfoCount(String merchantId, String startDate, String endDate, int page, int size);
 
 	/**
-	 * 统计手工订单信息实际支付金额的总额
-	 * @param itemList 订单Id集合
-	 * @return double
+	 * 统计未发起过备案的手工订单实际支付金额的总额
+	 * @param itemList 订单Id集合 
+	 * @return double 总金额
 	 */
 	public double statisticalManualOrderAmount(List<Object> itemList);
 
@@ -65,11 +67,20 @@ public interface MorderDao extends BaseDao {
 	public Table getIdCardCount(String orderDocId, String startDate, String endDate);
 
 	/**
-	 * 
-	 * @param recipientTel
-	 * @param startDate
-	 * @param endDate
-	 * @return
+	 * 根据收货人手机号码,查询日期货人手机号码出现的次数
+	 * @param recipientTel 收货人手机号码
+	 * @param startDate 开始时间
+	 * @param endDate 结束时间
+	 * @return Table
 	 */
 	public Table getPhoneCount(String recipientTel, String startDate, String endDate);
+
+	/**
+	 * 根据集合中Map key-orderNo,value -订单Id ,通过SQL IN 操作符统一查询批量的订单信息
+	 * @param itemList 订单Id集合
+	 * @return List
+	 */
+	public List<Morder> findByPropertyIn(List<Map<String,Object>> itemList);
+	
+	
 }

@@ -9,22 +9,22 @@
             <generator class="identity" />
         </id>
         <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" />
+            <column name="merchantId" not-null="true"/>
         </property>
         <property name="tradeNo" type="java.lang.String">
-            <column name="tradeNo" />
+            <column name="tradeNo" unique="true" not-null="true"/>
         </property>
         <property name="orderId" type="java.lang.String">
-            <column name="orderId" />
+            <column name="orderId" not-null="true"/>
         </property>
         <property name="thirdPartyId" type="java.lang.String">
-            <column name="thirdPartyId" />
+            <column name="thirdPartyId" unique="true" not-null="true"/>
         </property>
         <property name="resendStatus" type="java.lang.String">
-            <column name="resendStatus" />
+            <column name="resendStatus" not-null="true"/>
         </property>
         <property name="resendCount" type="int">
-            <column name="resendCount" />
+            <column name="resendCount" not-null="true"/>
         </property>
         <property name="createDate" type="java.util.Date">
             <column name="createDate" />
@@ -39,7 +39,7 @@
             <column name="updateBy" />
         </property>
         <property name="deleteFlag" type="int">
-            <column name="deleteFlag" default="0"/>
+            <column name="deleteFlag" default="0" not-null="true"/>
         </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />

@@ -3,6 +3,7 @@ package org.silver.shop.dao.system.manual.impl;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,10 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.manual.MorderDao;
+import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.util.DateUtil;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
 
 import com.justep.baas.data.DataUtils;
@@ -126,10 +130,14 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 
 	@Override
 	public double statisticalManualOrderAmount(List<Object> itemList) {
+		// 当没有订单Id集合则直接返回0
+		if (itemList == null || itemList.isEmpty()) {
+			return 0;
+		}
 		Session session = null;
 		try {
 			StringBuilder sbSQL = new StringBuilder(
-					" SELECT SUM(t1.ActualAmountPaid) AS ActualAmountPaid FROM ym_shop_manual_morder t1 WHERE order_id IN ( ");
+					" SELECT SUM(t1.ActualAmountPaid) AS ActualAmountPaid FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
 			for (int i = 0; i < itemList.size(); i++) {
 				sbSQL.append(" ? , ");
 			}
@@ -144,7 +152,10 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			}
 			List resources = query.list();
 			session.close();
-			return (double) resources.get(0);
+			if (resources != null && !resources.isEmpty() && StringEmptyUtils.isNotEmpty(resources.get(0))) {
+				return (double) resources.get(0);
+			}
+			return 0;
 		} catch (Exception re) {
 			re.printStackTrace();
 			return -1;
@@ -207,6 +218,67 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 				session.close();
 			}
 		}
+	}
+
+	@Override
+	public List<Morder> findByPropertyIn(List<Map<String,Object>> itemList) {
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(" SELECT * FROM ym_shop_manual_morder t1 WHERE  t1.order_id IN ( ");
+			for (int i = 0; i < itemList.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			// 删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < itemList.size(); i++) {
+				Map<String, Object> orderMap =  itemList.get(i);
+				query.setString(i, orderMap.get("orderNo") + "");
+			}
+			// session.close();
+			return setEntityInfo(query.list());
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	/**
+	 * 遍历查询的结果集,将所有结果集set到对应的实体中
+	 * 
+	 * @param cources
+	 * @return List
+	 */
+	private List<Morder> setEntityInfo(List<Morder> cources) {
+		Iterator i = cources.iterator();
+		List<Morder> orderList = new ArrayList<>();
+		Morder order = null;
+		while (i.hasNext()) {
+			order = new Morder();
+			Object[] obj = (Object[]) i.next();
+			for (int j = 0; j < obj.length; j++) {
+				order.setOrder_id(obj[1].toString());
+				order.setFCY(Double.parseDouble(obj[5].toString()));
+				order.setActualAmountPaid(Double.parseDouble(obj[7].toString()));
+				order.setRecipientName(obj[8].toString());
+				order.setRecipientID(obj[10].toString());
+				order.setRecipientTel(obj[11].toString());
+				order.setRecipientProvincesCode(obj[12].toString());
+				order.setOrderDocName(obj[14].toString());
+				order.setOrderDocId(obj[16].toString());
+				order.setOrderDocTel(obj[17].toString());
+				order.setStatus(Integer.parseInt(obj[21].toString()));
+				order.setOrder_record_status(Integer.parseInt(obj[34].toString()));
+			}
+			orderList.add(order);
+		}
+		return orderList;
 	}
 
 }

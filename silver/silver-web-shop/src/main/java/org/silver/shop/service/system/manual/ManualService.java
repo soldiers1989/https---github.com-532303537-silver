@@ -48,7 +48,7 @@ import net.sf.json.JSONObject;
 public class ManualService {
 	private static Logger logger = LogManager.getLogger(ManualService.class);
 
-	@Reference
+	@Reference(timeout = 20000)
 	private MorderService morderService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;

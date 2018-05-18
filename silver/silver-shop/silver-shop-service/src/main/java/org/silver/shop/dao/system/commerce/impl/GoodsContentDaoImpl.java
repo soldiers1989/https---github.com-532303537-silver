@@ -34,7 +34,9 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 					.append("SELECT t1.*,t2.sellCount,t2.regPrice as sellPrice,t2.marketPrice,t2.doneCount AS doneCount from ym_shop_goods_record_detail t1  LEFT JOIN ym_shop_stock_content t2 "
 							+ "	 on t1.entGoodsNo = t2.entGoodsNo WHERE t2.sellFlag = 1 AND t1.status =2 ");
 			List<Object> sqlParams = new ArrayList<>();
-			appendSort(datasMap, queryString, sqlParams);
+			if(datasMap !=null){
+				appendSort(datasMap, queryString, sqlParams);
+			}
 			session = getSession();
 			Table l = null;
 			if (page > 0 && size > 0) {
@@ -85,9 +87,9 @@ public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsConte
 			int thirdType = Integer.parseInt(datasMap.get("thirdType") + "");
 			sqlParams.add(thirdType);
 			queryString.append("  and t1.spareGoodsThirdTypeId = ? ");
-		} else if (StringEmptyUtils.isNotEmpty(datasMap.get("secndType"))) {
-			int secndType = Integer.parseInt(datasMap.get("secndType") + "");
-			sqlParams.add(secndType);
+		} else if (StringEmptyUtils.isNotEmpty(datasMap.get("secondType"))) {
+			int secondType = Integer.parseInt(datasMap.get("secondType") + "");
+			sqlParams.add(secondType);
 			queryString.append("  and t1.spareGoodsSecondTypeId = ? ");
 		} else if (StringEmptyUtils.isNotEmpty(datasMap.get("firstType"))) {
 			int firstType = Integer.parseInt(datasMap.get("firstType") + "");

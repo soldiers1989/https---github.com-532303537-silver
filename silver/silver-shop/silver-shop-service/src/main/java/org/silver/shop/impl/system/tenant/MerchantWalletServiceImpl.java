@@ -15,6 +15,7 @@ import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
 import org.silver.shop.model.system.tenant.ProxyWalletContent;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,55 +58,49 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	 * @param type
 	 *            1-商户钱包,2-用户钱包,3-代理商钱包
 	 * @param id
-	 *            商户Id/用户Id
+	 *            商户Id/用户Id/代理商Id
 	 * @param name
-	 *            商户名称/用户名称
+	 *            商户名称/用户名称/代理商名称
+	 * @return Map中datas(Key)-钱包实体
 	 */
 	public Map<String, Object> checkWallet(int type, String id, String name) {
 		Map<String, Object> params = new HashMap<>();
-		Map<String, Object> statusMap = new HashMap<>();
 		Class entity = null;
 		if (type > 0 && StringEmptyUtils.isNotEmpty(id) && StringEmptyUtils.isNotEmpty(name)) {
 			switch (type) {
 			case 1:
 				params.put("merchantId", id);
+				// 商户钱包
 				entity = MerchantWalletContent.class;
 				break;
 			case 2:
 				params.put("memberId", id);
+				// 用户钱包
 				entity = MemberWalletContent.class;
 				break;
 			case 3:
 				params.put("proxyId", id);
+				// 代理商钱包
 				entity = ProxyWalletContent.class;
 				break;
 			default:
-				break;
+				return ReturnInfoUtils.errorInfo("检查钱包类型错误,暂未支持[" + type + "]类型!");
 			}
 			List<Object> reList = merchantWalletDao.findByProperty(entity, params, 1, 1);
 			if (reList == null) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("查询钱包信息失败,服务器繁忙!");
 			} else if (!reList.isEmpty()) {// 钱包不为空,则直接返回
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.DATAS.toString(), reList.get(0));
-				return statusMap;
+				return ReturnInfoUtils.successDataInfo(reList.get(0));
 			} else {
 				Object reEntity = createWallet(type, entity, id, name);
 				if (reEntity != null) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-					statusMap.put(BaseCode.DATAS.toString(), reEntity);
-					return statusMap;
+					return ReturnInfoUtils.successDataInfo(reEntity);
 				} else {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("创建钱包失败,服务器繁忙!");
 				}
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), "参数不能为空!");
-		return statusMap;
+		return ReturnInfoUtils.errorInfo("检查钱包,请求参数不能为空!");
 	}
 
 	/**
@@ -194,7 +189,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 				startDate = calendar.getTime();// 当天零点零分零秒
 				break;
 			default:
-				
+
 				break;
 			}
 			params.put("startDate", startDate);

@@ -480,7 +480,7 @@ public class OrderController {
 		order.element("EntOrderNo", "TEST1234");
 		order.element("OrderStatus","1");
 		order.element("PayStatus","1");
-		order.element("OrderGoodTotal",210);
+		order.element("OrderGoodTotal",2100);
 		order.element("OrderGoodTotalCurr","142");
 		order.element("Freight",0);
 		order.element("Tax",0);
@@ -489,14 +489,14 @@ public class OrderController {
 		order.element("RecipientName","收货人姓名");
 		order.element("RecipientAddr","收货人地址");
 		order.element("RecipientID","");
-		order.element("RecipientTel","收货人电话");
+		order.element("RecipientTel","13812345678");
 		order.element("RecipientCountry","116");
 		order.element("RecipientProvincesCode","110000");
 		order.element("OrderDocAcount","下单人账号");
-		order.element("OrderDocName","下单人姓名");
+		order.element("OrderDocName","下单人先生");
 		order.element("OrderDocType","1");
 		order.element("OrderDocId","37021119770918101X");
-		order.element("OrderDocTel","下单人电话");
+		order.element("OrderDocTel","13812345678");
 		order.element("OrderDate","订单日期");
 		order.element("eport","1");
 		order.element("ciqOrgCode","440300");

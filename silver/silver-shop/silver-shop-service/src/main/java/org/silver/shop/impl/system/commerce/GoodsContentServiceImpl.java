@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import org.hibernate.engine.query.ReturnMetadata;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.GoodsContentService;
@@ -169,6 +169,9 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Override
 	public Map<String, Object> getShowGoodsBaseInfo(Map<String,Object> datasMap, int page, int size) {
+		if(datasMap == null ){
+			return ReturnInfoUtils.errorInfo("获取商品信息失败,请求参数错误!");
+		}
 		Table t = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, page, size);
 		Table tCount = goodsContentDao.getAlreadyRecordGoodsBaseInfo(datasMap, 0, 0);
 		if (t == null) {

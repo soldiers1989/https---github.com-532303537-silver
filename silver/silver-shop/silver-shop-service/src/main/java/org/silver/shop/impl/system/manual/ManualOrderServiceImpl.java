@@ -353,6 +353,9 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		return ReturnInfoUtils.successInfo();
 	}
 
+	public static void main(String[] args) {
+		System.out.println("--->"+StringUtil.isChinese("娜地拉·艾孜拉提"));
+	}
 	/**
 	 * 判断订单与订单商品信息是否存在,如果只是商品不存在则更新订单金额,如果订单号+商品自编号+序号+商户Id查询商品是否已存在,已存在则判定为重复导入
 	 * 

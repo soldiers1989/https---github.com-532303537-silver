@@ -51,10 +51,12 @@ import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
+import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -88,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
 	private RecipientServiceImpl recipientServiceImpl;
 	@Autowired
 	private MemberService memberService;
-	
+
 	/**
 	 * 小写开头订单编号
 	 */
@@ -429,11 +431,8 @@ public class OrderServiceImpl implements OrderService {
 			}
 			return updateOrderStatusAndShopCar(memberId, jsonList, reEntOrderNo);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), "https://ym.191ec.com/silver-web-shop/yspay/dopay");
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/dopay");
 		}
-
 	}
 
 	@Override
@@ -632,7 +631,9 @@ public class OrderServiceImpl implements OrderService {
 
 	/**
 	 * 检查收货人姓名与电话是否与用户信息一致
-	 * @param recipientId 收货地址Id
+	 * 
+	 * @param recipientId
+	 *            收货地址Id
 	 * @return Map
 	 */
 	private Map<String, Object> checkRecipientInfo(String recipientId) {
@@ -641,19 +642,19 @@ public class OrderServiceImpl implements OrderService {
 			return reRecipientMap;
 		}
 		RecipientContent recipient = (RecipientContent) reRecipientMap.get(BaseCode.DATAS.toString());
-		
-		Map<String,Object> reMemberMap = memberService.getMemberInfo(recipient.getMemberId());
-		if(!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))){
+
+		Map<String, Object> reMemberMap = memberService.getMemberInfo(recipient.getMemberId());
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
 			return reMemberMap;
 		}
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
-		if(member.getMemberRealName() == 1){
+		if (member.getMemberRealName() == 1) {
 			return ReturnInfoUtils.errorInfo("用户尚未实名,暂不能下单,请先实名认证!");
 		}
-		if(!(recipient.getRecipientName().trim()).equals(member.getMemberIdCardName())){
+		if (!(recipient.getRecipientName().trim()).equals(member.getMemberIdCardName())) {
 			return ReturnInfoUtils.errorInfo("收货人姓名与用户真实姓名不匹配,请核对信息!");
 		}
-		if(!(recipient.getRecipientCardId()).trim().equals(member.getMemberIdCard())){
+		if (!(recipient.getRecipientCardId()).trim().equals(member.getMemberIdCard())) {
 			return ReturnInfoUtils.errorInfo("收货人身份证号码与用户身份证号码不匹配,请核对信息!");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -1358,11 +1359,32 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reCheckProvinceMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckProvinceMap;
 		}
+		double orderGoodTotal = Double.parseDouble(orderJson.get("OrderGoodTotal") + "");
+		if (orderGoodTotal > 2000) {
+			return ReturnInfoUtils.errorInfo("接收订单失败,订单商品总金额超过2000,请核对订单信息!");
+		}
 		// 下单人身份证号码
 		String orderDocId = orderJson.get("OrderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			return ReturnInfoUtils.errorInfo("下单人证件号实名认证错误,请核对信息!");
+			return ReturnInfoUtils.errorInfo("下单人身份证号码实名认证失败,请核对订单信息!");
 		}
+		String recipientTel = orderJson.get("RecipientTel") + "";
+		if (!PhoneUtils.isPhone(recipientTel)) {
+			return ReturnInfoUtils.errorInfo("收货人手机号码格式,请核对订单信息!");
+		}
+		String orderDocTel = orderJson.get("OrderDocTel") + "";
+		if (!PhoneUtils.isPhone(orderDocTel)) {
+			return ReturnInfoUtils.errorInfo("下单人手机号码格式不正确,请核对订单信息!");
+		}
+		String orderDocName = orderJson.get("OrderDocName") + "";
+		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
+				|| orderDocName.contains("小姐")) {
+			return ReturnInfoUtils.errorInfo("接收订单失败,订单下单人姓名错误,请核对订单信息!");
+		}
+		return checkOrderEport(orderJson);
+	}
+
+	private Map<String, Object> checkOrderEport(JSONObject orderJson) {
 		// 订单口岸标识
 		String eport = orderJson.get("eport") + "";
 		// 国检检疫机构代码
@@ -1374,18 +1396,19 @@ public class OrderServiceImpl implements OrderService {
 			if (customsPortServiceImpl.checkCCIQ(ciqOrgCode) && customsPortServiceImpl.checkGAC(customsCode)) {
 				return ReturnInfoUtils.successInfo();
 			} else {
-				return ReturnInfoUtils.errorInfo("电子口岸对应的海关口岸与国检检疫机构代码错误,请核对信息!");
+				return ReturnInfoUtils.errorInfo("电子口岸对应的海关代码与国检检疫机构代码错误,请核对信息!");
 			}
 		case "2":
 			// 暂定只有南沙旅检
 			if ("000069".equals(ciqOrgCode) && "5165".equals(customsCode)) {
 				return ReturnInfoUtils.successInfo();
 			} else {
-				return ReturnInfoUtils.errorInfo("智检对应的国检检疫机构及海关代码错误,请核对信息!");
+				return ReturnInfoUtils.errorInfo("智检对应的海关代码与国检检疫机构代码错误,请核对信息!");
 			}
 		default:
-			return ReturnInfoUtils.errorInfo("口岸标识暂未支持["+eport+"],请核对信息!");
+			return ReturnInfoUtils.errorInfo("口岸标识暂未支持[" + eport + "],请核对信息!");
 		}
+
 	}
 
 	/**
@@ -1603,21 +1626,22 @@ public class OrderServiceImpl implements OrderService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			String thirdPartyId =datasMap.get("thirdPartyId") + "" ;
-			return thirdPartyOrderInfo( merchant.getMerchantId(),thirdPartyId);
+			String thirdPartyId = datasMap.get("thirdPartyId") + "";
+			return thirdPartyOrderInfo(merchant.getMerchantId(), thirdPartyId);
 		}
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 	}
 
 	/**
 	 * 第三方平获取订单信息
+	 * 
 	 * @param merchantId
 	 *            商户Id
-	 * @param thirdPartyId 
+	 * @param thirdPartyId
 	 * @return Map
 	 */
-	private Map<String, Object> thirdPartyOrderInfo (String merchantId, String thirdPartyId) {
-		Map<String,Object> params = new HashMap<>();
+	private Map<String, Object> thirdPartyOrderInfo(String merchantId, String thirdPartyId) {
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchant_no", merchantId);
 		params.put("thirdPartyId", thirdPartyId);
 		List<Morder> reOrderList = orderDao.findByProperty(Morder.class, params, 1, 1);

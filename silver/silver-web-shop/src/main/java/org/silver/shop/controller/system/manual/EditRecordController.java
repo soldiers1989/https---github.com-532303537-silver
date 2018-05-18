@@ -5,8 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -599,7 +601,7 @@ public class EditRecordController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除手工订单信息 (将订单及订单商品信息移至历史记录表中)")
 	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
-			@RequestParam("orderIdPack") String orderIdPack,  String note) {
+			@RequestParam("orderIdPack") String orderIdPack, String note) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -612,7 +614,7 @@ public class EditRecordController {
 			e.printStackTrace();
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数格式错误,请重试!")).toString();
 		}
-		if(StringEmptyUtils.isEmpty(note)){
+		if (StringEmptyUtils.isEmpty(note)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("备注说明不能为空!")).toString();
 		}
 		return JSONObject.fromObject(manualService.managerDeleteMorder(json, note)).toString();
@@ -642,20 +644,14 @@ public class EditRecordController {
 			// logger.debug("Hello World!");
 			e.printStackTrace();
 		}
-
-		// return JSONObject.fromObject(manualService.managerDeleteMorder(json,
-		// note)).toString();
 		return "";
 	}
 
 	public static void main(String[] args) {
-		Thread t = new Thread();
-		Map<String, Object> item = new HashMap<>();
-		item.put("recipientAddr", "福建省厦门市思明区莲花五村龙盛里14号502室");
-		t.start();
-		for (int i = 0; i < 1000; i++) {
-			System.out.println(
-					i + "---->>" + YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web-shop/manual/readInfo2", item));
-		}
+		JSONArray list = new JSONArray();
+		Map<String,Object> item = new HashMap<>();
+		item.put("orderNo", "YM180125052168190");
+		list.add(item);
+		System.out.println(list.toString());
 	}
 }

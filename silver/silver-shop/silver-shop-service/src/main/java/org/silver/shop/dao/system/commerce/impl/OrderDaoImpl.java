@@ -222,7 +222,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				}
 				list.add(params.get(property));
 			}
-			sbSQL.append(" 1 = 1");
+			sbSQL.append(" entPayNo IS NOT NULL");
 		}
 	}
 
@@ -295,7 +295,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				}
 				list.add(viceParams.get(property));
 			}
-			sbSQL.append(" 1 = 1 ");
+			sbSQL.append(" trade_no IS NOT NULL ");
 			// 查询分页
 			sbSQL.append(" ORDER BY createDate DESC LIMIT " + (page - 1) + " , " + size);
 		}

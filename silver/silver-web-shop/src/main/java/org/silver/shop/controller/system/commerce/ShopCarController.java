@@ -60,10 +60,7 @@ public class ShopCarController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		HttpSession session = req.getSession();
-		System.out.println("--查询购物车-->>"+session.getId());
-		Map<String, Object> statusMap = shopCarTransaction.getGoodsToShopCartInfo();
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(shopCarTransaction.getGoodsToShopCartInfo()).toString();
 	}
 
 	@RequestMapping(value = "/deleteShopCartGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
