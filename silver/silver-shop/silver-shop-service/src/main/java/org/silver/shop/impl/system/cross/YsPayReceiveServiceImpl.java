@@ -578,7 +578,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		Map<String, Object> statusMap = new HashMap<>();
 		List<JSONObject> paymentList = new ArrayList<>();
 		Map<String, Object> paymentMap = new HashMap<>();
-		if (StringEmptyUtils.isNotEmpty(tok)) {
+		if (paymentInfoMap != null && !paymentInfoMap.isEmpty()) {
 			JSONObject json = new JSONObject();
 			json.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
 			json.element("PayStatus", paymentInfoMap.get("PayStatus"));
@@ -654,8 +654,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paramsMap.put("customsPort", 1);
 				//检验检疫机构代码
 				paymentMap.put("ciqOrgCode", "443400");
-				List<Object> reMerchantList = ysPayReceiveDao.findByProperty(MerchantRecordInfo.class, paramsMap, 1, 1);
-				MerchantRecordInfo merchantRecordInfo = (MerchantRecordInfo) reMerchantList.get(0);
 				JSONObject json2 = new JSONObject();
 				List<JSONObject> paymentList2 = new ArrayList<>();
 				json2.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
@@ -669,15 +667,15 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
 				json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
 				json2.element("Notes", paymentInfoMap.get("Notes"));
-				json2.element("EBPEntNo", merchantRecordInfo.getEbpEntNo());
-				json2.element("EBPEntName", merchantRecordInfo.getEbpEntName());
+				json2.element("EBPEntNo", recordMap.get("ebEntNo"));
+				json2.element("EBPEntName", recordMap.get("ebEntName"));
 				paymentList2.add(json2);
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				paymentMap.put("eport", 1);
 				// 电商企业编号
-				paymentMap.put("ebEntNo", merchantRecordInfo.getEbEntNo());
+				paymentMap.put("ebEntNo", recordMap.get("ebEntNo"));
 				// 电商企业名称
-				paymentMap.put("ebEntName", merchantRecordInfo.getEbEntName());
+				paymentMap.put("ebEntName", recordMap.get("ebEntName"));
 				paymentMap.put("datas", paymentList2.toString());
 				try {
 					clientsign = MD5
@@ -690,12 +688,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				}
 				paymentMap.put("clientsign", clientsign.trim());
 				System.out.println("------第二次发起支付单推送-------");
-				String resultStr2 = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
-				if (StringEmptyUtils.isNotEmpty(resultStr2)) {
-					return JSONObject.fromObject(resultStr2);
-				} else {
-					return ReturnInfoUtils.errorInfo("第二次推送订单信息接收失败,请重试！");
-				}
+				resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			}
 			if (StringUtil.isNotEmpty(resultStr)) {
 				return JSONObject.fromObject(resultStr);

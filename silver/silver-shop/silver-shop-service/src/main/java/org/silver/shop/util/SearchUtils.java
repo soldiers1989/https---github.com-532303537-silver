@@ -213,6 +213,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -296,6 +297,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -307,6 +309,9 @@ public final class SearchUtils {
 	 * @return Map
 	 */
 	public static final Map<String, Object> universalMPaymentSearch(Map<String, Object> datasMap) {
+		if(datasMap == null){
+			 return ReturnInfoUtils.errorInfo("搜索参数集合不能为null");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -364,6 +369,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -402,6 +408,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -448,6 +455,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("viceParams", viceParams);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -468,7 +476,6 @@ public final class SearchUtils {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
@@ -515,7 +522,7 @@ public final class SearchUtils {
 			}
 		}
 		statusMap.put(PARAM, paramMap);
-		statusMap.put("viceParams", viceParams);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -531,7 +538,6 @@ public final class SearchUtils {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
@@ -563,7 +569,7 @@ public final class SearchUtils {
 			}
 		}
 		statusMap.put(PARAM, paramMap);
-		statusMap.put("viceParams", viceParams);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 
@@ -640,6 +646,7 @@ public final class SearchUtils {
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
 }

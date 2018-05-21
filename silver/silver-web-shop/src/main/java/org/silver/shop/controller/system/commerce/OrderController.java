@@ -164,14 +164,16 @@ public class OrderController {
 	@RequiresRoles("Member")
 	@ApiOperation("用户查看订单详情")
 	public String getMemberOrderDetail(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("entOrderNo") String entOrderNo) {
+			 String entOrderNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.getMemberOrderDetail(entOrderNo);
-		return JSONObject.fromObject(statusMap).toString();
+		if(StringEmptyUtils.isNotEmpty(entOrderNo)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.getMemberOrderDetail(entOrderNo)).toString();
 	}
 
 	@RequestMapping(value = "/searchMerchantOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

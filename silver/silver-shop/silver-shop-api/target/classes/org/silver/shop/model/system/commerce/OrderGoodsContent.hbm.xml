@@ -10,22 +10,22 @@
 			<generator class="identity" />
 		</id>
 		<property name="merchantId" type="java.lang.String">
-			<column name="merchantId"  />
+			<column name="merchantId" />
 		</property>
 		<property name="merchantName" type="java.lang.String">
-			<column name="merchantName"  />
+			<column name="merchantName" />
 		</property>
 		<property name="memberId" type="java.lang.String">
-			<column name="memberId"  />
+			<column name="memberId" />
 		</property>
 		<property name="memberName" type="java.lang.String">
-			<column name="memberName"  />
+			<column name="memberName" />
 		</property>
 		<property name="orderId" type="java.lang.String">
 			<column name="orderId" not-null="true" />
 		</property>
 		<property name="goodsId" type="java.lang.String">
-			<column name="goodsId"  />
+			<column name="goodsId" />
 		</property>
 		<property name="goodsName" type="java.lang.String">
 			<column name="goodsName" not-null="true" />
@@ -43,7 +43,7 @@
 			<column name="goodsImage" />
 		</property>
 		<property name="tax" type="java.lang.Double">
-			<column name="tax"  />
+			<column name="tax" />
 		</property>
 		<property name="logisticsCosts" type="java.lang.Double">
 			<column name="logisticsCosts" />
@@ -72,9 +72,11 @@
 		<property name="entGoodsNo" type="java.lang.String">
 			<column name="entGoodsNo"></column>
 		</property>
-		
 		<property name="entOrderNo" type="java.lang.String">
-        	<column name="entOrderNo"/>
-        </property>
+			<column name="entOrderNo" />
+		</property>
+		<property name="evaluationFlag" type="int">
+			<column name="evaluationFlag" default="0" />
+		</property>
 	</class>
 </hibernate-mapping>

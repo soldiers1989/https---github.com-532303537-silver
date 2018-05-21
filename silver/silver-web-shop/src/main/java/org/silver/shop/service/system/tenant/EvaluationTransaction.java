@@ -7,6 +7,7 @@ import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.tenant.EvaluationService;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -23,7 +24,7 @@ public class EvaluationTransaction {
 
 	public Object addInfo(String goodsId, String content, double level, String memberId, String memberName) {
 //		Subject currentUser = SecurityUtils.getSubject();
-//		// 获取用户登录时,shiro存入在session中的数据
+		// 获取用户登录时,shiro存入在session中的数据
 //		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 //		String memberId = memberInfo.getMemberId();
 //		String memberName = memberInfo.getMemberName();
@@ -32,6 +33,23 @@ public class EvaluationTransaction {
 
 	public Object randomMember() {
 		return evaluationService.randomMember();
+	}
+
+	public Object addEvaluation(String goodsId, String content, double level) {
+		Subject currentUser = SecurityUtils.getSubject();
+	// 获取用户登录时,shiro存入在session中的数据
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		String memberId = memberInfo.getMemberId();
+		String memberName = memberInfo.getMemberName();
+		return evaluationService.addEvaluation(goodsId,content,level,memberId,memberName);
+	}
+
+	public Object merchantGetInfo(String goodsName, String memberName) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取用户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		return evaluationService.merchantGetInfo(goodsName,memberName,merchantId);
 	}
 
 }

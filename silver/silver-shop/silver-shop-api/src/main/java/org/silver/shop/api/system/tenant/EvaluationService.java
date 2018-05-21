@@ -41,4 +41,24 @@ public interface EvaluationService {
 	 */
 	public Map<String, Object> randomMember();
 
+	/**
+	 * 用户根据商品Id进行商品评价
+	 * @param goodsId 商品Id
+	 * @param content 评价内容
+	 * @param level 评分
+	 * @param memberId 用户Id
+	 * @param memberName 用户名称
+	 * @return Map
+	 */
+	public Map<String, Object> addEvaluation(String goodsId, String content, double level, String memberId, String memberName);
+
+	/**
+	 * 商户获取商品评价信息
+	 * @param goodsName 商品名称
+	 * @param memberName 用户名称
+	 * @return Map
+	 */
+	public Map<String, Object> merchantGetInfo(String goodsName, String memberName,String merchantId);
+
+
 }

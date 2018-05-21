@@ -65,11 +65,11 @@ public class EvaluationController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/addInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/temporary-addInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商城用户进行商品评价")
 	//@RequiresRoles("Member")
-	public String addInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("goodsId") String goodsId,
+	public String temporaryAddInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("goodsId") String goodsId,
 			@RequestParam("content") String content, @RequestParam("level") double level, String memberId,
 			String memberName) {
 		String originHeader = req.getHeader("Origin");
@@ -136,4 +136,51 @@ public class EvaluationController {
 		String resources =YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/evaluation/addInfo", item);
 		return JSONObject.fromObject(resources).toString();
 	}
+	/**
+	 * 用户对订单中商品进行评价
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/addEvaluation", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商城用户进行商品评价")
+	@RequiresRoles("Member")
+	public String addEvaluation(HttpServletRequest req, HttpServletResponse response, @RequestParam("goodsId") String goodsId,
+			@RequestParam("content") String content, @RequestParam("level") double level) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(goodsId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品Id不能为空!")).toString();
+		}
+		return JSONObject.fromObject(evaluationTransaction.addEvaluation(goodsId, content, level))
+				.toString();
+	}
+	
+	/**
+	 * 商户后台获取所有商品评价信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/merchantGetInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户后台获取所有商品评价信息")
+	@RequiresRoles("Merchant")
+	public String merchantGetInfo(HttpServletRequest req, HttpServletResponse response, String goodsName,
+			 String memberName) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(evaluationTransaction.merchantGetInfo(goodsName, memberName))
+				.toString();
+	}
+	
 }

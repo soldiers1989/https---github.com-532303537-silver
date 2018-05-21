@@ -1,6 +1,5 @@
 package org.silver.shop.util;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,8 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.log.OrderImplLogsService;
+import org.silver.shop.impl.system.manual.ManualOrderServiceImpl;
 import org.silver.util.CalculateCpuUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
@@ -26,7 +28,7 @@ import org.springframework.stereotype.Component;
  */
 @Component("bufferUtils")
 public class BufferUtils {
-
+	private static Logger logger = LogManager.getLogger(ManualOrderServiceImpl.class);
 	@Autowired
 	private OrderImplLogsService orderImplLogsService;
 
@@ -277,6 +279,7 @@ public class BufferUtils {
 		int counter = Integer.parseInt(serviceMap.get(COMPLETED) + "");
 		int sendCounter = Integer.parseInt(webMap.get("sendCounter") + "");
 		int errCounter = Integer.parseInt(webMap.get("errCounter") + "");
+		logger.error("---完成数量->>"+counter+";---发送成功数量->"+sendCounter+";--错误数量-->"+errCounter);
 		// Mq队列完成数=web层的发送MQ队列成功数量,并且web层发送数量+错误信息数量=总数时则表示整个表单已经读取完成,更新信息至缓存
 		if (counter == sendCounter && (sendCounter + errCounter) == totalCount) {
 			Map<String, Object> datasMap = new HashMap<>();
@@ -301,6 +304,7 @@ public class BufferUtils {
 			SortUtil.sortList(webErrl);
 			// 更新web层使用的缓存,用于前台页面显示
 			JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+			logger.error("----缓存结束后Map信息->>>"+datasMap.toString());
 		}
 	}
 

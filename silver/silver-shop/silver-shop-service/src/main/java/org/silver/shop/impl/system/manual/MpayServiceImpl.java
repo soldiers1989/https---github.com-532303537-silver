@@ -380,7 +380,7 @@ public class MpayServiceImpl implements MpayService {
 		// 查询商户钱包余额是否有足够的钱
 		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo("创建钱包失败!");
+			return reMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 		// 统计未发起过备案的手工订单实际支付金额的总额

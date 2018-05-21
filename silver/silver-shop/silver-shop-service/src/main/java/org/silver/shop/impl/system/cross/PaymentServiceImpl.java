@@ -22,6 +22,7 @@ import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
+import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.base.Postal;
 import org.silver.shop.model.system.cross.PaymentContent;
@@ -31,6 +32,7 @@ import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.BufferUtils;
@@ -82,6 +84,8 @@ public class PaymentServiceImpl implements PaymentService {
 	private MerchantUtils merchantUtils;
 	@Autowired
 	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	@Autowired
+	private MerchantFeeServiceImpl merchantFeeServiceImpl;
 	/**
 	 * 错误标识
 	 */
@@ -95,26 +99,30 @@ public class PaymentServiceImpl implements PaymentService {
 	 * 商户Id
 	 */
 	private static final String MERCHANT_ID = "merchantId";
-	
+
 	/**
 	 * 下划线版本商户Id
 	 */
-	private static final String MERCHANT_NO ="merchant_no";
+	private static final String MERCHANT_NO = "merchant_no";
 	/**
 	 * 口岸
 	 */
-	private static final String E_PORT ="eport";
-	
+	private static final String E_PORT = "eport";
+
 	/**
 	 * 检验检疫机构代码
 	 */
-	private static final String CIQ_ORG_CODE ="ciqOrgCode";
-	
+	private static final String CIQ_ORG_CODE = "ciqOrgCode";
+
 	/**
 	 * 主管海关代码
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
-	
+	/**
+	 *
+	 */
+	private static final String ORDER_ID = "orderId";
+
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
 		Date date = new Date();
@@ -206,7 +214,9 @@ public class PaymentServiceImpl implements PaymentService {
 			recordMap.put(APPKEY, YmMallConfig.APPKEY);
 			recordMap.put("appSecret", YmMallConfig.APPSECRET);
 		}
-		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName);
+		//
+		String merchantFeeId = recordMap.get("merchantFeeId") + "";
+		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName, merchantFeeId);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
@@ -247,14 +257,16 @@ public class PaymentServiceImpl implements PaymentService {
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名称
+	 * @param merchantFeeId
 	 * @return Map
 	 */
-	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId,
-			String merchantName) {
+	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId, String merchantName,
+			String merchantFeeId) {
+		double fee;
 		// 查询商户钱包
 		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo("创建钱包失败!");
+			return reMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 		double merchantBalance = merchantWallet.getBalance();
@@ -264,9 +276,19 @@ public class PaymentServiceImpl implements PaymentService {
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
 		}
-		// 支付单平台服务费
-		double serviceFee = totalAmountPaid * 0.002;
-		if (merchantBalance - serviceFee < 0) {
+
+		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
+			Map<String, Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
+			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
+				return reFeeMap;
+			}
+			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
+			fee = merchantFee.getPlatformFee();
+		} else {
+			// 支付单平台服务费
+			fee = totalAmountPaid * 0.002;
+		}
+		if ((merchantBalance - fee) < 0) {
 			return ReturnInfoUtils.errorInfo("推送支付单失败,余额不足,请先充值后再进行操作!");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -483,10 +505,10 @@ public class PaymentServiceImpl implements PaymentService {
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 		int thirdPartyFlag = merchant.getThirdPartyFlag();
-		if (thirdPartyFlag == 2) {
+		if (thirdPartyFlag == 2 && StringEmptyUtils.isEmpty(pay.getResendStatus())) {
 			System.out.println("---------返回第三方支付单信息----------");
 			rePaymentInfo(pay);
-		}
+		} 
 		return ReturnInfoUtils.successInfo();
 	}
 
@@ -498,7 +520,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @return Map
 	 */
 	public void rePaymentInfo(Mpay pay) {
-		if(pay !=null){
+		if (pay != null) {
 			Map<String, Object> item = new HashMap<>();
 			JSONObject payment = new JSONObject();
 			payment.element("thirdPartyId", pay.getThirdPartyId());
@@ -535,7 +557,8 @@ public class PaymentServiceImpl implements PaymentService {
 	/**
 	 * 更新成功的支付单第三方回调信息
 	 * 
-	 * @param Mpay 手工支付单实体类
+	 * @param Mpay
+	 *            手工支付单实体类
 	 */
 	private void updateSuccessPaymentCallBack(Mpay pay) {
 		Map<String, Object> params = new HashMap<>();
@@ -569,7 +592,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @param pay
 	 */
 	private void savePaymentCallBack(Mpay pay) {
-		
+
 		Map<String, Object> params = new HashMap<>();
 		params.put("thirdPartyId", pay.getThirdPartyId());
 		params.put("tradeNo", pay.getTrade_no());
@@ -641,8 +664,10 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public Object getMpayRecordInfo(String merchantId, String merchantName, Map<String, Object> params, int page,
 			int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reDatasMap = SearchUtils.universalMPaymentSearch(params);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put(MERCHANT_NO, merchantId);
 		paramMap.put("del_flag", 0);
@@ -651,11 +676,7 @@ public class PaymentServiceImpl implements PaymentService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, tatolCount);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
@@ -703,7 +724,11 @@ public class PaymentServiceImpl implements PaymentService {
 				List<Morder> morder = paymentDao.findByProperty(Morder.class, params, 1, 1);
 				if (morder != null && !morder.isEmpty()) {
 					Morder order = morder.get(0);
-					Map<String, Object> reCheckMap = checkPaymentInfo(order);
+					Map<String, Object> checkInfoMap = new HashMap<>();
+					checkInfoMap.put(ORDER_ID, order.getOrder_id());
+					checkInfoMap.put("orderDocId", order.getOrderDocId());
+					checkInfoMap.put("orderDocName", order.getOrderDocName());
+					Map<String, Object> reCheckMap = checkPaymentInfo(checkInfoMap);
 					if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 						RedisInfoUtils.commonErrorInfo(reCheckMap.get(BaseCode.MSG.toString()) + "", errorList, ERROR,
 								redisMap);
@@ -715,7 +740,7 @@ public class PaymentServiceImpl implements PaymentService {
 					int count = SerialNoUtils.getRedisIdCount("paymentId");
 					String tradeNo = createTradeNo("01O", (count + 1), new Date());
 					paymentMap.put("tradeNo", tradeNo);
-					paymentMap.put("orderId", order_id);
+					paymentMap.put(ORDER_ID, order_id);
 					paymentMap.put("amount", order.getActualAmountPaid());
 					paymentMap.put("orderDocName", order.getOrderDocName());
 					paymentMap.put("orderDocId", order.getOrderDocId());
@@ -747,30 +772,28 @@ public class PaymentServiceImpl implements PaymentService {
 	/**
 	 * 生成支付单时校验订单信息
 	 * 
-	 * @param order
-	 *            订单信息实体类
+	 * @param infoMap
+	 *            需校验的信息集合Map
 	 * @return Map
 	 */
-	private Map<String, Object> checkPaymentInfo(Morder order) {
+	private Map<String, Object> checkPaymentInfo(Map<String, Object> infoMap) {
+		if (infoMap == null || infoMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("校验支付单参数不能为空!");
+		}
+		String orderId = infoMap.get(ORDER_ID) + "";
 		Map<String, Object> params = new HashMap<>();
-		String orderId = order.getOrder_id();
-		params.put("morder_id", orderId);
+		params.put("morder_id", infoMap.get(ORDER_ID));
 		List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (mpayl != null && !mpayl.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]关联的支付单已经存在,无需重复生成!");
 		}
-		String orderDocId = order.getOrderDocId();
+		String orderDocId = infoMap.get("orderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]实名认证不通过,请核实身份证信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人身份证实名认证不通过,请核信息!");
 		}
-		if (!StringUtil.isContainChinese(order.getOrderDocName().replace("·", ""))) {
+		String orderDocName = infoMap.get("orderDocName") + "";
+		if (!StringUtil.isContainChinese(orderDocName.replace("·", ""))) {
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人姓名错误,请核实信息!");
-		}
-		if (!StringUtil.isContainChinese(order.getRecipientName().replace("·", ""))) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]收货人姓名错误,请核实信息!");
-		}
-		if (!PhoneUtils.isPhone(order.getRecipientTel())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]收件人电话错误,请核实信息!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -789,7 +812,7 @@ public class PaymentServiceImpl implements PaymentService {
 		Mpay entity = new Mpay();
 		entity.setMerchant_no(paymentMap.get(MERCHANT_ID) + "");
 		entity.setTrade_no(paymentMap.get("tradeNo") + "");
-		entity.setMorder_id(paymentMap.get("orderId") + "");
+		entity.setMorder_id(paymentMap.get(ORDER_ID) + "");
 		entity.setPay_amount(Double.parseDouble(paymentMap.get("amount") + ""));
 		entity.setPayer_name(paymentMap.get("orderDocName") + "");
 		entity.setPayer_document_type("01");
@@ -1069,29 +1092,30 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> getThirdPartyInfo(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(datasMap.get(MERCHANT_ID) + "");
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantMap;
 		}
-		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-		String thirdPartyId = datasMap.get("thirdPartyId") + "";
-		return thirdPartyPaymentInfo(merchant.getMerchantId(), thirdPartyId);
+		Map<String, Object> reSearchMap = SearchUtils.universalMPaymentSearch(datasMap);
+		if (!"1".equals(reSearchMap.get(BaseCode.STATUS.toString()))) {
+			return reSearchMap;
+		}
+		Map<String, Object> paramMap = (Map<String, Object>) reSearchMap.get("param");
+		return thirdPartyPaymentInfo(paramMap);
 	}
 
 	/**
 	 * 第三方平获取支付单信息
 	 * 
-	 * @param json
-	 *            查询参数
-	 * @param merchantId
-	 *            商户Id
-	 * @param thirdPartyId
 	 * @return Map
 	 */
-	private Map<String, Object> thirdPartyPaymentInfo(String merchantId, String thirdPartyId) {
-		Map<String, Object> params = new HashMap<>();
-		params.put(MERCHANT_NO, merchantId);
-		params.put("thirdPartyId", thirdPartyId);
+	private Map<String, Object> thirdPartyPaymentInfo(Map<String, Object> params) {
+		if (params == null || params.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("查询参数不能为空!");
+		}
 		List<Mpay> rePayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (rePayList == null) {
 			return ReturnInfoUtils.errorInfo("查询支付单信息失败,服务器繁忙!");

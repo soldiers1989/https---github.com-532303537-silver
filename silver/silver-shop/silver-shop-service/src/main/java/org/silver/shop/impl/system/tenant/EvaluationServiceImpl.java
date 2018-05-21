@@ -65,6 +65,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			GoodsRecordDetail goods = reList.get(0);
+			goods.getGoodsMerchantId();
 			EvaluationContent evaluation = new EvaluationContent();
 			evaluation.setGoodsId(goodsId);
 			evaluation.setGoodsName(goods.getShelfGName());
@@ -99,14 +100,59 @@ public class EvaluationServiceImpl implements EvaluationService {
 		return ReturnInfoUtils.errorInfo("随机查询用户信息失败,服务器繁忙!");
 	}
 
-	public static void main(String[] args) {
-		Random random = new Random();
-		for (int i = 0; i < 200; i++) {
-			int s = random.nextInt(9) + 2;
-			if (s == 10) {
-				System.out.println("---------------->>>");
+	@Override
+	public Map<String, Object> addEvaluation(String goodsId, String content, double level, String memberId,
+			String memberName) {
+		if (StringEmptyUtils.isEmpty(goodsId) || StringEmptyUtils.isEmpty(content) || level == 0) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("entGoodsNo", goodsId);
+		List<GoodsRecordDetail> reList = evaluationDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			GoodsRecordDetail goods = reList.get(0);
+			EvaluationContent evaluation = new EvaluationContent();
+			evaluation.setGoodsId(goodsId);
+			evaluation.setGoodsName(goods.getShelfGName());
+			evaluation.setMemberId(memberId);
+			evaluation.setMemberName(memberName);
+			evaluation.setLevel(level);
+			evaluation.setContent(content);
+			evaluation.setCreateBy(memberName);
+			evaluation.setCreateDate(new Date());
+			evaluation.setDeleteFlag(0);
+			if (evaluationDao.add(evaluation)) {
+				return ReturnInfoUtils.successInfo();
 			}
-			System.out.println("s-->" + s);
+			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到商品信息,请核对商品Id!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> merchantGetInfo(String goodsName, String memberName, String merchantId) {
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("商户Id不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		if (StringEmptyUtils.isNotEmpty(goodsName)) {
+			params.put("goodsName", goodsName);
+		}
+		if (StringEmptyUtils.isNotEmpty(memberName)) {
+			params.put("memberName", memberName);
+		}
+		params.put("merchantId", merchantId);
+		List<EvaluationContent> reList = evaluationDao.findByProperty(EvaluationContent.class, params, 0, 0);
+		long count = evaluationDao.findByPropertyCount(EvaluationContent.class, params);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("商户查询评论信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList, count);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无评论信息!");
 		}
 	}
 }

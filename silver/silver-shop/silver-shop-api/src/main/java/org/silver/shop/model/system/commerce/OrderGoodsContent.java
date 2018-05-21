@@ -38,6 +38,7 @@ public class OrderGoodsContent implements Serializable{
 	
 	private String entGoodsNo;//商品备案信息ID
 	private String entOrderNo;//对接海关订单总编号
+	private int evaluationFlag;//评价标识0-未评价,1-已评价
 	public long getId() {
 		return id;
 	}
@@ -189,7 +190,11 @@ public class OrderGoodsContent implements Serializable{
 	public void setEntOrderNo(String entOrderNo) {
 		this.entOrderNo = entOrderNo;
 	}
-	
-	
+	public int getEvaluationFlag() {
+		return evaluationFlag;
+	}
+	public void setEvaluationFlag(int evaluationFlag) {
+		this.evaluationFlag = evaluationFlag;
+	}
 	
 }

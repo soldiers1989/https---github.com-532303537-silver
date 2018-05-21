@@ -347,7 +347,7 @@ public class PaymentController {
 	 */
 	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("第三方商城平台传递订单信息入口")
+	@ApiOperation("公开性第三方商城平台 查询支付单信息入口")
 	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response ) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -364,9 +364,9 @@ public class PaymentController {
 		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
+		/*if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单第三方业务Id不能为空,请核对信息!")).toString();
-		}
+		}*/
 		return JSONObject.fromObject(paytemTransaction.getThirdPartyInfo(datasMap)).toString();
 	
 	}

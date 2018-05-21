@@ -39,7 +39,7 @@ public class TimerResendPayment implements InitializingBean {
 			public void run() {
 				resendPayment();
 			}
-			// 项目启动后90秒开始扫描， 暂定循环为30秒启动一次
+			// 项目启动后90秒开始扫描， 暂定循环为60秒启动一次
 		}, 90000, 60000);
 	}
 
@@ -48,7 +48,7 @@ public class TimerResendPayment implements InitializingBean {
 	 */
 	private void resendPayment() {
 		try {
-			System.out.println("---扫描返回次数10次以下-与状态为FALSE的支付单信息-");
+			System.out.println("--扫描支付单返回次数10次以下与返回状态为FALSE--");
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", "FALSE");
 			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 200);
