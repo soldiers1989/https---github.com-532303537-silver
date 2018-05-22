@@ -1,6 +1,5 @@
 package org.silver.shop.impl.system.commerce;
 
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +16,6 @@ import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.api.system.organization.MemberService;
-import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
@@ -32,7 +30,6 @@ import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
-import org.silver.shop.model.system.commerce.QuartetOrderContent;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
@@ -50,7 +47,6 @@ import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
-import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -100,9 +96,14 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	private static final String GOODS_TOTAL_PRICE = "goodsTotalPrice";
 	/**
-	 * 商品自编号-小写开头
+	 * 小写开头-商品自编号
 	 */
 	private static final String ENT_GOODS_NO = "entGoodsNo";
+
+	/**
+	 * 第三方平台业务Id
+	 */
+	private static final String THIR_DPARTY_ID = "thirdPartyId";
 
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
@@ -735,32 +736,32 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
-		List<Map<String, Object>> lMap = new ArrayList<>();
+	public Map<String, Object> getMemberOrderInfo(Map<String, Object> datasMap, int page, int size) {
+		List<Map<String, Object>> listMap = new ArrayList<>();
 		String descParams = "createDate";
-		params.put("memberId", memberId);
+		Map<String, Object> reDatasMap = SearchUtils.universalMemberOrderSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
+		Map<String, Object> params = (Map<String, Object>) reDatasMap.get("param");
+		params.put("memberId", datasMap.get("memberId"));
 		params.put("deleteFlag", 0);
 		List<OrderContent> reOrderList = orderDao.findByPropertyDesc(OrderContent.class, params, descParams, page,
 				size);
 		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
 		if (reOrderList != null && !reOrderList.isEmpty()) {
 			for (OrderContent orderInfo : reOrderList) {
-				String orderId = orderInfo.getOrderId();
-				params.put("orderId", orderId);
-				params.put("memberId", memberId);
+				params.clear();
+				params.put("orderId", orderInfo.getOrderId());
+				params.put("memberId", datasMap.get("memberId"));
+				params.put("evaluationFlag", Integer.parseInt(datasMap.get("evaluationFlag")+""));
 				List<OrderContent> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
 				Map<String, Object> item = new HashMap<>();
 				item.put("order", orderInfo);
 				item.put("orderGoods", reOrderGoodsList);
-				lMap.add(item);
+				listMap.add(item);
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), lMap);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), orderTotalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(listMap, orderTotalCount);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
@@ -860,40 +861,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
-	@Override
-	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
-			String extraCommonParam, String clientSign, String timestamp) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> merchantMap = getMerchantInfo(merchantCusNo);
-		if (!"1".equals(merchantMap.get(BaseCode.STATUS.toString()) + "")) {
-			return merchantMap;
-		}
-		timestamp = System.currentTimeMillis() + "";
-		String str = amount + merchantCusNo + outTradeNo + notifyUrl + timestamp;
-		// 请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
-		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			return reTokMap;
-		}
-		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
-
-		// 客戶端签名
-		// String clientSign = "";
-		try {
-			clientSign = MD5.getMD5((YmMallConfig.APPKEY + tok + str + timestamp).getBytes("UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}
-		Map<String, Object> checkMap = appkeyService.CheckClientSign(YmMallConfig.APPKEY, clientSign, str, timestamp);
-		if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()) + "")) {
-			return checkMap;
-		}
-		return createEntity(merchantCusNo, outTradeNo, amount, "content", extraCommonParam, notifyUrl);
-	}
-
 	/**
 	 * 根据商户第三方自编号,查询商户信息
 	 * 
@@ -920,61 +887,6 @@ public class OrderServiceImpl implements OrderService {
 			statusMap.put(BaseCode.MSG.toString(), "商户编号[" + merchant_cus_no + "]查询appkey失败,请核实信息!");
 			return statusMap;
 		}
-	}
-
-	/**
-	 * 保存订单信息
-	 * 
-	 * @param notifyUrl
-	 * @param extraCommonParam
-	 * @param string
-	 * @param amount
-	 * @param outTradeNo
-	 * @param merchantCusNo
-	 * @return
-	 */
-	private Map<String, Object> createEntity(String merchantCusNo, String outTradeNo, String amount, String content,
-			String extraCommonParam, String notifyUrl) {
-		Map<String, Object> statusMap = new HashMap<>();
-		double total = 0;
-		try {
-			total = Double.parseDouble(amount);
-			if (total < 0.01) {
-				return ReturnInfoUtils.errorInfo(total + "<------无效的交易金额");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ReturnInfoUtils.errorInfo("错误的交易金额!");
-		}
-		/*
-		 * List<YMorder> last = orderDao.getLast(YMorder.class); long id = 0; if
-		 * (last != null && last.size() > 0) { id = last.get(0).getId(); } else
-		 * if (last == null) { statusMap.put("status", -5); statusMap.put("msg",
-		 * "系统内部错误，请稍后重试"); return statusMap; }
-		 */
-
-		QuartetOrderContent entity = new QuartetOrderContent();
-		// 查询缓存中订单自增Id
-		int count = SerialNoUtils.getRedisIdCount("quartetOrder");
-		entity.setOrderId(SerialNoUtils.getSerialNo("YM", count));
-		entity.setMerchantCusNo(merchantCusNo);
-		entity.setAmount(total);
-		entity.setContent(content);
-		entity.setExtraCommonParam(extraCommonParam);
-		entity.setNotifyUrl(notifyUrl);
-		entity.setType(0);
-		entity.setDelFlag(0);
-		entity.setCreateDate(new Date());
-
-		entity.setCreateBy("system");
-		entity.setTenantOrderId(outTradeNo);
-		if (orderDao.add(entity)) {
-			statusMap.put("status", "1");
-			statusMap.put("order_id", entity.getOrderId());
-			statusMap.put("msg", "订单保存成功");
-			return statusMap;
-		}
-		return ReturnInfoUtils.errorInfo("系统保存订单错误，请稍后重试!");
 	}
 
 	@Override
@@ -1076,7 +988,7 @@ public class OrderServiceImpl implements OrderService {
 				if (!"1".equals(reCheckAmountMap.get(BaseCode.STATUS.toString()))) {
 					return reCheckAmountMap;
 				}
-				orderJson.put("thirdPartyId", datasMap.get("thirdPartyId"));
+				orderJson.put(THIR_DPARTY_ID, datasMap.get(THIR_DPARTY_ID));
 				Map<String, Object> reSaveOrderMap = saveOrderInfo(merchant, orderJson);
 				if (!"1".equals(reSaveOrderMap.get(BaseCode.STATUS.toString()))) {
 					return reSaveOrderMap;
@@ -1157,7 +1069,6 @@ public class OrderServiceImpl implements OrderService {
 					goods.setSpareParams(params.toString());
 				}
 			}
-
 			if (!orderDao.add(goods)) {
 				return ReturnInfoUtils.errorInfo("商品自编号[" + entGoodsNo + "]保存失败,服务器繁忙！");
 			}
@@ -1216,7 +1127,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrder_record_status(1);
 			order.setDateSign(DateUtil.formatDate(new Date(), "yyyyMMdd"));
 			order.setRemarks(orderJson.get("Notes") + "");
-			order.setThirdPartyId(orderJson.get("thirdPartyId") + "");
+			order.setThirdPartyId(orderJson.get(THIR_DPARTY_ID) + "");
 			// 订单口岸标识
 			String eport = orderJson.get("eport") + "";
 			// 国检检疫机构代码
@@ -1626,7 +1537,7 @@ public class OrderServiceImpl implements OrderService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			String thirdPartyId = datasMap.get("thirdPartyId") + "";
+			String thirdPartyId = datasMap.get(THIR_DPARTY_ID) + "";
 			return thirdPartyOrderInfo(merchant.getMerchantId(), thirdPartyId);
 		}
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
@@ -1643,7 +1554,7 @@ public class OrderServiceImpl implements OrderService {
 	private Map<String, Object> thirdPartyOrderInfo(String merchantId, String thirdPartyId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchant_no", merchantId);
-		params.put("thirdPartyId", thirdPartyId);
+		params.put(THIR_DPARTY_ID, thirdPartyId);
 		List<Morder> reOrderList = orderDao.findByProperty(Morder.class, params, 1, 1);
 		if (reOrderList == null) {
 			return ReturnInfoUtils.errorInfo("查询订单信息失败,服务器繁忙!");

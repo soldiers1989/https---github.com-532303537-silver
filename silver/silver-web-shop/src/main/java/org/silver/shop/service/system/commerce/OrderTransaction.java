@@ -55,13 +55,13 @@ public class OrderTransaction {
 		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack,recipientId);
 	}
 
-	public Map<String, Object> getMemberOrderInfo(int page, int size) {
+	public Map<String, Object> getMemberOrderInfo(int page, int size, Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
-		String memberName = memberInfo.getMemberName();
-		return orderService.getMemberOrderInfo(memberId, memberName, page, size);
+		datasMap.put("memberId", memberId);
+		return orderService.getMemberOrderInfo(datasMap, page, size);
 	}
 
 	// 商户查看订单详情
@@ -109,13 +109,6 @@ public class OrderTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return orderService.getMerchantOrderDailyReport(merchantId, merchantName, startDate, endDate);
-	}
-
-	public Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
-			String extraCommonParam, String clientSign, String timestamp) {
-
-		return orderService.doBusiness(merchantCusNo, outTradeNo, amount, notifyUrl, extraCommonParam, clientSign,
-				timestamp);
 	}
 
 	// 管理员查询手动订单信息

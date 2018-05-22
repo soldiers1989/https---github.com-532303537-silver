@@ -649,6 +649,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
+				Map<String,Object> reMerchantMap = merchantUtils.getMerchantRecordInfo(merchantId, 1);
+				if(!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))){
+					return reMerchantMap;
+				}
+				MerchantRecordInfo merchantRecord = (MerchantRecordInfo) reMerchantMap.get(BaseCode.DATAS.toString());
 				Map<String, Object> paramsMap = new HashMap<>();
 				paramsMap.put("merchantId", merchantId);
 				paramsMap.put("customsPort", 1);
@@ -667,15 +672,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
 				json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
 				json2.element("Notes", paymentInfoMap.get("Notes"));
-				json2.element("EBPEntNo", recordMap.get("ebEntNo"));
-				json2.element("EBPEntName", recordMap.get("ebEntName"));
+				//电商平台企业编码
+				json2.element("EBPEntNo", merchantRecord.getEbpEntNo());
+				//电商平台企业名称
+				json2.element("EBPEntName", merchantRecord.getEbpEntName());
 				paymentList2.add(json2);
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				paymentMap.put("eport", 1);
 				// 电商企业编号
-				paymentMap.put("ebEntNo", recordMap.get("ebEntNo"));
+				paymentMap.put("ebEntNo", merchantRecord.getEbEntNo());
 				// 电商企业名称
-				paymentMap.put("ebEntName", recordMap.get("ebEntName"));
+				paymentMap.put("ebEntName", merchantRecord.getEbEntName());
 				paymentMap.put("datas", paymentList2.toString());
 				try {
 					clientsign = MD5

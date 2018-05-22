@@ -2,9 +2,9 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.silver.shop.model.system.manual" >
+<hibernate-mapping package="org.silver.shop.model.system.manual">
 
-	<class name="OldManualOrder" table="ym_shop_manual_morder_old" >
+	<class name="OldManualOrder" table="ym_shop_manual_morder_old">
 
 		<id name="id" type="long">
 			<column name="id" />
@@ -14,46 +14,46 @@
 		</id>
 
 		<property name="order_id">
-			<column name="order_id"  />
+			<column name="order_id" />
 		</property>
 		<property name="trade_no">
-			<column name="trade_no"  />
+			<column name="trade_no" />
 		</property>
 		<property name="merchant_no">
-			<column name="merchant_no"  />
+			<column name="merchant_no" />
 		</property>
 
 		<property name="Fcode">
-			<column name="Fcode"  />
+			<column name="Fcode" />
 		</property>
 
 
 		<property name="FCY" type="java.lang.Double">
-			<column name="FCY"  />
+			<column name="FCY" />
 		</property>
 
 		<property name="Tax" type="java.lang.Double">
-			<column name="Tax"  />
+			<column name="Tax" />
 		</property>
 
 		<property name="ActualAmountPaid" type="java.lang.Double">
-			<column name="ActualAmountPaid"  />
+			<column name="ActualAmountPaid" />
 		</property>
 
 		<property name="RecipientName">
-			<column name="RecipientName"  />
+			<column name="RecipientName" />
 		</property>
 
 		<property name="RecipientAddr">
-			<column name="RecipientAddr"  />
+			<column name="RecipientAddr" />
 		</property>
 
 		<property name="RecipientID">
-			<column name="RecipientID"  />
+			<column name="RecipientID" />
 		</property>
 
 		<property name="RecipientTel">
-			<column name="RecipientTel"  />
+			<column name="RecipientTel" />
 		</property>
 
 		<property name="RecipientProvincesCode">
@@ -61,44 +61,44 @@
 		</property>
 
 		<property name="OrderDocAcount">
-			<column name="OrderDocAcount"  />
+			<column name="OrderDocAcount" />
 		</property>
 
 		<property name="OrderDocName">
-			<column name="OrderDocName"  />
+			<column name="OrderDocName" />
 		</property>
 
 		<property name="OrderDocType">
-			<column name="OrderDocType"  />
+			<column name="OrderDocType" />
 		</property>
 
 		<property name="OrderDocId">
-			<column name="OrderDocId"  />
+			<column name="OrderDocId" />
 		</property>
 
 		<property name="OrderDocTel">
-			<column name="OrderDocTel"  />
+			<column name="OrderDocTel" />
 		</property>
 		<property name="OrderDate">
-			<column name="OrderDate"  />
+			<column name="OrderDate" />
 		</property>
 		<property name="dateSign">
-			<column name="dateSign"  />
+			<column name="dateSign" />
 		</property>
 		<property name="waybill">
 			<column name="waybill" />
 		</property>
 		<property name="status" type="java.lang.Integer">
-			<column name="status"  />
+			<column name="status" />
 		</property>
 		<property name="serial" type="java.lang.Integer">
-			<column name="serial"  />
+			<column name="serial" />
 		</property>
 		<property name="del_flag" type="java.lang.Integer">
-			<column name="del_flag"  />
+			<column name="del_flag" />
 		</property>
 		<property name="create_date" type="java.util.Date">
-			<column name="create_date"  />
+			<column name="create_date" />
 		</property>
 		<property name="create_by">
 			<column name="create_by" />
@@ -140,7 +140,6 @@
 		<property name="senderTel">
 			<column name="senderTel" />
 		</property>
-
 		<property name="RecipientCityCode">
 			<column name="RecipientCityCode" />
 		</property>
@@ -150,7 +149,6 @@
 		<property name="postal">
 			<column name="postal" />
 		</property>
-
 		<property name="RecipientCityName">
 			<column name="RecipientCityName" />
 		</property>
@@ -169,14 +167,25 @@
 		<property name="eport">
 			<column name="eport" />
 		</property>
+		
 		<property name="customsCode">
 			<column name="customsCode" />
 		</property>
+		
 		<property name="ciqOrgCode">
 			<column name="ciqOrgCode" />
 		</property>
+		
 		<property name="thirdPartyId">
 			<column name="thirdPartyId" />
+		</property>
+		
+		<property name="deleteBy">
+			<column name="deleteBy" />
+		</property>
+		
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
 		</property>
 	</class>
 

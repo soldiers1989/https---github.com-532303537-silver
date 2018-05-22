@@ -1,5 +1,6 @@
 package org.silver.shop.api.system.tenant;
 
+import java.util.List;
 import java.util.Map;
 
 public interface EvaluationService {
@@ -50,7 +51,7 @@ public interface EvaluationService {
 	 * @param memberName 用户名称
 	 * @return Map
 	 */
-	public Map<String, Object> addEvaluation(String goodsId, String content, double level, String memberId, String memberName);
+	public Map<String, Object> addEvaluation(String entOrderNo,String goodsInfoPack,String memberId,String memberName);
 
 	/**
 	 * 商户获取商品评价信息
@@ -59,6 +60,15 @@ public interface EvaluationService {
 	 * @return Map
 	 */
 	public Map<String, Object> merchantGetInfo(String goodsName, String memberName,String merchantId);
+
+	/**
+	 * 管理员删除商品评论
+	 * @param idList 评论流水Id集合
+	 * @param managerName 
+	 * @param managerId 
+	 * @return Map
+	 */
+	public Map<String,Object> managerDeleteInfo(List<String> idList, String managerId, String managerName);
 
 
 }

@@ -51,7 +51,7 @@ public class OrderController {
 	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
 			@RequestParam("recipientId") String recipientId) {
-	
+
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -111,37 +111,43 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("检查订单商品是否都属于一个海关口岸")
 	public String checkOrderGoodsCustoms(HttpServletRequest req, HttpServletResponse response,
-			 String orderGoodsInfoPack,String recipientId) {
-		HttpSession session = req.getSession();
-		System.out.println("----->>"+session.getId());
+			String orderGoodsInfoPack, String recipientId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if(StringEmptyUtils.isEmpty(recipientId)){
+		if (StringEmptyUtils.isEmpty(recipientId)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("收货人地址Id不能为空!")).toString();
 		}
-		if(StringEmptyUtils.isEmpty(orderGoodsInfoPack)){
+		if (StringEmptyUtils.isEmpty(orderGoodsInfoPack)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单商品信息包不能为空!")).toString();
 		}
-		return JSONObject.fromObject(orderTransaction.checkOrderGoodsCustoms(orderGoodsInfoPack,recipientId)).toString();
+		return JSONObject.fromObject(orderTransaction.checkOrderGoodsCustoms(orderGoodsInfoPack, recipientId))
+				.toString();
 	}
 
 	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "获取用户订单信息")
 	@RequiresRoles("Member")
-	//@RequiresPermissions("")
-	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
+	// @RequiresPermissions("")
+	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.getMemberOrderInfo(page, size);
-		return JSONObject.fromObject(statusMap).toString();
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		datasMap.remove("page");
+		datasMap.remove("size");
+		return JSONObject.fromObject(orderTransaction.getMemberOrderInfo(page, size,datasMap)).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantOrderRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -163,14 +169,13 @@ public class OrderController {
 	@ResponseBody
 	@RequiresRoles("Member")
 	@ApiOperation("用户查看订单详情")
-	public String getMemberOrderDetail(HttpServletRequest req, HttpServletResponse response,
-			 String entOrderNo) {
+	public String getMemberOrderDetail(HttpServletRequest req, HttpServletResponse response, String entOrderNo) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if(StringEmptyUtils.isNotEmpty(entOrderNo)){
+		if (StringEmptyUtils.isNotEmpty(entOrderNo)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
 		}
 		return JSONObject.fromObject(orderTransaction.getMemberOrderDetail(entOrderNo)).toString();
@@ -201,78 +206,14 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("商户查询订单每日报表")
 	@RequiresRoles("Merchant")
-	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate, String endDate) {
+	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate,
+			String endDate) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(orderTransaction.getMerchantOrderReport( startDate, endDate)).toString();
-	}
-
-	/**
-	 * 提供第四方下单入口
-	 * 
-	 * @param req
-	 * @param resp
-	 * @param merchant_cus_no
-	 *            商户编号
-	 * @param out_trade_no
-	 *            交易订单号
-	 * @param amount
-	 *            交易金额
-	 * @param return_url
-	 *            回调URL
-	 * @param notify_url
-	 *            银盛URl
-	 * @param extra_common_param
-	 *            支付人姓名
-	 * @param client_sign
-	 *            签名
-	 * @param timestamp
-	 *            时间戳
-	 * @param errBack
-	 * @return
-	 */
-	@RequestMapping(value = "/enter", method = RequestMethod.POST)
-	public String dopay(HttpServletRequest req, HttpServletResponse resp, String merchantCusNo, String outTradeNo,
-			String amount, String returnUrl, String notifyUrl, String extraCommonParam, String clientSign,
-			String timestamp, String errBack) {
-		if (merchantCusNo != null && outTradeNo != null && amount != null && clientSign != null && timestamp != null
-				&& notifyUrl != null) {
-			Map<String, Object> reqMap = orderTransaction.doBusiness(merchantCusNo, outTradeNo, amount, notifyUrl,
-					extraCommonParam, clientSign, timestamp);
-			if (!"1".equals(reqMap.get("status"))) {
-				req.setAttribute("msg", reqMap.get("msg") + "<a href=\"" + errBack + "\">" + "点击返回</a>");
-				return "ympay-err";
-			}
-			System.out.println("--------验证通过,准备向银盛发起--------------------");
-			req.setAttribute("method", "ysepay.online.directpay.createbyuser");
-			req.setAttribute("partner_id", DirectPayConfig.PLATFORM_PARTNER_NO);
-			req.setAttribute("timestamp", DateUtil.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss"));
-			req.setAttribute("charset", DirectPayConfig.DEFAULT_CHARSET);
-			req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
-			// request.setAttribute("sign", userName);
-			req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/ysPayReceive");
-			req.setAttribute("return_url", returnUrl);
-			req.setAttribute("version", DirectPayConfig.VERSION);
-			req.setAttribute("out_trade_no", reqMap.get("order_id"));// 商户订单号
-			req.setAttribute("subject", "即时到账");
-			req.setAttribute("total_amount", amount);// 支付总金额
-			req.setAttribute("seller_id", DirectPayConfig.PLATFORM_PARTNER_NO);
-			req.setAttribute("seller_name", DirectPayConfig.PLATFORM_PARTNER_NAME);
-			req.setAttribute("timeout_express", "1h");
-			req.setAttribute("business_code", "01000010");
-			req.setAttribute("extra_common_param", extraCommonParam);// 支付人姓名
-			// request.setAttribute("pay_mode", "internetbank");
-			req.setAttribute("bank_type", "");
-			req.setAttribute("bank_account_type", "");
-			req.setAttribute("support_card_type", "");
-			req.setAttribute("bank_account_no", "");
-			return "yspayapi";
-		}
-		req.setAttribute("msg", "下单参数有误");
-		return "ympay-err";
+		return JSONObject.fromObject(orderTransaction.getMerchantOrderReport(startDate, endDate)).toString();
 	}
 
 	@RequestMapping(value = "/getManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -293,14 +234,14 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("管理员查询订单报表")
 	@RequiresRoles("Manager")
-	public String managerGetOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate, String endDate,
-			String merchantId) {
+	public String managerGetOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate,
+			String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(orderTransaction.managerGetOrderReport(  startDate, endDate, merchantId)).toString();
+		return JSONObject.fromObject(orderTransaction.managerGetOrderReport(startDate, endDate, merchantId)).toString();
 	}
 
 	@RequestMapping(value = "/memberDeleteOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -347,6 +288,7 @@ public class OrderController {
 
 	/**
 	 * 管理员获取已移除到历史记录(删除)表中的订单及订单商品信息
+	 * 
 	 * @param resp
 	 * @param req
 	 * @return
@@ -384,7 +326,7 @@ public class OrderController {
 	@RequestMapping(value = "/thirdPartyBusiness", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("第三方商城平台传递订单信息入口")
-	public String thirdPartyBusiness(HttpServletRequest req, HttpServletResponse response ) {
+	public String thirdPartyBusiness(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -397,18 +339,18 @@ public class OrderController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+		if (StringEmptyUtils.isEmpty(datasMap.get("merchantId"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("datas"))){
+		if (StringEmptyUtils.isEmpty(datasMap.get("datas"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单信息不能为空,请核对信息!")).toString();
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId"))){
+		if (StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("第三方订单Id(唯一标识)不能为空,请核对信息!")).toString();
 		}
 		return JSONObject.fromObject(orderTransaction.thirdPartyBusiness(datasMap)).toString();
 	}
-	
+
 	/**
 	 * 公开性第三方商城平台 查询订单信息入口
 	 * 
@@ -419,7 +361,7 @@ public class OrderController {
 	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("第三方商城平台传递订单信息入口")
-	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response ) {
+	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -432,16 +374,16 @@ public class OrderController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+		if (StringEmptyUtils.isEmpty(datasMap.get("merchantId"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
 		}
-		
-		if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
+
+		if (StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单第三方业务Id不能为空,请核对信息!")).toString();
 		}
 		return JSONObject.fromObject(orderTransaction.getThirdPartyInfo(datasMap)).toString();
 	}
-	
+
 	/**
 	 * 推送订单时,根据订单号校验订单是否全部属于一个口岸
 	 * 
@@ -471,77 +413,76 @@ public class OrderController {
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
 	}
-	
-	
+
 	public static void main(String[] args) {
-		Map<String,Object> item = new HashMap<>();
-		List<JSONObject> orderGoodsList=  new ArrayList<>();
+		Map<String, Object> item = new HashMap<>();
+		List<JSONObject> orderGoodsList = new ArrayList<>();
 		JSONObject order = new JSONObject();
 		JSONObject goods = new JSONObject();
 		JSONObject goods2 = new JSONObject();
 		order.element("EntOrderNo", "TEST1234");
-		order.element("OrderStatus","1");
-		order.element("PayStatus","1");
-		order.element("OrderGoodTotal",2100);
-		order.element("OrderGoodTotalCurr","142");
-		order.element("Freight",0);
-		order.element("Tax",0);
-		order.element("OtherPayment","1");
-		order.element("ActualAmountPaid",210);
-		order.element("RecipientName","收货人姓名");
-		order.element("RecipientAddr","收货人地址");
-		order.element("RecipientID","");
-		order.element("RecipientTel","13812345678");
-		order.element("RecipientCountry","116");
-		order.element("RecipientProvincesCode","110000");
-		order.element("OrderDocAcount","下单人账号");
-		order.element("OrderDocName","下单人先生");
-		order.element("OrderDocType","1");
-		order.element("OrderDocId","37021119770918101X");
-		order.element("OrderDocTel","13812345678");
-		order.element("OrderDate","订单日期");
-		order.element("eport","1");
-		order.element("ciqOrgCode","440300");
-		order.element("customsCode","5165");
-		
-		
+		order.element("OrderStatus", "1");
+		order.element("PayStatus", "1");
+		order.element("OrderGoodTotal", 2100);
+		order.element("OrderGoodTotalCurr", "142");
+		order.element("Freight", 0);
+		order.element("Tax", 0);
+		order.element("OtherPayment", "1");
+		order.element("ActualAmountPaid", 210);
+		order.element("RecipientName", "收货人姓名");
+		order.element("RecipientAddr", "收货人地址");
+		order.element("RecipientID", "");
+		order.element("RecipientTel", "13812345678");
+		order.element("RecipientCountry", "116");
+		order.element("RecipientProvincesCode", "110000");
+		order.element("OrderDocAcount", "下单人账号");
+		order.element("OrderDocName", "下单人先生");
+		order.element("OrderDocType", "1");
+		order.element("OrderDocId", "37021119770918101X");
+		order.element("OrderDocTel", "13812345678");
+		order.element("OrderDate", "订单日期");
+		order.element("eport", "1");
+		order.element("ciqOrgCode", "440300");
+		order.element("customsCode", "5165");
+
 		goods.element("Seq", 1);
-		goods.element("EntGoodsNo","TEst321");
-		goods.element("CIQGoodsNo","*");
+		goods.element("EntGoodsNo", "TEst321");
+		goods.element("CIQGoodsNo", "*");
 		// goods.element("BarCode");
-		goods.element("CusGoodsNo","*");
-		goods.element("GoodsName","商品名称");
-		goods.element("GoodsStyle","商品规格");
-		goods.element("OriginCountry","142");
-		goods.element("Qty",1);
-		goods.element("HSCode","HS编码");
-		goods.element("Unit","110");
-		goods.element("Price",110);
-		goods.element("Total" ,(1 * 110));
-		goods.element("CurrCode","142");
-		goods.element("Brand","品牌");
+		goods.element("CusGoodsNo", "*");
+		goods.element("GoodsName", "商品名称");
+		goods.element("GoodsStyle", "商品规格");
+		goods.element("OriginCountry", "142");
+		goods.element("Qty", 1);
+		goods.element("HSCode", "HS编码");
+		goods.element("Unit", "110");
+		goods.element("Price", 110);
+		goods.element("Total", (1 * 110));
+		goods.element("CurrCode", "142");
+		goods.element("Brand", "品牌");
 		orderGoodsList.add(goods);
 		goods2.element("Seq", 1);
-		goods2.element("EntGoodsNo","TEst2");
-		goods2.element("CIQGoodsNo","*");
+		goods2.element("EntGoodsNo", "TEst2");
+		goods2.element("CIQGoodsNo", "*");
 		// goods.element("BarCode");
-		goods2.element("CusGoodsNo","*");
-		goods2.element("GoodsName","商品名称");
-		goods2.element("GoodsStyle","商品规格");
-		goods2.element("OriginCountry","142");
-		goods2.element("Qty",1);
-		goods2.element("HSCode","HS编码");
-		goods2.element("Unit","110");
-		goods2.element("Price","100");
-		goods2.element("Total" ,(1 * 100));
-		goods2.element("CurrCode","142");
-		goods2.element("Brand","品牌");
+		goods2.element("CusGoodsNo", "*");
+		goods2.element("GoodsName", "商品名称");
+		goods2.element("GoodsStyle", "商品规格");
+		goods2.element("OriginCountry", "142");
+		goods2.element("Qty", 1);
+		goods2.element("HSCode", "HS编码");
+		goods2.element("Unit", "110");
+		goods2.element("Price", "100");
+		goods2.element("Total", (1 * 100));
+		goods2.element("CurrCode", "142");
+		goods2.element("Brand", "品牌");
 		orderGoodsList.add(goods2);
 		order.element("orderGoodsList", orderGoodsList);
-		
+
 		item.put("datas", order);
 		item.put("thirdPartyId", "a");
 		item.put("merchantId", "MerchantId_00001");
-		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item));
+		System.out.println("------->>"
+				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item));
 	}
 }

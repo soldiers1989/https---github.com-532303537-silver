@@ -5,10 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
+import org.silver.shop.impl.system.manual.ManualOrderServiceImpl;
 
 public class RedisInfoUtils {
-
+	private static Logger logger = LogManager.getLogger(ManualOrderServiceImpl.class);
 	/**
 	 * 
 	 * @param msg
@@ -56,5 +59,9 @@ public class RedisInfoUtils {
 		paramsMap.put("type", type);
 		BufferUtils bufferUtils = new BufferUtils();
 		bufferUtils.writeRedisMq(errorList, paramsMap);
+	}
+	public static void main(String[] args) {
+		logger.debug("--sssssssssss-");
+		logger.error("--sssssssssss-");
 	}
 }

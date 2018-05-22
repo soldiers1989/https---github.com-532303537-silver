@@ -916,8 +916,10 @@ public class MpayServiceImpl implements MpayService {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
 		Map<String, Object> orMap = new HashMap<>();
-		orMap.put("order_serial_no", datasMap.get("messageID") + "");
-		orMap.put(ORDER_ID, datasMap.get("entOrderNo") + "");
+		String messageId = datasMap.get("messageID") + "";
+		String entOrderNo = datasMap.get("entOrderNo") + "";
+		orMap.put("order_serial_no", messageId);
+		orMap.put(ORDER_ID, entOrderNo);
 		String reMsg = datasMap.get("msg") + "";
 		List<Morder> reList = morderDao.findByPropertyOr2(Morder.class, orMap, 1, 1);
 		if (reList != null && !reList.isEmpty()) {
@@ -929,26 +931,20 @@ public class MpayServiceImpl implements MpayService {
 			if (StringEmptyUtils.isEmpty(note)) {
 				note = "";
 			}
-			order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
+			if (StringEmptyUtils.isNotEmpty(reMsg)) {
+				order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
+			}
 			if ("1".equals(status)) {
-				// 已经返回过一次备案成功后
-				if (note.contains("新增申报成功") && order.getOrder_record_status() == 3) {
-					System.out.println("------重复订单回执拦截------");
-					return ReturnInfoUtils.successInfo();
-				}
 				//
 				findOrderGoodsInfo(orderId, merchantId);
 				order.setOrder_record_status(3);
 			} else {
 				// 备案失败
-				if (reMsg.contains("旧报文数据") || reMsg.contains("订单数据已存在") || reMsg.contains("重复申报")) {
-					return updateOldOrderInfo(order);
-				}
 				order.setOrder_record_status(4);
 			}
 			return updateOrderRecordInfo(order);
 		} else {
-			return ReturnInfoUtils.errorInfo("根据订单Id与msgId未找到数据,请核对信息!");
+			return ReturnInfoUtils.errorInfo("根据订单["+entOrderNo+"]与messageId["+messageId+"]未找到订单信息,请核对信息!");
 		}
 	}
 

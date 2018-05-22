@@ -649,4 +649,50 @@ public final class SearchUtils {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
+	
+	
+	/**
+	 * 商城前端用户通用订单检索方法
+	 * 
+	 * @param datasMap
+	 *            参数Map
+	 * @return Map
+	 */
+	public static final Map<String, Object> universalMemberOrderSearch(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+		}
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "goodsName":
+				blurryMap.put(key, "%" + value + "%");
+				break;
+			case "entOrderNo":
+				paramMap.put(key, value);
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put(PARAM, paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
 }

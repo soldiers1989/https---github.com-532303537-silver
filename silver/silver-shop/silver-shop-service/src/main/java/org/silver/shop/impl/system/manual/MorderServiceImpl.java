@@ -1707,6 +1707,8 @@ public class MorderServiceImpl implements MorderService {
 					}
 					// 注明删除原因
 					oldManualOrder.setRemarks(note);
+					oldManualOrder.setDeleteBy(managerName);
+					oldManualOrder.setDeleteDate(new Date());
 					Map<String, Object> reMOrderMap = transferMOrder(oldManualOrder);
 					if (!"1".equals(reMOrderMap.get(BaseCode.STATUS.toString()))) {
 						return reMOrderMap;

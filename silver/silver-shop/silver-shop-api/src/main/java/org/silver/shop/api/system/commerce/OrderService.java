@@ -53,12 +53,12 @@ public interface OrderService {
 
 	/**
 	 * 用户查询订单信息
-	 * 
-	 * @param memberId
-	 * @param memberName
-	 * @return
+	 * @param datasMap 查询参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
 	 */
-	public Map<String, Object> getMemberOrderInfo(String memberId, String memberName, int page, int size);
+	public Map<String, Object> getMemberOrderInfo(Map<String, Object> datasMap, int page, int size);
 
 	/**
 	 * 商户查看订单详情
@@ -115,29 +115,6 @@ public interface OrderService {
 	 */
 	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, String startDate,
 			String endDate);
-
-	/**
-	 * 银盟电子订单下单
-	 * 
-	 * @param merchantCusNo
-	 *            商户号
-	 * @param outTradeNo
-	 *            商户订单批次号 所属商户下唯一标识
-	 * @param amount
-	 *            交易金额
-	 * @param notifyUrl
-	 *            异步通知url
-	 * @param extraCommonParam
-	 *            额外参数 可空
-	 * @param clientSign
-	 *            客户端签名
-	 * @param timestamp
-	 *            时间戳
-	 * 
-	 * @return 返回下单的必须参数map
-	 */
-	Map<String, Object> doBusiness(String merchantCusNo, String outTradeNo, String amount, String notifyUrl,
-			String extraCommonParam, String clientSign, String timestamp);
 
 	/**
 	 * 管理员查询所有手动订单信息

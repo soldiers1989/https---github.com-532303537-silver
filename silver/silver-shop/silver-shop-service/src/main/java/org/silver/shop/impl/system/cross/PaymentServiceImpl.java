@@ -119,9 +119,13 @@ public class PaymentServiceImpl implements PaymentService {
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
 	/**
-	 *
+	 * 驼峰写法订单Id
 	 */
 	private static final String ORDER_ID = "orderId";
+	/**
+	 * 下划线交易流水号
+	 */
+	private static final String TRADE_NO = "trade_no";
 
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
@@ -135,7 +139,7 @@ public class PaymentServiceImpl implements PaymentService {
 		List<Object> reList = paymentDao.findByProperty(PaymentContent.class, paramMap, 1, 1);
 		if (reList != null && reList.size() > 0) {
 			PaymentContent payment = (PaymentContent) reList.get(0);
-			String status = datasMap.get("status") + "";
+			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 			String note = payment.getReNote();
 			if ("null".equals(note) || note == null) {
 				note = "";
@@ -153,8 +157,7 @@ public class PaymentServiceImpl implements PaymentService {
 				statusMap.put(BaseCode.MSG.toString(), "异步更新支付单备案信息错误!");
 				return paramMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+			return ReturnInfoUtils.successInfo();
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
@@ -317,7 +320,7 @@ public class PaymentServiceImpl implements PaymentService {
 			try {
 				param.clear();
 				param.put(MERCHANT_NO, merchantId);
-				param.put("trade_no", treadeNo);
+				param.put(TRADE_NO, treadeNo);
 				List<Mpay> payList = paymentDao.findByProperty(Mpay.class, param, 1, 1);
 				if (payList != null && !payList.isEmpty()) {
 					Mpay payInfo = payList.get(0);
@@ -367,7 +370,7 @@ public class PaymentServiceImpl implements PaymentService {
 				bufferUtils.writeRedis(errorList, paramsMap);
 				Thread.sleep(200);
 			} catch (Exception e) {
-				logger.error(Thread.currentThread().getName() + "-->>>>", e);
+				logger.error(Thread.currentThread().getName() + "-->", e);
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 			}
@@ -421,7 +424,7 @@ public class PaymentServiceImpl implements PaymentService {
 		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
 		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
 		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("trade_no", entPayNo);
+		paramMap.put(TRADE_NO, entPayNo);
 		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 0, 0);
 		if (reList != null && !reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
@@ -454,8 +457,8 @@ public class PaymentServiceImpl implements PaymentService {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("pay_serial_no", datasMap.get("messageID") + "");
 		String entPayNo = datasMap.get("entPayNo") + "";
-		paramMap.put("trade_no", entPayNo);
-		String reMsg = datasMap.get("msg") + "";
+		paramMap.put(TRADE_NO, entPayNo);
+		String reMsg = datasMap.get(BaseCode.MSG.toString()) + "";
 		List<Mpay> reList = paymentDao.findByPropertyOr2(Mpay.class, paramMap, 0, 0);
 		if (reList != null && !reList.isEmpty()) {
 			Mpay pay = reList.get(0);
@@ -465,19 +468,9 @@ public class PaymentServiceImpl implements PaymentService {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				// 已经返回过一次备案成功后
-				if (note.contains("保存成功") || note.contains("入库成功")
-						|| note.contains("新增申报成功") && pay.getPay_record_status() == 3) {
-					System.out.println("------重复支付单回执拦截成功------");
-					return ReturnInfoUtils.successInfo();
-				}
 				// 支付单备案状态修改为成功
 				pay.setPay_record_status(3);
 			} else {
-				// 备案失败
-				if (reMsg.contains("旧报文数据") || reMsg.contains("支付数据已存在") || reMsg.contains("重复申报")) {
-					return updateOldPaymentInfo(pay);
-				}
 				// 备案失败
 				pay.setPay_record_status(4);
 			}
@@ -508,7 +501,7 @@ public class PaymentServiceImpl implements PaymentService {
 		if (thirdPartyFlag == 2 && StringEmptyUtils.isEmpty(pay.getResendStatus())) {
 			System.out.println("---------返回第三方支付单信息----------");
 			rePaymentInfo(pay);
-		} 
+		}
 		return ReturnInfoUtils.successInfo();
 	}
 
@@ -564,7 +557,6 @@ public class PaymentServiceImpl implements PaymentService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("thirdPartyId", pay.getThirdPartyId());
 		params.put(MERCHANT_ID, pay.getMerchant_no());
-		@SuppressWarnings("unchecked")
 		List<PaymentCallBack> rePaymentCallBackList = paymentDao.findByProperty(PaymentCallBack.class, params, 0, 0);
 		if (rePaymentCallBackList != null && !rePaymentCallBackList.isEmpty()) {
 			Date date = new Date();
@@ -579,10 +571,10 @@ public class PaymentServiceImpl implements PaymentService {
 			if (!paymentDao.update(paymentCallBack)) {
 				logger.error("--异步回调第三方支付单成功后保存信息失败--");
 			}
-			pay.setResendStatus("SUCCESS");
-			if (!paymentDao.update(pay)) {
-				logger.error("--异步回调第三方支付单成功后更新支付单状态失败--");
-			}
+		}
+		pay.setResendStatus("SUCCESS");
+		if (!paymentDao.update(pay)) {
+			logger.error("--异步回调第三方支付单成功后更新支付单回调状态失败--");
 		}
 	}
 
@@ -592,7 +584,6 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @param pay
 	 */
 	private void savePaymentCallBack(Mpay pay) {
-
 		Map<String, Object> params = new HashMap<>();
 		params.put("thirdPartyId", pay.getThirdPartyId());
 		params.put("tradeNo", pay.getTrade_no());
@@ -604,7 +595,13 @@ public class PaymentServiceImpl implements PaymentService {
 			int count = paymentCallBack.getResendCount();
 			System.out.println(pay.getTrade_no() + "--支付单->第" + (count + 1) + "次重发接受失败");
 			if (count == 9) {
-				paymentCallBack.setRemark(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + "_支付单重发第10次,接收失败!");
+				String remark = paymentCallBack.getRemark();
+				String note = DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + "_支付单重发第10次,接收失败!";
+				if(StringEmptyUtils.isNotEmpty(remark)){
+					paymentCallBack.setRemark(remark+"#"+note);
+				}else{
+					paymentCallBack.setRemark(note);
+				}
 			}
 			count++;
 			paymentCallBack.setResendCount(count);
@@ -943,8 +940,8 @@ public class PaymentServiceImpl implements PaymentService {
 	public Map<String, Object> managerEditMpayInfo(Map<String, Object> datasMap, String managerId, String managerName) {
 		if (datasMap != null && !datasMap.isEmpty()) {
 			Map<String, Object> params = new HashMap<>();
-			String tradeNo = datasMap.get("trade_no") + "";
-			params.put("trade_no", tradeNo);
+			String tradeNo = datasMap.get(TRADE_NO) + "";
+			params.put(TRADE_NO, tradeNo);
 			List<Mpay> mPayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 			if (mPayList != null && !mPayList.isEmpty()) {
 				Mpay pay = mPayList.get(0);
@@ -993,7 +990,7 @@ public class PaymentServiceImpl implements PaymentService {
 			Map<String, Object> params = new HashMap<>();
 			for (int i = 0; i < jsonArray.size(); i++) {
 				String tradeNo = jsonArray.get(i) + "";
-				params.put("trade_no", tradeNo);
+				params.put(TRADE_NO, tradeNo);
 				List<Mpay> reMpayList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
 				if (reMpayList == null) {
 					return ReturnInfoUtils.errorInfo("支付流水号[" + tradeNo + "]查询失败,服务器繁忙!");
@@ -1028,7 +1025,7 @@ public class PaymentServiceImpl implements PaymentService {
 		String customsCode = datasMap.get(CUSTOMS_CODE) + "";
 		String tradeNo = datasMap.get("tradeNo") + "";
 		Map<String, Object> params = new HashMap<>();
-		params.put("trade_no", tradeNo);
+		params.put(TRADE_NO, tradeNo);
 		List<Mpay> reMpayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (reMpayList == null) {
 			return ReturnInfoUtils.errorInfo("查询支付单失败,服务器繁忙!");
@@ -1059,7 +1056,7 @@ public class PaymentServiceImpl implements PaymentService {
 		for (int i = 0; i < tradeNos.size(); i++) {
 			String tradeNo = tradeNos.get(i);
 			Map<String, Object> params = new HashMap<>();
-			params.put("trade_no", tradeNo);
+			params.put(TRADE_NO, tradeNo);
 			params.put(MERCHANT_NO, merchantId);
 			List<Mpay> reList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
 			if (reList == null) {
