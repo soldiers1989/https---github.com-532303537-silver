@@ -60,5 +60,8 @@
 		<property name="merchantName" type="java.lang.String">
 			<column name="merchantName" />
 		</property>
+			<property name="ipAddresses" type="java.lang.String">
+			<column name="ipAddresses" />
+		</property>
 	</class>
 </hibernate-mapping>

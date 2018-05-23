@@ -81,13 +81,10 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> findOriginalMerchantId() {
-		Map<String, Object> statusMap = new HashMap<>();
 		// 扫描获取数据库表中的商户自增长ID
 		long merchantCount = merchantDao.findLastId();
 		if (merchantCount < 0) {// 判断数据库查询出数据如果小于0,则中断程序,告诉异常
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询商户商户自增长Id错误,服务器繁忙!");
 		}
 		// 得出的总数上+1
 		long count = merchantCount + 1;
@@ -97,10 +94,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchantId = "0" + merchantId;
 		}
 		merchantId = "MerchantId_" + merchantId;
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.DATAS.getBaseCode(), merchantId);
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successDataInfo(merchantId);
 	}
 
 	@Override

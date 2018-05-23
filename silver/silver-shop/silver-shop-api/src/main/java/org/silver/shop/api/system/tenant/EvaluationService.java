@@ -49,9 +49,10 @@ public interface EvaluationService {
 	 * @param level 评分
 	 * @param memberId 用户Id
 	 * @param memberName 用户名称
+	 * @param ipAddress Ip地址
 	 * @return Map
 	 */
-	public Map<String, Object> addEvaluation(String entOrderNo,String goodsInfoPack,String memberId,String memberName);
+	public Map<String, Object> addEvaluation(String entOrderNo,String goodsInfoPack,String memberId,String memberName, String ipAddress);
 
 	/**
 	 * 商户获取商品评价信息

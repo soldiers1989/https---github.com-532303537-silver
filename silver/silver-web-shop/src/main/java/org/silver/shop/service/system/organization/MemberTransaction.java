@@ -67,9 +67,7 @@ public class MemberTransaction {
 	public Map<String, Object> memberLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
 		List<Member> reList = memberService.findMemberBy(account);
-		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("服务器繁忙!");
-		} else if (!reList.isEmpty()) {
+		if (reList!=null && !reList.isEmpty()) {
 			Member member = reList.get(0);
 			// String name = member.getMemberName();
 			String loginpas = member.getLoginPass();

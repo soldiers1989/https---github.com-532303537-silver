@@ -14,6 +14,8 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Resource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.manual.MorderService;
@@ -21,8 +23,6 @@ import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MorderSubDao;
 import org.silver.shop.dao.system.manual.MuserDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -33,9 +33,7 @@ import org.silver.shop.model.system.manual.Muser;
 import org.silver.shop.model.system.manual.OldManualOrder;
 import org.silver.shop.model.system.manual.OldManualOrderSub;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
-import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.task.UpdateMOrderGoodsTask;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
@@ -55,7 +53,6 @@ import com.justep.baas.data.Table;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import net.sf.json.JsonConfig;
 
 @Service(interfaceClass = MorderService.class)
 public class MorderServiceImpl implements MorderService {
@@ -70,10 +67,6 @@ public class MorderServiceImpl implements MorderService {
 	private GoodsRecordServiceImpl goodsRecordServiceImpl;
 	@Autowired
 	private MerchantUtils merchantUtils;
-	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	@Autowired
-	private MerchantFeeServiceImpl merchantFeeServiceImpl;
 
 	// 海关币制默认为人名币
 	private static final String FCODE = "142";
@@ -990,11 +983,23 @@ public class MorderServiceImpl implements MorderService {
 		}
 		order.setRecipientTel(strArr[7]);
 		order.setRecipientProvincesName(strArr[8]);
-		order.setRecipientProvincesCode(strArr[9]);
+		String provincesCode = strArr[9];
+		if (provincesCode.length() != 6) {
+			return ReturnInfoUtils.errorInfo("收货人省份编码错误,请核对信息!");
+		}
+		order.setRecipientProvincesCode(provincesCode);
 		order.setRecipientCityName(strArr[10]);
-		order.setRecipientCityCode(strArr[11]);
+		String cityCode = strArr[11];
+		if (cityCode.length() != 6) {
+			return ReturnInfoUtils.errorInfo("收货人城市编码错误,请核对信息!");
+		}
+		order.setRecipientCityCode(cityCode);
 		order.setRecipientAreaName(strArr[12]);
-		order.setRecipientAreaCode(strArr[13]);
+		String areaCode = strArr[13];
+		if (areaCode.length() != 6) {
+			return ReturnInfoUtils.errorInfo("收货人区域编码,请核对信息!");
+		}
+		order.setRecipientAreaCode(areaCode);
 		order.setRecipientAddr(strArr[14]);
 		if (!IdcardValidator.validate18Idcard(strArr[15])) {
 			return ReturnInfoUtils.errorInfo("下单人身份证号,请核对信息!");
@@ -2022,4 +2027,20 @@ public class MorderServiceImpl implements MorderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	private static Logger logger = LogManager.getLogger(MorderServiceImpl.class);
+	@Override
+	public Object testLogs() {
+		JSONArray json = null;
+		try {
+			json.size();
+		} catch (Exception e) {
+			logger.error("====service层=====>>>>json错误！", e);
+			// logger.debug("Hello World!");
+			//e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
 }

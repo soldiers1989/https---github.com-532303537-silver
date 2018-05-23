@@ -37,13 +37,13 @@ public class EvaluationTransaction {
 		return evaluationService.randomMember();
 	}
 
-	public Object addEvaluation(String entOrderNo, String goodsInfoPack) {
+	public Object addEvaluation(String entOrderNo, String goodsInfoPack, String ipAddress) {
 		Subject currentUser = SecurityUtils.getSubject();
 	// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
-		return evaluationService.addEvaluation(entOrderNo,goodsInfoPack,memberId,memberName);
+		return evaluationService.addEvaluation(entOrderNo,goodsInfoPack,memberId,memberName,ipAddress);
 	}
 
 	public Object merchantGetInfo(String goodsName, String memberName) {

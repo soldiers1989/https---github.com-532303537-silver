@@ -30,6 +30,7 @@ public class EvaluationContent implements Serializable{
 	private int sensitiveFlag;//是否包含敏感字眼标识:0-未识别,1-不包含,2-包含
 	private String merchantId;//商户Id
 	private String merchantName;//商户名称
+	private String ipAddresses;//ip地址
 	public long getId() {
 		return id;
 	}
@@ -139,4 +140,11 @@ public class EvaluationContent implements Serializable{
 	public void setMerchantName(String merchantName) {
 		this.merchantName = merchantName;
 	}
+	public String getIpAddresses() {
+		return ipAddresses;
+	}
+	public void setIpAddresses(String ipAddresses) {
+		this.ipAddresses = ipAddresses;
+	}
+	
 }

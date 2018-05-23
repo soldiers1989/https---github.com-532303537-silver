@@ -14,6 +14,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.tenant.EvaluationTransaction;
+import org.silver.shop.utils.CusAccessObjectUtil;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -158,13 +159,14 @@ public class EvaluationController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		String ipAddress = CusAccessObjectUtil.getIpAddress(req);
 		if (StringEmptyUtils.isEmpty(entOrderNo)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
 		}
 		if (StringEmptyUtils.isEmpty(goodsInfoPack)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单商品信息不能为空!")).toString();
 		}
-		return JSONObject.fromObject(evaluationTransaction.addEvaluation(entOrderNo,goodsInfoPack)).toString();
+		return JSONObject.fromObject(evaluationTransaction.addEvaluation(entOrderNo,goodsInfoPack,ipAddress)).toString();
 	}
 
 	/**

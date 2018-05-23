@@ -20,6 +20,7 @@ import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.service.system.organization.ManagerTransaction;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -323,20 +324,17 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String editMerhcnatInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("length") int length) {
+			 int length) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
 		if (length > 0) {
-			statusMap = managerTransaction.editMerhcnatInfo(req, length);
+			return JSONObject.fromObject(managerTransaction.editMerhcnatInfo(req, length)).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数length错误!")).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	/**

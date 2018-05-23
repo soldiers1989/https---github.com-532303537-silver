@@ -19,6 +19,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
@@ -34,6 +35,8 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Autowired
 	private ManagerDao managerDao;
+	@Autowired
+	private MerchantUtils merchantUtils;
 
 	@Override
 	public List<Object> findManagerBy(String account) {
@@ -68,7 +71,7 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName,String description) {
+			String reManagerName, String description) {
 		Date date = new Date();
 		Manager managerInfo = new Manager();
 		Map<String, Object> statusMap = new HashMap<>();
@@ -241,8 +244,10 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> editMerhcnatInfo(String managerId, String managerName, String[] arrStr) {
+		if (arrStr == null || arrStr.length <= 0) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
 		String merchantId = "";
 		String merchantName = "";
 		String merchantPhone = "";
@@ -252,9 +257,7 @@ public class ManagerServiceImpl implements ManagerService {
 		String merchantIdCardName = "";
 		String merchantAddress = "";
 		String merchantStatus = "";
-		String merchantCustomsregistrationCode = "";
-		String merchantOrganizationCode = "";
-		String merchantChecktheRegistrationCode = "";
+
 		for (int i = 0; i < arrStr.length; i++) {
 			String value = arrStr[i];
 			switch (i) {
@@ -291,52 +294,34 @@ public class ManagerServiceImpl implements ManagerService {
 			case 8:
 				merchantStatus = value;
 				break;
-			case 9:
-				merchantCustomsregistrationCode = value;
-				break;
-			case 10:
-				merchantOrganizationCode = value;
-				break;
-			case 11:
-				merchantChecktheRegistrationCode = value;
-				break;
 			default:
 				break;
 			}
 		}
-		paramMap.put("merchantId", merchantId);
-		List<Object> reList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
-		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
-		} else if (!reList.isEmpty()) {
-			Merchant merchantInfo = (Merchant) reList.get(0);
-			merchantInfo.setMerchantName(merchantName);
-			merchantInfo.setMerchantPhone(merchantPhone);
-			merchantInfo.setMerchantQQ(merchantQQ);
-			merchantInfo.setMerchantEmail(merchantEmail);
-			merchantInfo.setMerchantIdCard(merchantIdCard);
-			merchantInfo.setMerchantIdCardName(merchantIdCardName);
-			merchantInfo.setMerchantAddress(merchantAddress);
-			merchantInfo.setMerchantStatus(merchantStatus);
-
-			/*merchantInfo.setMerchantCustomsregistrationCode(merchantCustomsregistrationCode);
-			merchantInfo.setMerchantOrganizationCode(merchantOrganizationCode);
-			merchantInfo.setMerchantChecktheRegistrationCode(merchantChecktheRegistrationCode);*/
-			if (!managerDao.update(merchantInfo)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "服务器繁忙!");
-				return statusMap;
-			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
 		}
+		Merchant merchantInfo = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		merchantInfo.setMerchantName(merchantName);
+		merchantInfo.setMerchantPhone(merchantPhone);
+		merchantInfo.setMerchantQQ(merchantQQ);
+		merchantInfo.setMerchantEmail(merchantEmail);
+		merchantInfo.setMerchantIdCard(merchantIdCard);
+		merchantInfo.setMerchantIdCardName(merchantIdCardName);
+		merchantInfo.setMerchantAddress(merchantAddress);
+		merchantInfo.setMerchantStatus(merchantStatus);
+		/*
+		 * merchantInfo.setMerchantCustomsregistrationCode(
+		 * merchantCustomsregistrationCode);
+		 * merchantInfo.setMerchantOrganizationCode(merchantOrganizationCode);
+		 * merchantInfo.setMerchantChecktheRegistrationCode(
+		 * merchantChecktheRegistrationCode);
+		 */
+		if (!managerDao.update(merchantInfo)) {
+			return ReturnInfoUtils.errorInfo("更新商户基本信息失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -355,10 +340,10 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> addMerchantBusinessInfo(String merchantId, String[] arrayStr, List<Object> imglist) {
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		List<MerchantDetail> reList = managerDao.findByProperty(MerchantDetail.class, params, 0, 0);
-		if(reList!=null && !reList.isEmpty()){
+		if (reList != null && !reList.isEmpty()) {
 			return updateMerchantDetail(reList.get(0), arrayStr, imglist);
 		}
 		return ReturnInfoUtils.errorInfo("商户详情信息查询失败！");
@@ -685,12 +670,12 @@ public class ManagerServiceImpl implements ManagerService {
 			return ReturnInfoUtils.successDataInfo(reList, 0);
 		} else {
 			List<Merchant> reMerchantList = managerDao.findByProperty(Merchant.class, paramMap, 0, 0);
-			if(reMerchantList!=null && !reMerchantList.isEmpty()){
+			if (reMerchantList != null && !reMerchantList.isEmpty()) {
 				MerchantDetail merchantDetail = new MerchantDetail();
 				merchantDetail.setMerchantId(merchantId);
 				merchantDetail.setCreateDate(new Date());
 				merchantDetail.setCreateBy("system");
-				if(!managerDao.add(merchantDetail)){
+				if (!managerDao.add(merchantDetail)) {
 					return ReturnInfoUtils.errorInfo("服务器异常!");
 				}
 				return ReturnInfoUtils.successDataInfo(merchantDetail, 0);

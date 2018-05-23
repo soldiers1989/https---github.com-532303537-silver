@@ -80,7 +80,6 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	// @SuppressWarnings("unchecked")
 	public List<Member> findMemberBy(String account) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("memberName", account);

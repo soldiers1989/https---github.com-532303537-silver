@@ -245,4 +245,6 @@ public interface MorderService {
 	 */
 	public Map<String, Object> checkRecipientTel(String recipientTel);
 
+	public Object testLogs();
+
 }

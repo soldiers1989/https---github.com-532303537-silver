@@ -107,7 +107,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 
 	@Override
 	public Map<String, Object> addEvaluation(String entOrderNo, String goodsInfoPack, String memberId,
-			String memberName) {
+			String memberName, String ipAddress) {
 		if (StringEmptyUtils.isEmpty(entOrderNo) || StringEmptyUtils.isEmpty(goodsInfoPack)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
@@ -130,7 +130,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 				errorList.add(item);
 			} else if (!reList.isEmpty()) {
 				GoodsRecordDetail goods = reList.get(0);
-				if (saveEvaluationContent(goods, datasMap, memberId, memberName)) {
+				if (saveEvaluationContent(goods, datasMap, memberId, memberName,ipAddress)) {
 					// 更新订单商品评论标识
 					Map<String, Object> reUpdateMap = updateOrderGoodsFlag(entOrderNo, goodsId);
 					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
@@ -155,10 +155,11 @@ public class EvaluationServiceImpl implements EvaluationService {
 	 * @param datasMap 
 	 * @param memberId 用户Id
 	 * @param memberName 用户名称
+	 * @param ipAddress ip地址
 	 * @return boolean
 	 */
 	private boolean saveEvaluationContent(GoodsRecordDetail goods, Map<String, Object> datasMap, String memberId,
-			String memberName) {
+			String memberName, String ipAddress) {
 		EvaluationContent evaluation = new EvaluationContent();
 		String goodsId = datasMap.get("goodsId") + "";
 		evaluation.setGoodsId(goodsId);
@@ -178,15 +179,15 @@ public class EvaluationServiceImpl implements EvaluationService {
 		evaluation.setCreateBy(memberName);
 		evaluation.setCreateDate(new Date());
 		evaluation.setDeleteFlag(0);
+		evaluation.setIpAddresses(ipAddress);
 		// 保存评论信息
 		return evaluationDao.add(evaluation);
 	}
 
 	/**
 	 * 根据(海关)订单Id与订单(备案商品自编号)商品Id更新订单商品中评论标识
-	 * 
-	 * @param datasMap
-	 *            查询参数
+	 * @param entOrderNo 订单Id
+	 * @param goodsId 商品自编号
 	 * @return Map
 	 */
 	private Map<String, Object> updateOrderGoodsFlag(String entOrderNo, String goodsId) {

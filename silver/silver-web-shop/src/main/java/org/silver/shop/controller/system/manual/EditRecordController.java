@@ -22,6 +22,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.shop.utils.CusAccessObjectUtil;
 import org.silver.util.HttpUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -638,18 +639,18 @@ public class EditRecordController {
 		JSONArray json = null;
 		try {
 			json.size();
-
 		} catch (Exception e) {
 			logger.error("json错误！", e);
+			return JSONObject.fromObject(manualService.testLogs()).toString();
 			// logger.debug("Hello World!");
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return "";
 	}
 
 	public static void main(String[] args) {
 		JSONArray list = new JSONArray();
-		Map<String,Object> item = new HashMap<>();
+		Map<String, Object> item = new HashMap<>();
 		item.put("orderNo", "YM180125052168190");
 		list.add(item);
 		System.out.println(list.toString());

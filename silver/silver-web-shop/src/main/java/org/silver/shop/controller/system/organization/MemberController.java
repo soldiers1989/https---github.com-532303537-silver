@@ -122,7 +122,7 @@ public class MemberController {
 				currentUser.login(customizedToken);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} catch (IncorrectCredentialsException ice) {
-				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("账号不存在或密码错误!")).toString();
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("你输入的密码和账户名不匹配!")).toString();
 			} catch (LockedAccountException lae) {
 				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
 				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");

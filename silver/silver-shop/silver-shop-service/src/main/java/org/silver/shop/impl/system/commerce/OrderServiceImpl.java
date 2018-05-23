@@ -738,7 +738,6 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> getMemberOrderInfo(Map<String, Object> datasMap, int page, int size) {
 		List<Map<String, Object>> listMap = new ArrayList<>();
-		String descParams = "createDate";
 		Map<String, Object> reDatasMap = SearchUtils.universalMemberOrderSearch(datasMap);
 		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
 			return reDatasMap;
@@ -746,6 +745,7 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> params = (Map<String, Object>) reDatasMap.get("param");
 		params.put("memberId", datasMap.get("memberId"));
 		params.put("deleteFlag", 0);
+		String descParams = "createDate";
 		List<OrderContent> reOrderList = orderDao.findByPropertyDesc(OrderContent.class, params, descParams, page,
 				size);
 		long orderTotalCount = orderDao.findByPropertyCount(OrderContent.class, params);
@@ -754,7 +754,11 @@ public class OrderServiceImpl implements OrderService {
 				params.clear();
 				params.put("orderId", orderInfo.getOrderId());
 				params.put("memberId", datasMap.get("memberId"));
-				params.put("evaluationFlag", Integer.parseInt(datasMap.get("evaluationFlag")+""));
+				String evaluationFlag = datasMap.get("evaluationFlag") + "";
+				if (StringEmptyUtils.isNotEmpty(evaluationFlag)) {
+					int flag = Integer.parseInt(evaluationFlag);
+					params.put("evaluationFlag", flag);
+				}
 				List<OrderContent> reOrderGoodsList = orderDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
 				Map<String, Object> item = new HashMap<>();
 				item.put("order", orderInfo);

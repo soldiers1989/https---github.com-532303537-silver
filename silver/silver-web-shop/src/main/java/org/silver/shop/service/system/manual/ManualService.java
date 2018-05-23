@@ -2093,4 +2093,8 @@ public class ManualService {
 		return morderService.managerDeleteMorderDatas(json, note, managerId, managerName);
 	}
 
+	public Object testLogs() {
+		return morderService.testLogs();
+	}
+
 }
