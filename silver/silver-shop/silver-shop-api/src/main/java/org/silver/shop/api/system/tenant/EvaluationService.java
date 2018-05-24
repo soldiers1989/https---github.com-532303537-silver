@@ -58,9 +58,11 @@ public interface EvaluationService {
 	 * 商户获取商品评价信息
 	 * @param goodsName 商品名称
 	 * @param memberName 用户名称
+	 * @param size 
+	 * @param page 
 	 * @return Map
 	 */
-	public Map<String, Object> merchantGetInfo(String goodsName, String memberName,String merchantId);
+	public Map<String, Object> merchantGetInfo(String goodsName, String memberName,String merchantId, int page, int size);
 
 	/**
 	 * 管理员删除商品评论

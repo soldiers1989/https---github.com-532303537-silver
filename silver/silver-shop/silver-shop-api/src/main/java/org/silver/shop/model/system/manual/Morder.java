@@ -33,7 +33,7 @@ public class Morder implements Serializable {
 	private String dateSign;// 日期标记YYYYMMDD
 	private String waybill;// 运单号
 	private int serial;// 批次号
-	private int status;// 订单接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
+	private int status;// 订单推送至网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 	private int del_flag;// 删除标识:0-未删除,1-已删除
 	private Date create_date;// 创建日期
 	private String create_by;// 创建人

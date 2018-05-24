@@ -41,7 +41,7 @@ public class WordFilter {
 		}
 	}
 
-	private static void init() {
+	public static void init() {
 		// 获取敏感词
 		addSensitiveWord(readWordFromFile("wd.txt"));
 		addStopWord(readWordFromFile("stopwd.txt"));
@@ -49,15 +49,16 @@ public class WordFilter {
 
 	/**
 	 * 增加敏感词
+	 * 
 	 * @param path
 	 * @return
 	 */
-	private static List<String> readWordFromFile(String path) {
+	public static List<String> readWordFromFile(String path) {
 		List<String> words;
 		BufferedReader br = null;
 		try {
-			br = new BufferedReader(new InputStreamReader(WordFilter.class.getClassLoader().getResourceAsStream(path)));
-			words = new ArrayList<String>(1200);
+			br = new BufferedReader(new InputStreamReader(WordFilter.class.getClassLoader().getResourceAsStream(path),"UTF-8"));
+			words = new ArrayList<>(1200);
 			for (String buf = ""; (buf = br.readLine()) != null;) {
 				if (buf == null || buf.trim().equals(""))
 					continue;
@@ -95,6 +96,7 @@ public class WordFilter {
 
 	/**
 	 * 添加DFA节点
+	 * 
 	 * @param words
 	 */
 	private static void addSensitiveWord(final List<String> words) {
@@ -125,6 +127,7 @@ public class WordFilter {
 
 	/**
 	 * 过滤判断 将敏感词转化为成屏蔽词
+	 * 
 	 * @param src
 	 * @return
 	 */
@@ -135,7 +138,7 @@ public class WordFilter {
 		int k;
 		WordNode node;
 		for (int i = 0; i < length; i++) {
-			
+
 			currc = charConvert(chs[i]);
 			if (!set.contains(currc)) {
 				continue;
@@ -171,12 +174,13 @@ public class WordFilter {
 				i = i + markNum;
 			}
 		}
-		
+
 		return new String(chs);
 	}
-	
+
 	/**
 	 * 是否包含敏感词
+	 * 
 	 * @param src
 	 * @return
 	 */

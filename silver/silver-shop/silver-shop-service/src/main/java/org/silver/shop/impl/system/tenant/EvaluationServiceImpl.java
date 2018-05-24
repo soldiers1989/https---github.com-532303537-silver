@@ -38,6 +38,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("goodsId", goodsId);
+		params.put("deleteFlag", 0);
 		List<EvaluationContent> reList = evaluationDao.findByCreateDate(EvaluationContent.class, params, page, size);
 		long count = evaluationDao.findByPropertyCount(EvaluationContent.class, params);
 		if (reList == null) {
@@ -213,10 +214,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 	}
 
 	@Override
-	public Map<String, Object> merchantGetInfo(String goodsName, String memberName, String merchantId) {
-		if (StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("商户Id不能为空!");
-		}
+	public Map<String, Object> merchantGetInfo(String goodsName, String memberName, String merchantId, int page, int size) {
 		Map<String, Object> params = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		if (StringEmptyUtils.isNotEmpty(goodsName)) {
@@ -228,8 +226,8 @@ public class EvaluationServiceImpl implements EvaluationService {
 		if (StringEmptyUtils.isNotEmpty(merchantId)) {
 			params.put("merchantId", merchantId);
 		}
-		List<EvaluationContent> reList = evaluationDao.findByPropertyLike(EvaluationContent.class, params, blurryMap, 0,
-				0);
+		List<EvaluationContent> reList = evaluationDao.findByPropertyLike(EvaluationContent.class, params, blurryMap, page,
+				size);
 		long count = evaluationDao.findByPropertyCount(EvaluationContent.class, params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询评论信息失败,服务器繁忙!");
@@ -250,7 +248,7 @@ public class EvaluationServiceImpl implements EvaluationService {
 		for (String id : idList) {
 			Map<String, Object> item = new HashMap<>();
 			params.clear();
-			params.put("id", id);
+			params.put("id", Long.parseLong(id));
 			List<EvaluationContent> reList = evaluationDao.findByProperty(EvaluationContent.class, params, 0, 0);
 			if (reList == null) {
 				item.put(BaseCode.MSG.toString(), "流水号[" + id + "]查询评论信息失败,服务器繁忙!");

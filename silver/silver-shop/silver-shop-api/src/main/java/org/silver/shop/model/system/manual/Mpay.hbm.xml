@@ -109,6 +109,9 @@
 		<property name="resendStatus" type="java.lang.String">
 			<column name="resendStatus" />
 		</property>
+		<property name="networkStatus" type="java.lang.Integer">
+			<column name="networkStatus" not-null="true" default="0"/>
+		</property>
 	</class>
 
 </hibernate-mapping>

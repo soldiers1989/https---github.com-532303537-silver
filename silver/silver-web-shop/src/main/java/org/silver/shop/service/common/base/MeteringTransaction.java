@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
-
 /**
  * 计量单位 Transaction
  *
@@ -30,7 +29,7 @@ public class MeteringTransaction {
 		} else {
 			List<Object> reList = meteringService.findAllMetering();
 			if (reList != null && !reList.isEmpty()) {
-				//将查询出来的数据放入到缓存中
+				// 将查询出来的数据放入到缓存中
 				JedisUtil.set("Shop_Key_Metering_List".getBytes(), SerializeUtil.toBytes(reList), 3600);
 				return reList;
 			}

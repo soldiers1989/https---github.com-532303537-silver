@@ -245,7 +245,7 @@ public class PaymentServiceImpl implements PaymentService {
 			return reMap;
 		}
 		statusMap.clear();
-		statusMap.put("status", 1);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put("msg", "执行成功,开始推送支付单备案.......");
 		statusMap.put("serialNo", serialNo);
 		return statusMap;
@@ -265,21 +265,41 @@ public class PaymentServiceImpl implements PaymentService {
 	 */
 	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId, String merchantName,
 			String merchantFeeId) {
-		double fee;
 		// 查询商户钱包
 		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		double merchantBalance = merchantWallet.getBalance();
 		// 所有支付单总金额
-		double totalAmountPaid = paymentDao
+		List<Object> reList = paymentDao
 				.statisticalManualPaymentAmount(JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
-		if (totalAmountPaid < 0) {
-			return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
+		double totalAmountPaid = 0;
+		int count = 0;
+		if (reList != null && !reList.isEmpty()) {
+			Map<String, Object> map = (Map<String, Object>) reList.get(0);
+			totalAmountPaid = Double.parseDouble(map.get("totalAmount") + "");
+			count = Integer.parseInt(map.get("count") + "");
+			if (totalAmountPaid < 0) {
+				return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
+			} else if (totalAmountPaid > 0) {
+				return paymentToll(merchantWallet, merchantFeeId, totalAmountPaid, count);
+			}
 		}
+		return ReturnInfoUtils.successInfo();
+	}
 
+	/**
+	 * 支付单推送手续费结算
+	 * @param merchantWallet 商户钱包实体类
+	 * @param merchantFeeId 商户费率口岸Id
+	 * @param totalAmountPaid 支付单总金额
+	 * @param count 数量
+	 * @return Map
+	 */
+	private Map<String, Object> paymentToll(MerchantWalletContent merchantWallet, String merchantFeeId,
+			double totalAmountPaid, int count) {
+		double fee;
 		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
 			Map<String, Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
 			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
@@ -289,10 +309,25 @@ public class PaymentServiceImpl implements PaymentService {
 			fee = merchantFee.getPlatformFee();
 		} else {
 			// 支付单平台服务费
-			fee = totalAmountPaid * 0.002;
+			fee = 0.002;
 		}
-		if ((merchantBalance - fee) < 0) {
-			return ReturnInfoUtils.errorInfo("推送支付单失败,余额不足,请先充值后再进行操作!");
+		// 支付单手续费
+		double serviceFee = totalAmountPaid * fee;
+		double walletBalance = merchantWallet.getBalance();
+		Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet,
+				walletBalance, serviceFee);
+		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletDeductionMap;
+		}
+		Map<String, Object> datas = new HashMap<>();
+		datas.put(MERCHANT_ID, merchantWallet.getMerchantId());
+		datas.put("balance", walletBalance);
+		datas.put("serviceFee", serviceFee);
+		datas.put("name", "支付单申报-手续费");
+		datas.put("note", "[" + count + "]单,支付单申报手续费");
+		Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
+		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletLogMap;
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -339,20 +374,15 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> paymentMap = ysPayReceiveServiceImpl.sendPayment(merchantId, paymentInfoMap,
 							tok, recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
 					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
-						String msg = "支付流水号[" + treadeNo + "]-->" + paymentMap.get(BaseCode.MSG.toString());
+						String msg = "";
+						Map<String, Object> rePaymentMap = updatePaymentFailureStatus(treadeNo);
+						if (!"1".equals(rePaymentMap.get(BaseCode.STATUS.toString()))) {
+							msg = rePaymentMap.get(BaseCode.MSG.toString()) + "";
+						} else {
+							msg = "支付流水号[" + treadeNo + "]-->" + paymentMap.get(BaseCode.MSG.toString());
+						}
 						RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 						continue;
-					}
-					// 当未备案时进行手续费清算
-					if (payInfo.getPay_record_status() == 1) {
-						// 支付单服务费清算
-						Map<String, Object> rePaymentTollMap = paymentToll(merchantId, payInfo.getTrade_no(),
-								payInfo.getPay_amount());
-						if (!"1".equals(rePaymentTollMap.get(BaseCode.STATUS.toString()))) {
-							String msg = "支付流水号[" + treadeNo + "]-->" + rePaymentTollMap.get(BaseCode.MSG.toString());
-							RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
-							continue;
-						}
 					}
 					String rePayMessageID = paymentMap.get("messageID") + "";
 					// 更新服务器返回支付Id
@@ -370,7 +400,7 @@ public class PaymentServiceImpl implements PaymentService {
 				bufferUtils.writeRedis(errorList, paramsMap);
 				Thread.sleep(200);
 			} catch (Exception e) {
-				logger.error(Thread.currentThread().getName() + "-->", e);
+				logger.error(Thread.currentThread().getName() + "-支付单推送失败->", e);
 				String msg = "[" + treadeNo + "]支付单推送失败,系統繁忙!";
 				RedisInfoUtils.commonErrorInfo(msg, errorList, ERROR, paramsMap);
 			}
@@ -379,30 +409,26 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * 当支付单状态为未备案时,第一次推送后进行支付单服务费清算
+	 * 当通用网关接收支付单失败后,更新支付单中网络状态
 	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param tradeNo
-	 *            交易流水号
-	 * @param price
-	 *            金额
+	 * @param treadeNo
+	 *            支付单流水号
 	 * @return Map
 	 */
-	private Map<String, Object> paymentToll(String merchantId, String tradeNo, double price) {
-		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(tradeNo)
-				|| StringEmptyUtils.isEmpty(price)) {
-			return ReturnInfoUtils.errorInfo("清算订单服务费,请求参数不能为空！");
-		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
-		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantMap;
-		}
-		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reUpdateWalletMap = mpayServiceImpl.updateWallet(1, merchantId, merchant.getMerchantName(),
-				tradeNo, merchant.getAgentParentId(), price, merchant.getAgentParentName());
-		if (!"1".equals(reUpdateWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reUpdateWalletMap;
+	private Map<String, Object> updatePaymentFailureStatus(String treadeNo) {
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put(TRADE_NO, treadeNo);
+		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 1, 1);
+		if (reList != null && !reList.isEmpty()) {
+			Mpay payment = reList.get(0);
+			// 支付单推送至网关接收状态： 0-未发起,1-接收成功,2-接收失败
+			payment.setNetworkStatus(2);
+			payment.setUpdate_date(new Date());
+			if (!paymentDao.update(payment)) {
+				return ReturnInfoUtils.errorInfo("更新支付单网络状态失败,服务器繁忙!");
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("更新支付单网络状态失败,[" + treadeNo + "]支付单未找到!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -438,6 +464,8 @@ public class PaymentServiceImpl implements PaymentService {
 					payment.setCiqOrgCode(ciqOrgCode);
 					payment.setCustomsCode(customsCode);
 				}
+				// 支付单推送至网关接收状态： 0-未发起,1-接收成功,2-接收失败
+				payment.setNetworkStatus(1);
 				payment.setUpdate_date(new Date());
 				if (!paymentDao.update(payment)) {
 					return ReturnInfoUtils.errorInfo("更新服务器返回messageID错误,服务器繁忙!");
@@ -597,9 +625,9 @@ public class PaymentServiceImpl implements PaymentService {
 			if (count == 9) {
 				String remark = paymentCallBack.getRemark();
 				String note = DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + "_支付单重发第10次,接收失败!";
-				if(StringEmptyUtils.isNotEmpty(remark)){
-					paymentCallBack.setRemark(remark+"#"+note);
-				}else{
+				if (StringEmptyUtils.isNotEmpty(remark)) {
+					paymentCallBack.setRemark(remark + "#" + note);
+				} else {
 					paymentCallBack.setRemark(note);
 				}
 			}

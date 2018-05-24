@@ -1,6 +1,8 @@
 package org.silver.shop.dao.system.cross.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,15 +28,15 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			List<Object> sqlParams = new ArrayList<>();
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
-			String sql = "SELECT DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) as paymentCount,SUM(t1.pay_amount) AS amount,(SUM(t1.pay_amount) * 0.002	) AS Fee,t2.merchantId,t2.merchantName,t2.agentParentId,t2.agentParentName FROM	ym_shop_manual_mpay t1" 
-					 +" LEFT JOIN ym_shop_merchant t2 ON t1.merchant_no = t2.merchantId WHERE 	(t1.pay_record_status = 3 or t1.pay_record_status = 2 AND t1.del_flag = 0 )  ";
-			String merchantId = paramsMap.get("merchantId") + "";	
-			if(StringEmptyUtils.isNotEmpty(merchantId)){
+			String sql = "SELECT DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) as paymentCount,SUM(t1.pay_amount) AS amount,(SUM(t1.pay_amount) * 0.002	) AS Fee,t2.merchantId,t2.merchantName,t2.agentParentId,t2.agentParentName FROM	ym_shop_manual_mpay t1"
+					+ " LEFT JOIN ym_shop_merchant t2 ON t1.merchant_no = t2.merchantId WHERE 	(t1.pay_record_status = 3 or t1.pay_record_status = 2 AND t1.del_flag = 0 )  ";
+			String merchantId = paramsMap.get("merchantId") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sql += " AND t1.merchant_no = ? ";
 				sqlParams.add(merchantId);
 			}
-			String merchantName = paramsMap.get("merchantName") + "";	
-			if(StringEmptyUtils.isNotEmpty(merchantName)){
+			String merchantName = paramsMap.get("merchantName") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantName)) {
 				sql += " AND t1.create_by = ? ";
 				sqlParams.add(merchantName);
 			}
@@ -69,15 +71,15 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 	}
 
 	@Override
-	public double statisticalManualPaymentAmount(List<Object> list) {
+	public List<Object> statisticalManualPaymentAmount(List<Object> list) {
 		Session session = null;
 		try {
 			StringBuilder sbSQL = new StringBuilder(
-					" SELECT SUM(t1.pay_amount)   FROM ym_shop_manual_mpay t1 WHERE trade_no IN ( ");
+					" SELECT SUM(t1.pay_amount) , COUNT(t1.trade_no) as count FROM ym_shop_manual_mpay t1 WHERE t1.networkStatus = 0 AND trade_no IN ( ");
 			for (int i = 0; i < list.size(); i++) {
 				sbSQL.append(" ? , ");
 			}
-			//删除结尾的逗号
+			// 删除结尾的逗号
 			sbSQL.deleteCharAt(sbSQL.length() - 2);
 			sbSQL.append(" ) ");
 			session = getSession();
@@ -88,15 +90,37 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			}
 			List resources = query.list();
 			session.close();
-			return (double) resources.get(0);
+			// 进行参数转换
+			return conversionParam(resources);
 		} catch (Exception re) {
 			re.printStackTrace();
-			return -1;
+			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
+	}
+
+	/**
+	 * 将查询出的支付单总金额和支付单数量封装成List返回
+	 * @param list 
+	 * @return
+	 */
+	private List<Object> conversionParam(List list) {
+		if (list == null || list.isEmpty()) {
+			return null;
+		}
+		List<Object> relist = new ArrayList<>();
+		Iterator i = list.iterator();
+		while (i.hasNext()) {
+			Map<String, Object> item = new HashMap<>();
+			Object[] obj = (Object[]) i.next();
+			item.put("totalAmount", obj[0].toString());
+			item.put("count", obj[1].toString());
+			relist.add(item);
+		}
+		return relist;
 	}
 
 	@Override
@@ -183,5 +207,5 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			}
 		}
 	}
-	
+
 }

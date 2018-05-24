@@ -46,16 +46,16 @@ public class EvaluationTransaction {
 		return evaluationService.addEvaluation(entOrderNo,goodsInfoPack,memberId,memberName,ipAddress);
 	}
 
-	public Object merchantGetInfo(String goodsName, String memberName) {
+	public Object merchantGetInfo(String goodsName, String memberName, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		return evaluationService.merchantGetInfo(goodsName,memberName,merchantId);
+		return evaluationService.merchantGetInfo(goodsName,memberName,merchantId,page,size);
 	}
 
-	public Object managerGetInfo(Map<String, Object> datasMap) {
-		return evaluationService.merchantGetInfo(datasMap.get("goodsName")+"",datasMap.get("memberName")+"",datasMap.get("merchantId")+"");
+	public Object managerGetInfo(Map<String, Object> datasMap, int page, int size) {
+		return evaluationService.merchantGetInfo(datasMap.get("goodsName")+"",datasMap.get("memberName")+"",datasMap.get("merchantId")+"", page,  size);
 	}
 
 	public Object managerDeleteInfo(List<String> idList) {

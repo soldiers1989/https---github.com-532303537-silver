@@ -181,17 +181,17 @@ public class EvaluationController {
 	@ApiOperation("商户后台获取所有商品评价信息")
 	@RequiresRoles("Merchant")
 	public String merchantGetInfo(HttpServletRequest req, HttpServletResponse response, String goodsName,
-			String memberName) {
+			String memberName,@RequestParam("page") int page,@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(evaluationTransaction.merchantGetInfo(goodsName, memberName)).toString();
+		return JSONObject.fromObject(evaluationTransaction.merchantGetInfo(goodsName, memberName,page,size)).toString();
 	}
 
 	/**
-	 * 管理员获取所有商品评价信息
+	 * 管理员获取商品评价信息
 	 * 
 	 * @param req
 	 * @param response
@@ -201,7 +201,7 @@ public class EvaluationController {
 	@ResponseBody
 	@ApiOperation("管理员获取所有商品评价信息")
 	@RequiresRoles("Manager")
-	public String managerGetInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String managerGetInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("page") int page,@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -214,7 +214,7 @@ public class EvaluationController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		return JSONObject.fromObject(evaluationTransaction.managerGetInfo(datasMap)).toString();
+		return JSONObject.fromObject(evaluationTransaction.managerGetInfo(datasMap,page,size)).toString();
 	}
 	
 	/**
