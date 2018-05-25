@@ -12,7 +12,6 @@ import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.Proxy;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
-import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;

@@ -20,6 +20,9 @@ public class AgentBaseContent implements Serializable{
 	private String agentOrg;// 所属机构
 	private String agentNature;// 代理商性质
 	private String agentLevel;// 代理商等级
+	private double goodsRecordCommissionRate;//商品备案佣金率
+	private double orderCommissionRate;//订单佣金率
+	private double paymentCommissionRate;//支付单佣金率
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -117,7 +120,22 @@ public class AgentBaseContent implements Serializable{
 	public void setAgentId(String agentId) {
 		this.agentId = agentId;
 	}
-	
-	
-	
+	public double getGoodsRecordCommissionRate() {
+		return goodsRecordCommissionRate;
+	}
+	public double getOrderCommissionRate() {
+		return orderCommissionRate;
+	}
+	public double getPaymentCommissionRate() {
+		return paymentCommissionRate;
+	}
+	public void setGoodsRecordCommissionRate(double goodsRecordCommissionRate) {
+		this.goodsRecordCommissionRate = goodsRecordCommissionRate;
+	}
+	public void setOrderCommissionRate(double orderCommissionRate) {
+		this.orderCommissionRate = orderCommissionRate;
+	}
+	public void setPaymentCommissionRate(double paymentCommissionRate) {
+		this.paymentCommissionRate = paymentCommissionRate;
+	}
 }

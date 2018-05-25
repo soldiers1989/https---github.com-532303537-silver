@@ -138,21 +138,14 @@ public class ManagerTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerName = managerInfo.getManagerName();
-		// 获取商户ID
-		Map<String, Object> reIdMap = merchantService.findOriginalMerchantId();
-		String status = reIdMap.get(BaseCode.STATUS.getBaseCode()) + "";
-		if (!"1".equals(status)) {
-			return reIdMap;
-		}
 		int imgLength = Integer.parseInt(datasMap.get("imgLength")+"");
-		String merchantId = reIdMap.get(BaseCode.DATAS.getBaseCode()) + "";
-		datasMap.put("merchantId", merchantId);
 		datasMap.put("managerName", managerName);
 		// 添加商户
 		Map<String, Object> registerMap = merchantService.merchantRegister(datasMap);
 		if (!"1".equals(registerMap.get(BaseCode.STATUS.toString()))) {
 			return registerMap;
 		}
+		String merchantId = registerMap.get(BaseCode.DATAS.toString())+"";
 		// 图片上传路径
 		String path = "/opt/www/img/" + merchantId + "/";
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);

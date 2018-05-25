@@ -14,10 +14,12 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
+import org.springframework.stereotype.Repository;
 
 /**
  * 提供数据访问层共用DAO方法
  */
+@Repository("baseDao")
 public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	protected static final Logger logger = LogManager.getLogger();
 
@@ -608,47 +610,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	@Override
-	public List<Object> synFindByProperty(Class entity, Map params, int page, int size) {
-		Session session = null;
-		String entName = entity.getSimpleName();
-		try {
-			session = getSession();
-
-			String hql = "from " + entName + " model ";
-			List<Object> list = new ArrayList<>();
-			if (params != null && params.size() > 0) {
-				hql += "where ";
-				String property;
-				Iterator<String> is = params.keySet().iterator();
-				while (is.hasNext()) {
-					property = is.next();
-					hql = hql + "model." + property + "=" + "?" + " and ";
-					list.add(params.get(property));
-				}
-				hql += " 1=1 Order By id DESC";
-			}
-			Query query = session.createQuery(hql).setLockMode("model",LockMode.UPGRADE); // 加锁  
-			if (!list.isEmpty()) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, list.get(i));
-				}
-			}
-			if (page > 0 && size > 0) {
-				query.setFirstResult((page - 1) * size).setMaxResults(size);
-			}
-			List<Object> results = query.list();
-			session.close();
-			return results;
-		} catch (Exception re) {
-			re.printStackTrace();
-			return null;
-		} finally {
-			if (session != null && session.isOpen()) {
-				session.close();
-			}
-		}
-	}
 
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());

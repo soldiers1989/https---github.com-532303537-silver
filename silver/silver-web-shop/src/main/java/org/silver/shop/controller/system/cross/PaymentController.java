@@ -303,7 +303,7 @@ public class PaymentController {
 		} catch (Exception e) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数格式错误!")).toString();
 		}
-		if (!jsonArray.isEmpty()) {
+		if (jsonArray.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(paytemTransaction.managerHideMpayInfo(jsonArray)).toString();

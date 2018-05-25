@@ -5,12 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.dao.system.tenant.MerchantFeeDao;
 import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
+import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -28,6 +30,8 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	private CustomsPortServiceImpl customsPortServiceImpl;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private IdUtils<MerchantFeeContent> idUtils;
 
 	@Override
 	public Map<String, Object> addMerchantServiceFee(Map<String, Object> datasMap) {
@@ -44,7 +48,7 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			String ciqOrgName = datasMap.get("ciqOrgName") + "";
 			String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
 			String managerName = datasMap.get("managerName") + "";
-			double platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
+
 			String type = datasMap.get("type") + "";
 			String status = datasMap.get("status") + "";
 			if (!customsPortServiceImpl.checkProvince(provinceName, provinceCode)) {
@@ -64,12 +68,13 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			long id = merchantFeeDao.findLastId(MerchantFeeContent.class);
-			if (id < 0) {
-				return ReturnInfoUtils.errorInfo("查询流水Id失败,服务器繁忙!");
+			checkFee(datasMap);
+			Map<String, Object> reIdMap = idUtils.createId(MerchantFeeContent.class, "merchantFee_");
+			if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
+				return reIdMap;
 			}
-			String merchantFeeId = SerialNoUtils.getNotRandomSerialNo("merchantFee_", id);
 			MerchantFeeContent merchantFee = new MerchantFeeContent();
+			String merchantFeeId = reIdMap.get(BaseCode.DATAS.toString()) + "";
 			merchantFee.setMerchantFeeId(merchantFeeId);
 			merchantFee.setMerchantId(merchant.getMerchantId());
 			merchantFee.setMerchantName(merchant.getMerchantName());
@@ -83,7 +88,8 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			merchantFee.setCustomsName(customsName);
 			merchantFee.setCiqOrgCode(ciqOrgCode);
 			merchantFee.setCiqOrgName(ciqOrgName);
-			merchantFee.setPlatformFee(platformFee);
+			merchantFee.setPlatformFee(Double.parseDouble(datasMap.get("platformFee") + ""));
+			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 			merchantFee.setType(type);
 			merchantFee.setStatus(status);
 			merchantFee.setCreateBy(managerName);
@@ -93,7 +99,39 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			}
 			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
 		}
-		return ReturnInfoUtils.errorInfo("请求参数错误!");
+		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	}
+
+	/**
+	 * 校验商户口岸费率
+	 * @param datasMap 校验参数
+	 * @return Map
+	 */
+	private Map<String, Object> checkFee(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("参数不能为空！");
+		}
+		//类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+		String type = datasMap.get("type") + "";
+		if (StringEmptyUtils.isEmpty(datasMap.get("platformFee"))) {
+			return ReturnInfoUtils.errorInfo("服务费率不能为空,请重新输入!");
+		}
+		double platformFee;
+		try{
+			 platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
+		}catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("服务费参数格式错误,请重新输入!");
+		}
+		if ("goodsRecord".equals(type) && platformFee < 0.0001) {
+			return ReturnInfoUtils.errorInfo("商品备案费率不能低于万一,请重新输入!");
+		}
+		if ("orderRecord".equals(type) && platformFee < 0.0001) {
+			return ReturnInfoUtils.errorInfo("订单申报费率不能低于万一,请重新输入!");
+		}
+		if ("paymentRecord".equals(type) && platformFee < 0.002) {
+			return ReturnInfoUtils.errorInfo("订单申报费率不能低于千二,请重新输入!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -103,7 +141,7 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	 *            流水Id
 	 * @return Map
 	 */
-	public   Map<String, Object> getMerchantFeeInfo(String merchantFeeId) {
+	public Map<String, Object> getMerchantFeeInfo(String merchantFeeId) {
 		if (StringEmptyUtils.isEmpty(merchantFeeId)) {
 			return ReturnInfoUtils.errorInfo("Id不能为空!");
 		}

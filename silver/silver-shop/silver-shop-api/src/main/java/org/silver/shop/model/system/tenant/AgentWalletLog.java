@@ -7,18 +7,18 @@ import java.util.Date;
  * 
  *
  */
-public class ProxyWalletLog implements Serializable{
+public class AgentWalletLog implements Serializable{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3923473504903642825L;
 	private long id ; 
-	private String proxyId ; //代理商Id
-	private String proxyName ; //代理商Id
+	private String agentId ; //代理商Id
+	private String agentName ; //代理商Id
 	private String merchantId;// 商户Id
 	private String merchantName;// 商户名称
-	private String entPayNo;// 支付交易编号
 	private String serialName;// 交易名称
+	private String entPayNo;// 支付单流水编号
 	private String entOrderNo;//交易订单编号
 	private double beforeChangingBalance;//变更之前钱包余额
 	private double afterChangeBalance;//变更之后钱包余额
@@ -30,12 +30,6 @@ public class ProxyWalletLog implements Serializable{
 	private int status;//状态：1-交易成功、2-交易失败、3-交易关闭
 	public long getId() {
 		return id;
-	}
-	public String getProxyId() {
-		return proxyId;
-	}
-	public String getProxyName() {
-		return proxyName;
 	}
 	public String getEntPayNo() {
 		return entPayNo;
@@ -79,12 +73,6 @@ public class ProxyWalletLog implements Serializable{
 	public void setId(long id) {
 		this.id = id;
 	}
-	public void setProxyId(String proxyId) {
-		this.proxyId = proxyId;
-	}
-	public void setProxyName(String proxyName) {
-		this.proxyName = proxyName;
-	}
 	public void setEntPayNo(String entPayNo) {
 		this.entPayNo = entPayNo;
 	}
@@ -124,6 +112,16 @@ public class ProxyWalletLog implements Serializable{
 	public void setStatus(int status) {
 		this.status = status;
 	}
-	
-	
+	public String getAgentId() {
+		return agentId;
+	}
+	public String getAgentName() {
+		return agentName;
+	}
+	public void setAgentId(String agentId) {
+		this.agentId = agentId;
+	}
+	public void setAgentName(String agentName) {
+		this.agentName = agentName;
+	}
 }

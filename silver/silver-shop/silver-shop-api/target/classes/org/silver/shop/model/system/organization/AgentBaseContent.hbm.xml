@@ -3,52 +3,62 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2018-3-8 15:21:12 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.organization.AgentBaseContent" table="ym_shop_agent_base_content">
-        <id name="id" type="long">
-            <column name="id" />
-            <generator class="identity" />
-        </id>
-        <property name="agentId" type="java.lang.String">
-            <column name="agentId" not-null="true" unique="true"/>
-        </property>
-        <property name="agentName" type="java.lang.String">
-            <column name="agentName" not-null="true"  unique="true"/>
-        </property>
-        <property name="loginPassword" type="java.lang.String">
-            <column name="loginPassword" not-null="true"/>
-        </property>
-        <property name="agentStatus" type="java.lang.String">
-            <column name="agentStatus" not-null="true"/>
-        </property>
-        <property name="agentOrg" type="java.lang.String">
-            <column name="agentOrg" />
-        </property>
-        <property name="agentNature" type="java.lang.String">
-            <column name="agentNature" />
-        </property>
-        <property name="agentLevel" type="java.lang.String">
-            <column name="agentLevel" />
-        </property>
-        <property name="createBy" type="java.lang.String">
-            <column name="createBy" />
-        </property>
-        <property name="createDate" type="java.util.Date">
-            <column name="createDate" />
-        </property>
-        <property name="updateBy" type="java.lang.String">
-            <column name="updateBy" />
-        </property>
-        <property name="updateDate" type="java.util.Date">
-            <column name="updateDate" />
-        </property>
-        <property name="deleteFlag" type="int">
-            <column name="deleteFlag" not-null="true"/>
-        </property>
-        <property name="deleteBy" type="java.lang.String">
-            <column name="deleteBy" />
-        </property>
-        <property name="deleteDate" type="java.util.Date">
-            <column name="deleteDate" />
-        </property>
-    </class>
+	<class name="org.silver.shop.model.system.organization.AgentBaseContent"
+		table="ym_shop_agent_base_content">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="agentId" type="java.lang.String">
+			<column name="agentId" not-null="true" unique="true" />
+		</property>
+		<property name="agentName" type="java.lang.String">
+			<column name="agentName" not-null="true" unique="true" />
+		</property>
+		<property name="loginPassword" type="java.lang.String">
+			<column name="loginPassword" not-null="true" />
+		</property>
+		<property name="agentStatus" type="java.lang.String">
+			<column name="agentStatus" not-null="true" />
+		</property>
+		<property name="agentOrg" type="java.lang.String">
+			<column name="agentOrg" />
+		</property>
+		<property name="agentNature" type="java.lang.String">
+			<column name="agentNature" />
+		</property>
+		<property name="agentLevel" type="java.lang.String">
+			<column name="agentLevel" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" not-null="true" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+		<property name="goodsRecordCommissionRate" type="double">
+			<column name="goodsRecordCommissionRate" />
+		</property>
+			<property name="orderCommissionRate" type="double">
+			<column name="orderCommissionRate" />
+		</property>
+			<property name="paymentCommissionRate" type="double">
+			<column name="paymentCommissionRate" />
+		</property>
+	</class>
 </hibernate-mapping>

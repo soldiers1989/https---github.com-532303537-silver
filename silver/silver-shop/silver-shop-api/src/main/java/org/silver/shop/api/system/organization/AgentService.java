@@ -45,6 +45,4 @@ public interface AgentService {
 	 */
 	public Map<String, Object> getSubMerchantInfo(String agentId, String agentName);
 
-	
-
 }

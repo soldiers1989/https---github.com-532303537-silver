@@ -29,7 +29,7 @@
 	<dubbo:reference id="proxyService"
 		interface="org.silver.shop.api.system.organization.ProxyService"
 		check="false" />
-	<dubbo:reference id="AgentService"
+	<dubbo:reference id="agentService"
 		interface="org.silver.shop.api.system.organization.AgentService"
 		check="false" />
 	<!-- 配置Realm -->
@@ -93,7 +93,7 @@
 				/proxy/*=anon
 				/merchantFee/*=anon
 				/subMerchant/*=anon
-				/proxyWallet/*=anon
+				/agentWallet/*=anon
 				/orderImplLogs/*=anon
 				/managerWallet/*=anon
 				/idCard/*=anon

@@ -1,18 +1,22 @@
 package org.silver.shop.controller.common.base;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.silver.shop.service.common.base.PostalTransaction;
+import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
@@ -99,10 +103,34 @@ public class SensitiveController {
 			String temp = "";
 			while ((temp = br.readLine()) != null) {
 				System.out.println("--->>>" + temp);
+				if(temp.trim().equals(";")){
+					continue;
+				}
+				 sb.append(temp+"\n");
 			}
+			write(sb.toString());
+			  br.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	public static void write(String fixedText) {
+        BufferedWriter bw=null;
+        try {
+            bw=new BufferedWriter(new FileWriter(new File("C:\\Users\\Lenovo\\Desktop\\newTest.txt")));
+            bw.write(fixedText);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally{
+            if(bw!=null){
+                try {
+                    bw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

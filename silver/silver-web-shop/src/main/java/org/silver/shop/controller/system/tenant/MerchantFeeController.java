@@ -55,6 +55,9 @@ public class MerchantFeeController {
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
+		if(params.isEmpty()){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("添加商户服务费参数不能为空!")).toString();
+		}
 		return JSONObject.fromObject(merchantFeeTransaction.addMerchantServiceFee(params)).toString();
 	}
 

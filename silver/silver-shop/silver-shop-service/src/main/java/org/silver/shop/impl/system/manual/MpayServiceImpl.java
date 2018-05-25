@@ -23,22 +23,24 @@ import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
+import org.silver.shop.impl.system.organization.AgentServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
-import org.silver.shop.model.system.tenant.MerchantWalletLog;
-import org.silver.shop.model.system.tenant.ProxyWalletContent;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.CompressUtils;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
@@ -82,6 +84,10 @@ public class MpayServiceImpl implements MpayService {
 	private InvokeTaskUtils invokeTaskUtils;
 	@Autowired
 	private MerchantFeeServiceImpl merchantFeeServiceImpl;
+	@Autowired
+	private WalletUtils walletUtils;
+	@Autowired
+	private AgentServiceImpl agentServiceImpl;
 
 	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);
 
@@ -102,163 +108,6 @@ public class MpayServiceImpl implements MpayService {
 	 * 下划线版本的订单Id
 	 */
 	private static final String ORDER_ID = "order_id";
-
-	/**
-	 * 更新钱包日志
-	 * 
-	 * @param type
-	 *            1-支付单,2-订单
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
-	 * @param serialNo
-	 *            流水号
-	 * @param proxyId
-	 *            代理商Id
-	 * @param payAmount
-	 *            推送单总金额
-	 * @param proxyParentName
-	 *            代理商名称
-	 * @return Map
-	 */
-	public Map<String, Object> updateWallet(int type, String merchantId, String merchantName, String serialNo,
-			String proxyId, double payAmount, String proxyParentName) {
-		if (type == 1
-				|| type == 2 && StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)
-						&& StringEmptyUtils.isNotEmpty(serialNo) && StringEmptyUtils.isNotEmpty(proxyId)
-						&& payAmount > 0 && StringEmptyUtils.isNotEmpty(proxyParentName)) {
-			Map<String, Object> merchantWalletMap = saveMerchantWalletLog(type, merchantId, merchantName, proxyId,
-					proxyParentName, serialNo, payAmount);
-			if (!"1".equals(merchantWalletMap.get(BaseCode.STATUS.toString()) + "")) {
-				return merchantWalletMap;
-			}
-			double serviceFee = Double.parseDouble(merchantWalletMap.get("serviceFee") + "");
-			return saveProxyWalletLog(type, merchantId, merchantName, proxyId, proxyParentName, serialNo, serviceFee);
-		} else {
-			return ReturnInfoUtils.errorInfo("更新钱包信息,参数出错,请核实信息!");
-		}
-	}
-
-	/**
-	 * 保存代理商钱包
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
-	 * @param proxyId
-	 *            代理商
-	 * @param proxyParentName
-	 *            代理商名称
-	 * @param treadeNo
-	 *            交易编号
-	 * @param serviceFee
-	 *            佣金(平台费用千分之二)
-	 * @return Map
-	 */
-	private Map<String, Object> saveProxyWalletLog(int type, String merchantId, String merchantName, String proxyId,
-			String proxyParentName, String serialNo, double serviceFee) {
-		Map<String, Object> reMap2 = merchantWalletServiceImpl.checkWallet(3, proxyId, proxyParentName);
-		if (!"1".equals(reMap2.get(BaseCode.STATUS.toString()))) {
-			return reMap2;
-		}
-		ProxyWalletContent proxyWallet = (ProxyWalletContent) reMap2.get(BaseCode.DATAS.toString());
-		double balance = proxyWallet.getBalance();
-		proxyWallet.setBalance(balance + serviceFee);
-		if (!morderDao.update(proxyWallet)) {
-			return ReturnInfoUtils.errorInfo("钱包更新余额失败!");
-		}
-		JSONObject param = new JSONObject();
-		param.put(MERCHANT_ID, merchantId);
-		param.put("merchantName", merchantName);
-		param.put("proxyId", proxyId);
-		param.put("proxyName", proxyParentName);
-		// 钱包交易日志流水名称
-		if (type == 1) {
-			param.put("entPayNo", serialNo);
-			param.put("entPayName", "推送支付单服务费");
-		} else if (type == 2) {
-			param.put("entOrderNo", serialNo);
-			param.put("entPayName", "推送订单服务费");
-		}
-		param.put("payAmount", serviceFee);
-		param.put("oldBalance", balance);
-		// 分类1-佣金、2-充值、3-提现、4-缴费
-		param.put("type", 1);
-		Map<String, Object> logMap = walletLogService.addWalletLog(3, param);
-		if (!"1".equals(logMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo("保存代理商钱包日志记录失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 添加商户钱包日志
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
-	 * @param proxyId
-	 *            代理商Id
-	 * @param proxyParentName
-	 *            代理商名称
-	 * @param serialNo
-	 *            流水号
-	 * @param payAmount
-	 *            推送单金额
-	 * @return Map
-	 */
-	private Map<String, Object> saveMerchantWalletLog(int type, String merchantId, String merchantName, String proxyId,
-			String proxyParentName, String serialNo, double payAmount) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
-		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		double merchantBalance = merchantWallet.getBalance();
-		// 平台服务费
-		double serviceFee = payAmount * 0.002;
-		merchantWallet.setBalance(merchantBalance - serviceFee);
-		if (!morderDao.update(merchantWallet)) {
-			statusMap.clear();
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.LOSS_SESSION.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "钱包更新余额失败!");
-			return statusMap;
-		}
-		// 当更新钱包余额后,进行商户钱包日志记录
-		JSONObject param = new JSONObject();
-		param.put(MERCHANT_ID, merchantId);
-		param.put("merchantName", merchantName);
-		if (type == 1) {
-			// 钱包交易日志流水名称
-			param.put("entPayNo", serialNo);
-			param.put("entPayName", "推送支付单服务费");
-		} else if (type == 2) {
-			param.put("entOrderNo", serialNo);
-			param.put("entPayName", "推送订单服务费");
-		}
-		param.put("payAmount", serviceFee);
-		param.put("oldBalance", merchantBalance);
-		param.put("proxyId", proxyId);
-		param.put("proxyName", proxyParentName);
-		// 分类:1-购物、2-充值、3-提现、4-缴费、5-代理商佣金
-		param.put("type", 5);
-		Map<String, Object> reWalletLogMap = walletLogService.addWalletLog(2, param);
-		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-			statusMap.put(BaseCode.MSG.toString(), "保存商户钱包日志,服务器繁忙!");
-			return statusMap;
-		}
-		statusMap.clear();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put("serviceFee", serviceFee);
-		return statusMap;
-	}
 
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
@@ -325,7 +174,7 @@ public class MpayServiceImpl implements MpayService {
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		//
 		String merchantFeeId = customsMap.get("merchantFeeId") + "";
-		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchantId, merchantName, merchantFeeId);
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
@@ -355,30 +204,26 @@ public class MpayServiceImpl implements MpayService {
 	 * 
 	 * @param jsonList
 	 *            订单Id
-	 * @param merchantId
-	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
+	 * @param merchant
+	 *            商户信息实体类
 	 * @param merchantFeeId
 	 *            商户口岸费率流水Id
 	 * 
 	 * @return Map
 	 */
-	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, String merchantId, String merchantName,
-			String merchantFeeId) {
-		if (jsonList == null) {
-			return ReturnInfoUtils.errorInfo("订单Id信息集合不能为空!");
+	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId) {
+		if (jsonList == null || merchant == null) {
+			return ReturnInfoUtils.errorInfo("计算商户钱包余额请求参数不能为空!");
 		}
 		Map<String, Object> reCheckMap = beforePushingCheckManualOrder(
 				JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
+		// 获取校验通过的订单信息集合
 		List<Object> newList = (List<Object>) reCheckMap.get(BaseCode.DATAS.toString());
-		// 初始化平台服务费
-		double fee;
-		// 查询商户钱包余额是否有足够的钱
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
+		// 查询商户钱包
+		Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(), merchant.getMerchantName());
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
@@ -388,37 +233,85 @@ public class MpayServiceImpl implements MpayService {
 		// 当小于0时,代表查询数据库信息错误
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
-		} else if (totalAmountPaid > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
-			if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
-				Map<String, Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
-				if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
-					return reFeeMap;
-				}
-				MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
-				fee = merchantFee.getPlatformFee();
-			} else {
-				fee = 0.001;
+		} else if (totalAmountPaid > 0) {
+			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
+			return manualOrderToll(merchantWallet, merchantFeeId, totalAmountPaid, merchant);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, String merchantFeeId,
+			double totalAmountPaid, Merchant merchant) {
+		if (merchant == null) {
+			return ReturnInfoUtils.errorInfo("商户钱包扣款时商户信息不能为空!");
+		}
+		// 初始化平台服务费
+		double fee;
+		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
+		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
+			Map<String, Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
+			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
+				return reFeeMap;
 			}
-			// 钱包余额
-			double balance = merchantWallet.getBalance();
-			// 平台服务费
-			double serviceFee = totalAmountPaid * fee;
-			// 商户钱包扣钱进代理商钱包
-			Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet, balance, serviceFee);
-			if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
-				return reWalletDeductionMap;
-			}
-			Map<String,Object> datas = new HashMap<>();
-			datas.put(MERCHANT_ID, merchantId);
-			datas.put("balance", balance);
-			datas.put("serviceFee", serviceFee);
-			//datas.put("note", "[" + count + "]单,支付单申报服务费");
-			// 保存钱包流水log
-			Map<String,Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
-			if(!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))){
-				return reWalletLogMap;
-			}
+			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
+			fee = merchantFee.getPlatformFee();
+		} else {
+			fee = 0.001;
+		}
+		// 钱包余额
+		double balance = merchantWallet.getBalance();
+		// 订申报单手续费
+		double serviceFee = totalAmountPaid * fee;
+		// 商户钱包扣钱进代理商钱包
+		Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet, balance,
+				serviceFee);
+		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletDeductionMap;
+		}
+		Map<String, Object> datas = new HashMap<>();
+		datas.put(MERCHANT_ID, merchant.getMerchantId());
+		datas.put("balance", balance);
+		datas.put("serviceFee", serviceFee);
+		datas.put("name", "订单申报-手续费");
+		// datas.put("note", "[" + count + "]单,支付单申报服务费");
+		// 添加商户钱包流水日志
+		Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
+		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletLogMap;
+		}
+		// 代理商收取订单申报服务费
+		Map<String,Object> reChargeFeeMap = chargeFee(merchant.getAgentParentId(), serviceFee);
+		if(!"1".equals(reChargeFeeMap.get(BaseCode.STATUS.toString()))){
+			return reChargeFeeMap;
+		}
+		//添加代理商钱包流水日志
+		
+		return null;
+	}
+
+	/**
+	 * 代理商下商户推送订单后佣金结算
+	 * 
+	 * @param serviceFee
+	 * 
+	 * @param merchantId
+	 */
+	private Map<String, Object> chargeFee(String agentId, double serviceFee) {
+		Map<String, Object> reAgentMap = agentServiceImpl.getAgentInfo(agentId);
+		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
+			return reAgentMap;
+		}
+		AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.DATAS.toString());
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, agent.getAgentId(), agent.getAgentName());
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletMap;
+		}
+		AgentWalletContent agentWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+		double balance = agentWallet.getBalance();
+
+		agentWallet.setBalance(balance + serviceFee);
+		if (!morderDao.update(agentWallet)) {
+			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -443,14 +336,13 @@ public class MpayServiceImpl implements MpayService {
 					Map<String, Object> item = new HashMap<>();
 					item.put("orderNo", order.getOrder_id());
 					newOrderIdList.add(item);
-				} 
+				}
 			}
 		} else {
 			return ReturnInfoUtils.errorInfo("推送订单前校验订单数据失败!");
 		}
 		return ReturnInfoUtils.successDataInfo(newOrderIdList);
 	}
-
 
 	/**
 	 * 准备开始推送订单备案
@@ -888,7 +780,7 @@ public class MpayServiceImpl implements MpayService {
 			}
 			return updateOrderRecordInfo(order);
 		} else {
-			return ReturnInfoUtils.errorInfo("根据订单["+entOrderNo+"]与messageId["+messageId+"]未找到订单信息,请核对信息!");
+			return ReturnInfoUtils.errorInfo("根据订单[" + entOrderNo + "]与messageId[" + messageId + "]未找到订单信息,请核对信息!");
 		}
 	}
 
@@ -960,7 +852,6 @@ public class MpayServiceImpl implements MpayService {
 		}
 
 	}
-
 
 	@Override
 	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,

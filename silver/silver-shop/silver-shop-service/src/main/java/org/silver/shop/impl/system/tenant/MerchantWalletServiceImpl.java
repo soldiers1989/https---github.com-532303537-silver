@@ -11,12 +11,13 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.organization.Proxy;
+import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
-import org.silver.shop.model.system.tenant.ProxyWalletContent;
+import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -31,16 +32,16 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	private MerchantWalletDao merchantWalletDao;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private WalletUtils walletUtils;
 
 	@Override
 	public Map<String, Object> walletRecharge(String merchantId, String merchantName, Double money) {
 		Date date = new Date();
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reMap = checkWallet(1, merchantId, merchantName);
+		Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
+			return reMap;
 		}
 		MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 		double oldBalance = wallet.getBalance();
@@ -56,114 +57,9 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		return statusMap;
 	}
 
-	/**
-	 * 检查钱包
-	 * 
-	 * @param type
-	 *            1-商户钱包,2-用户钱包,3-代理商钱包
-	 * @param id
-	 *            商户Id/用户Id/代理商Id
-	 * @param name
-	 *            商户名称/用户名称/代理商名称
-	 * @return Map中datas(Key)-钱包实体
-	 */
-	public Map<String, Object> checkWallet(int type, String id, String name) {
-		Map<String, Object> params = new HashMap<>();
-		Class entity = null;
-		if (type > 0 && StringEmptyUtils.isNotEmpty(id) && StringEmptyUtils.isNotEmpty(name)) {
-			switch (type) {
-			case 1:
-				params.put("merchantId", id);
-				// 商户钱包
-				entity = MerchantWalletContent.class;
-				break;
-			case 2:
-				params.put("memberId", id);
-				// 用户钱包
-				entity = MemberWalletContent.class;
-				break;
-			case 3:
-				params.put("proxyId", id);
-				// 代理商钱包
-				entity = ProxyWalletContent.class;
-				break;
-			default:
-				return ReturnInfoUtils.errorInfo("检查钱包类型错误,暂未支持[" + type + "]类型!");
-			}
-			List<Object> reList = merchantWalletDao.findByProperty(entity, params, 1, 1);
-			if (reList == null) {
-				return ReturnInfoUtils.errorInfo("查询钱包信息失败,服务器繁忙!");
-			} else if (!reList.isEmpty()) {// 钱包不为空,则直接返回
-				return ReturnInfoUtils.successDataInfo(reList.get(0));
-			} else {
-				Object reEntity = createWallet(type, entity, id, name);
-				if (reEntity != null) {
-					return ReturnInfoUtils.successDataInfo(reEntity);
-				} else {
-					return ReturnInfoUtils.errorInfo("创建钱包失败,服务器繁忙!");
-				}
-			}
-		}
-		return ReturnInfoUtils.errorInfo("检查钱包,请求参数不能为空!");
-	}
-
-	/**
-	 * 创建钱包
-	 * 
-	 * @param type
-	 *            1-商户钱包,2-用户钱包
-	 * @param entity
-	 *            实体类
-	 * @param id
-	 * @param name
-	 * @return
-	 */
-	private Object createWallet(int type, Class entity, String id, String name) {
-		Calendar cal = Calendar.getInstance();
-		Date date = new Date();
-		int year = cal.get(Calendar.YEAR);
-		Object wallet = null;
-		long count = merchantWalletDao.findSerialNoCount(entity, "id", 0);
-		if (count < 0) {
-			return null;
-		}
-		String serialNo = SerialNoUtils.getSerialNotTimestamp2("walletId", year, count);
-		switch (type) {
-		case 1:
-			wallet = new MerchantWalletContent.Builder(serialNo).merchantId(id).merchantName(name).createBy(name)
-					.createDate(date).build();
-			break;
-		case 2:
-			wallet = new MemberWalletContent.Builder(serialNo).memberId(id).memberName(name).createBy(name)
-					.createDate(date).build();
-			break;
-		case 3:
-			wallet = new ProxyWalletContent.Builder(serialNo).proxyId(id).proxyName(name).createBy(name)
-					.createDate(date).build();
-			break;
-		default:
-			break;
-		}
-		if (!merchantWalletDao.add(wallet)) {
-			return null;
-		}
-		return wallet;
-	}
-
 	@Override
 	public Map<String, Object> getMerchantWallet(String merchantId, String merchantName) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reMap = checkWallet(1, merchantId, merchantName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
-		MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.DATAS.toString(), wallet);
-		return statusMap;
+		return walletUtils.checkWallet(1, merchantId, merchantName);
 	}
 
 	@Override
@@ -228,9 +124,13 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 	/**
 	 * 商户钱包扣款
-	 * @param merchantWallet 商户钱包实体类
-	 * @param balance 商户原钱包余额
-	 * @param serviceFee 手续费(平台服务费)
+	 * 
+	 * @param merchantWallet
+	 *            商户钱包实体类
+	 * @param balance
+	 *            商户原钱包余额
+	 * @param serviceFee
+	 *            手续费(平台服务费)
 	 * @return Map
 	 */
 	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
@@ -251,44 +151,45 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-	
+
 	/**
 	 * 商户钱包扣费并且记录钱包日志
 	 * 
-	 * @param datasMap 参数
+	 * @param datasMap
+	 *            参数
 	 * @return Map
 	 */
-	public Map<String, Object> addWalletLog(Map<String,Object> datasMap) {
-		if(datasMap == null || datasMap.isEmpty()){
+	public Map<String, Object> addWalletLog(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加钱包日志,请求参数不能为空!");
 		}
-		String merchantId = datasMap.get("merchantId")+"";
+		String merchantId = datasMap.get("merchantId") + "";
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantMap;
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 		MerchantWalletLog walletLog = new MerchantWalletLog();
-		if(StringEmptyUtils.isEmpty(datasMap.get("name"))){
+		if (StringEmptyUtils.isEmpty(datasMap.get("name"))) {
 			return ReturnInfoUtils.errorInfo("添加钱包日志,日志名称不能为空!");
 		}
-		walletLog.setEntPayName(datasMap.get("name")+"");
+		walletLog.setEntPayName(datasMap.get("name") + "");
 		walletLog.setMerchantId(merchant.getMerchantId());
 		walletLog.setMerchantName(merchant.getMerchantName());
-		if(StringEmptyUtils.isEmpty(datasMap.get("balance"))){
+		if (StringEmptyUtils.isEmpty(datasMap.get("balance"))) {
 			return ReturnInfoUtils.errorInfo("添加钱包日志,余额不能为空!");
 		}
-		double balance = Double.parseDouble(datasMap.get("balance")+"");
+		double balance = Double.parseDouble(datasMap.get("balance") + "");
 		walletLog.setBeforeChangingBalance(balance);
-		if(StringEmptyUtils.isEmpty(datasMap.get("serviceFee"))){
+		if (StringEmptyUtils.isEmpty(datasMap.get("serviceFee"))) {
 			return ReturnInfoUtils.errorInfo("添加钱包日志,平台服务费不能为空!");
 		}
-		double serviceFee = Double.parseDouble(datasMap.get("serviceFee")+"");
+		double serviceFee = Double.parseDouble(datasMap.get("serviceFee") + "");
 		walletLog.setPayAmount(serviceFee);
 		walletLog.setAfterChangeBalance(balance - serviceFee);
 		// 分类1-购物、2-充值、3-提现、4-缴费、5-支付代理商佣金
 		walletLog.setType(5);
-		walletLog.setNote(datasMap.get("note")+"");
+		walletLog.setNote(datasMap.get("note") + "");
 		walletLog.setCreateBy("system");
 		walletLog.setCreateDate(new Date());
 		// 状态：1-交易成功、2-交易失败、3-交易关闭

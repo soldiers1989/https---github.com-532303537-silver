@@ -8,36 +8,26 @@ import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
-import org.silver.shop.api.system.tenant.ProxyWalletService;
+import org.silver.shop.api.system.tenant.AgentWalletService;
 import org.silver.shop.dao.system.tenant.ProxyWalletDao;
-import org.silver.shop.model.system.tenant.ProxyWalletContent;
-import org.silver.shop.model.system.tenant.ProxyWalletLog;
+import org.silver.shop.model.system.tenant.AgentWalletLog;
+import org.silver.shop.util.WalletUtils;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
-@Service(interfaceClass = ProxyWalletService.class)
-public class ProxyWalletServiceImpl implements ProxyWalletService {
+@Service(interfaceClass = AgentWalletService.class)
+public class AgentWalletServiceImpl implements AgentWalletService {
 
 	@Autowired
 	private ProxyWalletDao proxyWalletDao;
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-
+	private WalletUtils walletUtils;
+	
 	@Override
-	public Map<String, Object> getProxyWalletInfo(String proxyUUid, String proxyName) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(3, proxyUUid, proxyName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
-		ProxyWalletContent wallet = (ProxyWalletContent) reMap.get(BaseCode.DATAS.toString());
-		statusMap.put(BaseCode.DATAS.toString(), wallet);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+	public Map<String, Object> getAgentWalletInfo(String agentId, String agentName) {
+		return walletUtils.checkWallet(3, agentId, agentName);
 	}
 
 	@Override
@@ -59,8 +49,8 @@ public class ProxyWalletServiceImpl implements ProxyWalletService {
 		params.put("proxyId", proxyUUid);
 		params.put("startDate", startDate);
 		params.put("endDate", endDate);
-		List<Object> reList = proxyWalletDao.findByPropertyLike(ProxyWalletLog.class, params, null, page, size);
-		long tatolCount = proxyWalletDao.findByPropertyLikeCount(ProxyWalletLog.class, params, null);
+		List<Object> reList = proxyWalletDao.findByPropertyLike(AgentWalletLog.class, params, null, page, size);
+		long tatolCount = proxyWalletDao.findByPropertyLikeCount(AgentWalletLog.class, params, null);
 		if (reList == null) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-12-17 14:11:52 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.ProxyWalletContent" table="ym_shop_proxy_wallet_content">
+    <class name="org.silver.shop.model.system.tenant.AgentWalletContent" table="ym_shop_agent_wallet_content">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -11,11 +11,11 @@
         <property name="walletId" type="java.lang.String">
             <column name="walletId" />
         </property>
-        <property name="proxyId" type="java.lang.String">
-            <column name="proxyId" />
+        <property name="agentId" type="java.lang.String">
+            <column name="agentId" />
         </property>
-        <property name="proxyName" type="java.lang.String">
-            <column name="proxyName" />
+        <property name="agentName" type="java.lang.String">
+            <column name="agentName" />
         </property>
         <property name="balance" type="double">
             <column name="balance" />

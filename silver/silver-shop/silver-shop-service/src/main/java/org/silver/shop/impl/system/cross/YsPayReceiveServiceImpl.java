@@ -35,6 +35,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.MerchantUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
@@ -69,21 +70,18 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	@Autowired
 	private YsPayReceiveDao ysPayReceiveDao;
-
 	@Autowired
 	private AccessTokenService accessTokenService;
-
-	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-
 	@Autowired
 	private WalletLogService walletLogService;
-
 	@Autowired
 	private MemberService memberService;
 	@Autowired
 	private MerchantUtils merchantUtils;
-
+	@Autowired
+	private WalletUtils walletUtils;
+	
+	
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
 		Map<String, Object> params = new HashMap<>();
@@ -284,7 +282,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			}
 
 			//
-			Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
+			Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
 				statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");

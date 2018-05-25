@@ -399,6 +399,9 @@ public final class SearchUtils {
 			case "agentName":
 				paramMap.put(key, value);
 				break;
+			case "agentId":
+				paramMap.put(key, value);
+				break;
 			case "agentStatus":
 				paramMap.put(key, value);
 				break;

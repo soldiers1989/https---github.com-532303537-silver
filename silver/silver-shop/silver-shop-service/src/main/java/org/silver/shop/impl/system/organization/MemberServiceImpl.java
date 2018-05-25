@@ -19,6 +19,7 @@ import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
@@ -41,10 +42,10 @@ public class MemberServiceImpl implements MemberService {
 	@Autowired
 	private MemberDao memberDao;
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	@Autowired
 	private MemberService memberService;
-
+	@Autowired
+	private WalletUtils walletUtils;
+	
 	private static final Object LOCK = "lock";
 
 	@Override
@@ -70,7 +71,7 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
 		// 创建用户钱包
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, account);
+		Map<String, Object> reMap = walletUtils.checkWallet(2, memberId, account);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
 			statusMap.put(BaseCode.MSG.toString(), "用户创建钱包失败!");
@@ -194,15 +195,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> getMemberWalletInfo(String memberId, String memberName) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(2, memberId, memberName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-			return statusMap;
-		}
-		MemberWalletContent wallet = (MemberWalletContent) reMap.get(BaseCode.DATAS.toString());
-		return ReturnInfoUtils.successDataInfo(wallet);
+		return walletUtils.checkWallet(2, memberId, memberName);
 	}
 
 	@Override

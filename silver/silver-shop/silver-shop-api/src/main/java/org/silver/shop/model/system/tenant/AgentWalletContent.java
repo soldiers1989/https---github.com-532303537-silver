@@ -3,21 +3,21 @@ package org.silver.shop.model.system.tenant;
 import java.io.Serializable;
 import java.util.Date;
 
-import org.silver.shop.model.system.tenant.MerchantWalletContent.Builder;
-
-public class ProxyWalletContent implements Serializable{
-	public ProxyWalletContent() {
+/**
+ * 代理商钱包信息实体类
+ */
+public class AgentWalletContent implements Serializable {
+	public AgentWalletContent() {
 
 	}
-
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6910869733492890837L;
 	private long id;
 	private String walletId;// 钱包Id
-	private String proxyId;// 代理商Id
-	private String proxyName;// 代理商名称
+	private String agentId;// 代理商Id
+	private String agentName;// 代理商名称
 	private double balance;// 余额
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
@@ -32,22 +32,20 @@ public class ProxyWalletContent implements Serializable{
 		this.id = id;
 	}
 
-	
-
-	public String getProxyId() {
-		return proxyId;
+	public String getAgentId() {
+		return agentId;
 	}
 
-	public String getProxyName() {
-		return proxyName;
+	public String getAgentName() {
+		return agentName;
 	}
 
-	public void setProxyId(String proxyId) {
-		this.proxyId = proxyId;
+	public void setAgentId(String agentId) {
+		this.agentId = agentId;
 	}
 
-	public void setProxyName(String proxyName) {
-		this.proxyName = proxyName;
+	public void setAgentName(String agentName) {
+		this.agentName = agentName;
 	}
 
 	public double getBalance() {
@@ -101,8 +99,8 @@ public class ProxyWalletContent implements Serializable{
 	public static class Builder {
 		private long id;
 		private String walletId = null;// 钱包Id
-		private String proxyId = null;// 代理商Id
-		private String proxyName = null;// 代理商名称
+		private String agentId = null;// 代理商Id
+		private String agentName = null;// 代理商名称
 		private double balance = 0.0;// 余额
 		private String createBy = null;// 创建人
 		private Date createDate = null;// 创建日期
@@ -112,29 +110,35 @@ public class ProxyWalletContent implements Serializable{
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
-		public Builder proxyId(String proxyId) {
-			this.proxyId = proxyId;
+
+		public Builder agentId(String agentId) {
+			this.agentId = agentId;
 			return this;
 		}
 
-		public Builder proxyName(String proxyName) {
-			this.proxyName = proxyName;
+		public Builder agentName(String agentName) {
+			this.agentName = agentName;
 			return this;
 		}
-		public void setProxyId(String proxyId) {
-			this.proxyId = proxyId;
+
+		public void setAgentId(String agentId) {
+			this.agentId = agentId;
 		}
-		public void setProxyName(String proxyName) {
-			this.proxyName = proxyName;
+
+		public void setAgentName(String agentName) {
+			this.agentName = agentName;
 		}
+
 		public Builder balance(double balance) {
 			this.balance = balance;
 			return this;
 		}
+
 		public Builder createBy(String createBy) {
 			this.createBy = createBy;
 			return this;
 		}
+
 		public Builder createDate(Date createDate) {
 			this.createDate = createDate;
 			return this;
@@ -150,16 +154,16 @@ public class ProxyWalletContent implements Serializable{
 			return this;
 		}
 
-		public ProxyWalletContent build() {
-			return new ProxyWalletContent(this);
+		public AgentWalletContent build() {
+			return new AgentWalletContent(this);
 		}
 	}
 
-	private ProxyWalletContent(Builder b) {
+	private AgentWalletContent(Builder b) {
 		id = b.id;
 		walletId = b.walletId;
-		proxyId = b.proxyId;
-		proxyName = b.proxyName;
+		agentId = b.agentId;
+		agentName = b.agentName;
 		balance = b.balance;
 		createBy = b.createBy;
 		createDate = b.createDate;

@@ -43,6 +43,7 @@ import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
@@ -86,7 +87,10 @@ public class OrderServiceImpl implements OrderService {
 	private RecipientServiceImpl recipientServiceImpl;
 	@Autowired
 	private MemberService memberService;
-
+	@Autowired
+	private WalletUtils walletUtils;
+	
+	
 	/**
 	 * 小写开头订单编号
 	 */
@@ -405,11 +409,9 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> datasMap = new HashMap<>();
 		if (type == 1) {// 1-余额支付,2-跳转至银盛
-			Map<String, Object> reWalletMap = merchantWalletServiceImpl.checkWallet(2, memberId, memberName);
+			Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId, memberName);
 			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-				statusMap.put(BaseCode.MSG.toString(), "检查钱包失败!");
-				return statusMap;
+				return reWalletMap;
 			}
 			MemberWalletContent wallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			double balance = wallet.getBalance();

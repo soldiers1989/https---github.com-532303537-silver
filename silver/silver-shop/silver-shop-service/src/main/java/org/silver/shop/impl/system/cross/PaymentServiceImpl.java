@@ -40,6 +40,7 @@ import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
@@ -74,8 +75,7 @@ public class PaymentServiceImpl implements PaymentService {
 	@Autowired
 	private GoodsRecordServiceImpl goodsRecordServiceImpl;
 	@Autowired
-	private MpayServiceImpl mpayServiceImpl;
-
+	private WalletUtils walletUtils;
 	@Autowired
 	private BufferUtils bufferUtils;
 	@Autowired
@@ -266,7 +266,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId, String merchantName,
 			String merchantFeeId) {
 		// 查询商户钱包
-		Map<String, Object> reMap = merchantWalletServiceImpl.checkWallet(1, merchantId, merchantName);
+		Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
@@ -817,7 +817,8 @@ public class PaymentServiceImpl implements PaymentService {
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人身份证实名认证不通过,请核信息!");
 		}
 		String orderDocName = infoMap.get("orderDocName") + "";
-		if (!StringUtil.isContainChinese(orderDocName.replace("·", ""))) {
+		if (!StringUtil.isContainChinese(orderDocName.trim().replace("·", "")) || orderDocName.trim().contains("先生") || orderDocName.trim().contains("女士")
+				|| orderDocName.trim().contains("小姐")) {
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人姓名错误,请核实信息!");
 		}
 		return ReturnInfoUtils.successInfo();

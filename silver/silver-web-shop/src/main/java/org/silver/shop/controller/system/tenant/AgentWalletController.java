@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
-import org.silver.shop.service.system.tenant.ProxyWalletTransaction;
+import org.silver.shop.service.system.tenant.AgentWalletTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,24 +26,23 @@ import net.sf.json.JSONObject;
  *
  */
 @Controller
-@RequestMapping("/proxyWallet")
-public class ProxyWalletController {
+@RequestMapping("/agentWallet")
+public class AgentWalletController {
 	@Autowired
-	private ProxyWalletTransaction proxyWalletTransaction;
+	private AgentWalletTransaction agentWalletTransaction;
 	
 	
-	@RequestMapping(value = "/getProxyWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("获取代理下钱包信息")
-	@RequiresRoles("Proxy")
-	public String getProxyWalletInfo(HttpServletRequest req, HttpServletResponse response) {
+	@RequiresRoles("Agent")
+	public String getWalletInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = proxyWalletTransaction.getProxyWalletInfo();
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(agentWalletTransaction.getWalletInfo()).toString();
 	}
 	
 	/**
@@ -55,11 +54,11 @@ public class ProxyWalletController {
 	 * @param size 数目
 	 * @return String
 	 */
-	@RequestMapping(value = "/getProxyWalletLog", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@RequiresRoles("Proxy")
+	@RequestMapping(value = "/getWalletLog", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Agent")
 	@ResponseBody
 	@ApiOperation("代理商查看钱包记录")
-	public String getProxyWalletLog(HttpServletRequest req, HttpServletResponse response,
+	public String getWalletLog(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") int type, @RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -68,7 +67,7 @@ public class ProxyWalletController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (type == 1 || type == 2) {
-			statusMap = proxyWalletTransaction.getProxyWalletLog(type, page, size);
+			statusMap = agentWalletTransaction.getProxyWalletLog(type, page, size);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());

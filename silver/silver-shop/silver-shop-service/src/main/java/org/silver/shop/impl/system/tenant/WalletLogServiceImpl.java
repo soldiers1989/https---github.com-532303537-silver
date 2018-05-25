@@ -8,8 +8,8 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.WalletLogService;
 import org.silver.shop.dao.system.tenant.WalletLogDao;
+import org.silver.shop.model.system.tenant.AgentWalletLog;
 import org.silver.shop.model.system.tenant.MerchantWalletLog;
-import org.silver.shop.model.system.tenant.ProxyWalletLog;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -112,15 +112,15 @@ public class WalletLogServiceImpl implements WalletLogService {
 	// 创建代理商日志
 	private Map<String, Object> createProxyWallet(JSONObject params) {
 		Map<String, Object> statusMap = new HashMap<>();
-		ProxyWalletLog walletLog = new ProxyWalletLog();
+		AgentWalletLog walletLog = new AgentWalletLog();
 		// 分类1-佣金、2-充值、3-提现、4-缴费
 		int type = params.getInt("type");
 		switch (type) {
 		case 1:
 			String serialNo = params.get("entPayNo") + "";
 			walletLog.setType(type);
-			walletLog.setProxyId(params.get("proxyId") + "");
-			walletLog.setProxyName(params.get("proxyName") + "");
+			walletLog.setAgentId(params.get("proxyId") + "");
+			walletLog.setAgentName(params.get("proxyName") + "");
 			walletLog.setMerchantId(params.get("merchantId") + "");
 			walletLog.setMerchantName(params.get("merchantName") + "");
 			//如果支付单流水号不为空则保存为支付单流水,为空时则是订单流水

@@ -3,16 +3,16 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2017-12-17 17:12:00 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.ProxyWalletLog" table="ym_shop_sys_proxy_wallet_log">
+    <class name="org.silver.shop.model.system.tenant.AgentWalletLog" table="ym_shop_sys_agent_wallet_log">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="proxyId" type="java.lang.String">
-            <column name="proxyId" />
+      <property name="agentId" type="java.lang.String">
+            <column name="agentId" />
         </property>
-        <property name="proxyName" type="java.lang.String">
-            <column name="proxyName" />
+        <property name="agentName" type="java.lang.String">
+            <column name="agentName" />
         </property>
         <property name="merchantId" type="java.lang.String">
             <column name="merchantId" />

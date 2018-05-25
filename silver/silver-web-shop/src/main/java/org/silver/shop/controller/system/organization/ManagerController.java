@@ -298,15 +298,11 @@ public class ManagerController {
 			datasMap.put(key, value);
 		}
 		int type = Integer.parseInt(datasMap.get("type")+"");
-		Map<String, Object> statusMap = new HashMap<>();
 		int imgLength = Integer.parseInt(datasMap.get("imgLength") + "");
 		if (type == 1 || type == 2 && imgLength > 0) {
-			statusMap = managerTransaction.managerAddMerchantInfo(req, datasMap);
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(managerTransaction.managerAddMerchantInfo(req, datasMap)).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("添加商户失败,请求参数错误!")).toString();
 		}
 	}
 

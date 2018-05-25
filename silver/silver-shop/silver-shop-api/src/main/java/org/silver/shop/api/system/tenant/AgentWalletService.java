@@ -2,7 +2,7 @@ package org.silver.shop.api.system.tenant;
 
 import java.util.Map;
 
-public interface ProxyWalletService {
+public interface AgentWalletService {
 
 	/**
 	 * 获取代理商钱包日志
@@ -17,9 +17,9 @@ public interface ProxyWalletService {
 
 	/**
 	 * 获取代理商钱包信息
-	 * @param proxyUUid 代理商Id
-	 * @param proxyName 代理商名称
+	 * @param agentId 代理商Id
+	 * @param agentName 代理商名称
 	 * @return Map
 	 */
-	public Map<String, Object> getProxyWalletInfo(String proxyUUid, String proxyName);
+	public Map<String, Object> getAgentWalletInfo(String agentId, String agentName);
 }

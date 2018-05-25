@@ -1,16 +1,10 @@
 package org.silver.shop.service.system.organization;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
-import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.AgentService;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
@@ -20,7 +14,6 @@ import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.dubbo.config.annotation.Reference;
 
 @Service
 public class AgentTransaction {
@@ -50,8 +43,8 @@ public class AgentTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
-				if (managerInfo == null) {
+				AgentBaseContent agentInfo = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+				if (agentInfo == null) {
 					WebUtil.getSession().setAttribute(LoginType.AGENTINFO.toString(), reList.get(0));
 				}
 				return ReturnInfoUtils.successInfo();
@@ -86,5 +79,5 @@ public class AgentTransaction {
 		String agentName = agentBaseContent.getAgentName();
 		return agentService.getSubMerchantInfo(agentId,agentName);
 	}
-	
+
 }

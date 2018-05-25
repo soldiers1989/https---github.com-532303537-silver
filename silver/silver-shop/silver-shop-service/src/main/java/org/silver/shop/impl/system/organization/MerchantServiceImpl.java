@@ -11,9 +11,11 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.AuthorityUser;
+import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.util.IdUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -28,6 +30,11 @@ import net.sf.json.JSONArray;
 @Service(interfaceClass = MerchantService.class)
 public class MerchantServiceImpl implements MerchantService {
 
+	@Autowired
+	private AgentServiceImpl agentServiceImpl;
+	@Autowired
+	private IdUtils<Merchant> idUtils;
+	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
@@ -119,16 +126,20 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Date dateTime = new Date();
 		int type = Integer.parseInt(datasMap.get("type") + "");
 		String loginPassword = datasMap.get("loginPassword") + "";
-		String merchantId = datasMap.get("merchantId") + "";
+		Map<String,Object> reIdMap = idUtils.createId(Merchant.class, "MerchantId_");
+		if(!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))){
+			return reIdMap;
+		}
+		String merchantId = reIdMap.get(BaseCode.DATAS.toString())+"";
 		String merchantName = datasMap.get("merchantName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
+		String agentId = datasMap.get("agentId") + "";
 		if (type == 1) {// 1-银盟商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			MerchantRecordInfo recordInfo = new MerchantRecordInfo();
@@ -138,12 +149,10 @@ public class MerchantServiceImpl implements MerchantService {
 			recordInfo.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
 			// 保存商户对应的电商平台名称(及编码)
 			if (!addMerchantRecordInfo(recordInfo, "1")) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "保存商品备案信息失败,服务器繁忙!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("保存商户备案信息失败,服务器繁忙!");
 			}
 		} else if (type == 2) {// 2-第三方商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			Map<String, Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId,
@@ -159,7 +168,7 @@ public class MerchantServiceImpl implements MerchantService {
 			 * return reAppkeyMap; }
 			 */
 		}
-		return ReturnInfoUtils.successInfo();
+		return ReturnInfoUtils.successDataInfo(merchantId);
 	}
 
 	/**
@@ -227,10 +236,12 @@ public class MerchantServiceImpl implements MerchantService {
 	 *            商户Id
 	 * @param type
 	 *            商户类型 1-银盟自营、2-第三方商城平台
+	 * @param agentId
+	 *            代理商Id
 	 * @return boolean
 	 */
 	private boolean createMerchantInfo(int type, String merchantId, String merchantName, String loginPassword,
-			String managerName, String phone) {
+			String managerName, String phone, String agentId) {
 		MD5 md5 = new MD5();
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId(merchantId);
@@ -242,13 +253,26 @@ public class MerchantServiceImpl implements MerchantService {
 		merchant.setCreateBy(managerName);
 		merchant.setCreateDate(new Date());
 		merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-		merchant.setAgentParentId("prxoy_00001");
-		merchant.setAgentParentName("银盟");
+		if(StringEmptyUtils.isNotEmpty(agentId)){
+			Map<String,Object> reAgentMap = agentServiceImpl.getAgentInfo(agentId);
+			if(!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))){
+				System.out.println("---->>"+reAgentMap.get(BaseCode.MSG.toString()));
+				return false;
+			}
+			AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.STATUS.toString());
+			merchant.setAgentParentId(agent.getAgentId());
+			merchant.setAgentParentName(agent.getAgentName());
+		}else{
+			merchant.setAgentParentId("prxoy_00001");
+			merchant.setAgentParentName("银盟");
+		}
 		merchant.setMerchantPhone(phone);
 		// 标识
 		merchant.setThirdPartyFlag(type);
 		MerchantDetail merchantDetail = new MerchantDetail();
 		merchantDetail.setMerchantId(merchantId);
+		merchantDetail.setCreateBy("system");
+		merchantDetail.setCreateDate(new Date());
 		return merchantDao.add(merchant) && merchantDao.add(merchantDetail);
 	}
 
