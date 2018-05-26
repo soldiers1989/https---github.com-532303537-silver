@@ -13,6 +13,7 @@ import org.silver.shop.api.system.tenant.EvaluationService;
 import org.silver.shop.dao.system.tenant.EvaluationDao;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderGoodsContent;
+import org.silver.shop.model.system.log.EvaluationLog;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.EvaluationContent;
 import org.silver.util.DateUtil;
@@ -131,11 +132,23 @@ public class EvaluationServiceImpl implements EvaluationService {
 				errorList.add(item);
 			} else if (!reList.isEmpty()) {
 				GoodsRecordDetail goods = reList.get(0);
-				if (saveEvaluationContent(goods, datasMap, memberId, memberName,ipAddress)) {
+				datasMap.put("merchantId", goods.getGoodsMerchantId());
+				datasMap.put("merchantName", goods.getGoodsMerchantName());
+				datasMap.put("ipAddress", ipAddress);
+				datasMap.put("memberId", memberId);
+				datasMap.put("memberName", memberName);
+				datasMap.put("goodsName", goods.getShelfGName());
+				if (saveEvaluationContent( datasMap)) {
 					// 更新订单商品评论标识
 					Map<String, Object> reUpdateMap = updateOrderGoodsFlag(entOrderNo, goodsId);
 					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 						item.put(BaseCode.STATUS.toString(), reUpdateMap.get(BaseCode.MSG.toString()));
+						errorList.add(item);
+					}
+					//日志类型:1-用户商品评论,2-商户回复评论,3-管理员删除
+					datasMap.put("type", "1");
+					if(!addEvaluationLog( datasMap)){
+						item.put(BaseCode.STATUS.toString(), "保存评论日志失败,服务器繁忙!");
 						errorList.add(item);
 					}
 				} else {
@@ -151,22 +164,57 @@ public class EvaluationServiceImpl implements EvaluationService {
 	}
 
 	/**
+	 * 保存操作日志
+	 * @param datasMap
+	 * @return
+	 */
+	private boolean addEvaluationLog(Map<String, Object> datasMap) {
+		if(datasMap == null || datasMap.isEmpty()){
+			return false;
+		}
+		EvaluationLog evaluationLog = new EvaluationLog();
+		String goodsId = datasMap.get("goodsId") + "";
+		evaluationLog.setGoodsId(goodsId);
+		evaluationLog.setGoodsName(datasMap.get("goodsName")+"");
+		evaluationLog.setMemberId(datasMap.get("memberId")+"");
+		evaluationLog.setMemberName(datasMap.get("memberName")+"");
+		evaluationLog.setLevel(Double.parseDouble(datasMap.get("level") + ""));
+		String content = datasMap.get("content") + "";
+		//敏感字眼标识:0-未识别,1-不包含,2-包含
+		if(WordFilter.isContains(content)){
+			evaluationLog.setSensitiveFlag(2);
+			content = WordFilter.doFilter(content);
+		}else{
+			evaluationLog.setSensitiveFlag(1);
+		}
+		evaluationLog.setContent(content);
+		evaluationLog.setIpAddresses(datasMap.get("ipAddress")+"");
+		//日志类型:1-用户商品评论,2-商户回复评论,3-管理员删除
+		evaluationLog.setType(datasMap.get("type")+"");
+		evaluationLog.setMerchantId(datasMap.get("merchantId")+"");
+		evaluationLog.setMerchantName(datasMap.get("merchantName")+"");
+		evaluationLog.setCreateBy(datasMap.get("memberName")+"");
+		evaluationLog.setCreateDate(new Date());
+		// 保存评论信息
+		return evaluationDao.add(evaluationLog);
+	}
+
+	/**
 	 * 保存商品评论信息
 	 * @param goods 商品备案信息
 	 * @param datasMap 
-	 * @param memberId 用户Id
-	 * @param memberName 用户名称
-	 * @param ipAddress ip地址
 	 * @return boolean
 	 */
-	private boolean saveEvaluationContent(GoodsRecordDetail goods, Map<String, Object> datasMap, String memberId,
-			String memberName, String ipAddress) {
+	private boolean saveEvaluationContent( Map<String, Object> datasMap) {
+		if(datasMap == null || datasMap.isEmpty()){
+			return false;
+		}
 		EvaluationContent evaluation = new EvaluationContent();
 		String goodsId = datasMap.get("goodsId") + "";
 		evaluation.setGoodsId(goodsId);
-		evaluation.setGoodsName(goods.getShelfGName());
-		evaluation.setMemberId(memberId);
-		evaluation.setMemberName(memberName);
+		evaluation.setGoodsName(datasMap.get("goodsName")+"");
+		evaluation.setMemberId(datasMap.get("memberId")+"");
+		evaluation.setMemberName(datasMap.get("memberName")+"");
 		evaluation.setLevel(Double.parseDouble(datasMap.get("level") + ""));
 		String content = datasMap.get("content") + "";
 		//敏感字眼标识:0-未识别,1-不包含,2-包含
@@ -177,10 +225,12 @@ public class EvaluationServiceImpl implements EvaluationService {
 			evaluation.setSensitiveFlag(1);
 		}
 		evaluation.setContent(content);
-		evaluation.setCreateBy(memberName);
+		evaluation.setCreateBy(datasMap.get("memberName")+"");
 		evaluation.setCreateDate(new Date());
 		evaluation.setDeleteFlag(0);
-		evaluation.setIpAddresses(ipAddress);
+		evaluation.setIpAddresses(datasMap.get("ipAddress")+"");
+		evaluation.setMerchantId(datasMap.get("merchantId")+"");
+		evaluation.setMerchantName(datasMap.get("merchantName")+"");
 		// 保存评论信息
 		return evaluationDao.add(evaluation);
 	}
@@ -261,6 +311,19 @@ public class EvaluationServiceImpl implements EvaluationService {
 					item.put(BaseCode.MSG.toString(), "流水号[" + id + "]删除失败,服务器繁忙!");
 					errorList.add(item);
 				}
+				Map<String,Object> datasMap = new HashMap<>();
+				datasMap.put("goodsId", evaluationContent.getGoodsId());
+				datasMap.put("merchantId", evaluationContent.getMerchantId());
+				datasMap.put("merchantName", evaluationContent.getMerchantName());
+				datasMap.put("ipAddress", evaluationContent.getIpAddresses());
+				datasMap.put("memberId", evaluationContent.getMemberId());
+				datasMap.put("memberName", evaluationContent.getMemberName());
+				datasMap.put("goodsName", evaluationContent.getGoodsName());
+				datasMap.put("level", evaluationContent.getLevel());
+				datasMap.put("content", evaluationContent.getContent());
+				//日志类型:1-用户商品评论,2-商户回复评论,3-管理员删除
+				datasMap.put("type", "3");
+				addEvaluationLog(datasMap);
 			} else {
 				item.put(BaseCode.MSG.toString(), "流水号[" + id + "]未找到对应的评论信息!");
 				errorList.add(item);

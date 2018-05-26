@@ -82,8 +82,11 @@
 				/regin=anon
 				/login=anon
 				/member/*=anon
+				/evaluationLog/*=anon
 				/authority/*=anon
 				/cciq/*=anon
+				/sensitive/*=anon
+				
 				/evaluation/*=anon
 				/gac/*=anon
 				/manualOrder/*=anon

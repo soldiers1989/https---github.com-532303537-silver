@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository;
 @Repository("errorLogsDao")
 public class ErrorLogsDaoImpl extends BaseDaoImpl implements ErrorLogsDao {
 
-
 }

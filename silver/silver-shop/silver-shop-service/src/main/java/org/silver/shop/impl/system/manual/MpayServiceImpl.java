@@ -280,13 +280,13 @@ public class MpayServiceImpl implements MpayService {
 			return reWalletLogMap;
 		}
 		// 代理商收取订单申报服务费
-		Map<String,Object> reChargeFeeMap = chargeFee(merchant.getAgentParentId(), serviceFee);
-		if(!"1".equals(reChargeFeeMap.get(BaseCode.STATUS.toString()))){
-			return reChargeFeeMap;
-		}
+	//	Map<String,Object> reChargeFeeMap = chargeFee(merchant.getAgentParentId(), serviceFee);
+		//if(!"1".equals(reChargeFeeMap.get(BaseCode.STATUS.toString()))){
+			//return reChargeFeeMap;
+		//}
 		//添加代理商钱包流水日志
 		
-		return null;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
