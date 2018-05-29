@@ -762,7 +762,7 @@ public class PaymentServiceImpl implements PaymentService {
 					//
 					Map<String, Object> paymentMap = new HashMap<>();
 					paymentMap.put(MERCHANT_ID, merchantId);
-					int count = SerialNoUtils.getRedisIdCount("paymentId");
+					int count = SerialNoUtils.getSerialNo("paymentId");
 					String tradeNo = createTradeNo("01O", (count + 1), new Date());
 					paymentMap.put("tradeNo", tradeNo);
 					paymentMap.put(ORDER_ID, order_id);

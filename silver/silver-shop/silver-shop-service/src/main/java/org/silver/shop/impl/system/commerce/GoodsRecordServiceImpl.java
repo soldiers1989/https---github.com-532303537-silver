@@ -467,7 +467,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			Map<String, Object> mRecordMap) {
 		Map<String, Object> statusMap = new HashMap<>();
 		// 查询缓存中商品自编号自增Id
-		int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+		int count = SerialNoUtils.getSerialNo("goodsRecordHead");
 		String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
 		Date date = new Date();
 		GoodsRecord recordInfo = new GoodsRecord();
@@ -1746,7 +1746,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return warehousMap;
 		}
 		// 查询缓存中商品自编号自增Id
-		int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+		int count = SerialNoUtils.getSerialNo("goodsRecordHead");
 		String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
 		// 根据商户编号,查询商户海关备案信息
 		paramMap.put("merchantId", merchantId);

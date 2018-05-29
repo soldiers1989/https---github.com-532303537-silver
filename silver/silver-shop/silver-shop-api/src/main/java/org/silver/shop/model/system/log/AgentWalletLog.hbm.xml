@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-5-29 10:39:42 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.log.AgentWalletLog" table="ym_shop_sys_agent_wallet_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="agentWalletId" type="java.lang.String">
+            <column name="agentWalletId" not-null="true" />
+        </property>
+        <property name="agentName" type="java.lang.String">
+            <column name="agentName" not-null="true"/>
+        </property>
+        <property name="serialNo" type="java.lang.String">
+            <column name="serialNo" not-null="true" unique="true"/>
+        </property>
+        <property name="serialName" type="java.lang.String">
+            <column name="serialName" not-null="true"/>
+        </property>
+        <property name="beforeChangingBalance" type="double">
+            <column name="beforeChangingBalance" />
+        </property>
+        <property name="amount" type="double">
+            <column name="amount" />
+        </property>
+        <property name="afterChangeBalance" type="double">
+            <column name="afterChangeBalance" />
+        </property>
+        <property name="type" type="int">
+            <column name="type" not-null="true" />
+        </property>
+        <property name="status" type="java.lang.String">
+            <column name="status" not-null="true" />
+        </property>
+        <property name="flag" type="java.lang.String">
+            <column name="flag" not-null="true" />
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="targetWalletId" type="java.lang.String">
+            <column name="targetWalletId" />
+        </property>
+        <property name="targetName" type="java.lang.String">
+            <column name="targetName" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+          <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+    </class>
+</hibernate-mapping>

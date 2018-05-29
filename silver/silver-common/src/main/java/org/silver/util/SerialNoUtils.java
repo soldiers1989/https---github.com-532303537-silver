@@ -12,7 +12,7 @@ import org.silver.common.StatusCode;
  */
 public class SerialNoUtils {
 	// 创建一个静态钥匙
-	private static Object lock = "lock";// 值是任意的
+	private static Object LOCK = new Object();// 值是任意的
 
 	private SerialNoUtils() {
 
@@ -93,32 +93,6 @@ public class SerialNoUtils {
 	}
 
 	/**
-	 * 根据不同场景,获取缓存当前日期下自增数
-	 * 
-	 * @param name
-	 *            名称
-	 * @return int
-	 */
-	public static final int getRedisIdCount(String name) {
-		Map<String, Object> statusMap = new HashMap<>();
-		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
-		int count = 1;
-		String key = "Shop_Key_" + name + "_Int_" + dateSign;
-		synchronized (lock) {// 防止多线程时,冲突
-			// 读取缓存中的信息
-			byte[] redisByte = JedisUtil.get(key.getBytes(), 86400);
-			if (redisByte != null && redisByte.length > 0) {
-				Map<String, Object> datasMap = (Map<String, Object>) SerializeUtil.toObject(redisByte);
-				count = Integer.parseInt(datasMap.get("count") + "");
-				count++;
-			}
-			statusMap.put("count", count);
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(statusMap), 86400);
-			return count;
-		}
-	}
-
-	/**
 	 * 根据(自编抬头)抬头获取当天缓存中的自增数
 	 * 
 	 * @param topStr
@@ -126,21 +100,28 @@ public class SerialNoUtils {
 	 * @return int
 	 */
 	public static final int getSerialNo(String topStr) {
-		String dateSign = DateUtil.format(new Date(), "yyyyMMdd");
-		String str = JedisUtil.get(topStr + "_SerialNo_" + dateSign);
-		int serial = 1;
-		if (str != null && !"".equals(str.trim())) {
-			try {
-				serial = Integer.parseInt(str);
-				JedisUtil.set(topStr + "_SerialNo_" + dateSign, 60 * 60 * 24, serial + 1);
-				return serial + 1;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return -1;
-			}
+		if (StringEmptyUtils.isEmpty(topStr)) {
+			return -1;
 		}
-		JedisUtil.set(topStr + "_SerialNo_" + dateSign, 60 * 60 * 24, 1);
-		return serial;
+		synchronized (LOCK) {
+			String dateSign = DateUtil.format(new Date(), "yyyyMMdd");
+			String key = "shop_key_" + topStr + "_SerialNo_" + dateSign;
+			String str = JedisUtil.get(key);
+			int serial = 1;
+			if (str != null && !"".equals(str.trim())) {
+				try {
+					serial = Integer.parseInt(str);
+					serial++;
+					JedisUtil.set(key, (60 * 60) * 24, serial);
+					return serial;
+				} catch (Exception e) {
+					e.printStackTrace();
+					return -1;
+				}
+			}
+			JedisUtil.set(key, 60 * 60 * 24, 1);
+			return serial;
+		}
 	}
 
 	/**
@@ -170,18 +151,8 @@ public class SerialNoUtils {
 		return topStr + time + strCount + ramCount;
 	}
 
-	public static void main(String[] args) {
-		String str = "YT201802228377126678";
-		Map<String, Object> map = new HashMap<>();
-		map.put("str", str);
-		System.out.println("YM20180320022081798".length());
-		System.out.println(map);
-		System.out.println(map.toString());
-	}
-
 	/**
-	 * 生成流水号不要后4位随机数
-	 *  流水号格式为:自编抬头+五位增长数(当天缓存自增数)
+	 * 生成流水号不要后4位随机数 流水号格式为:自编抬头+五位增长数(当天缓存自增数)
 	 * 
 	 * @param topStr
 	 *            自编抬头
@@ -201,7 +172,12 @@ public class SerialNoUtils {
 		while (strId.length() < 5) {
 			strId = "0" + strId;
 		}
-		return topStr  + strId;
+		return topStr + strId;
+	}
 
+	public static void main(String[] args) {
+		String d = "53.333";
+		double y= Double.parseDouble("53.333");
+		System.out.println("---->" + y);
 	}
 }

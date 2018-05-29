@@ -10,7 +10,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.AgentWalletService;
 import org.silver.shop.dao.system.tenant.ProxyWalletDao;
-import org.silver.shop.model.system.tenant.AgentWalletLog;
+import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;

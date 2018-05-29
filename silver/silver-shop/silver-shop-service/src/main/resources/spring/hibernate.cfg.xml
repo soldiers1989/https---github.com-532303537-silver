@@ -12,7 +12,7 @@
 			org.hibernate.dialect.MySQLDialect
 		</property>
 		<property name="connection.url">
-			jdbc:mysql://150.242.58.22:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
+			jdbc:mysql://150.242.58.19:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
 			<!-- jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false -->
 		</property>
 		<!-- jdbc:mysql://yueliankeji.mysql.rds.aliyuncs.com:3302/szs_sj?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true -->
@@ -89,7 +89,7 @@
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantWalletContent.hbm.xml" />
 		<mapping
-			resource="org/silver/shop/model/system/tenant/MerchantWalletLog.hbm.xml" />
+			resource="org/silver/shop/model/system/log/MerchantWalletLog.hbm.xml" />
 
 		<mapping resource="org/silver/shop/model/system/manual/Morder.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/MorderSub.hbm.xml" />
@@ -101,7 +101,7 @@
 		<mapping resource="org/silver/shop/model/system/organization/Proxy.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/AgentWalletContent.hbm.xml" />
-		<mapping resource="org/silver/shop/model/system/tenant/AgentWalletLog.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/AgentWalletLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/Postal.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/Appkey.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/IdCard.hbm.xml" />

@@ -166,7 +166,7 @@ public class OrderServiceImpl implements OrderService {
 			name = "totalShopOrder";
 		}
 		// 查询缓存中商城下单自增Id
-		int count = SerialNoUtils.getRedisIdCount(name);
+		int count = SerialNoUtils.getSerialNo(name);
 		return SerialNoUtils.getSerialNo(topStr, count);
 	}
 

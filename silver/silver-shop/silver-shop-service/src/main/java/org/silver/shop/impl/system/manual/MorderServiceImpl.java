@@ -431,7 +431,7 @@ public class MorderServiceImpl implements MorderService {
 			}
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("order");
+			int count = SerialNoUtils.getSerialNo("order");
 			String newOrderId = SerialNoUtils.getSerialNo("YM", count);
 			morder.setOrder_id(newOrderId);
 			// 原导入表中的订单编号
@@ -579,7 +579,7 @@ public class MorderServiceImpl implements MorderService {
 			String orderId = item.get("orderId") + "";
 			if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
 				// 查询缓存中订单自增Id
-				int count = SerialNoUtils.getRedisIdCount("order");
+				int count = SerialNoUtils.getSerialNo("order");
 				orderId = SerialNoUtils.getSerialNo("YM", count);
 			}
 			// 校验企邦是否已经录入已备案商品信息
@@ -1213,7 +1213,7 @@ public class MorderServiceImpl implements MorderService {
 			}
 			Map<String, Object> params = new HashMap<>();
 			// 查询缓存中商品自编号自增Id
-			int count = SerialNoUtils.getRedisIdCount("goodsRecordHead");
+			int count = SerialNoUtils.getSerialNo("goodsRecordHead");
 			String goodsRecordHeadSerialNo = SerialNoUtils.getSerialNo("GRH", count);
 			item.put("goodsRecordHeadSerialNo", goodsRecordHeadSerialNo);
 			if (!saveGoodsRecordHead(item)) {
@@ -1582,7 +1582,7 @@ public class MorderServiceImpl implements MorderService {
 		String orderId = item.get("orderId") + "";
 		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
 			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("order");
+			int count = SerialNoUtils.getSerialNo("order");
 			orderId = SerialNoUtils.getSerialNo("YM", count);
 		}
 		// 校验企邦是否已经录入已备案商品信息

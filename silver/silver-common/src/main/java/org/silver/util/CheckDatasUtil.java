@@ -23,7 +23,6 @@ public class CheckDatasUtil {
 	 * @return Map
 	 */
 	public static Map<String, Object> checkData(JSONArray datas, List<String> noNullKeys) {
-		Map<String, Object> map = new HashMap<>();
 		List<JSONObject> dataList = new ArrayList<>();
 		if (datas != null && !datas.isEmpty()) {
 			JSONObject jsonObject = null;
@@ -35,9 +34,7 @@ public class CheckDatasUtil {
 					key = it.next() + "";
 					value = jsonObject.get(key) + "";
 					if (("null".equals(value) || "".equals(value.trim())) && noNullKeys.contains(key)) {
-						map.put("status", -1);
-						map.put("msg", "第" + (i + 1) + "条数据 " + key + " 不能为空!");
-						return map;
+						return ReturnInfoUtils.errorInfo("第" + (i + 1) + "条数据 " + key + " 不能为空!");
 					}
 					noNullKeys.remove(key);
 				}
@@ -46,10 +43,7 @@ public class CheckDatasUtil {
 			if (!noNullKeys.isEmpty()) {
 				return ReturnInfoUtils.errorInfo(noNullKeys.get(0) + ":不能为空!");
 			}
-			map.put("status", 1);
-			map.put("datas", dataList);
-			map.put("msg", "数据校验通过");
-			return map;
+			return ReturnInfoUtils.successDataInfo(dataList);
 		}
 		return ReturnInfoUtils.errorInfo("非法数据!");
 	}

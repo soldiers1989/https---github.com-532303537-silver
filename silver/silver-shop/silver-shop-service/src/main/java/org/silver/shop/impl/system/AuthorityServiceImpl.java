@@ -296,7 +296,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 		case "member":
 			break;
 		default:
-			break;
+			return ReturnInfoUtils.errorInfo("类型错误!");
 		}
 		return addRoleAuthorityInfo(jsonArr, datasMap.get("managerName") + "", userId, userName);
 	}

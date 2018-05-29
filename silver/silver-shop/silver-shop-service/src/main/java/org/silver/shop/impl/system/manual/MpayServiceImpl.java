@@ -27,6 +27,7 @@ import org.silver.shop.impl.system.organization.AgentServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
@@ -101,18 +102,36 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private static final String ERROR = "error";
 	/**
-	 * 商户Id
+	 * 驼峰写法：商户Id
 	 */
 	private static final String MERCHANT_ID = "merchantId";
 	/**
 	 * 下划线版本的订单Id
 	 */
 	private static final String ORDER_ID = "order_id";
+	/**
+	 * 驼峰写法：商户名称
+	 */
+	private static final String MERCHANT_NAME = "merchantName";
+	
+	/**
+	 * 口岸
+	 */
+	private static final String E_PORT = "eport";
 
+	/**
+	 * 检验检疫机构代码
+	 */
+	private static final String CIQ_ORG_CODE = "ciqOrgCode";
+
+	/**
+	 * 主管海关代码
+	 */
+	private static final String CUSTOMS_CODE = "customsCode";
+	
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
-
 		// 总参数
 		Map<String, Object> params = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
@@ -125,9 +144,9 @@ public class MpayServiceImpl implements MpayService {
 		if (jsonList == null || jsonList.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("订单Id信息包不能为空!");
 		}
-		int eport = Integer.parseInt(customsMap.get("eport") + "");
-		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
-		String customsCode = customsMap.get("customsCode") + "";
+		int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
+		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
+		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
 		// 校验前台传递口岸、海关、智检编码
 		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
 		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
@@ -182,7 +201,7 @@ public class MpayServiceImpl implements MpayService {
 		// 总数
 		int totalCount = jsonList.size();
 		params.put(MERCHANT_ID, merchantId);
-		params.put("merchantName", merchantName);
+		params.put(MERCHANT_NAME, merchantName);
 		params.put("tok", tok);
 		// 获取流水号
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
@@ -235,13 +254,27 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
 			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			return manualOrderToll(merchantWallet, merchantFeeId, totalAmountPaid, merchant);
+			try{
+				return manualOrderToll(merchantWallet, merchantFeeId, totalAmountPaid, merchant, newList.size());
+			}catch (Exception e) {
+				e.printStackTrace();
+				logger.error("---订单平台服务费计算错误-->",e);
+			}
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 根据商户勾选的所有订单总金额进行申报手续费计算
+	 * @param merchantWallet 商户钱包
+	 * @param merchantFeeId 商户口岸费率Id
+	 * @param totalAmountPaid 订单总金额
+	 * @param merchant 商户信息实体类
+	 * @param count 数量
+	 * @return Map
+	 */
 	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, String merchantFeeId,
-			double totalAmountPaid, Merchant merchant) {
+			double totalAmountPaid, Merchant merchant, int count) {
 		if (merchant == null) {
 			return ReturnInfoUtils.errorInfo("商户钱包扣款时商户信息不能为空!");
 		}
@@ -262,41 +295,106 @@ public class MpayServiceImpl implements MpayService {
 		double balance = merchantWallet.getBalance();
 		// 订申报单手续费
 		double serviceFee = totalAmountPaid * fee;
-		// 商户钱包扣钱进代理商钱包
+		// 商户钱包扣款
 		Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet, balance,
 				serviceFee);
 		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletDeductionMap;
 		}
+
+		// 查询代理商钱包
+		Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
+				merchant.getAgentParentName());
+		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
+			return reAgentMap;
+		}
+		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> datas = new HashMap<>();
 		datas.put(MERCHANT_ID, merchant.getMerchantId());
+		datas.put("walletId", merchantWallet.getWalletId());
+		datas.put(MERCHANT_NAME, merchant.getMerchantName());
+		datas.put("serialName", "订单申报-手续费");
 		datas.put("balance", balance);
-		datas.put("serviceFee", serviceFee);
-		datas.put("name", "订单申报-手续费");
-		// datas.put("note", "[" + count + "]单,支付单申报服务费");
+		datas.put("amount", serviceFee);
+		datas.put("type", 4);
+		datas.put("flag", "out");
+		datas.put("note", "[" + count + "]单,订单申报-手续费");
+		datas.put("targetWalletId", agentWallet.getWalletId());
+		datas.put("targetName", agentWallet.getAgentName());
+
+		datas.put("count", count);
 		// 添加商户钱包流水日志
 		Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
+		datas.put("totalAmountPaid", totalAmountPaid);
 		// 代理商收取订单申报服务费
-	//	Map<String,Object> reChargeFeeMap = chargeFee(merchant.getAgentParentId(), serviceFee);
-		//if(!"1".equals(reChargeFeeMap.get(BaseCode.STATUS.toString()))){
-			//return reChargeFeeMap;
-		//}
-		//添加代理商钱包流水日志
-		
+		Map<String, Object> reChargeFeeMap = agentChargeFee(merchant.getAgentParentId(), serviceFee, datas);
+		if (!"1".equals(reChargeFeeMap.get(BaseCode.STATUS.toString()))) {
+			return reChargeFeeMap;
+		}
+
 		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
 	 * 代理商下商户推送订单后佣金结算
 	 * 
+	 * @param agentId
+	 *            代理商Id
 	 * @param serviceFee
-	 * 
-	 * @param merchantId
+	 *            平台服务费
+	 * @param datas
+	 *            参数
+	 * @return Map
 	 */
-	private Map<String, Object> chargeFee(String agentId, double serviceFee) {
+	private Map<String, Object> agentChargeFee(String agentId, double serviceFee, Map<String, Object> datas) {
+		Map<String, Object> reAgentWalletMap = agentWalletReceipt(agentId, serviceFee, datas);
+		if (!"1".equals(reAgentWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reAgentWalletMap;
+		}
+		double agentFee = Double.parseDouble(datas.get("agentFee") + "");
+		// 银盟平台进行代理商订单佣金收取
+		Map<String, Object> rePlatformMap = platformCommissionFee(serviceFee);
+		if (!"1".equals(rePlatformMap.get(BaseCode.STATUS.toString()))) {
+			return rePlatformMap;
+		}
+		AgentWalletContent agentWallet = (AgentWalletContent) rePlatformMap.get(BaseCode.DATAS.toString());
+		// 获取以更新后得总代理钱包余额剪掉佣金,得到原来未变更的钱包余额
+		double balance = agentWallet.getBalance() - agentFee;
+		// 代理商收款来源钱包Id与商户名称
+		String walletId = datas.get("walletId") + "";
+		String agentName = datas.get("agentName") + "";
+		datas.put("walletId", agentWallet.getWalletId());
+		datas.put("agentName", "银盟");
+		datas.put("serialName", "申报订单-平台佣金");
+		datas.put("balance", balance);
+		datas.put("amount", agentFee);
+		datas.put("type", 4);
+		datas.put("flag", "in");
+		datas.put("note", "商户申报[" + datas.get("count") + "]订单后,平台收取代理商佣金");
+		datas.put("targetWalletId", walletId);
+		datas.put("targetName", agentName);
+
+		// 添加平台总代理商钱包流水日志
+		Map<String, Object> reTotalWalletLogMap = addAgentWalletLog(datas);
+		if (!"1".equals(reTotalWalletLogMap.get(BaseCode.STATUS.toString()))) {
+			return reTotalWalletLogMap;
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 代理商钱包清算，先将商户申报订单时服务费加入至代理商钱包中,并生成加款日志记录,然后根据代理商与总代理(暂写死为银盟为总代理)协商的佣金率,
+	 * 进行平台平台服务费的扣款,并进行日志记录
+	 * 
+	 * @param agentId
+	 * @param serviceFee
+	 * @param datas
+	 * @return
+	 */
+	private Map<String, Object> agentWalletReceipt(String agentId, double serviceFee, Map<String, Object> datas) {
 		Map<String, Object> reAgentMap = agentServiceImpl.getAgentInfo(agentId);
 		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
 			return reAgentMap;
@@ -307,11 +405,152 @@ public class MpayServiceImpl implements MpayService {
 			return reWalletMap;
 		}
 		AgentWalletContent agentWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+		// 获取钱包余额
 		double balance = agentWallet.getBalance();
-
 		agentWallet.setBalance(balance + serviceFee);
 		if (!morderDao.update(agentWallet)) {
 			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
+		}
+		// 代理商收款来源钱包Id与商户名称
+		String walletId = datas.get("walletId") + "";
+		String merchantName = datas.get(MERCHANT_NAME) + "";
+		// 重新放入钱包日志参数
+		datas.put("walletId", agentWallet.getWalletId());
+		datas.put("agentName", agent.getAgentName());
+		datas.put("balance", balance);
+		datas.put("flag", "in");
+		// 类型1-佣金、2-充值、3-提现、4-缴费
+		datas.put("type", 1);
+		datas.put("targetWalletId", walletId);
+		datas.put("targetName", merchantName);
+		// 添加代理商钱包流水日志
+		Map<String, Object> reWalletLogMap = addAgentWalletLog(datas);
+		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletLogMap;
+		}
+		String strAmount = String.valueOf(datas.get("totalAmountPaid"));
+		if (StringEmptyUtils.isEmpty(strAmount)) {
+			return ReturnInfoUtils.errorInfo("订单总金额不能为空!");
+		}
+		double totalAmountPaid = Double.parseDouble(strAmount);
+		// 代理商订单佣金率
+		double agentFee = totalAmountPaid * agent.getOrderCommissionRate();
+		// 变更前的代理商钱包余额
+		double beforeChangingBalance = agentWallet.getBalance();
+		// 代理商支付平台佣金
+		Map<String, Object> reAgentTollMap = agentTollCommissionRate(agentWallet, agentFee);
+		if (!"1".equals(reAgentTollMap.get(BaseCode.STATUS.toString()))) {
+			return reAgentTollMap;
+		}
+		// 使用代理商钱包余额替换缓存中的商户钱包余额
+		// 重新放入钱包日志参数
+		datas.put("walletId", agentWallet.getWalletId());
+		datas.put("agentName", agent.getAgentName());
+		datas.put("balance", beforeChangingBalance);
+		datas.put("name", "商户申报[" + datas.get("count") + "]订单后,缴纳代理商佣金");
+		datas.put("serialName", "申报订单-平台佣金");
+		datas.put("flag", "out");
+		Map<String, Object> rePlatformWalletMap = walletUtils.checkWallet(3, "AgentId_00001", "银盟");
+		if (!"1".equals(rePlatformWalletMap.get(BaseCode.STATUS.toString()))) {
+			return rePlatformWalletMap;
+		}
+		AgentWalletContent platformWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+		datas.put("targetWalletId", platformWallet.getWalletId());
+		datas.put("targetName", "银盟");
+		// 代理商支付平台佣金后记录支付日志
+		Map<String, Object> reAgentWalletLogMap = addAgentWalletLog(datas);
+		if (!"1".equals(reAgentWalletLogMap.get(BaseCode.STATUS.toString()))) {
+			return reAgentWalletLogMap;
+		}
+		datas.put("agentFee", agentFee);
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 订单申报后,代理商抽取佣金
+	 * 
+	 * @param agentWallet
+	 * @param fee
+	 * @return
+	 */
+	private Map<String, Object> agentTollCommissionRate(AgentWalletContent agentWallet, double fee) {
+		double agentOldBalance = agentWallet.getBalance();
+		agentWallet.setBalance(agentOldBalance - fee);
+		if (!morderDao.update(agentWallet)) {
+			return ReturnInfoUtils.errorInfo("订单申报后,代理商抽取佣金失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 平台收取代理商对应的订单申报佣金
+	 * 
+	 * @param fee
+	 *            订单申报佣金
+	 * @return Map
+	 */
+	private Map<String, Object> platformCommissionFee(double fee) {
+		// 查询平台总代理的钱包信息
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, "AgentId_00001", "银盟");
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletMap;
+		}
+		AgentWalletContent agentWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+		// 获取总代理商钱包余额
+		double oldB = agentWallet.getBalance();
+		agentWallet.setBalance(oldB + fee);
+		if (!morderDao.update(agentWallet)) {
+			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successDataInfo(agentWallet);
+	}
+
+	/**
+	 * 添加代理商钱包流水日志
+	 * 
+	 * @param agentWallet
+	 *            代理商钱包实体信息类
+	 * @param datas
+	 *            参数
+	 * @return Map
+	 */
+	private Map<String, Object> addAgentWalletLog(Map<String, Object> datas) {
+		if (datas == null || datas.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
+		}
+		Map<String, Object> reCheckMap = WalletUtils.checkWalletInfo(datas);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+		AgentWalletLog log = new AgentWalletLog();
+		log.setAgentWalletId(datas.get("walletId") + "");
+		log.setAgentName(datas.get("agentName") + "");
+		int serialNo = SerialNoUtils.getSerialNo("logs");
+		if (serialNo < 0) {
+			return ReturnInfoUtils.errorInfo("查询流水号自增Id失败,服务器繁忙!");
+		}
+		log.setSerialNo(SerialNoUtils.getSerialNo("L", serialNo));
+		log.setSerialName(datas.get("serialName") + "");
+		double balance = Double.parseDouble(datas.get("balance") + "");
+		log.setBeforeChangingBalance(balance);
+		double amount = Double.parseDouble(datas.get("amount") + "");
+		log.setAmount(amount);
+		String flag = datas.get("flag") + "";
+		log.setFlag(flag);
+		if ("in".equals(flag)) {
+			log.setAfterChangeBalance(balance + amount);
+		} else if ("out".equals(flag)) {
+			log.setAfterChangeBalance(balance - amount);
+		}
+		log.setType(Integer.parseInt(datas.get("type") + ""));
+		log.setStatus("success");
+		log.setNote(datas.get("note") + "");
+		log.setTargetWalletId(datas.get("targetWalletId") + "");
+		log.setTargetName(datas.get("targetName") + "");
+		log.setCreateBy("system");
+		log.setCreateDate(new Date());
+		if (!morderDao.add(log)) {
+			return ReturnInfoUtils.errorInfo("保存代理商钱包日志流水信息失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -518,9 +757,9 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID,
 			Map<String, Object> customsMap) {
-		String eport = customsMap.get("eport") + "";
-		String ciqOrgCode = customsMap.get("ciqOrgCode") + "";
-		String customsCode = customsMap.get("customsCode") + "";
+		String eport = customsMap.get(E_PORT) + "";
+		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
+		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put(ORDER_ID, orderNo);
 		List<Morder> reList = morderDao.findByProperty(Morder.class, paramMap, 0, 0);
@@ -656,7 +895,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 0:商品备案 1:订单推送 2:支付单推送
 		orderMap.put("type", 1);
-		int eport = Integer.parseInt(customsMap.get("eport") + "");
+		int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
 		int businessType = eport == 1 ? 3 : 2;
@@ -669,7 +908,7 @@ public class MpayServiceImpl implements MpayService {
 		// 商品发起备案(录入)日期
 		orderMap.put("inputDate", inputDate);
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-		orderMap.put("eport", eport);
+		orderMap.put(E_PORT, eport);
 		if (StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 			// 电商企业编号
 			orderMap.put("ebEntNo", ebEntNo);
@@ -681,8 +920,8 @@ public class MpayServiceImpl implements MpayService {
 			// 电商企业名称
 			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 		}
-		orderMap.put("ciqOrgCode", customsMap.get("ciqOrgCode"));
-		orderMap.put("customsCode", customsMap.get("customsCode"));
+		orderMap.put(CIQ_ORG_CODE, customsMap.get(CIQ_ORG_CODE));
+		orderMap.put(CUSTOMS_CODE, customsMap.get(CUSTOMS_CODE));
 		orderMap.put("appkey", appkey);
 		orderMap.put("clientsign", clientsign);
 		orderMap.put("timestamp", timestamp);
@@ -699,13 +938,13 @@ public class MpayServiceImpl implements MpayService {
 			orderMap.put("opType", "A");
 		}
 		// 是否像海关发送
-		// orderMap.put("uploadOrNot", false);
+		orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-			orderMap.put("eport", 1);
+			orderMap.put(E_PORT, 1);
 			if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 				// 电商企业编号
 				orderMap.put("ebEntNo", dzkaNo);
@@ -718,7 +957,7 @@ public class MpayServiceImpl implements MpayService {
 			}
 			System.out.println("-----------------第二次向电子口岸发送------------");
 			// 检验检疫机构代码
-			orderMap.put("ciqOrgCode", "443400");
+			orderMap.put(CIQ_ORG_CODE, "443400");
 			resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		}
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {

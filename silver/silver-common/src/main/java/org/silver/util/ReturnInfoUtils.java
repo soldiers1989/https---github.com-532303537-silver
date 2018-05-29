@@ -21,7 +21,7 @@ public class ReturnInfoUtils {
 	 */
 	public static final Map<String, Object> errorInfo(String message) {
 		if (StringEmptyUtils.isEmpty(message)) {
-			return null;
+			return errorInfo("未知错误,返回错误信息失败!");
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -52,7 +52,7 @@ public class ReturnInfoUtils {
 	 */
 	public static final Map<String, Object> successDataInfo(Object datas, long count) {
 		if (datas == null || count < 0) {
-			return null;
+			return errorInfo("未知错误,返回错误信息失败!");
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -71,7 +71,7 @@ public class ReturnInfoUtils {
 	 */
 	public static final Map<String, Object> successDataInfo(Object datas) {
 		if (datas == null) {
-			return null;
+			return successInfo();
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -89,7 +89,7 @@ public class ReturnInfoUtils {
 	 */
 	public static final Map<String, Object> errorInfo(List<Map<String, Object>> errorList) {
 		if (errorList == null) {
-			return null;
+			return errorInfo("未知错误,返回错误信息失败!");
 		}else if(errorList.isEmpty()){
 			return successInfo();
 		}

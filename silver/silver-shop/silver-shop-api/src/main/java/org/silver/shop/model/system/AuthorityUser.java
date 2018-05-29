@@ -21,7 +21,7 @@ public class AuthorityUser implements Serializable {
 	private Long authorityId;
 	// 权限代码
 	private String authorityCode;
-	private String status;// 状态1-启用(授权),2-禁用()
+	private String status;// 状态1-启用(授权),2-禁用
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人

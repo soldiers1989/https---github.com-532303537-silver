@@ -346,7 +346,7 @@ public class GoodsRecordTransaction {
 				}
 			}
 			// 查询缓存中商品自编号自增Id
-			int count = SerialNoUtils.getRedisIdCount("goods");
+			int count = SerialNoUtils.getSerialNo("goods");
 			String entGoodsNo = SerialNoUtils.getSerialNo("GR", count);
 			Map<String, Object> param = new HashMap<>();
 			// 由于行循环是从第三行开始读取,所以SEQ要减1

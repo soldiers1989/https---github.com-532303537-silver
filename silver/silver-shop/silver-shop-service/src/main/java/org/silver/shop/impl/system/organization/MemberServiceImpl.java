@@ -533,7 +533,7 @@ public class MemberServiceImpl implements MemberService {
 		YmMallOauth oau = new YmMallOauth();
 		Calendar calendar = Calendar.getInstance();
 		String termTransID = SerialNoUtils.getSerialNo("YMID", calendar.get(Calendar.YEAR),
-				SerialNoUtils.getRedisIdCount("realName"));
+				SerialNoUtils.getSerialNo("realName"));
 		Map<String, Object> reOauthMap = oau.oauthInfo(termTransID, "YS02", "", name, idCard, "", "");
 		if (!"1".equals(reOauthMap.get(BaseCode.STATUS.toString()))) {
 			return reOauthMap;

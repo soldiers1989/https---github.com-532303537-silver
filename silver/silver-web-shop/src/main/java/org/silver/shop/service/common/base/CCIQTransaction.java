@@ -9,6 +9,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CCIQService;
 import org.silver.shop.model.common.base.CCIQ;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,21 +27,15 @@ public class CCIQTransaction {
 	public Object getCCIQInfo() {
 		Map<String, Object> datasMap = new HashMap<>();
 		String key = "Shop_Key_Allcciq_List";
-		List<CCIQ> gacList = null;
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null) {
-			gacList = (List<CCIQ>) SerializeUtil.toObject(redisByte);
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.DATAS.toString(), JSONArray.fromObject(gacList));
-			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return datasMap;
+			return ReturnInfoUtils.successDataInfo((List<CCIQ>) SerializeUtil.toObject(redisByte));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
 			datasMap = cciqService.getCCIQInfo();
-			if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 				return datasMap;
 			}
-			gacList = (List<CCIQ>) datasMap.get(BaseCode.DATAS.toString());
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(gacList), 3600);
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return datasMap;
 		}
 	}

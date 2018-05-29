@@ -150,7 +150,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		} else {
 			Morder morder = new Morder();
 			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("order");
+			int count = SerialNoUtils.getSerialNo("order");
 			String newOrderId = SerialNoUtils.getSerialNo("YM", count);
 			morder.setOrder_id(newOrderId);
 			// 原导入表中的订单编号
@@ -538,7 +538,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String orderId = datas.get("orderId") + "";
 		if (StringEmptyUtils.isEmpty(orderId)) {// 当表单中未填写订单Id时,则系统生成
 			// 查询缓存中订单自增Id
-			int count = SerialNoUtils.getRedisIdCount("order");
+			int count = SerialNoUtils.getSerialNo("order");
 			orderId = SerialNoUtils.getSerialNo("YM", count);
 		}
 		Map<String, Object> paramsMap = new HashMap<>();

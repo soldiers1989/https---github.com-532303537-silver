@@ -32,6 +32,7 @@ import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.MerchantUtils;
@@ -73,7 +74,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	@Autowired
 	private AccessTokenService accessTokenService;
 	@Autowired
-	private WalletLogService walletLogService;
+	private MerchantWalletServiceImpl merchantWalletServiceImpl;
 	@Autowired
 	private MemberService memberService;
 	@Autowired
@@ -228,14 +229,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		PaymentContent paymentInfo = new PaymentContent();
 		String entPayNo = datasMap.get("trade_no") + "";
 		paramMap.put("entPayNo", entPayNo);
-		List<Object> rePayList = ysPayReceiveDao.findByProperty(PaymentContent.class, paramMap, 1, 1);
+		List<PaymentContent> rePayList = ysPayReceiveDao.findByProperty(PaymentContent.class, paramMap, 1, 1);
 		if (rePayList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询支付订单是否存在时错误,请重试!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询支付订单是否存在时错误,请重试!");
 		} else if (!rePayList.isEmpty()) {
-			PaymentContent rePaymentInfo = (PaymentContent) rePayList.get(0);
-			return ReturnInfoUtils.successDataInfo(rePaymentInfo);
+			return ReturnInfoUtils.successDataInfo(rePayList.get(0));
 		} else {
 			// 获取订单商品名称
 			String goodsName = orderGoodsContent.getGoodsName();
@@ -280,15 +278,13 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				statusMap.put(BaseCode.MSG.toString(), "保存支付单信息失败,服务器繁忙!");
 				return statusMap;
 			}
-
-			//
-			Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-				statusMap.put(BaseCode.MSG.toString(), "创建钱包失败!");
-				return statusMap;
+			
+			//获取商户钱包信息
+			Map<String, Object> reMerchantMap = walletUtils.checkWallet(1, merchantId, merchantName);
+			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+				return reMerchantMap;
 			}
-			MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
+			MerchantWalletContent wallet = (MerchantWalletContent) reMerchantMap.get(BaseCode.DATAS.toString());
 			// 原钱包余额
 			double oldBalance = wallet.getBalance();
 			Map<String, Object> reWalletMap = updateWallet(wallet, payAmount);
@@ -297,28 +293,29 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				statusMap.put(BaseCode.MSG.toString(), "交易金额存入商户钱包失败,服务器繁忙!");
 				return statusMap;
 			}
-			JSONObject param = new JSONObject();
-			param.put("merchantId", merchantId);
-			param.put("merchantName", merchantName);
-			param.put("memberId", memberId);
-			param.put("memberName", memberName);
-			param.put("entOrderNo", entOrderNo);
-			param.put("entPayNo", entPayNo);
-			// 钱包交易日志流水名称
-			param.put("entPayName", goodsName);
-			param.put("payAmount", payAmount);
-			param.put("oldBalance", oldBalance);
-			// 分类:1-购物、2-充值、3-提现、4-缴费
-			param.put("type", 1);
-			Map<String, Object> reWalletLogMap = walletLogService.addWalletLog(2, param);
-			if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-				statusMap.put(BaseCode.MSG.toString(), "交易日志记录失败,服务器繁忙!");
-				return statusMap;
+			Map<String, Object> datas = new HashMap<>();
+			datas.put("walletId", wallet.getWalletId());
+			datas.put("merchantName", merchantName);
+			datas.put("serialName", goodsName);
+			datas.put("balance", oldBalance);
+			datas.put("amount", payAmount);
+			datas.put("type", 5);
+			datas.put("flag", "in");
+			//获取用户钱包信息
+			Map<String, Object> reMemeberMap = walletUtils.checkWallet(2, memberId, memberName);
+			if (!"1".equals(reMemeberMap.get(BaseCode.STATUS.toString()))) {
+				return reMemeberMap;
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), paymentInfo);
-			return statusMap;
+			MemberWalletContent memberWallet = (MemberWalletContent) reMerchantMap.get(BaseCode.DATAS.toString());
+			datas.put("targetWalletId", memberWallet.getWalletId());
+			datas.put("targetName", memberName);
+			// 添加商户钱包流水日志
+			Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
+			if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
+				return reWalletLogMap;
+			}
+
+			return ReturnInfoUtils.successDataInfo(paymentInfo);
 		}
 	}
 
