@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -242,8 +243,8 @@ public class GoodsRecordController {
 	 */
 	@RequestMapping(value = "/managerEditGoodsRecordStatus", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("管理员修改备案商品状态")
+	@RequiresPermissions("goodsRecord:managerEditGoodsRecordStatus")
+	@ApiOperation("管理员修改(审核)备案商品状态")
 	public String managerEditGoodsRecordStatus(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("goodsPack") String goodsPack) {
 		String originHeader = req.getHeader("Origin");
@@ -284,7 +285,7 @@ public class GoodsRecordController {
 	@RequestMapping(value = "/managerGetGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员查询商品备案信息")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("goodsRecord:managerGetGoodsRecordInfo")
 	public String managerGetGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");

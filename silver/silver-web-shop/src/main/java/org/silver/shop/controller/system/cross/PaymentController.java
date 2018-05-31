@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -188,7 +189,7 @@ public class PaymentController {
 	@RequestMapping(value = "/managerGetPaymentReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员查询支付单报表")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("paymentReport:managerGetPaymentReport")
 	public String managerGetPaymentReport(HttpServletRequest req, HttpServletResponse response, String startDate,
 			String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -209,7 +210,8 @@ public class PaymentController {
 	 */
 	@RequestMapping(value = "/managerGetMpayInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@ApiOperation("管理员查询商户手工支付单信息")
+	@RequiresPermissions("manualPayment:managerGetMpayInfo")
 	public String managerGetMpayRecordInfo(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -236,7 +238,7 @@ public class PaymentController {
 	 */
 	@RequestMapping(value = "/managerEditMpayInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("manualPayment:managerEditMpayInfo")
 	public String managerEditMpayInfo(HttpServletResponse resp, HttpServletRequest req) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -288,7 +290,7 @@ public class PaymentController {
 	 */
 	@RequestMapping(value = "/managerHideMpayInfo", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("manualPayment:managerHideMpayInfo")
 	@ApiOperation("管理员隐藏(对于商户=删除)手工支付单信息")
 	public String managerHideMpayInfo(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("paymentIdPack") String paymentIdPack) {

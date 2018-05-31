@@ -23,13 +23,14 @@ public interface AuthorityService {
 	 * @param managerName 
 	 * @return
 	 */
-	public Map<String, Object> setRoleAuthority(Map<String, Object> datasMap);
+	public Map<String, Object> setAuthorityInfo(Map<String, Object> datasMap);
 
 	/**
-	 * 管理员针对对应的用户组查询权限信息
-	 * @param groupName 用户组的名称
+	 * 管理员针对对应的用户查询权限信息
+	 * @param userId 用户Id
+	 * @param groupName 分组名称
 	 * @return Map
 	 */
-	public Map<String, Object> getAuthorityGroupInfo(String groupName);
+	public Map<String, Object> getUserAuthorityInfo(String userId, String groupName);
 
 }

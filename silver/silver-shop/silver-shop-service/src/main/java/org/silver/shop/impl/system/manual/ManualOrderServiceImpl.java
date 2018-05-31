@@ -61,7 +61,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 */
 	private static final String IDCARD = "idCard";
 	/**
-	 * 商户Id
+	 * 驼峰命名：商户Id
 	 */
 	private static final String MERCHANT_ID = "merchantId";
 	/**
@@ -353,9 +353,6 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		return ReturnInfoUtils.successInfo();
 	}
 
-	public static void main(String[] args) {
-		System.out.println("--->"+StringUtil.isChinese("娜地拉·艾孜拉提"));
-	}
 	/**
 	 * 判断订单与订单商品信息是否存在,如果只是商品不存在则更新订单金额,如果订单号+商品自编号+序号+商户Id查询商品是否已存在,已存在则判定为重复导入
 	 * 
@@ -487,12 +484,13 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String ebEntNo = goodsInfo.get("ebEntNo") + "";
 		String ebEntName = goodsInfo.get("ebEntName") + "";
 		String DZKNNo = goodsInfo.get("DZKNNo") + "";
-		if (StringEmptyUtils.isNotEmpty(sku) && StringEmptyUtils.isNotEmpty(marCode)
-				&& StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)
-				&& StringEmptyUtils.isNotEmpty(DZKNNo)) {
+		if (StringEmptyUtils.isNotEmpty(marCode) && StringEmptyUtils.isNotEmpty(ebEntNo)
+				&& StringEmptyUtils.isNotEmpty(ebEntName) && StringEmptyUtils.isNotEmpty(DZKNNo)) {
 			JSONObject spareParams = new JSONObject();
 			spareParams.put("marCode", marCode);
-			spareParams.put("SKU", sku);
+			if(StringEmptyUtils.isNotEmpty(sku)){
+				spareParams.put("SKU", sku);
+			}
 			spareParams.put("ebEntNo", ebEntNo);
 			spareParams.put("ebEntName", ebEntName);
 			spareParams.put("DZKNNo", DZKNNo);
@@ -505,7 +503,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (manualOrderDao.add(mosb)) {
 			return ReturnInfoUtils.successInfo();
 		}
-		return ReturnInfoUtils.errorInfo("订单商品【" + goodsInfo.get("GoodsName") + "】存储失败，请重试!");
+		return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]商品[" + goodsInfo.get("GoodsName") + "]存储失败，请重试!");
 	}
 
 	/**
@@ -558,6 +556,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		} else {
 			paramsMap.clear();
 			paramsMap.put(ORDER_ID, orderId);
+			paramsMap.put("merchant_no", merchantId);
 			List<Morder> ml = manualOrderDao.findByProperty(Morder.class, paramsMap, 1, 1);
 			if (ml != null && !ml.isEmpty()) {
 				Morder morder = ml.get(0);
@@ -609,7 +608,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 					// 注册会员账号信息
 					memberServiceImpl.registerMember(morder);
 				} else {
-					RedisInfoUtils.errorInfoMq("订单[" + orderId + "]保存失败,请核对订单信息!", ERROR, params);
+					RedisInfoUtils.errorInfoMq("订单[" + orderId + "]保存失败,订单信息错误或订单已存在,请核对信息!", ERROR, params);
 				}
 			}
 		}

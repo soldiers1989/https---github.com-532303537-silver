@@ -599,8 +599,8 @@ public class EditRecordController {
 	 * @return
 	 */
 	@RequestMapping(value = "/managerDeleteMorder", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除手工订单信息 (将订单及订单商品信息移至历史记录表中)")
+	@RequiresPermissions("manualOrder:managerDeleteMorder")
 	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("orderIdPack") String orderIdPack, String note) {
 		String originHeader = req.getHeader("Origin");

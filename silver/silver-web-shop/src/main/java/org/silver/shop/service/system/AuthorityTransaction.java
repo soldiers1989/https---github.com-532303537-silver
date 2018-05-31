@@ -34,18 +34,18 @@ public class AuthorityTransaction {
 	}
 
 	//
-	public Map<String, Object> getAuthorityGroupInfo(String groupName) {
-		return authorityService.getAuthorityGroupInfo(groupName);
+	public Map<String, Object> getUserAuthorityInfo(String userId, String groupName) {
+		return authorityService.getUserAuthorityInfo(userId,groupName);
 	}
 
 	//
-	public Map<String, Object> setRoleAuthority(Map<String, Object> datasMap) {
+	public Map<String, Object> setAuthorityInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取管理员登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
 		String managerName = managerInfo.getManagerName();
 		datasMap.put("managerName", managerName);
-		return authorityService.setRoleAuthority(datasMap);
+		return authorityService.setAuthorityInfo(datasMap);
 	}
 
 }

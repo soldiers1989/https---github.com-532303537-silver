@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.tenant.ManagerWalletTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,8 @@ public class ManagerWalletController {
 	 */
 	@RequestMapping(value = "/getMerchantWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员查询所有商户钱包信息")
+	@RequiresPermissions("merchantWallet:getMerchantWalletInfo")
 	public String getMerchantWalletInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -56,7 +57,7 @@ public class ManagerWalletController {
 	 */
 	@RequestMapping(value = "/updateMerchantWalletAmount", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchantWallet:updateMerchantWalletAmount")
 	@ApiOperation("管理员给商户钱包充值")
 	public String updateMerchantWalletAmount(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId ,@RequestParam("amount") double amount)  {

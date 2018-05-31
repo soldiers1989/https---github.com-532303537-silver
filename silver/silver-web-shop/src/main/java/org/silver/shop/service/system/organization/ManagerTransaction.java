@@ -303,9 +303,13 @@ public class ManagerTransaction {
 				return null;
 			}
 			List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
-			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
+			//JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
 			return item;
 		//}
+	}
+
+	public Object tmpUpdateAuthority() {
+		return managerService.tmpUpdateAuthority();
 	}
 
 }

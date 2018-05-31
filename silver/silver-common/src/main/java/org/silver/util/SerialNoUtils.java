@@ -176,8 +176,7 @@ public class SerialNoUtils {
 	}
 
 	public static void main(String[] args) {
-		String d = "53.333";
-		double y= Double.parseDouble("53.333");
-		System.out.println("---->" + y);
+		String str = "000000000000000000000000000091";
+		System.out.println("---->>>"+str.length());
 	}
 }

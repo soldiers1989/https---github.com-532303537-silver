@@ -14,13 +14,14 @@ import com.justep.baas.data.Table;
 public class AuthorityDaoImpl extends BaseDaoImpl implements AuthorityDao {
 
 	@Override
-	public Table getAuthorityGroupInfo(String groupName) {
+	public Table getAuthorityGroupInfo(String userId, String groupName) {
 		Session session = null;
 		try {
-			String queryString = "SELECT t1.firstName,t1.firstCode,t1.secondCode,t1.secondName,t1.thirdCode,t1.thirdName,t2.id AS groupId,t1.groupName,t2.status  FROM ym_shop_sys_authority t1 "
-					+ " RIGHT JOIN ym_shop_sys_authority_group t2 ON t1.id = t2.authorityId WHERE t2.groupName = ?";
+			String queryString = " SELECT m.* ,t3.checkFlag ,t3.userId FROM (SELECT t1.firstName,t1.secondName,t1.thirdName,t2.status,t2.authorityId  FROM ym_shop_sys_authority t1 INNER JOIN ym_shop_sys_authority_group t2 ON (t1.id = t2.authorityId AND t2.status = 1 AND t2.groupName = ?) ) m "
+					+ " LEFT JOIN ym_shop_sys_authority_user t3 ON t3.authorityId = m.authorityId WHERE t3.userId = ? OR t3.userId IS NULL ";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(groupName);
+			sqlParams.add(userId);
 			session = getSession();
 			java.sql.Connection conn = session.connection();
 			Table t = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);

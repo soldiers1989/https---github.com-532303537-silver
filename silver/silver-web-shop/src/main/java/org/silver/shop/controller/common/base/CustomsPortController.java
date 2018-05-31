@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -78,7 +79,7 @@ public class CustomsPortController {
 	@RequestMapping(value = "/addCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("添加已开通的海关及智检")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("customsPort:addCustomsPort")
 	public String addCustomsPort( HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -134,7 +135,7 @@ public class CustomsPortController {
 	@RequestMapping(value = "/deleteCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("刪除已开通的 海关及国检名称与编码")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("customsPort:deleteCustomsPort")
 	public String deleteCustomsPort(HttpServletRequest req, HttpServletResponse response, @RequestParam("id") long id) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -152,7 +153,7 @@ public class CustomsPortController {
 	@RequestMapping(value = "/modifyCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员修改已开通的海关及国检名称与编码")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("customsPort:modifyCustomsPort")
 	public String modifyCustomsPort(HttpServletRequest req, HttpServletResponse response, @RequestParam("id") long id) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

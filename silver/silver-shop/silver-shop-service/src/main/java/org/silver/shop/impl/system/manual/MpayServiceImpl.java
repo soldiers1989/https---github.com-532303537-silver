@@ -938,7 +938,7 @@ public class MpayServiceImpl implements MpayService {
 			orderMap.put("opType", "A");
 		}
 		// 是否像海关发送
-		orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次

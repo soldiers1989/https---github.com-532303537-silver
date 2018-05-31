@@ -76,9 +76,9 @@ public class ManagerController {
 	}
 
 	@RequestMapping(value = "/findAllmemberInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("管理员查询所有用户信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@ApiOperation("管理员查询用户信息")
+	@RequiresPermissions("member:findAllmemberInfo")
 	public String findAllmemberInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -86,8 +86,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllmemberInfo(req, page, size);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(managerTransaction.findAllmemberInfo(req, page, size)).toString();
 	}
 
 	/**
@@ -105,8 +104,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/createManager", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("创建管理员或运营管理员")
+	@ApiOperation("创建管理员")
+	@RequiresPermissions("manager:createManager")
 	public String createManager(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("managerName") String managerName, @RequestParam("loginPassword") String loginPassword,
 			@RequestParam("managerMarks") int managerMarks,String description) {
@@ -135,8 +134,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/findAllMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员查询所有商户信息")
+	@RequiresPermissions("merchant:findAllMerchantInfo")
 	public String findAllMerchantInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
@@ -159,8 +158,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/getMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员获取商户基本信息")
+	@RequiresPermissions("merchant:findAllMerchantInfo")
 	public String getMerchantInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -223,8 +222,7 @@ public class ManagerController {
 	@RequestMapping(value = "/findAllManagerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("超级管理员查询所有运营人员信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
-	//@RequiresPermissions("manager/findAllManagerInfo")
+	@RequiresPermissions("manager:findAllManagerInfo")
 	public String findAllManagerInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -247,7 +245,7 @@ public class ManagerController {
 	@RequestMapping(value = "/resetManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("超级管理员重置运营人员密码")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("manager:resetManagerPassword")
 	public String resetManagerPassword(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("managerId") String managerId) {
 		String originHeader = req.getHeader("Origin");
@@ -283,7 +281,7 @@ public class ManagerController {
 	@RequestMapping(value = "/addMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员添加商户")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchant:addMerchantInfo")
 	public String addMerchantInfo(String recordInfoPack, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -318,7 +316,7 @@ public class ManagerController {
 	@RequestMapping(value = "/editMerhcnatInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员修改商户信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchant:editMerhcnatInfo")
 	public String editMerhcnatInfo(HttpServletRequest req, HttpServletResponse response,
 			 int length) {
 		String originHeader = req.getHeader("Origin");
@@ -349,7 +347,7 @@ public class ManagerController {
 	@RequestMapping(value = "/editMerhcnatBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员修改商户业务(图片)信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchant:editMerhcnatBusinessInfo")
 	public String editMerhcnatBusinessInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("imgLength") int imgLength, @RequestParam("merchantId") String merchantId,
 			@RequestParam("merchantName") String merchantName) {
@@ -379,8 +377,7 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/findMemberDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("管理员查询用户详情")
+	//@RequiresPermissions("member:findAllmemberInfo")
 	public String findMemberDetail(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("memberId") String memberId) {
 		String originHeader = req.getHeader("Origin");
@@ -460,8 +457,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/findMerchantRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员查看商户备案信息")
+	@RequiresPermissions("merchant:findMerchantRecordDetail")
 	public String findMerchantRecordDetail(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -491,8 +488,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/editMerchantRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商户备案信息")
+	@RequiresPermissions("merchant:editMerchantRecordDetail")
 	public String editMerchantRecordDetail(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId,
 			@RequestParam("merchantRecordInfo") String merchantRecordInfo) {
@@ -521,8 +518,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/managerDeleteMerchantRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除商户备案信息")
+	@RequiresPermissions("merchant:managerDeleteMerchantRecordInfo")
 	public String managerDeleteMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response, long id) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -549,8 +546,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/managerAuditMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员审核商户")
+	@RequiresPermissions("merchant:managerAuditMerchantInfo")
 	public String managerAuditMerchantInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantPack") String merchantPack) {
 		String originHeader = req.getHeader("Origin");
@@ -572,9 +569,9 @@ public class ManagerController {
 	 * @return Json
 	 */
 	@RequestMapping(value = "/resetMerchantLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("超级管理员重置运营人员密码")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@ApiOperation("超级管理员重置商户登录密码")
+	@RequiresPermissions("merchant:resetMerchantLoginPassword")
 	public String resetMerchantLoginPassword(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -598,8 +595,8 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/getMerchantBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员获取商户业务(详情)信息")
+	@RequiresPermissions("merchant:getMerchantBusinessInfo")
 	public String getMerchantBusinessInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -618,5 +615,23 @@ public class ManagerController {
 		}
 	}
 	
-	
+	/**
+	 * 临时-管理员更新旧管理员权限信息进权限表中
+	 * 
+	 * @param req
+	 * @param response
+	 * @return Json
+	 */
+	@RequestMapping(value = "/tmpUpdateAuthority", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("临时-管理员更新旧管理员权限信息进权限表中")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	public String tmpUpdateAuthority(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(managerTransaction.tmpUpdateAuthority()).toString();
+	}
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
@@ -126,6 +127,9 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
+		if(datasMap == null || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("商户注册请求参数不能为空!");
+		}
 		Date dateTime = new Date();
 		int type = Integer.parseInt(datasMap.get("type") + "");
 		String loginPassword = datasMap.get("loginPassword") + "";
@@ -138,8 +142,9 @@ public class MerchantServiceImpl implements MerchantService {
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
 		String agentId = datasMap.get("agentId") + "";
+		String  merchantStatus = datasMap.get("merchantStatus") + "";
 		if (type == 1) {// 1-银盟商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,merchantStatus)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			MerchantRecordInfo recordInfo = new MerchantRecordInfo();
@@ -152,7 +157,7 @@ public class MerchantServiceImpl implements MerchantService {
 				return ReturnInfoUtils.errorInfo("保存商户备案信息失败,服务器繁忙!");
 			}
 		} else if (type == 2) {// 2-第三方商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,merchantStatus)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			Map<String, Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId,
@@ -238,10 +243,11 @@ public class MerchantServiceImpl implements MerchantService {
 	 *            商户类型 1-银盟自营、2-第三方商城平台
 	 * @param agentId
 	 *            代理商Id
+	 * @param merchantStatus 
 	 * @return boolean
 	 */
 	private boolean createMerchantInfo(int type, String merchantId, String merchantName, String loginPassword,
-			String managerName, String phone, String agentId) {
+			String managerName, String phone, String agentId, String merchantStatus) {
 		MD5 md5 = new MD5();
 		Merchant merchant = new Merchant();
 		merchant.setMerchantId(merchantId);
@@ -249,7 +255,11 @@ public class MerchantServiceImpl implements MerchantService {
 		merchant.setMerchantName(merchantName);
 		merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
 		// 商户状态：1-启用，2-禁用，3-审核
-		merchant.setMerchantStatus("3");
+		if(StringEmptyUtils.isNotEmpty(merchantStatus)){
+			merchant.setMerchantStatus(merchantStatus);
+		}else{
+			merchant.setMerchantStatus("3");
+		}
 		merchant.setCreateBy(managerName);
 		merchant.setCreateDate(new Date());
 		merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除

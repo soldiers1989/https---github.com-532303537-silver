@@ -35,5 +35,11 @@
 		<property name="updateDate" type="java.util.Date">
 			<column name="updateDate" />
 		</property>
+		<property name="checkFlag" type="java.lang.String">
+			<column name="checkFlag" />
+		</property>
+		<property name="remark" type="java.lang.String">
+			<column name="remark" />
+		</property>
 	</class>
 </hibernate-mapping>

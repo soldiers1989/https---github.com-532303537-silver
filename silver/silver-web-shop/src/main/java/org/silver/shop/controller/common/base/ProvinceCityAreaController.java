@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -64,7 +65,7 @@ public class ProvinceCityAreaController {
 	@RequestMapping(value = "/editProvinceCityAreaInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("修改省市区信息")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("provinceCityArea:editProvinceCityAreaInfo")
 	public String editProvinceCityAreaInfo(HttpServletResponse response, HttpServletRequest req, int flag) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

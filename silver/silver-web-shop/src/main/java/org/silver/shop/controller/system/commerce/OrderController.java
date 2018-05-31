@@ -218,8 +218,8 @@ public class OrderController {
 
 	@RequestMapping(value = "/getManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员查询所有手工订单信息")
+	@RequiresPermissions("manualOrder:getManualOrderInfo")
 	public String getManualOrderInfo(HttpServletRequest req, HttpServletResponse response, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -233,7 +233,7 @@ public class OrderController {
 	@RequestMapping(value = "/managerGetOrderReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员查询订单报表")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("orderReport:managerGetOrderReport")
 	public String managerGetOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate,
 			String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
@@ -296,7 +296,7 @@ public class OrderController {
 	@RequestMapping(value = "/getAlreadyDelOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员获取已删除的订单信息")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("manualOrder:getAlreadyDelOrderInfo")
 	public String getAlreadyDelOrderInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");

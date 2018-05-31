@@ -30,7 +30,7 @@ public class TimerResendPayment implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		System.out.println("支付回调定时器启动-----");
-		reminder();
+		//reminder();
 	}
 
 	public void reminder() {

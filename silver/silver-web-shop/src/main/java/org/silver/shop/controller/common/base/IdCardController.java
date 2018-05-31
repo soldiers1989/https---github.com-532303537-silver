@@ -4,6 +4,7 @@ package org.silver.shop.controller.common.base;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.common.base.IdCardTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class IdCardController {
 	@RequestMapping(value = "/getAllIdCard", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员查询所有身份证信息")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("idCard:getAllIdCard")
 	public String getAllIdCard(HttpServletRequest req, HttpServletResponse response, @RequestParam("page") int page,
 			@RequestParam("size") int size, String idName, String idNumber,String type) {
 		String originHeader = req.getHeader("Origin");
@@ -50,7 +51,7 @@ public class IdCardController {
 	@RequestMapping(value = "/editIdCardInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员修改身份证")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("idCard:editIdCardInfo")
 	public String editIdCardInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("id") long id,
 			@RequestParam("idName") String idName, @RequestParam("idNumber") String idNumber,
 			@RequestParam("type") int type) {
@@ -70,7 +71,7 @@ public class IdCardController {
 	@RequestMapping(value = "/firstUpdateIdCardInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员首次更新身份证数据")
-	@RequiresRoles("Manager")
+	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
 	public String firstUpdateIdCardInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

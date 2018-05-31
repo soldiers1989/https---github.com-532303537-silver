@@ -46,7 +46,8 @@ public class AuthorityController {
 	public String addAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") String type, @RequestParam("groupName") String groupName,
 			@RequestParam("firstName") String firstName, @RequestParam("firstCode") String firstCode,
-			@RequestParam("secondName") String secondName, @RequestParam("secondCode") String secondCode) {
+			@RequestParam("secondName") String secondName, @RequestParam("secondCode") String secondCode,
+			@RequestParam("thirdName") String thirdName, @RequestParam("thirdCode") String thirdCode) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -92,21 +93,24 @@ public class AuthorityController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/getAuthorityGroupInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/getUserAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	@ApiOperation("管理员针对对应的用户组查询权限信息")
-	public String getAuthorityGroupInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("groupName") String groupName) {
+	@ApiOperation("管理员获取用户所有权限")
+	public String getUserAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("userId") String userId ,@RequestParam("groupName") String groupName ) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (StringEmptyUtils.isEmpty(groupName)) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		if (StringEmptyUtils.isEmpty(userId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
 		}
-		return JSONObject.fromObject(authorityTransaction.getAuthorityGroupInfo(groupName)).toString();
+		if (StringEmptyUtils.isEmpty(groupName)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("分组名称不能为空!")).toString();
+		}
+		return JSONObject.fromObject(authorityTransaction.getUserAuthorityInfo(userId,groupName)).toString();
 	}
 
 	/**
@@ -116,11 +120,11 @@ public class AuthorityController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "/setRoleAuthority", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/setAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员设置角色权限信息")
-	public String setRoleAuthority(HttpServletRequest req, HttpServletResponse response,
+	public String setAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") String type, @RequestParam("userId") String userId,
 			@RequestParam("authorityPack") String authorityPack) {
 		String originHeader = req.getHeader("Origin");
@@ -138,19 +142,6 @@ public class AuthorityController {
 		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
-		return JSONObject.fromObject(authorityTransaction.setRoleAuthority(datasMap)).toString();
-	}
-
-	public static void main(String[] args) {
-		JSONArray json = new JSONArray();
-		Map<String, Object> item = new HashMap<>();
-		item.put("authorityId", "1");
-		item.put("authorityCode", "manager/findAllManagerInfo");
-		//Map<String, Object> item2 = new HashMap<>();
-		//item2.put("authorityId", "3");
-		//item2.put("authorityCode", "groupAddOrder");
-		json.add(item);
-	//	json.add(item2);
-		System.out.println(json.toString());
+		return JSONObject.fromObject(authorityTransaction.setAuthorityInfo(datasMap)).toString();
 	}
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
@@ -48,8 +49,8 @@ public class CategoryController {
 
 	@RequestMapping(value = "/addGoodsCategory", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员添加商品类型")
+	@RequiresPermissions("category:addGoodsCategory")
 	public String addGoodsCategory(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -62,8 +63,8 @@ public class CategoryController {
 
 	@RequestMapping(value = "/deleteGoodsCategory", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
 	@ApiOperation("管理员删除商品类型")
+	@RequiresPermissions("category:deleteGoodsCategory")
 	public String deleteGoodsCategory(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -76,7 +77,7 @@ public class CategoryController {
 
 	@RequestMapping(value = "/editGoodsCategory", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("category:editGoodsCategory")
 	@ApiOperation("管理员修改商品类型")
 	public String editGoodsCategory(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
@@ -100,7 +101,7 @@ public class CategoryController {
 	 */
 	@RequestMapping(value = "/getCategoryInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("category:getCategoryInfo")
 	public String getCategoryInfo(HttpServletRequest req, HttpServletResponse response, @RequestParam("type") int type,
 			@RequestParam("id") String id) {
 		String originHeader = req.getHeader("Origin");
@@ -131,7 +132,7 @@ public class CategoryController {
 	 */
 	@RequestMapping(value = "/searchCategoryInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("category:searchCategoryInfo")
 	public String searchCategoryInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") int type) {
 		String originHeader = req.getHeader("Origin");

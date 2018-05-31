@@ -13,6 +13,8 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.dao.system.organization.ManagerDao;
 import org.silver.shop.impl.system.commerce.StockServiceImpl;
+import org.silver.shop.model.system.Authority;
+import org.silver.shop.model.system.AuthorityGroup;
 import org.silver.shop.model.system.AuthorityUser;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
@@ -691,6 +693,7 @@ public class ManagerServiceImpl implements ManagerService {
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("userId", managerId);
+		params.put("checkFlag", "true");
 		List<AuthorityUser> reList = managerDao.findByProperty(AuthorityUser.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询管理员权限信息失败,服务器繁忙!");
@@ -703,6 +706,49 @@ public class ManagerServiceImpl implements ManagerService {
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到该管理员权限信息!");
 		}
+	}
+
+	@Override
+	public Object tmpUpdateAuthority() {
+		Map<String, Object> params = new HashMap<>();
+		@SuppressWarnings("unchecked")
+		List<Authority> reList = managerDao.findByProperty(Authority.class, null, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询管理员权限信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			for (Authority authority : reList) {
+				params.clear();
+				if ("manager".equals(authority.getGroupName().trim())) {
+					List<Manager> reManagerList = managerDao.findByProperty(Manager.class, null, 0, 0);
+					for (Manager manager : reManagerList) {
+						params.clear();
+						params.put("userId", manager.getManagerId());
+						params.put("authorityId", authority.getId());
+						List<AuthorityUser> reAuthorityUserList = managerDao.findByProperty(AuthorityUser.class, params, 0, 0);
+						if(reAuthorityUserList !=null && reAuthorityUserList.isEmpty()){
+							AuthorityUser authorityUser = new AuthorityUser();
+							authorityUser.setUserId(manager.getManagerId());
+							authorityUser.setUserName(manager.getManagerName());
+							authorityUser.setAuthorityId(authority.getId());
+							authorityUser.setAuthorityCode(authority.getSecondCode() + ":" + authority.getThirdCode());
+							System.out.println("---路径-?>>" + authority.getSecondCode() + ":" + authority.getThirdCode());
+							authorityUser.setCheckFlag("true");
+							authorityUser.setCreateBy("system");
+							authorityUser.setCreateDate(new Date());
+							if (managerDao.add(authorityUser)) {
+								System.out.println("-管理员->>>" + manager.getManagerName() + "保存" + authority.getThirdName());
+							}
+						}else{
+							System.out.println(manager.getManagerId()+"--管理员Id对应的权限id-->>>"+authority.getId()+"已存在");
+						}
+					}
+
+				}
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到该管理员权限信息!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 }

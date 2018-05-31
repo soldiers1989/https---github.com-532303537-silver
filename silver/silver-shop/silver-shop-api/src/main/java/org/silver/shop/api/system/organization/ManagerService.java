@@ -174,5 +174,7 @@ public interface ManagerService {
 	 */
 	public Map<String, Object> getManagerAuthority(String managerId);
 
+	public Object tmpUpdateAuthority();
+
 	
 }

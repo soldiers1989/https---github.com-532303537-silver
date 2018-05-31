@@ -6,7 +6,12 @@ import com.justep.baas.data.Table;
 
 public interface AuthorityDao extends BaseDao{
 
-	
-	public Table getAuthorityGroupInfo(String groupName);
+	/**
+	 * 
+	 * @param userId
+	 * @param groupName
+	 * @return
+	 */
+	public Table getAuthorityGroupInfo(String userId, String groupName);
 
 }
