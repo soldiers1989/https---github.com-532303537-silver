@@ -192,7 +192,7 @@ public class ManagerController {
 	@RequestMapping(value = "/updateManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	@ApiOperation("修改管理员密码")
+	@ApiOperation("管理员修改密码")
 	public String updateManagerPassword(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("oldLoginPassword") String oldLoginPassword,
 			@RequestParam("newLoginPassword") String newLoginPassword) {

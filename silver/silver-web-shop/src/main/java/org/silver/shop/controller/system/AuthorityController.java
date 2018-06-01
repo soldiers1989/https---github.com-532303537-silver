@@ -98,7 +98,7 @@ public class AuthorityController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员获取用户所有权限")
 	public String getUserAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("userId") String userId ,@RequestParam("groupName") String groupName ) {
+			@RequestParam("userId") String userId, @RequestParam("groupName") String groupName) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -110,7 +110,7 @@ public class AuthorityController {
 		if (StringEmptyUtils.isEmpty(groupName)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("分组名称不能为空!")).toString();
 		}
-		return JSONObject.fromObject(authorityTransaction.getUserAuthorityInfo(userId,groupName)).toString();
+		return JSONObject.fromObject(authorityTransaction.getUserAuthorityInfo(userId, groupName)).toString();
 	}
 
 	/**
@@ -143,5 +143,33 @@ public class AuthorityController {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(authorityTransaction.setAuthorityInfo(datasMap)).toString();
+	}
+
+	/**
+	 * 管理员修改权限字典信息
+	 * 
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/editAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员修改权限字典信息")
+	public String editAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("authorityId") String authorityId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(authorityTransaction.editAuthorityInfo(datasMap)).toString();
 	}
 }

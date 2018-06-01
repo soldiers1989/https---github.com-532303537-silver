@@ -92,12 +92,13 @@ public class OrderController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put(BaseCode.STATUS.toString(), req.getParameter(BaseCode.STATUS.toString()) + "");
-		datasMap.put("errMsg", req.getParameter("errMsg") + "");
-		datasMap.put("messageID", req.getParameter("messageID") + "");
-		Map<String, Object> statusMap = orderTransaction.updateOrderRecordInfo(datasMap);
-		logger.info(JSONObject.fromObject(statusMap).toString());
-		return JSONObject.fromObject(statusMap).toString();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key =  isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(orderTransaction.updateOrderRecordInfo(datasMap)).toString();
 	}
 
 	/**

@@ -16,7 +16,7 @@ public class AuthorityGroup implements Serializable{
 	
 	private String groupName;// 组 merchant,manager,member
 	
-	private Long authorityId;//关联权限Id
+	private String authorityId;//关联权限Id
 	
 	private String status;//状态1-启用,2-禁用
 	
@@ -27,21 +27,12 @@ public class AuthorityGroup implements Serializable{
 	public String getGroupName() {
 		return groupName;
 	}
-
-	public Long getAuthorityId() {
-		return authorityId;
-	}
-
 	public void setId(Long id) {
 		this.id = id;
 	}
 
 	public void setGroupName(String groupName) {
 		this.groupName = groupName;
-	}
-
-	public void setAuthorityId(Long authorityId) {
-		this.authorityId = authorityId;
 	}
 
 	public String getStatus() {
@@ -51,4 +42,14 @@ public class AuthorityGroup implements Serializable{
 	public void setStatus(String status) {
 		this.status = status;
 	}
+
+	public String getAuthorityId() {
+		return authorityId;
+	}
+
+	public void setAuthorityId(String authorityId) {
+		this.authorityId = authorityId;
+	}
+	
+	
 }

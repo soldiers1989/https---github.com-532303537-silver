@@ -15,7 +15,7 @@ public class AuthorityUser implements Serializable {
 	private Long id;// 流水号
 	private String userId;// 用户Id
 	private String userName;// 用户名称
-	private Long authorityId;// 对应权限Id
+	private String authorityId;// 对应权限Id
 	private String authorityCode;// 权限代码
 	private String checkFlag;//选中标识:true,false
 	private String status;//状态:1-正常,2-禁用
@@ -73,18 +73,9 @@ public class AuthorityUser implements Serializable {
 		this.updateDate = updateDate;
 	}
 
-	public Long getAuthorityId() {
-		return authorityId;
-	}
-
 	public String getAuthorityCode() {
 		return authorityCode;
 	}
-
-	public void setAuthorityId(Long authorityId) {
-		this.authorityId = authorityId;
-	}
-
 	public void setAuthorityCode(String authorityCode) {
 		this.authorityCode = authorityCode;
 	}
@@ -119,6 +110,14 @@ public class AuthorityUser implements Serializable {
 
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+
+	public String getAuthorityId() {
+		return authorityId;
+	}
+
+	public void setAuthorityId(String authorityId) {
+		this.authorityId = authorityId;
 	}
 
 }

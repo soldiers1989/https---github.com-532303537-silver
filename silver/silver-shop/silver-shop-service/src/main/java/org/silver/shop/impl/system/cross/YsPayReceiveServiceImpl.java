@@ -722,7 +722,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		String ebEntNo = "";
 		String ebEntName = "";
 		// 电子口岸(16)编码
-		String DZKANo = "";
+		String dzkaNo = "";
 		Map<String, Object> statusMap = new HashMap<>();
 		List<JSONObject> goodsList = new ArrayList<>();
 		List<JSONObject> orderJsonList = new ArrayList<>();
@@ -731,14 +731,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		JSONObject orderJson = new JSONObject();
 		Map<String, Object> goodsMap = new HashMap<>();
 		for (int y = 0; y < reOrderGoodsList.size(); y++) {
-			OrderGoodsContent orderGoodsInfo = (OrderGoodsContent) reOrderGoodsList.get(y);
-			goodsMap.put(orderGoodsInfo.getGoodsName(),
-					orderGoodsInfo.getGoodsCount() + "#" + orderGoodsInfo.getGoodsPrice());
-		}
+			OrderGoodsContent  orderInfo = (OrderGoodsContent) reOrderGoodsList.get(y);
+			// 根据商品备案编号,保存订单商品数量及商品单价
+			goodsMap.put(orderInfo.getEntGoodsNo(), orderInfo.getGoodsCount() + "#" + orderInfo.getGoodsPrice());
+		}		
 		for (int i = 0; i < reGoodsRecordDetailList.size(); i++) {
 			goodsJson = new JSONObject();
 			GoodsRecordDetail goodsRecordDetail = (GoodsRecordDetail) reGoodsRecordDetailList.get(i);
-			String str = goodsMap.get(goodsRecordDetail.getGoodsName()) + "";
+			String str = goodsMap.get(goodsRecordDetail.getEntGoodsNo()) + "";
 			String[] strs = str.split("#");
 			// 截取拼接在#之前的商品数量
 			int goodsCount = Integer.parseInt(strs[0]);
@@ -767,7 +767,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			goodsJson.element("Total", goodsCount * price);
 			goodsJson.element("CurrCode", "142");
 			goodsJson.element("Notes", "");
+			//当口岸为1(电子口岸时)电商企业编码则直接用电子口岸对应的16位编码,如果不是则使用智检电商企业备案编码
 			ebEntNo = eport == 1 ? goodsRecordDetail.getDZKNNo() : goodsRecordDetail.getEbEntNo();
+			dzkaNo = goodsRecordDetail.getDZKNNo();
 			// 电商企业名称
 			ebEntName = goodsRecordDetail.getEbEntName();
 			String jsonGoods = goodsRecordDetail.getSpareParams();
@@ -868,9 +870,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		if (goodsRecordInfo.getCustomsPort() == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 			orderMap.put("eport", 1);
-			if (StringEmptyUtils.isNotEmpty(DZKANo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
+			if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 				// 电商企业编号
-				orderMap.put("ebEntNo", DZKANo);
+				orderMap.put("ebEntNo", dzkaNo);
 				// 电商企业名称
 				orderMap.put("ebEntName", ebEntName);
 			} else {

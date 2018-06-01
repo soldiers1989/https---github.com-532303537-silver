@@ -10,7 +10,7 @@
 		<property name="groupName" type="java.lang.String">
 			<column name="groupName" />
 		</property>
-		<property name="authorityId" type="java.lang.Long">
+		<property name="authorityId" type="java.lang.String">
 			<column name="authorityId" />
 		</property>
 		<property name="status" type="java.lang.String">

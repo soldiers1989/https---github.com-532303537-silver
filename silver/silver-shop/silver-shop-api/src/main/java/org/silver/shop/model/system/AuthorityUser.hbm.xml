@@ -14,7 +14,7 @@
 		<property name="userName" type="java.lang.String">
 			<column name="userName" />
 		</property>
-		<property name="authorityId" type="java.lang.Long">
+		<property name="authorityId" type="java.lang.String">
 			<column name="authorityId" />
 		</property>
 		<property name="authorityCode" type="java.lang.String">

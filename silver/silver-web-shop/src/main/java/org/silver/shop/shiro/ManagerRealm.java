@@ -33,7 +33,9 @@ public class ManagerRealm extends AuthorizingRealm {
 			info.addRole(LoginType.MANAGER.toString());
 			//查询管理员权限
 			List<String> authorityList = managerTransaction.getManagerAuthority();
-			info.addStringPermissions(authorityList);
+			if(authorityList !=null && !authorityList.isEmpty()){
+				info.addStringPermissions(authorityList);
+			}
 		}
 		return info;
 	}

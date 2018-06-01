@@ -8,6 +8,9 @@
 			<column name="id" />
 			<generator class="identity" />
 		</id>
+		<property name="authorityId" type="java.lang.String">
+			<column name="authorityId" not-null="true" unique="true"/>
+		</property>
 		<property name="firstName" type="java.lang.String">
 			<column name="firstName" />
 		</property>
@@ -49,6 +52,13 @@
 		</property>
 		<property name="deleteDate" type="java.util.Date">
 			<column name="deleteDate" />
+		</property>
+		
+		<property name="status" type="java.lang.String">
+			<column name="status" not-null="true" default="1"/>
+		</property>
+		<property name="remark" type="java.lang.String">
+			<column name="remark" />
 		</property>
 	</class>
 </hibernate-mapping>

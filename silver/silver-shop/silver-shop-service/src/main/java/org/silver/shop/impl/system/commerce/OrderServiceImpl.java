@@ -440,6 +440,10 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap) {
+		if(datasMap == null  || datasMap.isEmpty()){
+			return ReturnInfoUtils.errorInfo("回调参数不能为空!");
+		}
+		System.out.println("-----订单异步回调参数->"+datasMap.toString());
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间

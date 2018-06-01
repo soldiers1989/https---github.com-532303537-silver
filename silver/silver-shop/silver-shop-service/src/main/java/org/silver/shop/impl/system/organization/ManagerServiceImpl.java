@@ -21,6 +21,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
@@ -39,7 +40,9 @@ public class ManagerServiceImpl implements ManagerService {
 	private ManagerDao managerDao;
 	@Autowired
 	private MerchantUtils merchantUtils;
-
+	@Autowired
+	private IdUtils idUtils;
+	
 	@Override
 	public List<Object> findManagerBy(String account) {
 		Map<String, Object> params = new HashMap<>();
@@ -77,26 +80,14 @@ public class ManagerServiceImpl implements ManagerService {
 		Date date = new Date();
 		Manager managerInfo = new Manager();
 		Map<String, Object> statusMap = new HashMap<>();
-		// 查询数据库字段名
-		String property = "managerId";
-		// 根据年份查询,当前年份下的id数量
-		long managerIdCount = managerDao.findSerialNoCount(Manager.class, property, 0);
-		// 当返回-1时,则查询数据库失败
-		if (managerIdCount < 0) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
-		}
-		// 得出的总数上+1
-		long count = managerIdCount + 1;
-		String managerId = String.valueOf(count);
-		// 当商户ID没有5位数时,前面补0
-		while (managerId.length() < 5) {
-			managerId = "0" + managerId;
-		}
 		MD5 md5 = new MD5();
-		managerId = "ManagerId_" + managerId;
-		managerInfo.setManagerId(managerId);
+		@SuppressWarnings("unchecked")
+		Map<String,Object> reIdMap = idUtils.createId(Manager.class, "managerId_");
+		if(!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))){
+			return reIdMap;
+		}
+		String serialNo = reIdMap.get(BaseCode.DATAS.toString())+"";
+		managerInfo.setManagerId(serialNo);
 		managerInfo.setManagerName(managerName);
 		managerInfo.setLoginPassword(md5.getMD5ofStr(loginPassword));
 		// 管理员标识1-超级管理员2-运营管理员
@@ -723,13 +714,13 @@ public class ManagerServiceImpl implements ManagerService {
 					for (Manager manager : reManagerList) {
 						params.clear();
 						params.put("userId", manager.getManagerId());
-						params.put("authorityId", authority.getId());
+						params.put("authorityId", authority.getAuthorityId());
 						List<AuthorityUser> reAuthorityUserList = managerDao.findByProperty(AuthorityUser.class, params, 0, 0);
 						if(reAuthorityUserList !=null && reAuthorityUserList.isEmpty()){
 							AuthorityUser authorityUser = new AuthorityUser();
 							authorityUser.setUserId(manager.getManagerId());
 							authorityUser.setUserName(manager.getManagerName());
-							authorityUser.setAuthorityId(authority.getId());
+							authorityUser.setAuthorityId(authority.getAuthorityId());
 							authorityUser.setAuthorityCode(authority.getSecondCode() + ":" + authority.getThirdCode());
 							System.out.println("---路径-?>>" + authority.getSecondCode() + ":" + authority.getThirdCode());
 							authorityUser.setCheckFlag("true");

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.service.system.cross.YsPayReceiveTransaction;
+import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping("yspay-receive")
 public class YsPayReceiveController {
-	private static Logger logger = LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
+	private static Logger logger = LogManager.getLogger(ManualOrderTransaction.class);
 	@Autowired
 	private YsPayReceiveTransaction ysPayReceiveTransaction;
 

@@ -16,6 +16,7 @@ import org.silver.shop.model.system.AuthorityGroup;
 import org.silver.shop.model.system.AuthorityUser;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -34,6 +35,13 @@ public class AuthorityServiceImpl implements AuthorityService {
 	private AuthorityDao authorityDao;
 	@Autowired
 	private MerchantUtils merchantUtils;
+	@Autowired
+	private IdUtils idUtils;
+
+	/**
+	 * 驼峰命名：分组名称
+	 */
+	private static final String GROUP_NAME = "groupName";
 
 	@Override
 	public Map<String, Object> addAuthorityInfo(Map<String, Object> datasMap) {
@@ -68,7 +76,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 			return reAddMap;
 		}
 		Authority authority = (Authority) reAddMap.get(BaseCode.DATAS.toString());
-		return addAuthorityGroup(datasMap.get("groupName") + "", authority.getId());
+		return addAuthorityGroup(datasMap.get(GROUP_NAME) + "", authority.getAuthorityId());
 	}
 
 	/**
@@ -84,11 +92,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 			return reAddMap;
 		}
 		Authority authority = (Authority) reAddMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reGroupMap = addAuthorityGroup(datasMap.get("groupName") + "", authority.getId());
-		if (!"1".equals(reGroupMap.get(BaseCode.STATUS.toString()))) {
-			return reGroupMap;
-		}
-		return ReturnInfoUtils.successInfo();
+		return addAuthorityGroup(datasMap.get(GROUP_NAME) + "", authority.getAuthorityId());
 	}
 
 	/**
@@ -126,8 +130,8 @@ public class AuthorityServiceImpl implements AuthorityService {
 	 *            关联权限Id
 	 * @return Map
 	 */
-	private Map<String, Object> addAuthorityGroup(String groupName, long authorityId) {
-		if (StringEmptyUtils.isEmpty(groupName) || authorityId < 0) {
+	private Map<String, Object> addAuthorityGroup(String groupName, String authorityId) {
+		if (StringEmptyUtils.isEmpty(groupName) || StringEmptyUtils.isEmpty(authorityId)) {
 			return ReturnInfoUtils.errorInfo("权限组参数错误!");
 		}
 		AuthorityGroup authorityGroup = new AuthorityGroup();
@@ -151,14 +155,20 @@ public class AuthorityServiceImpl implements AuthorityService {
 			return ReturnInfoUtils.errorInfo("添加权限信息表,请求参数不能为空!");
 		}
 		Authority authority = new Authority();
+		Map<String, Object> reIdMap = idUtils.createId(Authority.class, "authorityId_");
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
+			return reIdMap;
+		}
+		authority.setAuthorityId(reIdMap.get(BaseCode.DATAS.toString()) + "");
 		authority.setFirstName(datasMap.get("firstName") + "");
 		authority.setFirstCode(datasMap.get("firstCode") + "");
 		authority.setSecondName(datasMap.get("secondName") + "");
 		authority.setSecondCode(datasMap.get("secondCode") + "");
 		authority.setThirdName(datasMap.get("thirdName") + "");
 		authority.setThirdCode(datasMap.get("thirdCode") + "");
-		authority.setGroupName(datasMap.get("groupName") + "");
+		authority.setGroupName(datasMap.get(GROUP_NAME) + "");
 		authority.setCreateBy(datasMap.get("managerName") + "");
+		authority.setStatus(datasMap.get("status") + "");
 		authority.setCreateDate(new Date());
 		authority.setDeleteFlag(0);
 		if (authorityDao.add(authority)) {
@@ -198,7 +208,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 			String secName = authority.getSecondName();
 			String thirdCode = authority.getThirdCode();
 			String thirdName = authority.getThirdName();
-			long authorityCode = authority.getId();
+			String authorityId = authority.getAuthorityId();
 			// 当分组(第一级)名称已存在后
 			if (item.containsKey(groupName)) {
 				firstMap = item.get(groupName);
@@ -210,18 +220,16 @@ public class AuthorityServiceImpl implements AuthorityService {
 							&& secMap.containsKey(authority.getSecondCode() + "_" + authority.getSecondName())) {
 						thirdMap = secMap.get(authority.getSecondCode() + "_" + authority.getSecondName());
 						if (thirdMap != null
-								&& thirdMap.containsKey(authority.getThirdCode() + "_" + authority.getThirdName())) {
+								&& thirdMap.containsKey(authority.getThirdCode() + "#" + authority.getThirdName())) {
 						} else {
-							thirdMap = new HashMap<>();
-							thirdMap.put(authorityCode + "_" + thirdCode, thirdName);
 							secMap.get(authority.getSecondCode() + "_" + authority.getSecondName())
-									.put(authorityCode + "_" + thirdCode, thirdName);
+									.put(authorityId + "#" + thirdCode, thirdName);
 						}
 					} else {// 当(该名称)分组第一级类型不存在时
 						// 添加第三级权限信息
 						if (StringEmptyUtils.isNotEmpty(thirdCode) && StringEmptyUtils.isNotEmpty(thirdName)) {
 							thirdMap = new HashMap<>();
-							thirdMap.put(authorityCode + "_" + thirdCode, thirdName);
+							thirdMap.put(authorityId + "#" + thirdCode, thirdName);
 						}
 						// 当第二级参数不为空时,往当前的第一级键值对名称下添加第二级权限信息
 						if (StringEmptyUtils.isNotEmpty(secCode) && StringEmptyUtils.isNotEmpty(secName)) {
@@ -254,13 +262,13 @@ public class AuthorityServiceImpl implements AuthorityService {
 		String thirdCode = authority.getThirdCode();
 		String thirdName = authority.getThirdName();
 		String groupName = authority.getGroupName();
-		long authorityCode = authority.getId();
+		String authorityId = authority.getAuthorityId();
 		Map<String, Map<String, Map<String, Object>>> firstMap = null;
 		Map<String, Map<String, Object>> secMap = null;
 		Map<String, Object> thirdMap = null;
 		if (StringEmptyUtils.isNotEmpty(thirdCode) && StringEmptyUtils.isNotEmpty(thirdName)) {
 			thirdMap = new HashMap<>();
-			thirdMap.put(authorityCode + "_" + thirdCode, thirdName);
+			thirdMap.put(authorityId + "#" + thirdCode, thirdName);
 		}
 		if (StringEmptyUtils.isNotEmpty(secCode) && StringEmptyUtils.isNotEmpty(secName)) {
 			secMap = new HashMap<>();
@@ -287,10 +295,23 @@ public class AuthorityServiceImpl implements AuthorityService {
 			List<Row> lr = table.getRows();
 			return baleUserAuthorityInfo(lr);
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据!");
+			//
+			Table table2 = authorityDao.getAuthorityGroupInfo(groupName);
+			if (table2 != null && !table2.getRows().isEmpty()) {
+				List<Row> lr = table2.getRows();
+				return baleUserAuthorityInfo(lr);
+			} else {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			}
 		}
 	}
 
+	/**
+	 * 将查询出来的权限信息参数封装成对应的权限树(三级菜单)
+	 * 
+	 * @param lr
+	 * @return
+	 */
 	private Map<String, Object> baleUserAuthorityInfo(List<Row> lr) {
 		// 三层嵌套
 		Map<String, Map<String, Map<String, Object>>> item = new HashMap<>();
@@ -305,18 +326,18 @@ public class AuthorityServiceImpl implements AuthorityService {
 			if (StringEmptyUtils.isEmpty(checkFlag)) {
 				checkFlag = "false";
 			}
-			if (item.containsKey(firstName)) {
+			if (item.containsKey(firstName)) {//
 				secMap = item.get(firstName);
 				if (secMap != null && secMap.containsKey(secondName)) {
-					secMap.get(secondName).put(authorityId + "_" + checkFlag, thirdName);
+					secMap.get(secondName).put(authorityId + "#" + checkFlag, thirdName);
 				} else {
 					thirdMap = new HashMap<>();
-					thirdMap.put(authorityId + "_" + checkFlag, thirdName);
+					thirdMap.put(authorityId + "#" + checkFlag, thirdName);
 					item.get(firstName).put(secondName, thirdMap);
 				}
 			} else {
 				thirdMap = new HashMap<>();
-				thirdMap.put(authorityId + "_" + checkFlag, thirdName);
+				thirdMap.put(authorityId + "#" + checkFlag, thirdName);
 				secMap = new HashMap<>();
 				secMap.put(secondName, thirdMap);
 				item.put(firstName, secMap);
@@ -363,7 +384,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 		default:
 			return ReturnInfoUtils.errorInfo("类型错误!");
 		}
-		return checkAuthorityInfo(jsonArr, datasMap.get("managerName") + "", userId, userName);
+		return checkAuthorityInfo(jsonArr, datasMap.get("managerName") + "", userId, userName, type);
 	}
 
 	/**
@@ -396,6 +417,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 	 *            权限信息
 	 * @param managerName
 	 *            管理员名称
+	 * @param type
 	 * @param userId
 	 *            用户Id
 	 * @param userName
@@ -403,14 +425,17 @@ public class AuthorityServiceImpl implements AuthorityService {
 	 * @return Map
 	 */
 	private Map<String, Object> checkAuthorityInfo(JSONArray jsonArr, String managerName, String roleId,
-			String roleName) {
+			String roleName, String type) {
 		if (jsonArr == null || StringEmptyUtils.isEmpty(roleId) || StringEmptyUtils.isEmpty(roleName)) {
 			return ReturnInfoUtils.errorInfo("权限参数不能为空!");
 		}
-		if (jsonArr.isEmpty()) {
-			return updateAllAuthorityUser(roleId, managerName);
+		if (!authorityDao.updateAuthorityCheckFlag(roleId)) {
+			return ReturnInfoUtils.errorInfo("设置权限信息时更新标识失败,服务器繁忙!");
 		}
-		return updateAuthorityUser(jsonArr, roleId, managerName);
+		if (jsonArr.isEmpty()) {
+			return updateAllAuthorityUser(roleId, roleName, managerName, type);
+		}
+		return updateAuthorityUser(jsonArr, roleId, roleName, managerName, type);
 	}
 
 	/**
@@ -420,34 +445,40 @@ public class AuthorityServiceImpl implements AuthorityService {
 	 *            流水Id集合
 	 * @param roleId
 	 *            用户Id
+	 * @param roleName
 	 * @param managerName
 	 *            管理员名称
+	 * @param type
 	 * @return Map
 	 */
-	private Map<String, Object> updateAuthorityUser(JSONArray jsonArr, String roleId, String managerName) {
+	private Map<String, Object> updateAuthorityUser(JSONArray jsonArr, String roleId, String roleName,
+			String managerName, String type) {
 		if (jsonArr == null || jsonArr.isEmpty() || StringEmptyUtils.isEmpty(roleId)
 				|| StringEmptyUtils.isEmpty(managerName)) {
 			return ReturnInfoUtils.errorInfo("权限信息参数不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();
-		long id = 0;
 		for (int i = 0; i < jsonArr.size(); i++) {
-			try {
-				id = Long.parseLong(jsonArr.get(i) + "");
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("权限Id流水格式错误！");
-			}
+			String authorityId = jsonArr.get(i) + "";
 			params.clear();
 			params.put("userId", roleId);
-			params.put("authorityId", id);
+			params.put("authorityId", authorityId);
 			List<AuthorityUser> reUserList = authorityDao.findByProperty(AuthorityUser.class, params, 0, 0);
-			if (reUserList != null && !reUserList.isEmpty()) {
-				AuthorityUser authorityUser = reUserList.get(0);
-				authorityUser.setCheckFlag("false");
-				authorityUser.setUpdateBy(managerName);
-				authorityUser.setUpdateDate(new Date());
-				if (!authorityDao.update(authorityUser)) {
-					return ReturnInfoUtils.errorInfo("设置权限失败,服务器繁忙!");
+			if (reUserList == null) {
+				return ReturnInfoUtils.errorInfo("查询用户权限信息失败,服务器繁忙!");
+			} else if (!reUserList.isEmpty()) {
+				if (!updateAuthorityUserFlag(reUserList.get(0), "true", managerName)) {
+					return ReturnInfoUtils.errorInfo("设置权限信息失败,服务器繁忙!");
+				}
+			} else {
+				params.clear();
+				params.put("authorityId", authorityId);
+				params.put(GROUP_NAME, type);
+				List<Authority> reAuthorityList = authorityDao.findByProperty(Authority.class, params, 0, 0);
+				if (reAuthorityList != null && !reAuthorityList.isEmpty()) {
+					if (!addAuthorityUserInfo(reAuthorityList.get(0), "true", roleId, roleName, managerName)) {
+						return ReturnInfoUtils.errorInfo("插入新的用户权限信息失败,服务器繁忙!");
+					}
 				}
 			}
 		}
@@ -461,22 +492,140 @@ public class AuthorityServiceImpl implements AuthorityService {
 	 *            用户Id
 	 * @param managerName
 	 *            管理员名称
+	 * @param type
+	 * @param type2
 	 * @return Map
 	 */
-	private Map<String, Object> updateAllAuthorityUser(String roleId, String managerName) {
+	private Map<String, Object> updateAllAuthorityUser(String roleId, String roleName, String managerName,
+			String type) {
 		Map<String, Object> params = new HashMap<>();
-		params.put("userId", roleId);
-		List<AuthorityUser> reUserList = authorityDao.findByProperty(AuthorityUser.class, params, 0, 0);
-		if (reUserList != null && !reUserList.isEmpty()) {
-			for (AuthorityUser authorityUser : reUserList) {
-				authorityUser.setCheckFlag("true");
-				authorityUser.setUpdateBy(managerName);
-				authorityUser.setUpdateDate(new Date());
-				if (!authorityDao.update(authorityUser)) {
-					return ReturnInfoUtils.errorInfo("设置权限失败,服务器繁忙!");
+		params.put(GROUP_NAME, type);
+		List<Authority> reAuthorityList = authorityDao.findByProperty(Authority.class, params, 0, 0);
+		if (reAuthorityList == null) {
+			return ReturnInfoUtils.errorInfo("设置权限信息失败,服务器繁忙!");
+		} else if (!reAuthorityList.isEmpty()) {
+			for (Authority authority : reAuthorityList) {
+				params.clear();
+				params.put("authorityId", authority.getAuthorityId());
+				params.put("userId", roleId);
+				List<AuthorityUser> reUserList = authorityDao.findByProperty(AuthorityUser.class, params, 0, 0);
+				if (reUserList == null) {
+					return ReturnInfoUtils.errorInfo("查询用户权限信息失败,服务器繁忙!");
+				} else if (!reUserList.isEmpty()) {
+					if (!updateAuthorityUserFlag(reUserList.get(0), "true", managerName)) {
+						return ReturnInfoUtils.errorInfo("设置权限信息失败,服务器繁忙!");
+					}
+				} else {
+					addAuthorityUserInfo(authority, "true", roleId, roleName, managerName);
 				}
 			}
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无权限信息!");
 		}
 		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 更新已存在的用户权限信息
+	 * 
+	 * @param authorityUser
+	 *            用户权限信息实体类
+	 * @param flag
+	 *            权限选中标识:true/false
+	 * @param managerName
+	 *            管理员名称
+	 * @return boolean
+	 */
+	private boolean updateAuthorityUserFlag(AuthorityUser authorityUser, String flag, String managerName) {
+		authorityUser.setCheckFlag(flag);
+		authorityUser.setUpdateBy(managerName);
+		authorityUser.setUpdateDate(new Date());
+		return authorityDao.update(authorityUser);
+	}
+
+	/**
+	 * 添加新的用户权限信息
+	 * 
+	 * @param authority
+	 *            权限信息实体类
+	 * @param flag
+	 *            权限选中标识:true/false
+	 * @param roleId
+	 *            用户Id
+	 * @param roleName
+	 *            用户名称
+	 * @param managerName
+	 *            管理员名称
+	 * @return boolean
+	 */
+	private boolean addAuthorityUserInfo(Authority authority, String flag, String roleId, String roleName,
+			String managerName) {
+		if (StringEmptyUtils.isEmpty(flag) || StringEmptyUtils.isEmpty(roleId) || StringEmptyUtils.isEmpty(roleName)
+				|| StringEmptyUtils.isEmpty(managerName)) {
+			return false;
+		}
+		AuthorityUser authorityUser = new AuthorityUser();
+		authorityUser.setUserId(roleId);
+		authorityUser.setUserName(roleName);
+		authorityUser.setAuthorityId(authority.getAuthorityId());
+		authorityUser.setAuthorityCode(authority.getSecondCode() + ":" + authority.getThirdCode());
+		// 状态:1-正常,2-禁用
+		authorityUser.setStatus("1");
+		authorityUser.setCheckFlag(flag);
+		authorityUser.setCreateBy(managerName);
+		authorityUser.setCreateDate(new Date());
+		return authorityDao.add(authorityUser);
+	}
+
+	@Override
+	public Map<String, Object> editAuthorityInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("修改权限信息不能为空!");
+		}
+		String authorityId = datasMap.get("authorityId") + "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("authorityId", authorityId);
+		List<Authority> reUserList = authorityDao.findByProperty(Authority.class, params, 0, 0);
+		if (reUserList == null) {
+			return ReturnInfoUtils.errorInfo("查询用户权限信息失败,服务器繁忙!");
+		} else if (!reUserList.isEmpty()) {
+			Authority authority = reUserList.get(0);
+			for(Map.Entry<String, Object> entry : datasMap.entrySet()){
+				String key = entry.getKey();
+				String value = entry.getValue()+"";
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("groupName"))){
+				authority.setGroupName(datasMap.get("groupName")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("firstName"))){
+				authority.setFirstName(datasMap.get("firstName")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("firstCode"))){
+				authority.setFirstCode(datasMap.get("firstCode")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("secondCode"))){
+				authority.setSecondCode(datasMap.get("secondCode")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("secondName"))){
+				authority.setSecondName(datasMap.get("secondName")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("thirdName"))){
+				authority.setThirdName(datasMap.get("thirdName")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("thirdCode"))){
+				authority.setThirdCode(datasMap.get("thirdCode")+"");
+			}
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("status"))){
+				authority.setStatus(datasMap.get("status")+"");
+			}
+			authority.setUpdateBy(datasMap.get("manager")+"");
+			authority.setUpdateDate(new Date());
+			if(!authorityDao.update(authority)){
+				return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("权限信息流水号[" + authorityId + "]未找到对应的权限信息!");
+		}
+		return null;
 	}
 }

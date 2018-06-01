@@ -48,4 +48,8 @@ public class AuthorityTransaction {
 		return authorityService.setAuthorityInfo(datasMap);
 	}
 
+	//修改权限字典信息
+	public Map<String,Object> editAuthorityInfo(Map<String, Object> datasMap) {
+		return authorityService.editAuthorityInfo(datasMap);
+	}
 }

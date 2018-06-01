@@ -33,4 +33,11 @@ public interface AuthorityService {
 	 */
 	public Map<String, Object> getUserAuthorityInfo(String userId, String groupName);
 
+	/**
+	 * 管理员根据权限流水Id修改信息
+	 * @param datasMap 权限信息
+	 * @return Map
+	 */
+	public Map<String, Object> editAuthorityInfo(Map<String, Object> datasMap);
+
 }
