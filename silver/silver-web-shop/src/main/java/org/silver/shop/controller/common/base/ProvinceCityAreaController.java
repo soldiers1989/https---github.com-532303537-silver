@@ -40,21 +40,13 @@ public class ProvinceCityAreaController {
 	@RequestMapping(value = "/findProvinceCityArea", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询省市区三级联动")
-	public String findProvinceCityArea(HttpServletResponse response) {
+	public String findProvinceCityArea(HttpServletResponse response, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Origin", "*");
-		Map<String, Object> statusMap = new HashMap<>();
-		List datasList = provinceCityAreaTransaction.findProvinceCityArea();
-		if (datasList != null && datasList.size() > 0) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), datasList);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getStatus());
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getStatus());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(provinceCityAreaTransaction.findProvinceCityArea()).toString();
 	}
 
 	/**

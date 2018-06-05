@@ -38,9 +38,9 @@ public class ProxyTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXYINFO.toString());
+				Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXY_INFO.toString());
 				if (proxyInfo == null) {
-					WebUtil.getSession().setAttribute(LoginType.PROXYINFO.toString(), reList.get(0));
+					WebUtil.getSession().setAttribute(LoginType.PROXY_INFO.toString(), reList.get(0));
 				}
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
@@ -54,7 +54,7 @@ public class ProxyTransaction {
 	public Map<String, Object> getProxyMerchantInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXYINFO.toString());
+		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXY_INFO.toString());
 		// 获取登录后的商户账号
 		String proxyUUid = proxyInfo.getProxyUUid();
 		String proxyName = proxyInfo.getProxyName();

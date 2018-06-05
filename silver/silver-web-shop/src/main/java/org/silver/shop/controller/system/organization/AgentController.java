@@ -133,7 +133,7 @@ public class AgentController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 		if (managerInfo != null && currentUser.isAuthenticated()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("代理商已登陆！")).toString();
 		} else {

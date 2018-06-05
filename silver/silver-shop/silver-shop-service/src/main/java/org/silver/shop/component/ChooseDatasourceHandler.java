@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
 import org.silver.shop.dao.HibernateDaoImpl;
 import org.silver.shop.dao.SessionFactory;
-import org.silver.shop.dao.SessionFactory2;
 
 public class ChooseDatasourceHandler {
 	

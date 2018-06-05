@@ -20,7 +20,7 @@ public class RecipientTransaction {
 	public Map<String,Object> addRecipientInfo(String recipientInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return recipientSerivce.addRecipientInfo(memberId,memberName,recipientInfo);
@@ -29,7 +29,7 @@ public class RecipientTransaction {
 	public Map<String,Object> getMemberRecipientInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return recipientSerivce.getMemberRecipientInfo(memberId,memberName);
@@ -39,7 +39,7 @@ public class RecipientTransaction {
 	public Map<String, Object> deleteMemberRecipientInfo(String recipientId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return recipientSerivce.deleteMemberRecipientInfo(memberId,memberName,recipientId);
@@ -48,7 +48,7 @@ public class RecipientTransaction {
 	public Map<String,Object> memberModify(String recipientInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberName = memberInfo.getMemberName();
 		return recipientSerivce.modifyRecipientInfo(recipientInfoPack,memberName);
 	}

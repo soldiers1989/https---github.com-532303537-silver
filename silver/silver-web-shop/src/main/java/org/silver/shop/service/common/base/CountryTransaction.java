@@ -32,18 +32,17 @@ public class CountryTransaction {
 	 * @return
 	 */
 	public Map<String, Object> findAllCountry() {
-		List<Country> countryList = null;
-		byte[] redisByte = JedisUtil.get("Shop_Key_Country_List".getBytes(), 3600);
+		String key = "SHOP_KEY_COUNTRY_LIST";
+		byte[] redisByte = JedisUtil.get(key.getBytes());
 		if (redisByte != null) {
-			countryList = (List<Country>) SerializeUtil.toObject(redisByte);
-			return ReturnInfoUtils.successDataInfo(countryList, 0);
+			return ReturnInfoUtils.successDataInfo((List<Country>)SerializeUtil.toObject(redisByte));
 		} else {
 			Map<String, Object> item = countryService.findAllCountry();
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				return item;
 			}
-			JedisUtil.set("Shop_Key_Country_List".getBytes(),
-					SerializeUtil.toBytes(item.get(BaseCode.DATAS.toString())), 3600);
+			JedisUtil.set(key.getBytes(),
+					SerializeUtil.toBytes(item.get(BaseCode.DATAS.toString())), 86400);
 			return item;
 		}
 	}

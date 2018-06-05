@@ -8,9 +8,6 @@
         <dependent-module archiveName="silver-common-1.0.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/silver-common/silver-common">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="silver-sys-api-1.0.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/silver-sys-api/silver-sys-api">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
         <dependent-module archiveName="silver-pay-api-1.0.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/silver-pay-api/silver-pay-api">
             <dependency-type>uses</dependency-type>
         </dependent-module>

@@ -112,6 +112,10 @@
 		<property name="networkStatus" type="java.lang.Integer">
 			<column name="networkStatus" not-null="true" default="0"/>
 		</property>
+			<property name="resendDate" type="java.util.Date">
+			<column name="resendDate" />
+		</property>
+		
 	</class>
 
 </hibernate-mapping>

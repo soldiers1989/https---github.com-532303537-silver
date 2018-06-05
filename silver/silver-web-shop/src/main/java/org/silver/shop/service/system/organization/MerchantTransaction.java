@@ -77,7 +77,7 @@ public class MerchantTransaction {
 					// 抛出 帐号锁定异常
 					throw new LockedAccountException();
 				}
-				WebUtil.getSession().setAttribute(LoginType.MERCHANTINFO.toString(), reList.get(0));
+				WebUtil.getSession().setAttribute(LoginType.MERCHANT_INFO.toString(), reList.get(0));
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
 				return datasMap;
@@ -90,7 +90,7 @@ public class MerchantTransaction {
 	public Map<String, Object> editBusinessInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantName + "/";
@@ -127,7 +127,7 @@ public class MerchantTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String account = merchantInfo.getMerchantName();
 		// 验证输入的原密码是否能登录
@@ -148,7 +148,7 @@ public class MerchantTransaction {
 	public Map<String, Object> getMerchantRecordInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return merchantService.getMerchantRecordInfo(merchantId);
@@ -162,7 +162,7 @@ public class MerchantTransaction {
 	public List<String> getMerchantAuthority() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String redisKey = "Shop_Key_Merchant_Authority_List__" + merchantId;

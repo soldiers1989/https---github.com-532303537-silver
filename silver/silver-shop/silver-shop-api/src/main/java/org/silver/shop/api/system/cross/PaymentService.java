@@ -3,6 +3,8 @@ package org.silver.shop.api.system.cross;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.manual.Mpay;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -151,4 +153,19 @@ public interface PaymentService {
 	 */
 	public Map<String,Object> getThirdPartyInfo(Map<String, Object> datasMap);
 
+	/**
+	 * 开始发送手工支付单备案
+	 * @param dataList 支付单流水Id集合
+	 * @param errorList 错误信息集合
+	 * @param customsMap 海关口岸信息
+	 * @param paramsMap 缓存参数
+	 */
+	public void startSendPaymentRecord(JSONArray dataList, List<Map<String, Object>> errorList,
+			Map<String, Object> customsMap, Map<String, Object> paramsMap);
+
+	/**
+	 * 将支付单返回给第三方电商平台
+	 * @param mpay 手工支付单实体类
+	 */
+	public void rePaymentInfo(Mpay mpay);
 }

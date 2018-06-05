@@ -21,7 +21,7 @@ public class MerchantFeeTransaction {
 	public Map<String,Object> addMerchantServiceFee(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		params.put("managerName", managerName);
 		return merchantFeeService.addMerchantServiceFee(params);
@@ -36,7 +36,7 @@ public class MerchantFeeTransaction {
 	public Object editMerchantServiceFee(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		params.put("managerName", managerName);
 		return merchantFeeService.editMerchantServiceFee(params);

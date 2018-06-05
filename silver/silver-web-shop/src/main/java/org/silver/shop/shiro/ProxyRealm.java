@@ -24,7 +24,7 @@ public class ProxyRealm extends AuthorizingRealm {
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		Proxy proxy = (Proxy) WebUtil.getSession().getAttribute(LoginType.PROXYINFO.toString());
+		Proxy proxy = (Proxy) WebUtil.getSession().getAttribute(LoginType.PROXY_INFO.toString());
 		SimpleAuthorizationInfo info = null;
 		if (proxy != null) {
 			info = new SimpleAuthorizationInfo();

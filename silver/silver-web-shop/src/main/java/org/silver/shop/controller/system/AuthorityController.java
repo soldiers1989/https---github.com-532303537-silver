@@ -66,13 +66,6 @@ public class AuthorityController {
 		return JSONObject.fromObject(authorityTransaction.addAuthorityInfo(datasMap)).toString();
 	}
 
-	/**
-	 * 管理员查询所有权限字典信息
-	 * 
-	 * @param req
-	 * @param response
-	 * @return
-	 */
 	@RequestMapping(value = "/getAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
@@ -171,5 +164,19 @@ public class AuthorityController {
 			datasMap.put(key, value);
 		}
 		return JSONObject.fromObject(authorityTransaction.editAuthorityInfo(datasMap)).toString();
+	}
+
+	@RequestMapping(value = "/deleteAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员删除权限字典信息")
+	public String deleteAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("authorityId") String authorityId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(authorityTransaction.deleteAuthorityInfo(authorityId)).toString();
 	}
 }

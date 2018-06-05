@@ -179,7 +179,9 @@ public class AuthorityServiceImpl implements AuthorityService {
 
 	@Override
 	public Map<String, Object> getAuthorityInfo() {
-		List<Authority> reList = authorityDao.findByProperty(Authority.class, null, 0, 0);
+		Map<String, Object> params = new HashMap<>();
+		params.put("deleteFlag", 0);
+		List<Authority> reList = authorityDao.findByProperty(Authority.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询权限信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
@@ -583,49 +585,93 @@ public class AuthorityServiceImpl implements AuthorityService {
 			return ReturnInfoUtils.errorInfo("修改权限信息不能为空!");
 		}
 		String authorityId = datasMap.get("authorityId") + "";
-		Map<String, Object> params = new HashMap<>();
-		params.put("authorityId", authorityId);
-		List<Authority> reUserList = authorityDao.findByProperty(Authority.class, params, 0, 0);
-		if (reUserList == null) {
-			return ReturnInfoUtils.errorInfo("查询用户权限信息失败,服务器繁忙!");
-		} else if (!reUserList.isEmpty()) {
-			Authority authority = reUserList.get(0);
-			for(Map.Entry<String, Object> entry : datasMap.entrySet()){
-				String key = entry.getKey();
-				String value = entry.getValue()+"";
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("groupName"))){
-				authority.setGroupName(datasMap.get("groupName")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("firstName"))){
-				authority.setFirstName(datasMap.get("firstName")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("firstCode"))){
-				authority.setFirstCode(datasMap.get("firstCode")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("secondCode"))){
-				authority.setSecondCode(datasMap.get("secondCode")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("secondName"))){
-				authority.setSecondName(datasMap.get("secondName")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("thirdName"))){
-				authority.setThirdName(datasMap.get("thirdName")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("thirdCode"))){
-				authority.setThirdCode(datasMap.get("thirdCode")+"");
-			}
-			if(StringEmptyUtils.isNotEmpty(datasMap.get("status"))){
-				authority.setStatus(datasMap.get("status")+"");
-			}
-			authority.setUpdateBy(datasMap.get("manager")+"");
-			authority.setUpdateDate(new Date());
-			if(!authorityDao.update(authority)){
-				return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
-			}
-		} else {
-			return ReturnInfoUtils.errorInfo("权限信息流水号[" + authorityId + "]未找到对应的权限信息!");
+		Map<String, Object> reAuthorityMap = getAuthorityInfo(authorityId);
+		if (!"1".equals(reAuthorityMap.get(BaseCode.STATUS.toString()))) {
+			return reAuthorityMap;
 		}
-		return null;
+		Authority authority = (Authority) reAuthorityMap.get(BaseCode.DATAS.toString());
+		for (Map.Entry<String, Object> entry : datasMap.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue() + "".trim();
+			switch (key) {
+			case "firstName":
+				authority.setFirstName(value);
+				break;
+			case "firstCode":
+				authority.setFirstCode(value);
+				break;
+			case "secondName":
+				authority.setSecondName(value);
+				break;
+			case "secondCode":
+				authority.setSecondCode(value);
+				break;
+			case "thirdName":
+				authority.setThirdName(value);
+				break;
+			case "thirdCode":
+				authority.setThirdCode(value);
+				break;
+			case "status":
+				authority.setStatus(value);
+				break;
+			case "deleteFlag":
+				authority.setDeleteFlag(Integer.parseInt(value));
+				authority.setDeleteBy(datasMap.get("manager") + "");
+				authority.setDeleteDate(new Date());
+				break;
+			default:
+				break;
+			}
+		}
+		authority.setUpdateBy(datasMap.get("manager") + "");
+		authority.setUpdateDate(new Date());
+		if (!authorityDao.update(authority)) {
+			return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> deleteAuthorityInfo(String authorityId, String managerName) {
+		if (StringEmptyUtils.isEmpty(authorityId)) {
+			return ReturnInfoUtils.errorInfo("流水Id不能为空!");
+		}
+		Map<String, Object> reAuthorityMap = getAuthorityInfo(authorityId);
+		if (!"1".equals(reAuthorityMap.get(BaseCode.STATUS.toString()))) {
+			return reAuthorityMap;
+		}
+		Authority authority = (Authority) reAuthorityMap.get(BaseCode.DATAS.toString());
+		authority.setDeleteFlag(1);
+		authority.setDeleteDate(new Date());
+		authority.setDeleteBy(managerName);
+		if (!authorityDao.update(authority)) {
+			return ReturnInfoUtils.errorInfo("删除失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据权限流水Id查询权限字典表中信息
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> getAuthorityInfo(String authorityId) {
+		if (StringEmptyUtils.isEmpty(authorityId)) {
+			return ReturnInfoUtils.errorInfo("流水Id不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("deleteFlag", 0);
+		params.put("authorityId", authorityId);
+		List<Authority> reList = authorityDao.findByProperty(Authority.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询权限信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无权限信息数据!");
+		}
+	}
+
 }

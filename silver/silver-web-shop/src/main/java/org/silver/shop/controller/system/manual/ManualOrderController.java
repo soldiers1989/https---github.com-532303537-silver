@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.manual;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
+import org.silver.util.ExcelUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +50,14 @@ public class ManualOrderController {
 		Map<String, Object> reqMap = manualOrderTransaction.excelImportOrder(req);
 		return JSONObject.fromObject(reqMap).toString();
 	}
-
-
+	
+	public static void main(String[] args) {
+		File f = new File("C:\\Users\\Lenovo\\Desktop\\1594云集批量订单(IK01) 6-1-邮政.xlsx");
+		long star = System.currentTimeMillis();
+		ExcelUtil excel = new ExcelUtil(f);
+		
+		excel.open();
+		long end = System.currentTimeMillis();
+		System.out.println("----->?>>"+ (end - star));
+	}
 }

@@ -20,7 +20,7 @@ public class AuthorityTransaction {
 	public Map<String, Object> addAuthorityInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取管理员登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		datasMap.put("managerId", managerId);
@@ -42,7 +42,7 @@ public class AuthorityTransaction {
 	public Map<String, Object> setAuthorityInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取管理员登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		datasMap.put("managerName", managerName);
 		return authorityService.setAuthorityInfo(datasMap);
@@ -51,5 +51,13 @@ public class AuthorityTransaction {
 	//修改权限字典信息
 	public Map<String,Object> editAuthorityInfo(Map<String, Object> datasMap) {
 		return authorityService.editAuthorityInfo(datasMap);
+	}
+
+	public Map<String,Object> deleteAuthorityInfo(String authorityId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取管理员登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		String managerName = managerInfo.getManagerName();
+		return authorityService.deleteAuthorityInfo(authorityId,managerName);
 	}
 }

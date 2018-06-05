@@ -22,7 +22,7 @@ public class MeteringTransaction {
 
 	public List findMetering() {
 		List<Metering> meteringList = null;
-		byte[] redisByte = JedisUtil.get("Shop_Key_Metering_List".getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get("SHOP_KEY_METERING_LIST".getBytes(), 3600);
 		if (redisByte != null) {
 			meteringList = (List<Metering>) SerializeUtil.toObject(redisByte);
 			return meteringList;
@@ -30,7 +30,7 @@ public class MeteringTransaction {
 			List<Object> reList = meteringService.findAllMetering();
 			if (reList != null && !reList.isEmpty()) {
 				// 将查询出来的数据放入到缓存中
-				JedisUtil.set("Shop_Key_Metering_List".getBytes(), SerializeUtil.toBytes(reList), 3600);
+				JedisUtil.set("SHOP_KEY_METERING_LIST".getBytes(), SerializeUtil.toBytes(reList), 3600);
 				return reList;
 			}
 		}

@@ -24,7 +24,7 @@ public class AgentTransaction {
 	public Map<String,Object> addAgentBaseInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return agentService.addAgentBaseInfo(datasMap,managerId,managerName);
@@ -43,9 +43,9 @@ public class AgentTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				AgentBaseContent agentInfo = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+				AgentBaseContent agentInfo = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 				if (agentInfo == null) {
-					WebUtil.getSession().setAttribute(LoginType.AGENTINFO.toString(), reList.get(0));
+					WebUtil.getSession().setAttribute(LoginType.AGENT_INFO.toString(), reList.get(0));
 				}
 				return ReturnInfoUtils.successInfo();
 			}
@@ -62,7 +62,7 @@ public class AgentTransaction {
 	public Map<String,Object> setAgentSubMerchant(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 		String agentId = agentBaseContent.getAgentId();
 		String agentName = agentBaseContent.getAgentName();
 		params.put("agentId", agentId);
@@ -74,7 +74,7 @@ public class AgentTransaction {
 	public Map<String,Object> getSubMerchantInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 		String agentId = agentBaseContent.getAgentId();
 		String agentName = agentBaseContent.getAgentName();
 		return agentService.getSubMerchantInfo(agentId,agentName);

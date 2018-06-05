@@ -28,7 +28,7 @@ import net.sf.json.JSONObject;
  */
 @Service("provinceCityAreaTransaction")
 public class ProvinceCityAreaTransaction {
-	
+
 	private static Logger logger = LogManager.getLogger(ProvinceCityAreaTransaction.class);
 	@Reference
 	private ProvinceCityAreaService provinceCityAreaService;
@@ -38,20 +38,14 @@ public class ProvinceCityAreaTransaction {
 	 * 
 	 * @return
 	 */
-	public List<Object> findProvinceCityArea() {
-		List<Object> datasList = null;
-		Map<String, Object> datasMap = null;
-		String redisList = JedisUtil.get("Shop_Key_ProvinceCityArea_List");
+	public Map<String, Object> findProvinceCityArea() {
+		//省市区List缓存
+		String redisList = JedisUtil.get("SHOP_KEY_PROVINCE_CITY_AREA_LIST");
 		if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
-			datasMap = provinceCityAreaService.getProvinceCityArea();
-			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-			if (status.equals("1")) {// 当查询成功时
-				datasList = (List) datasMap.get(BaseCode.DATAS.toString());
-			}
-			return JSONArray.fromObject(datasList);
+			return provinceCityAreaService.getProvinceCityArea();
 		} else {
 			// redis缓存中已有数据,直接返回数据
-			return JSONArray.fromObject(redisList);
+			return ReturnInfoUtils.successDataInfo(JSONArray.fromObject(redisList));
 		}
 	}
 
@@ -61,21 +55,17 @@ public class ProvinceCityAreaTransaction {
 	 * @return
 	 */
 	public Object getProvinceCityArea() {
-		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
+		//省市区Map缓存
+		byte[] redisByte = JedisUtil.get("SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP".getBytes());
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {
-			try{
-				Map<String, Object> datasMap = provinceCityAreaService.getProvinceCityArea2();
-				String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-				if ("1".equals(status)) {
-					return datasMap;
-				}
-			}catch (Exception e) {
-				logger.error(Thread.currentThread().getName()+"-查询省市区信息错误->",e);
+			try {
+				return  provinceCityAreaService.getAllProvinceCityAreaPostal();
+			} catch (Exception e) {
+				logger.error(Thread.currentThread().getName() + "-查询省市区信息错误->", e);
 				return ReturnInfoUtils.errorInfo("查询省市区失败,服务器繁忙!！");
 			}
-			return ReturnInfoUtils.errorInfo("查询省市区失败！");
 		}
 	}
 

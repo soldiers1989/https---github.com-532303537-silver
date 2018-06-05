@@ -6,17 +6,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.dao.common.base.ProvinceCityAreaDao;
 import org.silver.shop.dao.common.base.impl.ProvinceCityAreaDaoImpl;
 import org.silver.shop.model.common.base.Area;
 import org.silver.shop.model.common.base.City;
-import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.base.Province;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -24,8 +23,6 @@ import com.justep.baas.data.Row;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
-import net.sf.ezmorph.object.SwitchingMorpher;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service(interfaceClass = ProvinceCityAreaService.class)
@@ -36,14 +33,13 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 
 	@Override
 	public Map<String, Object> getProvinceCityArea() {
-		Map<String, Object> statusMap = new HashMap<>();
 		List<Object> provinceList = new ArrayList<>();
 		Map<String, Map<String, Map<String, Object>>> provinceMap = new HashMap<>();
 		Map<String, Map<String, Object>> cityMap = null;
 		Map<String, Object> areaMap = null;
 		// 查询省市区
 		Table table = provinceCityAreaDao.findAllProvinceCityArea();
-		if (table != null && table.getRows().size() > 0) {
+		if (table != null && !table.getRows().isEmpty()) {
 			List<Row> lr = table.getRows();
 			for (int i = 0; i < lr.size(); i++) {
 				areaMap = new HashMap<>();
@@ -53,11 +49,10 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 				String cityName = lr.get(i).getValue("cityName") + "";
 				String provinceCode = lr.get(i).getValue("provinceCode") + "";
 				String provinceName = lr.get(i).getValue("provinceName") + "";
-				if (provinceMap != null && provinceMap.get(provinceName + "_" + provinceCode) != null) {
+				if (provinceMap.get(provinceName + "_" + provinceCode) != null) {
 					String cityKey = provinceMap.get(provinceName + "_" + provinceCode).get(cityName + "_" + cityCode)
 							+ "";
-					if (cityKey != null && !cityKey.equals("null")) {
-						cityMap = new HashMap<>();
+					if (StringEmptyUtils.isNotEmpty(cityKey)) {
 						provinceMap.get(provinceName + "_" + provinceCode).get(cityName + "_" + cityCode).put(areaCode,
 								areaName);
 					} else {
@@ -67,7 +62,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 					}
 				} else {// 省份不存在时
 					provinceMap = new HashMap<>();
-					if (areaCode != null && !areaCode.trim().equals("null")) {
+					if (StringEmptyUtils.isNotEmpty(areaCode)) {
 						cityMap = new HashMap<>();
 						areaMap.put(areaCode, areaName);
 						cityMap.put(cityName + "_" + cityCode, areaMap);
@@ -80,64 +75,61 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 					provinceList.add(provinceMap);
 				}
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), provinceList);
-
 			// 将查询出来的省市区放入到redis缓存中
-			JedisUtil.setListDatas("Shop_Key_ProvinceCityArea_Map", 3600, provinceList);
+			JedisUtil.setListDatas("SHOP_KEY_PROVINCE_CITY_AREA_LIST", 86400, provinceList);
+			return ReturnInfoUtils.successDataInfo(provinceList);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+			return ReturnInfoUtils.errorInfo("查询省市区信息失败,服务器繁忙!");
 		}
-		return statusMap;
 	}
 
+
+	/**
+	 * 获取所有(邮编)省市区四表信息,并进行对应的等级封装
+	 * 
+	 * @return Map
+	 */
 	@Override
-	public Map<String, Object> getProvinceCityArea2() {
-		Map<String, Object> reMap = new HashMap<>();
-		byte[] redisByte = JedisUtil.get("Shop_Key_Province_Map".getBytes());
-		if (redisByte != null) {
-			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(SerializeUtil.toObject(redisByte)), 0);
-		} else {
-			// 查询省市区
-			Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
-			if (table != null && !table.getRows().isEmpty()) {
-				com.alibaba.fastjson.JSONArray jsonObject = Transform.tableToJson(table).getJSONArray("rows");
-				reMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				reMap.put(BaseCode.DATAS.toString(), jsonObject);
-				reMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				if (jsonObject != null && !jsonObject.isEmpty()) {
-					Map<String, Object> item = new HashMap<>();
-					for (int i = 0; i < jsonObject.size(); i++) {
-						JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
-						// 由于取出来是row数据,所以需要截取字符串
-						// 查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码_区域名称
-						item.put(provinceCityArea.getString("areaCode").replace("{\"value\":\"", "").replace("\"}", ""),
-								provinceCityArea.getString("provinceCode").replace("{\"value\":\"", "").replace("\"}",
-										"")
-										+ "_"
-										+ provinceCityArea.getString("provinceName").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "#"
-										+ provinceCityArea.getString("cityCode").replace("{\"value\":\"", "")
-												.replace("\"}", "").replace("{\"value\":\"", "").replace("\"}", "")
-										+ "_"
-										+ provinceCityArea.getString("cityName").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "#"
-										+ provinceCityArea.getString("areaCode").replace("{\"value\":\"", "")
-												.replace("\"}", "")
-										+ "_" + provinceCityArea.getString("areaName").replace("{\"value\":\"", "")
-												.replace("\"}", ""));
-					}
-					// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
-					JedisUtil.set("Shop_Key_Province_Map".getBytes(), SerializeUtil.toBytes(item), (3600 * 24) * 5);
-					return ReturnInfoUtils.successDataInfo(item, 0);
+	public Map<String, Object> getAllProvinceCityAreaPostal() {
+		Map<String, Object> item = new HashMap<>();
+		// 查询省市区
+		Table table = provinceCityAreaDao.findAllProvinceCityArePostal();
+		if (table != null && !table.getRows().isEmpty()) {
+			com.alibaba.fastjson.JSONArray jsonObject = Transform.tableToJson(table).getJSONArray("rows");
+			if (jsonObject != null && !jsonObject.isEmpty()) {
+				for (int i = 0; i < jsonObject.size(); i++) {
+					JSONObject provinceCityArea = JSONObject.fromObject(jsonObject.get(i));
+					// 由于取出来是row数据,所以需要截取字符串
+					// 查询省市区封装成Map集合key=区域编码,value=省份编码+省份名称#城市编码_城市名称#区域编码_区域名称
+					item.put(replace(provinceCityArea.getString("areaCode")),
+							replace(provinceCityArea.getString("provinceCode")) + "_"
+									+ replace(provinceCityArea.getString("provinceName")) + "#"
+									+ replace(provinceCityArea.getString("cityCode")) + "_"
+									+ replace(provinceCityArea.getString("cityName")) + "#"
+									+ replace(provinceCityArea.getString("areaCode")) + "_"
+									+ replace(provinceCityArea.getString("areaName")));
 				}
-			} else {
-				return ReturnInfoUtils.errorInfo("未查询到省市区数据!");
+				// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
+				JedisUtil.set("SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP".getBytes(), SerializeUtil.toBytes(item),
+						(3600 * 24) * 7);
 			}
+		} else {
+			return ReturnInfoUtils.errorInfo("查询省市区信息失败,服务器繁忙!");
 		}
-		return reMap;
+		return ReturnInfoUtils.successDataInfo(item);
+	}
+
+	/**
+	 * 通用替换多表查询字符串
+	 * 
+	 * @param str
+	 * @return
+	 */
+	private String replace(String str) {
+		if (StringEmptyUtils.isEmpty(str)) {
+			return "";
+		}
+		return str.replace("{\"value\":\"", "").replace("\"}", "");
 	}
 
 	@Override
@@ -165,7 +157,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			return ReturnInfoUtils.errorInfo("标识错误！");
 		}
 		getProvinceCityArea();
-		getProvinceCityArea2();
+		getAllProvinceCityAreaPostal();
 		return ReturnInfoUtils.successInfo();
 	}
 
@@ -241,4 +233,9 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 
 	}
 
+	public static void main(String[] args) {
+		String str = "{\"value\":\"acs\"}";
+
+		System.out.println("---->" + str.replace("{\"value\":\"", "").replace("\"}", ""));
+	}
 }

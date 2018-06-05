@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
-import org.silver.shop.impl.system.cross.PaymentServiceImpl;
+import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.OrderRecordTask;
@@ -31,7 +31,7 @@ public class InvokeTaskUtils {
 	@Autowired
 	private MpayServiceImpl mpayServiceImpl;
 	@Autowired
-	private PaymentServiceImpl paymentServiceImpl;
+	private PaymentService paymentService;
 
 	/**
 	 * 统一计算多线程后调用对应的方法
@@ -90,7 +90,7 @@ public class InvokeTaskUtils {
 			Map<String, Object> customsMap, ExecutorService threadPool, Map<String, Object> paramsMap) {
 		switch (flag) {
 		case 1:
-			GroupPaymentTask groupPaymentTask = new GroupPaymentTask(jsonList, paymentServiceImpl, errorList,
+			GroupPaymentTask groupPaymentTask = new GroupPaymentTask(jsonList, paymentService, errorList,
 					paramsMap);
 			threadPool.submit(groupPaymentTask);
 			break;
@@ -101,7 +101,7 @@ public class InvokeTaskUtils {
 			break;
 		case 3:
 			PaymentRecordTask paymentRecordTask = new PaymentRecordTask(jsonList, errorList, customsMap,
-					paymentServiceImpl, paramsMap);
+					paymentService, paramsMap);
 			threadPool.submit(paymentRecordTask);
 			break;
 		default:

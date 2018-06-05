@@ -38,6 +38,7 @@ public class Mpay implements Serializable {
 	private String ciqOrgCode;// 国检机构代码
 	private String thirdPartyId;// 第三方支付单唯一标识
 	private String resendStatus;// 第三方支付单重发状态：success-成功，false-失败
+	private Date resendDate;// 第三方支付单重发接收成功时间
 	private int networkStatus;//支付单推送至网关接收状态： 0-未发起,1-接收成功,2-接收失败
 	public long getId() {
 		return id;
@@ -269,6 +270,14 @@ public class Mpay implements Serializable {
 
 	public void setNetworkStatus(int networkStatus) {
 		this.networkStatus = networkStatus;
+	}
+
+	public Date getResendDate() {
+		return resendDate;
+	}
+
+	public void setResendDate(Date resendDate) {
+		this.resendDate = resendDate;
 	}
 
 

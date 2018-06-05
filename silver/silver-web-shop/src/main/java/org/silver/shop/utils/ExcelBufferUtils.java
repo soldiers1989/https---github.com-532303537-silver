@@ -222,6 +222,7 @@ public class ExcelBufferUtils {
 			if (redisByte != null && redisByte.length > 0) {
 				updateRedis(redisByte, key, errl, paramsMap);
 			} else {
+				System.out.println("----没有缓存信息--key->>>>"+key);
 				notRedis(key, errl, paramsMap);
 			}
 		}
@@ -253,6 +254,7 @@ public class ExcelBufferUtils {
 				redisMap.put(BaseCode.ERROR.toString(), errl);
 			}
 		}
+		System.out.println("------>>>"+redisMap.toString());
 		// 类型
 		String type = paramsMap.get("type") + "";
 		int errCounter = 0;
@@ -277,6 +279,7 @@ public class ExcelBufferUtils {
 		redisMap.put(BaseCode.STATUS.toString(), "1");
 		redisMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
+		
 		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
 	}
 
@@ -347,6 +350,7 @@ public class ExcelBufferUtils {
 					datasMap.put("orderCount", reMap.get("orderCount"));
 				}
 				// 将数据放入到缓存中
+				System.out.println("---线程结束后数据放入到缓存中>>"+datasMap.toString());
 				JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 				String oldKey = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
 				JedisUtil.set(oldKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);

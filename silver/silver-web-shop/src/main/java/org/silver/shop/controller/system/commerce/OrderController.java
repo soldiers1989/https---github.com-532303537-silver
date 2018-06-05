@@ -361,7 +361,7 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("第三方商城平台传递订单信息入口")
+	@ApiOperation("公开性第三方商城平台 查询订单信息入口")
 	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

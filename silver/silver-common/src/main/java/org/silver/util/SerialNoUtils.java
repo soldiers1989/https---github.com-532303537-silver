@@ -119,7 +119,7 @@ public class SerialNoUtils {
 					return -1;
 				}
 			}
-			JedisUtil.set(key, 60 * 60 * 24, 1);
+			JedisUtil.set(key, (60 * 60) * 24, 1);
 			return serial;
 		}
 	}

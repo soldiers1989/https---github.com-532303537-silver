@@ -25,7 +25,7 @@ public class StockTransaction {
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String warehouseCode, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		return stockService.searchAlreadyRecordGoodsDetails(merchantId,warehouseCode,page,size);
 	}
@@ -33,7 +33,7 @@ public class StockTransaction {
 	public Map<String,Object> addGoodsStockCount(String warehouseCode, String warehouseName, String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.addGoodsStockCount(merchantId,merchantName,warehouseCode,warehouseName,goodsInfoPack);
@@ -43,7 +43,7 @@ public class StockTransaction {
 	public Map<String,Object> addGoodsSellCount(String goodsId, int sellCount) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.addGoodsSellCount(merchantId,merchantName,goodsId,sellCount);
@@ -53,7 +53,7 @@ public class StockTransaction {
 	public Map<String, Object> getGoodsStockInfo(int page, int size,String warehouseCode) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.getGoodsStockInfo(merchantId,merchantName,page,size,warehouseCode);
@@ -63,7 +63,7 @@ public class StockTransaction {
 	public Map<String, Object> merchantSetGoodsSellAndStopSelling(String goodsInfoPack,int type) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.setGoodsSellAndStopSelling(merchantId,merchantName,goodsInfoPack,type);
@@ -73,7 +73,7 @@ public class StockTransaction {
 	public Map<String, Object> merchantSetGoodsStorageAndSellCount(String goodsInfoPack, int type) { 
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.setGoodsStorageAndSellCount(merchantId,merchantName,goodsInfoPack,type);
@@ -83,7 +83,7 @@ public class StockTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		Enumeration<String> iskey = req.getParameterNames();
@@ -99,7 +99,7 @@ public class StockTransaction {
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String goodsInfoPack, int type) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return stockService.merchantSetGoodsSalePriceAndMarketPrice(merchantId,merchantName,goodsInfoPack,type);

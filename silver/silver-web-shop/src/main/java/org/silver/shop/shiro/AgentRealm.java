@@ -24,7 +24,7 @@ public class AgentRealm extends AuthorizingRealm{
 	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		AgentBaseContent agentBaseContent = (AgentBaseContent) WebUtil.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		AgentBaseContent agentBaseContent = (AgentBaseContent) WebUtil.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 		SimpleAuthorizationInfo info = null;
 		if (agentBaseContent != null) {
 			info = new SimpleAuthorizationInfo();

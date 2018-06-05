@@ -45,7 +45,9 @@ public class JedisTemplate {
 			K result = executor.execute(jedis);
 			if (jedis.exists(key)) {
 				if (expire == null || expire.length == 0) {
-					jedis.expire(key, EXPIRE);
+					// 获取剩余有效期
+					int ttl = jedis.ttl(key).intValue();
+					jedis.expire(key, ttl);
 				} else if (expire.length == 1) {
 					jedis.expire(key, expire[0]);
 				}
@@ -70,7 +72,9 @@ public class JedisTemplate {
 			K result = executor.execute(jedis);
 			if (jedis.exists(key)) {
 				if (expire == null || expire.length == 0) {
-					jedis.expire(key, EXPIRE);
+					// 获取剩余有效期
+					int ttl = jedis.ttl(key).intValue();
+					jedis.expire(key, ttl);
 				} else if (expire.length == 1) {
 					jedis.expire(key, expire[0]);
 				}
@@ -85,12 +89,12 @@ public class JedisTemplate {
 		}
 		return null;
 	}
-	 public static void main(String[] args) {
-	
-		 
-	//	 Jedis jedis = new Jedis("150.242.58.22", 6380);
-		// jedis.auth("jugg"); 
+
+	public static void main(String[] args) {
+
+		// Jedis jedis = new Jedis("150.242.58.22", 6380);
+		// jedis.auth("jugg");
 		// jedis.set("name", "678");
-	//	 System.out.println(jedis.get("name"));
+		// System.out.println(jedis.get("name"));
 	}
 }

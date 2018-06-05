@@ -1,7 +1,5 @@
 package org.silver.shop.service.system.cross;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -13,21 +11,22 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.cross.PaymentService;
-import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.util.DateUtil;
 import org.silver.util.YmHttpUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
 import net.sf.json.JSONArray;
 
-@Service
+@Component
 public class PaymentTransaction {
-	@Reference(timeout = 20000)
+	//@Reference(timeout = 20000)
+	@Autowired
 	private PaymentService paymentService;
 
 	//
@@ -39,7 +38,7 @@ public class PaymentTransaction {
 	public Object sendMpayRecord(Map<String, Object> recordMap, String tradeNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -58,7 +57,7 @@ public class PaymentTransaction {
 		Map<String, Object> params = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -76,7 +75,7 @@ public class PaymentTransaction {
 	public Map<String, Object> getMerchantPaymentReport(String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return paymentService.getMerchantPaymentReport(merchantId, merchantName, startDate, endDate);
@@ -85,7 +84,7 @@ public class PaymentTransaction {
 	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -105,7 +104,7 @@ public class PaymentTransaction {
 	public Map<String, Object> managerEditMpayInfo(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return paymentService.managerEditMpayInfo(params, managerId, managerName);
@@ -116,7 +115,7 @@ public class PaymentTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession()
-				.getAttribute(LoginType.AGENTINFO.toString());
+				.getAttribute(LoginType.AGENT_INFO.toString());
 		String agentId = agentBaseContent.getAgentId();
 		String agentName = agentBaseContent.getAgentName();
 		// datasMap.put("agentId", agentId);
@@ -127,7 +126,7 @@ public class PaymentTransaction {
 	public Map<String, Object> managerHideMpayInfo(JSONArray jsonArray) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return paymentService.managerHideMpayInfo(jsonArray, managerName);
 	}
@@ -135,7 +134,7 @@ public class PaymentTransaction {
 	public Object checkPaymentPort(List<String> tradeNos) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return paymentService.checkPaymentPort(tradeNos,merchantId);

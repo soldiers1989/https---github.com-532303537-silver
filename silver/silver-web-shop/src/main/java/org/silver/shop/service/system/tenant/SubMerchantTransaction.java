@@ -23,7 +23,7 @@ public class SubMerchantTransaction {
 	public Map<String,Object> addSubMerchantInfo(Map<String,Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		String managerId = managerInfo.getManagerId();
 		return subMerchantService.addSubMerchantInfo(params,managerId,managerName);
@@ -38,7 +38,7 @@ public class SubMerchantTransaction {
 	public Object editSubMerchantInfo(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		String managerId = managerInfo.getManagerId();
 		return subMerchantService.editSubMerchantInfo(params,managerId,managerName);

@@ -26,7 +26,7 @@ public class GACTransaction {
 
 	public Map<String, Object> getGACInfo() {
 		Map<String, Object> datasMap = new HashMap<>();
-		String key = "Shop_Key_Allgac_List";
+		String key = "SHOP_KEY_ALL_GAC_LIST";
 		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo((List<GAC>) SerializeUtil.toObject(redisByte));

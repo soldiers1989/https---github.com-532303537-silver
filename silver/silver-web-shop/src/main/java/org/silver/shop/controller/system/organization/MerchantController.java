@@ -294,7 +294,7 @@ public class MerchantController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		Map<String, Object> statusMap = new HashMap<>();
 		if (merchantInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

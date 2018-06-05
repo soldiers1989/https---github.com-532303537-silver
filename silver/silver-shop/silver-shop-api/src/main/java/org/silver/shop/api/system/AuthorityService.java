@@ -40,4 +40,12 @@ public interface AuthorityService {
 	 */
 	public Map<String, Object> editAuthorityInfo(Map<String, Object> datasMap);
 
+	/**
+	 * 管理员删除权限信息
+	 * @param authorityId 权限信息流水Id
+	 * @param managerName 
+	 * @return Map
+	 */
+	public Map<String, Object> deleteAuthorityInfo(String authorityId, String managerName);
+
 }

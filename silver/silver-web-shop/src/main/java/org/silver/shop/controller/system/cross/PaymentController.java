@@ -79,7 +79,6 @@ public class PaymentController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = new HashMap<>();
 		Map<String, Object> recordMap = new HashMap<>();
 		Enumeration<String> itkeys = req.getParameterNames();
 		String key = "";
@@ -91,9 +90,7 @@ public class PaymentController {
 		if (!recordMap.isEmpty()) {
 			return JSONObject.fromObject(paytemTransaction.sendMpayRecord(recordMap, tradeNoPack)).toString();
 		}
-		reqMap.put("status", -3);
-		reqMap.put("msg", "缺少支付流水号");
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付流水号信息不能为空!")).toString();
 	}
 
 	/**

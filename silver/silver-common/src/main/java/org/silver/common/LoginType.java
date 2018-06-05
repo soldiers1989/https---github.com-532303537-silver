@@ -24,23 +24,23 @@ public enum LoginType {
 	/**
 	 * 商户的info
 	 */
-	MERCHANTINFO(MERCHANT+"_info"),
+	MERCHANT_INFO(MERCHANT+"_info"),
 	/**
-	 * 管理员的info
+	 * 管理员info
 	 */
-	MANAGERINFO(MANAGER+"_info"),
+	MANAGER_INFO(MANAGER+"_info"),
 	/**
-	 * 用户的info
+	 * 用户info
 	 */
-	MEMBERINFO(MEMBER+"_info"),
+	MEMBER_INFO(MEMBER+"_info"),
 	/**
-	 * （临时旧数据）代理的info
+	 * （临时旧数据）代理info
 	 */
-	PROXYINFO(PROXY+"_info"),
+	PROXY_INFO(PROXY+"_info"),
 	/**
-	 * 代理商的info
+	 * 代理商info
 	 */
-	AGENTINFO(AGENT+"_info")
+	AGENT_INFO(AGENT+"_info")
 	;
 	
     private String type;

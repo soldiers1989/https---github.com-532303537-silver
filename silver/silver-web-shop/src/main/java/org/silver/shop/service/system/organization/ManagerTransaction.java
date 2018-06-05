@@ -54,9 +54,9 @@ public class ManagerTransaction {
 			if (account.equals(name) && md5Pas.equals(loginpas)) {
 				Subject currentUser = SecurityUtils.getSubject();
 				// 获取商户登录时,shiro存入在session中的数据
-				Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+				Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 				if (managerInfo == null) {
-					WebUtil.getSession().setAttribute(LoginType.MANAGERINFO.toString(), reList.get(0));
+					WebUtil.getSession().setAttribute(LoginType.MANAGER_INFO.toString(), reList.get(0));
 				}
 				datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.MSG.getBaseCode(), "登录成功");
@@ -82,7 +82,7 @@ public class ManagerTransaction {
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks, String description) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String reManagerName = managerInfo.getManagerName();
 		return managerService.createManager(managerName, loginPassword, managerMarks, reManagerName,description);
 	}
@@ -103,7 +103,7 @@ public class ManagerTransaction {
 	public Map<String, Object> findMerchantDetail(String merchantId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return managerService.findMerchantDetail(managerName, merchantId);
 	}
@@ -112,7 +112,7 @@ public class ManagerTransaction {
 	public Map<String, Object> updateManagerPassword(String oldLoginPassword, String newLoginPassword) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.updateManagerPassword(managerId, managerName, oldLoginPassword, newLoginPassword);
@@ -127,7 +127,7 @@ public class ManagerTransaction {
 	public Map<String, Object> resetManagerPassword(String managerId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return managerService.resetManagerPassword(managerId, managerName);
 	}
@@ -136,7 +136,7 @@ public class ManagerTransaction {
 	public Map<String, Object> managerAddMerchantInfo(HttpServletRequest req,Map<String,Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		int imgLength = Integer.parseInt(datasMap.get("imgLength")+"");
 		datasMap.put("managerName", managerName);
@@ -174,7 +174,7 @@ public class ManagerTransaction {
 	public Map<String, Object> editMerhcnatInfo(HttpServletRequest req, int length) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		String[] arrStr = new String[length];
@@ -190,7 +190,7 @@ public class ManagerTransaction {
 			String merchantName) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		String path = "/opt/www/img/" + merchantId + "/";
@@ -225,7 +225,7 @@ public class ManagerTransaction {
 		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		Enumeration<String> isKey = req.getParameterNames();
@@ -246,7 +246,7 @@ public class ManagerTransaction {
 	public Map<String, Object> editMerchantRecordDetail(String merchantId, String merchantRecordInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.editMerchantRecordDetail(managerId, managerName, merchantId, merchantRecordInfo);
@@ -267,7 +267,7 @@ public class ManagerTransaction {
 		}
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.managerAuditMerchantInfo(managerId,managerName,json);
@@ -277,7 +277,7 @@ public class ManagerTransaction {
 	public Map<String, Object> resetMerchantLoginPassword(String merchantId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return managerService.resetMerchantLoginPassword(merchantId,managerId,managerName);
@@ -290,7 +290,7 @@ public class ManagerTransaction {
 	public List<String> getManagerAuthority() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		//String managerName = managerInfo.getManagerName();
 		String redisKey = "Shop_Key_Manager_Authority_List__" + managerId;

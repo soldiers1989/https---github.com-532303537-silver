@@ -29,7 +29,7 @@ public class OrderTransaction {
 	public Map<String, Object> createOrderInfo(String goodsInfoPack, int type, String recipientId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return orderService.createOrderInfo(memberId, memberName, goodsInfoPack, type, recipientId);
@@ -44,7 +44,7 @@ public class OrderTransaction {
 	public Map<String, Object> getMerchantOrderRecordInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
 		return orderService.getMerchantOrderRecordInfo(merchantId, merchantName, page, size);
@@ -58,7 +58,7 @@ public class OrderTransaction {
 	public Map<String, Object> getMemberOrderInfo(int page, int size, Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		datasMap.put("memberId", memberId);
 		return orderService.getMemberOrderInfo(datasMap, page, size);
@@ -68,7 +68,7 @@ public class OrderTransaction {
 	public Map<String, Object> getMerchantOrderDetail(String entOrderNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return orderService.getMerchantOrderDetail(merchantId, merchantName, entOrderNo);
@@ -78,7 +78,7 @@ public class OrderTransaction {
 	public Map<String, Object> getMemberOrderDetail(String entOrderNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return orderService.getMemberOrderDetail(memberId, memberName, entOrderNo);
@@ -88,7 +88,7 @@ public class OrderTransaction {
 	public Map<String, Object> searchMerchantOrderInfo(HttpServletRequest req, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		Map<String, Object> param = new HashMap<>();
@@ -105,7 +105,7 @@ public class OrderTransaction {
 	public Map<String, Object> getMerchantOrderReport(String startDate, String endDate) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return orderService.getMerchantOrderDailyReport(merchantId, merchantName, startDate, endDate);
@@ -134,7 +134,7 @@ public class OrderTransaction {
 	public Object memberDeleteOrderInfo(String entOrderNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberName = memberInfo.getMemberName();
 		return orderService.memberDeleteOrderInfo(entOrderNo, memberName);
 	}
@@ -144,7 +144,7 @@ public class OrderTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
 		AgentBaseContent agentBaseContent = (AgentBaseContent) currentUser.getSession()
-				.getAttribute(LoginType.AGENTINFO.toString());
+				.getAttribute(LoginType.AGENT_INFO.toString());
 		String agentId = agentBaseContent.getAgentId();
 		String agentName = agentBaseContent.getAgentName();
 		// datasMap.put("agentId", agentId);
@@ -171,7 +171,7 @@ public class OrderTransaction {
 	public Object checkOrderPort(List<String> orderIDs) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		return orderService.checkOrderPort(orderIDs,merchantId);
 	}

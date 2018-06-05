@@ -23,6 +23,8 @@ import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
+import org.silver.shop.utils.CusAccessObjectUtil;
+import org.silver.util.IpAddresUtils;
 import org.silver.util.JedisUtil;
 import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
@@ -107,6 +109,7 @@ public class MemberController {
 	@ApiOperation(value = "用户--登录")
 	public String memberLogin(@RequestParam("account") String account,
 			@RequestParam("loginPassword") String loginPassword, HttpServletRequest req, HttpServletResponse response) {
+		String ipAddress = CusAccessObjectUtil.getIpAddress(req);
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -116,7 +119,9 @@ public class MemberController {
 		if (account != null && loginPassword != null) {
 			Subject currentUser = SecurityUtils.getSubject();
 			// currentUser.logout();
-			CustomizedToken customizedToken = new CustomizedToken(account, loginPassword, USER_LOGIN_TYPE);
+			// 将IP地址拼接在账号变量中传递到登陆方法
+			CustomizedToken customizedToken = new CustomizedToken(account + "_" + ipAddress, loginPassword,
+					USER_LOGIN_TYPE);
 			customizedToken.setRememberMe(false);
 			try {
 				currentUser.login(customizedToken);
@@ -124,13 +129,41 @@ public class MemberController {
 			} catch (IncorrectCredentialsException ice) {
 				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("你输入的密码和账户名不匹配!")).toString();
 			} catch (LockedAccountException lae) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), -1);
-				statusMap.put(BaseCode.MSG.getBaseCode(), "账户已被冻结");
+				// 账号锁定(冻结)错误
+				// 多次输入密码错误，请 30 分钟之后再次尝试登录！
+				Long ttl = JedisUtil.ttl("SHOP_LOGIN_MEMBER_ERROR_COUNT_INT" + lae.getMessage() + "_" + ipAddress);
+				int m = (ttl.intValue() % 3600) / 60;
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("多次输入密码错误，请 " + m + " 分钟之后再次尝试登录！")).toString();
 			} catch (AuthenticationException ae) {
-				ae.printStackTrace();
+				// 账号认证失败错误
+				// ae.printStackTrace();
+				return passwordErrorInfo(ae.getMessage(), ipAddress);
 			}
 		}
 		return JSONObject.fromObject(statusMap).toString();
+	}
+
+	/**
+	 * 当用户同一个Ip地址同一账号登陆多次密码失败后
+	 * 
+	 * @param memberId
+	 * @param ipAddress
+	 *            IP地址
+	 * @return
+	 */
+	private String passwordErrorInfo(String memberId, String ipAddress) {
+		//根据缓存中的KEY获取用户登陆次数
+		String redis = JedisUtil.get("SHOP_LOGIN_MEMBER_ERROR_COUNT_INT" + memberId + "_" + ipAddress);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			int count = Integer.parseInt(redis);
+			if ((3 - count) <= 0) {
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("多次输入密码错误，请 15 分钟之后再次尝试登录！")).toString();
+			} else {
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("密码错误,您还可以尝试" + (3 - count) + "次!")).toString();
+			}
+		} else {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录失败,请联系客服人员!")).toString();
+		}
 	}
 
 	@RequestMapping(value = "/getMemberInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -162,7 +195,7 @@ public class MemberController {
 		Map<String, Object> statusMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		if (memberInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), "用户已登陆！");
@@ -340,8 +373,7 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation(value = "会员实名认证")
 	@RequiresRoles("Member")
-	public String realName(HttpServletRequest req, HttpServletResponse response,
-			String memberId,String captcha) {
+	public String realName(HttpServletRequest req, HttpServletResponse response, String memberId, String captcha) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -352,7 +384,7 @@ public class MemberController {
 		if (StringEmptyUtils.isEmpty(memberId) || StringEmptyUtils.isEmpty(captcha)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id或验证码不能为空!")).toString();
 		}
-		if(!captcha.equalsIgnoreCase(captchaCode)){
+		if (!captcha.equalsIgnoreCase(captchaCode)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
 		}
 		return JSONObject.fromObject(memberTransaction.realName(memberId)).toString();

@@ -3,7 +3,7 @@ package org.silver.shop.dao.system.tenant;
 import java.util.List;
 import java.util.Map;
 
-public interface MerchantWalletDao {
+public interface MerchantWalletDao<E> {
 
 	/**
 	 * 根据实体,及Map键值对查询数据 key=(表中列名称),value=(查询参数)
@@ -101,7 +101,7 @@ public interface MerchantWalletDao {
 	 * @param size 数目
 	 * @return List 
 	 */
-	public List<Object> findByPropertyLike(Class entity, Map<String, Object> params,Map blurryMap ,int page, int size);
+	public List<E> findByPropertyLike(Class entity, Map<String, Object> params,Map blurryMap ,int page, int size);
 
 	
 	/**

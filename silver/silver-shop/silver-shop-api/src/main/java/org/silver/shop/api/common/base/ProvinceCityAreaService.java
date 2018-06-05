@@ -16,7 +16,7 @@ public interface ProvinceCityAreaService {
 	 * 
 	 * @return Map
 	 */
-	public Map<String, Object> getProvinceCityArea2();
+	public Map<String, Object> getAllProvinceCityAreaPostal();
 
 	/**
 	 * 修改省市区

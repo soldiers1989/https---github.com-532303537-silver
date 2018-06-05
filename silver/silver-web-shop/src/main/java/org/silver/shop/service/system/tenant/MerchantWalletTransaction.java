@@ -21,7 +21,7 @@ public class MerchantWalletTransaction {
 	public Map<String, Object> merchantWalletRecharge(Double money) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return merchantWalletService.walletRecharge(merchantId, merchantName, money);
@@ -31,7 +31,7 @@ public class MerchantWalletTransaction {
 	public Map<String, Object> getMerchantWallet() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return merchantWalletService.getMerchantWallet(merchantId, merchantName);
@@ -41,7 +41,7 @@ public class MerchantWalletTransaction {
 	public Map<String, Object> getMerchantWalletLog(int type, int page, int size, int timeLimit) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return merchantWalletService.getMerchantWalletLog(merchantId,merchantName,type,page,size,timeLimit);

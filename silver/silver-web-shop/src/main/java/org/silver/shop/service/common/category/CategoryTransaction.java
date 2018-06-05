@@ -37,22 +37,18 @@ public class CategoryTransaction {
 	 * @return Map
 	 */
 	public Map<String, Object> findAllCategory() {
-		Map<String, Object> datasMap = new HashMap<>();
 		// 获取在redis中的所有商品类型
-		String redisList = JedisUtil.get("Shop_Key_GoodsCategory_Map");
+		String redisList = JedisUtil.get("SHOP_KEY_GOODS_CATEGORY_MAP");
 		if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
-			datasMap = categoryService.findGoodsType();
+			Map<String, Object> datasMap = categoryService.findGoodsType();
 			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
 				// 将已查询出来的商品类型存入redis,有效期为1小时
-				JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap.get(BaseCode.DATAS.getBaseCode()));
+				JedisUtil.setListDatas("SHOP_KEY_GOODS_CATEGORY_MAP", 3600, datasMap.get(BaseCode.DATAS.getBaseCode()));
 			}
 			return datasMap;
 		} else {// redis缓存中已有数据,直接返回数据
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			datasMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			datasMap.put(BaseCode.DATAS.toString(), JSONObject.fromObject(redisList));
-			return datasMap;
+			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(redisList));
 		}
 	}
 
@@ -61,7 +57,7 @@ public class CategoryTransaction {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		Enumeration<String> isKey = req.getParameterNames();
@@ -79,7 +75,7 @@ public class CategoryTransaction {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		Enumeration<String> isKey = req.getParameterNames();
@@ -96,7 +92,7 @@ public class CategoryTransaction {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		Enumeration<String> isKey = req.getParameterNames();

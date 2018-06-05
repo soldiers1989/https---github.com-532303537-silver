@@ -34,7 +34,7 @@ public class SessionListener implements HttpSessionListener {
 		}
 		session.removeAttribute(Constants.CURRENT_USER);*/
 	//	sessionService.deleteBySessionId(session.getId());
-		setAllUserNumber(-1);
+	//	setAllUserNumber(-1);
 	}
 
 	private void setAllUserNumber(int n) {

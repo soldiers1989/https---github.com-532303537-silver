@@ -276,6 +276,7 @@ public class BufferUtils {
 		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
 		Map<String, Object> serviceMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
 		Map<String, Object> webMap = (Map<String, Object>) SerializeUtil.toObject(webRedisInfo);
+		System.out.println("---webMap->>>"+webMap.toString());
 		int counter = Integer.parseInt(serviceMap.get(COMPLETED) + "");
 		int sendCounter = Integer.parseInt(webMap.get("sendCounter") + "");
 		int errCounter = Integer.parseInt(webMap.get("errCounter") + "");

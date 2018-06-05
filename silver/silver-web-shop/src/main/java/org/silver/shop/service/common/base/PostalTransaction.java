@@ -27,7 +27,7 @@ public class PostalTransaction {
 	public static Object getPostal() {
 		Map<String, Object> datasMap = new HashMap<>();
 		List<Postal> provinceList = null;
-		byte[] redisByte = JedisUtil.get("Shop_Key_Postal_List".getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get("SHOP_KEY_POSTAL_LIST".getBytes(), 3600);
 		if (redisByte != null) {
 			provinceList = (List<Postal>) SerializeUtil.toObject(redisByte);
 			datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -41,7 +41,7 @@ public class PostalTransaction {
 				List<Object> reList = (List) datasMap.get(BaseCode.DATAS.getBaseCode());
 				if (reList != null && !reList.isEmpty()) {
 					// 将查询出来的数据放入到缓存中
-					JedisUtil.set("Shop_Key_Postal_List".getBytes(), SerializeUtil.toBytes(reList), 3600);
+					JedisUtil.set("SHOP_KEY_POSTAL_LIST".getBytes(), SerializeUtil.toBytes(reList), 3600);
 				}
 			}
 			return datasMap;

@@ -26,7 +26,7 @@ public class ManagerRealm extends AuthorizingRealm {
 	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		Manager manager = (Manager) WebUtil.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager manager = (Manager) WebUtil.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		SimpleAuthorizationInfo info = null;
 		if (manager != null) {
 			info = new SimpleAuthorizationInfo();

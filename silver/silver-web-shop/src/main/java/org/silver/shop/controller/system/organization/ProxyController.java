@@ -99,7 +99,7 @@ public class ProxyController {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Proxy proxyInfo = (Proxy) currentUser.getSession()
-				.getAttribute(LoginType.PROXYINFO.toString());
+				.getAttribute(LoginType.PROXY_INFO.toString());
 		if (!"".equals(proxyInfo)) {
 			// 将session内的商户登录密码清空
 			proxyInfo.setLoginPassword("");
@@ -144,7 +144,7 @@ public class ProxyController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXYINFO.toString());
+		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXY_INFO.toString());
 		Map<String, Object> statusMap = new HashMap<>();
 		if (proxyInfo != null && currentUser.isAuthenticated()) {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());

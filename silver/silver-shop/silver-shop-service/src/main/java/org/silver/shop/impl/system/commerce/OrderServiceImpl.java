@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.commerce;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1212,7 +1213,10 @@ public class OrderServiceImpl implements OrderService {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额["
 						+ goodsJson.get("Total") + "]格式错误!");
 			}
-			if ((count * price) != total) {
+			//由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
+			DecimalFormat df = new DecimalFormat("#.00");
+			double temToal = Double.parseDouble(df.format(count * price));
+			if (temToal != total) {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额为：" + total
 						+ ",与" + count + "(数量)*" + price + "(单价)=" + (count * price) + "(商品总金额)不对等,请核对信息!");
 			}

@@ -4,31 +4,24 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import javax.swing.plaf.synth.SynthSpinnerUI;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.PaymentService;
+import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
-import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
-import org.silver.shop.model.common.base.Postal;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
-import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.Merchant;
@@ -43,12 +36,9 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
-import org.silver.util.JedisUtil;
-import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
-import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
 import org.silver.util.YmHttpUtil;
@@ -83,7 +73,7 @@ public class PaymentServiceImpl implements PaymentService {
 	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
+	private MerchantWalletService merchantWalletService;
 	@Autowired
 	private MerchantFeeServiceImpl merchantFeeServiceImpl;
 	/**
@@ -168,6 +158,7 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public Object sendMpayByRecord(String merchantId, Map<String, Object> recordMap, String tradeNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
+		System.out.println("-------sendMpayByRecord-------------");
 		Map<String, Object> statusMap = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		JSONArray jsonList = null;
@@ -175,6 +166,9 @@ public class PaymentServiceImpl implements PaymentService {
 			jsonList = JSONArray.fromObject(tradeNoPack);
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("支付流水号包格式错误,请核实信息！");
+		}
+		if(jsonList == null || jsonList.isEmpty()){
+			return ReturnInfoUtils.errorInfo("支付流水信息包不能为空!");
 		}
 		int eport = Integer.parseInt(recordMap.get(E_PORT) + "");
 		String ciqOrgCode = recordMap.get(CIQ_ORG_CODE) + "";
@@ -217,8 +211,9 @@ public class PaymentServiceImpl implements PaymentService {
 			recordMap.put(APPKEY, YmMallConfig.APPKEY);
 			recordMap.put("appSecret", YmMallConfig.APPSECRET);
 		}
-		//
+		//AOP
 		String merchantFeeId = recordMap.get("merchantFeeId") + "";
+		
 		Map<String, Object> reCheckMap = computingCostsManualPayment(jsonList, merchantId, merchantName, merchantFeeId);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
@@ -263,7 +258,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @param merchantFeeId
 	 * @return Map
 	 */
-	private Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId, String merchantName,
+	public Map<String, Object> computingCostsManualPayment(JSONArray jsonList, String merchantId, String merchantName,
 			String merchantFeeId) {
 		// 查询商户钱包
 		Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
@@ -314,7 +309,7 @@ public class PaymentServiceImpl implements PaymentService {
 		// 支付单手续费
 		double serviceFee = totalAmountPaid * fee;
 		double walletBalance = merchantWallet.getBalance();
-		Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet,
+		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet,
 				walletBalance, serviceFee);
 		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletDeductionMap;
@@ -325,7 +320,7 @@ public class PaymentServiceImpl implements PaymentService {
 		datas.put("serviceFee", serviceFee);
 		datas.put("name", "支付单申报-手续费");
 		datas.put("note", "[" + count + "]单,支付单申报手续费");
-		Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
+		Map<String, Object> reWalletLogMap = merchantWalletService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
@@ -343,6 +338,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 * @param paramsMap
 	 *            缓存参数
 	 */
+	@Override
 	public final void startSendPaymentRecord(JSONArray jsonList, List<Map<String, Object>> errorList,
 			Map<String, Object> recordMap, Map<String, Object> paramsMap) {
 		String merchantId = paramsMap.get(MERCHANT_ID) + "";
@@ -540,6 +536,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 *            手工支付单实体类
 	 * @return Map
 	 */
+	@Override
 	public void rePaymentInfo(Mpay pay) {
 		if (pay != null) {
 			Map<String, Object> item = new HashMap<>();
@@ -576,7 +573,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * 更新成功的支付单第三方回调信息
+	 * 当支付单回调给第三方电商平台返回成功(success)后,更新成功的支付单第三方回调信息
 	 * 
 	 * @param Mpay
 	 *            手工支付单实体类
@@ -601,6 +598,7 @@ public class PaymentServiceImpl implements PaymentService {
 			}
 		}
 		pay.setResendStatus("SUCCESS");
+		pay.setResendDate(new Date());
 		if (!paymentDao.update(pay)) {
 			logger.error("--异步回调第三方支付单成功后更新支付单回调状态失败--");
 		}

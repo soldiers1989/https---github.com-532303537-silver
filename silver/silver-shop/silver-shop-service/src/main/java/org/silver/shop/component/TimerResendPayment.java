@@ -1,5 +1,7 @@
 package org.silver.shop.component;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,8 +10,8 @@ import java.util.TimerTask;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.dao.system.cross.PaymentDao;
-import org.silver.shop.impl.system.cross.PaymentServiceImpl;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.springframework.beans.factory.InitializingBean;
@@ -25,19 +27,19 @@ public class TimerResendPayment implements InitializingBean {
 	@Autowired
 	private PaymentDao paymentDao;
 	@Autowired
-	private PaymentServiceImpl paymentServiceImpl;
+	private PaymentService paymentService;  
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		System.out.println("支付回调定时器启动-----");
-		//reminder();
+		reminder();
 	}
 
 	public void reminder() {
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			public void run() {
-				resendPayment();
+				//resendPayment();
 			}
 			// 项目启动后90秒开始扫描， 暂定循环为60秒启动一次
 		}, 90000, 60000);
@@ -61,12 +63,21 @@ public class TimerResendPayment implements InitializingBean {
 					params.put("merchant_no", paymentCallBack.getMerchantId());
 					List<Mpay> rePaymentList = paymentDao.findByProperty(Mpay.class, params, 0, 0);
 					if (rePaymentList != null && !rePaymentList.isEmpty()) {
-						paymentServiceImpl.rePaymentInfo(rePaymentList.get(0));
+						paymentService.rePaymentInfo(rePaymentList.get(0));
 					}
 				}
 			}
 		} catch (Exception e) {
 			logger.error("----扫描回调支付单错误-----", e);
 		}
+	}
+	public static void main(String[] args) {
+		int i = 3;
+		double d = 62.95;  
+		BigDecimal bg = new BigDecimal(i * d);  
+        double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();  
+		
+		 DecimalFormat df = new DecimalFormat("#.00");  
+		System.out.println("---->>>"+ df.format(188.855));
 	}
 }

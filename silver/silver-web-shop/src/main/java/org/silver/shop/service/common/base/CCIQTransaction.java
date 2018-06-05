@@ -25,17 +25,16 @@ public class CCIQTransaction {
 	private CCIQService cciqService;
 	
 	public Object getCCIQInfo() {
-		Map<String, Object> datasMap = new HashMap<>();
-		String key = "Shop_Key_Allcciq_List";
-		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
+		String key = "SHOP_KEY_ALL_CCIQ_LIST";
+		byte[] redisByte = JedisUtil.get(key.getBytes());
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo((List<CCIQ>) SerializeUtil.toObject(redisByte));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
-			datasMap = cciqService.getCCIQInfo();
+			Map<String, Object> datasMap = cciqService.getCCIQInfo();
 			if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 				return datasMap;
 			}
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
+			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 86400);
 			return datasMap;
 		}
 	}

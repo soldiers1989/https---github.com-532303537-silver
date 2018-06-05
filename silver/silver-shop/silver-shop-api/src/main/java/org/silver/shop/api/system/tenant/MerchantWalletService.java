@@ -2,6 +2,8 @@ package org.silver.shop.api.system.tenant;
 
 import java.util.Map;
 
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
+
 public interface MerchantWalletService {
 
 	/**
@@ -33,4 +35,26 @@ public interface MerchantWalletService {
 	 */
 	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page, int size, int timeLimit);
 
+	/**
+	 * 商户钱包扣款
+	 * 
+	 * @param merchantWallet
+	 *            商户钱包实体类
+	 * @param balance
+	 *            商户原钱包余额
+	 * @param serviceFee
+	 *            手续费(平台服务费)
+	 * @return Map
+	 */
+	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
+			double serviceFee);
+	
+	/**
+	 * 商户钱包扣费并且记录钱包日志
+	 * 
+	 * @param datasMap
+	 *            参数
+	 * @return Map
+	 */
+	public Map<String, Object> addWalletLog(Map<String, Object> datasMap);
 }

@@ -24,7 +24,7 @@ public class AgentWalletTransaction {
 	public Map<String, Object> getWalletInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		AgentBaseContent agentInfo = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENTINFO.toString());
+		AgentBaseContent agentInfo = (AgentBaseContent) currentUser.getSession().getAttribute(LoginType.AGENT_INFO.toString());
 		// 获取登录后的商户账号
 		String agentId = agentInfo.getAgentId();
 		String agentName = agentInfo.getAgentName();
@@ -34,7 +34,7 @@ public class AgentWalletTransaction {
 	public Map<String, Object> getProxyWalletLog(int type, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXYINFO.toString());
+		Proxy proxyInfo = (Proxy) currentUser.getSession().getAttribute(LoginType.PROXY_INFO.toString());
 		// 获取登录后的商户账号
 		String proxyUUid = proxyInfo.getProxyUUid();
 		String proxyName = proxyInfo.getProxyName();

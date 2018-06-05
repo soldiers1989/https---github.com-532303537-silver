@@ -25,22 +25,22 @@ public class CustomsPortTransaction {
 	@Reference
 	private CustomsPortService customsPortService;
 	/**
-	 * 缓存系统已开通口岸键
+	 * 缓存系统已开通海关口岸键
 	 */
-	private static final String SHOP_PORT_ALLCUSTOMSPORT_LIST = "Shop_Port_AllCustomsPort_List";
+	private static final String SHOP_ALL_CUSTOMS_PORT_LIST = "SHOP_ALL_CUSTOMS_PORT_LIST";
 
 	// 添加口岸下已开通的 海关及国检名称与编码
 	public Map<String, Object> addCustomsPort(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		String managerId = managerInfo.getManagerId();
 		Map<String, Object> reMap = customsPortService.addCustomsPort(params, managerId, managerName);
 		if ("1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			Map<String, Object> datasMap = customsPortService.findAllCustomsPort();
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_PORT_ALLCUSTOMSPORT_LIST.getBytes(),
+			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
 					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return ReturnInfoUtils.successInfo();
 		}
@@ -49,7 +49,7 @@ public class CustomsPortTransaction {
 
 	// 查询所有已开通的口岸及关联的海关
 	public Map<String, Object> findAllCustomsPort() {
-		byte[] redisByte = JedisUtil.get(SHOP_PORT_ALLCUSTOMSPORT_LIST.getBytes());
+		byte[] redisByte = JedisUtil.get(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes());
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo(JSONArray.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
@@ -58,7 +58,7 @@ public class CustomsPortTransaction {
 				return datasMap;
 			}
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_PORT_ALLCUSTOMSPORT_LIST.getBytes(),
+			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
 					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return datasMap;
 		}
@@ -68,7 +68,7 @@ public class CustomsPortTransaction {
 	public Map<String, Object> findMerchantCustomsPort() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return customsPortService.findMerchantCustomsPort(merchantId, merchantName);
@@ -78,7 +78,7 @@ public class CustomsPortTransaction {
 		if (customsPortService.deleteCustomsPort(id)) {
 			Map<String, Object> datasMap = customsPortService.findAllCustomsPort();
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_PORT_ALLCUSTOMSPORT_LIST.getBytes(),
+			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
 					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return ReturnInfoUtils.successInfo();
 		}
@@ -88,7 +88,7 @@ public class CustomsPortTransaction {
 	public Object modifyCustomsPort(Map<String, Object> params) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		String managerId = managerInfo.getManagerId();
 		return customsPortService.modifyCustomsPort(managerId, managerName, params);

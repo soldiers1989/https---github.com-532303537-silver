@@ -21,7 +21,7 @@ public class ShopCarTransaction {
 	public Map<String, Object> addGoodsToShopCar(String entGoodsNo, int count) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return shopCarService.addGoodsToShopCar(memberId, memberName, entGoodsNo, count);
@@ -31,7 +31,7 @@ public class ShopCarTransaction {
 	public Map<String, Object> getGoodsToShopCartInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return shopCarService.getGoodsToShopCartInfo(memberId, memberName);
@@ -41,7 +41,7 @@ public class ShopCarTransaction {
 	public Map<String, Object> deleteShopCartGoodsInfo(String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return shopCarService.deleteShopCartGoodsInfo(entGoodsNo, memberId, memberName);
@@ -50,7 +50,7 @@ public class ShopCarTransaction {
 	public Map<String, Object> editShopCarGoodsInfo(String goodsInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return shopCarService.editShopCarGoodsInfo(memberId,memberName,goodsInfo);

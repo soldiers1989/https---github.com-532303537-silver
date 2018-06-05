@@ -13,7 +13,7 @@ import org.silver.common.StatusCode;
 public class ReturnInfoUtils {
 
 	/**
-	 * 错误返回信息,注：该信息为单挑错误信息返回,并且错误信息在msg键中
+	 * 错误返回信息,注：该信息为单条错误信息返回,并且错误信息在msg键中
 	 * 
 	 * @param message
 	 *            提示信息
@@ -26,6 +26,26 @@ public class ReturnInfoUtils {
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 		map.put(BaseCode.MSG.toString(), message);
+		return map;
+	}
+
+	/**
+	 * 错误返回信息带datas参数,注：该信息为错误信息与带参返回,并且错误信息在msg键中
+	 * 
+	 * @param message
+	 *            提示信息
+	 * @param datas
+	 *            参数信息
+	 * @return Map
+	 */
+	public static final Map<String, Object> errorInfo(String message, Object datas) {
+		if (StringEmptyUtils.isEmpty(message)) {
+			return errorInfo("未知错误,返回错误信息失败!");
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		map.put(BaseCode.MSG.toString(), message);
+		map.put(BaseCode.DATAS.toString(), datas);
 		return map;
 	}
 
@@ -90,7 +110,7 @@ public class ReturnInfoUtils {
 	public static final Map<String, Object> errorInfo(List<Map<String, Object>> errorList) {
 		if (errorList == null) {
 			return errorInfo("未知错误,返回错误信息失败!");
-		}else if(errorList.isEmpty()){
+		} else if (errorList.isEmpty()) {
 			return successInfo();
 		}
 		Map<String, Object> map = new HashMap<>();

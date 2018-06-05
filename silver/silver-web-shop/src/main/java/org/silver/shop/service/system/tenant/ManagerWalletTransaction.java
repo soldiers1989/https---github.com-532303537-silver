@@ -39,7 +39,7 @@ public class ManagerWalletTransaction {
 	public Object updateMerchantWalletAmount(String merchantId, double amount) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return managerWalletService.updateMerchantWalletAmount(merchantId,managerName,amount);
 	}

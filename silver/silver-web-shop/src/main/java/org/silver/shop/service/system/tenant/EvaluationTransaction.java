@@ -40,7 +40,7 @@ public class EvaluationTransaction {
 	public Object addEvaluation(String entOrderNo, String goodsInfoPack, String ipAddress) {
 		Subject currentUser = SecurityUtils.getSubject();
 	// 获取用户登录时,shiro存入在session中的数据
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBERINFO.toString());
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
 		return evaluationService.addEvaluation(entOrderNo,goodsInfoPack,memberId,memberName,ipAddress);
@@ -49,7 +49,7 @@ public class EvaluationTransaction {
 	public Object merchantGetInfo(String goodsName, String memberName, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANTINFO.toString());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		return evaluationService.merchantGetInfo(goodsName,memberName,merchantId,page,size);
 	}
@@ -61,7 +61,7 @@ public class EvaluationTransaction {
 	public Object managerDeleteInfo(List<String> idList) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取用户登录时,shiro存入在session中的数据
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGERINFO.toString());
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
 		return evaluationService.managerDeleteInfo(idList,managerId,managerName);

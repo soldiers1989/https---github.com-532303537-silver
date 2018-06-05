@@ -90,13 +90,15 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 				break;
 			}
+			Map<String,Object> reWalletMap= walletUtils.checkWallet(1, merchantId, merchantName);
+			MerchantWalletContent wallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			params.put("startDate", startDate);
 			params.put("endDate", endDate);
-			params.put("merchantId", merchantId);
+			params.put("merchantWalletId", wallet.getWalletId());
 			if (type > 0) {
 				params.put("type", type);
 			}
-			List<Object> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page,
+			List<MerchantWalletLog> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page,
 					size);
 			long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);
 			if (reList == null) {
@@ -110,17 +112,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 	}
 
-	/**
-	 * 商户钱包扣款
-	 * 
-	 * @param merchantWallet
-	 *            商户钱包实体类
-	 * @param balance
-	 *            商户原钱包余额
-	 * @param serviceFee
-	 *            手续费(平台服务费)
-	 * @return Map
-	 */
+	@Override
 	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
 			double serviceFee) {
 		if (merchantWallet == null) {
@@ -140,13 +132,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 商户钱包扣费并且记录钱包日志
-	 * 
-	 * @param datasMap
-	 *            参数
-	 * @return Map
-	 */
+	@Override
 	public Map<String, Object> addWalletLog(Map<String, Object> datasMap) {
 		try {
 			if (datasMap == null || datasMap.isEmpty()) {
@@ -196,7 +182,6 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			walletLog.setCreateDate(new Date());
 			// 状态：success-交易成功、fail-交易失败
 			walletLog.setStatus("success");
-			
 			if (!merchantWalletDao.add(walletLog)) {
 				return ReturnInfoUtils.errorInfo("保存商户钱包日志失败,服务器繁忙!");
 			}
