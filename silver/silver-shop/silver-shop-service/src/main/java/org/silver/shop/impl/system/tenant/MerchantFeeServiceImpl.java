@@ -5,17 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
+import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.dao.system.tenant.MerchantFeeDao;
-import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,7 +26,7 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	@Autowired
 	private MerchantFeeDao merchantFeeDao;
 	@Autowired
-	private CustomsPortServiceImpl customsPortServiceImpl;
+	private CustomsPortService customsPortService;
 	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
@@ -37,38 +36,36 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	public Map<String, Object> addMerchantServiceFee(Map<String, Object> datasMap) {
 		if (datasMap != null) {
 			String merchantId = datasMap.get("merchantId") + "";
-			String provinceName = datasMap.get("provinceName") + "";
-			String provinceCode = datasMap.get("provinceCode") + "";
-			String cityName = datasMap.get("cityName") + "";
-			String cityCode = datasMap.get("cityCode") + "";
-			int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 			String customsPortName = datasMap.get("customsPortName") + "";
 			String customsName = datasMap.get("customsName") + "";
 			String customsCode = datasMap.get("customsCode") + "";
 			String ciqOrgName = datasMap.get("ciqOrgName") + "";
 			String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
 			String managerName = datasMap.get("managerName") + "";
-
 			String type = datasMap.get("type") + "";
 			String status = datasMap.get("status") + "";
-			if (!customsPortServiceImpl.checkProvince(provinceName, provinceCode)) {
-				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,省份信息错误,请重新输入!");
+			int customsPort = 0;
+			int backCoverFlag =0;
+			try{
+				 customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+				 backCoverFlag = Integer.parseInt(datasMap.get("backCoverFlag") + "");
+			}catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("请求参数格式错误,请重新输入!");
 			}
-			if (!customsPortServiceImpl.checkCity(cityName, cityCode)) {
-				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,城市信息错误,请重新输入!");
+			Map<String, Object> reCheckCustomsMap = checkCustomsInfo(customsPort, customsName, customsCode, ciqOrgCode,
+					ciqOrgName);
+			if (!"1".equals(reCheckCustomsMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckCustomsMap;
 			}
-			// if (!customsPortServiceImpl.checkGAC(customsName, customsCode)) {
-			// return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,海关关区错误,请重新输入!");
-			// }
-			// if (!customsPortServiceImpl.checkCCIQ(ciqOrgName, ciqOrgCode)) {
-			// return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,国检机构信息错误,请重新输入!");
-			// }
+			Map<String, Object> checkFeeMap = checkFee(datasMap);
+			if (!"1".equals(checkFeeMap.get(BaseCode.STATUS.toString()))) {
+				return checkFeeMap;
+			}
 			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			checkFee(datasMap);
 			Map<String, Object> reIdMap = idUtils.createId(MerchantFeeContent.class, "merchantFee_");
 			if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 				return reIdMap;
@@ -78,22 +75,26 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			merchantFee.setMerchantFeeId(merchantFeeId);
 			merchantFee.setMerchantId(merchant.getMerchantId());
 			merchantFee.setMerchantName(merchant.getMerchantName());
-			merchantFee.setProvinceCode(provinceCode);
-			merchantFee.setProvinceName(provinceName);
-			merchantFee.setCityCode(cityCode);
-			merchantFee.setCityName(cityName);
 			merchantFee.setCustomsPort(customsPort);
 			merchantFee.setCustomsPortName(customsPortName);
 			merchantFee.setCustomsCode(customsCode);
 			merchantFee.setCustomsName(customsName);
 			merchantFee.setCiqOrgCode(ciqOrgCode);
 			merchantFee.setCiqOrgName(ciqOrgName);
-			merchantFee.setPlatformFee(Double.parseDouble(datasMap.get("platformFee") + ""));
+			double platformFee = 0;
+			try {
+				platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,平台服务费率参数格式错误,请重新输入!");
+			}
+			merchantFee.setPlatformFee(platformFee);
 			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 			merchantFee.setType(type);
 			merchantFee.setStatus(status);
 			merchantFee.setCreateBy(managerName);
 			merchantFee.setCreateDate(new Date());
+			//封底标识：1-正常计算、2-不满100提至100计算
+			merchantFee.setBackCoverFlag(backCoverFlag);
 			if (merchantFeeDao.add(merchantFee)) {
 				return ReturnInfoUtils.successInfo();
 			}
@@ -103,23 +104,57 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	/**
+	 * 根据口岸编码校验海关，国检信息是否系统真实存在
+	 * 
+	 * @param customsPort
+	 *            海关口岸编码 1-广州电子口岸 ,2-广东智检
+	 * @param customsName
+	 *            海关名称名称
+	 * @param customsCode
+	 *            海关关区代码
+	 * @param ciqOrgCode
+	 *            国检检疫机构代码
+	 * @param ciqOrgName
+	 *            国检检疫机构名称
+	 * @return Map
+	 */
+	private Map<String, Object> checkCustomsInfo(int customsPort, String customsName, String customsCode,
+			String ciqOrgCode, String ciqOrgName) {
+		if (customsPort == 1) {
+			if (!customsPortService.checkGAC(customsName, customsCode)) {
+				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,海关关区错误,请重新输入!");
+			}
+			if (!customsPortService.checkCCIQ(ciqOrgName, ciqOrgCode)) {
+				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,国检机构信息错误,请重新输入!");
+			}
+		} else if (customsPort == 2 && !"000069".equals(ciqOrgCode) || !"南沙局本部".equals(ciqOrgName)) {
+			return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,国检机构信息错误,请重新输入!");
+		}else{
+			return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,海关或国检信息错误,请重新输入!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
 	 * 校验商户口岸费率
-	 * @param datasMap 校验参数
+	 * 
+	 * @param datasMap
+	 *            校验参数
 	 * @return Map
 	 */
 	private Map<String, Object> checkFee(Map<String, Object> datasMap) {
 		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("参数不能为空！");
 		}
-		//类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+		// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 		String type = datasMap.get("type") + "";
 		if (StringEmptyUtils.isEmpty(datasMap.get("platformFee"))) {
 			return ReturnInfoUtils.errorInfo("服务费率不能为空,请重新输入!");
 		}
 		double platformFee;
-		try{
-			 platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
-		}catch (Exception e) {
+		try {
+			platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
+		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("服务费参数格式错误,请重新输入!");
 		}
 		if ("goodsRecord".equals(type) && platformFee < 0.0001) {
@@ -129,18 +164,12 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			return ReturnInfoUtils.errorInfo("订单申报费率不能低于万一,请重新输入!");
 		}
 		if ("paymentRecord".equals(type) && platformFee < 0.002) {
-			return ReturnInfoUtils.errorInfo("订单申报费率不能低于千二,请重新输入!");
+			return ReturnInfoUtils.errorInfo("支付单申报费率不能低于千二,请重新输入!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 根据流水Id查询商户口岸费率信息
-	 * 
-	 * @param merchantFeeId
-	 *            流水Id
-	 * @return Map
-	 */
+	@Override
 	public Map<String, Object> getMerchantFeeInfo(String merchantFeeId) {
 		if (StringEmptyUtils.isEmpty(merchantFeeId)) {
 			return ReturnInfoUtils.errorInfo("Id不能为空!");
@@ -182,15 +211,14 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			return ReturnInfoUtils.errorInfo("请求参数错误!");
 		}
 		String merchantFeeId = datasMap.get("merchantFeeId") + "";
-		Map<String, Object> reMerchantFeeMap = getMerchantFeeInfo(merchantFeeId);
-		if (!"1".equals(reMerchantFeeMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantFeeMap;
+		int customsPort = 0;
+		int backCoverFlag =0;
+		try{
+			 customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+			 backCoverFlag = Integer.parseInt(datasMap.get("backCoverFlag") + "");
+		}catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("请求参数格式错误,请重新输入!");
 		}
-		String provinceName = datasMap.get("provinceName") + "";
-		String provinceCode = datasMap.get("provinceCode") + "";
-		String cityName = datasMap.get("cityName") + "";
-		String cityCode = datasMap.get("cityCode") + "";
-		int customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 		String customsPortName = datasMap.get("customsPortName") + "";
 		String customsName = datasMap.get("customsName") + "";
 		String customsCode = datasMap.get("customsCode") + "";
@@ -200,18 +228,16 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		double platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
 		String type = datasMap.get("type") + "";
 		String status = datasMap.get("status") + "";
-		if (!customsPortServiceImpl.checkProvince(provinceName, provinceCode)) {
-			return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,省份信息错误,请重新输入!");
+		Map<String, Object> checkFeeMap = checkFee(datasMap);
+		if (!"1".equals(checkFeeMap.get(BaseCode.STATUS.toString()))) {
+			return checkFeeMap;
 		}
-		if (!customsPortServiceImpl.checkCity(cityName, cityCode)) {
-			return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,城市信息错误,请重新输入!");
+		Map<String, Object> reMerchantFeeMap = getMerchantFeeInfo(merchantFeeId);
+		if (!"1".equals(reMerchantFeeMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantFeeMap;
 		}
 		MerchantFeeContent merchantFee = (MerchantFeeContent) reMerchantFeeMap.get(BaseCode.DATAS.toString());
 		merchantFee.setMerchantFeeId(merchantFeeId);
-		merchantFee.setProvinceCode(provinceCode);
-		merchantFee.setProvinceName(provinceName);
-		merchantFee.setCityCode(cityCode);
-		merchantFee.setCityName(cityName);
 		merchantFee.setCustomsPort(customsPort);
 		merchantFee.setCustomsPortName(customsPortName);
 		merchantFee.setCustomsCode(customsCode);
@@ -223,6 +249,8 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		merchantFee.setStatus(status);
 		merchantFee.setUpdateBy(managerName);
 		merchantFee.setUpdateDate(new Date());
+		//封底标识：1-正常计算、2-不满100提至100计算
+		merchantFee.setBackCoverFlag(backCoverFlag);
 		if (merchantFeeDao.update(merchantFee)) {
 			return ReturnInfoUtils.successInfo();
 		}
@@ -230,17 +258,19 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	@Override
-	public Map<String, Object> getServiceFee(String merchantId) {
-		if (StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	public Map<String, Object> getServiceFee(Map<String, Object> datasMap) {
+		Map<String, Object> reDatasMap = SearchUtils.universalMerchantFeeSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
 		}
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
-		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		paramMap.put("deleteFlag", 0);
+		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, paramMap, 0, 0);
+		long count = merchantFeeDao.findByPropertyCount(MerchantFeeContent.class, paramMap);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户费用信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList);
+			return ReturnInfoUtils.successDataInfo(reList, count);
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到商户费用信息!");
 		}

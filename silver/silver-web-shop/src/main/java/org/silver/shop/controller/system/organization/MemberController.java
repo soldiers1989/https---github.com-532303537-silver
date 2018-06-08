@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +20,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Member;
@@ -102,57 +104,60 @@ public class MemberController {
 	 * @param loginPassword
 	 *            登录密码
 	 * @return
-	 * @throws IOException
 	 */
 	@RequestMapping(value = "/memberLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation(value = "用户--登录")
 	public String memberLogin(@RequestParam("account") String account,
-			@RequestParam("loginPassword") String loginPassword, HttpServletRequest req, HttpServletResponse response) {
+			@RequestParam("loginPassword") String loginPassword, String captcha, HttpServletRequest req,
+			HttpServletResponse response) {
 		String ipAddress = CusAccessObjectUtil.getIpAddress(req);
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (account != null && loginPassword != null) {
-			Subject currentUser = SecurityUtils.getSubject();
-			// currentUser.logout();
-			// 将IP地址拼接在账号变量中传递到登陆方法
-			CustomizedToken customizedToken = new CustomizedToken(account + "_" + ipAddress, loginPassword,
-					USER_LOGIN_TYPE);
-			customizedToken.setRememberMe(false);
-			try {
-				currentUser.login(customizedToken);
-				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-			} catch (IncorrectCredentialsException ice) {
-				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("你输入的密码和账户名不匹配!")).toString();
-			} catch (LockedAccountException lae) {
-				// 账号锁定(冻结)错误
-				// 多次输入密码错误，请 30 分钟之后再次尝试登录！
-				Long ttl = JedisUtil.ttl("SHOP_LOGIN_MEMBER_ERROR_COUNT_INT" + lae.getMessage() + "_" + ipAddress);
-				int m = (ttl.intValue() % 3600) / 60;
-				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("多次输入密码错误，请 " + m + " 分钟之后再次尝试登录！")).toString();
-			} catch (AuthenticationException ae) {
-				// 账号认证失败错误
-				// ae.printStackTrace();
-				return passwordErrorInfo(ae.getMessage(), ipAddress);
-			}
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入！")).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
+		Subject currentUser = SecurityUtils.getSubject();
+		// currentUser.logout();
+		// 将IP地址拼接在账号变量中传递到登陆方法
+		CustomizedToken customizedToken = new CustomizedToken(account + "_" + ipAddress, loginPassword,
+				USER_LOGIN_TYPE);
+		customizedToken.setRememberMe(false);
+		try {
+			currentUser.login(customizedToken);
+			return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+		} catch (IncorrectCredentialsException ice) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("你输入的密码和账户名不匹配!")).toString();
+		} catch (LockedAccountException lae) {
+			// 账号锁定(冻结)错误
+			// 多次输入密码错误，请 30 分钟之后再次尝试登录！
+			//
+			Long ttl = JedisUtil.ttl("SHOP_LOGIN_MEMBER_ERROR_COUNT_INT" + lae.getMessage() + "_" + ipAddress);
+			int m = (ttl.intValue() % 3600) / 60;
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("多次输入密码错误，请 " + m + " 分钟之后再次尝试登录！")).toString();
+		} catch (AuthenticationException ae) {
+			// 账号认证失败错误
+			// ae.printStackTrace();
+			return passwordErrorInfo(ae.getMessage(), ipAddress);
+		}
 	}
 
 	/**
 	 * 当用户同一个Ip地址同一账号登陆多次密码失败后
 	 * 
 	 * @param memberId
+	 *            商户Id
 	 * @param ipAddress
 	 *            IP地址
 	 * @return
 	 */
 	private String passwordErrorInfo(String memberId, String ipAddress) {
-		//根据缓存中的KEY获取用户登陆次数
+		// 根据缓存中的KEY获取用户登陆次数
 		String redis = JedisUtil.get("SHOP_LOGIN_MEMBER_ERROR_COUNT_INT" + memberId + "_" + ipAddress);
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			int count = Integer.parseInt(redis);
@@ -324,7 +329,7 @@ public class MemberController {
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get("Shop_Key_MemberRegisterCode_" + phone);
+			String redisCode = JedisUtil.get("SHOP_KEY_MEMBER_REGISTER_CODE_" + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
@@ -332,13 +337,13 @@ public class MemberController {
 				json.put("code", code);
 				System.out.println("----注册验证码--->>" + code);
 				// 将查询出来的省市区放入到redis缓存中
-				JedisUtil.setListDatas("Shop_Key_MemberRegisterCode_" + phone, 900, json);
+				JedisUtil.set("SHOP_KEY_MEMBER_REGISTER_CODE_" + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
 				json = JSONObject.fromObject(redisCode);
 				long time = Long.parseLong(json.get("time") + "");
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
-				if (time - new Date().getTime() < 50000) {
+				if ((new Date().getTime() - time) < 60000) {
 					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
 				}
 			}
@@ -390,25 +395,40 @@ public class MemberController {
 		return JSONObject.fromObject(memberTransaction.realName(memberId)).toString();
 	}
 
-	@RequestMapping(value = "/editPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/updateLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation(value = "会员修改密码")
+	@ApiOperation(value = "会员修改登陆密码")
 	@RequiresRoles("Member")
-	public String editPassword(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("memberId") String memberId, @RequestParam("oldPassword") String oldPassword,
-			@RequestParam("newPassword") String newPassword) {
+	public String updateLoginPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId, @RequestParam("newPassword") String newPassword, String appkey,
+			String captcha) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (StringEmptyUtils.isEmpty(memberId)) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("用户Id不能为空!")).toString();
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || StringEmptyUtils.isEmpty(memberId) || StringEmptyUtils.isEmpty(appkey)
+				|| StringEmptyUtils.isEmpty(newPassword)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
-		if (newPassword.length() < 6 || newPassword.length() > 18) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("新密码长度最少为6位,最长为18位!")).toString();
+		// 密码的组成至少要包括大小写字母、数字及标点符号的其中两项
+		String regex = "^(?![A-Za-z]+$)(?!\\d+$)(?![\\W_]+$)\\S{6,20}$";
+		if (!newPassword.matches(regex)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("新密码至少要由6-20个字符包括大小写字母、数字、特殊符号的其中两项!")).toString();
 		}
-		return JSONObject.fromObject(memberTransaction.editPassword(memberId, oldPassword, newPassword)).toString();
+		if (!captcha.trim().equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
+		}
+		//取出修改登陆密码前验证身份通过后系统分配的uuid
+		String uuid = (String) session.getAttribute("uuid");
+		if(StringEmptyUtils.isNotEmpty(uuid) && appkey.equals(uuid)){
+			return JSONObject.fromObject(memberTransaction.updateLoginPassword(memberId,  newPassword))
+					.toString();
+		}else{
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证身份错误!")).toString();
+		}
 	}
 
 	@RequestMapping(value = "/editInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -436,13 +456,95 @@ public class MemberController {
 		return JSONObject.fromObject(memberTransaction.editInfo(datasMap)).toString();
 	}
 
-	public static void main(String[] args) {
-		Map<String, Object> item = new HashMap<>();
-		item.put("memberId", "Member_2017000025928");
-		item.put("memberIdCardName", "杨汕");
-		item.put("memberIdCard", "441423198802121716");
-
-		System.out.println(
-				"------->>" + YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/member/editInfo", item));
+	/**
+	 * 用户修改登陆密码时发送手机验证码
+	 * 
+	 * @param phone
+	 *            手机号码
+	 * @return Map
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	@RequestMapping(value = "/sendEditLoginPasswordCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String sendEditLoginPasswordCaptchaCode(String phone, HttpServletRequest req, HttpServletResponse response,
+			String captcha) throws ParserConfigurationException, SAXException, IOException {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(captcha)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
+			JSONObject json = new JSONObject();
+			// 获取用户注册保存在缓存中的验证码
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone);
+			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+				int code = RandomUtils.getRandom(6);
+				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				json.put("time", new Date().getTime());
+				json.put("code", code);
+				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone, 900, json);
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+			} else {
+				json = JSONObject.fromObject(redisCode);
+				long time = Long.parseLong(json.get("time") + "");
+				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
+				if ((new Date().getTime() - time) < 60000) {
+					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				}
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
 	}
+
+	/**
+	 * 用户设置新的登陆密码前,验证手机验证码是否正确
+	 * 
+	 * @param phone
+	 *            手机号码
+	 * @return Map
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	@RequestMapping(value = "/updateLoginPasswordCheckIdentity", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String updateLoginPasswordCheckIdentity(HttpServletRequest req, HttpServletResponse response, String captcha,
+			String phone,String memberId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(captcha) || StringEmptyUtils.isEmpty(memberId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			JSONObject json = null;
+			try {
+				json = JSONObject.fromObject(redis);
+			} catch (Exception e) {
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("未知错误,请重新输入!")).toString();
+			}
+			// 判断前台传递的验证码是否与发送至手机的一致
+			if (captcha.trim().equals(json.get("code") + "")) {
+				UUID uuid = UUID.randomUUID();
+				HttpSession session = req.getSession();
+				session.setAttribute("uuid", uuid);
+			//	JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_UUID_ + memberId, 900, uuid);
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+			} else {
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("系统内部错误!")).toString();
+	}
+
 }

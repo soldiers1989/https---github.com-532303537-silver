@@ -13,8 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.service.system.cross.PaymentTransaction;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -209,7 +207,7 @@ public class PaymentController {
 	@ResponseBody
 	@ApiOperation("管理员查询商户手工支付单信息")
 	@RequiresPermissions("manualPayment:managerGetMpayInfo")
-	public String managerGetMpayRecordInfo(HttpServletResponse resp, HttpServletRequest req,
+	public String managerGetMpayInfo(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");

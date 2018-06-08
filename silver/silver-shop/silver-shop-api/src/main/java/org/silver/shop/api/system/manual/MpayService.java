@@ -1,6 +1,9 @@
 package org.silver.shop.api.system.manual;
 
+import java.util.List;
 import java.util.Map;
+
+import net.sf.json.JSONArray;
 
 public interface MpayService {
 
@@ -42,6 +45,16 @@ public interface MpayService {
 	public Map<String, Object> downOrderExcelByDateSerialNo(String merchantId, String merchantName, String filePath,
 			String date, String serialNo);
 
-
-
+	/**
+	 * 准备开始推送订单备案
+	 * 
+	 * @param dataList
+	 *            订单信息
+	 * @param errorList
+	 *            错误信息
+	 * @param customsMap
+	 *            海关信息
+	 */
+	public void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList, Map<String, Object> customsMap,
+			Map<String, Object> paramsMap);
 }

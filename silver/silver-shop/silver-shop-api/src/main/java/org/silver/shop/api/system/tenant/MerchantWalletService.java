@@ -50,7 +50,7 @@ public interface MerchantWalletService {
 			double serviceFee);
 	
 	/**
-	 * 商户钱包扣费并且记录钱包日志
+	 * 添加商户钱包日志
 	 * 
 	 * @param datasMap
 	 *            参数

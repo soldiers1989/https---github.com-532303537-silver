@@ -58,7 +58,7 @@ public class MemberTransaction {
 			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项!");
 		}
 		// 获取缓存中用户注册手机验证码
-		String redis = JedisUtil.get("Shop_Key_MemberRegisterCode_" + memberTel);
+		String redis = JedisUtil.get("SHOP_KEY_MEMBER_REGISTER_CODE_" + memberTel);
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			JSONObject json = JSONObject.fromObject(redis);
 			long time = Long.parseLong(json.get("time") + "");
@@ -79,7 +79,7 @@ public class MemberTransaction {
 	// 用户登录
 	public Map<String, Object> memberLogin(String account, String loginPassword) {
 		if (StringEmptyUtils.isEmpty(account) || StringEmptyUtils.isEmpty(loginPassword)) {
-			return ReturnInfoUtils.errorInfo("账号密码不能为空!");
+			return ReturnInfoUtils.errorInfo("你输入的密码和账户名不匹配!");
 		}
 		String[] strArr = account.split("_");
 		account = strArr[0];
@@ -92,7 +92,8 @@ public class MemberTransaction {
 			String md5Pas = md5.getMD5ofStr(loginPassword);
 			// 判断查询出的账号密码与前台登录的账号密码是否一致
 			if (md5Pas.equals(loginpas)) {
-				String redis = JedisUtil.get(SHOP_LOGIN_MEMBER_ERROR_COUNT_INT + member.getMemberId() + "_" + ipAddress);
+				String redis = JedisUtil
+						.get(SHOP_LOGIN_MEMBER_ERROR_COUNT_INT + member.getMemberId() + "_" + ipAddress);
 				if (StringEmptyUtils.isNotEmpty(redis) && Integer.parseInt(redis) >= 3) {
 					return getRedisInfo(member.getMemberId(), ipAddress);
 				}
@@ -126,15 +127,15 @@ public class MemberTransaction {
 			count = Integer.parseInt(redis);
 			// 当密码输入错误次数超过3次(含3次)时,直接返回
 			if (count >= 3) {
-				return ReturnInfoUtils.errorInfo("账号已被锁定",memberId);
+				return ReturnInfoUtils.errorInfo("账号已被锁定", memberId);
 			} else {
 				count++;
 				JedisUtil.set(SHOP_LOGIN_MEMBER_ERROR_COUNT_INT + memberId + "_" + ipAddress, 900, count);
-				return ReturnInfoUtils.errorInfo("密码错误",memberId);
+				return ReturnInfoUtils.errorInfo("密码错误", memberId);
 			}
 		} else {// 缓存中没有数据,重新访问数据库读取数据
 			JedisUtil.set(SHOP_LOGIN_MEMBER_ERROR_COUNT_INT + memberId + "_" + ipAddress, 900, count);
-			return ReturnInfoUtils.errorInfo("密码错误",memberId);
+			return ReturnInfoUtils.errorInfo("密码错误", memberId);
 		}
 
 	}
@@ -180,9 +181,9 @@ public class MemberTransaction {
 		return memberService.realName(memberId);
 	}
 
-	// 会员修改密码
-	public Object editPassword(String memberId, String oldPassword, String newPassword) {
-		return memberService.editPassword(memberId, oldPassword, newPassword);
+	// 会员修改登陆密码
+	public Object updateLoginPassword(String memberId, String newPassword) {
+		return memberService.updateLoginPassword(memberId, newPassword);
 	}
 
 	// 用户修改信息

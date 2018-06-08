@@ -222,4 +222,29 @@ public interface GoodsRecordService {
 	 */
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String merchantId, String merchantName, String entGoodsNo);
 
+	/**
+	 * 根据口岸代码、海关代码、国检代码 校验口岸对应的信息是否已在系统中存在
+	 * 
+	 * @param eport
+	 *            1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+	 * @param customsCode
+	 *            主管海关代码
+	 * @param ciqOrgCode
+	 *            检验检疫机构代码
+	 * @return Map
+	 */
+	public  Map<String, Object> checkCustomsPort(int eport, String customsCode, String ciqOrgCode);
+
+	/**
+	 * 创建商品仓库
+	 * 
+	 * @param merchantId
+	 *            商户ID
+	 * @param merchantName
+	 *            商户名称
+	 * @param portInfo
+	 *            口岸管理实体类
+	 * @return Map
+	 */
+	public Map<String, Object> createWarehous(String merchantId, String merchantName, String customsCode, String customsName);
 }

@@ -88,10 +88,9 @@ public interface MerchantService {
 	public Map<String, Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword);
 
 	/**
-	 * 获取商户备案信息
-	 * 
-	 * @param merchantId
-	 * @return Map
+	 * 根据商户Id,获取商户备案信息
+	 * @param merchantId 商户Id
+	 * @return Map 
 	 */
 	public Map<String, Object> getMerchantRecordInfo(String merchantId);
 

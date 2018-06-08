@@ -18,16 +18,16 @@
             <column name="merchantName" not-null="true"/>
         </property>
         <property name="provinceCode" type="java.lang.String">
-            <column name="provinceCode" not-null="true"/>
+            <column name="provinceCode" />
         </property>
         <property name="provinceName" type="java.lang.String">
-            <column name="provinceName" not-null="true"/>
+            <column name="provinceName" />
         </property>
         <property name="cityCode" type="java.lang.String">
-            <column name="cityCode" not-null="true"/>
+            <column name="cityCode" />
         </property>
         <property name="cityName" type="java.lang.String">
-            <column name="cityName" not-null="true"/>
+            <column name="cityName" />
         </property>
         <property name="customsPort" type="int">
             <column name="customsPort" not-null="true"/>
@@ -74,10 +74,11 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-        
-           
            <property name="status" type="java.lang.String">
             <column name="status" />
+        </property>
+          <property name="backCoverFlag" type="int">
+            <column name="backCoverFlag"  default="1"/>
         </property>
     </class>
 </hibernate-mapping>

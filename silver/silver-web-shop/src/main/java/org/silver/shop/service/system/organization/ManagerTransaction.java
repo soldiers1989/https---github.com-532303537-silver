@@ -1,6 +1,5 @@
 package org.silver.shop.service.system.organization;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -18,12 +16,10 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Manager;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;

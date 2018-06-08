@@ -24,9 +24,9 @@ public interface PaymentDao  extends BaseDao{
 	/**
 	 * 查询统计手工支付单总金额
 	 * @param list 支付单Id集合
-	 * @return List 总金额与支付单数量
+	 * @return double 支付单总金额
 	 */
-	public List<Object> statisticalManualPaymentAmount(List<Object> list);
+	public double statisticalManualPaymentAmount(List<Object> list);
 
 	/**
 	 * 代理商查询旗下所有商户支付单报表信息
@@ -43,4 +43,11 @@ public interface PaymentDao  extends BaseDao{
 	 * @return Table
 	 */
 	public List getFailPaymentInfo(Class entity, Map<String, Object> params, int page, int size);
+
+	/**
+	 * 当支付单实际支付金额不足100提升至100,后统计支付单金额
+	 * @param itemList
+	 * @return
+	 */
+	public double backCoverStatisticalManualPaymentAmount(List<Object> itemList);
 }

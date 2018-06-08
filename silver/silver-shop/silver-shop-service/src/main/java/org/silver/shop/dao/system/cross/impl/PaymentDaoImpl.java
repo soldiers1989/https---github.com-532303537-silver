@@ -71,11 +71,11 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 	}
 
 	@Override
-	public List<Object> statisticalManualPaymentAmount(List<Object> list) {
+	public double statisticalManualPaymentAmount(List<Object> list) {
 		Session session = null;
 		try {
 			StringBuilder sbSQL = new StringBuilder(
-					" SELECT SUM(t1.pay_amount) , COUNT(t1.trade_no) as count FROM ym_shop_manual_mpay t1 WHERE t1.networkStatus = 0 AND trade_no IN ( ");
+					" SELECT SUM(t1.pay_amount)  AS count FROM ym_shop_manual_mpay t1 WHERE t1.networkStatus = 0 AND trade_no IN ( ");
 			for (int i = 0; i < list.size(); i++) {
 				sbSQL.append(" ? , ");
 			}
@@ -90,37 +90,18 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			}
 			List resources = query.list();
 			session.close();
-			// 进行参数转换
-			return conversionParam(resources);
+			if (resources != null && !resources.isEmpty() && StringEmptyUtils.isNotEmpty(resources.get(0))) {
+				return (double) resources.get(0);
+			}
+			return 0;
 		} catch (Exception re) {
 			re.printStackTrace();
-			return null;
+			return -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
-	}
-
-	/**
-	 * 将查询出的支付单总金额和支付单数量封装成List返回
-	 * @param list 
-	 * @return
-	 */
-	private List<Object> conversionParam(List list) {
-		if (list == null || list.isEmpty()) {
-			return null;
-		}
-		List<Object> relist = new ArrayList<>();
-		Iterator i = list.iterator();
-		while (i.hasNext()) {
-			Map<String, Object> item = new HashMap<>();
-			Object[] obj = (Object[]) i.next();
-			item.put("totalAmount", obj[0].toString());
-			item.put("count", obj[1].toString());
-			relist.add(item);
-		}
-		return relist;
 	}
 
 	@Override
@@ -201,6 +182,40 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 		} catch (Exception re) {
 			re.printStackTrace();
 			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public double backCoverStatisticalManualPaymentAmount(List<Object> itemList) {
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT SUM(CASE WHEN t1.pay_amount < 100 THEN 100 ELSE t1.pay_amount END ) AS amount FROM ym_shop_manual_mpay t1 WHERE t1.networkStatus = 0 AND trade_no IN ( ");
+			for (int i = 0; i < itemList.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			// 删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < itemList.size(); i++) {
+				Map<String, Object> treadeMap = (Map<String, Object>) itemList.get(i);
+				query.setString(i, treadeMap.get("treadeNo") + "");
+			}
+			List resources = query.list();
+			session.close();
+			if (resources != null && !resources.isEmpty() && StringEmptyUtils.isNotEmpty(resources.get(0))) {
+				return (double) resources.get(0);
+			}
+			return 0;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();

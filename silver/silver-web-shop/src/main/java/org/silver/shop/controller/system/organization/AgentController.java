@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -218,5 +219,17 @@ public class AgentController {
 			}
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("未登陆,请先登录！")).toString();
+	}
+	
+	public static void main(String[] args) {
+		String regex = "^(?:(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9])).{6,20}$";
+		String str = "123456aAsc";
+		if (!str.matches(regex)) {
+		System.out.println("----->>>>");
+		}else{
+			System.out.println("--包");
+		}
+		UUID uuid = UUID.randomUUID();
+		System.out.println("----->>"+uuid);
 	}
 }

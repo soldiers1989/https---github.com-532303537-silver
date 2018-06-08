@@ -201,13 +201,7 @@ public class AgentServiceImpl implements AgentService {
 		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
-	/**
-	 * 根据代理商Id获取代理商基本(实体类)信息
-	 * 
-	 * @param agentId
-	 *            代理商Id
-	 * @return Map
-	 */
+	@Override
 	public Map<String, Object> getAgentInfo(String agentId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("agentId", agentId);

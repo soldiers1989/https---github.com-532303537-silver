@@ -18,4 +18,16 @@ public interface YsPayReceiveService {
 	 * @return Map
 	 */
 	public Map<String,Object> balancePayReceive(Map<String,Object> datasMap);
+	
+	/**
+	 * 发起支付单备案
+	 * @param merchantId 商户Id 
+	 * @param paymentInfoMap 支付单信息
+	 * @param tok 
+	 * @param recordMap 备案信息
+	 * @param notifyurl 回调的url
+ 	 * @return Map
+	 */
+	public Map<String, Object> sendPayment(String merchantId, Map<String, Object> paymentInfoMap, String tok,
+			Map<String, Object> recordMap, String notifyurl);
 }

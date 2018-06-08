@@ -584,7 +584,7 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Object editPassword(String memberId, String oldPassword, String newPassword) {
+	public Object updateLoginPassword(String memberId,  String newPassword) {
 		if (StringEmptyUtils.isEmpty(memberId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
@@ -593,11 +593,7 @@ public class MemberServiceImpl implements MemberService {
 			return reMemberMap;
 		}
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
-		String loginPass = member.getLoginPass();
 		MD5 md5 = new MD5();
-		if (!loginPass.equals(md5.getMD5ofStr(oldPassword))) {
-			return ReturnInfoUtils.errorInfo("旧密码错误,请重新输入!");
-		}
 		member.setLoginPass(md5.getMD5ofStr(newPassword));
 		if (memberDao.update(member)) {
 			return ReturnInfoUtils.successInfo();

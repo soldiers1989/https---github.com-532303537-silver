@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.AccessTokenService;
@@ -201,22 +202,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return updateGoodsRecordInfo(recordMap, merchantId, goodsSerialNo);
 	}
 
-	/**
-	 * 根据口岸代码、海关代码、国检代码 校验口岸对应的信息是否已在系统中存在
-	 * 
-	 * @param eport
-	 *            1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-	 * @param customsCode
-	 *            主管海关代码
-	 * @param ciqOrgCode
-	 *            检验检疫机构代码
-	 * @return Map
-	 */
-	public final Map<String, Object> checkCustomsPort(int eport, String customsCode, String ciqOrgCode) {
-		Map<String, Object> statusMap = new HashMap<>();
+	@Override
+	public Map<String, Object> checkCustomsPort(int eport, String customsCode, String ciqOrgCode) {
 		Map<String, Object> paramsMap = null;
 		List<CustomsPort> customsPortList = null;
-		byte[] redisByte = JedisUtil.get("Shop_Port_AllCustomsPort_List".getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes());
 		if (redisByte != null) {
 			customsPortList = (List<CustomsPort>) SerializeUtil.toObject(redisByte);
 		} else {// 缓存中没有数据,重新访问数据库读取数据
@@ -226,7 +216,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			}
 			customsPortList = (List<CustomsPort>) paramsMap.get(BaseCode.DATAS.toString());
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set("Shop_Port_AllCustomsPort_List".getBytes(), SerializeUtil.toBytes(customsPortList), 3600);
+			JedisUtil.set(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes(), SerializeUtil.toBytes(customsPortList),
+					86400);
 		}
 		for (int i = 0; i < customsPortList.size(); i++) {
 			CustomsPort portInfo = customsPortList.get(i);
@@ -239,22 +230,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			// 判断前端传递的口岸端口、海关代码、智检代码是否正确
 			if (reCustomsPort == eport && reCustomsCode.trim().equals(customsCode.trim())
 					&& reCiqOrgCode.trim().equals(ciqOrgCode.trim())) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.DATAS.toString(), portInfo);
-				return statusMap;
+				return ReturnInfoUtils.successDataInfo(portInfo);
 			}
 		}
 		return ReturnInfoUtils.errorInfo("海关口岸、主管海关、检验检疫机构代码错误,请核对信息!");
-	}
-	
-	public static void main(String[] args) {
-		CustomsPortServiceImpl customsPortService = new CustomsPortServiceImpl();
-		Map<String,Object> paramsMap = customsPortService.findAllCustomsPort();
-		if (!paramsMap.get(BaseCode.STATUS.toString()).equals("1")) {
-			//return paramsMap;
-		}
-		// 将查询出来的口岸数据放入缓存中
-		JedisUtil.set("Shop_Port_AllCustomsPort_List".getBytes(), SerializeUtil.toBytes(paramsMap.get(BaseCode.DATAS.toString())), 3600);
 	}
 
 	/**
@@ -645,19 +624,13 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		return statusMap;
 	}
 
-	/**
-	 * 创建商品仓库
-	 * 
-	 * @param merchantId
-	 *            商户ID
-	 * @param merchantName
-	 *            商户名称
-	 * @param portInfo
-	 *            口岸管理实体类
-	 * @return Map
-	 */
+	@Override
 	public final Map<String, Object> createWarehous(String merchantId, String merchantName, String customsCode,
 			String customsName) {
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(merchantName)
+				|| StringEmptyUtils.isEmpty(customsCode) || StringEmptyUtils.isEmpty(customsName)) {
+			return ReturnInfoUtils.errorInfo("创建仓库时,请求参数不能为空!");
+		}
 		Date date = new Date();
 		Map<String, Object> paramsMap = new HashMap<>();
 		// 主管海关代码(同仓库编码)
@@ -1002,21 +975,19 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
 			Map<String, Object> paramMap) {
-		Map<String, Object> statusMap = new HashMap<>();
+		if (paramMap == null || paramMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
 		JSONArray jsonList = new JSONArray();
 		// 电商企业编号
 		String ebEntNo = paramMap.get("ebEntNo") + "";
 		if (StringEmptyUtils.isEmpty(ebEntNo)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "电商企业编号不能为空！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("电商企业编号不能为空！");
 		}
 		// 电商企业名称
 		String ebEntName = paramMap.get("ebEntName") + "";
 		if (StringEmptyUtils.isEmpty(ebEntName)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "电商企业名称不能为空");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("电商企业名称不能为空");
 		}
 		// 口岸编码
 		int customsPort = Integer.parseInt(paramMap.get("customsPort") + "");
@@ -1060,10 +1031,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (!"1".equals(reRecordMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reRecordMap;
 		}
-
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -1559,7 +1527,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					GoodsContent goodsInfo = reGoodsList.get(0);
 					// if (status == 2) {
 					goodsRecordInfo.setRecordFlag(status);
-					
+
 					goodsRecordInfo.setStatus(2);
 					goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
 					goodsRecordInfo.setSpareGoodsFirstTypeId(goodsInfo.getGoodsFirstTypeId());
@@ -1615,7 +1583,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					}
 				}
 			} else {
-				return ReturnInfoUtils.errorInfo("商品自编号["+goodsMap.get("entGoodsNo")+"]为找到对应商品信息,请重试!");
+				return ReturnInfoUtils.errorInfo("商品自编号[" + goodsMap.get("entGoodsNo") + "]为找到对应商品信息,请重试!");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
@@ -1806,7 +1774,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 	@Override
 	public Map<String, Object> checkEntGoodsNoRepeat(String value) {
-		if (value.length() <= 20 && StringEmptyUtils.isNotEmpty(value)) {
+		if (StringEmptyUtils.isNotEmpty(value) && value.length() <= 20) {
 			Map<String, Object> param = new HashMap<>();
 			param.put("entGoodsNo", value);
 			List<Object> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, param, 1, 1);

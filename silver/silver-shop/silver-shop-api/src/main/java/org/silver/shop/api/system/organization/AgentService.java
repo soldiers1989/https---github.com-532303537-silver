@@ -44,5 +44,13 @@ public interface AgentService {
 	 * @return Map
 	 */
 	public Map<String, Object> getSubMerchantInfo(String agentId, String agentName);
-
+	
+	/**
+	 * 根据代理商Id获取代理商基本(实体类)信息
+	 * 
+	 * @param agentId
+	 *            代理商Id
+	 * @return Map
+	 */
+	public Map<String, Object> getAgentInfo(String agentId);
 }

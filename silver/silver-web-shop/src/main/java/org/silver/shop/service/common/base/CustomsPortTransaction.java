@@ -7,6 +7,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.common.RedisKey;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
@@ -24,10 +25,6 @@ public class CustomsPortTransaction {
 
 	@Reference
 	private CustomsPortService customsPortService;
-	/**
-	 * 缓存系统已开通海关口岸键
-	 */
-	private static final String SHOP_ALL_CUSTOMS_PORT_LIST = "SHOP_ALL_CUSTOMS_PORT_LIST";
 
 	// 添加口岸下已开通的 海关及国检名称与编码
 	public Map<String, Object> addCustomsPort(Map<String, Object> params) {
@@ -40,7 +37,7 @@ public class CustomsPortTransaction {
 		if ("1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			Map<String, Object> datasMap = customsPortService.findAllCustomsPort();
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
+			JedisUtil.set(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes(),
 					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return ReturnInfoUtils.successInfo();
 		}
@@ -49,7 +46,7 @@ public class CustomsPortTransaction {
 
 	// 查询所有已开通的口岸及关联的海关
 	public Map<String, Object> findAllCustomsPort() {
-		byte[] redisByte = JedisUtil.get(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes());
+		byte[] redisByte = JedisUtil.get(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes());
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo(JSONArray.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
@@ -58,8 +55,8 @@ public class CustomsPortTransaction {
 				return datasMap;
 			}
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
-					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
+			JedisUtil.set(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes(),
+					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 86400);
 			return datasMap;
 		}
 	}
@@ -78,8 +75,8 @@ public class CustomsPortTransaction {
 		if (customsPortService.deleteCustomsPort(id)) {
 			Map<String, Object> datasMap = customsPortService.findAllCustomsPort();
 			// 将查询出来的口岸数据放入缓存中
-			JedisUtil.set(SHOP_ALL_CUSTOMS_PORT_LIST.getBytes(),
-					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
+			JedisUtil.set(RedisKey.SHOP_KEY_ALL_PORT_CUSTOMS_LIST.getBytes(),
+					SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 86400);
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("删除失败,服务器繁忙!");

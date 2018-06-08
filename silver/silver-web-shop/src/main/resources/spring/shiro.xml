@@ -31,8 +31,6 @@
 	<dubbo:reference id="agentService"
 		interface="org.silver.shop.api.system.organization.AgentService"
 		check="false" />
-	<dubbo:reference id="PaymentService"
-		interface="org.silver.shop.api.system.cross.PaymentService" check="false" />
 	<!-- 配置Realm -->
 	<bean id="memberRealm" class="org.silver.shop.shiro.MemberRealm" />
 	<bean id="managerRealm" class="org.silver.shop.shiro.ManagerRealm" />

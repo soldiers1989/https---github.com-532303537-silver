@@ -7,6 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 
@@ -92,9 +93,18 @@ public class JedisTemplate {
 
 	public static void main(String[] args) {
 
-		// Jedis jedis = new Jedis("150.242.58.22", 6380);
-		// jedis.auth("jugg");
-		// jedis.set("name", "678");
+		 Jedis jedis = new Jedis("150.242.58.22", 6380);
+		 jedis.auth("jugg");
+		 String key  ="Shop_Key_ExcelIng_20180606_orderImport_QB_13_Web";
+		 for(int i =0 ; i < 100 ; i++){
+			 byte[] redisByte = jedis.get(key.getBytes());
+			 if(redisByte != null &&  redisByte.length >0){
+				 System.out.println("---缓存中有参数--");
+			 }else{
+				 System.out.println("---缓存中没有参数--");
+				 
+			 }
+		 }
 		// System.out.println(jedis.get("name"));
 	}
 }

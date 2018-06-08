@@ -39,7 +39,7 @@ public class TimerResendPayment implements InitializingBean {
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			public void run() {
-				//resendPayment();
+				resendPayment();
 			}
 			// 项目启动后90秒开始扫描， 暂定循环为60秒启动一次
 		}, 90000, 60000);

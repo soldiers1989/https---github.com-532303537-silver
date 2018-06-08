@@ -43,8 +43,8 @@ public class MerchantFeeTransaction {
 	}
 
 	//管理员获取指定商户口岸服务费信息
-	public Object getServiceFee(String merchantId) {
-		return merchantFeeService.getServiceFee(merchantId);
+	public Object getServiceFee(Map<String, Object> datasMap) {
+		return merchantFeeService.getServiceFee(datasMap);
 	}
 
 }

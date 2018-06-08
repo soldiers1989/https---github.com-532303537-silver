@@ -22,6 +22,7 @@ public class Merchant implements Serializable {
 	private String merchantPhone;// 商户手机号码
 	private String merchantQQ;// 商户QQ
 	private String merchantEmail;// 商户邮箱
+	private String merchantIdCardName; // 商户法人代表名称
 	private String merchantIdCard;// 商户法人证件号
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
@@ -36,7 +37,6 @@ public class Merchant implements Serializable {
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
 	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
-	private String merchantIdCardName; // 商户法人代表名称
 
 	private String agentParentId ; //代理商Id
 	private String agentParentName ;// 代理商名称
@@ -45,6 +45,8 @@ public class Merchant implements Serializable {
 	private String sku;//(名称来源自启邦)
 	private int thirdPartyFlag;//第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 	private String thirdPartyKey;//第三方密钥
+	//private int ;//
+	
 	public Long getId() {
 		return id;
 	}

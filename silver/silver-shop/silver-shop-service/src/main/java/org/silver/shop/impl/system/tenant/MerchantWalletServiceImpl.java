@@ -186,7 +186,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 				return ReturnInfoUtils.errorInfo("保存商户钱包日志失败,服务器繁忙!");
 			}
 		} catch (Exception e) {
-			logger.error("----商户钱包扣费并且记录钱包日志->>>" + e);
+			logger.error("----商户钱包扣费并且记录钱包日志-->>" + e);
 		}
 		return ReturnInfoUtils.successInfo();
 	}

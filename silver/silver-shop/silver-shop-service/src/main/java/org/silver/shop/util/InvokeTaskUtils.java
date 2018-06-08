@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.cross.PaymentService;
-import org.silver.shop.impl.system.manual.MpayServiceImpl;
+import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.task.GroupPaymentTask;
 import org.silver.shop.task.OrderRecordTask;
 import org.silver.shop.task.PaymentRecordTask;
@@ -29,7 +29,7 @@ import net.sf.json.JSONArray;
 public class InvokeTaskUtils {
 
 	@Autowired
-	private MpayServiceImpl mpayServiceImpl;
+	private MpayService mpayService;
 	@Autowired
 	private PaymentService paymentService;
 
@@ -86,6 +86,15 @@ public class InvokeTaskUtils {
 		return ReturnInfoUtils.errorInfo("调用通用方法错误,参数有误!");
 	}
 
+	/**
+	 * 根据对应的标识选择对应的操作
+	 * @param flag  1-生成支付单、2-推送订单、3-推送支付单
+	 * @param jsonList 参数集合
+	 * @param errorList 错误信息
+	 * @param customsMap 海关信息
+	 * @param threadPool 线程
+	 * @param paramsMap 缓存参数
+	 */
 	private void chooseTask(int flag, JSONArray jsonList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, ExecutorService threadPool, Map<String, Object> paramsMap) {
 		switch (flag) {
@@ -95,7 +104,7 @@ public class InvokeTaskUtils {
 			threadPool.submit(groupPaymentTask);
 			break;
 		case 2:
-			OrderRecordTask orderRecordTask = new OrderRecordTask(jsonList, errorList, customsMap, mpayServiceImpl,
+			OrderRecordTask orderRecordTask = new OrderRecordTask(jsonList, errorList, customsMap, mpayService,
 					paramsMap);
 			threadPool.submit(orderRecordTask);
 			break;

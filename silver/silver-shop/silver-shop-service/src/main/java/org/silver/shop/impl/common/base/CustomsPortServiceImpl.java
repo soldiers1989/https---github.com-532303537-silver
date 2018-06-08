@@ -74,15 +74,8 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		return ReturnInfoUtils.errorInfo("添加口岸失败,服务器繁忙!");
 	}
 
-	/**
-	 * 根据国检名称,国检编码校验国检检疫信息是否正确
-	 * 
-	 * @param ciqOrgName
-	 *            国检名称
-	 * @param ciqOrgCode
-	 *            国检编码
-	 * @return boolean
-	 */
+	
+	@Override
 	public boolean checkCCIQ(String ciqOrgName, String ciqOrgCode) {
 		if (StringEmptyUtils.isNotEmpty(ciqOrgName) && StringEmptyUtils.isNotEmpty(ciqOrgCode)) {
 			Map<String, Object> params = new HashMap<>();
@@ -95,13 +88,9 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		}
 		return false;
 	}
-	/**
-	 * 根据国检编码校验国检检疫信息是否正确
-	 * 
-	 * @param ciqOrgCode
-	 *            国检编码
-	 * @return boolean
-	 */
+	
+	
+	@Override
 	public boolean checkCCIQ( String ciqOrgCode) {
 		if ( StringEmptyUtils.isNotEmpty(ciqOrgCode)) {
 			Map<String, Object> params = new HashMap<>();
@@ -113,15 +102,8 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		}
 		return false;
 	}
-	/**
-	 * 根据海关关区名称,海关关区编码校验海关关区信息是否正确
-	 * 
-	 * @param customsName
-	 *            海关关区名称
-	 * @param customsCode
-	 *            海关关区编码
-	 * @return boolean
-	 */
+
+	@Override
 	public boolean checkGAC(String customsName, String customsCode) {
 		if (StringEmptyUtils.isNotEmpty(customsName) && StringEmptyUtils.isNotEmpty(customsCode)) {
 			Map<String, Object> params = new HashMap<>();

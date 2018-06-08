@@ -518,10 +518,10 @@ public class ManualOrderTransaction {
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
-				excelBufferUtils.writeCompletedRedisMq(null, params);
+			//	excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
-		excelBufferUtils.writeCompletedRedisMq(null, params);
+	//	excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
 
@@ -713,7 +713,7 @@ public class ManualOrderTransaction {
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
-				excelBufferUtils.writeCompletedRedisMq(null, params);
+				//excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
 		//excelBufferUtils.writeCompletedRedisMq(null, params);

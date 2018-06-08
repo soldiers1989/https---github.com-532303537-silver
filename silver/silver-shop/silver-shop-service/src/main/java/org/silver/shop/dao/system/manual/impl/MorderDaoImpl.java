@@ -281,4 +281,42 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 		return orderList;
 	}
 
+	@Override
+	public double backCoverStatisticalManualOrderAmount(List<Object> itemList) {
+		// 当没有订单Id集合则直接返回0
+		if (itemList == null || itemList.isEmpty()) {
+			return 0;
+		}
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT SUM(CASE WHEN t1.ActualAmountPaid < 100 THEN 100 ELSE t1.ActualAmountPaid END ) AS ActualAmountPaid  FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
+			for (int i = 0; i < itemList.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			// 删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < itemList.size(); i++) {
+				Map<String, Object> orderMap = (Map<String, Object>) itemList.get(i);
+				query.setString(i, orderMap.get("orderNo") + "");
+			}
+			List resources = query.list();
+			session.close();
+			if (resources != null && !resources.isEmpty() && StringEmptyUtils.isNotEmpty(resources.get(0))) {
+				return (double) resources.get(0);
+			}
+			return 0;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 }

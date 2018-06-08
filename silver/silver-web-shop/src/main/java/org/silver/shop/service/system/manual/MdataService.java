@@ -28,6 +28,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
@@ -555,17 +556,21 @@ public class MdataService {
 
 	// 读取缓存中excel导入实时数据
 	public Map<String, Object> readExcelRedisInfo(String serialNo, String name) {
-		Map<String, Object> statusMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
+		if(StringEmptyUtils.isNotEmpty(name) && "orderImport".equals(name)){
+			String redisInfo = JedisUtil.get(key);
+			if(StringEmptyUtils.isNotEmpty(redisInfo)){
+				return JSONObject.fromObject(redisInfo);
+			}
+			return ReturnInfoUtils.errorInfo("暂无数据,请等待!");
+		}
 		// String key = "Shop_Key_ExcelIng_"+dateSign+"_"+serialNo;
-		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get(key.getBytes());
 		if (redisByte != null && redisByte.length > 0) {
 			return (Map<String, Object>) SerializeUtil.toObject(redisByte);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "暂无数据,请等待!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据,请等待!");
 		}
 	}
 }

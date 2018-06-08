@@ -205,7 +205,7 @@ public class OrderController {
 
 	@RequestMapping(value = "/getMerchantOrderReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商户查询订单每日报表")
+	@ApiOperation("商户查询订单报表")
 	@RequiresRoles("Merchant")
 	public String getMerchantOrderReport(HttpServletRequest req, HttpServletResponse response, String startDate,
 			String endDate) {

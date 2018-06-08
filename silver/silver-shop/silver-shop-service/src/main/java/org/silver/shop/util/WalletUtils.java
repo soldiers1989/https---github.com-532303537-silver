@@ -175,6 +175,7 @@ public class WalletUtils {
 				break;
 			default:
 				break;
+			//	return ReturnInfoUtils.errorInfo("添加钱包日志,未知参数-->key:"+entry.getKey()+";value:"+entry.getValue()+"!");
 			}
 		}
 		return ReturnInfoUtils.successInfo();

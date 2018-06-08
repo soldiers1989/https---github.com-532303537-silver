@@ -17,6 +17,7 @@ public class ManualPaymentInterceptor {
 		if("computingCostsManualPayment".equals(methodName)){
 			// 拦截方法所传入的参数
 			Object[] args = joinPoint.getArgs();
+			
 			System.out.println("p---args-?>??"+args.toString());
 		}
 		System.out.println(

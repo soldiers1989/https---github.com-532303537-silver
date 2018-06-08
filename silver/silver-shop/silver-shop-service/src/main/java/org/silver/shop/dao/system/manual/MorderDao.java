@@ -81,6 +81,13 @@ public interface MorderDao extends BaseDao {
 	 * @return List
 	 */
 	public List<Morder> findByPropertyIn(List<Map<String,Object>> itemList);
+
+	/**
+	 * 当订单实际支付金额不足100提升至100,后统计订单实际支付金额
+	 * @param itemList 订单Id集合
+	 * @return double 实际支付金额
+	 */
+	public double backCoverStatisticalManualOrderAmount(List<Object> itemList);
 	
 	
 }

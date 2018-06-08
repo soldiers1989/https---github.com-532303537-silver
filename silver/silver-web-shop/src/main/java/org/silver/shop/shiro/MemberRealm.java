@@ -44,15 +44,17 @@ public class MemberRealm extends AuthorizingRealm {
 		String account = customizedToken.getUsername();
 		String pass = new String(customizedToken.getPassword());
 		Map<String, Object> reLoginMap = memberTransaction.memberLogin(account, pass);
-		if ("你输入的密码和账户名不匹配!".equals(reLoginMap.get(BaseCode.MSG.toString()))) {
+		String msg = reLoginMap.get(BaseCode.MSG.toString()) + "";
+		if ("你输入的密码和账户名不匹配!".equals(msg)) {
 			throw new IncorrectCredentialsException();
-		} else if ("密码错误".equals(reLoginMap.get(BaseCode.MSG.toString()))) {
+		} else if ("密码错误".equals(msg)) {
 			throw new AuthenticationException(reLoginMap.get(BaseCode.DATAS.toString()) + "");
-		} else if ("账号已被锁定".equals(reLoginMap.get(BaseCode.MSG.toString()))) {
+		} else if ("账号已被锁定".equals(msg)) {
 			throw new LockedAccountException(reLoginMap.get(BaseCode.DATAS.toString()) + "");
+		}else{
+			authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MEMBER.toString());
+			return authcInfo;
 		}
-		authcInfo = new SimpleAuthenticationInfo(account, pass, LoginType.MEMBER.toString());
-		return authcInfo;
 	}
 
 	public static void main(String[] args) {

@@ -127,7 +127,6 @@ public class EditRecordController {
 
 		Map<String, Object> reqMap = manualService.groupAdd("YM20170000015078659178651922", req, autoMSHR, autoMXDR);
 		return JSONObject.fromObject(reqMap).toString();
-
 	}
 
 	/**
@@ -432,14 +431,13 @@ public class EditRecordController {
 	@ResponseBody
 	@ApiOperation("商户查询缓存中Excel读取进度")
 	public String readExcelRedisInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("serialNo") String serialNo, @RequestParam("name") String name) {
+			@RequestParam("serialNo") String serialNo, @RequestParam("name") String name ) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = mdataService.readExcelRedisInfo(serialNo, name);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(mdataService.readExcelRedisInfo(serialNo, name)).toString();
 	}
 
 	/**

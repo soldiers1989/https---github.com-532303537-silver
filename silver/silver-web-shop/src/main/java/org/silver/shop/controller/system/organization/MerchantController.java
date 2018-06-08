@@ -184,22 +184,15 @@ public class MerchantController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession()
-				.getAttribute(LoginType.MERCHANT.toString() + "_info");
-		if (!"".equals(merchantInfo)) {
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		if (merchantInfo != null) {
 			// 将session内的商户登录密码清空
 			merchantInfo.setLoginPassword("");
-			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
-			reMap.put(BaseCode.DATAS.getBaseCode(), merchantInfo);
-			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			return JSONObject.fromObject(reMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.successDataInfo(merchantInfo)).toString();
 		}
-		reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.LOSS_SESSION.getStatus());
-		reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.LOSS_SESSION.getMsg());
-		return JSONObject.fromObject(reMap).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("服务器繁忙!")).toString();
 	}
 
 	/**
@@ -321,17 +314,18 @@ public class MerchantController {
 		Map<String, Object> statusMap = merchantTransaction.getMerchantRecordInfo();
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
+
 	@RequestMapping(value = "/publicMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商城前台公开获取商户信息")
-	public String publicMerchantInfo(HttpServletRequest req, HttpServletResponse response,@RequestParam("merchantId")String merchantId) {
+	public String publicMerchantInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if(StringEmptyUtils.isEmpty(merchantId)){
+		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空!")).toString();
 		}
 		return JSONObject.fromObject(merchantTransaction.publicMerchantInfo(merchantId)).toString();

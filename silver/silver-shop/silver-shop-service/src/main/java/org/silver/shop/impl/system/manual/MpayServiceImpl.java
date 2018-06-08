@@ -13,19 +13,17 @@ import javax.annotation.Resource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
+import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.api.system.manual.MpayService;
-import org.silver.shop.api.system.tenant.WalletLogService;
+import org.silver.shop.api.system.organization.AgentService;
+import org.silver.shop.api.system.tenant.MerchantFeeService;
+import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
-import org.silver.shop.impl.system.commerce.GoodsRecordServiceImpl;
-import org.silver.shop.impl.system.organization.AgentServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantFeeServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
@@ -72,11 +70,9 @@ public class MpayServiceImpl implements MpayService {
 	@Autowired
 	private AccessTokenService accessTokenService;
 	@Autowired
-	private GoodsRecordServiceImpl goodsRecordServiceImpl;
+	private GoodsRecordService goodsRecordService;
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	@Autowired
-	private WalletLogService walletLogService;
+	private MerchantWalletService merchantWalletService;
 	@Autowired
 	private BufferUtils bufferUtils;
 	@Autowired
@@ -84,11 +80,11 @@ public class MpayServiceImpl implements MpayService {
 	@Autowired
 	private InvokeTaskUtils invokeTaskUtils;
 	@Autowired
-	private MerchantFeeServiceImpl merchantFeeServiceImpl;
+	private MerchantFeeService merchantFeeService;
 	@Autowired
 	private WalletUtils walletUtils;
 	@Autowired
-	private AgentServiceImpl agentServiceImpl;
+	private AgentService agentService;
 
 	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);
 
@@ -113,7 +109,7 @@ public class MpayServiceImpl implements MpayService {
 	 * 驼峰写法：商户名称
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
-	
+
 	/**
 	 * 口岸
 	 */
@@ -128,7 +124,12 @@ public class MpayServiceImpl implements MpayService {
 	 * 主管海关代码
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
-	
+
+	/**
+	 * 钱包流水Id
+	 */
+	private static final String WALLET_ID = "walletId";
+
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
@@ -148,7 +149,7 @@ public class MpayServiceImpl implements MpayService {
 		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
 		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
 		// 校验前台传递口岸、海关、智检编码
-		Map<String, Object> reCustomsMap = goodsRecordServiceImpl.checkCustomsPort(eport, customsCode, ciqOrgCode);
+		Map<String, Object> reCustomsMap = goodsRecordService.checkCustomsPort(eport, customsCode, ciqOrgCode);
 		if (!"1".equals(reCustomsMap.get(BaseCode.STATUS.toString()))) {
 			return reCustomsMap;
 		}
@@ -247,18 +248,41 @@ public class MpayServiceImpl implements MpayService {
 			return reMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		// 统计未发起过备案的手工订单实际支付金额的总额
-		double totalAmountPaid = morderDao.statisticalManualOrderAmount(newList);
+		// 初始化平台服务费
+		double fee;
+		// 封底标识：1-正常计算、2-不满100提至100计算
+		int backCoverFlag = 0;
+		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
+		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
+			Map<String, Object> reFeeMap = merchantFeeService.getMerchantFeeInfo(merchantFeeId);
+			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
+				return reFeeMap;
+			}
+			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
+			fee = merchantFee.getPlatformFee();
+			backCoverFlag = merchantFee.getBackCoverFlag();
+		} else {
+			fee = 0.001;
+		}
+		double totalAmountPaid = 0;
+		//封底标识：1-正常计算、2-不满100提至100计算
+		if (backCoverFlag == 2) {
+			// 当订单实际支付金额不足100提升至100,后统计订单实际支付金额
+			totalAmountPaid = morderDao.backCoverStatisticalManualOrderAmount(newList);
+		} else {
+			// 统计未发起过备案的手工订单实际支付金额的总额
+			totalAmountPaid = morderDao.statisticalManualOrderAmount(newList);
+		}
 		// 当小于0时,代表查询数据库信息错误
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
 			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			try{
-				return manualOrderToll(merchantWallet, merchantFeeId, totalAmountPaid, merchant, newList.size());
-			}catch (Exception e) {
+			try {
+				return manualOrderToll(merchantWallet, fee, totalAmountPaid, merchant, newList.size());
+			} catch (Exception e) {
 				e.printStackTrace();
-				logger.error("---订单平台服务费计算错误-->",e);
+				logger.error("---订单平台服务费计算错误-->", e);
 			}
 		}
 		return ReturnInfoUtils.successInfo();
@@ -266,37 +290,31 @@ public class MpayServiceImpl implements MpayService {
 
 	/**
 	 * 根据商户勾选的所有订单总金额进行申报手续费计算
-	 * @param merchantWallet 商户钱包
-	 * @param merchantFeeId 商户口岸费率Id
-	 * @param totalAmountPaid 订单总金额
-	 * @param merchant 商户信息实体类
-	 * @param count 数量
+	 * 
+	 * @param merchantWallet
+	 *            商户钱包
+	 * @param fee
+	 *            商户口岸费率
+	 * @param totalAmountPaid
+	 *            订单总金额
+	 * @param merchant
+	 *            商户信息实体类
+	 * @param count
+	 *            数量
 	 * @return Map
 	 */
-	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, String merchantFeeId,
+	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, double fee,
 			double totalAmountPaid, Merchant merchant, int count) {
 		if (merchant == null) {
 			return ReturnInfoUtils.errorInfo("商户钱包扣款时商户信息不能为空!");
 		}
-		// 初始化平台服务费
-		double fee;
-		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
-		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
-			Map<String, Object> reFeeMap = merchantFeeServiceImpl.getMerchantFeeInfo(merchantFeeId);
-			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
-				return reFeeMap;
-			}
-			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
-			fee = merchantFee.getPlatformFee();
-		} else {
-			fee = 0.001;
-		}
+
 		// 钱包余额
 		double balance = merchantWallet.getBalance();
 		// 订申报单手续费
 		double serviceFee = totalAmountPaid * fee;
 		// 商户钱包扣款
-		Map<String, Object> reWalletDeductionMap = merchantWalletServiceImpl.walletDeduction(merchantWallet, balance,
+		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet, balance,
 				serviceFee);
 		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletDeductionMap;
@@ -311,7 +329,7 @@ public class MpayServiceImpl implements MpayService {
 		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> datas = new HashMap<>();
 		datas.put(MERCHANT_ID, merchant.getMerchantId());
-		datas.put("walletId", merchantWallet.getWalletId());
+		datas.put(WALLET_ID, merchantWallet.getWalletId());
 		datas.put(MERCHANT_NAME, merchant.getMerchantName());
 		datas.put("serialName", "订单申报-手续费");
 		datas.put("balance", balance);
@@ -321,10 +339,9 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("note", "[" + count + "]单,订单申报-手续费");
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
-
 		datas.put("count", count);
 		// 添加商户钱包流水日志
-		Map<String, Object> reWalletLogMap = merchantWalletServiceImpl.addWalletLog(datas);
+		Map<String, Object> reWalletLogMap = merchantWalletService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
@@ -364,9 +381,9 @@ public class MpayServiceImpl implements MpayService {
 		// 获取以更新后得总代理钱包余额剪掉佣金,得到原来未变更的钱包余额
 		double balance = agentWallet.getBalance() - agentFee;
 		// 代理商收款来源钱包Id与商户名称
-		String walletId = datas.get("walletId") + "";
+		String walletId = datas.get(WALLET_ID) + "";
 		String agentName = datas.get("agentName") + "";
-		datas.put("walletId", agentWallet.getWalletId());
+		datas.put(WALLET_ID, agentWallet.getWalletId());
 		datas.put("agentName", "银盟");
 		datas.put("serialName", "申报订单-平台佣金");
 		datas.put("balance", balance);
@@ -390,12 +407,15 @@ public class MpayServiceImpl implements MpayService {
 	 * 进行平台平台服务费的扣款,并进行日志记录
 	 * 
 	 * @param agentId
+	 *            商户对应的代理商Id
 	 * @param serviceFee
+	 *            平台服务费
 	 * @param datas
-	 * @return
+	 *            日志参数
+	 * @return Map
 	 */
 	private Map<String, Object> agentWalletReceipt(String agentId, double serviceFee, Map<String, Object> datas) {
-		Map<String, Object> reAgentMap = agentServiceImpl.getAgentInfo(agentId);
+		Map<String, Object> reAgentMap = agentService.getAgentInfo(agentId);
 		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
 			return reAgentMap;
 		}
@@ -412,10 +432,10 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
 		}
 		// 代理商收款来源钱包Id与商户名称
-		String walletId = datas.get("walletId") + "";
+		String walletId = datas.get(WALLET_ID) + "";
 		String merchantName = datas.get(MERCHANT_NAME) + "";
 		// 重新放入钱包日志参数
-		datas.put("walletId", agentWallet.getWalletId());
+		datas.put(WALLET_ID, agentWallet.getWalletId());
 		datas.put("agentName", agent.getAgentName());
 		datas.put("balance", balance);
 		datas.put("flag", "in");
@@ -423,7 +443,8 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("type", 1);
 		datas.put("targetWalletId", walletId);
 		datas.put("targetName", merchantName);
-		// 添加代理商钱包流水日志
+		datas.put("serialName", "商户申报订单-手续费");
+		// 添加代理商进账钱包流水日志
 		Map<String, Object> reWalletLogMap = addAgentWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
@@ -444,7 +465,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 使用代理商钱包余额替换缓存中的商户钱包余额
 		// 重新放入钱包日志参数
-		datas.put("walletId", agentWallet.getWalletId());
+		datas.put(WALLET_ID, agentWallet.getWalletId());
 		datas.put("agentName", agent.getAgentName());
 		datas.put("balance", beforeChangingBalance);
 		datas.put("name", "商户申报[" + datas.get("count") + "]订单后,缴纳代理商佣金");
@@ -523,7 +544,7 @@ public class MpayServiceImpl implements MpayService {
 			return reCheckMap;
 		}
 		AgentWalletLog log = new AgentWalletLog();
-		log.setAgentWalletId(datas.get("walletId") + "");
+		log.setAgentWalletId(datas.get(WALLET_ID) + "");
 		log.setAgentName(datas.get("agentName") + "");
 		int serialNo = SerialNoUtils.getSerialNo("logs");
 		if (serialNo < 0) {
@@ -563,7 +584,7 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private Map<String, Object> beforePushingCheckManualOrder(List<Map<String, Object>> list) {
 		if (list == null) {
-			return ReturnInfoUtils.errorInfo("推送订单扣费前校验订单商品信息失败,请求参数不能为空!");
+			return ReturnInfoUtils.errorInfo("推送订单扣费前校验订单信息失败,请求参数不能为空!");
 		}
 		List<Morder> reList = morderDao.findByPropertyIn(list);
 		List<Object> newOrderIdList = new ArrayList<>();
@@ -583,16 +604,7 @@ public class MpayServiceImpl implements MpayService {
 		return ReturnInfoUtils.successDataInfo(newOrderIdList);
 	}
 
-	/**
-	 * 准备开始推送订单备案
-	 * 
-	 * @param dataList
-	 *            订单信息
-	 * @param errorList
-	 *            错误信息
-	 * @param customsMap
-	 *            海关信息
-	 */
+	@Override
 	public final void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap) {
 		String merchantId = paramsMap.get(MERCHANT_ID) + "";
@@ -938,7 +950,7 @@ public class MpayServiceImpl implements MpayService {
 			orderMap.put("opType", "A");
 		}
 		// 是否像海关发送
-		//orderMap.put("uploadOrNot", false);
+		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次

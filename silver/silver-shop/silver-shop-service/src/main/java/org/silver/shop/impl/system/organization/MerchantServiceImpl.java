@@ -273,8 +273,8 @@ public class MerchantServiceImpl implements MerchantService {
 			merchant.setAgentParentId(agent.getAgentId());
 			merchant.setAgentParentName(agent.getAgentName());
 		}else{
-			merchant.setAgentParentId("prxoy_00001");
-			merchant.setAgentParentName("银盟");
+			merchant.setAgentParentId("AgentId_00002");
+			merchant.setAgentParentName("广州银盟");
 		}
 		merchant.setMerchantPhone(phone);
 		// 标识

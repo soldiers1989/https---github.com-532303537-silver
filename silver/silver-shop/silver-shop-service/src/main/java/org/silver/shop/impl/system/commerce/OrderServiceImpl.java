@@ -1218,7 +1218,7 @@ public class OrderServiceImpl implements OrderService {
 			double temToal = Double.parseDouble(df.format(count * price));
 			if (temToal != total) {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额为：" + total
-						+ ",与" + count + "(数量)*" + price + "(单价)=" + (count * price) + "(商品总金额)不对等,请核对信息!");
+						+ ",与" + count + "(数量)*" + price + "(单价)=" + temToal + "(商品总金额)不对等,请核对信息!");
 			}
 			goodsTotal += total;
 		}

@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.tenant;
 
+import java.text.DecimalFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 商户平台手续费
+ * 商户口岸手续费
  */
 @Controller
 @RequestMapping("/merchantFee")
@@ -32,13 +33,11 @@ public class MerchantFeeController {
 	private MerchantFeeTransaction merchantFeeTransaction;
 
 	@RequestMapping(value = "/addServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("管理员添加商户服务费")
+	@ApiOperation("管理员添加商户口岸服务费率")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String addServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId, @RequestParam("provinceName") String provinceName,
-			@RequestParam("provinceCode") String provinceCode, @RequestParam("cityName") String cityName,
-			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
+			@RequestParam("merchantId") String merchantId, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
 			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("platformFee") double platformFee,
@@ -86,9 +85,7 @@ public class MerchantFeeController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	public String editServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantFeeId") String merchantFeeId, @RequestParam("provinceName") String provinceName,
-			@RequestParam("provinceCode") String provinceCode, @RequestParam("cityName") String cityName,
-			@RequestParam("cityCode") String cityCode, @RequestParam("customsPort") int customsPort,
+			@RequestParam("merchantFeeId") String merchantFeeId,  @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
 			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("platformFee") double platformFee,
@@ -109,16 +106,29 @@ public class MerchantFeeController {
 	}
 
 	@RequestMapping(value = "/getServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("管理员获取指定商户口岸服务费信息")
+	@ApiOperation("管理员获取商户口岸服务费信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String getServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId) {
+	public String getServiceFee(HttpServletRequest req, HttpServletResponse response,String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(merchantFeeTransaction.getServiceFee(merchantId)).toString();
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		
+		return JSONObject.fromObject(merchantFeeTransaction.getServiceFee(datasMap)).toString();
+	}
+	public static void main(String[] args) {
+		double d= 19.33;
+		DecimalFormat df = new DecimalFormat("#.00");
+		double temToal = Double.parseDouble(df.format(3 * d));
+		System.out.println(temToal);
 	}
 }

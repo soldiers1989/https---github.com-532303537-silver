@@ -54,7 +54,7 @@ public class OrderImplLogsController {
 	}
 
 	/**
-	 * 商户查询错误日志记录
+	 * 商户查询手工订单/支付单错误日志
 	 * 
 	 * @param req
 	 * @param response

@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.model.system.manual.Morder;
@@ -24,6 +26,9 @@ import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import net.sf.json.JSONObject;
+
+
 /**
  * 主要用于Excel导入时写入缓冲数据 web层
  */
@@ -32,8 +37,10 @@ public class ExcelBufferUtils {
 	@Autowired
 	private OrderImplLogsTransaction orderImplLogsTransaction;
 
+	
+	private static Logger logger = LogManager.getLogger(ExcelBufferUtils.class);
 	// 创建一个静态钥匙
-	private static Object lock = "lock";// 值是任意的
+	private static Object LOCK = new Object();// 值是任意的
 	/**
 	 * 总行数
 	 */
@@ -71,7 +78,7 @@ public class ExcelBufferUtils {
 		Map<String, Object> datasMap = new HashMap<>();
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + params.get("name") + "_" + params.get("serialNo");
-		synchronized (lock) {
+		synchronized (LOCK) {
 			AtomicInteger counter = (AtomicInteger) params.get("counter");
 			datasMap.put(COMPLETED, counter.getAndIncrement());
 			datasMap.put(BaseCode.STATUS.toString(), "1");
@@ -100,7 +107,7 @@ public class ExcelBufferUtils {
 		String name = params.get("name") + "";
 		String serialNo = params.get("serialNo") + "";
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
-		synchronized (lock) {
+		synchronized (LOCK) {
 			AtomicInteger threadCounter = (AtomicInteger) params.get("statusCounter");
 			AtomicInteger counter = (AtomicInteger) params.get("counter");
 			int totalCount = Integer.parseInt(params.get(TOTAL_COUNT) + "");
@@ -217,13 +224,16 @@ public class ExcelBufferUtils {
 	public void writeRedisMq(List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
 		String key = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_" + paramsMap.get("name")
 				+ "_" + paramsMap.get("serialNo") + "_Web";
-		synchronized (lock) {
-			byte[] redisByte = JedisUtil.get(key.getBytes());
-			if (redisByte != null && redisByte.length > 0) {
-				updateRedis(redisByte, key, errl, paramsMap);
-			} else {
-				System.out.println("----没有缓存信息--key->>>>"+key);
-				notRedis(key, errl, paramsMap);
+		synchronized (LOCK) {
+			try{
+				String redisInfo = JedisUtil.get(key);
+				if (StringEmptyUtils.isNotEmpty(redisInfo) ) {
+					updateRedis(redisInfo, key, errl, paramsMap);
+				} else {
+					notRedis(key, errl, paramsMap);
+				}
+			}catch (Exception e) {
+				logger.error("----web层excel写入缓存错误--",e);
 			}
 		}
 	}
@@ -240,21 +250,21 @@ public class ExcelBufferUtils {
 	 * @param paramsMap
 	 *            缓存参数
 	 */
-	private void updateRedis(byte[] redisByte, String key, List<Map<String, Object>> errl,
+	private void updateRedis(String redisInfo, String key, List<Map<String, Object>> errl,
 			Map<String, Object> paramsMap) {
-		ConcurrentMap<String, Object> redisMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
-		List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisMap.get(BaseCode.ERROR.toString());
+		JSONObject redisJSON = JSONObject.fromObject(redisInfo);
+		List<Map<String, Object>> reErrl = (List<Map<String, Object>>) redisJSON.get(BaseCode.ERROR.toString());
 		if (reErrl != null && !reErrl.isEmpty()) {
 			if (errl != null && !errl.isEmpty()) {
 				reErrl.add(errl.get(0));
 			}
-			redisMap.put(BaseCode.ERROR.toString(), reErrl);
+			redisJSON.put(BaseCode.ERROR.toString(), reErrl);
 		} else {
 			if (errl != null ) {
-				redisMap.put(BaseCode.ERROR.toString(), errl);
+				redisJSON.put(BaseCode.ERROR.toString(), errl);
 			}
 		}
-		System.out.println("------>>>"+redisMap.toString());
+		
 		// 类型
 		String type = paramsMap.get("type") + "";
 		int errCounter = 0;
@@ -262,25 +272,24 @@ public class ExcelBufferUtils {
 		int sendCounter = 0;
 		switch (type) {
 		case "success":
-			sendCounter = Integer.parseInt(redisMap.get(SENDCOUNTER) + "");
+			sendCounter = Integer.parseInt(redisJSON.get(SENDCOUNTER) + "");
 			sendCounter++;
-			redisMap.put(SENDCOUNTER, sendCounter);
+			redisJSON.put(SENDCOUNTER, sendCounter);
 			break;
 		case "error":
-			errCounter = Integer.parseInt(redisMap.get(ERRCOUNTER) + "");
+			errCounter = Integer.parseInt(redisJSON.get(ERRCOUNTER) + "");
 			errCounter++;
-			redisMap.put(ERRCOUNTER, errCounter);
+			redisJSON.put(ERRCOUNTER, errCounter);
 			break;
 		default:
-			redisMap.put(ERRCOUNTER, redisMap.get(ERRCOUNTER));
-			redisMap.put(SENDCOUNTER, redisMap.get(SENDCOUNTER));
+			redisJSON.put(ERRCOUNTER, redisJSON.get(ERRCOUNTER));
+			redisJSON.put(SENDCOUNTER, redisJSON.get(SENDCOUNTER));
 			break;
 		}
-		redisMap.put(BaseCode.STATUS.toString(), "1");
-		redisMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+		redisJSON.put(BaseCode.STATUS.toString(), "1");
+		redisJSON.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
-		
-		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(redisMap), 3600);
+		JedisUtil.set(key, 3600, redisJSON);
 	}
 
 	/**
@@ -295,11 +304,13 @@ public class ExcelBufferUtils {
 	 * 
 	 */
 	private void notRedis(String key, List<Map<String, Object>> errl, Map<String, Object> paramsMap) {
+		//
 		int counter = 0;
+		//错误数量
 		int errCounter = 0;
 		// 成功发送数量
 		int sendCounter = 0;
-		ConcurrentMap<String, Object> datasMap = new ConcurrentHashMap<>();
+		JSONObject json = new JSONObject();
 		// 类型
 		String type = paramsMap.get("type") + "";
 		//
@@ -310,17 +321,17 @@ public class ExcelBufferUtils {
 		}
 		//
 		if (errl != null && !errl.isEmpty()) {
-			datasMap.put(BaseCode.ERROR.toString(), errl);
+			json.put(BaseCode.ERROR.toString(), errl);
 		} else {
-			datasMap.put(BaseCode.ERROR.toString(), new ArrayList<>());
+			json.put(BaseCode.ERROR.toString(), new ArrayList<>());
 		}
-		datasMap.put(COMPLETED, counter);
-		datasMap.put(SENDCOUNTER, sendCounter);
-		datasMap.put(ERRCOUNTER, errCounter);
-		datasMap.put(BaseCode.STATUS.toString(), "1");
-		datasMap.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
+		json.put(COMPLETED, counter);
+		json.put(SENDCOUNTER, sendCounter);
+		json.put(ERRCOUNTER, errCounter);
+		json.put(BaseCode.STATUS.toString(), "1");
+		json.put(TOTAL_COUNT, paramsMap.get(TOTAL_COUNT));
 		// 将数据放入到缓存中
-		JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+		JedisUtil.set(key, 3600, json);
 	}
 
 	/**

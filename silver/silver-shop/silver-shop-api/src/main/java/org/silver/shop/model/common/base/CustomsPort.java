@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 口岸及已开通海关、国检信息实体类
+ * 系统已开通的口岸-海关-国检信息实体类
  */
 public class CustomsPort implements Serializable {
 

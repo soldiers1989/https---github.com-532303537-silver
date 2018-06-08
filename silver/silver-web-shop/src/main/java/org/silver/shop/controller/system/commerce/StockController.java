@@ -78,7 +78,7 @@ public class StockController {
 	 */
 	@RequestMapping(value = "/searchAlreadyRecordGoodsDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("搜索该仓库下已经备案成功的备案商品信息")
+	@ApiOperation("搜索该仓库下已经备案商品信息")
 	@RequiresRoles("Merchant")
 	public String searchAlreadyRecordGoodsDetails(@RequestParam("warehouseCode") String warehouseCode,
 			@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
@@ -133,7 +133,7 @@ public class StockController {
 	 */
 	@RequestMapping(value = "/getMerchantGoodsStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商户查询当前仓库下商品库存信息")
+	@ApiOperation("商户查询仓库下商品库存信息")
 	@RequiresRoles("Merchant")
 	public String getMerchantGoodsStockInfo(@RequestParam("page") int page, @RequestParam("size") int size,
 			@RequestParam("warehouseCode") String warehouseCode, HttpServletRequest req, HttpServletResponse response) {

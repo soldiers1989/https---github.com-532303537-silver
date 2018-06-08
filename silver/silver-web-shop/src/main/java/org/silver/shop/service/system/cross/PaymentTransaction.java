@@ -15,9 +15,7 @@ import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.YmHttpUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
@@ -25,8 +23,7 @@ import net.sf.json.JSONArray;
 
 @Component
 public class PaymentTransaction {
-	//@Reference(timeout = 20000)
-	@Autowired
+	@Reference(timeout = 20000)
 	private PaymentService paymentService;
 
 	//

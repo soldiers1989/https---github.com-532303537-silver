@@ -22,6 +22,8 @@ import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import net.sf.json.JSONObject;
+
 
 /**
  * 用于批量生成支付单、发送支付单与订单时,缓冲数据 service层使用
@@ -33,7 +35,7 @@ public class BufferUtils {
 	private OrderImplLogsService orderImplLogsService;
 
 	// 创建一个静态钥匙
-	private static Object LOCK = "lock";// 值是任意的
+	private static Object LOCK = new Object();// 值是任意的
 
 	/**
 	 * 总行数
@@ -160,18 +162,18 @@ public class BufferUtils {
 	private void updateWebRedis(byte[] redisByte, Map<String, Object> paramsMap) {
 		String webKey = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_" + paramsMap.get("name")
 				+ "_" + paramsMap.get(SERIAL_NO) + "_Web";
-		byte[] webRedisByte = JedisUtil.get(webKey.getBytes());
-		if (webRedisByte != null && webRedisByte.length > 0) {
+		String webRedisInfo = JedisUtil.get(webKey);
+		if (StringEmptyUtils.isNotEmpty(webRedisInfo)) {
+			JSONObject redisJSON = JSONObject.fromObject(webRedisInfo);
 			ConcurrentMap<String, Object> redisMap = (ConcurrentMap<String, Object>) SerializeUtil.toObject(redisByte);
-			ConcurrentMap<String, Object> webRedisMap = (ConcurrentMap<String, Object>) SerializeUtil
-					.toObject(webRedisByte);
-			int errCounter = Integer.parseInt(webRedisMap.get("errCounter") + "");
+			int errCounter = Integer.parseInt(redisJSON.get("errCounter") + "");
 			int completed = Integer.parseInt(redisMap.get(COMPLETED) + "");
 			// 将web层的错误信息及service层的完成数量,更新进缓存
-			webRedisMap.put(COMPLETED, errCounter + completed);
+			redisJSON.put(COMPLETED, errCounter + completed);
 			String newKey = "Shop_Key_ExcelIng_" + DateUtil.formatDate(new Date(), "yyyyMMdd") + "_"
 					+ paramsMap.get("name") + "_" + paramsMap.get(SERIAL_NO);
-			JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(webRedisMap), 3600);
+			JedisUtil.set(newKey, 3600, redisJSON);
+			//JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(redisJSON), 3600);
 		}
 	}
 
@@ -261,13 +263,21 @@ public class BufferUtils {
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo + "_service";
 		byte[] redisInfo = JedisUtil.get(key.getBytes());
 		String webKey = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo + "_Web";
-		byte[] webRedisInfo = JedisUtil.get(webKey.getBytes());
-		if (redisInfo != null && redisInfo.length > 0 && webRedisInfo != null && webRedisInfo.length > 0) {
+		String webRedisInfo = JedisUtil.get(webKey);
+		if (redisInfo != null && redisInfo.length > 0 && StringEmptyUtils.isNotEmpty(webRedisInfo)) {
 			updateCompletedRedis(redisInfo, webRedisInfo, paramsMap, key, webKey);
 		}
 	}
 
-	private void updateCompletedRedis(byte[] redisInfo, byte[] webRedisInfo, Map<String, Object> paramsMap, String key,
+	/**
+	 * 
+	 * @param redisInfo
+	 * @param webRedisInfo
+	 * @param paramsMap
+	 * @param key
+	 * @param webKey
+	 */
+	private void updateCompletedRedis(byte[] redisInfo, String webRedisInfo, Map<String, Object> paramsMap, String key,
 			String webKey) {
 		String name = paramsMap.get("name") + "";
 		String serialNo = paramsMap.get(SERIAL_NO) + "";
@@ -275,37 +285,37 @@ public class BufferUtils {
 		String merchantName = paramsMap.get("merchantName") + "";
 		int totalCount = Integer.parseInt(paramsMap.get(TOTAL_COUNT) + "");
 		Map<String, Object> serviceMap = (Map<String, Object>) SerializeUtil.toObject(redisInfo);
-		Map<String, Object> webMap = (Map<String, Object>) SerializeUtil.toObject(webRedisInfo);
-		System.out.println("---webMap->>>"+webMap.toString());
+		JSONObject redisJSON = JSONObject.fromObject(webRedisInfo);
 		int counter = Integer.parseInt(serviceMap.get(COMPLETED) + "");
-		int sendCounter = Integer.parseInt(webMap.get("sendCounter") + "");
-		int errCounter = Integer.parseInt(webMap.get("errCounter") + "");
+		int sendCounter = Integer.parseInt(redisJSON.get("sendCounter") + "");
+		int errCounter = Integer.parseInt(redisJSON.get("errCounter") + "");
 		logger.error("---完成数量-->"+counter+";---发送成功数量-->"+sendCounter+";--错误数量-->"+errCounter);
 		// Mq队列完成数=web层的发送MQ队列成功数量,并且web层发送数量+错误信息数量=总数时则表示整个表单已经读取完成,更新信息至缓存
 		if (counter == sendCounter && (sendCounter + errCounter) == totalCount) {
-			Map<String, Object> datasMap = new HashMap<>();
-			datasMap.put(BaseCode.MSG.toString(), "完成!");
-			datasMap.put(BaseCode.STATUS.toString(), "2");
-			datasMap.put(TOTAL_COUNT, totalCount);
 			List<Map<String, Object>> serviceErrl = (List<Map<String, Object>>) serviceMap
 					.get(BaseCode.ERROR.toString());
-			List<Map<String, Object>> webErrl = (List<Map<String, Object>>) webMap.get(BaseCode.ERROR.toString());
+			List<Map<String, Object>> webErrl = (List<Map<String, Object>>) redisJSON.get(BaseCode.ERROR.toString());
+			//整合前台与后端的错误信息集合
 			if (serviceErrl != null) {
 				if (webErrl != null && !webErrl.isEmpty()) {
 					serviceErrl.addAll(webErrl);
 				}
-				datasMap.put(BaseCode.ERROR.toString(), serviceErrl);
+				redisJSON.put(BaseCode.ERROR.toString(), serviceErrl);
 			} else if (webErrl != null && !webErrl.isEmpty()) {
-				datasMap.put(BaseCode.ERROR.toString(), webErrl);
+				redisJSON.put(BaseCode.ERROR.toString(), webErrl);
 			}
-			orderImplLogsService.addErrorLogs(serviceErrl, totalCount, serialNo, merchantId, merchantName, name);
 			// 将数据放入到缓存中
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
 			String newKey = webKey.substring(0, webKey.length() - 4);
 			SortUtil.sortList(webErrl);
+			redisJSON.put(BaseCode.MSG.toString(), "完成!");
+			redisJSON.put(BaseCode.STATUS.toString(), "2");
+			redisJSON.put(COMPLETED, counter);
 			// 更新web层使用的缓存,用于前台页面显示
-			JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
-			logger.error("----缓存结束后Map信息---->"+datasMap.toString());
+			JedisUtil.set(newKey, 3600, redisJSON);
+			//缓存更新后再记录日志
+			orderImplLogsService.addErrorLogs(serviceErrl, totalCount, serialNo, merchantId, merchantName, name);
+			//JedisUtil.set(newKey.getBytes(), SerializeUtil.toBytes(datasMap), 3600);
+			logger.error("----缓存结束后信息---->"+redisJSON.toString());
 		}
 	}
 }

@@ -46,14 +46,16 @@ public class MerchantUtils {
 			return ReturnInfoUtils.errorInfo("未找到对应的商户备案信息!");
 		}
 	}
-	
+
 	/**
 	 * 根据商户Id查询商户信息
-	 * @param merchantId 商户Id
-	 * @return Map  datas(Key)-商户基本信息实体类
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @return Map datas(Key)-商户基本信息实体类
 	 */
 	public Map<String, Object> getMerchantInfo(String merchantId) {
-		if(StringEmptyUtils.isEmpty(merchantId)){
+		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("商户Id不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();
@@ -67,10 +69,12 @@ public class MerchantUtils {
 			return ReturnInfoUtils.errorInfo("未找到商户信息!");
 		}
 	}
-	
+
 	/**
-	 * 根据商户Id查询商户在appkey
-	 * @param merchantId 商户Id
+	 * 根据商户Id查询商户在商城的appkey
+	 * 
+	 * @param merchantId
+	 *            商户Id
 	 * @return Map
 	 */
 	public Map<String, Object> getMerchantAppkey(String merchantId) {
@@ -85,17 +89,24 @@ public class MerchantUtils {
 			return ReturnInfoUtils.errorInfo("未找到商户appkey信息!");
 		}
 	}
-	
+
 	/**
 	 * 根据商户Id,海关/检验检疫机构代码,类型,查询商户口岸平台服务费 费率
-	 * @param merchantId 商户Id
-	 * @param customsCode 海关代码
-	 * @param ciqOrgCode 检验检疫机构代码
-	 * @param type 类型：goodsRecord-商品备案、orderRecord-订单备案、paymentRecord-支付单备案
-	 * @return Map  datas(Key)-商户口岸费率实体
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param customsCode
+	 *            海关代码
+	 * @param ciqOrgCode
+	 *            检验检疫机构代码
+	 * @param type
+	 *            类型：goodsRecord-商品备案、orderRecord-订单备案、paymentRecord-支付单备案
+	 * @return Map datas(Key)-商户口岸费率实体
 	 */
-	public Map<String,Object> getMerchantFeeInfo(String merchantId , String customsCode,String ciqOrgCode,String type){
-		if(StringEmptyUtils.isEmpty(merchantId)|| StringEmptyUtils.isEmpty(ciqOrgCode)|| StringEmptyUtils.isEmpty(customsCode)||StringEmptyUtils.isEmpty(type)){
+	public Map<String, Object> getMerchantFeeInfo(String merchantId, String customsCode, String ciqOrgCode,
+			String type) {
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(ciqOrgCode)
+				|| StringEmptyUtils.isEmpty(customsCode) || StringEmptyUtils.isEmpty(type)) {
 			return ReturnInfoUtils.errorInfo("查询商户服务费参数不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();

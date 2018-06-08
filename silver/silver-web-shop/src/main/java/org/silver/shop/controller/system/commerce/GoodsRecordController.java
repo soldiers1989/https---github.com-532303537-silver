@@ -79,7 +79,7 @@ public class GoodsRecordController {
 	 */
 	@RequestMapping(value = "/merchantSendGoodsRecord", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商戶发起商品备案")
+	@ApiOperation("商户发起商品备案")
 	@RequiresRoles("Merchant")
 	public String merchantSendGoodsRecord(@RequestParam("customsPort") String customsPort,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgCode") String ciqOrgCode,
@@ -117,7 +117,7 @@ public class GoodsRecordController {
 
 	@RequestMapping(value = "/getMerchantGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("商戶查询单个商品备案详情")
+	@ApiOperation("商户查询单个商品备案详情")
 	@RequiresRoles("Merchant")
 	public String getMerchantGoodsRecordDetail(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("entGoodsNo") String entGoodsNo) {
@@ -182,7 +182,7 @@ public class GoodsRecordController {
 
 	@RequestMapping(value = "/searchGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("根据指定信息搜索商品信息")
+	@ApiOperation("商户搜索备案商品信息")
 	@RequiresRoles("Merchant")
 	public String searchGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {

@@ -962,6 +962,7 @@ public class GoodsRecordTransaction {
 				errl.add(errMap);
 			}
 		}
+		logger.error("---导入已备案商品信息结束-->"+errl.toString());
 		return ReturnInfoUtils.errorInfo(errl);
 	}
 
