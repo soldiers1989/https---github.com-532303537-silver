@@ -17,8 +17,8 @@
 <!-- 	jdbc:mysql://yueliankeji.mysql.rds.aliyuncs.com:3302/szs_sj?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true  -->
 <!-- 	jdbc:mysql://localhost:3306/mysql?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true -->
 		
-		<property name="connection.username">root</property>
-		<property name="connection.password">ppxcat58</property>
+		<property name="connection.username"></property>
+		<property name="connection.password"></property>
 <!-- 	<property name="connection.username">root</property> -->
 <!-- 	<property name="connection.password">532303537</property>  -->
 		
