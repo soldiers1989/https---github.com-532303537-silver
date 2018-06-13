@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.util.JedisUtil;
@@ -39,7 +40,7 @@ public class ProvinceCityAreaTransaction {
 	 * @return
 	 */
 	public Map<String, Object> findProvinceCityArea() {
-		//省市区List缓存
+		// 省市区List缓存
 		String redisList = JedisUtil.get("SHOP_KEY_PROVINCE_CITY_AREA_LIST");
 		if (StringEmptyUtils.isEmpty(redisList)) {// redis缓存没有数据
 			return provinceCityAreaService.getProvinceCityArea();
@@ -55,13 +56,17 @@ public class ProvinceCityAreaTransaction {
 	 * @return
 	 */
 	public Object getProvinceCityArea() {
-		//省市区Map缓存
-		byte[] redisByte = JedisUtil.get("SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP".getBytes());
+		// 省市区Map缓存
+		byte[] redisByte = JedisUtil.get(RedisKey.SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP.getBytes());
 		if (redisByte != null) {
+			//为确保省市区查询不会影响项目功能使用,故发现省市区缓存剩余时间小于1000(秒)时,则重新set一次缓存
+			if (JedisUtil.ttl(RedisKey.SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP.getBytes()) < 1000) {
+				JedisUtil.set(RedisKey.SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP.getBytes(), redisByte, (3600 * 24) * 7);
+			}
 			return ReturnInfoUtils.successDataInfo(JSONObject.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {
 			try {
-				return  provinceCityAreaService.getAllProvinceCityAreaPostal();
+				return provinceCityAreaService.getAllProvinceCityAreaPostal();
 			} catch (Exception e) {
 				logger.error(Thread.currentThread().getName() + "-查询省市区信息错误->", e);
 				return ReturnInfoUtils.errorInfo("查询省市区失败,服务器繁忙!！");

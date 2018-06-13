@@ -49,12 +49,5 @@ public interface MerchantWalletService {
 	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
 			double serviceFee);
 	
-	/**
-	 * 添加商户钱包日志
-	 * 
-	 * @param datasMap
-	 *            参数
-	 * @return Map
-	 */
-	public Map<String, Object> addWalletLog(Map<String, Object> datasMap);
+
 }

@@ -47,17 +47,16 @@ public class ManualOrderController {
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		resp.setHeader("Access-Control-Allow-Credentials", "true");
 		resp.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> reqMap = manualOrderTransaction.excelImportOrder(req);
-		return JSONObject.fromObject(reqMap).toString();
+		return JSONObject.fromObject(manualOrderTransaction.excelImportOrder(req)).toString();
 	}
-	
+
 	public static void main(String[] args) {
 		File f = new File("C:\\Users\\Lenovo\\Desktop\\1594云集批量订单(IK01) 6-1-邮政.xlsx");
 		long star = System.currentTimeMillis();
 		ExcelUtil excel = new ExcelUtil(f);
-		
+
 		excel.open();
 		long end = System.currentTimeMillis();
-		System.out.println("----->?>>"+ (end - star));
+		System.out.println("----->?>>" + (end - star));
 	}
 }

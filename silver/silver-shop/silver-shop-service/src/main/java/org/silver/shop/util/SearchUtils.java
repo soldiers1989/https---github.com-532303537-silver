@@ -643,6 +643,9 @@ public final class SearchUtils {
 			case "entGoodsNo":
 				paramMap.put(key, value);
 				break;
+			case "goodsMerchantId":
+				paramMap.put(key, value);
+				break;
 			default:
 				break;
 			}
@@ -698,6 +701,11 @@ public final class SearchUtils {
 		return statusMap;
 	}
 
+	/**
+	 * 通用检索商户口岸费率攻击类
+	 * @param datasMap
+	 * @return
+	 */
 	public static Map<String, Object> universalMerchantFeeSearch(Map<String, Object> datasMap) {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
@@ -722,6 +730,46 @@ public final class SearchUtils {
 				break;
 			case "platformFee":
 				paramMap.put(key, Double.parseDouble(value));
+				break;
+			default:
+				break;
+			}
+		}
+		statusMap.put(PARAM, paramMap);
+		statusMap.put("blurry", blurryMap);
+		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return statusMap;
+	}
+	
+	/**
+	 * 通用检索商户口岸费率攻击类
+	 * @param datasMap
+	 * @return
+	 */
+	public static Map<String, Object> universalMemberSearch(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
+		}
+		Map<String, Object> statusMap = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "memberId":
+				paramMap.put(key, value);
+				break;
+			case "memberTel":
+				paramMap.put(key, value);
+				break;
+			case "memberIdCardName":
+				paramMap.put(key, value);
 				break;
 			default:
 				break;

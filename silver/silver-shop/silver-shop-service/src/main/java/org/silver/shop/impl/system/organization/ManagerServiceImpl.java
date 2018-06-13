@@ -52,25 +52,16 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> findAllmemberInfo(int page, int size, Map<String, Object> datasMap) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalMemberSearch(datasMap);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<Object> reList = managerDao.findByProperty(Member.class, paramMap, page, size);
 		long totalCount = managerDao.findByPropertyCount(Member.class, null);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, totalCount);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无会员信息!");
 		}
 	}
 

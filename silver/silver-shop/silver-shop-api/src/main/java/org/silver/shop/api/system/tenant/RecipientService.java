@@ -40,4 +40,13 @@ public interface RecipientService {
 	 */
 	public Map<String, Object> modifyRecipientInfo(String recipientInfoPack, String updateBy);
 
+	/**
+	 * 根据收货地址信息流水Id 查询对应的收货地址信息
+	 * 
+	 * @param recipientId
+	 *            收获地址信息流水Id
+	 * @return Map 键datas=参数
+	 */
+	public Map<String, Object> getRecipientInfo(String recipientId);
+
 }

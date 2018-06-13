@@ -17,6 +17,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
+import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.organization.AgentService;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
@@ -40,6 +41,7 @@ import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.WalletUtils;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.CompressUtils;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
@@ -73,6 +75,8 @@ public class MpayServiceImpl implements MpayService {
 	private GoodsRecordService goodsRecordService;
 	@Autowired
 	private MerchantWalletService merchantWalletService;
+	@Autowired
+	private MerchantWalletLogService merchantWalletLogService;
 	@Autowired
 	private BufferUtils bufferUtils;
 	@Autowired
@@ -340,8 +344,9 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
 		datas.put("count", count);
+		datas.put("status", "success");
 		// 添加商户钱包流水日志
-		Map<String, Object> reWalletLogMap = merchantWalletService.addWalletLog(datas);
+		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
@@ -539,8 +544,8 @@ public class MpayServiceImpl implements MpayService {
 		if (datas == null || datas.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
 		}
-		Map<String, Object> reCheckMap = WalletUtils.checkWalletInfo(datas);
-		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+		Map<String,Object> reCheckMap =  walletUtils.checkMerchantWalletLogInfo(datas);
+		if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
 			return reCheckMap;
 		}
 		AgentWalletLog log = new AgentWalletLog();
@@ -575,7 +580,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
+	
 	/**
 	 * 推送订单前进行订单校验,保证扣费订单都未校验通过的订单信息
 	 * 
@@ -950,7 +955,7 @@ public class MpayServiceImpl implements MpayService {
 			orderMap.put("opType", "A");
 		}
 		// 是否像海关发送
-		// orderMap.put("uploadOrNot", false);
+		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次

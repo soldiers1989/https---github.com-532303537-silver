@@ -91,9 +91,10 @@ public interface PaymentService {
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名称
+	 * @param memberId 
 	 * @return Map
 	 */
-	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName);
+	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName, String memberId);
 
 	/**
 	 * 管理员查询所有商户手工支付单信息

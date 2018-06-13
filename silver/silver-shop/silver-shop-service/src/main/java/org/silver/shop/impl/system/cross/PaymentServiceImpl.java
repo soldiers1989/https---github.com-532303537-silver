@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,11 +18,14 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.organization.AgentService;
+import org.silver.shop.api.system.tenant.MemberWalletService;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.PaymentDao;
+import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
@@ -33,12 +38,14 @@ import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.task.WalletTransferTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.RandomUtils;
@@ -80,9 +87,15 @@ public class PaymentServiceImpl implements PaymentService {
 	@Autowired
 	private MerchantWalletService merchantWalletService;
 	@Autowired
+	private MerchantWalletLogService merchantWalletLogService;
+	@Autowired
 	private MerchantFeeService merchantFeeService;
 	@Autowired
 	private AgentService agentService;
+	@Autowired
+	private MerchantDao merchantDao;
+	@Autowired
+	private MemberWalletService memberWalletService;
 
 	/**
 	 * 错误标识
@@ -296,13 +309,14 @@ public class PaymentServiceImpl implements PaymentService {
 		// 所有支付单总金额
 		double totalAmountPaid = 0;
 		List<Object> itemList = JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig());
-		//封底标识：1-正常计算、2-不满100提至100计算
+		// 封底标识：1-正常计算、2-不满100提至100计算
 		if (backCoverFlag == 2) {
 			// 当支付单实际支付金额不足100提升至100,后统计支付单金额
 			totalAmountPaid = paymentDao.backCoverStatisticalManualPaymentAmount(itemList);
 		} else {
 			totalAmountPaid = paymentDao.statisticalManualPaymentAmount(itemList);
 		}
+
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
@@ -357,7 +371,8 @@ public class PaymentServiceImpl implements PaymentService {
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
 		datas.put("count", count);
-		Map<String, Object> reWalletLogMap = merchantWalletService.addWalletLog(datas);
+		datas.put("status", "success");
+		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
@@ -514,8 +529,8 @@ public class PaymentServiceImpl implements PaymentService {
 		if (datas == null || datas.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
 		}
-		Map<String, Object> reCheckMap = WalletUtils.checkWalletInfo(datas);
-		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+		Map<String,Object> reCheckMap = walletUtils.checkMerchantWalletLogInfo(datas);
+		if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
 			return reCheckMap;
 		}
 		AgentWalletLog log = new AgentWalletLog();
@@ -550,7 +565,8 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
+	
+	
 	/**
 	 * 开始发起支付单推送
 	 * 
@@ -962,6 +978,8 @@ public class PaymentServiceImpl implements PaymentService {
 			Map<String, Object> redisMap) {
 		String merchantId = redisMap.get(MERCHANT_ID) + "";
 		if (StringEmptyUtils.isNotEmpty(merchantId) && orderIDs != null && !orderIDs.isEmpty()) {
+			// 创建线程池
+			ExecutorService threadPool = Executors.newCachedThreadPool();
 			//
 			redisMap.put("name", "createPaymentId");
 			for (String order_id : orderIDs) {
@@ -1002,6 +1020,13 @@ public class PaymentServiceImpl implements PaymentService {
 					if (addEntity(paymentMap) && updateOrderPayNo(merchantId, order_id, tradeNo)) {
 						// 当创建完支付流水号之后
 						bufferUtils.writeRedis(errorList, redisMap);
+						// 创建一个生成钱包流水子任务
+						String memberId = redisMap.get("memberId") + "";
+						if(StringEmptyUtils.isNotEmpty(memberId)){
+							WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, merchantId, tradeNo,
+									memberWalletService,order.getActualAmountPaid());
+							threadPool.submit(walletTransferTask);
+						}
 						continue;
 					}
 					RedisInfoUtils.commonErrorInfo("订单号[" + order_id + "]生成支付单失败,请稍后重试!", errorList, ERROR, redisMap);
@@ -1009,6 +1034,8 @@ public class PaymentServiceImpl implements PaymentService {
 				}
 				RedisInfoUtils.commonErrorInfo("订单号[" + order_id + "]不存在,请核对信息!", errorList, ERROR, redisMap);
 			}
+			threadPool.shutdown();
+
 			bufferUtils.writeCompletedRedis(errorList, redisMap);
 			return null;
 		} else {
@@ -1145,17 +1172,26 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName) {
+	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName,
+			String memberId) {
 		Map<String, Object> statusMap = new HashMap<>();
 		String serialNo = "payment_" + SerialNoUtils.getSerialNo("payment");
 		// 总数
 		int totalCount = orderIdList.size();
 		List<Map<String, Object>> errorList = new Vector();
+		// 缓存参数
 		Map<String, Object> params = new HashMap<>();
 		params.put(MERCHANT_ID, merchantId);
 		params.put(MERCHANT_NAME, merchantName);
-		params.put("tok", "tok");
 		params.put("serialNo", serialNo);
+		params.put("memberId", memberId);
+		if (StringEmptyUtils.isNotEmpty(memberId)) {
+			Map<String, Object> reCheckMap = checkReserveAmount(orderIdList, merchantId, memberId);
+			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckMap;
+			}
+		}
+		//
 		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(1, totalCount, JSONArray.fromObject(orderIdList),
 				errorList, null, params);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
@@ -1167,9 +1203,44 @@ public class PaymentServiceImpl implements PaymentService {
 		return statusMap;
 	}
 
+	/**
+	 * 商户生成支付单时,校验商户关联的用户钱包储备金是否有足够的金额支付订单费用
+	 * 
+	 * @param orderIdList
+	 *            手工订单Id
+	 * @param merchantId
+	 *            商户Id
+	 * @param memberId
+	 *            用户Id
+	 * @return Map
+	 */
+	private Map<String, Object> checkReserveAmount(List<String> orderIdList, String merchantId, String memberId) {
+		// 统计订单总金额
+		double totalAmount = paymentDao.statisticsManualOrderAmount(orderIdList);
+		if (totalAmount < 0) {
+			return ReturnInfoUtils.errorInfo("统计订单总金额失败,服务器繁忙!");
+		}
+		// 根据用户Id查询用户钱包是否有足够的储备资金支付
+		Table table = merchantDao.getRelatedMemberFunds(merchantId, memberId, 0, 0);
+		if (table == null || table.getRows().isEmpty()) {
+			return ReturnInfoUtils.errorInfo("查询商户关联的用户储备资金错误,服务器繁忙!");
+		} else {
+			double reserveAmount = 0;
+			try {
+				reserveAmount = Double.parseDouble(table.getRows().get(0).getValue("reserveAmount") + "");
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("储备金,金额错误!");
+			}
+			// 手工订单总金额 减 商户关联的用户钱包储备金
+			if ((reserveAmount - totalAmount) < 0) {
+				return ReturnInfoUtils.errorInfo("储备金不足,请先充值,再进行操作!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+	}
+
 	@Override
 	public Map<String, Object> managerGetMpayInfo(Map<String, Object> params, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> reDatasMap = SearchUtils.universalMPaymentSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<Mpay> reList = paymentDao.findByPropertyLike(Mpay.class, paramMap, null, page, size);
@@ -1177,11 +1248,7 @@ public class PaymentServiceImpl implements PaymentService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), tatolCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, tatolCount);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}

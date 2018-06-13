@@ -88,8 +88,7 @@
 			resource="org/silver/shop/model/system/tenant/MemberWalletContent.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantWalletContent.hbm.xml" />
-		<mapping
-			resource="org/silver/shop/model/system/log/MerchantWalletLog.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/MerchantWalletLog.hbm.xml" />
 
 		<mapping resource="org/silver/shop/model/system/manual/Morder.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/MorderSub.hbm.xml" />
@@ -130,7 +129,9 @@
 			resource="org/silver/shop/model/system/tenant/MerchantFeeContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/PaymentCallBack.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/EvaluationLog.hbm.xml" />
-
+		<mapping
+			resource="org/silver/shop/model/system/tenant/MerchantRelatedMemberContent.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/MemberWalletLog.hbm.xml" />
 		<!-- <mapping resource="org/silver/sys/model/Appkey.hbm.xml"/> -->
 	</session-factory>
 </hibernate-configuration>

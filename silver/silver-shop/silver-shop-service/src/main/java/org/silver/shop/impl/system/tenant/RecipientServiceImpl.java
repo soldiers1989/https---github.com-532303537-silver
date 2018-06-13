@@ -225,13 +225,8 @@ public class RecipientServiceImpl implements RecipientService {
 		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 	}
 	
-	/**
-	 * 根据收货地址信息流水Id 查询对应的收货地址信息
-	 * 
-	 * @param recipientId
-	 *            收获地址信息流水Id
-	 * @return Map 键datas=参数
-	 */
+
+	@Override
 	public Map<String, Object> getRecipientInfo(String recipientId) {
 		if (StringEmptyUtils.isEmpty(recipientId)) {
 			return ReturnInfoUtils.errorInfo("收货信息Id不能为空!");

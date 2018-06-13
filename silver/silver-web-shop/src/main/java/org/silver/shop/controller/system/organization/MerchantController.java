@@ -330,4 +330,33 @@ public class MerchantController {
 		}
 		return JSONObject.fromObject(merchantTransaction.publicMerchantInfo(merchantId)).toString();
 	}
+
+	@RequestMapping(value = "/setRelatedMember", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员商户设置关联用户信息")
+	@RequiresRoles("Manager")
+	public String setRelatedMember(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("memberId") String memberId, @RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(merchantTransaction.setRelatedMember(memberId, merchantId)).toString();
+	}
+
+	@RequestMapping(value = "/getRelatedMemberFunds", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户获取关联用户的储备资金")
+	@RequiresRoles("Merchant")
+	public String getRelatedMemberFunds(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+
+		return JSONObject.fromObject(merchantTransaction.getRelatedMemberFunds(page, size)).toString();
+	}
 }

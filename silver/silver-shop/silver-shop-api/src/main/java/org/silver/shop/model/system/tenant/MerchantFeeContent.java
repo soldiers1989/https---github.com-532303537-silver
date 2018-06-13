@@ -13,7 +13,7 @@ public class MerchantFeeContent implements Serializable {
 	 */
 	private static final long serialVersionUID = 3679696160927798741L;
 	private long id;
-	private String merchantFeeId;//商户费用流水Id
+	private String merchantFeeId;//商户口岸费率流水Id
 	private String merchantId;// 商户Id
 	private String merchantName;// 商户名称
 	private String provinceCode;// 省份编码
@@ -36,7 +36,7 @@ public class MerchantFeeContent implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
-	private int backCoverFlag;//封底标识：1-正常计算、2-不满100提至100计算
+	private int backCoverFlag;//封底标识：1-不封底计算、2-100封底计算
 	
 	public long getId() {
 		return id;

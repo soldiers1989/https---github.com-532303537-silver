@@ -3,6 +3,8 @@ package org.silver.shop.model.system.tenant;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.silver.shop.model.system.tenant.MemberWalletContent.Builder;
+
 /**
  * 商户钱包
  *
@@ -24,7 +26,7 @@ public class MerchantWalletContent implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-
+	private Double reserveAmount;//储备金额
 	public long getId() {
 		return id;
 	}
@@ -97,6 +99,16 @@ public class MerchantWalletContent implements Serializable {
 		this.updateDate = updateDate;
 	}
 
+	
+	public Double getReserveAmount() {
+		return reserveAmount;
+	}
+
+	public void setReserveAmount(Double reserveAmount) {
+		this.reserveAmount = reserveAmount;
+	}
+
+
 	public static class Builder {
 		private long id;
 		private String walletId = null;// 钱包Id
@@ -107,7 +119,7 @@ public class MerchantWalletContent implements Serializable {
 		private Date createDate = null;// 创建日期
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
-
+		private double reserveAmount = 0.0;// 储备金额
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -150,6 +162,10 @@ public class MerchantWalletContent implements Serializable {
 		public MerchantWalletContent build(){
 			return new MerchantWalletContent(this);
 		}
+		public Builder reserveAmount(double reserveAmount) {
+			this.reserveAmount = reserveAmount;
+			return this;
+		}
 	}
 
 	private MerchantWalletContent(Builder b) {
@@ -162,5 +178,6 @@ public class MerchantWalletContent implements Serializable {
 		createDate = b.createDate;
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
+		reserveAmount = b.reserveAmount;
 	}
 }

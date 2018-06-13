@@ -50,4 +50,10 @@ public interface PaymentDao  extends BaseDao{
 	 * @return
 	 */
 	public double backCoverStatisticalManualPaymentAmount(List<Object> itemList);
+
+	/**
+	 * 
+	 * @param orderIdList
+	 */
+	public double statisticsManualOrderAmount(List<String> orderIdList);
 }

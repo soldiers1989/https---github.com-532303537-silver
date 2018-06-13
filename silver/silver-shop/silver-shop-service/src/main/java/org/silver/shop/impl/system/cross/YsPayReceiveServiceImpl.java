@@ -14,6 +14,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
@@ -66,7 +67,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	@Autowired
 	private AccessTokenService accessTokenService;
 	@Autowired
-	private MerchantWalletService merchantWalletService;
+	private MerchantWalletLogService merchantWalletLogService;
 	@Autowired
 	private MemberService memberService;
 	@Autowired
@@ -306,7 +307,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			datas.put("targetWalletId", memberWallet.getWalletId());
 			datas.put("targetName", memberName);
 			// 添加商户钱包流水日志
-			Map<String, Object> reWalletLogMap = merchantWalletService.addWalletLog(datas);
+			Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 			if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 				return reWalletLogMap;
 			}

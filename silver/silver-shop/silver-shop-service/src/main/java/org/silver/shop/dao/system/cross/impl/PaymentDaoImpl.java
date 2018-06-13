@@ -223,4 +223,37 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 		}
 	}
 
+	@Override
+	public double statisticsManualOrderAmount(List<String> orderIdList) {
+		Session session = null;
+		try {
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT SUM(t1.ActualAmountPaid) FROM ym_shop_manual_morder t1 WHERE t1.order_id IN ( ");
+			for (int i = 0; i < orderIdList.size(); i++) {
+				sbSQL.append(" ? , ");
+			}
+			// 删除结尾的逗号
+			sbSQL.deleteCharAt(sbSQL.length() - 2);
+			sbSQL.append(" ) ");
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < orderIdList.size(); i++) {
+				query.setString(i, orderIdList.get(i));
+			}
+			List resources = query.list();
+			session.close();
+			if (resources != null && !resources.isEmpty() && StringEmptyUtils.isNotEmpty(resources.get(0))) {
+				return (double) resources.get(0);
+			}
+			return 0;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 }

@@ -3,12 +3,14 @@ package org.silver.shop.impl.system.organization;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
+import org.silver.shop.api.system.organization.AgentService;
+import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.AuthorityUser;
@@ -16,7 +18,9 @@ import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
+import org.silver.shop.model.system.tenant.MerchantRelatedMemberContent;
 import org.silver.shop.util.IdUtils;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -24,7 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alibaba.dubbo.common.json.JSONObject;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 
@@ -32,9 +39,13 @@ import net.sf.json.JSONArray;
 public class MerchantServiceImpl implements MerchantService {
 
 	@Autowired
-	private AgentServiceImpl agentServiceImpl;
+	private AgentService agentService;
 	@Autowired
 	private IdUtils<Merchant> idUtils;
+	@Autowired
+	private MemberService memberService;
+	@Autowired
+	private WalletUtils walletUtils;
 	
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
@@ -127,24 +138,25 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> merchantRegister(Map<String, Object> datasMap) {
-		if(datasMap == null || datasMap.isEmpty()){
-			return ReturnInfoUtils.errorInfo("商户注册请求参数不能为空!");
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("商户注册参数不能为空!");
 		}
 		Date dateTime = new Date();
 		int type = Integer.parseInt(datasMap.get("type") + "");
 		String loginPassword = datasMap.get("loginPassword") + "";
-		Map<String,Object> reIdMap = idUtils.createId(Merchant.class, "MerchantId_");
-		if(!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reIdMap = idUtils.createId(Merchant.class, "MerchantId_");
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 			return reIdMap;
 		}
-		String merchantId = reIdMap.get(BaseCode.DATAS.toString())+"";
+		String merchantId = reIdMap.get(BaseCode.DATAS.toString()) + "";
 		String merchantName = datasMap.get("merchantName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
 		String agentId = datasMap.get("agentId") + "";
-		String  merchantStatus = datasMap.get("merchantStatus") + "";
+		String merchantStatus = datasMap.get("merchantStatus") + "";
 		if (type == 1) {// 1-银盟商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,merchantStatus)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,
+					merchantStatus)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			MerchantRecordInfo recordInfo = new MerchantRecordInfo();
@@ -157,7 +169,8 @@ public class MerchantServiceImpl implements MerchantService {
 				return ReturnInfoUtils.errorInfo("保存商户备案信息失败,服务器繁忙!");
 			}
 		} else if (type == 2) {// 2-第三方商户注册
-			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,merchantStatus)) {
+			if (!createMerchantInfo(type, merchantId, merchantName, loginPassword, managerName, phone, agentId,
+					merchantStatus)) {
 				return ReturnInfoUtils.errorInfo("商户基本信息保存失败,服务器繁忙!");
 			}
 			Map<String, Object> reRecordMap = createMerchantRecord(datasMap.get("recordInfoPack") + "", merchantId,
@@ -172,6 +185,10 @@ public class MerchantServiceImpl implements MerchantService {
 			 * (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
 			 * return reAppkeyMap; }
 			 */
+		}
+		Map<String,Object> reWalletMap = walletUtils.checkWallet(1, merchantId, merchantName);
+		if("1".equals(reWalletMap.get(BaseCode.DATAS.toString()))){
+			return reWalletMap;
 		}
 		return ReturnInfoUtils.successDataInfo(merchantId);
 	}
@@ -243,7 +260,7 @@ public class MerchantServiceImpl implements MerchantService {
 	 *            商户类型 1-银盟自营、2-第三方商城平台
 	 * @param agentId
 	 *            代理商Id
-	 * @param merchantStatus 
+	 * @param merchantStatus
 	 * @return boolean
 	 */
 	private boolean createMerchantInfo(int type, String merchantId, String merchantName, String loginPassword,
@@ -255,24 +272,24 @@ public class MerchantServiceImpl implements MerchantService {
 		merchant.setMerchantName(merchantName);
 		merchant.setLoginPassword(md5.getMD5ofStr(loginPassword));
 		// 商户状态：1-启用，2-禁用，3-审核
-		if(StringEmptyUtils.isNotEmpty(merchantStatus)){
+		if (StringEmptyUtils.isNotEmpty(merchantStatus)) {
 			merchant.setMerchantStatus(merchantStatus);
-		}else{
+		} else {
 			merchant.setMerchantStatus("3");
 		}
 		merchant.setCreateBy(managerName);
 		merchant.setCreateDate(new Date());
 		merchant.setDeleteFlag(0);// 删除标识:0-未删除,1-已删除
-		if(StringEmptyUtils.isNotEmpty(agentId)){
-			Map<String,Object> reAgentMap = agentServiceImpl.getAgentInfo(agentId);
-			if(!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))){
-				System.out.println("---->>"+reAgentMap.get(BaseCode.MSG.toString()));
+		if (StringEmptyUtils.isNotEmpty(agentId)) {
+			Map<String, Object> reAgentMap = agentService.getAgentInfo(agentId);
+			if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
+				System.out.println("---->>" + reAgentMap.get(BaseCode.MSG.toString()));
 				return false;
 			}
 			AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.STATUS.toString());
 			merchant.setAgentParentId(agent.getAgentId());
 			merchant.setAgentParentName(agent.getAgentName());
-		}else{
+		} else {
 			merchant.setAgentParentId("AgentId_00002");
 			merchant.setAgentParentName("广州银盟");
 		}
@@ -424,4 +441,78 @@ public class MerchantServiceImpl implements MerchantService {
 		}
 	}
 
+	@Override
+	public Map<String, Object> setRelatedMember(String memberId, String merchantId, String managerName) {
+		if (StringEmptyUtils.isEmpty(memberId) || StringEmptyUtils.isEmpty(merchantId)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String, Object> reMemberMap = memberService.getMemberInfo(memberId);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberId", memberId);
+		params.put("merchantId", merchantId);
+		List<MerchantRelatedMemberContent> reList = merchantDao.findByProperty(MerchantRelatedMemberContent.class,
+				params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户关联的用户信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("该用户已关联该商户,请勿重复操作!");
+		} else {
+			MerchantRelatedMemberContent content = new MerchantRelatedMemberContent();
+			content.setMemberId(memberId);
+			content.setMerchantId(merchantId);
+			content.setCreateDate(new Date());
+			content.setCreateBy(managerName);
+			if (!merchantDao.add(content)) {
+				return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+	}
+
+	@Override
+	public Map<String, Object> getRelatedMemberFunds(String merchantId, int page, int size) {
+		if (StringEmptyUtils.isEmpty(merchantId)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Table t = merchantDao.getRelatedMemberFunds(merchantId, null,page, size);
+		Table count = merchantDao.getRelatedMemberFunds(merchantId,null, 0, 0);
+		if (t == null) {
+			return ReturnInfoUtils.errorInfo("查询商户关联的用户信息失败,服务器繁忙!");
+		} else if (!t.getRows().isEmpty()) {
+			List<net.sf.json.JSONObject> list = new ArrayList<>();
+			com.alibaba.fastjson.JSONArray jsonArr = Transform.tableToJson(t).getJSONArray("rows");
+			for (int i = 0; i < jsonArr.size(); i++) {
+				net.sf.json.JSONObject item = new net.sf.json.JSONObject();
+				net.sf.json.JSONObject json = net.sf.json.JSONObject.fromObject(jsonArr.get(i));
+				Iterator iterator = json.keys();
+				while (iterator.hasNext()) {
+					String key = (String) iterator.next();
+					String value = json.get(key) + "";
+					if (StringEmptyUtils.isNotEmpty(value)) {
+						item.put(key, replace(value));
+					}
+				}
+				list.add(item);
+			}
+			return ReturnInfoUtils.successDataInfo(list, count.getRows().size());
+		} else {
+			return ReturnInfoUtils.errorInfo("没有关联的用户信息,请联系管理员!");
+		}
+	}
+
+	/**
+	 * 通用替换多表查询字符串
+	 * 
+	 * @param str
+	 * @return
+	 */
+	private String replace(String str) {
+		if (StringEmptyUtils.isEmpty(str)) {
+			return "";
+		}
+		return str.replace("{\"value\":", "").replace("\"}", "").replace("\"", "").replace("}", "");
+	}
 }

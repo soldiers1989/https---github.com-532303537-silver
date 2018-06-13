@@ -14,6 +14,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
@@ -165,7 +166,7 @@ public class MerchantTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		String redisKey = "Shop_Key_Merchant_Authority_List__" + merchantId;
+		String redisKey = "Shop_Key_Merchant_Authority_List_" + merchantId;
 		byte[] redisByte = JedisUtil.get(redisKey.getBytes());
 	//	if (redisByte != null && redisByte.length > 0) {
 			//return (List<String>) SerializeUtil.toObject(redisByte);
@@ -178,5 +179,22 @@ public class MerchantTransaction {
 			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
 			return item;
 		//}
+	}
+
+	//管理员设置商户关联的用户信息
+	public Map<String,Object> setRelatedMember(String memberId, String merchantId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		return merchantService.setRelatedMember(memberId,merchantId,managerInfo.getManagerName());
+	}
+
+	//
+	public Map<String,Object> getRelatedMemberFunds(int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		return merchantService.getRelatedMemberFunds(merchantId,page,size);
 	}
 }

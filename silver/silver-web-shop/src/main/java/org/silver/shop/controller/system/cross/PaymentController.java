@@ -160,7 +160,8 @@ public class PaymentController {
 	@RequestMapping(value = "/createMpayByOID", produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
 	@ResponseBody
-	public String createMpayByOID(HttpServletResponse resp, HttpServletRequest req, int length) {
+	public String createMpayByOID(HttpServletResponse resp, HttpServletRequest req,
+			 String orderID,  String memberId) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -171,13 +172,15 @@ public class PaymentController {
 		String key = "";
 		while (itkeys.hasMoreElements()) {
 			key = itkeys.nextElement();
-			String value = req.getParameter(key).trim();
-			orderIDs.add(value);
+			if (!"memberId".equals(key)) {
+				String value = req.getParameter(key).trim();
+				orderIDs.add(value);
+			}
 		}
-		orderIDs.remove(length);
 		if (!orderIDs.isEmpty()) {
-			return JSONObject.fromObject(paytemTransaction.groupCreateMpay(orderIDs)).toString();
+			return JSONObject.fromObject(paytemTransaction.groupCreateMpay(orderIDs, memberId)).toString();
 		}
+
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单Id不能为空!")).toString();
 	}
 
@@ -207,8 +210,8 @@ public class PaymentController {
 	@ResponseBody
 	@ApiOperation("管理员查询商户手工支付单信息")
 	@RequiresPermissions("manualPayment:managerGetMpayInfo")
-	public String managerGetMpayInfo(HttpServletResponse resp, HttpServletRequest req,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
+	public String managerGetMpayInfo(HttpServletResponse resp, HttpServletRequest req, @RequestParam("page") int page,
+			@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -305,6 +308,7 @@ public class PaymentController {
 		}
 		return JSONObject.fromObject(paytemTransaction.managerHideMpayInfo(jsonArray)).toString();
 	}
+
 	/**
 	 * 根据支付单流水号校验订单是否全部属于一个口岸
 	 * 
@@ -334,7 +338,7 @@ public class PaymentController {
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单Id不能为空!")).toString();
 	}
-	
+
 	/**
 	 * 公开性第三方商城平台 查询支付单信息入口
 	 * 
@@ -345,7 +349,7 @@ public class PaymentController {
 	@RequestMapping(value = "/getThirdPartyInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("公开性第三方商城平台 查询支付单信息入口")
-	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response ) {
+	public String getThirdPartyInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -358,25 +362,29 @@ public class PaymentController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(StringEmptyUtils.isEmpty(datasMap.get("merchantId")) ){
+		if (StringEmptyUtils.isEmpty(datasMap.get("merchantId"))) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空,请核对信息!")).toString();
 		}
-		/*if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("支付单第三方业务Id不能为空,请核对信息!")).toString();
-		}*/
+		/*
+		 * if(StringEmptyUtils.isEmpty(datasMap.get("thirdPartyId")) ){ return
+		 * JSONObject.fromObject(ReturnInfoUtils.errorInfo(
+		 * "支付单第三方业务Id不能为空,请核对信息!")).toString(); }
+		 */
 		return JSONObject.fromObject(paytemTransaction.getThirdPartyInfo(datasMap)).toString();
-	
+
 	}
+
 	public static void main(String[] args) {
-		Map<String,Object> item = new HashMap<>();
-		//YM180125052191327
-		//YM180125052181629
-		//YM180125052176708
-		//item.put("a", "YM180125052209119");
-		//2
+		Map<String, Object> item = new HashMap<>();
+		// YM180125052191327
+		// YM180125052181629
+		// YM180125052176708
+		// item.put("a", "YM180125052209119");
+		// 2
 		item.put("b", "01O180206003352760");
-		//1
+		// 1
 		item.put("c", "01O180507014605478");
-		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/checkPaymentPort", item));
+		System.out.println("------->>"
+				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/checkPaymentPort", item));
 	}
 }

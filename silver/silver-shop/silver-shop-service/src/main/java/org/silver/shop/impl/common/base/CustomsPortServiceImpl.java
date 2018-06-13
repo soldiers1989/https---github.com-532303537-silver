@@ -117,13 +117,7 @@ public class CustomsPortServiceImpl implements CustomsPortService {
 		return false;
 	}
 
-	/**
-	 * 根据海关关区编码校验海关关区信息是否正确
-	 * 
-	 * @param customsCode
-	 *            海关关区编码
-	 * @return boolean
-	 */
+@Override
 	public boolean checkGAC(  String customsCode) {
 		if ( StringEmptyUtils.isNotEmpty(customsCode)) {
 			Map<String, Object> params = new HashMap<>();

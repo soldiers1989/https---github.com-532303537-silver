@@ -32,5 +32,8 @@
 		<property name="updateDate" type="java.util.Date">
 			<column name="updateDate" />
 		</property>
+		<property name="reserveAmount" type="java.lang.Double">
+			<column name="reserveAmount" default="0"/>
+		</property>
     </class>
 </hibernate-mapping>

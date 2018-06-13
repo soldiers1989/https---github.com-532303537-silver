@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.tenant.MerchantFeeTransaction;
 import org.silver.util.ReturnInfoUtils;
@@ -35,7 +36,7 @@ public class MerchantFeeController {
 	@RequestMapping(value = "/addServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员添加商户口岸服务费率")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchantFee:addServiceFee")
 	public String addServiceFee(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantId") String merchantId, @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
@@ -80,11 +81,12 @@ public class MerchantFeeController {
 		return JSONObject.fromObject(merchantFeeTransaction.getMerchantServiceFee(merchantId,type)).toString();
 	}
 
-	@RequestMapping(value = "/editServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/updateServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员修改商户口岸服务费信息")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	public String editServiceFee(HttpServletRequest req, HttpServletResponse response,
+	@RequiresPermissions("merchantFee:updateServiceFee")
+	public String updateServiceFee(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("merchantFeeId") String merchantFeeId,  @RequestParam("customsPort") int customsPort,
 			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
 			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
@@ -108,7 +110,7 @@ public class MerchantFeeController {
 	@RequestMapping(value = "/getServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员获取商户口岸服务费信息")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	@RequiresPermissions("merchantFee:getServiceFee")
 	public String getServiceFee(HttpServletRequest req, HttpServletResponse response,String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -122,13 +124,12 @@ public class MerchantFeeController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		
 		return JSONObject.fromObject(merchantFeeTransaction.getServiceFee(datasMap)).toString();
 	}
 	public static void main(String[] args) {
 		double d= 19.33;
-		DecimalFormat df = new DecimalFormat("#.00");
-		double temToal = Double.parseDouble(df.format(3 * d));
-		System.out.println(temToal);
+		//DecimalFormat df = new DecimalFormat("#.00");
+	//	double temToal = Double.parseDouble(df.format(3 * d));
+		System.out.println("---->>"+3 * 18.89);
 	}
 }

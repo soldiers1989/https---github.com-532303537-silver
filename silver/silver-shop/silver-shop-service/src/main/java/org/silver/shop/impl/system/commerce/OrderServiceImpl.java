@@ -12,14 +12,12 @@ import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CountryService;
-import org.silver.shop.api.system.AccessTokenService;
+import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
-import org.silver.shop.api.system.manual.AppkeyService;
 import org.silver.shop.api.system.organization.MemberService;
+import org.silver.shop.api.system.tenant.RecipientService;
 import org.silver.shop.dao.system.commerce.OrderDao;
-import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.impl.system.tenant.RecipientServiceImpl;
 import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.Metering;
@@ -71,21 +69,15 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderDao orderDao;
 	@Autowired
-	private MerchantWalletServiceImpl merchantWalletServiceImpl;
-	@Autowired
 	private YsPayReceiveService ysPayReceiveService;
-	@Autowired
-	private AppkeyService appkeyService;
 	@Autowired
 	private CountryService countryService;
 	@Autowired
-	private AccessTokenService accessTokenService;
-	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
-	private CustomsPortServiceImpl customsPortServiceImpl;
+	private CustomsPortService customsPortService;
 	@Autowired
-	private RecipientServiceImpl recipientServiceImpl;
+	private RecipientService recipientService;
 	@Autowired
 	private MemberService memberService;
 	@Autowired
@@ -645,7 +637,7 @@ public class OrderServiceImpl implements OrderService {
 	 * @return Map
 	 */
 	private Map<String, Object> checkRecipientInfo(String recipientId) {
-		Map<String, Object> reRecipientMap = recipientServiceImpl.getRecipientInfo(recipientId);
+		Map<String, Object> reRecipientMap = recipientService.getRecipientInfo(recipientId);
 		if (!"1".equals(reRecipientMap.get(BaseCode.STATUS.toString()))) {
 			return reRecipientMap;
 		}
@@ -1318,7 +1310,7 @@ public class OrderServiceImpl implements OrderService {
 		String customsCode = orderJson.get("customsCode") + "";
 		switch (eport) {
 		case "1":
-			if (customsPortServiceImpl.checkCCIQ(ciqOrgCode) && customsPortServiceImpl.checkGAC(customsCode)) {
+			if (customsPortService.checkCCIQ(ciqOrgCode) && customsPortService.checkGAC(customsCode)) {
 				return ReturnInfoUtils.successInfo();
 			} else {
 				return ReturnInfoUtils.errorInfo("电子口岸对应的海关代码与国检检疫机构代码错误,请核对信息!");

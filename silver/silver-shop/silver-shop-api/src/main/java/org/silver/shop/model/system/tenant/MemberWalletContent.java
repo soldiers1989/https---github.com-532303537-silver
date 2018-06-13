@@ -24,7 +24,7 @@ public class MemberWalletContent implements Serializable{
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	
+	private Double reserveAmount;//储备金额
 	public long getId() {
 		return id;
 	}
@@ -79,7 +79,13 @@ public class MemberWalletContent implements Serializable{
 	public void setWalletId(String walletId) {
 		this.walletId = walletId;
 	}
-	
+	public Double getReserveAmount() {
+		return reserveAmount;
+	}
+	public void setReserveAmount(Double reserveAmount) {
+		this.reserveAmount = reserveAmount;
+	}
+
 	//Builder(建造者模式)
 	public static class Builder {
 		private long id;
@@ -91,7 +97,7 @@ public class MemberWalletContent implements Serializable{
 		private Date createDate = null;// 创建日期
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
-
+		private double reserveAmount = 0.0;// 储备金额
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -134,6 +140,10 @@ public class MemberWalletContent implements Serializable{
 		public MemberWalletContent build(){
 			return new MemberWalletContent(this);
 		}
+		public Builder reserveAmount(double reserveAmount) {
+			this.reserveAmount = reserveAmount;
+			return this;
+		}
 	}
 
 	private MemberWalletContent(Builder b) {
@@ -146,6 +156,7 @@ public class MemberWalletContent implements Serializable{
 		createDate = b.createDate;
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
+		reserveAmount = b.reserveAmount;
 	}
 	
 }

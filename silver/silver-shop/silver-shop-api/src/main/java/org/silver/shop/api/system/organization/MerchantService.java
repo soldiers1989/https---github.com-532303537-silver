@@ -47,7 +47,7 @@ public interface MerchantService {
 	/**
 	 * 保存商户对应的电商平台名称(及编码)
 	 * 
-	 * @param entity
+	 * @param entity 商户备案信息实体类
 	 * @param type
 	 *            1-银盟商户注册,2-第三方商户注册
 	 * @return boolean
@@ -70,6 +70,7 @@ public interface MerchantService {
 	 * @param checktheRegistrationCode
 	 *            报检注册编码
 	 * @param merchantName
+	 * 			商户名称
 	 * @return Map
 	 */
 	public Map<String, Object> editBusinessInfo(String merchantInfo, List<Object> imglist, int[] array,
@@ -96,15 +97,34 @@ public interface MerchantService {
 
 	/**
 	 * 商城前台公开接口，用户查询商品时获取商户信息
+	 * @param merchantId 商户Id
 	 * @return
 	 */
 	public Map<String, Object> publicMerchantInfo(String merchantId);
 
 	/**
 	 * 根据商户Id获取商户对应的权限信息
-	 * @param merchantId
+	 * @param merchantId 商户Id
 	 * @return 
 	 */
 	public Map<String, Object> getMerchantAuthority(String merchantId);
+
+	/**
+	 * 设置商户关联的用户账号
+	 * @param memberId 用户Id
+	 * @param merchantId 商户Id
+	 * @param managerName  管理员名称
+	 * @return Map
+	 */
+	public Map<String, Object> setRelatedMember(String memberId, String merchantId, String managerName );
+
+	/**
+	 * 获取关联的用户资金信息
+	 * @param merchantId
+	 * @param size 
+	 * @param page 
+	 * @return
+	 */
+	public Map<String, Object> getRelatedMemberFunds(String merchantId, int page, int size);
 
 }

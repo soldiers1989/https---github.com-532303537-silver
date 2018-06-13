@@ -15,4 +15,8 @@ public class RedisKey {
 	 */
 	public static final String SHOP_KEY_ALL_PORT_CUSTOMS_LIST = "SHOP_KEY_ALL_PORT_CUSTOMS_LIST";
 	
+	/**
+	 * 商城省-市-区三级联动封装好的MAP--key
+	 */
+	public static final String SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP = "SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP";
 }

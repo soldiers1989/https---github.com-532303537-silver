@@ -139,7 +139,7 @@ public class ManualOrderTransaction {
 	 * @return int 最后一行序号值
 	 */
 	public static int excelRealRowCount(int rowTotalCount, ExcelUtil excel) {
-		if(excel == null || rowTotalCount <= 0){
+		if (excel == null || rowTotalCount <= 0) {
 			return -1;
 		}
 		for (int r = rowTotalCount; r > 0; r--) {
@@ -172,14 +172,6 @@ public class ManualOrderTransaction {
 			}
 		}
 		return -1;
-	}
-
-	public static void main(String[] args) {
-		File file = new File("C:\\Users\\Lenovo\\Desktop\\Work\\前海爱库\\1504订单模板(IK01)-20180228.xlsx");
-		ExcelUtil excel = new ExcelUtil(file);
-		excel.open();
-		System.out.println("---第一行列数---->>>>" + excel.getColumnCount(0, 0));
-		System.out.println("---->>>>" + excelRealRowCount(excel.getRowCount(0), null));
 	}
 
 	/**
@@ -518,10 +510,10 @@ public class ManualOrderTransaction {
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
-			//	excelBufferUtils.writeCompletedRedisMq(null, params);
+				// excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
-	//	excelBufferUtils.writeCompletedRedisMq(null, params);
+		// excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
 
@@ -624,22 +616,22 @@ public class ManualOrderTransaction {
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
-					} else if (c == 6) {
+					} else if (c == 6 && StringEmptyUtils.isNotEmpty(value)) {
 						// 收货人姓名
-						recipientName = value;
-					} else if (c == 7) {
+						recipientName = value.trim().replaceAll("  ", "").replaceAll(" ", "");
+					} else if (c == 7 && StringEmptyUtils.isNotEmpty(value)) {
 						// 收件人电话
-						recipientTel = value;
+						recipientTel = value.trim().replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 8) {
 						// 收货人详细地址
 						recipientAddr = value;
 					} else if (c == 9) {
 						// (启邦客户)商品归属商家代码
 						marCode = value;
-					} else if (c == 10) {
+					} else if (c == 10 && StringEmptyUtils.isNotEmpty(value)) {
 						// 订单人姓名
-						orderDocName = value;
-					} else if (c == 11) {
+						orderDocName = value.trim().replaceAll("  ", "").replaceAll(" ", "");
+					} else if (c == 11 && StringEmptyUtils.isNotEmpty(value)) {
 						// 身份证号码
 						orderDocId = value.replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 12) {
@@ -684,7 +676,7 @@ public class ManualOrderTransaction {
 				item.put("recipientName", recipientName);
 				item.put("recipientTel", recipientTel);
 				item.put("recipientAddr", recipientAddr);
-				item.put("orderDocAcount", recipientName);
+				item.put("orderDocAcount", orderDocName);
 				item.put("orderDocName", orderDocName);
 				item.put("orderDocId", orderDocId);
 				// 下单人电话
@@ -713,10 +705,10 @@ public class ManualOrderTransaction {
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 				//
-				//excelBufferUtils.writeCompletedRedisMq(null, params);
+				// excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
-		//excelBufferUtils.writeCompletedRedisMq(null, params);
+		// excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
 }

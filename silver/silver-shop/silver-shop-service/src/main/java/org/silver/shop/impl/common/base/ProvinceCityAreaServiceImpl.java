@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.shop.api.common.base.ProvinceCityAreaService;
 import org.silver.shop.dao.common.base.ProvinceCityAreaDao;
 import org.silver.shop.dao.common.base.impl.ProvinceCityAreaDaoImpl;
@@ -110,7 +111,7 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 									+ replace(provinceCityArea.getString("areaName")));
 				}
 				// 将查询出来的数据放入到缓存中,由于查询省市区超时故而将缓冲时间延长至五天
-				JedisUtil.set("SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP".getBytes(), SerializeUtil.toBytes(item),
+				JedisUtil.set(RedisKey.SHOP_KEY_PROVINCE_CITY_AREA_POSTAL_MAP.getBytes(), SerializeUtil.toBytes(item),
 						(3600 * 24) * 7);
 			}
 		} else {

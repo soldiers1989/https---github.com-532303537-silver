@@ -78,14 +78,14 @@ public class PaymentTransaction {
 		return paymentService.getMerchantPaymentReport(merchantId, merchantName, startDate, endDate);
 	}
 
-	public Map<String, Object> groupCreateMpay(List<String> orderIdList) {
+	public Map<String, Object> groupCreateMpay(List<String> orderIdList, String memberId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return paymentService.splitStartPaymentId(orderIdList, merchantId, merchantName);
+		return paymentService.splitStartPaymentId(orderIdList, merchantId, merchantName,memberId);
 	}
 
 	public Map<String, Object> managerGetPaymentReport(String startDate, String endDate, String merchantId) {
@@ -138,16 +138,29 @@ public class PaymentTransaction {
 	}
 
 	public static void main(String[] args) {
+		test();
 		Map<String,Object> item = new HashMap<>();
 		item.put("status",  "1");
 		item.put("msg",  "");
 		item.put("messageID",  "");
 		item.put("entPayNo",  "01O180122002765938");
-		String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/rePayNotifyMsg", item);
-		System.out.println("---result->"+result);
+		
+		//String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/rePayNotifyMsg", item);
+		System.out.println("---result->"+item.toString());
 	}
 
 	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
 		return paymentService.getThirdPartyInfo(datasMap);
 	}
+	
+	public static void test(){
+		for(int i =0 ; i <20 ; i++){
+			System.out.println("----前前>>>");
+		}
+		System.out.println("----前前2>>>");
+		System.out.println("----前前3>>>");
+		System.out.println("----前前4>>>");
+		System.out.println("----前前5>>>");
+	}
+
 }

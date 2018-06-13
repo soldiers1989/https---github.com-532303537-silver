@@ -74,7 +74,7 @@ public interface CustomsPortService {
 	 * @return boolean
 	 */
 	public boolean checkCCIQ(String ciqOrgCode);
-	
+
 	/**
 	 * 根据海关关区名称,海关关区编码校验海关关区信息是否正确
 	 * 
@@ -86,4 +86,12 @@ public interface CustomsPortService {
 	 */
 	public boolean checkGAC(String customsName, String customsCode);
 
+	/**
+	 * 根据海关关区编码校验海关关区信息是否正确
+	 * 
+	 * @param customsCode
+	 *            海关关区编码
+	 * @return boolean
+	 */
+	public boolean checkGAC(String customsCode);
 }
