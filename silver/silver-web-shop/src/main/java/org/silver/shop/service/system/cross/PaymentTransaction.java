@@ -136,31 +136,18 @@ public class PaymentTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		return paymentService.checkPaymentPort(tradeNos,merchantId);
 	}
-
-	public static void main(String[] args) {
-		test();
-		Map<String,Object> item = new HashMap<>();
-		item.put("status",  "1");
-		item.put("msg",  "");
-		item.put("messageID",  "");
-		item.put("entPayNo",  "01O180122002765938");
-		
-		//String result = YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/rePayNotifyMsg", item);
-		System.out.println("---result->"+item.toString());
-	}
-
+	//
 	public Object getThirdPartyInfo(Map<String, Object> datasMap) {
 		return paymentService.getThirdPartyInfo(datasMap);
 	}
-	
-	public static void test(){
-		for(int i =0 ; i <20 ; i++){
-			System.out.println("----前前>>>");
-		}
-		System.out.println("----前前2>>>");
-		System.out.println("----前前3>>>");
-		System.out.println("----前前4>>>");
-		System.out.println("----前前5>>>");
+	//
+	public Map<String,Object> managerGetPaymentReportInfo(Map<String, Object> params) {
+		return paymentService.managerGetPaymentReportInfo(params);
+	}
+
+	//
+	public Map<String,Object> managerGetPaymentReportDetails(Map<String, Object> params) {
+		return paymentService.managerGetPaymentReportDetails(params);
 	}
 
 }

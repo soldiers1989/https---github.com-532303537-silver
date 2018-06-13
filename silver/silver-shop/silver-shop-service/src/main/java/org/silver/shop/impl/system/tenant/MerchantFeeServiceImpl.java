@@ -233,6 +233,9 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		params.put("type", type);
+		//状态：1-启用、2-禁用
+		params.put("status", "1");
+		//删除标识:0-未删除,1-已删除
 		params.put("deleteFlag", 0);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
 		if (reList == null) {

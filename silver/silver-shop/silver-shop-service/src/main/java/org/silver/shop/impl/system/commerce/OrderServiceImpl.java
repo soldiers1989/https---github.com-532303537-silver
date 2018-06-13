@@ -1621,4 +1621,35 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId) {
+		Map<String, Object> paramsMap = new HashMap<>();
+		paramsMap.put("startDate", startDate);
+		paramsMap.put("endDate", endDate);
+		paramsMap.put("merchantId", merchantId);
+		Table reList = orderDao.getOrderDailyReportInfo(paramsMap);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无报表数据!");
+		}
+	}
+
+	@Override
+	public Map<String,Object> managerGetOrderReportDetails(Map<String, Object> params) {
+		if(params == null || params.isEmpty()){
+			return ReturnInfoUtils.errorInfo("参数不能为空!");
+		}
+		Table reList = orderDao.getOrderDailyReportetDetails(params);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无报表数据!");
+		}
+	}
 }

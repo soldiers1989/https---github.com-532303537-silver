@@ -99,7 +99,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public Table getOrderDailyReport(Map<String,Object> paramsMap) {
+	public Table getOrderDailyReport(Map<String, Object> paramsMap) {
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();
@@ -439,5 +439,99 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				session.close();
 			}
 		}
+	}
+
+	@Override
+	public Table getOrderDailyReportInfo(Map<String, Object> paramsMap) {
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			String startDate = paramsMap.get("startDate") + "";
+			String endDate = paramsMap.get("endDate") + "";
+			String merchantId = paramsMap.get("merchantId") + "";
+			StringBuilder sql = new StringBuilder("SELECT COUNT(t1.order_id) AS count,SUM(t1.ActualAmountPaid) AS amount,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date	FROM ym_shop_manual_morder t1 "
+					+ "WHERE t1.status != 0 ");
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				sql.append(" AND t1.merchant_no = ? ");
+				sqlParams.add(merchantId);
+			}
+			if (StringEmptyUtils.isNotEmpty(startDate)) {
+				appendStartDate(sql);
+				sqlParams.add(startDate);
+			}
+			if (StringEmptyUtils.isNotEmpty(endDate)) {
+				appendEndDate(sql);				
+				sqlParams.add(endDate);
+			}
+			sql.append(" GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d') ");
+			session = getSession();
+			Table t = null;
+			t = DataUtils.queryData(session.connection(), sql.toString(), sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public Table getOrderDailyReportetDetails(Map<String, Object> params) {
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			String startDate = params.get("startDate") + "";
+			String endDate = params.get("endDate") + "";
+			StringBuilder sql = new StringBuilder(
+					"SELECT	t1.merchant_no,t1.create_by AS merchantName,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.order_id) AS totalCount,SUM(t1.ActualAmountPaid) AS amount,t2.platformFee , COUNT(case when t1.ActualAmountPaid<100 then t1.ActualAmountPaid end) AS backCoverCount, SUM(case when t1.ActualAmountPaid > 100 then t1.ActualAmountPaid end)  AS normalAmount,t1.customsCode  FROM ym_shop_manual_morder t1 LEFT JOIN ym_shop_merchant_fee_content t2 ON (t1.merchant_no = t2.merchantId AND t2.type = 'orderRecord') "
+							+ "WHERE  t1.status != 0  ");
+			String merchantId = params.get("merchantId") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				sql.append(" AND t1.merchant_no = ? ");
+				sqlParams.add(merchantId);
+			}
+			if (StringEmptyUtils.isNotEmpty(startDate)) {
+				appendStartDate(sql);
+				sqlParams.add(startDate);
+			}
+			if (StringEmptyUtils.isNotEmpty(endDate)) {
+				appendEndDate(sql);
+				sqlParams.add(endDate);
+			}
+			sql.append(" GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'), t1.create_by ,t1.customsCode");
+			session = getSession();
+			Table t = DataUtils.queryData(session.connection(), sql.toString(), sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	/**
+	 * 拼接查询条件中,通用的日期开始时间
+	 * @param sql 
+	 */
+	private void appendStartDate(StringBuilder sql) {
+		sql.append(" AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ");
+	}
+	
+	/**
+	 * 拼接查询条件中,通用的日期结束时间
+	 * @param sql 
+	 */
+	private void appendEndDate(StringBuilder sql) {
+		sql.append(" AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ");
 	}
 }

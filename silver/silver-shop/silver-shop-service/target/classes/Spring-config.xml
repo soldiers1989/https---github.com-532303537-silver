@@ -26,6 +26,8 @@
 		lazy-init="false" destroy-method="close" /> -->
 	<bean id="timerResendPayment" class="org.silver.shop.component.TimerResendPayment"
 		lazy-init="false" />
+	<bean id="timerCreateOrderReport" class="org.silver.shop.component.TimerCreateOrderReport"
+		lazy-init="false" />
 	<!-- 扫描注解 -->
 	<context:component-scan base-package="org.silver.shop">
 		<context:exclude-filter type="annotation"

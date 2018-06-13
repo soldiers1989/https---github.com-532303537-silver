@@ -94,7 +94,7 @@ public class OrderController {
 		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
-			String key =  isKeys.nextElement();
+			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
@@ -148,7 +148,7 @@ public class OrderController {
 		}
 		datasMap.remove("page");
 		datasMap.remove("size");
-		return JSONObject.fromObject(orderTransaction.getMemberOrderInfo(page, size,datasMap)).toString();
+		return JSONObject.fromObject(orderTransaction.getMemberOrderInfo(page, size, datasMap)).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantOrderRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -413,6 +413,47 @@ public class OrderController {
 			return JSONObject.fromObject(orderTransaction.checkOrderPort(orderIDs)).toString();
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单Id不能为空!")).toString();
+	}
+
+	@RequestMapping(value = "/managerGetOrderReportInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("新-管理员查询订单报表信息")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	public String managerGetOrderReportInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(orderTransaction.managerGetOrderReportInfo(startDate, endDate,merchantId)).toString();
+	}
+
+	@RequestMapping(value = "/managerGetOrderReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("新-管理员查询订单报表详情")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	public String managerGetOrderReportDetails(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
+			@RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		if (params.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.managerGetOrderReportDetails(params)).toString();
 	}
 
 	public static void main(String[] args) {

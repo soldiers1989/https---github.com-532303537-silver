@@ -176,14 +176,13 @@ public class OrderTransaction {
 		return orderService.checkOrderPort(orderIDs,merchantId);
 	}
 
-	public static void main(String[] args) {
-		Map<String,Object> item = new HashMap<>();
-		//YM180125052191327
-		//YM180125052181629
-		//YM180125052176708
-		item.put("a", "YM180125052209119");
-		item.put("b", "YM180125052181629");
-		item.put("c", "YM180125052176708");
-		System.out.println("------->>"+YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/checkOrderPort", item));
+	// 管理员查询商户订单报表
+	public Map<String,Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId) {
+		return orderService.managerGetOrderReportInfo(startDate,endDate,merchantId);
+	}
+
+	//新-管理员查询订单报表详情信息
+	public Object managerGetOrderReportDetails(Map<String, Object> params) {
+		return orderService.managerGetOrderReportDetails(params);
 	}
 }

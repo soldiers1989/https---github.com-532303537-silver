@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 跟随项目启动扫描支付单第三方回执
- *
  */
 public class TimerResendPayment implements InitializingBean {
 

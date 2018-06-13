@@ -52,8 +52,22 @@ public interface PaymentDao  extends BaseDao{
 	public double backCoverStatisticalManualPaymentAmount(List<Object> itemList);
 
 	/**
-	 * 
-	 * @param orderIdList
+	 * 根据订单Id,统计订单总金额
+	 * @param orderIdList 
 	 */
 	public double statisticsManualOrderAmount(List<String> orderIdList);
+
+	/**
+	 * 查询手工支付单信息
+	 * @param params 查询参数
+	 * @return Table
+	 */
+	public Table getPaymentReportInfo(Map<String, Object> params);
+
+	/**
+	 * 查询手工支付单详情
+	 * @param params 查询参数
+	 * @return
+	 */
+	public Table getPaymentReportDetails(Map<String, Object> params);
 }

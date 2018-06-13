@@ -30,7 +30,6 @@ import net.sf.json.JSONObject;
 
 /**
  * 支付单Controller
- *
  */
 @Controller
 @RequestMapping(value = "/payment")
@@ -371,9 +370,59 @@ public class PaymentController {
 		 * "支付单第三方业务Id不能为空,请核对信息!")).toString(); }
 		 */
 		return JSONObject.fromObject(paytemTransaction.getThirdPartyInfo(datasMap)).toString();
-
 	}
 
+	@RequestMapping(value = "/managerGetPaymentReportInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("新-管理员查询支付单报表信息")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	public String managerGetPaymentReportInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		if (params.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(paytemTransaction.managerGetPaymentReportInfo(params)).toString();
+	}
+	
+	@RequestMapping(value = "/managerGetPaymentReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("新-管理员查询支付单报表详情")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	public String managerGetPaymentReportDetails(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
+			@RequestParam("merchantId") String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		if (params.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(paytemTransaction.managerGetPaymentReportDetails(params)).toString();
+	}
+	
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		// YM180125052191327

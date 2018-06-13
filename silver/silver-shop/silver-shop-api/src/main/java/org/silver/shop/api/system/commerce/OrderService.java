@@ -185,4 +185,20 @@ public interface OrderService {
 	 * @return Map
 	 */
 	public Map<String,Object> checkOrderPort(List<String> orderIDs, String merchantId);
+
+	/**
+	 * 管理员查询商户订单报表信息
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	public Map<String, Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId);
+	
+	/**
+	 * 查询商户订单信息详情
+	 * @param params
+	 * @return
+	 */
+	public Map<String, Object> managerGetOrderReportDetails(Map<String, Object> params);
 }

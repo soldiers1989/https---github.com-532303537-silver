@@ -75,4 +75,18 @@ public interface OrderDao extends BaseDao {
 	 */
 	public Table getAgentOrderReport(Map<String, Object> datasMap);
 
+	/**
+	 * 获取每日订单报表信息
+	 * @param paramsMap
+	 * @return
+	 */
+	public Table getOrderDailyReportInfo(Map<String, Object> paramsMap);
+
+	/**
+	 * 获取商户订单报表详情
+	 * @param params
+	 * @return
+	 */
+	public Table getOrderDailyReportetDetails(Map<String, Object> params);
+
 }

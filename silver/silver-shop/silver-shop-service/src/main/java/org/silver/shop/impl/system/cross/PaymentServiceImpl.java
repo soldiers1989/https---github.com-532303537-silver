@@ -1440,4 +1440,34 @@ public class PaymentServiceImpl implements PaymentService {
 			return ReturnInfoUtils.errorInfo("未找到对应的支付单信息!");
 		}
 	}
+
+	@Override
+	public Map<String, Object> managerGetPaymentReportInfo(Map<String, Object> params) {
+		if(params == null || params.isEmpty()){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Table reList = paymentDao.getPaymentReportInfo(params);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无支付单报表数据!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> managerGetPaymentReportDetails(Map<String, Object> params) {
+		if(params == null || params.isEmpty()){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Table reList = paymentDao.getPaymentReportDetails(params);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.getRows().isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"));
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无支付单报表数据!");
+		}
+	}
 }

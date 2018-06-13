@@ -169,4 +169,18 @@ public interface PaymentService {
 	 * @param mpay 手工支付单实体类
 	 */
 	public void rePaymentInfo(Mpay mpay);
+
+	/**
+	 * 管理员平台查询支付单报表信息
+	 * @param params 查询参数
+	 * @return Map
+	 */
+	public Map<String, Object> managerGetPaymentReportInfo(Map<String, Object> params);
+
+	/**
+	 * 管理员查询平台支付单报表详情
+	 * @param params 查询参数
+	 * @return Map
+	 */
+	public Map<String, Object> managerGetPaymentReportDetails(Map<String, Object> params);
 }
