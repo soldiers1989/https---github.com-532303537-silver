@@ -437,7 +437,7 @@ public class OrderController {
 	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String managerGetOrderReportDetails(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
-			@RequestParam("merchantId") String merchantId) {
+			String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-6-14 10:02:58 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.commerce.OrderHistoryReports" table="ym_shop_sys_order_history_reports">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" />
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" />
+        </property>
+        <property name="totalCount" type="int">
+            <column name="totalCount" not-null="true"/>
+        </property>
+        <property name="totalAmount" type="double">
+            <column name="totalAmount" not-null="true"/>
+        </property>
+        <property name="platformFee" type="double">
+            <column name="platformFee" />
+        </property>
+        <property name="backCoverCount" type="int">
+            <column name="backCoverCount" not-null="true"/>
+        </property>
+        <property name="backCoverFee" type="double">
+            <column name="backCoverFee" />
+        </property>
+        <property name="orderNormalCount" type="int">
+            <column name="orderNormalCount" not-null="true"/>
+        </property>
+        <property name="orderNormalAmount" type="double">
+            <column name="orderNormalAmount" not-null="true"/>
+        </property>
+        <property name="orderNormalFee" type="double">
+            <column name="orderNormalFee" />
+        </property>
+        <property name="customsCode" type="java.lang.String">
+            <column name="customsCode" />
+        </property>
+        <property name="ciqOrgCode" type="java.lang.String">
+            <column name="ciqOrgCode" />
+        </property>
+        <property name="type" type="java.lang.String">
+            <column name="type" not-null="true"/>
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+    </class>
+</hibernate-mapping>

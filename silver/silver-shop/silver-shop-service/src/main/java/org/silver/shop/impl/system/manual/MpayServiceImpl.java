@@ -196,13 +196,12 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg") + "");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
-		//
+		// 商户口岸费率Id
 		String merchantFeeId = customsMap.get("merchantFeeId") + "";
-		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId);
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId, customsMap);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
-		//
 		// 总数
 		int totalCount = jsonList.size();
 		params.put(MERCHANT_ID, merchantId);
@@ -211,10 +210,16 @@ public class MpayServiceImpl implements MpayService {
 		// 获取流水号
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		params.put("serialNo", serialNo);
-		Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
-				params);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return reMap;
+		String pushType = customsMap.get("pushType") + "";
+		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
+			// 当商户为自主申报时
+			return updateOrderRecordStatus(jsonList, merchantId, eport, customsCode, ciqOrgCode);
+		} else {
+			Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
+					params);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
 		}
 		Map<String, Object> statusMap = new HashMap<>();
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -224,18 +229,75 @@ public class MpayServiceImpl implements MpayService {
 	}
 
 	/**
-	 * 计算商户钱包余额是否足够推送此次手工订单
+	 * 将商户选择的自助申报的订单修改为申报状态(10)
 	 * 
 	 * @param jsonList
-	 *            订单Id
-	 * @param merchant
-	 *            商户信息实体类
-	 * @param merchantFeeId
-	 *            商户口岸费率流水Id
-	 * 
+	 *            订单Id集合
+	 * @param merchantId
+	 *            商户Id
+	 * @param ciqOrgCode
+	 *            国检检疫机构代码
+	 * @param customsCode
+	 *            海关代码
+	 * @param eport
+	 *            口岸
 	 * @return Map
 	 */
-	private Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId) {
+	private Map<String, Object> updateOrderRecordStatus(JSONArray jsonList, String merchantId, int eport,
+			String customsCode, String ciqOrgCode) {
+		System.out.println("-------将商户选择的自助申报的订单修改为申报状态(10)--------");
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		Map<String, Object> errMap = null;
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> orderMap = (Map<String, Object>) jsonList.get(i);
+			Map<String, Object> param = new HashMap<>();
+			param.put("merchant_no", merchantId);
+			param.put(ORDER_ID, orderMap.get("orderNo") + "");
+			List<Morder> orderList = morderDao.findByProperty(Morder.class, param, 1, 1);
+			if (orderList != null && !orderList.isEmpty()) {
+				Morder order = orderList.get(0);
+				// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+				if (order.getOrder_record_status() == 10 || order.getOrder_record_status() == 2) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					errMap.put(BaseCode.MSG.toString(), "订单号[" + order.getOrder_id() + "]正在申报中,请勿重复申报!");
+					errorList.add(errMap);
+					continue;
+				} else if (order.getOrder_record_status() == 3) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					errMap.put(BaseCode.MSG.toString(),
+							"订单号[" + order.getOrder_id() + "]已在[" + order.getCreate_date() + "]申报成功,请勿重复申报!");
+					errorList.add(errMap);
+					continue;
+				}
+				Map<String, Object> reCheckMap = checkManualOrderInfo(order);
+				if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+					errorList.add(reCheckMap);
+					continue;
+				}
+				order.setEport(eport + "");
+				order.setCustomsCode(customsCode);
+				order.setCiqOrgCode(ciqOrgCode);
+				order.setOrder_record_status(10);
+				// 订单推送至网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
+				order.setStatus(1);
+				order.setUpdate_date(new Date());
+				if (!morderDao.update(order)) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					errMap.put(BaseCode.MSG.toString(), "订单号[" + order.getOrder_id() + "]申报失败,服务器繁忙,请重试!");
+					errorList.add(errMap);
+					continue;
+				}
+			}
+		}
+		return ReturnInfoUtils.errorInfo(errorList);
+	}
+
+	@Override
+	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId,
+			Map<String, Object> customsMap) {
 		if (jsonList == null || merchant == null) {
 			return ReturnInfoUtils.errorInfo("计算商户钱包余额请求参数不能为空!");
 		}
@@ -256,20 +318,42 @@ public class MpayServiceImpl implements MpayService {
 		double fee;
 		// 封底标识：1-正常计算、2-不满100提至100计算
 		int backCoverFlag = 0;
+		// 支付单服务费率
+		double paymentFee = 0;
 		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
 		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
+			String pushType = customsMap.get("pushType") + "";
+			//当推送类型为商户自助申报时,将商户的订单与支付单口岸费率合并一次清算
+			if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
+				Map<String, Object> params = new HashMap<>();
+				int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
+				String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
+				String customsCode = customsMap.get(CUSTOMS_CODE) + "";
+				params.put(MERCHANT_ID, merchant.getMerchantId());
+				params.put("customsPort", eport);
+				params.put(CUSTOMS_CODE, customsCode);
+				params.put(CIQ_ORG_CODE, ciqOrgCode);
+				params.put("type", "paymentRecord");
+				List<MerchantFeeContent> reFeeList = morderDao.findByProperty(MerchantFeeContent.class, null, 0, 0);
+				if (reFeeList != null && !reFeeList.isEmpty()) {
+					MerchantFeeContent feeContent = reFeeList.get(0);
+					paymentFee = feeContent.getPlatformFee();
+				}
+			}
+			// 根据前台传递的商户订单备案口岸费率Id查询
 			Map<String, Object> reFeeMap = merchantFeeService.getMerchantFeeInfo(merchantFeeId);
 			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
 				return reFeeMap;
 			}
 			MerchantFeeContent merchantFee = (MerchantFeeContent) reFeeMap.get(BaseCode.DATAS.toString());
-			fee = merchantFee.getPlatformFee();
+			//
+			fee = merchantFee.getPlatformFee() + paymentFee;
 			backCoverFlag = merchantFee.getBackCoverFlag();
 		} else {
 			fee = 0.001;
 		}
 		double totalAmountPaid = 0;
-		//封底标识：1-正常计算、2-不满100提至100计算
+		// 封底标识：1-正常计算、2-不满100提至100计算
 		if (backCoverFlag == 2) {
 			// 当订单实际支付金额不足100提升至100,后统计订单实际支付金额
 			totalAmountPaid = morderDao.backCoverStatisticalManualOrderAmount(newList);
@@ -279,7 +363,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 当小于0时,代表查询数据库信息错误
 		if (totalAmountPaid < 0) {
-			return ReturnInfoUtils.errorInfo("查询手工订单总金额失败,服务器繁忙!");
+			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
 			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
 			try {
@@ -544,8 +628,8 @@ public class MpayServiceImpl implements MpayService {
 		if (datas == null || datas.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
 		}
-		Map<String,Object> reCheckMap =  walletUtils.checkMerchantWalletLogInfo(datas);
-		if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reCheckMap = walletUtils.checkMerchantWalletLogInfo(datas);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
 		AgentWalletLog log = new AgentWalletLog();
@@ -580,7 +664,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-	
+
 	/**
 	 * 推送订单前进行订单校验,保证扣费订单都未校验通过的订单信息
 	 * 
@@ -615,7 +699,6 @@ public class MpayServiceImpl implements MpayService {
 		String merchantId = paramsMap.get(MERCHANT_ID) + "";
 		String tok = paramsMap.get("tok") + "";
 		paramsMap.put("name", "orderRecord");
-		// 累计金额
 		for (int i = 0; i < dataList.size(); i++) {
 			try {
 				Map<String, Object> orderMap = (Map<String, Object>) dataList.get(i);
@@ -681,22 +764,22 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private Map<String, Object> checkManualOrderInfo(Morder order) {
 		if (order == null) {
-			return ReturnInfoUtils.errorInfo("推送订单时,校验订单数据,订单参数不能为空!");
+			return ReturnInfoUtils.errorInfo("申报订单时,核对订单数据时订单信息不能为空!");
 		}
 		if (order.getFCY() > 2000) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,订单商品总金额超过2000,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单商品总金额超过2000,请核对订单信息!");
 		}
 		if (!checkProvincesCityAreaCode(order)) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,订单收货人省市区编码不能为空,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单收货人省市区编码不能为空,请核对订单信息!");
 		}
 		if (!PhoneUtils.isPhone(order.getRecipientTel().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,收货人手机号码格式不正确,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,收货人手机号码格式不正确,请核对订单信息!");
 		}
 		if (!PhoneUtils.isPhone(order.getOrderDocTel().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,下单人手机号码格式不正确,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,下单人手机号码格式不正确,请核对订单信息!");
 		}
 		if (!IdcardValidator.validate18Idcard(order.getOrderDocId().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,下单人身份证号码实名认证失败,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,下单人身份证号码实名认证失败,请核对订单信息!");
 		}
 		// if (!IdcardValidator.validate18Idcard(order.getRecipientID())) {
 		// return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() +
@@ -705,12 +788,12 @@ public class MpayServiceImpl implements MpayService {
 		String recipientName = order.getRecipientName().trim();
 		if (!StringUtil.isChinese(recipientName) || recipientName.contains("先生") || recipientName.contains("女士")
 				|| recipientName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,收货人姓名错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,收货人姓名错误,请核对订单信息!");
 		}
 		String orderDocName = order.getOrderDocName().trim();
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
 				|| orderDocName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]推送失败,订单人姓名错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单人姓名错误,请核对订单信息!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -761,18 +844,9 @@ public class MpayServiceImpl implements MpayService {
 		return StringEmptyUtils.isNotEmpty(order.getRecipientProvincesCode());
 	}
 
-	/**
-	 * 更新订单返回信息、并且将订单状态修改为备案中
-	 * 
-	 * @param orderNo
-	 *            订单编号
-	 * @param reOrderMessageID
-	 *            服务器返回流水Id
-	 * @param customsMap
-	 *            海关口岸信息包
-	 * @return Map
-	 */
-	private Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID,
+	
+	@Override
+	public Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID,
 			Map<String, Object> customsMap) {
 		String eport = customsMap.get(E_PORT) + "";
 		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
@@ -805,21 +879,12 @@ public class MpayServiceImpl implements MpayService {
 		}
 	}
 
-	/**
-	 * 发起手工订单备案
-	 * 
-	 * @param customsMap
-	 *            海关信息
-	 * @param orderSubList
-	 *            备案商品信息List
-	 * @param tok
-	 *            服务端tok
-	 * @param order
-	 *            订单信息
-	 * @return
-	 */
-	private final Map<String, Object> sendOrder(Map<String, Object> customsMap, List<MorderSub> orderSubList,
-			String tok, Morder order) {
+	@Override
+	public Map<String, Object> sendOrder(Map<String, Object> customsMap, List<MorderSub> orderSubList, String tok,
+			Morder order) {
+		if(orderSubList == null || order == null || customsMap == null || StringEmptyUtils.isEmpty(tok)){
+			return ReturnInfoUtils.errorInfo("推送订单时,请求参数不能为空!");
+		}
 		String timestamp = String.valueOf(System.currentTimeMillis());
 		List<JSONObject> goodsList = new ArrayList<>();
 		List<JSONObject> orderJsonList = new ArrayList<>();

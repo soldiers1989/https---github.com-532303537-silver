@@ -18,6 +18,7 @@ import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.manual.MorderService;
+import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.mq.ShopQueueSender;
 import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
@@ -59,7 +60,9 @@ public class ManualOrderTransaction {
 	private ExcelBufferUtils excelBufferUtils;
 	@Autowired
 	private ShopQueueSender shopQueueSender;
-
+	@Reference(timeout = 20000)
+	private MpayService mpayService;
+	
 	/**
 	 * 商户Id
 	 */
@@ -535,6 +538,7 @@ public class ManualOrderTransaction {
 		String goodsName = "";// 商品名称
 		double price = 0;// 单价
 		int count = 0;// 商品数量
+		double actualAmountPaid = 0;//订单实际支付金额
 		String recipientName = "";// 收货人名称
 		String recipientTel = "";// 收货人电话
 		String recipientAddr = "";// 收货人详细地址
@@ -616,28 +620,34 @@ public class ManualOrderTransaction {
 							RedisInfoUtils.errorInfoMq(msg, ERROR, params);
 							break;
 						}
-					} else if (c == 6 && StringEmptyUtils.isNotEmpty(value)) {
+					
+					} 
+					/*else if (c == 6 && StringEmptyUtils.isNotEmpty(value)) {
+						//订单实际支付金额
+						actualAmountPaid =  Double.parseDouble(value);
+					}*/
+					 else if (c == 6 && StringEmptyUtils.isNotEmpty(value)) {
 						// 收货人姓名
 						recipientName = value.trim().replaceAll("  ", "").replaceAll(" ", "");
-					} else if (c == 7 && StringEmptyUtils.isNotEmpty(value)) {
+					} else if (c == 7) {
 						// 收件人电话
 						recipientTel = value.trim().replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 8) {
 						// 收货人详细地址
 						recipientAddr = value;
-					} else if (c == 9) {
+					} else if (c == 9 && StringEmptyUtils.isNotEmpty(value)) {
 						// (启邦客户)商品归属商家代码
 						marCode = value;
 					} else if (c == 10 && StringEmptyUtils.isNotEmpty(value)) {
 						// 订单人姓名
 						orderDocName = value.trim().replaceAll("  ", "").replaceAll(" ", "");
-					} else if (c == 11 && StringEmptyUtils.isNotEmpty(value)) {
+					} else if (c == 11) {
 						// 身份证号码
 						orderDocId = value.replace("x", "X").replaceAll("  ", "").replaceAll(" ", "");
 					} else if (c == 12) {
 						// 承运商
 						ehsEntName = value;
-					} else if (c == 13) {
+					}else if(c == 13){
 						waybillNo = value;
 					}
 				}
@@ -711,4 +721,5 @@ public class ManualOrderTransaction {
 		// excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
+	
 }

@@ -403,8 +403,7 @@ public class PaymentController {
 	@RequiresRoles("Manager")
 	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String managerGetPaymentReportDetails(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
-			@RequestParam("merchantId") String merchantId) {
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

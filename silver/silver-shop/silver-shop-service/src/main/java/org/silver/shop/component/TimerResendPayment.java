@@ -2,6 +2,8 @@ package org.silver.shop.component;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.model.system.manual.Mpay;
 import org.silver.shop.model.system.manual.PaymentCallBack;
+import org.silver.util.DateUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,7 +48,7 @@ public class TimerResendPayment implements InitializingBean {
 	}
 
 	/**
-	 * 通过操纵缓存实现一个支付单重返10次
+	 * 扫描第三方电商平台支付单返回信息表中的,次数10次以下与返回状态为FALSE的支付单信息
 	 */
 	private void resendPayment() {
 		try {
@@ -70,13 +73,23 @@ public class TimerResendPayment implements InitializingBean {
 			logger.error("----扫描回调支付单错误-----", e);
 		}
 	}
+	
+	public static void  test(String a,String b){
+		a = "-----";
+		b = "=====";
+	}
 	public static void main(String[] args) {
-		int i = 3;
-		double d = 62.95;  
-		BigDecimal bg = new BigDecimal(i * d);  
-        double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();  
-		
-		 DecimalFormat df = new DecimalFormat("#.00");  
-		System.out.println("---->>>"+ df.format(188.855));
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		calendar.add(Calendar.DAY_OF_WEEK, -7);
+		calendar.set(Calendar.HOUR_OF_DAY, 00);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		System.out.println("----->>>"+DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd HH:mm:ss"));
+		calendar.setTime(new Date());
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		System.out.println("----->>>"+DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd HH:mm:ss"));
 	}
 }

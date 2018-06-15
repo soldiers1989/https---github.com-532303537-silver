@@ -45,7 +45,6 @@ public class EditRecordController {
 	private static Logger logger = LogManager.getLogger(EditRecordController.class);
 	@Autowired
 	private ManualService manualService;
-
 	@Autowired
 	private MdataService mdataService;
 

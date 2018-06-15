@@ -3,6 +3,10 @@ package org.silver.shop.api.system.manual;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.organization.Merchant;
+
 import net.sf.json.JSONArray;
 
 public interface MpayService {
@@ -57,4 +61,47 @@ public interface MpayService {
 	 */
 	public void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList, Map<String, Object> customsMap,
 			Map<String, Object> paramsMap);
+
+	/**
+	 * 计算商户钱包余额是否足够推送此次手工订单
+	 * 
+	 * @param jsonList
+	 *            订单Id
+	 * @param merchant
+	 *            商户信息实体类
+	 * @param merchantFeeId
+	 *            商户口岸费率流水Id
+	 * 
+	 * @return Map
+	 */
+	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId, Map<String, Object> customsMap);
+
+	/**
+	 * 发起手工订单备案
+	 * 
+	 * @param customsMap
+	 *            海关信息
+	 * @param orderSubList
+	 *            备案商品信息List
+	 * @param tok
+	 *            服务端tok
+	 * @param order
+	 *            订单信息
+	 * @return
+	 */
+	public Map<String, Object> sendOrder(Map<String, Object> customsMap, List<MorderSub> orderSubList, String tok,
+			Morder order);
+
+	/**
+	 * 更新订单返回信息、并且将订单状态修改为申报中
+	 * 
+	 * @param orderNo
+	 *            订单编号
+	 * @param reOrderMessageID
+	 *            网关返回流水Id
+	 * @param customsMap
+	 *            海关口岸信息包
+	 * @return Map
+	 */
+	public Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID, Map<String, Object> customsMap);
 }

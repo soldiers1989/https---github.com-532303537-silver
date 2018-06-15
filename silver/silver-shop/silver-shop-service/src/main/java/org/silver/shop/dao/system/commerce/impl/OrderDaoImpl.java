@@ -482,6 +482,9 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	@Override
 	public Table getOrderDailyReportetDetails(Map<String, Object> params) {
+		if(params == null){
+			return null;
+		}
 		Session session = null;
 		try {
 			List<Object> sqlParams = new ArrayList<>();

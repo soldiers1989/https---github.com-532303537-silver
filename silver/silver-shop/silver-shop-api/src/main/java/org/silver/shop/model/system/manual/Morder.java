@@ -3,7 +3,9 @@ package org.silver.shop.model.system.manual;
 import java.io.Serializable;
 import java.util.Date;
 
-//手工录入订单暂存表
+/**
+ * 手工录入订单暂存表
+ */
 public class Morder implements Serializable {
 	/**
 	* 
@@ -40,7 +42,11 @@ public class Morder implements Serializable {
 	private Date update_date;// 更新日期
 	private String update_by;// 更新人
 	private String remarks;//
-	private int order_record_status;// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	/**
+	 *  备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	 *   2018-6-14更新为申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+	 */
+	private int order_record_status;
 	private String order_serial_no;// 服务器接收成功后返回编号
 	private String order_re_note;// 服务器返回信息
 
@@ -60,7 +66,8 @@ public class Morder implements Serializable {
 	private String customsCode;// 海关关区代码(导出表中-进/出口岸)
 	private String ciqOrgCode;// 国检机构代码
 	private String thirdPartyId;// 第三方订单唯一标识
-
+	
+	
 	public long getId() {
 		return id;
 	}

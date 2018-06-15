@@ -529,8 +529,8 @@ public class PaymentServiceImpl implements PaymentService {
 		if (datas == null || datas.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
 		}
-		Map<String,Object> reCheckMap = walletUtils.checkMerchantWalletLogInfo(datas);
-		if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reCheckMap = walletUtils.checkMerchantWalletLogInfo(datas);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
 		AgentWalletLog log = new AgentWalletLog();
@@ -565,8 +565,7 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-	
-	
+
 	/**
 	 * 开始发起支付单推送
 	 * 
@@ -643,15 +642,8 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		bufferUtils.writeCompletedRedis(errorList, paramsMap);
 	}
-
-	/**
-	 * 当通用网关接收支付单失败后,更新支付单中网络状态
-	 * 
-	 * @param treadeNo
-	 *            支付单流水号
-	 * @return Map
-	 */
-	private Map<String, Object> updatePaymentFailureStatus(String treadeNo) {
+	@Override
+	public Map<String, Object> updatePaymentFailureStatus(String treadeNo) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put(TRADE_NO, treadeNo);
 		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 1, 1);
@@ -668,23 +660,18 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
-	/**
-	 * 更新支付单返回信息
-	 * 
-	 * @param entPayNo
-	 *            交易流水号
-	 * @param rePayMessageID
-	 *            服务端返回的流水Id
-	 * @param customsMap
-	 *            前台传递的海关信息
-	 * @return Map
-	 */
-	private Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID,
+	
+	@Override
+	public Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID,
 			Map<String, Object> customsMap) {
-		String eport = customsMap.get(E_PORT) + "";
-		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
-		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
+		String eport = null;
+		String ciqOrgCode = null;
+		String customsCode = null;
+		if (customsMap != null) {
+			eport = customsMap.get(E_PORT) + "";
+			ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
+			customsCode = customsMap.get(CUSTOMS_CODE) + "";
+		}
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put(TRADE_NO, entPayNo);
 		List<Mpay> reList = paymentDao.findByProperty(Mpay.class, paramMap, 0, 0);
@@ -770,7 +757,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * 返回给第三方支付单信息
+	 * 返回给第三方电商平台,支付单信息
 	 * 
 	 * @param pay
 	 *            手工支付单实体类
@@ -845,7 +832,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	/**
-	 * 当第三方接收支付单回执失败时,保存进支付回调信息
+	 * 当第三方电商平台接收支付单回执失败时,保存信息至支付回调信息
 	 * 
 	 * @param pay
 	 */
@@ -1003,7 +990,7 @@ public class PaymentServiceImpl implements PaymentService {
 					Map<String, Object> paymentMap = new HashMap<>();
 					paymentMap.put(MERCHANT_ID, merchantId);
 					int count = SerialNoUtils.getSerialNo("paymentId");
-					String tradeNo = createTradeNo("01O", (count + 1), new Date());
+					String tradeNo = SerialNoUtils.createTradeNo("01O", (count + 1), new Date());
 					paymentMap.put("tradeNo", tradeNo);
 					paymentMap.put(ORDER_ID, order_id);
 					paymentMap.put("amount", order.getActualAmountPaid());
@@ -1022,9 +1009,9 @@ public class PaymentServiceImpl implements PaymentService {
 						bufferUtils.writeRedis(errorList, redisMap);
 						// 创建一个生成钱包流水子任务
 						String memberId = redisMap.get("memberId") + "";
-						if(StringEmptyUtils.isNotEmpty(memberId)){
-							WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, merchantId, tradeNo,
-									memberWalletService,order.getActualAmountPaid());
+						if (StringEmptyUtils.isNotEmpty(memberId)) {
+							WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, merchantId,
+									tradeNo, memberWalletService, order.getActualAmountPaid());
 							threadPool.submit(walletTransferTask);
 						}
 						continue;
@@ -1043,23 +1030,17 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 	}
 
-	/**
-	 * 生成支付单时校验订单信息
-	 * 
-	 * @param infoMap
-	 *            需校验的信息集合Map
-	 * @return Map
-	 */
-	private Map<String, Object> checkPaymentInfo(Map<String, Object> infoMap) {
+	@Override
+	public Map<String, Object> checkPaymentInfo(Map<String, Object> infoMap) {
 		if (infoMap == null || infoMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("校验支付单参数不能为空!");
 		}
 		String orderId = infoMap.get(ORDER_ID) + "";
 		Map<String, Object> params = new HashMap<>();
-		params.put("morder_id", infoMap.get(ORDER_ID));
+		params.put("morder_id", orderId);
 		List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (mpayl != null && !mpayl.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]关联的支付单已经存在,无需重复生成!");
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]关联的支付单已经存在,无需再次支付!");
 		}
 		String orderDocId = infoMap.get("orderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
@@ -1073,14 +1054,8 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 保存支付单实体
-	 * 
-	 * @param paymentMap
-	 *            支付单信息集合
-	 * @return
-	 */
-	private boolean addEntity(Map<String, Object> paymentMap) {
+	@Override
+	public boolean addEntity(Map<String, Object> paymentMap) {
 		if (paymentMap == null || paymentMap.isEmpty()) {
 			return false;
 		}
@@ -1099,7 +1074,14 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
-		entity.setPay_record_status(1);
+		if(StringEmptyUtils.isNotEmpty(paymentMap.get("pay_record_status") + "")){
+			entity.setPay_record_status(Integer.parseInt(paymentMap.get("pay_record_status") + ""));
+		}else{
+			//申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
+			entity.setPay_record_status(1);
+		}
+		//网关接收状态： 0-未发起,1-接收成功,2-接收失败
+		entity.setNetworkStatus(0);
 		String orderDate = paymentMap.get("orderDate") + "";
 		Date payTime = DateUtil.randomPaymentDate(orderDate);
 		entity.setPay_time(payTime);
@@ -1124,18 +1106,8 @@ public class PaymentServiceImpl implements PaymentService {
 		return paymentDao.add(entity);
 	}
 
-	/**
-	 * 当生成的支付流水号更新到订单表中
-	 * 
-	 * @param merchantId
-	 *            商户Id
-	 * @param order_id
-	 *            订单Id
-	 * @param trade_no
-	 *            支付流水号
-	 * @return boolean
-	 */
-	private boolean updateOrderPayNo(String merchantId, String order_id, String trade_no) {
+	@Override
+	public boolean updateOrderPayNo(String merchantId, String order_id, String trade_no) {
 		Map<String, Object> param = new HashMap<>();
 		param.put(MERCHANT_NO, merchantId);
 		param.put("order_id", order_id);
@@ -1147,28 +1119,6 @@ public class PaymentServiceImpl implements PaymentService {
 			return paymentDao.update(entity);
 		}
 		return false;
-	}
-
-	/**
-	 * 模拟银盛生成支付流水号
-	 * 
-	 * @param sign
-	 *            日期标识
-	 * @param id
-	 *            自增Id数
-	 * @param date
-	 *            日期
-	 * @return String
-	 */
-	private String createTradeNo(String sign, long id, Date date) {
-		String dstr = DateUtil.formatDate(date, "yyMMdd");
-		String nstr = id + "";
-		// 获取或随机4位数
-		int rstr = RandomUtils.getRandom(4);
-		while (nstr.length() < 5) {
-			nstr = "0" + nstr;
-		}
-		return sign + dstr + nstr + rstr;
 	}
 
 	@Override
@@ -1443,7 +1393,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> managerGetPaymentReportInfo(Map<String, Object> params) {
-		if(params == null || params.isEmpty()){
+		if (params == null || params.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 		Table reList = paymentDao.getPaymentReportInfo(params);
@@ -1458,7 +1408,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	public Map<String, Object> managerGetPaymentReportDetails(Map<String, Object> params) {
-		if(params == null || params.isEmpty()){
+		if (params == null || params.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 		Table reList = paymentDao.getPaymentReportDetails(params);

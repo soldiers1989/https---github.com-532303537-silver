@@ -26,8 +26,6 @@
 		lazy-init="false" destroy-method="close" /> -->
 	<bean id="timerResendPayment" class="org.silver.shop.component.TimerResendPayment"
 		lazy-init="false" />
-	<bean id="timerCreateOrderReport" class="org.silver.shop.component.TimerCreateOrderReport"
-		lazy-init="false" />
 	<!-- 扫描注解 -->
 	<context:component-scan base-package="org.silver.shop">
 		<context:exclude-filter type="annotation"
@@ -39,7 +37,7 @@
 	<import resource="spring/dubbo.xml" />
 	<import resource="spring/redis.xml" />
 	<import resource="Spring-Aop.xml" />
-	<!-- <import resource="benx.xml"/> -->
+<!-- 	<import resource="Spring-Quartz.xml"/> -->
 	<!--<import resource="spring/dataSource.xml"/> -->
 	<!--<import resource="spring/mybatis.xml"/> -->
 	<!-- <import resource="spring/*.xml"/> -->

@@ -175,6 +175,28 @@ public class SerialNoUtils {
 		return topStr + strId;
 	}
 
+	/**
+	 * 模拟银盛生成支付流水号
+	 * 
+	 * @param sign
+	 *            日期标识
+	 * @param id
+	 *            自增Id数
+	 * @param date
+	 *            日期
+	 * @return String
+	 */
+	public static String createTradeNo(String sign, long id, Date date) {
+		String dstr = DateUtil.formatDate(date, "yyMMdd");
+		String nstr = id + "";
+		// 获取或随机4位数
+		int rstr = RandomUtils.getRandom(4);
+		while (nstr.length() < 5) {
+			nstr = "0" + nstr;
+		}
+		return sign + dstr + nstr + rstr;
+	}
+	
 	public static void main(String[] args) {
 		String str = "000000000000000000000000000091";
 		System.out.println("---->>>"+str.length());

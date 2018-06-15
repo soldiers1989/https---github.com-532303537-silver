@@ -11,6 +11,7 @@ import org.silver.shop.api.system.commerce.WarehousService;
 import org.silver.shop.dao.system.commerce.WarehousDao;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.commerce.WarehouseContent;
+import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -42,11 +43,7 @@ public class WarehousServiceImpl implements WarehousService {
 				warehouse.setReMark(String.valueOf(count));
 				cacheList.add(warehouse);
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, totalCount);
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());

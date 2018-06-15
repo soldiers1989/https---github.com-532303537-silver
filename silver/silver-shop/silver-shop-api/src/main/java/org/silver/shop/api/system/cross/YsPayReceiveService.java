@@ -24,7 +24,7 @@ public interface YsPayReceiveService {
 	 * @param merchantId 商户Id 
 	 * @param paymentInfoMap 支付单信息
 	 * @param tok 
-	 * @param recordMap 备案信息
+	 * @param recordMap 备案信息 appkey、eport-口岸代码、ciqOrgCode(检验检疫机构代码)、customsCode(海关代码)、opType(报文类型可空)、
 	 * @param notifyurl 回调的url
  	 * @return Map
 	 */

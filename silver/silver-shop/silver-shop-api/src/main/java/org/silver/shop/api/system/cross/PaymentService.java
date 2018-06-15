@@ -91,10 +91,11 @@ public interface PaymentService {
 	 *            商户Id
 	 * @param merchantName
 	 *            商户名称
-	 * @param memberId 
+	 * @param memberId
 	 * @return Map
 	 */
-	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName, String memberId);
+	public Map<String, Object> splitStartPaymentId(List<String> orderIdList, String merchantId, String merchantName,
+			String memberId);
 
 	/**
 	 * 管理员查询所有商户手工支付单信息
@@ -141,46 +142,114 @@ public interface PaymentService {
 
 	/**
 	 * 根据支付流水号 校验订单是否归属同一口岸
-	 * @param tradeNos 支付流水号集合 
-	 * @param merchantId 商户Id
+	 * 
+	 * @param tradeNos
+	 *            支付流水号集合
+	 * @param merchantId
+	 *            商户Id
 	 * @return Map
 	 */
-	public Map<String,Object> checkPaymentPort(List<String> tradeNos, String merchantId);
+	public Map<String, Object> checkPaymentPort(List<String> tradeNos, String merchantId);
 
 	/**
 	 * 第三方商城平台传递订单信息入口
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
-	public Map<String,Object> getThirdPartyInfo(Map<String, Object> datasMap);
+	public Map<String, Object> getThirdPartyInfo(Map<String, Object> datasMap);
 
 	/**
 	 * 开始发送手工支付单备案
-	 * @param dataList 支付单流水Id集合
-	 * @param errorList 错误信息集合
-	 * @param customsMap 海关口岸信息
-	 * @param paramsMap 缓存参数
+	 * 
+	 * @param dataList
+	 *            支付单流水Id集合
+	 * @param errorList
+	 *            错误信息集合
+	 * @param customsMap
+	 *            海关口岸信息
+	 * @param paramsMap
+	 *            缓存参数
 	 */
 	public void startSendPaymentRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap);
 
 	/**
 	 * 将支付单返回给第三方电商平台
-	 * @param mpay 手工支付单实体类
+	 * 
+	 * @param mpay
+	 *            手工支付单实体类
 	 */
 	public void rePaymentInfo(Mpay mpay);
 
 	/**
 	 * 管理员平台查询支付单报表信息
-	 * @param params 查询参数
+	 * 
+	 * @param params
+	 *            查询参数
 	 * @return Map
 	 */
 	public Map<String, Object> managerGetPaymentReportInfo(Map<String, Object> params);
 
 	/**
 	 * 管理员查询平台支付单报表详情
-	 * @param params 查询参数
+	 * 
+	 * @param params
+	 *            查询参数
 	 * @return Map
 	 */
 	public Map<String, Object> managerGetPaymentReportDetails(Map<String, Object> params);
+
+	/**
+	 * 保存支付单实体
+	 * 
+	 * @param paymentMap
+	 *            支付单信息集合
+	 * @return
+	 */
+	public boolean addEntity(Map<String, Object> paymentMap);
+
+	/**
+	 * 当生成的支付流水号更新到订单表中
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param orderId
+	 *            订单Id
+	 * @param tradeNo
+	 *            支付流水号
+	 * @return boolean
+	 */
+	public boolean updateOrderPayNo(String merchantId, String orderId, String tradeNo);
+
+	/**
+	 * 当网关接收支付单信息成功后,同步更新支付单返回信息
+	 * 
+	 * @param entPayNo
+	 *            交易流水号
+	 * @param rePayMessageID
+	 *            服务端返回的流水Id
+	 * @param customsMap
+	 *            海关信息，参数为：eport(口岸代码)、ciqOrgCode(国检检疫机构代码)、customsCode(海关代码)
+	 * @return Map
+	 */
+	public Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID,
+			Map<String, Object> customsMap);
+
+	/**
+	 * 当通用网关接收支付单失败后,同步更新支付单中网络状态
+	 * 
+	 * @param treadeNo
+	 *            支付单流水号
+	 * @return Map
+	 */
+	public Map<String, Object> updatePaymentFailureStatus(String treadeNo);
+	/**
+	 * 生成支付单时校验订单信息
+	 * 
+	 * @param infoMap
+	 *            参数为：orderId(订单Id)、orderDocId(下单人身份证号码)、orderDocName(下单人姓名)
+	 * @return Map
+	 */
+	public Map<String, Object> checkPaymentInfo(Map<String, Object> infoMap);
 }

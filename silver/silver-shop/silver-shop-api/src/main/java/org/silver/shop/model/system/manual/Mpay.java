@@ -3,7 +3,9 @@ package org.silver.shop.model.system.manual;
 import java.io.Serializable;
 import java.util.Date;
 
-//手工支付单(支持手工录入支付单，支持由手工订单生成支付单)
+/**
+ * 手工支付单(支持手工录入支付单，支持由手工订单生成支付单)
+ */
 public class Mpay implements Serializable {
 	/**
 		 * 
@@ -28,8 +30,11 @@ public class Mpay implements Serializable {
 	private String remarks;// 备注
 	private String pay_status;// 支付状态D-代扣(款项由消费者账户转至第三方支付企业账户)S-实扣(款项由消费者账户转至收款方账户)C-取消(退款)
 	private String pay_currCode;// 支付币制
-
-	private int pay_record_status;// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	/**
+	 * 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	 * 2018-6-14更新为申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
+	 */
+	private int pay_record_status;
 	private String pay_serial_no;// 服务器接收成功后返回编号
 	private String pay_re_note;// 服务器返回信息
 	private Date pay_time;// 付款时间
@@ -40,6 +45,7 @@ public class Mpay implements Serializable {
 	private String resendStatus;// 第三方支付单重发状态：success-成功，false-失败
 	private Date resendDate;// 第三方支付单重发接收成功时间
 	private int networkStatus;//支付单推送至网关接收状态： 0-未发起,1-接收成功,2-接收失败
+	
 	public long getId() {
 		return id;
 	}

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd  
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+
+	<bean id="createPaymentJob" class="org.silver.shop.quartz.CreatePaymentQtz" />
+	<bean id="pushOrderRecordQtz" class="org.silver.shop.quartz.PushOrderRecordQtz" />
+	<bean id="pushPaymentRecordQtzJob" class="org.silver.shop.quartz.PushPaymentRecordQtz" />
+
+	<bean id="SpringQtzJobMethod"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="createPaymentJob" />
+		</property>
+		<property name="targetMethod">  <!-- 要执行的方法名称 -->
+			<value>createPaymentJob</value>
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<!-- 定时任务,扫描商户自助申报的订单,进行订单申报 -->
+	<bean id="pushOrderRecordQtzMethod"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="pushOrderRecordQtz" />
+		</property>
+		<property name="targetMethod">
+			<value>pushOrderRecordJob</value>
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+	<!-- 定时任务,扫描手工支付单中需要自助申报的手工支付单 -->
+	<bean id="pushPaymentRecordQtzJobMethod"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="pushPaymentRecordQtzJob" />
+		</property>
+		<property name="targetMethod">
+			<value>pushPaymentRecordQtzJob</value>
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<!-- ======================== 调度触发器 ======================== -->
+	<bean id="CronTriggerBean"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="SpringQtzJobMethod"></property>
+		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<property name="startDelay" value="60000" />
+	</bean>
+
+	<bean id="pushOrderRecordBean"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="pushOrderRecordQtzMethod"></property>
+		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<property name="startDelay" value="60000" />
+	</bean>
+	
+	<bean id="pushPaymentRecordBean"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="pushPaymentRecordQtzJobMethod"></property>
+		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<property name="startDelay" value="60000" />
+	</bean>
+
+	<!-- ======================== 调度工厂 ======================== -->
+	<bean id="SpringJobSchedulerFactoryBean"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="CronTriggerBean" />
+				<ref bean="pushOrderRecordBean" />
+				<ref bean="pushPaymentRecordBean" />
+			</list>
+		</property>
+	</bean>
+</beans>

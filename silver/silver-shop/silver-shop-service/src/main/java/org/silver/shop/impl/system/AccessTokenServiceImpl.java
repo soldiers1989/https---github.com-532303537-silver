@@ -82,12 +82,15 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
 	@Override
 	public Map<String, Object> getRedisToks(String appkey, String appSecret) {
+		if(StringEmptyUtils.isEmpty(appkey) || StringEmptyUtils.isEmpty(appSecret)){
+			return ReturnInfoUtils.errorInfo("获取缓存中Tok时,参数不能为空!");
+		}
 		// 缓存中的键
-		String redisKey = "Shop_Key_PushRecord_Tok_" + appkey;
+		String redisKey = "SHOP_KEY_PUSH_RECORD_TOK_" + appkey;
 		//String redisTok = JedisUtil.get(redisKey);
 		// 当缓存中已有tok时
 		//if (StringEmptyUtils.isNotEmpty(redisTok)) {
-		//	return ReturnInfoUtils.successDataInfo(redisTok.replaceAll("\"", ""));
+			//return ReturnInfoUtils.successDataInfo(redisTok.replaceAll("\"", ""));
 		//} else {
 			// 请求获取tok
 			Map<String, Object> tokMap = getAccessToken(appkey, appSecret);
@@ -95,7 +98,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 				return tokMap;
 			}
 			// 由于服务器缓存时间为1小时,为岔开时间故而商城为50分钟
-			JedisUtil.set(redisKey, 2500, tokMap.get(BaseCode.DATAS.toString()));
+			JedisUtil.set(redisKey, 3000, tokMap.get(BaseCode.DATAS.toString()));
 			return tokMap;
 		//}
 	}
