@@ -17,15 +17,6 @@ public class MerchantWalletTransaction {
 	@Reference
 	private MerchantWalletService merchantWalletService;
 
-	// 商户钱包充值
-	public Map<String, Object> merchantWalletRecharge(Double money) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		return merchantWalletService.walletRecharge(merchantId, merchantName, money);
-	}
 
 	// 商户获取钱包信息
 	public Map<String, Object> getMerchantWallet() {
@@ -45,5 +36,15 @@ public class MerchantWalletTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		return merchantWalletService.getMerchantWalletLog(merchantId,merchantName,type,page,size,timeLimit);
+	}
+
+	public void addWalletRechargeLog(double amount, String orderId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		merchantWalletService.addWalletRechargeLog(merchantId,merchantName,amount,orderId);
+		
 	}
 }

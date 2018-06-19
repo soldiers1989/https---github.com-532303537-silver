@@ -27,6 +27,7 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.cross.PaymentContent;
+import org.silver.shop.model.system.log.PaymentReceiptLog;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -637,7 +638,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				paymentMap.put("opType", "A");
 			}
 			// 是否向海关发送
-			//paymentMap.put("uploadOrNot", false);
+			// paymentMap.put("uploadOrNot", false);
 			String resultStr = YmHttpUtil.HttpPost(REPORT_URL, paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
 			if (eport == 2) {
@@ -1046,15 +1047,43 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		}
 	}
 
-	public static void main(String[] args) {
-		// 4a5de70025a7425dabeef6e8ea752976
-		// 4a5de70025a7425dabeef6e8ea752976;
-		// 缓存中的键
-		Jedis j = new Jedis("150.242.58.22", 6380);
-		j.auth("jugg");
-
-		String redisKey = "4a5de70025a7425dabeef6e8ea752976_accessToken";
-		String redisTok = j.get(redisKey);
-		System.out.println(redisTok);
+	@Override
+	public Map<String, Object> walletRechargeReceive(Map datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("参数不能为空!");
+		}
+		// 发起交易的订单号
+		String orderId = datasMap.get("out_trade_no") + "";
+		// 返回时间
+		String reTime = datasMap.get("notify_time") + "";
+		// 交易流水号
+		String tradeNo = datasMap.get("trade_no") + "";
+		// 交易金额
+		String totalAmount = datasMap.get("total_amount") + "";
+		Map<String,Object> params = new HashMap<>();
+		params.put("orderId", orderId);
+		List<PaymentReceiptLog> reList  = ysPayReceiveDao.findByProperty(PaymentReceiptLog.class, params, 0, 0);
+		if(reList == null){
+			return ReturnInfoUtils.errorInfo("查询支付日志失败!");
+		}else if(!reList.isEmpty()){
+			PaymentReceiptLog log = reList.get(0);
+			if(Double.parseDouble(totalAmount) != log.getAmount()){
+				logger.error("--银盛支付回调金额错误--发起金额:"+log.getAmount()+";回调金额:"+totalAmount);
+			}
+			if("success".equalsIgnoreCase(log.getTradingStatus())){
+				return ReturnInfoUtils.successInfo();
+			}
+			log.setTradeNo(tradeNo);
+			log.setNotifyTime(DateUtil.parseDate(reTime, "yyyy-MM-dd hh:mm:ss"));
+			//状态：success(交易成功)、failure(交易失败)、process(处理中)
+			log.setTradingStatus("success");
+			log.setUpdateDate(new Date());
+			if(!ysPayReceiveDao.update(log)){
+				logger.error("--银盛支付回调--更新记录失败");
+			}
+			return ReturnInfoUtils.successInfo();
+		}else{
+			return ReturnInfoUtils.errorInfo("订单号["+orderId+"]未查询到交易日志记录!");
+		}
 	}
 }

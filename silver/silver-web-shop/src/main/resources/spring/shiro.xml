@@ -85,7 +85,7 @@
 				/authority/*=anon
 				/cciq/*=anon
 				/sensitive/*=anon
-
+				/reports/*=anon
 				/evaluation/*=anon
 				/gac/*=anon
 				/manualOrder/*=anon
@@ -123,8 +123,9 @@
 				/tests/a=anon
 				/test/*=anon
 				/manage/manageLoginController/*=anon
+				/WEB-INF/*=anon			
 				/logout=anon
-				/*.ico=anon
+				/*.ico=anon	
 				/upload/*=anon
 				/goods/*=anon
 				/resource/*=anon

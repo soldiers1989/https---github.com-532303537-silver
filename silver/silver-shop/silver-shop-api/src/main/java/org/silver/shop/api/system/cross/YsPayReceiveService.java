@@ -30,4 +30,11 @@ public interface YsPayReceiveService {
 	 */
 	public Map<String, Object> sendPayment(String merchantId, Map<String, Object> paymentInfoMap, String tok,
 			Map<String, Object> recordMap, String notifyurl);
+
+	/**
+	 * 钱包充值成功后回调信息处理
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> walletRechargeReceive(Map datasMap);
 }

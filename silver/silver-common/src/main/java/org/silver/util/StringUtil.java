@@ -95,10 +95,29 @@ public class StringUtil {
 		}
 		return true;
 	}
-
+	/**
+	 * 通用替换多表查询字符串
+	 * 例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"}
+	 * @param str
+	 * @return
+	 */
+	public static String replace(String str) {
+		if (StringEmptyUtils.isEmpty(str)) {
+			return "";
+		}
+		//
+		str = str.replace("{\"value\":", "");
+		str = str.replace("\"", "");
+		str = str.replace("}", "");
+		return str;
+	}
+	
 	public static void main(String[] args) {
+		String str = "{\"value\":919.04}";
+		String str2 = "{\"value\":\"深圳市前海爱库\"}";
+		
 		// System.out.println(StringUtil.addPrefixZero("2356", 8));
-		System.out.println(isContainChinese("吾尔尼沙·阿不力米提".replace("·", "")));
+		System.out.println("--->>>>"+replace(str2));
 		//System.out.println(isNumeric("1中"));
 	}
 }

@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-6-19 14:43:35 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.log.PaymentReceiptLog" table="ym_shop_sys_payment_receipt_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="userId" type="java.lang.String">
+            <column name="userId" not-null="true"/>
+        </property>
+        <property name="userName" type="java.lang.String">
+            <column name="userName" not-null="true"/>
+        </property>
+        <property name="orderId" type="java.lang.String">
+            <column name="orderId" not-null="true"/>
+        </property>
+        <property name="tradeNo" type="java.lang.String">
+            <column name="tradeNo" />
+        </property>
+        <property name="beforeChangingBalance" type="double">
+            <column name="beforeChangingBalance" />
+        </property>
+        <property name="amount" type="double">
+            <column name="amount" not-null="true"/>
+        </property>
+        <property name="afterChangeBalance" type="double">
+            <column name="afterChangeBalance" />
+        </property>
+        <property name="type" type="java.lang.String">
+            <column name="type" not-null="true"/>
+        </property>
+        <property name="tradingStatus" type="java.lang.String">
+            <column name="tradingStatus" not-null="true"/>
+        </property>
+        <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+          <property name="notifyTime" type="java.util.Date">
+            <column name="notifyTime" />
+        </property>
+    </class>
+</hibernate-mapping>

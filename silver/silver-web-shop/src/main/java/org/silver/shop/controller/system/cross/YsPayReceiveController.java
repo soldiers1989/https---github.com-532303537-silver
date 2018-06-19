@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.cross;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,6 +55,32 @@ public class YsPayReceiveController {
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());
 		}
+		return "success";
+	}
+	/**
+	 * 银盛支付充值回调
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/ysPayWalletRechargeReceive", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String ysPayWalletRechargeReceive(HttpServletRequest req, HttpServletResponse response) {
+		Map params = new HashMap<>();
+		Enumeration<String> iskeys = req.getParameterNames();
+		while (iskeys.hasMoreElements()) {
+			String key = iskeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		logger.error("------钱包充值回调信息参数-->"+params.toString());
+		if(ApipaySubmit.verifySign(req, params)){
+			Map<String,Object>  reMap = ysPayReceiveTransaction.walletRechargeReceive(params);
+			if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+				logger.error("------钱包充值回调错误---->"+reMap.get(BaseCode.MSG.toString()));
+			}
+		}
+		logger.error("------钱包充值回调信息处理------");
 		return "success";
 	}
 }

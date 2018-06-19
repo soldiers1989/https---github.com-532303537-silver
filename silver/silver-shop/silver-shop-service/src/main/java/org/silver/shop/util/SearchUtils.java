@@ -265,6 +265,9 @@ public final class SearchUtils {
 				}
 				break;
 			case "order_record_status":
+				if("10".equals(value) ){
+					value = "2";
+				}
 				paramMap.put(key, Integer.parseInt(value));
 				break;
 			case MERCHANT_NO:

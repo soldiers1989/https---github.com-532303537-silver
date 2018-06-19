@@ -15,6 +15,7 @@ import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
 import org.silver.shop.model.system.log.MerchantWalletLog;
+import org.silver.shop.model.system.log.PaymentReceiptLog;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
@@ -35,26 +36,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	@Autowired
 	private MerchantWalletDao merchantWalletDao;
 	@Autowired
-	private MerchantUtils merchantUtils;
-	@Autowired
 	private WalletUtils walletUtils;
-
-	@Override
-	public Map<String, Object> walletRecharge(String merchantId, String merchantName, Double money) {
-		Date date = new Date();
-		Map<String, Object> reMap = walletUtils.checkWallet(1, merchantId, merchantName);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return reMap;
-		}
-		MerchantWalletContent wallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		double oldBalance = wallet.getBalance();
-		wallet.setBalance(oldBalance + money);
-		wallet.setUpdateDate(date);
-		if (!merchantWalletDao.update(wallet)) {
-			return ReturnInfoUtils.errorInfo("充值失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
 
 	@Override
 	public Map<String, Object> getMerchantWallet(String merchantId, String merchantName) {
@@ -90,7 +72,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 				break;
 			}
-			Map<String,Object> reWalletMap= walletUtils.checkWallet(1, merchantId, merchantName);
+			Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, merchantName);
 			MerchantWalletContent wallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			params.put("startDate", startDate);
 			params.put("endDate", endDate);
@@ -98,8 +80,8 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			if (type > 0) {
 				params.put("type", type);
 			}
-			List<MerchantWalletLog> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null, page,
-					size);
+			List<MerchantWalletLog> reList = merchantWalletDao.findByPropertyLike(MerchantWalletLog.class, params, null,
+					page, size);
 			long tatolCount = merchantWalletDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
@@ -132,5 +114,31 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	
+	@Override
+	public void addWalletRechargeLog(String merchantId, String merchantName, double amount, String orderId) {
+		if (StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)
+				&& StringEmptyUtils.isNotEmpty(orderId) && amount >= 0.01) {
+			Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, merchantName);
+			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("--查询商户钱包信息失败-->" + reWalletMap.get(BaseCode.MSG.toString()));
+			}
+			MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			//
+			PaymentReceiptLog log = new PaymentReceiptLog();
+			log.setUserId(merchantId);
+			log.setUserName(merchantName);
+			log.setOrderId(orderId);
+			log.setBeforeChangingBalance(merchantWallet.getBalance());
+			log.setAmount(amount);
+			log.setAfterChangeBalance(merchantWallet.getBalance() + amount);
+			log.setType("recharge");
+			log.setTradingStatus("process");
+			log.setCreateBy(merchantName);
+			log.setCreateDate(new Date());
+			if (!merchantWalletDao.add(log)) {
+				logger.error(merchantName + "--商户钱包充值日志记录失败--");
+			}
+		}
+	}
+
 }
