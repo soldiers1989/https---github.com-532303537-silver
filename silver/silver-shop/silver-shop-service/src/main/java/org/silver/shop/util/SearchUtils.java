@@ -627,7 +627,6 @@ public final class SearchUtils {
 					return ReturnInfoUtils.errorInfo("recordFlag参数错误,请重新输入!");
 				}
 				break;
-
 			case "customsPort":
 				paramMap.put(key, value);
 				break;
@@ -648,6 +647,13 @@ public final class SearchUtils {
 				break;
 			case "goodsMerchantId":
 				paramMap.put(key, value);
+				break;
+			case "imageFlag":
+				if ("1".equals(value)) {
+					paramMap.put(key, " IS NULL ");
+				} else if ("2".equals(value)) {
+					paramMap.put(key, " IS NOT NULL ");
+				}
 				break;
 			default:
 				break;

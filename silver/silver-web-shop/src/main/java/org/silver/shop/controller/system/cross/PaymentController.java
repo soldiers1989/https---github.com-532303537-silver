@@ -422,6 +422,31 @@ public class PaymentController {
 		return JSONObject.fromObject(paytemTransaction.managerGetPaymentReportDetails(params)).toString();
 	}
 	
+	@RequestMapping(value = "/managerDeleteMpay", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员移除手工支付单信息 (将手工支付单信息移至历史记录表中)")
+	@RequiresRoles("Manager")
+	@ResponseBody
+	//@RequiresPermissions("manualPayment:managerDeleteMpay")
+	public String managerDeleteMpay(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("tradeNoPack") String tradeNoPack,@RequestParam("note") String note) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		JSONArray json = null;
+		try {
+			json = JSONArray.fromObject(tradeNoPack);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数格式错误,请重试!")).toString();
+		}
+		if (StringEmptyUtils.isEmpty(note)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("备注说明不能为空!")).toString();
+		}
+		return JSONObject.fromObject(paytemTransaction.managerDeleteMpay(json, note)).toString();
+	}
+	
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		// YM180125052191327
@@ -432,7 +457,10 @@ public class PaymentController {
 		item.put("b", "01O180206003352760");
 		// 1
 		item.put("c", "01O180507014605478");
-		System.out.println("------->>"
-				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/payment/checkPaymentPort", item));
+		JSONArray arr = new JSONArray();
+		arr.add("01O180615004341774aa");
+		arr.add("01O180615004333020aa");
+		
+		System.out.println("--->>"+arr.toString());
 	}
 }

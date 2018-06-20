@@ -28,15 +28,6 @@ public class MerchantWalletTransaction {
 		return merchantWalletService.getMerchantWallet(merchantId, merchantName);
 	}
 
-	//商户获取钱包日志
-	public Map<String, Object> getMerchantWalletLog(int type, int page, int size, int timeLimit) {
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		return merchantWalletService.getMerchantWalletLog(merchantId,merchantName,type,page,size,timeLimit);
-	}
 
 	public void addWalletRechargeLog(double amount, String orderId) {
 		Subject currentUser = SecurityUtils.getSubject();

@@ -27,6 +27,7 @@ import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.commerce.OrderRecordGoodsContent;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.cross.PaymentContent;
+import org.silver.shop.model.system.log.MerchantWalletLog;
 import org.silver.shop.model.system.log.PaymentReceiptLog;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
@@ -1052,6 +1053,86 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("参数不能为空!");
 		}
+		try{
+			// 添加交易日志
+			Map<String, Object> rePayMap = addPaymentLog(datasMap);
+			
+			if (!"1".equals(rePayMap.get(BaseCode.STATUS.toString()))) {
+				return rePayMap;
+			}
+			PaymentReceiptLog paymentReceiptLog = (PaymentReceiptLog) rePayMap.get(BaseCode.DATAS.toString());
+			// 钱包金额更新
+			return chooseWallet(paymentReceiptLog);
+		}catch (Exception e) {
+			logger.error("--钱包更新失败--",e);
+			return ReturnInfoUtils.errorInfo("未知错误!");
+		}
+	}
+
+	/**
+	 * 判断不同的Id类型，添加钱包日志记录
+	 * @param paymentReceiptLog 交易日志实体类
+	 * @return
+	 */
+	private Map<String,Object> chooseWallet(PaymentReceiptLog paymentReceiptLog) {
+		String userId = paymentReceiptLog.getUserId();
+		String[] strA = userId.split("_");
+		//截取Id前比自定义的名称
+		String id = strA[0];
+		//判断Id类型
+		if(id.contains("MerchantId")){//商户
+			return updateMerchantWallet(paymentReceiptLog);
+		}else if(id.contains("Member")){//用户
+			
+		}else if(id.contains("AgentId")){//代理商
+			
+		}
+		return ReturnInfoUtils.errorInfo("未找到对应钱包类型信息!");
+	}
+
+	/**
+	 * 更新商户钱包余额
+	 * @param paymentReceiptLog 交易日志记录
+	 * @return Map
+	 */
+	private Map<String,Object> updateMerchantWallet(PaymentReceiptLog paymentReceiptLog) {
+		System.out.println("--------更新商户钱包余额--");
+		Map<String,Object> reWalletMap = walletUtils.checkWallet(1, paymentReceiptLog.getUserId(), "");
+		if(!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))){
+			return reWalletMap;
+		}
+		MerchantWalletContent wallet =  (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+		double oldBalance = wallet.getBalance();
+		wallet.setBalance(oldBalance + paymentReceiptLog.getAmount());
+		if(!ysPayReceiveDao.update(wallet)){
+			return ReturnInfoUtils.errorInfo("商户钱包加款失败!");
+		}
+		Map<String,Object> datas = new HashMap<>();
+		datas.put("walletId", wallet.getWalletId());
+		datas.put("merchantName", wallet.getMerchantName());
+		datas.put("serialName", "钱包充值");
+		datas.put("balance", oldBalance);
+		datas.put("amount", paymentReceiptLog.getAmount());
+		datas.put("type", 2);
+		datas.put("flag", "in");
+		//由于商户充值是像银盛发起故而没有目标钱包Id
+		datas.put("targetWalletId", "000000");
+		datas.put("targetName", "银盛");
+		datas.put("merchantId", paymentReceiptLog.getUserId());
+		datas.put("serialNo",paymentReceiptLog.getTradeNo());
+		datas.put("status", "success");
+		//添加日志
+		return merchantWalletLogService.addWalletLog(datas);
+	}
+
+	/**
+	 * 添加系统交易日志记录
+	 * 
+	 * @param datasMap
+	 *            银盛返回参数
+	 * @return Map
+	 */
+	private Map<String, Object> addPaymentLog(Map datasMap) {
 		// 发起交易的订单号
 		String orderId = datasMap.get("out_trade_no") + "";
 		// 返回时间
@@ -1060,30 +1141,32 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		String tradeNo = datasMap.get("trade_no") + "";
 		// 交易金额
 		String totalAmount = datasMap.get("total_amount") + "";
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("orderId", orderId);
-		List<PaymentReceiptLog> reList  = ysPayReceiveDao.findByProperty(PaymentReceiptLog.class, params, 0, 0);
-		if(reList == null){
+		List<PaymentReceiptLog> reList = ysPayReceiveDao.findByProperty(PaymentReceiptLog.class, params, 0, 0);
+		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询支付日志失败!");
-		}else if(!reList.isEmpty()){
+		} else if (!reList.isEmpty()) {
 			PaymentReceiptLog log = reList.get(0);
-			if(Double.parseDouble(totalAmount) != log.getAmount()){
-				logger.error("--银盛支付回调金额错误--发起金额:"+log.getAmount()+";回调金额:"+totalAmount);
+			String status = log.getTradingStatus();
+			// 当流水号已返回成功后,防止银盛重复返回!
+			if ("success".equals(status)) {
+				return ReturnInfoUtils.errorInfo("交易流水[" + tradeNo + "]已经支付成功!");
 			}
-			if("success".equalsIgnoreCase(log.getTradingStatus())){
-				return ReturnInfoUtils.successInfo();
+			if (Double.parseDouble(totalAmount) != log.getAmount()) {
+				logger.error("--银盛支付回调金额错误--发起金额:" + log.getAmount() + ";回调金额:" + totalAmount);
 			}
 			log.setTradeNo(tradeNo);
 			log.setNotifyTime(DateUtil.parseDate(reTime, "yyyy-MM-dd hh:mm:ss"));
-			//状态：success(交易成功)、failure(交易失败)、process(处理中)
+			// 状态：success(交易成功)、failure(交易失败)、process(处理中)
 			log.setTradingStatus("success");
 			log.setUpdateDate(new Date());
-			if(!ysPayReceiveDao.update(log)){
+			if (!ysPayReceiveDao.update(log)) {
 				logger.error("--银盛支付回调--更新记录失败");
 			}
-			return ReturnInfoUtils.successInfo();
-		}else{
-			return ReturnInfoUtils.errorInfo("订单号["+orderId+"]未查询到交易日志记录!");
+			return ReturnInfoUtils.successDataInfo(log);
+		} else {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]未查询到交易日志记录!");
 		}
 	}
 }

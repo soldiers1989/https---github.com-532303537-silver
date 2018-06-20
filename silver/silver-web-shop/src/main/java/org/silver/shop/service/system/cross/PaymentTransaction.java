@@ -150,4 +150,14 @@ public class PaymentTransaction {
 		return paymentService.managerGetPaymentReportDetails(params);
 	}
 
+	//管理员移除手工支付单信息
+	public Map<String,Object> managerDeleteMpay(JSONArray json, String note) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		String managerName = managerInfo.getManagerName();
+		
+		return paymentService.managerDeleteMpay(json,note,managerName);
+	}
+
 }

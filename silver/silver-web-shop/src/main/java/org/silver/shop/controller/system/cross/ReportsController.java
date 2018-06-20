@@ -34,7 +34,7 @@ public class ReportsController {
 	@ResponseBody
 	@ApiOperation("新-管理员查询综合报表详情")
 	@RequiresRoles("Manager")
-	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	// @RequiresPermissions("report:getSynthesisReportDetails")
 	public String getSynthesisReportDetails(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");

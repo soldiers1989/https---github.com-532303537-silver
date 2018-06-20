@@ -162,6 +162,8 @@ public class GoodsRecordTransaction {
 			String value = req.getParameter(key);
 			param.put(key, value);
 		}
+		param.remove("page");
+		param.remove("size");
 		return goodsRecordService.searchGoodsRecordInfo(merchantId, merchantName, param, page, size);
 	}
 
@@ -1099,5 +1101,16 @@ public class GoodsRecordTransaction {
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
 		return goodsRecordService.merchantDeleteGoodsRecordInfo(merchantId, merchantName, entGoodsNo);
+	}
+
+	//管理员修改商品备案信息
+	public Map<String,Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		//String managerId = managerInfo.getManagerId();
+		String managerName = managerInfo.getManagerName();
+		datasMap.put("managerName", managerName);
+		return goodsRecordService.managerUpdateGoodsRecordInfo(datasMap);
 	}
 }

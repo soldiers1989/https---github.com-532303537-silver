@@ -17,7 +17,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-
 /**
  * 支付完成后,回调信息处理Controller
  *
@@ -25,7 +24,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping("yspay-receive")
 public class YsPayReceiveController {
-	private static Logger logger = LogManager.getLogger(ManualOrderTransaction.class);
+	
+	private static Logger logger = LogManager.getLogger();
 	@Autowired
 	private YsPayReceiveTransaction ysPayReceiveTransaction;
 
@@ -34,31 +34,33 @@ public class YsPayReceiveController {
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
 		Map datasMap = new HashMap<>();
 		datasMap.put("notify_type", req.getParameter("notify_type") + "");
-		
-		datasMap.put("notify_time", req.getParameter("notify_time") + "");		
+
+		datasMap.put("notify_time", req.getParameter("notify_time") + "");
 		datasMap.put("out_trade_no", req.getParameter("out_trade_no") + "");
 		datasMap.put("total_amount", req.getParameter("total_amount") + "");
-		
+
 		datasMap.put("account_date", req.getParameter("account_date") + "");
 		datasMap.put("trade_status", req.getParameter("trade_status") + "");
 		datasMap.put("sign", req.getParameter("sign") + "");
-		
+
 		datasMap.put("trade_no", req.getParameter("trade_no") + "");
-		
+
 		datasMap.put("sign_type", req.getParameter("sign_type") + "");
 		logger.error(datasMap.toString());
-		Map<String, Object> statusMap=new HashMap<>(); 
-		if(ApipaySubmit.verifySign(req, datasMap)){
-			 statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
+		Map<String, Object> statusMap = new HashMap<>();
+		if (ApipaySubmit.verifySign(req, datasMap)) {
+			statusMap = ysPayReceiveTransaction.ysPayReceive(datasMap);
 		}
-		if(!"1".equals(statusMap.get(BaseCode.STATUS.toString()))){
+		if (!"1".equals(statusMap.get(BaseCode.STATUS.toString()))) {
 			logger.error("------支付回调信息处理错误------");
 			logger.error(statusMap.toString());
 		}
 		return "success";
 	}
+
 	/**
-	 * 银盛支付充值回调
+	 * 银盟发起钱包余额充值后,银盛支付充值回调
+	 * 
 	 * @param req
 	 * @param response
 	 * @return
@@ -73,14 +75,13 @@ public class YsPayReceiveController {
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
-		logger.error("------钱包充值回调信息参数-->"+params.toString());
-		if(ApipaySubmit.verifySign(req, params)){
-			Map<String,Object>  reMap = ysPayReceiveTransaction.walletRechargeReceive(params);
-			if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
-				logger.error("------钱包充值回调错误---->"+reMap.get(BaseCode.MSG.toString()));
+		logger.error("--钱包充值回调信息参数-->" + params.toString());
+		if (ApipaySubmit.verifySign(req, params)) {
+			Map<String, Object> reMap = ysPayReceiveTransaction.walletRechargeReceive(params);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("--钱包充值失败-->" + reMap.get(BaseCode.MSG.toString()));
 			}
 		}
-		logger.error("------钱包充值回调信息处理------");
 		return "success";
 	}
 }

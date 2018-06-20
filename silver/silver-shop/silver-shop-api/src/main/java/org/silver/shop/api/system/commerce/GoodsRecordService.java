@@ -247,4 +247,11 @@ public interface GoodsRecordService {
 	 * @return Map
 	 */
 	public Map<String, Object> createWarehous(String merchantId, String merchantName, String customsCode, String customsName);
+
+	/**
+	 * 管理员修改商品备案信息
+	 * @param datasMap 商品备案信息参数
+	 * @return Map
+	 */
+	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap);
 }

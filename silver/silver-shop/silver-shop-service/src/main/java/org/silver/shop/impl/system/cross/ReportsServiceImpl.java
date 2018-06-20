@@ -33,7 +33,6 @@ public class ReportsServiceImpl implements ReportsService {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
 		long startTime = System.currentTimeMillis();
-
 		Table reList = paymentDao.getPaymentReportDetails(params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
@@ -48,6 +47,7 @@ public class ReportsServiceImpl implements ReportsService {
 				params.put("merchantId", StringUtil.replace(json.get("merchant_no") + ""));
 				// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 				params.put("type", "orderRecord");
+				params.put("customsCode", StringUtil.replace(json.get("customsCode") + ""));
 				List<MerchantFeeContent> feeList = paymentDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
 				if (feeList != null && !feeList.isEmpty()) {
 					MerchantFeeContent feeContent = feeList.get(0);

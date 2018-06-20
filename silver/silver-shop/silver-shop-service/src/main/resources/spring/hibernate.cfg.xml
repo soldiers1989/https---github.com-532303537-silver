@@ -12,7 +12,7 @@
 			org.hibernate.dialect.MySQLDialect
 		</property>
 		<property name="connection.url">
-			jdbc:mysql://150.242.58.22:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
+			jdbc:mysql://150.242.58.19:3306/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false
 			<!-- jdbc:mysql://150.242.58.19:3493/ym_shop_db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;allowMultiQueries=true&amp;serverTimezone=PRC&amp;useSSL=false -->
 		</property>
 		<!-- jdbc:mysql://yueliankeji.mysql.rds.aliyuncs.com:3302/szs_sj?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true -->
@@ -132,5 +132,6 @@
 		<mapping resource="org/silver/shop/model/system/log/MemberWalletLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/commerce/OrderHistoryReports.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/PaymentReceiptLog.hbm.xml" />
+			<mapping resource="org/silver/shop/model/system/manual/OldManualPayment.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

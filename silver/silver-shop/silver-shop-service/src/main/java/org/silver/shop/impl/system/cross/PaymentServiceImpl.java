@@ -31,6 +31,7 @@ import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.Mpay;
+import org.silver.shop.model.system.manual.OldManualPayment;
 import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
@@ -46,6 +47,7 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
+import org.silver.util.CopyUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.RandomUtils;
@@ -642,6 +644,7 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		bufferUtils.writeCompletedRedis(errorList, paramsMap);
 	}
+
 	@Override
 	public Map<String, Object> updatePaymentFailureStatus(String treadeNo) {
 		Map<String, Object> paramMap = new HashMap<>();
@@ -660,7 +663,7 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-	
+
 	@Override
 	public Map<String, Object> updatePaymentInfo(String entPayNo, String rePayMessageID,
 			Map<String, Object> customsMap) {
@@ -1074,13 +1077,13 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
-		if(StringEmptyUtils.isNotEmpty(paymentMap.get("pay_record_status") + "")){
+		if (StringEmptyUtils.isNotEmpty(paymentMap.get("pay_record_status") + "")) {
 			entity.setPay_record_status(Integer.parseInt(paymentMap.get("pay_record_status") + ""));
-		}else{
-			//申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
+		} else {
+			// 申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
 			entity.setPay_record_status(1);
 		}
-		//网关接收状态： 0-未发起,1-接收成功,2-接收失败
+		// 网关接收状态： 0-未发起,1-接收成功,2-接收失败
 		entity.setNetworkStatus(0);
 		String orderDate = paymentMap.get("orderDate") + "";
 		Date payTime = DateUtil.randomPaymentDate(orderDate);
@@ -1419,5 +1422,82 @@ public class PaymentServiceImpl implements PaymentService {
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无支付单报表数据!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> managerDeleteMpay(JSONArray json, String note, String managerName) {
+		if (json == null || json.isEmpty() || StringEmptyUtils.isEmpty(note) || StringEmptyUtils.isEmpty(managerName)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String,Object> params = new HashMap<>();
+		Map<String,Object> errMap = null;
+		List<Map<String,Object>> errorList = new ArrayList<>();
+		for (int i = 0; i < json.size(); i++) {
+			params.clear();
+			String tradeNo = String.valueOf(json.get(i));
+			params.put(TRADE_NO, tradeNo);
+			System.out.println("---tradeNo->>"+tradeNo);
+			List<Mpay> rePayList = paymentDao.findByProperty(Mpay.class, params, 1, 1);
+			if (rePayList == null) {
+				errMap = new HashMap<>();
+				errMap.put(BaseCode.MSG.toString(), "支付流水号["+tradeNo+"]查询支付单信息失败,服务器繁忙!");
+				errorList.add(errMap);
+			} else if (!rePayList.isEmpty()) {
+				Mpay payment = rePayList.get(0);
+				OldManualPayment oldPayment = new OldManualPayment();
+				try {
+					CopyUtils.copy(payment, oldPayment);
+				} catch (Exception e) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(), "支付流水号["+tradeNo+"]转换失败!");
+					errorList.add(errMap);
+				}
+				// 注明删除原因
+				oldPayment.setRemarks(note);
+				oldPayment.setDeleteBy(managerName);
+				oldPayment.setDeleteDate(new Date());
+				Map<String, Object> reMpayMap = transferMpay(oldPayment);
+				if (!"1".equals(reMpayMap.get(BaseCode.STATUS.toString()))) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(),reMpayMap.get(BaseCode.MSG.toString()));
+					errorList.add(errMap);
+				}
+				Map<String, Object> reDelMpayMap = deleteMpay(payment);
+				if (!"1".equals(reDelMpayMap.get(BaseCode.STATUS.toString()))) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(),reDelMpayMap.get(BaseCode.MSG.toString()));
+					errorList.add(errMap);
+				}
+			} else {
+				errMap = new HashMap<>();
+				errMap.put(BaseCode.MSG.toString(),"支付流水号["+tradeNo+"]未找到对应的支付单信息!");
+				errorList.add(errMap);
+			}
+		}
+		return ReturnInfoUtils.errorInfo(errorList);
+	}
+
+	/**
+	 * 真实删除手工支付单表中的支付单信息,前提条件为必须已经移植到历史表中
+	 * @param payment
+	 * @return
+	 */
+	private Map<String, Object> deleteMpay(Mpay payment) {
+		if (!paymentDao.delete(payment)) {			
+			return ReturnInfoUtils.errorInfo("支付流水号["+payment.getTrade_no()+"]删除失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 转移手工支付单信息
+	 * @param oldPayment 
+	 * @return
+	 */
+	private Map<String, Object> transferMpay(OldManualPayment oldPayment) {
+		if (!paymentDao.add(oldPayment)) {			
+			return ReturnInfoUtils.errorInfo("支付流水号["+oldPayment.getTrade_no()+"]添加至历史表中失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

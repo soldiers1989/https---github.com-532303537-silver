@@ -114,8 +114,8 @@ public class ReturnInfoUtils {
 			return successInfo();
 		}
 		Map<String, Object> map = new HashMap<>();
-		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-		map.put(BaseCode.MSG.toString(), StatusCode.UNKNOWN.getMsg());
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		map.put(BaseCode.ERROR.toString(), errorList);
 		return map;
 	}

@@ -1,7 +1,7 @@
 package org.silver.shop.impl.system.log;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,17 +12,15 @@ import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.dao.system.log.MerchantWalletLogDao;
 import org.silver.shop.model.system.log.MerchantWalletLog;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.WalletUtils;
-import org.silver.util.CheckDatasUtil;
+import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alibaba.dubbo.config.annotation.Service;
-
-import net.sf.json.JSONArray;
 
 @Service(interfaceClass = MerchantWalletLogService.class)
 public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
@@ -35,7 +33,7 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 	private MerchantWalletLogDao merchantWalletLogDao;
 	@Autowired
 	private WalletUtils walletUtils;
-	
+
 	@Override
 	public Map<String, Object> addWalletLog(Map<String, Object> datasMap) {
 		try {
@@ -99,6 +97,38 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-
+	@Override
+	public Map<String,Object> getWalletLog(String merchantId, int type, int page, int size, String startDate, String endDate) {
+		if (page >= 0 && size >= 0 && type >= 0 && StringEmptyUtils.isNotEmpty(startDate)
+				&& StringEmptyUtils.isNotEmpty(endDate)) {
+			Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, "");
+			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+				return reWalletMap;
+			}
+			MerchantWalletContent wallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			Map<String, Object> params = new HashMap<>();
+			try{
+				params.put("startDate", DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss"));
+				params.put("endDate", DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss"));
+			}catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("日期格式错误,请重新输入!");
+			}
+			params.put("merchantWalletId", wallet.getWalletId());
+			if (type > 0) {
+				params.put("type", type);
+			}
+			List<MerchantWalletLog> reList = merchantWalletLogDao.findByPropertyLike(MerchantWalletLog.class, params, null,
+					page, size);
+			long tatolCount = merchantWalletLogDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			} else if (!reList.isEmpty()) {
+				return ReturnInfoUtils.successDataInfo(reList, tatolCount);
+			} else {
+				return ReturnInfoUtils.errorInfo("暂无数据!");
+			}
+		}
+		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	}
 
 }

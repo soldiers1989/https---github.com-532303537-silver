@@ -92,8 +92,8 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 	public Table findByRecordInfoLike(Class entity, Map params, Map blurryMap, int page, int size) {
 		Session session = null;
 		try {
-			String queryString = "SELECT t1.customsPort, t1.customsPortName, t1.customsCode, t1.customsName, t1.ciqOrgCode, t1.ciqOrgName, t1.status as acceptFlag, t2.* FROM ym_shop_goods_record t1 RIGHT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo ";
-			queryString += " where ";
+			StringBuilder queryString = new StringBuilder(
+					" SELECT t1.customsPort, t1.customsPortName, t1.customsCode, t1.customsName, t1.ciqOrgCode, t1.ciqOrgName, t1.status as acceptFlag, t2.* FROM ym_shop_goods_record t1 RIGHT JOIN ym_shop_goods_record_detail t2 ON t1.goodsSerialNo = t2.goodsSerialNo where ");
 			List<Object> sqlParams = new ArrayList<>();
 			if (params != null && params.size() > 0) {
 				String property;
@@ -101,16 +101,20 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 				while (is.hasNext()) {
 					property = is.next();
 					if ("startDate".equals(property)) {
-						queryString = queryString + "t2.createDate " + " > " + "?" + " and ";
+						queryString.append("t2.createDate " + " >= " + "?" + " AND ");
 					} else if ("endDate".equals(property)) {
-						queryString = queryString + "t2.createDate " + " < " + "?" + " and ";
+						queryString.append("t2.createDate " + " <= " + "?" + " AND ");
 					} else if ("customsPort".equals(property) || "customsPortName".equals(property)
 							|| "customsCode".equals(property) || "customsName".equals(property)
 							|| "ciqOrgCode".equals(property) || "ciqOrgName".equals(property)) {
-						queryString = queryString + "t1." + property + " = " + "?" + " and ";
+						queryString.append("t1." + property + " = " + "?" + " AND ");
+					} else if ("imageFlag".equals(property)) {
+						queryString.append("t2.spareGoodsImage " + params.get(property) + " AND ");
+						continue;
 					} else {
-						queryString = queryString + "t2." + property + " = " + "?" + " and ";
+						queryString.append("t2." + property + " = " + "?" + " AND ");
 					}
+					//
 					sqlParams.add(params.get(property));
 				}
 			}
@@ -119,19 +123,19 @@ public class GoodsRecordDaoImpl extends BaseDaoImpl implements GoodsRecordDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					queryString = queryString + "t2." + property + " LIKE " + "?" + " and ";
+					queryString.append("t2." + property + " LIKE " + "?" + " and ");
 					sqlParams.add(blurryMap.get(property));
 				}
 			}
-			queryString += " 1=1 Order By id DESC";
+			queryString.append(" 1=1 Order By id DESC");
 			session = getSession();
 			java.sql.Connection conn = session.connection();
 			Table l = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, page * size, size);
+				l = DataUtils.queryData(conn, queryString.toString(), sqlParams, null, page * size, size);
 			} else {
-				l = DataUtils.queryData(conn, queryString, sqlParams, null, null, null);
+				l = DataUtils.queryData(conn, queryString.toString(), sqlParams, null, null, null);
 			}
 			session.close();
 			// Transform.tableToJson(l);

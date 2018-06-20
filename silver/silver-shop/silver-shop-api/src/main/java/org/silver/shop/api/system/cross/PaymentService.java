@@ -252,4 +252,13 @@ public interface PaymentService {
 	 * @return Map
 	 */
 	public Map<String, Object> checkPaymentInfo(Map<String, Object> infoMap);
+
+	/**
+	 * 管理员移除手工支付单至历史记录表中
+	 * @param json
+	 * @param note
+	 * @param managerName
+	 * @return
+	 */
+	public Map<String, Object> managerDeleteMpay(JSONArray json, String note, String managerName);
 }

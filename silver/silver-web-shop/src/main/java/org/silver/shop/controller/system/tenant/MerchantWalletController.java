@@ -103,39 +103,4 @@ public class MerchantWalletController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject( merchantWalletTransaction.getMerchantWallet()).toString();
 	}
-
-	/**
-	 * 商户查看钱包记录
-	 * 
-	 * @param req
-	 * @param response
-	 * @param type
-	 *            查询时间范围 1-三个月内,2-一年内,3-查询今天
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数目
-	 * @return String
-	 */
-	@RequestMapping(value = "/getMerchantWalletLog", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@RequiresRoles("Merchant")
-	@ResponseBody
-	@ApiOperation("商户查看钱包记录")
-	public String getMerchantWalletLog(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("type") int type, @RequestParam("page") int page, @RequestParam("size") int size,
-			@RequestParam("timeLimit") int timeLimit) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (timeLimit == 1 || timeLimit == 2 || timeLimit == 3) {
-			statusMap = merchantWalletTransaction.getMerchantWalletLog(type, page, size, timeLimit);
-		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.toString());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
-	}
 }

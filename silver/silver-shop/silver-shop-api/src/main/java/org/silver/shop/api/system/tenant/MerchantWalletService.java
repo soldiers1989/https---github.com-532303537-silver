@@ -14,17 +14,6 @@ public interface MerchantWalletService {
 	 */
 	public Map<String, Object> getMerchantWallet(String merchantId, String merchantName);
 
-	/**
-	 * 商户获取钱包日志
-	 * @param merchantId 商户Id
-	 * @param merchantName 商户名称
-	 * @param type 
-	 * @param size 
-	 * @param page 
-	 * @param timeLimit 
-	 * @return
-	 */
-	public Map<String, Object> getMerchantWalletLog(String merchantId, String merchantName, int type, int page, int size, int timeLimit);
 
 	/**
 	 * 商户钱包扣款

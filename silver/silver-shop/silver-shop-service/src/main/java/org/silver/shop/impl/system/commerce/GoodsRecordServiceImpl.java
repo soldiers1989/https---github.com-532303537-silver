@@ -1122,6 +1122,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			Map<String, Object> datasMap, int page, int size) {
 		//
 		Map<String, Object> reDatasMap = SearchUtils.universalRecordGoodsSearch(datasMap);
+		if(!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))){
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		paramMap.put("goodsMerchantId", merchantId);
@@ -1671,6 +1674,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> managerGetGoodsRecordInfo(Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalRecordGoodsSearch(datasMap);
+		if(!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))){
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		Table reList = goodsRecordDao.findByRecordInfoLike(GoodsRecordDetail.class, paramMap, blurryMap, page, size);
@@ -1808,6 +1814,95 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("修改参数不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		// 商家平台代码
+		String marCode = datasMap.get("marCode") + "";
+		String oldEntGoodsNo = null;
+		String newEntGoodsNo = null;
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
+			oldEntGoodsNo = oldEntGoodsNo + "_" + marCode;
+			newEntGoodsNo = datasMap.get("entGoodsNo") + "_" + marCode;
+		} else {
+			oldEntGoodsNo = datasMap.get("oldEntGoodsNo") + "";
+			newEntGoodsNo = datasMap.get("entGoodsNo") + "";
+		}
+		params.put("entGoodsNo", oldEntGoodsNo);
+		List<GoodsRecordDetail> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		if (reList != null && !reList.isEmpty()) {
+			GoodsRecordDetail goodsRecordInfo = reList.get(0);
+			goodsRecordInfo.setEntGoodsNo(newEntGoodsNo);
+			goodsRecordInfo.setEmsNo(datasMap.get("emsNo") + "");
+			goodsRecordInfo.setItemNo(datasMap.get("itemNo") + "");
+			goodsRecordInfo.setShelfGName(datasMap.get("shelfGName") + "");
+			goodsRecordInfo.setNcadCode(datasMap.get("ncadCode") + "");
+			goodsRecordInfo.setHsCode(datasMap.get("hsCode") + "");
+			goodsRecordInfo.setBarCode(datasMap.get("barCode") + "");
+			goodsRecordInfo.setGoodsName(datasMap.get("goodsName") + "");
+			goodsRecordInfo.setGoodsStyle(datasMap.get("goodsStyle") + "");
+			goodsRecordInfo.setBrand(datasMap.get("brand") + "");
+			goodsRecordInfo.setgUnit(datasMap.get("gUnit") + "");
+			goodsRecordInfo.setStdUnit(datasMap.get("stdUnit") + "");
+			goodsRecordInfo.setSecUnit(datasMap.get("secUnit") + "");
+			try {
+				goodsRecordInfo.setRegPrice(Double.valueOf(datasMap.get("regPrice") + ""));
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("商品价格错误,请重新输入!");
+			}
+			goodsRecordInfo.setGiftFlag(datasMap.get("giftFlag") + "");
+			goodsRecordInfo.setOriginCountry(datasMap.get("originCountry") + "");
+			goodsRecordInfo.setQuality(datasMap.get("quality") + "");
+			goodsRecordInfo.setQualityCertify(datasMap.get("qualityCertify") + "");
+			goodsRecordInfo.setManufactory(datasMap.get("manufactory") + "");
+			double netWt = 0.0;
+			try {
+				netWt = Double.valueOf(datasMap.get("netWt") + "");
+				goodsRecordInfo.setNetWt(netWt);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("商品净重错误,请重新输入!");
+			}
+			double grossWt = 0.0;
+			try {
+				grossWt = Double.valueOf(datasMap.get("grossWt") + "");
+				goodsRecordInfo.setGrossWt(grossWt);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("商品毛重错误,请重新输入!");
+			}
+			goodsRecordInfo.setNotes(datasMap.get("notes") + "");
+			goodsRecordInfo.setIngredient(datasMap.get("ingredient") + "");
+			goodsRecordInfo.setAdditiveflag(datasMap.get("additiveflag") + "");
+			goodsRecordInfo.setPoisonflag(datasMap.get("poisonflag") + "");
+			goodsRecordInfo.setUpdateDate(new Date());
+			goodsRecordInfo.setUpdateBy(datasMap.get("managerName") + "");
+			if (netWt > grossWt) {
+				return ReturnInfoUtils.errorInfo("商品净重不能大于毛重,请重新输入!");
+			}
+			if (StringEmptyUtils.isNotEmpty(marCode)) {
+				JSONObject json = JSONObject.fromObject(goodsRecordInfo.getSpareParams());
+				json.put("SKU", datasMap.get("SKU") + "");
+				json.put("marCode", marCode);
+				goodsRecordInfo.setSpareParams(json.toString());
+			}
+			String DZKN_NO = datasMap.get("DZKN_NO") + "";
+			if (DZKN_NO.length() != 16) {
+				return ReturnInfoUtils.errorInfo("电子口岸编码错误!");
+			}
+			goodsRecordInfo.setDZKNNo(datasMap.get("DZKN_NO") + "");
+			goodsRecordInfo.setEbEntName(datasMap.get("ebEntName") + "");
+			// 电商企业编号(智检)
+			goodsRecordInfo.setEbEntNo(datasMap.get("ebEntNo") + "");
+			if (!goodsRecordDao.update(goodsRecordInfo)) {
+				return ReturnInfoUtils.errorInfo("修改商品备案信息错误,服务器繁忙!");
+			}
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("商品自编号查询商品信息失败,请核对信息!");
 	}
 
 }

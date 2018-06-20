@@ -153,7 +153,9 @@ public class MorderServiceImpl implements MorderService {
 		paramMap.put("del_flag", 0);
 		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
 		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		if (mlist != null && !mlist.isEmpty()) {
+		if(mlist == null ){
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		}else if (!mlist.isEmpty()) {
 			List<Map<String, Object>> lMap = new ArrayList<>();
 			paramMap.clear();
 			for (Morder m : mlist) {
@@ -170,8 +172,9 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("datas", lMap);
 			statusMap.put("count", count);
 			return statusMap;
+		}else{
+			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-		return ReturnInfoUtils.errorInfo("暂无数据,服务器繁忙!");
 	}
 
 	@Override

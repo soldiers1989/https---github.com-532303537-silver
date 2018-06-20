@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -191,14 +192,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page > 0 && size > 0) {
-			statusMap = goodsRecordTransaction.searchGoodsRecordInfo(req, page, size);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.searchGoodsRecordInfo(req, page, size)).toString();
 	}
 
 	@RequestMapping(value = "/batchAddNotRecordGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -278,8 +272,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.merchantEditGoodsRecordInfo(req);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.merchantEditGoodsRecordInfo(req)).toString();
 	}
 
 	@RequestMapping(value = "/managerGetGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -338,4 +331,29 @@ public class GoodsRecordController {
 		Map<String, Object> statusMap = goodsRecordTransaction.merchantDeleteGoodsRecordInfo(entGoodsNo);
 		return JSONObject.fromObject(statusMap).toString();
 	}
+
+	@RequestMapping(value = "/managerUpdateGoodsRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("管理员修改商品备案信息")
+	//@RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
+	public String managerUpdateGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response, int length) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> isKes = req.getParameterNames();
+		while (isKes.hasMoreElements()) {
+			String key =  isKes.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		if(datasMap.isEmpty()){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(goodsRecordTransaction.managerUpdateGoodsRecordInfo(datasMap)).toString();
+	}
+	
 }

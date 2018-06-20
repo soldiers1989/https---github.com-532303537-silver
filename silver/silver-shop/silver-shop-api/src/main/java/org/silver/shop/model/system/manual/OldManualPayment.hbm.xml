@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-6-20 16:43:21 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.manual.OldManualPayment" table="ym_shop_manual_payment_old">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchant_no" type="java.lang.String">
+            <column name="merchant_no" />
+        </property>
+        <property name="trade_no" type="java.lang.String">
+            <column name="trade_no" />
+        </property>
+        <property name="morder_id" type="java.lang.String">
+            <column name="morder_id" />
+        </property>
+        <property name="pay_amount" type="double">
+            <column name="pay_amount" />
+        </property>
+        <property name="trade_status" type="java.lang.String">
+            <column name="trade_status" />
+        </property>
+        <property name="payer_name" type="java.lang.String">
+            <column name="payer_name" />
+        </property>
+        <property name="payer_document_type" type="java.lang.String">
+            <column name="payer_document_type" />
+        </property>
+        <property name="payer_document_number" type="java.lang.String">
+            <column name="payer_document_number" />
+        </property>
+        <property name="payer_phone_number" type="java.lang.String">
+            <column name="payer_phone_number" />
+        </property>
+        <property name="year" type="java.lang.String">
+            <column name="year" />
+        </property>
+        <property name="del_flag" type="int">
+            <column name="del_flag" />
+        </property>
+        <property name="create_date" type="java.util.Date">
+            <column name="create_date" />
+        </property>
+        <property name="create_by" type="java.lang.String">
+            <column name="create_by" />
+        </property>
+        <property name="update_date" type="java.util.Date">
+            <column name="update_date" />
+        </property>
+        <property name="update_by" type="java.lang.String">
+            <column name="update_by" />
+        </property>
+        <property name="remarks" type="java.lang.String">
+            <column name="remarks" />
+        </property>
+        <property name="pay_status" type="java.lang.String">
+            <column name="pay_status" />
+        </property>
+        <property name="pay_currCode" type="java.lang.String">
+            <column name="pay_currCode" />
+        </property>
+        <property name="pay_record_status" type="int">
+            <column name="pay_record_status" />
+        </property>
+        <property name="pay_serial_no" type="java.lang.String">
+            <column name="pay_serial_no" />
+        </property>
+        <property name="pay_re_note" type="java.lang.String">
+            <column name="pay_re_note" />
+        </property>
+        <property name="pay_time" type="java.util.Date">
+            <column name="pay_time" />
+        </property>
+        <property name="eport" type="java.lang.String">
+            <column name="eport" />
+        </property>
+        <property name="customsCode" type="java.lang.String">
+            <column name="customsCode" />
+        </property>
+        <property name="ciqOrgCode" type="java.lang.String">
+            <column name="ciqOrgCode" />
+        </property>
+        <property name="thirdPartyId" type="java.lang.String">
+            <column name="thirdPartyId" />
+        </property>
+        <property name="resendStatus" type="java.lang.String">
+            <column name="resendStatus" />
+        </property>
+        <property name="resendDate" type="java.util.Date">
+            <column name="resendDate" />
+        </property>
+        <property name="networkStatus" type="int">
+            <column name="networkStatus" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

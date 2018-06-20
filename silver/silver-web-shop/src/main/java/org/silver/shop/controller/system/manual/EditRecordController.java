@@ -28,6 +28,7 @@ import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -598,6 +599,7 @@ public class EditRecordController {
 	@RequestMapping(value = "/managerDeleteMorder", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员删除手工订单信息 (将订单及订单商品信息移至历史记录表中)")
 	@RequiresPermissions("manualOrder:managerDeleteMorder")
+	@ResponseBody
 	public String managerDeleteMorder(HttpServletResponse resp, HttpServletRequest req,
 			@RequestParam("orderIdPack") String orderIdPack, String note) {
 		String originHeader = req.getHeader("Origin");
