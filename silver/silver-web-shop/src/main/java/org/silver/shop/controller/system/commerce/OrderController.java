@@ -1,5 +1,6 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -10,17 +11,23 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shop.controller.system.cross.DirectPayConfig;
 import org.silver.shop.service.system.commerce.OrderTransaction;
 import org.silver.util.DateUtil;
+import org.silver.util.JedisUtil;
+import org.silver.util.PhoneUtils;
+import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SendMsg;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +36,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.xml.sax.SAXException;
+
+import com.google.code.kaptcha.Constants;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
@@ -456,6 +466,68 @@ public class OrderController {
 		return JSONObject.fromObject(orderTransaction.managerGetOrderReportDetails(params)).toString();
 	}
 
+	@RequestMapping(value = "/thirdPromoteBusiness", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("第三方商城推广订单下单入口")
+	//@RequiresRoles("Manager")
+	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
+	public String thirdPromoteBusiness(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> params = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		if (params.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.thirdPromoteBusiness(params)).toString();
+	}
+	
+	/**
+	 * 第三方商城推广订单下单时发送手机验证码
+	 * @param phone
+	 *            手机号码
+	 * @return Map
+	 */
+	@RequestMapping(value = "/sendThirdPromoteBusinessCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String sendEditLoginPasswordCaptchaCode(String phone, HttpServletRequest req, HttpServletResponse response) throws ParserConfigurationException, SAXException, IOException {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (PhoneUtils.isPhone(phone) ) {
+			JSONObject json = new JSONObject();
+			// 获取用户注册保存在缓存中的验证码
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone);
+			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+				int code = RandomUtils.getRandom(6);
+				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				json.put("time", new Date().getTime());
+				json.put("code", code);
+				JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone, 900, json);
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+			} else {
+				json = JSONObject.fromObject(redisCode);
+				long time = Long.parseLong(json.get("time") + "");
+				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
+				if ((new Date().getTime() - time) < 58000) {
+					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				}
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码错误,请重新输入!")).toString();
+	}
+	
+	
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		List<JSONObject> orderGoodsList = new ArrayList<>();

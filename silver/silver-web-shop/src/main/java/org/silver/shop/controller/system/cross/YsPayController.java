@@ -61,7 +61,7 @@ public class YsPayController {
 		req.setAttribute("return_url", "http://www.191ec.com");
 		req.setAttribute("version", DirectPayConfig.VERSION);
 		req.setAttribute("out_trade_no", entOrderNo);// 商品交易订单号
-		req.setAttribute("subject", "即时到账");
+		req.setAttribute("subject", "银盟商城购物");
 		req.setAttribute("total_amount", orderTotalPrice);// 支付总金额
 		req.setAttribute("seller_id", DirectPayConfig.PLATFORM_PARTNER_NO);
 		req.setAttribute("seller_name", DirectPayConfig.PLATFORM_PARTNER_NAME);

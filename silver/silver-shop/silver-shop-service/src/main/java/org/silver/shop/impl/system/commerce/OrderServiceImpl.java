@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CountryService;
 import org.silver.shop.api.common.base.CustomsPortService;
@@ -19,6 +20,8 @@ import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.RecipientService;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.impl.system.tenant.RecipientServiceImpl;
+import org.silver.shop.model.common.base.Area;
+import org.silver.shop.model.common.base.City;
 import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.Metering;
 import org.silver.shop.model.common.base.Province;
@@ -41,13 +44,16 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
 import org.silver.shop.util.MerchantUtils;
+import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
+import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
+import org.silver.util.RandomPasswordUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
@@ -82,8 +88,7 @@ public class OrderServiceImpl implements OrderService {
 	private MemberService memberService;
 	@Autowired
 	private WalletUtils walletUtils;
-	
-	
+
 	/**
 	 * 小写开头订单编号
 	 */
@@ -433,10 +438,10 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public Map<String, Object> updateOrderRecordInfo(Map<String, Object> datasMap) {
-		if(datasMap == null  || datasMap.isEmpty()){
+		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("回调参数不能为空!");
 		}
-		System.out.println("-----订单异步回调参数->"+datasMap.toString());
+		System.out.println("-----订单异步回调参数->" + datasMap.toString());
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
@@ -1205,7 +1210,7 @@ public class OrderServiceImpl implements OrderService {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额["
 						+ goodsJson.get("Total") + "]格式错误!");
 			}
-			//由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
+			// 由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
 			DecimalFormat df = new DecimalFormat("#.00");
 			double temToal = Double.parseDouble(df.format(count * price));
 			if (temToal != total) {
@@ -1639,8 +1644,8 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String,Object> managerGetOrderReportDetails(Map<String, Object> params) {
-		if(params == null || params.isEmpty()){
+	public Map<String, Object> managerGetOrderReportDetails(Map<String, Object> params) {
+		if (params == null || params.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("参数不能为空!");
 		}
 		Table reList = orderDao.getOrderDailyReportetDetails(params);
@@ -1651,5 +1656,369 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无报表数据!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> thirdPromoteBusiness(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("下单参数不能为空!");
+		}
+		// 手机号码
+		String phone = datasMap.get("phone") + "";
+		String verificationCode = datasMap.get("verificationCode") + "";
+		// 获取缓存中用户注册手机验证码
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			JSONObject json = JSONObject.fromObject(redis);
+			//long time = Long.parseLong(json.get("time") + "");
+			String code = json.get("code") + "";
+			if(verificationCode.equals(code)){
+				return ReturnInfoUtils.successInfo();
+			}
+		}else{
+			
+		}
+
+		// 校验参数
+		Map<String, Object> reCheckMap = checkDatas(datasMap);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+		// 校验商品信息
+		Map<String, Object> reGoodsMap = checkGoodsDatas(datasMap);
+		if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
+			return reGoodsMap;
+		}
+
+		// 校验身份证号码
+		Map<String, Object> reCheckIdcardMap = checkIdCardInfo(datasMap);
+		if (!"1".equals(reCheckIdcardMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckIdcardMap;
+		}
+		String memberId = reCheckIdcardMap.get(BaseCode.DATAS.toString()) + "";
+		// 添加收货人地址信息
+		Map<String, Object> reRecipientMap = addRecipientInfo(datasMap, memberId);
+		if (!"1".equals(reRecipientMap.get(BaseCode.STATUS.toString()))) {
+			return reRecipientMap;
+		}
+		RecipientContent recipient = (RecipientContent) reRecipientMap.get(BaseCode.DATAS.toString());
+
+		return null;
+	}
+
+	/**
+	 * 添加收货人地址信息
+	 * 
+	 * @param datasMap
+	 * @param memberId
+	 *            用户Id
+	 * @return
+	 */
+	private Map<String, Object> addRecipientInfo(Map<String, Object> datasMap, String memberId) {
+		RecipientContent recipient = new RecipientContent();
+		recipient.setMemberId(memberId);
+		// 下单人姓名=身份证号码
+		String idcard = datasMap.get("idcard") + "";
+		// 下单人姓名
+		String idName = datasMap.get("idName") + "";
+		// 手机号码
+		String phone = datasMap.get("phone") + "";
+		recipient.setMemberName(idcard);
+		if (!StringUtil.isContainChinese(idName.replaceAll("·", ""))) {
+			return ReturnInfoUtils.errorInfo("收货人姓名错误,请重新输入");
+		}
+		recipient.setRecipientName(idName);
+		if (!IdcardValidator.validate18Idcard(idcard)) {
+			return ReturnInfoUtils.errorInfo("收货人身份证号码错误,请重新输入!");
+		}
+		recipient.setRecipientCardId(idcard);
+		if (!PhoneUtils.isPhone(phone)) {
+			return ReturnInfoUtils.errorInfo("手机号码不正确,请重新输入!");
+		}
+		recipient.setRecipientTel(phone);
+		recipient.setRecipientCountryName("中国");
+		recipient.setRecipientCountryCode("142");
+		String recProvincesName = datasMap.get("recProvincesName") + "";
+		recipient.setRecProvincesName(recProvincesName);
+		Map<String, Object> reProvincesMap = setRecProvincesCode(recipient);
+		if (!"1".equals(reProvincesMap.get(BaseCode.STATUS.toString()))) {
+			return reProvincesMap;
+		}
+		recipient.setRecCityName(datasMap.get("recCityName") + "");
+		Map<String, Object> reCityMap = setRecCityCode(recipient);
+		if (!"1".equals(reCityMap.get(BaseCode.STATUS.toString()))) {
+			return reCityMap;
+		}
+		recipient.setRecAreaName(datasMap.get("recAreaName") + "");
+		Map<String, Object> reAreaMap = setRecAreaCode(recipient);
+		if (!"1".equals(reAreaMap.get(BaseCode.STATUS.toString()))) {
+			return reAreaMap;
+		}
+		recipient.setRecipientAddr(datasMap.get("recipientAddr") + "");
+		recipient.setCreateBy(idName);
+		recipient.setCreateDate(new Date());
+		// 删除标识
+		recipient.setDeleteFlag(0);
+		List<RecipientContent> cacheList = new ArrayList<>();
+		cacheList.add(recipient);
+		return recipientService.saveRecipientContent(cacheList);
+	}
+
+	/**
+	 * 根据区域中文名称,查询对应的城市编码
+	 * 
+	 * @param recipient
+	 *            收货地址信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> setRecAreaCode(RecipientContent recipient) {
+		String recAreaName = recipient.getRecAreaName();
+		if (StringEmptyUtils.isEmpty(recAreaName)) {
+			return ReturnInfoUtils.errorInfo("区域名称不能为空!");
+		}
+		String str = "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("areaName", recAreaName.trim());
+		List<Area> reList = orderDao.findByProperty(Area.class, params, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			for (Area area : reList) {
+				if (area.getAreaName().equals(recAreaName.trim())) {
+					str = area.getAreaCode();
+				}
+			}
+		}
+		if (StringEmptyUtils.isEmpty(str)) {
+			return ReturnInfoUtils.errorInfo("查询地区编码错误!");
+		} else {
+			recipient.setRecAreaCode(str);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据城市中文名称,查询对应的城市编码
+	 * 
+	 * @param recipient
+	 *            收货地址信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> setRecCityCode(RecipientContent recipient) {
+		String recCityName = recipient.getRecCityName();
+		if (StringEmptyUtils.isEmpty(recCityName)) {
+			return ReturnInfoUtils.errorInfo("城市名称不能为空!");
+		}
+		String str = "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("cityName", recCityName.trim());
+		List<City> reList = orderDao.findByProperty(City.class, params, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			for (City city : reList) {
+				if (city.getCityName().equals(recCityName.trim())) {
+					str = city.getCityCode();
+				}
+			}
+		}
+		if (StringEmptyUtils.isEmpty(str)) {
+			return ReturnInfoUtils.errorInfo("查询城市编码错误!");
+		} else {
+			recipient.setRecCityCode(str);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据省份中文名称,查询对应的省份编码
+	 * 
+	 * @param recipient
+	 *            收货地址信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> setRecProvincesCode(RecipientContent recipient) {
+		String recProvincesName = recipient.getRecProvincesName();
+		if (StringEmptyUtils.isEmpty(recProvincesName)) {
+			return ReturnInfoUtils.errorInfo("省份名称不能为空!");
+		}
+		String str = "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("provinceName", recProvincesName.trim());
+		List<Province> reList = orderDao.findByProperty(Province.class, params, 0, 0);
+		if (reList != null && !reList.isEmpty()) {
+			for (Province province : reList) {
+				if (province.getProvinceName().equals(recProvincesName)) {
+					str = province.getProvinceCode();
+				}
+			}
+		}
+		if (StringEmptyUtils.isEmpty(str)) {
+			return ReturnInfoUtils.errorInfo("查询省份编码错误!");
+		} else {
+			recipient.setRecProvincesCode(str);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 校验身份证号码是否已在商城注册,如果已经注册则需要提供用户登陆密码,进行登陆验证,如果没有注册过,则进行会员注册
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	private Map<String, Object> checkIdCardInfo(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("核对身份证是否注册时,请求参数不能为空!");
+		}
+		String idcard = datasMap.get("idcard") + "";
+		Map<String, Object> reCheckIdcardMap = memberService.checkIdCard(idcard);
+		String msg = reCheckIdcardMap.get(BaseCode.MSG.toString()) + "";
+		if (!"1".equals(reCheckIdcardMap.get(BaseCode.STATUS.toString()))) {
+			if (msg.contains("已注册过会员")) {// 当检测到身份证号码已注册过会员后
+
+				String password = datasMap.get("password") + "";
+				if (StringEmptyUtils.isEmpty(password)) {
+					return ReturnInfoUtils.errorInfo("请输入密码!");
+				} else {// 当用户已存在,并且有输入密码时,则进行密码校验
+					List<Member> reList = memberService.findMemberBy(idcard);
+					if (reList != null && !reList.isEmpty()) {
+						MD5 md5 = new MD5();
+						Member member = reList.get(0);
+						String loginpas = member.getLoginPass();
+						String md5Pas = md5.getMD5ofStr(password);
+						// 判断查询出的账号密码与前台登录的账号密码是否一致
+						if (md5Pas.equals(loginpas)) {
+							// 登陆成功,进行下单业务逻辑
+						}
+					}
+				}
+			} else {// 系统报错
+				return reCheckIdcardMap;
+			}
+		}
+		// 当身份号码在系统中不存在时进行会员注册
+		return memberRegister(datasMap);
+	}
+
+	/**
+	 * 会员注册
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	private Map<String, Object> memberRegister(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("注册会员账号时,请求参数不能为空!");
+		}
+		String idcard = datasMap.get("idcard") + "";
+		String idName = datasMap.get("idName") + "";
+		String phone = datasMap.get("phone") + "";
+		Map<String, Object> reIdMap = memberService.createMemberId();
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
+			return reIdMap;
+		}
+		String memberId = datasMap.get(BaseCode.DATAS.toString()) + "";
+		Map<String, Object> reRegisterMap = memberService.memberRegister(idcard, RandomPasswordUtils.createPassWord(8),
+				idName, idcard, memberId, phone);
+		if (!"1".equals(reRegisterMap.get(BaseCode.STATUS.toString()))) {
+			return reRegisterMap;
+		}
+		return ReturnInfoUtils.successDataInfo(memberId);
+	}
+
+	/**
+	 * 校验商品是否上架与库存是否足够
+	 * 
+	 * @param datasMap
+	 * @return Map
+	 */
+	private Map<String, Object> checkGoodsDatas(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("核对商品信息时,请求参数不能为空!");
+		}
+		String entGoodsNo = datasMap.get(ENT_GOODS_NO) + "";
+		int count = 0;
+		try {
+			count = Integer.parseInt(datasMap.get("count") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("下单商品数量格式错误!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put(ENT_GOODS_NO, entGoodsNo);
+		// 上下架标识：1-上架,2-下架
+		params.put("sellFlag", 1);
+		// 删除标识:0-未删除,1-已删除
+		params.put("deleteFlag", 0);
+		List<StockContent> reList = orderDao.findByProperty(StockContent.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商品库存信息失败!");
+		} else if (!reList.isEmpty()) {
+			StockContent stock = reList.get(0);
+			// 上架数量
+			int sellCount = stock.getSellCount();
+			if ((sellCount - count) < 0) {
+				return ReturnInfoUtils.errorInfo("下单失败,商品库存不足！");
+			}
+			return ReturnInfoUtils.successInfo();
+		} else {
+			return ReturnInfoUtils.errorInfo("商品自编号[" + entGoodsNo + "]未找到商品信息,或该商品已被下架!");
+		}
+	}
+
+	/**
+	 * 校验第三方推广下单参数是否齐全
+	 * 
+	 * @param params
+	 *            参数信息
+	 * @return Map
+	 */
+	private Map<String, Object> checkDatas(Map<String, Object> params) {
+		if (params == null) {
+			return ReturnInfoUtils.errorInfo("校验参数不能为空");
+		}
+		// 商品自编号、商品数量、姓名、身份证、手机号码、收货人地址
+		for (Map.Entry<String, Object> entry : params.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue() + "";
+			switch (key) {
+			case ENT_GOODS_NO:
+				if (StringEmptyUtils.isEmpty(value)) {
+					return ReturnInfoUtils.errorInfo("[entGoodsNo]商品自编号不能为空！");
+				}
+				break;
+			case "count":
+				if (StringEmptyUtils.isEmpty(value)) {
+					return ReturnInfoUtils.errorInfo("[count]商品数量不能为空！");
+				}
+				break;
+			case "idName":
+				if (StringEmptyUtils.isEmpty(value)) {
+					return ReturnInfoUtils.errorInfo("[idName]姓名不能为空！");
+				} else if (!StringUtil.isContainChinese(value.replaceAll("·", ""))) {
+					return ReturnInfoUtils.errorInfo("姓名必须为中文!");
+				}
+				break;
+			case "idcard":
+				if (!IdcardValidator.validate18Idcard(value)) {
+					return ReturnInfoUtils.errorInfo("身份证号码错误!");
+				}
+				break;
+			case "phone":
+				if (!PhoneUtils.isPhone(value)) {
+					return ReturnInfoUtils.errorInfo("手机号码错误!");
+				}
+				break;
+			case "address":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					return ReturnInfoUtils.errorInfo("[address]收货地址不能为空!");
+				}
+				break;
+			case "verificationCode":
+				if (StringEmptyUtils.isNotEmpty(value)) {
+					return ReturnInfoUtils.errorInfo("[verificationCode]手机验证码不能为空!");
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

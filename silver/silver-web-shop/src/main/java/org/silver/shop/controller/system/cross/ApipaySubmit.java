@@ -219,8 +219,9 @@ public class ApipaySubmit {
 			isSign = SignUtils.rsaCheckContent(publicCertFileInputStream,
 					params, sign, DirectPayConfig.DEFAULT_CHARSET);
 		} catch (Exception e) {
+			e.printStackTrace();
 			//throw new RuntimeException("验证签名失败，请检查银盛公钥证书文件是否存在");
-			logger.info("验证签名失败，请检查银盛公钥证书文件是否存在");
+			logger.error("验证签名失败，请检查银盛公钥证书文件是否存在");
 		}
 
 		return isSign;
@@ -239,5 +240,32 @@ public class ApipaySubmit {
 		String str3 = str1 + str2;
 		return str3;
 	}
+	
+	public static String signWithFilepath(String realPath,
+			Map<String, String> sParaTemp) {
+		Map<String, String> sPara = SignUtils.paraFilter(sParaTemp);
+		String partnerId = sParaTemp.get("partner_id");
+		String partnerCert = DirectPayConfig.PATH_PARTER_PKCS12;
+		if (partnerId.endsWith(DirectPayConfig.PLATFORM_PARTNER_NO)) {
+			partnerCert =DirectPayConfig.PATH_PARTER_PKCS12;
+		}
+		InputStream pfxCertFileInputStream = null;
+		File f = new File(realPath+partnerCert);
+		try {
+			pfxCertFileInputStream=new FileInputStream(f);
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
+		String signResult = "";
+		try {
+			signResult = SignUtils.rsaSign(sPara, sParaTemp.get("charset"),
+					pfxCertFileInputStream);
+		} catch (Exception e) {
+			throw new RuntimeException("签名失败，请检查证书文件是否存在，密码是否正确");
+		}
+
+		return signResult;
+	}
 }

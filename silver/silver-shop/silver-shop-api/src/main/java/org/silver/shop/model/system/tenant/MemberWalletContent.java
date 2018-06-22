@@ -24,7 +24,7 @@ public class MemberWalletContent implements Serializable{
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private Double reserveAmount;//储备金额
+	private Double reserveAmount;//储备金额-暂定用于商户订单导入时选择指定的用户进行资金扣费
 	public long getId() {
 		return id;
 	}
@@ -98,6 +98,7 @@ public class MemberWalletContent implements Serializable{
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
 		private double reserveAmount = 0.0;// 储备金额
+		
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}

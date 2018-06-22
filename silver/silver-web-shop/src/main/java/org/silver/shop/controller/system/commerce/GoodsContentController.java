@@ -11,6 +11,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.commerce.GoodsContentTransaction;
+import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.WebUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,27 +142,22 @@ public class GoodsContentController {
 		}
 		datasMap.remove("page");
 		datasMap.remove("size");
-		Map<String, Object> statusMap = goodsContentTransaction.getShowGoodsBaseInfo(datasMap, page, size);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsContentTransaction.getShowGoodsBaseInfo(datasMap, page, size)).toString();
 	}
 
 	@RequestMapping(value = "/getOneGoodsBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("前台根据商品自编号查询商品基本信息")
-	public String getOneGoodsBaseInfo(@RequestParam("entGoodsNo") String entGoodsNo, HttpServletRequest req,
-			HttpServletResponse response) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public String getOneGoodsBaseInfo(String entGoodsNo, HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Origin", "*");
-
-		if (entGoodsNo != null) {
-			statusMap = goodsContentTransaction.getOneGoodsBaseInfo(entGoodsNo);
-			return JSONObject.fromObject(statusMap).toString();
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(entGoodsNo)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品自编号不能为空!")).toString();
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsContentTransaction.getOneGoodsBaseInfo(entGoodsNo)).toString();
 	}
 
 	@RequestMapping(value = "/searchMerchantGoodsDetailInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -196,6 +192,6 @@ public class GoodsContentController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject( goodsContentTransaction.merchantGetGoodsBaseInfo(goodsId)).toString();
+		return JSONObject.fromObject(goodsContentTransaction.merchantGetGoodsBaseInfo(goodsId)).toString();
 	}
 }

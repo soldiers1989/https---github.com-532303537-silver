@@ -27,7 +27,7 @@ public class Merchant implements Serializable {
 	private String merchantAddress;// 商户地址
 	private String merchantTransport;// 商户商品运输方式
 	private int merchantLevel;// 商户等级
-	private long merchantProfit;// 平台服务费(原分润),按0.0X算
+	private double merchantProfit;// 平台服务费(原分润),按0.0X算
 	private String merchantStatus;// 商户状态：1-启用，2-禁用，3-审核
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
@@ -152,12 +152,12 @@ public class Merchant implements Serializable {
 	public void setMerchantLevel(int merchantLevel) {
 		this.merchantLevel = merchantLevel;
 	}
-
-	public long getMerchantProfit() {
+	
+	public double getMerchantProfit() {
 		return merchantProfit;
 	}
 
-	public void setMerchantProfit(long merchantProfit) {
+	public void setMerchantProfit(double merchantProfit) {
 		this.merchantProfit = merchantProfit;
 	}
 

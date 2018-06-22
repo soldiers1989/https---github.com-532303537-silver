@@ -9,11 +9,13 @@ import java.util.Map;
  */
 public interface MerchantBankInfoService {
 	/**
-	 * 查询商户银行卡信息
-	 * @param dataMap
-	 * @return
+	 * 根据商户id查询银行卡信息
+	 * @param merchantId 商户Id
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
 	 */
-	public List<Object> findMerchantBankInfo(Map dataMap,int page,int size);
+	public Map<String,Object> findMerchantBankInfo(String merchantId,int page,int size);
 	
 	/**
 	 * 添加商户银行信息
@@ -41,4 +43,6 @@ public interface MerchantBankInfoService {
 	 * @return 
 	 */
 	public boolean deleteMerchantBankInfo(long id, String merchantId);
+
+	
 }

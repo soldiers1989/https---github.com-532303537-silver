@@ -32,5 +32,8 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
+        <property name="cash" type="double">
+            <column name="cash" default="0"/>
+        </property>
     </class>
 </hibernate-mapping>

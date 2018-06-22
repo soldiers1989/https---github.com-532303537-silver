@@ -424,7 +424,7 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("amount", serviceFee);
 		datas.put("type", 4);
 		datas.put("flag", "out");
-		datas.put("note", "[" + count + "]单,订单申报-手续费");
+		datas.put("note", "共计推送[" + count + "]单,订单号详情为#");
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
 		datas.put("count", count);

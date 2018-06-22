@@ -201,4 +201,11 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> managerGetOrderReportDetails(Map<String, Object> params);
+
+	/**
+	 * 根据商品自编号、商品数量、姓名、身份证、手机号码、收货人地址进行直接下单
+	 * @param datasMap 参数：
+	 * @return
+	 */
+	public Map<String,Object> thirdPromoteBusiness(Map<String, Object> datasMap);
 }

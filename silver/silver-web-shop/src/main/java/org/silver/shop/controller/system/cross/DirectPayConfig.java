@@ -7,7 +7,7 @@ public class DirectPayConfig {
 
 	// 合作商家私钥pkcs12证书密码
 	//public static final String PASSWORD_PARTNER_PKCS12 = "123456";测试
-	public static final String PASSWORD_PARTNER_PKCS12 = "111111";
+	public static final String PASSWORD_PARTNER_PKCS12 = "856688";
 
 	// 银盛公钥pkcs12证书路径
 	public static final String PATH_YSEPAY_PUBLIC_CERT = "/businessgate.cer";

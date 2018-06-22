@@ -84,19 +84,14 @@ public class RecipientServiceImpl implements RecipientService {
 		return saveRecipientContent(cacheList);
 	}
 
-	/**
-	 * 保存收货人信息实体类
-	 * 
-	 * @param cacheList
-	 *            缓存收货人信息实体集合
-	 * @return Map
-	 */
-	private Map<String, Object> saveRecipientContent(List<RecipientContent> cacheList) {
+	@Override
+	public Map<String, Object> saveRecipientContent(List<RecipientContent> cacheList) {
 		if (cacheList == null || cacheList.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
+		RecipientContent recipient = null;
 		for (int x = 0; x < cacheList.size(); x++) {
-			RecipientContent recipient = cacheList.get(x);
+			 recipient = cacheList.get(x);
 			Calendar cal = Calendar.getInstance();
 			// 获取当前年份
 			int year = cal.get(Calendar.YEAR);
@@ -116,7 +111,7 @@ public class RecipientServiceImpl implements RecipientService {
 				return ReturnInfoUtils.errorInfo("保存收货人地址信息失败,服务器繁忙!");
 			}
 		}
-		return ReturnInfoUtils.successInfo();
+		return ReturnInfoUtils.successDataInfo(recipient);
 	}
 
 	/**

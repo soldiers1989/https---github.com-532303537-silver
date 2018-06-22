@@ -24,12 +24,17 @@ public class ManagerWalletServiceImpl implements ManagerWalletService {
 
 	@Override
 	public Map<String, Object> getMerchantWalletInfo(int page, int size, Map<String, Object> dataMap) {
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(dataMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalMerchantWalletSearch(dataMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		List<MerchantWalletContent> reList = managerWalletDao.findByProperty(MerchantWalletContent.class, paramMap,
 				page, size);
 		Long count = managerWalletDao.findByPropertyCount(MerchantWalletContent.class, null);
-		if (reList != null && !reList.isEmpty()) {
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户钱包信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(reList, count.intValue());
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
@@ -47,7 +52,7 @@ public class ManagerWalletServiceImpl implements ManagerWalletService {
 			merchantWallet.setBalance(oldBalance + amount);
 			merchantWallet.setUpdateBy(managerName);
 			merchantWallet.setUpdateDate(new Date());
-			if(!managerWalletDao.update(merchantWallet)){
+			if (!managerWalletDao.update(merchantWallet)) {
 				return ReturnInfoUtils.errorInfo("充值失败,服务器繁忙,请重试!");
 			}
 			return ReturnInfoUtils.successInfo();

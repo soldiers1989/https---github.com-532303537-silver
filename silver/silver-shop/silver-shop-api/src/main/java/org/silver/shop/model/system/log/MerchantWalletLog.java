@@ -20,7 +20,7 @@ public class MerchantWalletLog implements Serializable{
 	private double beforeChangingBalance;// 变更之前钱包余额
 	private double amount;// 金额
 	private double afterChangeBalance;// 变更之后钱包余额
-	private int type; // 类型1-佣金、2-充值、3-提现、4-缴费、5-购物
+	private int type; // 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
 	private String status;// 状态：success-交易成功、fail-交易失败
 	private String flag;// 进出帐标识：in-进账,out-出账
 	private String note; // 操作说明

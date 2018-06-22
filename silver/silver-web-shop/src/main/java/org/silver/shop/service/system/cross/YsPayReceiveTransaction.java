@@ -21,4 +21,9 @@ public class YsPayReceiveTransaction {
 	public Map<String, Object> walletRechargeReceive(Map datasMap) {
 		return ysPayReceiveService.walletRechargeReceive(datasMap);
 	}
+
+	//银盟发起商户资金代付后,银盛支付成功回调
+	public Map<String, Object> dfReceive(Map params) {
+		return ysPayReceiveService.dfReceive(params);
+	}
 }

@@ -22,7 +22,12 @@ import org.springframework.stereotype.Component;
 public class MerchantUtils {
 	@Autowired
 	private PaymentDao paymentDao;
-
+	
+	/**
+	 * 商户Id 
+	 */
+	private static final String MERCHANT_ID = "merchantId";
+	
 	/**
 	 * 根据商户Id及口岸获取商户对应的备案信息
 	 * 
@@ -34,7 +39,7 @@ public class MerchantUtils {
 	 */
 	public final Map<String, Object> getMerchantRecordInfo(String merchantId, int eport) {
 		Map<String, Object> param = new HashMap<>();
-		param.put("merchantId", merchantId);
+		param.put(MERCHANT_ID, merchantId);
 		param.put("customsPort", eport);
 		List<MerchantRecordInfo> recordList = paymentDao.findByProperty(MerchantRecordInfo.class, param, 1, 1);
 		if (recordList == null) {
@@ -52,14 +57,14 @@ public class MerchantUtils {
 	 * 
 	 * @param merchantId
 	 *            商户Id
-	 * @return Map datas(Key)-商户基本信息实体类
+	 * @return Map Merchant商户信息实体类
 	 */
 	public Map<String, Object> getMerchantInfo(String merchantId) {
 		if (StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("商户Id不能为空!");
+			return ReturnInfoUtils.errorInfo("获取商户信息时,id不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
+		params.put(MERCHANT_ID, merchantId);
 		List<Merchant> merchantList = paymentDao.findByProperty(Merchant.class, params, 1, 1);
 		if (merchantList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户信息失败,服务器繁忙!");
@@ -110,7 +115,7 @@ public class MerchantUtils {
 			return ReturnInfoUtils.errorInfo("查询商户服务费参数不能为空!");
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
+		params.put(MERCHANT_ID, merchantId);
 		params.put("customsCode", customsCode);
 		params.put("ciqOrgCode", ciqOrgCode);
 		params.put("type", type);

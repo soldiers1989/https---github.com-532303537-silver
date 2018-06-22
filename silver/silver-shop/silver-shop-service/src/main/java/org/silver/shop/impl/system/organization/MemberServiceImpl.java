@@ -24,6 +24,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
 import org.silver.util.PinyinUtil;
+import org.silver.util.RandomPasswordUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
@@ -52,7 +53,6 @@ public class MemberServiceImpl implements MemberService {
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberId, String memberTel) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		MD5 md = new MD5();
 		Member member = new Member();
 		member.setMemberId(memberId);
@@ -73,9 +73,7 @@ public class MemberServiceImpl implements MemberService {
 		// 创建用户钱包
 		Map<String, Object> reMap = walletUtils.checkWallet(2, memberId, account);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getMsg());
-			statusMap.put(BaseCode.MSG.toString(), "用户创建钱包失败!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("用户创建钱包失败!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -342,7 +340,7 @@ public class MemberServiceImpl implements MemberService {
 		//
 		member.setMemberName(randomCreateName(order));
 		MD5 md = new MD5();
-		member.setLoginPass(md.getMD5ofStr(Integer.toString(RandomUtils.getRandom(6))));
+		member.setLoginPass(md.getMD5ofStr(RandomPasswordUtils.createPassWord(8)));
 		member.setMemberTel(order.getOrderDocTel());
 		member.setMemberIdCardName(order.getOrderDocName());
 		member.setMemberIdCard(order.getOrderDocId());
@@ -361,20 +359,18 @@ public class MemberServiceImpl implements MemberService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 检查身份证号码是否已注册
-	 * 
-	 * @param orderDocId
-	 * @return
-	 */
-	private Map<String, Object> checkIdCard(String orderDocId) {
+	@Override
+	public Map<String, Object> checkIdCard(String idcard) {
+		if(StringEmptyUtils.isEmpty(idcard)){
+			return ReturnInfoUtils.errorInfo("身份证号码不能为空");
+		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("memberIdCard", orderDocId);
+		params.put("memberIdCard", idcard);
 		List<Member> memberList = memberDao.findByProperty(Member.class, params, 0, 0);
 		if (memberList == null) {
 			return ReturnInfoUtils.errorInfo("查询会员信息失败！");
 		} else if (!memberList.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("身份证号码[" + orderDocId + "]已注册过会员,请勿重复注册!");
+			return ReturnInfoUtils.errorInfo("身份证号码[" + idcard + "]已注册过会员,请勿重复注册!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}

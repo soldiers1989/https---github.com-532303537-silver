@@ -37,4 +37,11 @@ public interface YsPayReceiveService {
 	 * @return
 	 */
 	public Map<String, Object> walletRechargeReceive(Map datasMap);
+
+	/**
+	 * 管理员针对商户进行资金结算后,银盛代付回调处理
+	 * @param params
+	 * @return
+	 */
+	public Map<String, Object> dfReceive(Map params);
 }

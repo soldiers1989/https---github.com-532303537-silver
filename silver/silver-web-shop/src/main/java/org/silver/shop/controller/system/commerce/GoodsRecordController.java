@@ -356,4 +356,18 @@ public class GoodsRecordController {
 		return JSONObject.fromObject(goodsRecordTransaction.managerUpdateGoodsRecordInfo(datasMap)).toString();
 	}
 	
+	
+/*	@RequestMapping(value = "/temUpdateOldOriginCountry", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Manager")
+	@ApiOperation("临时接口-更新旧原产国信息")
+	//@RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
+	public String temUpdateOldOriginCountry(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(goodsRecordTransaction.temUpdateOldOriginCountry()).toString();
+	}*/
 }

@@ -1113,4 +1113,9 @@ public class GoodsRecordTransaction {
 		datasMap.put("managerName", managerName);
 		return goodsRecordService.managerUpdateGoodsRecordInfo(datasMap);
 	}
+
+	//
+	public Object temUpdateOldOriginCountry() {
+		return goodsRecordService.temUpdateOldOriginCountry();
+	}
 }

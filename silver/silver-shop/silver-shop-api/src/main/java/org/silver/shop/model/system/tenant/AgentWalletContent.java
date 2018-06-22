@@ -10,6 +10,7 @@ public class AgentWalletContent implements Serializable {
 	public AgentWalletContent() {
 
 	}
+
 	/**
 	 * 
 	 */
@@ -23,6 +24,7 @@ public class AgentWalletContent implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
+	private Double cash;// 代理商现金,用于真实转账、付款、收款
 
 	public long getId() {
 		return id;
@@ -96,6 +98,14 @@ public class AgentWalletContent implements Serializable {
 		this.updateDate = updateDate;
 	}
 
+	public Double getCash() {
+		return cash;
+	}
+
+	public void setCash(Double cash) {
+		this.cash = cash;
+	}
+
 	public static class Builder {
 		private long id;
 		private String walletId = null;// 钱包Id
@@ -106,6 +116,7 @@ public class AgentWalletContent implements Serializable {
 		private Date createDate = null;// 创建日期
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
+		private double cash = 0.0;// 现金
 
 		public Builder(String walletId) {
 			this.walletId = walletId;
@@ -157,6 +168,11 @@ public class AgentWalletContent implements Serializable {
 		public AgentWalletContent build() {
 			return new AgentWalletContent(this);
 		}
+
+		public Builder cash(double cash) {
+			this.cash = cash;
+			return this;
+		}
 	}
 
 	private AgentWalletContent(Builder b) {
@@ -169,5 +185,6 @@ public class AgentWalletContent implements Serializable {
 		createDate = b.createDate;
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
+		cash = b.cash;
 	}
 }

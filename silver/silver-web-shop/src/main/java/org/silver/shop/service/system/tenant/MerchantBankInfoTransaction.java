@@ -26,19 +26,11 @@ public class MerchantBankInfoTransaction {
 	 * 
 	 * @return Map
 	 */
-	public List<Object> findMerchantBankInfo(int page, int size) {
-		Map<String, Object> dataMap = new HashMap<>();
+	public Map<String,Object> findMerchantBankInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// key=(表中列名),value=传递过来的值
-		dataMap.put("merchantId", merchantInfo.getMerchantId());
-		List<Object> reList = merchantBankInfoService.findMerchantBankInfo(dataMap, page, size);
-		if (reList !=null && !reList.isEmpty()) {
-			dataMap.clear();
-			return reList;
-		}
-		return reList;
+		return merchantBankInfoService.findMerchantBankInfo( merchantInfo.getMerchantId(), page, size);
 	}
 
 	/**

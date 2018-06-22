@@ -71,17 +71,7 @@ public class MerchantBankController {
 	@RequiresRoles("Merchant")
 	@ApiOperation("获取商户银行卡信息")
 	public String getMerchantBankInfo(@RequestParam("page") int page, @RequestParam("size") int size) {
-		Map<String, Object> reMap = new HashMap<>();
-		List<Object> bankInfoList = merchantBankInfoTransaction.findMerchantBankInfo(page, size);
-		if (!bankInfoList.isEmpty()) {
-			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
-			reMap.put(BaseCode.DATAS.getBaseCode(), bankInfoList);
-			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			return JSONObject.fromObject(reMap).toString();
-		}
-		reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NO_DATAS.getStatus());
-		reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NO_DATAS.getMsg());
-		return JSONObject.fromObject(reMap).toString();
+		return JSONObject.fromObject(merchantBankInfoTransaction.findMerchantBankInfo(page, size)).toString();
 	}
 
 	/**

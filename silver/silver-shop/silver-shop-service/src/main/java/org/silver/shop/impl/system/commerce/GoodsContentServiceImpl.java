@@ -19,6 +19,7 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.util.ConvertUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -183,29 +184,32 @@ public class GoodsContentServiceImpl implements GoodsContentService {
 
 	@Override
 	public Map<String, Object> goodsContentService(String entGoodsNo) {
-		Map<String, Object> statusMap = new HashMap<>();
+		if(StringEmptyUtils.isEmpty(entGoodsNo)){
+			return ReturnInfoUtils.errorInfo("商品自编号不能为空!");
+		}
 		Map<String, Object> params = new HashMap<>();
+		params.put("deleteFlag", 0);
 		params.put("entGoodsNo", entGoodsNo);
 		List<Object> reList = goodsContentDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		//上下架标识：1-上架,2-下架
+		params.put("sellFlag", 1);
 		List<Object> reStockList = goodsContentDao.findByProperty(StockContent.class, params, 1, 1);
-		if (reList != null && reList.size() > 0 && reStockList != null && reStockList.size() > 0) {
-			Map<String, Object> datas = new HashMap<>();
+		if (reList != null && !reList.isEmpty() && reStockList != null && !reStockList.isEmpty()) {
+			params.clear();
 			List<Map<String, Object>> lm = new ArrayList<>();
 			GoodsRecordDetail goods = (GoodsRecordDetail) reList.get(0);
 			StockContent stockInfo = (StockContent) reStockList.get(0);
-			datas.put("goods", goods);
-			datas.put("stock", stockInfo);
-			lm.add(datas);
+			params.put("goods", goods);
+			params.put("stock", stockInfo);
+			lm.add(params);
 			int reRedingCount = stockInfo.getReadingCount();
+			//每次查询一次商品信息,增加一次阅读数量
 			reRedingCount++;
 			stockInfo.setReadingCount(reRedingCount);
 			if (!goodsContentDao.update(stockInfo)) {
-				return ReturnInfoUtils.errorInfo("暂无数据!");
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 			}
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.getBaseCode(), lm);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(lm);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}

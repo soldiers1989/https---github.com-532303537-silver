@@ -35,5 +35,8 @@
 		<property name="reserveAmount" type="java.lang.Double">
 			<column name="reserveAmount" default="0"/>
 		</property>
+		<property name="cash" type="java.lang.Double">
+			<column name="cash" default="0"/>
+		</property>
     </class>
 </hibernate-mapping>

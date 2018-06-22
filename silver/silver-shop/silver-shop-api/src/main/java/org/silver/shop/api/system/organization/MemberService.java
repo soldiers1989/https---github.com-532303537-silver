@@ -107,4 +107,12 @@ public interface MemberService {
 	 * @return Map
 	 */
 	public Map<String,Object> editInfo(Map<String, Object> datasMap);
+	
+	/**
+	 * 检查身份证号码是否已注册
+	 * 
+	 * @param idcard
+	 * @return
+	 */
+	public Map<String, Object> checkIdCard(String idcard);
 }

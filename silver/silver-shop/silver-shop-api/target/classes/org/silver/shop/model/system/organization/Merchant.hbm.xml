@@ -46,7 +46,7 @@
 		<property name="merchantLevel" type="int">
 			<column name="merchantLevel" default="0" />
 		</property>
-		<property name="merchantProfit" type="long">
+		<property name="merchantProfit" type="double">
 			<column name="merchantProfit" default="0" />
 		</property>
 		<property name="merchantStatus" type="java.lang.String">

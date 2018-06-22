@@ -40,6 +40,7 @@ public class PaymentContent implements Serializable{
 	private Date deleteDate;// 删除时间
 	private String reNote;//回调信息
 	private String reSerialNo;//支付单接受后返回流水号
+	//private String rePayStatus;//银盛支付回调状态：success-成功、
 	public long getId() {
 		return id;
 	}

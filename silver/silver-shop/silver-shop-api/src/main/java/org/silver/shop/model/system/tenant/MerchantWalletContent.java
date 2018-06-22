@@ -27,6 +27,7 @@ public class MerchantWalletContent implements Serializable {
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
 	private Double reserveAmount;//储备金额
+	private Double cash;//商户现金,用于真实转账、付款、收款
 	public long getId() {
 		return id;
 	}
@@ -107,7 +108,12 @@ public class MerchantWalletContent implements Serializable {
 	public void setReserveAmount(Double reserveAmount) {
 		this.reserveAmount = reserveAmount;
 	}
-
+	public Double getCash() {
+		return cash;
+	}
+	public void setCash(Double cash) {
+		this.cash = cash;
+	}
 
 	public static class Builder {
 		private long id;
@@ -120,6 +126,7 @@ public class MerchantWalletContent implements Serializable {
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
 		private double reserveAmount = 0.0;// 储备金额
+		private double cash = 0.0;// 现金
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -166,6 +173,10 @@ public class MerchantWalletContent implements Serializable {
 			this.reserveAmount = reserveAmount;
 			return this;
 		}
+		public Builder cash(double cash) {
+			this.cash = cash;
+			return this;
+		}
 	}
 
 	private MerchantWalletContent(Builder b) {
@@ -179,5 +190,6 @@ public class MerchantWalletContent implements Serializable {
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
 		reserveAmount = b.reserveAmount;
+		cash=b.cash;
 	}
 }

@@ -17,12 +17,14 @@ import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
+import org.silver.shop.api.common.base.CountryService;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
 import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
+import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
@@ -66,7 +68,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private CustomsPortService customsPortService;
 	@Autowired
 	private AccessTokenService accessTokenService;
-
+	@Autowired
+	private CountryService countryService;
+	
 	@Override
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
@@ -960,7 +964,22 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		goodsRecordInfo.setSpareGoodsBrand(goodsBrand);
 		goodsRecordInfo.setSpareGoodsStyle(goodsStyle);
 		goodsRecordInfo.setSpareGoodsUnit(goodsUnit);
-		goodsRecordInfo.setSpareGoodsOriginCountry(goodsOriginCountry);
+		Map<String,Object> reCountryMap = findAllCountry();
+		if(!"1".equals(reCountryMap.get(BaseCode.STATUS.toString()))){
+			return reCountryMap;
+		}
+		List<Country> countryList= (List<Country>) reCountryMap.get(BaseCode.DATAS.toString());
+		String str = "";
+		for(Country country :countryList){
+			if(country.getCountryCode().equals(goodsOriginCountry)){
+				str = country.getCountryName();
+			}
+		}
+		if(StringEmptyUtils.isNotEmpty(str)){
+			goodsRecordInfo.setSpareGoodsOriginCountry(str);
+		}else{
+			return ReturnInfoUtils.errorInfo("原产国错误,请重新输入!");
+		}
 		goodsRecordInfo.setSpareGoodsBarCode(goodsBarCode);
 		goodsRecordInfo.setTaxFlag(taxFlag);
 		goodsRecordInfo.setFreightFlag(freightFlag);
@@ -971,7 +990,27 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
-
+	
+	/**
+	 * 查询所有国家
+	 * 
+	 * @return
+	 */
+	public Map<String, Object> findAllCountry() {
+		String key = "SHOP_KEY_COUNTRY_LIST";
+		byte[] redisByte = JedisUtil.get(key.getBytes());
+		if (redisByte != null) {
+			return ReturnInfoUtils.successDataInfo((List<Country>)SerializeUtil.toObject(redisByte));
+		} else {
+			Map<String, Object> item = countryService.findAllCountry();
+			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
+				return item;
+			}
+			JedisUtil.set(key.getBytes(),
+					SerializeUtil.toBytes(item.get(BaseCode.DATAS.toString())), 86400);
+			return item;
+		}
+	}
 	@Override
 	public Map<String, Object> merchantAddAlreadyRecordGoodsInfo(String merchantId, String merchantName,
 			Map<String, Object> paramMap) {
@@ -1122,7 +1161,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			Map<String, Object> datasMap, int page, int size) {
 		//
 		Map<String, Object> reDatasMap = SearchUtils.universalRecordGoodsSearch(datasMap);
-		if(!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))){
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
 			return reDatasMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
@@ -1674,7 +1713,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> managerGetGoodsRecordInfo(Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalRecordGoodsSearch(datasMap);
-		if(!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))){
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
 			return reDatasMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
@@ -1903,6 +1942,53 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("商品自编号查询商品信息失败,请核对信息!");
+	}
+
+	@Override
+	public Object temUpdateOldOriginCountry() {
+		Map<String,Object> reCountryMap = countryService.findAllCountry();
+		if(!"1".equals(reCountryMap.get(BaseCode.STATUS.toString()))){
+			return reCountryMap;
+		}
+		List<Country> reCountryList = (List<Country>) reCountryMap.get(BaseCode.DATAS.toString());
+		Map<String,Object> cacheMap = new HashMap<>();
+		long startTime = System.currentTimeMillis();
+		int page = 1;
+		int size = 300;
+		List<GoodsRecordDetail> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, null, page, size);
+		while (reList != null && !reList.isEmpty()) {
+			if (page > 1) {
+				reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, null, page, size);
+			}
+			
+			for (GoodsRecordDetail goods : reList) {
+				String country = goods.getSpareGoodsOriginCountry();
+				if(StringEmptyUtils.isNotEmpty(country)){
+					if(cacheMap.containsKey(country)){
+						String countryName = cacheMap.get(country)+"";
+						goods.setSpareGoodsOriginCountry(countryName);
+						if(goodsRecordDao.update(goods)){
+							System.out.println(goods.getSpareGoodsName()+"<-缓存更新商品更新原产国--"+countryName);
+						}
+					}else{
+						for(Country country2 :reCountryList){
+							if(country2.getCountryCode().equals(country)){
+								goods.setSpareGoodsOriginCountry(country2.getCountryName());
+								if(goodsRecordDao.update(goods)){
+									System.out.println(goods.getSpareGoodsName()+"<-商品更新原产国--"+country2.getCountryName());
+								}
+								cacheMap.put(country2.getCountryCode(), country2.getCountryName());
+							}
+						}
+					}
+				}
+			}
+			System.out.println("--page---->>>"+page);
+			page++;
+		}
+		long endTime = System.currentTimeMillis();
+		System.out.println("---耗时->>"+(startTime - endTime)+"ms");
+		return ReturnInfoUtils.successInfo();
 	}
 
 }

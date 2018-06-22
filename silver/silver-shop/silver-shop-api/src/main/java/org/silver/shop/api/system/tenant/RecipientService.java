@@ -1,6 +1,9 @@
 package org.silver.shop.api.system.tenant;
 
+import java.util.List;
 import java.util.Map;
+
+import org.silver.shop.model.system.tenant.RecipientContent;
 
 public interface RecipientService {
 
@@ -48,5 +51,14 @@ public interface RecipientService {
 	 * @return Map 键datas=参数
 	 */
 	public Map<String, Object> getRecipientInfo(String recipientId);
+
+	/**
+	 * 保存收货人信息实体类
+	 * 
+	 * @param cacheList
+	 *            缓存收货人信息实体集合
+	 * @return Map
+	 */
+	 public Map<String, Object> saveRecipientContent(List<RecipientContent> cacheList);
 
 }

@@ -185,4 +185,9 @@ public class OrderTransaction {
 	public Object managerGetOrderReportDetails(Map<String, Object> params) {
 		return orderService.managerGetOrderReportDetails(params);
 	}
+
+	//第三方商城推广订单下单入口
+	public Object thirdPromoteBusiness(Map<String, Object> params) {
+		return orderService.thirdPromoteBusiness(params);
+	}
 }

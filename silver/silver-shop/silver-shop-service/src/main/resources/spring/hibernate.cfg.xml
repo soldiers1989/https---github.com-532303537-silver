@@ -37,7 +37,6 @@
 
 
 		<!-- <property name="hibernate.c3p0.testConnectionOnCheckout">true</property> -->
-
 		<mapping resource="org/silver/shop/model/system/organization/Merchant.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantRecordInfo.hbm.xml" />
@@ -75,8 +74,6 @@
 			resource="org/silver/shop/model/system/commerce/WarehouseContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/organization/Manager.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/organization/Member.hbm.xml" />
-		<mapping
-			resource="org/silver/shop/model/system/tenant/MerchantBankInfo.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/CCIQ.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/GAC.hbm.xml" />
 		<mapping resource="org/silver/shop/model/common/base/EPort.hbm.xml" />
@@ -116,11 +113,9 @@
 		<mapping resource="org/silver/shop/model/system/manual/OldManualOrder.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/manual/OldManualOrderSub.hbm.xml" />
-
 		<mapping resource="org/silver/shop/model/system/Authority.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/AuthorityGroup.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/AuthorityUser.hbm.xml" />
-
 		<mapping
 			resource="org/silver/shop/model/system/tenant/EvaluationContent.hbm.xml" />
 		<mapping
@@ -130,8 +125,12 @@
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantRelatedMemberContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/MemberWalletLog.hbm.xml" />
-		<mapping resource="org/silver/shop/model/system/commerce/OrderHistoryReports.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/commerce/OrderHistoryReports.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/PaymentReceiptLog.hbm.xml" />
-			<mapping resource="org/silver/shop/model/system/manual/OldManualPayment.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/manual/OldManualPayment.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/tenant/MerchantBankContent.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

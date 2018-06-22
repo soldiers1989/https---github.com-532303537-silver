@@ -254,4 +254,10 @@ public interface GoodsRecordService {
 	 * @return Map
 	 */
 	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap);
+
+	/**
+	 * 临时接口
+	 * @return
+	 */
+	public Object temUpdateOldOriginCountry();
 }
