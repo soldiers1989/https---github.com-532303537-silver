@@ -329,15 +329,15 @@ public class MemberController {
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get("SHOP_KEY_MEMBER_REGISTER_CODE_" + phone);
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_ + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
 				json.put("time", new Date().getTime());
 				json.put("code", code);
-				System.out.println("----注册验证码--->>" + code);
+				System.out.println("--注册验证码-->" + code);
 				// 将查询出来的省市区放入到redis缓存中
-				JedisUtil.set("SHOP_KEY_MEMBER_REGISTER_CODE_" + phone, 900, json);
+				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_  + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
 				json = JSONObject.fromObject(redisCode);
@@ -345,6 +345,15 @@ public class MemberController {
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
 				if ((new Date().getTime() - time) < 60000) {
 					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				}else{//重新发送验证码
+					int code = RandomUtils.getRandom(6);
+					SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+					json.put("time", new Date().getTime());
+					json.put("code", code);
+					System.out.println("--重新发送-注册验证码-->" + code);
+					// 将查询出来的省市区放入到redis缓存中
+					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_  + phone, 900, json);
+					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
 		}
@@ -497,6 +506,15 @@ public class MemberController {
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
 				if ((new Date().getTime() - time) < 60000) {
 					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				}else{//重新发送验证码
+					int code = RandomUtils.getRandom(6);
+					SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+					json.put("time", new Date().getTime());
+					json.put("code", code);
+					System.out.println("--重新发送-注册验证码-->" + code);
+					// 将查询出来的省市区放入到redis缓存中
+					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_  + phone, 900, json);
+					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
 		}

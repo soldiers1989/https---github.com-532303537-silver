@@ -119,7 +119,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return rePaymentMap;
 				}
 				PaymentContent paymentInfo = (PaymentContent) rePaymentMap.get(BaseCode.DATAS.toString());
-				SendMsg.sendMsg(merchantInfo.getMerchantPhone(), "【银盟信息科技有限公司】您有一个订单需要处理,订单号" + reEntOrderNo);
+				SendMsg.sendMsg(merchantInfo.getMerchantPhone(), "【广州银盟】您有一个订单需要处理,订单号" + reEntOrderNo);
 				// 商户钱包资金更新
 				Map<String, Object> reWalletMap = updateWalletFunds(orderInfo.getMerchantId(),
 						orderInfo.getMerchantName(), orderGoodsContent.getGoodsName(), paymentInfo.getPayAmount(),

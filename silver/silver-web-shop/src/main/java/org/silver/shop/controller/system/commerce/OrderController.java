@@ -431,13 +431,14 @@ public class OrderController {
 	@RequiresRoles("Manager")
 	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String managerGetOrderReportInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,String merchantId) {
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(orderTransaction.managerGetOrderReportInfo(startDate, endDate,merchantId)).toString();
+		return JSONObject.fromObject(orderTransaction.managerGetOrderReportInfo(startDate, endDate, merchantId))
+				.toString();
 	}
 
 	@RequestMapping(value = "/managerGetOrderReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -446,8 +447,7 @@ public class OrderController {
 	@RequiresRoles("Manager")
 	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String managerGetOrderReportDetails(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate,
-			String merchantId) {
+			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -469,7 +469,7 @@ public class OrderController {
 	@RequestMapping(value = "/thirdPromoteBusiness", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("第三方商城推广订单下单入口")
-	//@RequiresRoles("Manager")
+	// @RequiresRoles("Manager")
 	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String thirdPromoteBusiness(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
@@ -489,28 +489,32 @@ public class OrderController {
 		}
 		return JSONObject.fromObject(orderTransaction.thirdPromoteBusiness(params)).toString();
 	}
-	
+
 	/**
 	 * 第三方商城推广订单下单时发送手机验证码
+	 * 
 	 * @param phone
 	 *            手机号码
 	 * @return Map
 	 */
 	@RequestMapping(value = "/sendThirdPromoteBusinessCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String sendEditLoginPasswordCaptchaCode(String phone, HttpServletRequest req, HttpServletResponse response) throws ParserConfigurationException, SAXException, IOException {
+	public String sendThirdPromoteBusinessCaptchaCode(String phone, HttpServletRequest req, HttpServletResponse response,
+			String captcha) throws ParserConfigurationException, SAXException, IOException {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (PhoneUtils.isPhone(phone) ) {
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
 			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
-				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				SendMsg.sendMsg(phone, "【广州银盟】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
 				json.put("time", new Date().getTime());
 				json.put("code", code);
 				JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone, 900, json);
@@ -521,13 +525,21 @@ public class OrderController {
 				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
 				if ((new Date().getTime() - time) < 58000) {
 					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				} else {// 重新发送验证码
+					int code = RandomUtils.getRandom(6);
+					SendMsg.sendMsg(phone, "【广州银盟】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+					json.put("time", new Date().getTime());
+					json.put("code", code);
+					System.out.println("--重新发送-注册验证码-->" + code);
+					// 将查询出来的省市区放入到redis缓存中
+					JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone, 900, json);
+					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
 		}
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码错误,请重新输入!")).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
 	}
-	
-	
+
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		List<JSONObject> orderGoodsList = new ArrayList<>();

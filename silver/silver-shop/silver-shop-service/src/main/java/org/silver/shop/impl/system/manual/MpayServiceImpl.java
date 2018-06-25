@@ -367,7 +367,7 @@ public class MpayServiceImpl implements MpayService {
 		} else if (totalAmountPaid > 0) {
 			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
 			try {
-				return manualOrderToll(merchantWallet, fee, totalAmountPaid, merchant, newList.size());
+				return manualOrderToll(merchantWallet, fee, totalAmountPaid, merchant, newList);
 			} catch (Exception e) {
 				e.printStackTrace();
 				logger.error("---订单平台服务费计算错误-->", e);
@@ -387,12 +387,12 @@ public class MpayServiceImpl implements MpayService {
 	 *            订单总金额
 	 * @param merchant
 	 *            商户信息实体类
-	 * @param count
+	 * @param newList
 	 *            数量
 	 * @return Map
 	 */
 	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, double fee,
-			double totalAmountPaid, Merchant merchant, int count) {
+			double totalAmountPaid, Merchant merchant, List<Object> newList) {
 		if (merchant == null) {
 			return ReturnInfoUtils.errorInfo("商户钱包扣款时商户信息不能为空!");
 		}
@@ -424,10 +424,10 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("amount", serviceFee);
 		datas.put("type", 4);
 		datas.put("flag", "out");
-		datas.put("note", "共计推送[" + count + "]单,订单号详情为#");
+		datas.put("note", "共计推送[" + newList.size() + "]单,订单号详情为#"+newList.toString());
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
-		datas.put("count", count);
+		datas.put("count", newList.size());
 		datas.put("status", "success");
 		// 添加商户钱包流水日志
 		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
@@ -682,9 +682,7 @@ public class MpayServiceImpl implements MpayService {
 				Morder order = reList.get(i);
 				Map<String, Object> reCheckOrderMap = checkManualOrderInfo(order);
 				if ("1".equals(reCheckOrderMap.get(BaseCode.STATUS.toString()))) {
-					Map<String, Object> item = new HashMap<>();
-					item.put("orderNo", order.getOrder_id());
-					newOrderIdList.add(item);
+					newOrderIdList.add(order.getOrder_id());
 				}
 			}
 		} else {
@@ -747,7 +745,7 @@ public class MpayServiceImpl implements MpayService {
 				}
 				Thread.sleep(200);
 			} catch (Exception e) {
-				logger.error("--------推送订单信息错误-------", e);
+				logger.error("------推送订单信息错误-----", e);
 			} finally {
 				bufferUtils.writeRedis(errorList, paramsMap);
 			}

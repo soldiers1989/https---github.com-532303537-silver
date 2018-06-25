@@ -97,8 +97,8 @@ public class ManualOrderController {
 		List list = new ArrayList<>();
 		Map<String, Object> item = new HashMap<>();
 		item.put("orderNo", "SO1806050221617474057");
-		list.add(item);
-		;
-		System.out.println("===>>" + JSONObject.fromObject(item).toString());
+		list.add("abc");
+		list.add("def");
+		System.out.println("===>>" + list.toString());
 	}
 }

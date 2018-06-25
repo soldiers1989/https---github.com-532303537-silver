@@ -322,7 +322,7 @@ public class PaymentServiceImpl implements PaymentService {
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询手工支付单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
-			return paymentToll(merchantWallet, fee, totalAmountPaid, itemList.size(), merchant);
+			return paymentToll(merchantWallet, fee, totalAmountPaid, itemList, merchant);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -336,14 +336,14 @@ public class PaymentServiceImpl implements PaymentService {
 	 *            商户口岸费率
 	 * @param totalAmountPaid
 	 *            支付单总金额
-	 * @param count
+	 * @param itemList
 	 *            数量
 	 * @param merchant
 	 *            商户基本信息实体类
 	 * @return Map
 	 */
 	private Map<String, Object> paymentToll(MerchantWalletContent merchantWallet, double fee, double totalAmountPaid,
-			int count, Merchant merchant) {
+			List<Object> itemList, Merchant merchant) {
 
 		// 支付单手续费
 		double serviceFee = totalAmountPaid * fee;
@@ -369,10 +369,15 @@ public class PaymentServiceImpl implements PaymentService {
 		datas.put("serialName", "支付单申报-手续费");
 		datas.put("type", 4);
 		datas.put("flag", "out");
-		datas.put("note", "[" + count + "]单,支付单申报手续费");
+		List<Object> cacheList = new ArrayList<>();
+		for(int i = 0 ; i < itemList.size() ; i ++){
+			Map<String, Object> treadeMap = (Map<String, Object>) itemList.get(i);
+			cacheList.add(treadeMap.get("treadeNo"));
+		}
+		datas.put("note", "[" + itemList.size() + "]单,支付单申报手续费#"+cacheList.toString());
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
-		datas.put("count", count);
+		datas.put("count", itemList.size());
 		datas.put("status", "success");
 		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
@@ -389,6 +394,14 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 代理商钱包结算
+	 * @param agentId 代理商Id
+	 * @param agentName 代理商名称
+	 * @param serviceFee 平台服务费率
+	 * @param datas 参数
+	 * @return
+	 */
 	private Map<String, Object> agentChargeFee(String agentId, String agentName, double serviceFee,
 			Map<String, Object> datas) {
 		Map<String, Object> reAgentWalletMap = agentWalletReceipt(agentId, agentName, serviceFee, datas);
@@ -426,6 +439,11 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 总代理商钱包收款
+	 * @param fee 服务费
+	 * @return Map
+	 */
 	private Map<String, Object> platformCommissionFee(double fee) {
 		// 查询平台总代理的钱包信息
 		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, "AgentId_00001", "银盟");
@@ -442,6 +460,14 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successDataInfo(agentWallet);
 	}
 
+	/**
+	 * 代理商钱包清算
+	 * @param agentId 代理商Id
+	 * @param agentName 代理商名称
+	 * @param serviceFee 平台服务费率
+	 * @param datas 参数
+	 * @return Map
+	 */
 	private Map<String, Object> agentWalletReceipt(String agentId, String agentName, double serviceFee,
 			Map<String, Object> datas) {
 		Map<String, Object> reAgentMap = agentService.getAgentInfo(agentId);
@@ -518,6 +544,12 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 代理商缴纳支付单申报平台佣金
+	 * @param agentWallet 代理商钱包信息
+	 * @param fee 平台服务费
+	 * @return Map
+	 */
 	private Map<String, Object> agentTollCommissionRate(AgentWalletContent agentWallet, double fee) {
 		double agentOldBalance = agentWallet.getBalance();
 		agentWallet.setBalance(agentOldBalance - fee);
@@ -527,6 +559,11 @@ public class PaymentServiceImpl implements PaymentService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 添加代理商钱包日志
+	 * @param datas 参数
+	 * @return Map
+	 */
 	private Map<String, Object> addAgentWalletLog(Map<String, Object> datas) {
 		if (datas == null || datas.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("添加代理商钱包日志时,代理商信息不能为空!");
@@ -580,7 +617,7 @@ public class PaymentServiceImpl implements PaymentService {
 	 *            缓存参数
 	 */
 	@Override
-	public final void startSendPaymentRecord(JSONArray jsonList, List<Map<String, Object>> errorList,
+	public void startSendPaymentRecord(JSONArray jsonList, List<Map<String, Object>> errorList,
 			Map<String, Object> recordMap, Map<String, Object> paramsMap) {
 		String merchantId = paramsMap.get(MERCHANT_ID) + "";
 		String tok = paramsMap.get("tok") + "";

@@ -1,5 +1,6 @@
 package org.silver.shop.service.system.commerce;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public class OrderTransaction {
 
 	// 检查订单商品是否都属于一个海关口岸
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack, String recipientId) {
-		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack,recipientId);
+		return orderService.checkOrderGoodsCustoms(orderGoodsInfoPack, recipientId);
 	}
 
 	public Map<String, Object> getMemberOrderInfo(int page, int size, Map<String, Object> datasMap) {
@@ -173,21 +174,38 @@ public class OrderTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		return orderService.checkOrderPort(orderIDs,merchantId);
+		return orderService.checkOrderPort(orderIDs, merchantId);
 	}
 
 	// 管理员查询商户订单报表
-	public Map<String,Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId) {
-		return orderService.managerGetOrderReportInfo(startDate,endDate,merchantId);
+	public Map<String, Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId) {
+		return orderService.managerGetOrderReportInfo(startDate, endDate, merchantId);
 	}
 
-	//新-管理员查询订单报表详情信息
+	// 新-管理员查询订单报表详情信息
 	public Object managerGetOrderReportDetails(Map<String, Object> params) {
 		return orderService.managerGetOrderReportDetails(params);
 	}
 
-	//第三方商城推广订单下单入口
+	// 第三方商城推广订单下单入口
 	public Object thirdPromoteBusiness(Map<String, Object> params) {
 		return orderService.thirdPromoteBusiness(params);
+	}
+
+	public static void main(String[] args) {
+		Map<String, Object> item = new HashMap<>();
+		item.put("entGoodsNo", "HX171030BJ9111111134");
+		item.put("count", "1");
+		item.put("idName", "来");
+		item.put("idcard", "210502199312170624");
+		item.put("phone", "13825004872");
+		item.put("address", "景德镇");
+		item.put("recProvincesName", "广东省");
+		item.put("recCityName", "广州市");
+		item.put("recAreaName", "天河区");
+		
+		
+		System.out.println("------->>"
+				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPromoteBusiness", item));
 	}
 }

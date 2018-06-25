@@ -147,8 +147,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			session = getSession();
 			Query query = session.createSQLQuery(sbSQL.toString());
 			for (int i = 0; i < itemList.size(); i++) {
-				Map<String, Object> orderMap = (Map<String, Object>) itemList.get(i);
-				query.setString(i, orderMap.get("orderNo") + "");
+				query.setString(i, itemList.get(i) + "");
 			}
 			List resources = query.list();
 			session.close();
@@ -221,7 +220,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	}
 
 	@Override
-	public List<Morder> findByPropertyIn(List<Map<String,Object>> itemList) {
+	public List<Morder> findByPropertyIn(List<Map<String, Object>> itemList) {
 		Session session = null;
 		try {
 			StringBuilder sbSQL = new StringBuilder(" SELECT * FROM ym_shop_manual_morder t1 WHERE  t1.order_id IN ( ");
@@ -234,8 +233,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			session = getSession();
 			Query query = session.createSQLQuery(sbSQL.toString());
 			for (int i = 0; i < itemList.size(); i++) {
-				Map<String, Object> orderMap =  itemList.get(i);
-				query.setString(i, orderMap.get("orderNo") + "");
+				Map<String,Object> map = itemList.get(i);
+				query.setString(i, map.get("orderNo")+"");
 			}
 			// session.close();
 			return setEntityInfo(query.list());
@@ -300,8 +299,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			session = getSession();
 			Query query = session.createSQLQuery(sbSQL.toString());
 			for (int i = 0; i < itemList.size(); i++) {
-				Map<String, Object> orderMap = (Map<String, Object>) itemList.get(i);
-				query.setString(i, orderMap.get("orderNo") + "");
+				query.setString(i, itemList.get(i) + "");
 			}
 			List resources = query.list();
 			session.close();

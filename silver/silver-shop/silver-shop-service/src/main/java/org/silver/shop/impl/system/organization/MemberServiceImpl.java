@@ -71,9 +71,9 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
 		// 创建用户钱包
-		Map<String, Object> reMap = walletUtils.checkWallet(2, memberId, account);
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo("用户创建钱包失败!");
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId,account);
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletMap;
 		}
 		return ReturnInfoUtils.successInfo();
 	}

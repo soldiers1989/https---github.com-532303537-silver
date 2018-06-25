@@ -25,4 +25,8 @@ public class RedisKey {
 	 */
 	public static final String SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ = "SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_";
 	
+	/**
+	 * 商城用户注册时发送手机验证码--key
+	 */
+	public static final String SHOP_KEY_MEMBER_REGISTER_CODE_ = "SHOP_KEY_MEMBER_REGISTER_CODE_";
 }
