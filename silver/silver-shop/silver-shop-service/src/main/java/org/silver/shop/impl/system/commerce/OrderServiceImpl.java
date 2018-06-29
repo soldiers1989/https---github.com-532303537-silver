@@ -445,12 +445,12 @@ public class OrderServiceImpl implements OrderService {
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
+		String reMsg = datasMap.get("errMsg") + "";
+		String entOrderNo = datasMap.get(ENT_ORDER_NO) + "";
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("reOrderSerialNo", datasMap.get("messageID") + "");
-		String entOrderNo = datasMap.get(ENT_ORDER_NO) + "";
 		paramMap.put(ENT_ORDER_NO, entOrderNo);
-		String reMsg = datasMap.get("errMsg") + "";
-		List<Object> reList = orderDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
+		List<Object> reList = orderDao.findByPropertyOr2(OrderRecordContent.class, paramMap, 1, 1);
 		if (reList != null && !reList.isEmpty()) {
 			OrderRecordContent order = (OrderRecordContent) reList.get(0);
 			String status = datasMap.get("status") + "";
@@ -1803,6 +1803,8 @@ public class OrderServiceImpl implements OrderService {
 		// 物流状态：0-待发货,1-快件运输中,2-快件已签收
 		order.setEhsStatus(0);
 		// order.setWbEhsentName(wbEhsentName);
+		//来源标识：1-银盟商城、2-第三方推广
+		order.setSourceFlag(2);
 		order.setEntOrderNo(createOrderId(2));
 
 		if (!orderDao.add(order)) {

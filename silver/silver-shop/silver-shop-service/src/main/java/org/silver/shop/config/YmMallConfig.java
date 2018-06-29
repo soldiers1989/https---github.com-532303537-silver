@@ -5,6 +5,9 @@ package org.silver.shop.config;
  */
 public class YmMallConfig {
 	//public static final String TOPSTR = "http://192.168.1.116:8080";
+	/**
+	 * 银盟商城域名抬头
+	 */
 	public static final String YM = "https://ym.191ec.com";
 	/**
 	 * 银盟商城对接接入网关key
@@ -17,25 +20,30 @@ public class YmMallConfig {
 	/**
 	 * 商品备案异步回调URL
 	 */
-	public static final String GOODSRECORDNOTIFYURL = YM + "/silver-web-shop/goodsRecord/reNotifyMsg";
+	public static final String GOODS_RECORD_NOTIFY_URL = YM + "/silver-web-shop/goodsRecord/reNotifyMsg";
 	/**
-	 * 订单备案异步回调URL
+	 * 商城真实订单备案异步回调URL
 	 */
-	public static final String ORDERNOTIFYURL = YM + "/silver-web-shop/order/reNotifyMsg";
+	public static final String ORDER_NOTIFY_URL = YM + "/silver-web-shop/order/reNotifyMsg";
 
 	/**
 	 * 支付单备案异步回调URL
 	 */
-	public static final String PAYMENTNOTIFYURL = YM + "/silver-web-shop/payment/reNotifyMsg";
+	public static final String PAYMENT_NOTIFY_URL = YM + "/silver-web-shop/payment/reNotifyMsg";
 
 	/**
 	 * 手工订单备案异步回调URL
 	 */
-	public static final String MANUALORDERNOTIFYURL = YM + "/silver-web-shop/manual/reOrderNotifyMsg";
+	public static final String MANUAL_ORDER_NOTIFY_URL = YM + "/silver-web-shop/manual/reOrderNotifyMsg";
 
 	/**
 	 * 手工支付单备案异步回调URL
 	 */
-	public static final String MANUALPAYMENTNOTIFYURL = YM + "/silver-web-shop/payment/rePayNotifyMsg";
+	public static final String MANUAL_PAYMENT_NOTIFY_URL = YM + "/silver-web-shop/payment/rePayNotifyMsg";
 
+	/**
+	 * 银盟报关网关URL
+	 */
+	public static final String REPORT_URL = "https://ym.191ec.com/silver-web/Eport/Report";
+	
 }

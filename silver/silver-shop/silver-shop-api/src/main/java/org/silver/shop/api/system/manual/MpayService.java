@@ -104,4 +104,13 @@ public interface MpayService {
 	 * @return Map
 	 */
 	public Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID, Map<String, Object> customsMap);
+
+	/**
+	 * 更新订单推送错误状态
+	 * 
+	 * @param orderNo
+	 *            订单编号
+	 * @return Map
+	 */
+	public Map<String, Object> updateOrderErrorStatus(String orderNo);
 }

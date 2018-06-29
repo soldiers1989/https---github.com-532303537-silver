@@ -632,8 +632,9 @@ public class ManagerServiceImpl implements ManagerService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			Merchant merchant = reList.get(0);
-			// 默认为：888888
-			merchant.setLoginPassword("21218CCA77804D2BA1922C33E0151105");
+			MD5 md5 =  new MD5();
+			// 默认为：Ym@888!333
+			merchant.setLoginPassword(md5.getMD5("Ym@888!333".getBytes()));
 			if (!managerDao.update(merchant)) {
 				return ReturnInfoUtils.errorInfo("重置密码失败,服务器繁忙!");
 			}

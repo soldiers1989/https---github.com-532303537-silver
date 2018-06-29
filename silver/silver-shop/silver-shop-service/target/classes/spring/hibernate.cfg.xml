@@ -132,5 +132,7 @@
 			resource="org/silver/shop/model/system/manual/OldManualPayment.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/tenant/MerchantBankContent.hbm.xml" />
+		<mapping
+			resource="org/silver/shop/model/system/manual/ManualOrderResendContent.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

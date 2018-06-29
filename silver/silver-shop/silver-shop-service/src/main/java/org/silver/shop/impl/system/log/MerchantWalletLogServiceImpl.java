@@ -91,10 +91,11 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 			if (!merchantWalletLogDao.add(walletLog)) {
 				return ReturnInfoUtils.errorInfo("保存商户钱包日志失败,服务器繁忙!");
 			}
+			return ReturnInfoUtils.successInfo();
 		} catch (Exception e) {
-			logger.error("----商户钱包扣费并且记录钱包日志-->>" + e);
+			logger.error("----商户钱包扣费并且记录钱包日志-->" + e);
+			return ReturnInfoUtils.errorInfo("添加钱包日志失败,服务器繁忙!!");
 		}
-		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override

@@ -45,10 +45,10 @@ public class OrderContent implements Serializable {
 	private String wbEhsentNo;// 物流公司备案号
 	private String entOrderNo;// 对接海关订单总编号
 	private String reMark;//
-
+	
 	private String waybillNo;// (快递单号)运单编号
 	private double tax;// 税费
-
+	private int sourceFlag;//来源标识：1-银盟商城、2-第三方推广
 	public long getId() {
 		return id;
 	}
@@ -335,6 +335,14 @@ public class OrderContent implements Serializable {
 
 	public void setTax(double tax) {
 		this.tax = tax;
+	}
+
+	public int getSourceFlag() {
+		return sourceFlag;
+	}
+
+	public void setSourceFlag(int sourceFlag) {
+		this.sourceFlag = sourceFlag;
 	}
 
 }

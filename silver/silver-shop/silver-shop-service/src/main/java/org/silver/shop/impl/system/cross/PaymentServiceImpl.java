@@ -646,7 +646,7 @@ public class PaymentServiceImpl implements PaymentService {
 					paymentInfoMap.put("EntOrderNo", payInfo.getMorder_id());
 					paymentInfoMap.put("Notes", payInfo.getRemarks());
 					Map<String, Object> paymentMap = ysPayReceiveService.sendPayment(merchantId, paymentInfoMap, tok,
-							recordMap, YmMallConfig.MANUALPAYMENTNOTIFYURL);
+							recordMap, YmMallConfig.MANUAL_PAYMENT_NOTIFY_URL);
 					if (!"1".equals(paymentMap.get(BaseCode.STATUS.toString()) + "")) {
 						String msg = "";
 						Map<String, Object> rePaymentMap = updatePaymentFailureStatus(treadeNo);
@@ -898,7 +898,7 @@ public class PaymentServiceImpl implements PaymentService {
 			}
 			count++;
 			paymentCallBack.setResendCount(count);
-			paymentCallBack.setResendStatus("FALSE");
+			paymentCallBack.setResendStatus("failure");
 			if (!paymentDao.update(paymentCallBack)) {
 				logger.error("--异步更新第三方支付单计数器失败--");
 			}
@@ -911,11 +911,11 @@ public class PaymentServiceImpl implements PaymentService {
 			paymentCallBack.setCreateBy("system");
 			paymentCallBack.setCreateDate(new Date());
 			paymentCallBack.setResendCount(0);
-			paymentCallBack.setResendStatus("FALSE");
+			paymentCallBack.setResendStatus("failure");
 			if (!paymentDao.add(paymentCallBack)) {
 				logger.error("--异步保存支付单第三方回调信息失败--");
 			}
-			pay.setResendStatus("FALSE");
+			pay.setResendStatus("failure");
 			if (!paymentDao.update(pay)) {
 				logger.error("--异步回调第三方支付单后更新支付单失败状态--");
 			}

@@ -9,6 +9,8 @@
 	<bean id="createPaymentJob" class="org.silver.shop.quartz.CreatePaymentQtz" />
 	<bean id="pushOrderRecordQtz" class="org.silver.shop.quartz.PushOrderRecordQtz" />
 	<bean id="pushPaymentRecordQtzJob" class="org.silver.shop.quartz.PushPaymentRecordQtz" />
+	<bean id="resendPushOrderRecordQtzJob" class="org.silver.shop.quartz.PushOrderRecordQtz" />
+
 
 	<bean id="SpringQtzJobMethod"
 		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -42,6 +44,18 @@
 		</property>
 		<property name="concurrent" value="false" />
 	</bean>
+	<!-- 定时任务,扫描手工订单推送失败重发记录 -->
+	<bean id="resendPushOrderRecordQtzJobMethod"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="resendPushOrderRecordQtzJob" />
+		</property>
+		<property name="targetMethod">
+			<value>resendPushOrderRecordJob</value>
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
+
 
 	<!-- ======================== 调度触发器 ======================== -->
 	<bean id="CronTriggerBean"
@@ -57,13 +71,20 @@
 		<property name="cronExpression" value="0/10 * * * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
-	
+
 	<bean id="pushPaymentRecordBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="pushPaymentRecordQtzJobMethod"></property>
 		<property name="cronExpression" value="0/10 * * * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
+	<bean id="resendPushOrderRecordBean"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="resendPushOrderRecordQtzJobMethod"></property>
+		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<property name="startDelay" value="60000" />
+	</bean>
+
 
 	<!-- ======================== 调度工厂 ======================== -->
 	<bean id="SpringJobSchedulerFactoryBean"
@@ -73,6 +94,7 @@
 				<ref bean="CronTriggerBean" />
 				<ref bean="pushOrderRecordBean" />
 				<ref bean="pushPaymentRecordBean" />
+				<ref bean="resendPushOrderRecordBean" />
 			</list>
 		</property>
 	</bean>

@@ -254,7 +254,7 @@ public class GoodsRecordController {
 	}
 
 	/**
-	 * 商户修改备案商品信息(仅限于未备案与备案失败的商品)
+	 * 商户修改备案商品信息(仅限于未备案与备案失败、或已备案待审核状态)
 	 * 
 	 * @param req
 	 * @param response
@@ -337,7 +337,7 @@ public class GoodsRecordController {
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商品备案信息")
 	//@RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
-	public String managerUpdateGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response, int length) {
+	public String managerUpdateGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -357,7 +357,7 @@ public class GoodsRecordController {
 	}
 	
 	
-/*	@RequestMapping(value = "/temUpdateOldOriginCountry", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/temUpdateOldOriginCountry", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("临时接口-更新旧原产国信息")
@@ -369,5 +369,5 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(goodsRecordTransaction.temUpdateOldOriginCountry()).toString();
-	}*/
+	}
 }

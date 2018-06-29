@@ -133,7 +133,8 @@ public class MpayServiceImpl implements MpayService {
 	 * 钱包流水Id
 	 */
 	private static final String WALLET_ID = "walletId";
-
+	
+	
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String proxyParentId, String merchantName, String proxyParentName) {
@@ -323,7 +324,7 @@ public class MpayServiceImpl implements MpayService {
 		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
 		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
 			String pushType = customsMap.get("pushType") + "";
-			//当推送类型为商户自助申报时,将商户的订单与支付单口岸费率合并一次清算
+			// 当推送类型为商户自助申报时,将商户的订单与支付单口岸费率合并一次清算
 			if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
 				Map<String, Object> params = new HashMap<>();
 				int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
@@ -424,7 +425,7 @@ public class MpayServiceImpl implements MpayService {
 		datas.put("amount", serviceFee);
 		datas.put("type", 4);
 		datas.put("flag", "out");
-		datas.put("note", "共计推送[" + newList.size() + "]单,订单号详情为#"+newList.toString());
+		datas.put("note", "共计推送[" + newList.size() + "]单,订单号详情为#" + newList.toString());
 		datas.put("targetWalletId", agentWallet.getWalletId());
 		datas.put("targetName", agentWallet.getAgentName());
 		datas.put("count", newList.size());
@@ -796,28 +797,20 @@ public class MpayServiceImpl implements MpayService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 更新订单推送错误状态
-	 * 
-	 * @param orderNo
-	 *            订单编号
-	 * @return Map
-	 */
-	private Map<String, Object> updateOrderErrorStatus(String orderNo) {
+	@Override
+	public Map<String, Object> updateOrderErrorStatus(String orderNo) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(ORDER_ID, orderNo);
 		List<Morder> reList = morderDao.findByProperty(Morder.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("推送订单备案接收失败后,更新订单接收状态时查询订单信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			for (int i = 0; i < reList.size(); i++) {
-				Morder order = reList.get(i);
-				// 订单接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
-				order.setStatus(3);
-				order.setUpdate_date(new Date());
-				if (!morderDao.update(order)) {
-					return ReturnInfoUtils.errorInfo("推送订单备案接收失败后,更新订单接收状态失败,服务器繁忙!");
-				}
+			Morder order = reList.get(0);
+			// 订单接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
+			order.setStatus(3);
+			order.setUpdate_date(new Date());
+			if (!morderDao.update(order)) {
+				return ReturnInfoUtils.errorInfo("推送订单备案接收失败后,更新订单接收状态失败,服务器繁忙!");
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {
@@ -842,7 +835,6 @@ public class MpayServiceImpl implements MpayService {
 		return StringEmptyUtils.isNotEmpty(order.getRecipientProvincesCode());
 	}
 
-	
 	@Override
 	public Map<String, Object> updateOrderInfo(String orderNo, String reOrderMessageID,
 			Map<String, Object> customsMap) {
@@ -880,7 +872,7 @@ public class MpayServiceImpl implements MpayService {
 	@Override
 	public Map<String, Object> sendOrder(Map<String, Object> customsMap, List<MorderSub> orderSubList, String tok,
 			Morder order) {
-		if(orderSubList == null || order == null || customsMap == null || StringEmptyUtils.isEmpty(tok)){
+		if (orderSubList == null || order == null || customsMap == null || StringEmptyUtils.isEmpty(tok)) {
 			return ReturnInfoUtils.errorInfo("推送订单时,请求参数不能为空!");
 		}
 		String timestamp = String.valueOf(System.currentTimeMillis());
@@ -967,7 +959,7 @@ public class MpayServiceImpl implements MpayService {
 		String appkey = customsMap.get("appkey") + "";
 		try {
 			clientsign = MD5
-					.getMD5((appkey + tok + orderJsonList.toString() + YmMallConfig.MANUALORDERNOTIFYURL + timestamp)
+					.getMD5((appkey + tok + orderJsonList.toString() + YmMallConfig.MANUAL_ORDER_NOTIFY_URL + timestamp)
 							.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			logger.error("------推送订单失败,MD5加密客户端签名失败-----", e);
@@ -1006,7 +998,7 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("clientsign", clientsign);
 		orderMap.put("timestamp", timestamp);
 		orderMap.put("datas", orderJsonList.toString());
-		orderMap.put("notifyurl", YmMallConfig.MANUALORDERNOTIFYURL);
+		orderMap.put("notifyurl", YmMallConfig.MANUAL_ORDER_NOTIFY_URL);
 		orderMap.put("note", "");
 		// 报文类型
 		String opType = customsMap.get("opType") + "";
@@ -1020,7 +1012,7 @@ public class MpayServiceImpl implements MpayService {
 		// 是否像海关发送
 		//orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		String resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
+		String resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2) {
 			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
@@ -1038,12 +1030,12 @@ public class MpayServiceImpl implements MpayService {
 			System.out.println("-----------------第二次向电子口岸发送------------");
 			// 检验检疫机构代码
 			orderMap.put(CIQ_ORG_CODE, "443400");
-			resultStr = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/Report", orderMap);
+			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
 		}
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);
 		} else {
-			return ReturnInfoUtils.errorInfo("服务器接收订单信息失败,请重试！");
+			return ReturnInfoUtils.errorInfo("服务器接收订单信息失败！");
 		}
 	}
 

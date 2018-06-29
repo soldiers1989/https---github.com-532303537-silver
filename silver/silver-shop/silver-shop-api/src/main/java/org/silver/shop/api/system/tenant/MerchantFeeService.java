@@ -29,9 +29,11 @@ public interface MerchantFeeService {
 	/**
 	 * 管理员获取指定商户口岸服务费信息
 	 * @param datasMap 查询参数
+	 * @param size 
+	 * @param page 
 	 * @return Map
 	 */
-	public Map<String,Object> getServiceFee(Map<String, Object> datasMap);
+	public Map<String,Object> getServiceFee(Map<String, Object> datasMap, int page, int size);
 	
 	/**
 	 * 根据流水Id查询商户口岸费率信息
@@ -41,4 +43,11 @@ public interface MerchantFeeService {
 	 * @return Map
 	 */
 	public Map<String, Object> getMerchantFeeInfo(String merchantFeeId);
+
+	/**
+	 * 根据商户Id，查询商户自助申报订单时进行口岸费率统计总和
+	 * @param merchantId 商户Id
+	 * @return Map
+	 */
+	public Map<String, Object> getCustomsFee(String merchantId);
 }

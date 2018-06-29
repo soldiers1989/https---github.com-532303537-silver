@@ -73,6 +73,8 @@ public class CheckDatasUtil {
 				msg = msg.replace("ncadcode", "[ncadCode]行邮税号");
 			} else if (msg.contains("hscode")) {
 				msg = msg.replace("hscode", "[HSCode]HS编码");
+			} else if (msg.contains("barcode")) {
+				msg = msg.replace("barcode", "[barCode]条形码");
 			} else if (msg.contains("goodsname")) {
 				msg = msg.replace("goodsname", "[GoodsName]商品名称");
 			} else if (msg.contains("goodsstyle")) {
@@ -118,14 +120,14 @@ public class CheckDatasUtil {
 			} else if (msg.contains("currcode")) {
 				msg = msg.replace("currcode", "[CurrCode]币制");
 			}
-			reDataMap.put(BaseCode.MSG.toString(), msg);
-			return reDataMap;
+			return ReturnInfoUtils.errorInfo(msg);
 		}
 	}
 
 	/**
 	 * 根据对应的订单信息,将参数名称修改为对应的中文名称方便阅读
-	 * @param jsonList 
+	 * 
+	 * @param jsonList
 	 * @param noNullKeys
 	 * @return Map
 	 */
@@ -136,7 +138,7 @@ public class CheckDatasUtil {
 			return reDataMap;
 		} else {
 			msg = reDataMap.get(BaseCode.MSG.toString()) + "";
-			 msg = msg.replace("第1条数据", "");
+			msg = msg.replace("第1条数据", "");
 			// 将所有key值转换为小写,实现通用
 			msg = msg.toLowerCase();
 			if (msg.contains("entorderno")) {
@@ -179,11 +181,11 @@ public class CheckDatasUtil {
 				msg = msg.replace("orderdoctel", "[OrderDocTel]下单人电话");
 			} else if (msg.contains("orderdate")) {
 				msg = msg.replace("orderdate", "[OrderDate]订单日期");
-			}else if (msg.contains("eport")) {
+			} else if (msg.contains("eport")) {
 				msg = msg.replace("eport", "[eport]口岸标识");
-			}else if (msg.contains("ciqorgcode")) {
+			} else if (msg.contains("ciqorgcode")) {
 				msg = msg.replace("ciqorgcode", "[ciqOrgCode]国检检疫机构编码");
-			}else if (msg.contains("customscode")) {
+			} else if (msg.contains("customscode")) {
 				msg = msg.replace("customscode", "[customsCode]海关关区编码");
 			}
 			reDataMap.put(BaseCode.MSG.toString(), msg);

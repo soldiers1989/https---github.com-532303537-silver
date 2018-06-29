@@ -390,6 +390,6 @@ public class MD5 {
     
 	public static void main(String argv[]) {
 		String s = "21218cca77804d2ba1922c33e0151105";
-		System.out.println(MD5.getMD5("888888".getBytes()));
+		System.out.println("--->>"+MD5.getMD5("Ym@888!333".getBytes()));
 	}
 }

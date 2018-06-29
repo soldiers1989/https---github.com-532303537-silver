@@ -66,10 +66,10 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			//查询当前用户Id是否已添加过该口岸、海关、国检信息
-			Map<String,Object> reCheckMerchantMap = checkMerchantFeeInfo(merchantId,customsName, customsCode, ciqOrgCode,
-					ciqOrgName,type);
-			if(!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))){
+			// 查询当前用户Id是否已添加过该口岸、海关、国检信息
+			Map<String, Object> reCheckMerchantMap = checkMerchantFeeInfo(merchantId, customsName, customsCode,
+					ciqOrgCode, ciqOrgName, type);
+			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckMerchantMap;
 			}
 			Map<String, Object> reIdMap = idUtils.createId(MerchantFeeContent.class, "merchantFee_");
@@ -111,16 +111,23 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 
 	/**
 	 * 校验该商户是否已添加过海关、国检信息
-	 * @param merchantId 商户Id
-	 * @param customsName 海关名称
-	 * @param customsCode 海关代码
-	 * @param ciqOrgCode 国检检疫机构代码
-	 * @param ciqOrgName 国检检疫机构名称
-	 * @param type 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param customsName
+	 *            海关名称
+	 * @param customsCode
+	 *            海关代码
+	 * @param ciqOrgCode
+	 *            国检检疫机构代码
+	 * @param ciqOrgName
+	 *            国检检疫机构名称
+	 * @param type
+	 *            类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 	 */
-	private Map<String,Object> checkMerchantFeeInfo(String merchantId, String customsName, String customsCode, String ciqOrgCode,
-			String ciqOrgName, String type) {
-		Map<String,Object> params = new HashMap<>();
+	private Map<String, Object> checkMerchantFeeInfo(String merchantId, String customsName, String customsCode,
+			String ciqOrgCode, String ciqOrgName, String type) {
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		params.put("customsName", customsName);
 		params.put("customsCode", customsCode);
@@ -128,11 +135,11 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		params.put("ciqOrgName", ciqOrgName);
 		params.put("type", type);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
-		if(reList == null){
+		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户口岸信息失败,服务器繁忙!");
-		}else if(!reList.isEmpty()){
+		} else if (!reList.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("该商户已添加过该口岸信息,请勿重复添加!");
-		}else{
+		} else {
 			return ReturnInfoUtils.successInfo();
 		}
 	}
@@ -233,9 +240,9 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		params.put("type", type);
-		//状态：1-启用、2-禁用
+		// 状态：1-启用、2-禁用
 		params.put("status", "1");
-		//删除标识:0-未删除,1-已删除
+		// 删除标识:0-未删除,1-已删除
 		params.put("deleteFlag", 0);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
 		if (reList == null) {
@@ -255,7 +262,7 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		String merchantFeeId = datasMap.get("merchantFeeId") + "";
 		int customsPort = 0;
 		int backCoverFlag = 0;
-		double platformFee =0;
+		double platformFee = 0;
 		try {
 			customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
 			backCoverFlag = Integer.parseInt(datasMap.get("backCoverFlag") + "");
@@ -300,21 +307,55 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 	}
 
 	@Override
-	public Map<String, Object> getServiceFee(Map<String, Object> datasMap) {
+	public Map<String, Object> getServiceFee(Map<String, Object> datasMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalMerchantFeeSearch(datasMap);
 		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
 			return reDatasMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("deleteFlag", 0);
-		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, paramMap, 0, 0);
+		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, paramMap, page, size);
 		long count = merchantFeeDao.findByPropertyCount(MerchantFeeContent.class, paramMap);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户费用信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(reList, count);
 		} else {
-			return ReturnInfoUtils.errorInfo("未找到商户费用信息!");
+			return ReturnInfoUtils.errorInfo("暂无数据");
+		}
+	}
+
+	@Override
+	public Map<String, Object> getCustomsFee(String merchantId) {
+		if (StringEmptyUtils.isEmpty(merchantId)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+
+		params.put("merchantId", merchantId);
+		// 状态：1-启用、2-禁用
+		params.put("status", "1");
+		params.put("deleteFlag", 0);
+		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			Map<String, Object> cacheMap = new HashMap<>();
+			for (MerchantFeeContent feeContent : reList) {
+				String customsCode = feeContent.getCustomsCode();
+				String ciqOrgCode = feeContent.getCiqOrgCode();
+				if (cacheMap.containsKey(customsCode + "_" + ciqOrgCode)) {
+					double fee = feeContent.getPlatformFee();
+					MerchantFeeContent reFeeContent = (MerchantFeeContent) cacheMap.get(customsCode + "_" + ciqOrgCode);
+					feeContent.setPlatformFee(fee + reFeeContent.getPlatformFee());
+					cacheMap.put(customsCode + "_" + ciqOrgCode, feeContent);
+				} else {
+					cacheMap.put(customsCode + "_" + ciqOrgCode, feeContent);
+				}
+			}
+			return ReturnInfoUtils.successDataInfo(cacheMap);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据");
 		}
 	}
 

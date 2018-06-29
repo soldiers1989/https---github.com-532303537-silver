@@ -28,8 +28,10 @@ public class PaymentReceiptLogServiceImpl implements PaymentReceiptLogService {
 	private WalletUtils walletUtils;
 
 	@Override
-	public Map<String, Object> addPaymentReceiptLog(String merchantId, double amount, String orderId, String operator) {
-		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(amount) || StringEmptyUtils.isEmpty(orderId)) {
+	public Map<String, Object> addPaymentReceiptLog(String merchantId, double amount, String orderId, String operator,
+			String type) {
+		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(amount)
+				|| StringEmptyUtils.isEmpty(orderId)) {
 			return ReturnInfoUtils.errorInfo("添加交易日志时,请求参数不能为空");
 		}
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
@@ -49,19 +51,23 @@ public class PaymentReceiptLogServiceImpl implements PaymentReceiptLogService {
 		double cash = wallet.getCash();
 		log.setBeforeChangingBalance(cash);
 		log.setAmount(amount);
-		log.setAfterChangeBalance(cash + amount);
-		//类型：recharge(充值)、transfer(转账)、withdraw(提现)
+		// 类型：recharge(充值)、transfer(转账)、withdraw(提现)
+		if ("recharge".equals(type)) {
+			log.setAfterChangeBalance(cash + amount);
+		}else{
+			log.setAfterChangeBalance(cash - amount);
+		}
 		log.setType("withdraw");
 		// 状态：success(交易成功)、failure(交易失败)、process(处理中)
 		log.setTradingStatus("process");
-		log.setRemark("管理员对["+merchant.getMerchantName()+"]进行资金清算");
-		if(StringEmptyUtils.isNotEmpty(operator)){
+		log.setRemark("管理员对[" + merchant.getMerchantName() + "]进行资金清算");
+		if (StringEmptyUtils.isNotEmpty(operator)) {
 			log.setCreateBy(operator);
-		}else{
+		} else {
 			log.setCreateBy("system");
 		}
 		log.setCreateDate(new Date());
-		if(!paymentReceiptLogDao.add(log)){
+		if (!paymentReceiptLogDao.add(log)) {
 			return ReturnInfoUtils.errorInfo("保存商户交易记录失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();

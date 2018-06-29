@@ -1,5 +1,6 @@
 package org.silver.shop.service.system.cross;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 
 import org.silver.shop.api.system.cross.YsPayReceiveService;
@@ -25,5 +26,10 @@ public class YsPayReceiveTransaction {
 	//银盟发起商户资金代付后,银盛支付成功回调
 	public Map<String, Object> dfReceive(Map params) {
 		return ysPayReceiveService.dfReceive(params);
+	}
+	
+	public static void main(String[] args) {
+		DecimalFormat df = new DecimalFormat("#");
+		System.out.println("---->>>"+df.format(6.2222222));
 	}
 }

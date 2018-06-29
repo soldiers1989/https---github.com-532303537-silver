@@ -52,9 +52,9 @@ public class TimerResendPayment implements InitializingBean {
 	 */
 	private void resendPayment() {
 		try {
-			System.out.println("--扫描支付单返回次数10次以下与返回状态为FALSE--");
+			System.out.println("--扫描支付单返回次数10次以下与返回状态为failure--");
 			Map<String, Object> params = new HashMap<>();
-			params.put("resendStatus", "FALSE");
+			params.put("resendStatus", "failure");
 			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 200);
 			if (paymentList != null && !paymentList.isEmpty()) {
 				for (PaymentCallBack paymentCallBack : paymentList) {
@@ -72,11 +72,6 @@ public class TimerResendPayment implements InitializingBean {
 		} catch (Exception e) {
 			logger.error("----扫描回调支付单错误-----", e);
 		}
-	}
-	
-	public static void  test(String a,String b){
-		a = "-----";
-		b = "=====";
 	}
 	public static void main(String[] args) {
 		Calendar calendar = Calendar.getInstance();

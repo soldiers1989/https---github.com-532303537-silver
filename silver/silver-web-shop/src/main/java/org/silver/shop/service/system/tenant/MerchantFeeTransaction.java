@@ -7,6 +7,7 @@ import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -43,8 +44,14 @@ public class MerchantFeeTransaction {
 	}
 
 	//管理员获取指定商户口岸服务费信息
-	public Object getServiceFee(Map<String, Object> datasMap) {
-		return merchantFeeService.getServiceFee(datasMap);
+	public Object getServiceFee(Map<String, Object> datasMap, int page, int size) {
+		return merchantFeeService.getServiceFee(datasMap,page,size);
+	}
+
+	public Map<String,Object> getCustomsFee(){
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return merchantFeeService.getCustomsFee(merchantInfo.getMerchantId());
 	}
 
 }

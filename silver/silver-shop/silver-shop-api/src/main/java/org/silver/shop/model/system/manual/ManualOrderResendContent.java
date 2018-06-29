@@ -4,22 +4,22 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 手工支付单第三方回调实体类
+ * 手工订单重推记录实体信息类
  */
-public class PaymentCallBack implements Serializable {
+public class ManualOrderResendContent implements Serializable {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -391180442577887112L;
+	private static final long serialVersionUID = 8268179938406418403L;
 	private long id;
+	private String orderResendId;//订单重发唯一Id
 	private String merchantId;// 商户Id
-	private String tradeNo;// 模拟银盛支付交易流水 系统唯一
-	private String orderId;// 关联的手工订单 id
-	private String thirdPartyId;// 第三方支付单唯一标识
+	private String merchantName;//
+	private String orderId;// 手工订单id
 	private String resendStatus;// 重发状态：success-成功，failure-失败
-	private int resendCount;// 第三方回调重发次数
-	private String remark;// 备注说明字段
+	private int resendCount;// 订单重发海关次数
+	private String note;//
 	private Date createDate; // 创建时间
 	private String createBy; // 创建人
 	private Date updateDate; // 更新时间
@@ -27,7 +27,8 @@ public class PaymentCallBack implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
-
+	private String remark;//
+	
 	public long getId() {
 		return id;
 	}
@@ -36,16 +37,12 @@ public class PaymentCallBack implements Serializable {
 		return merchantId;
 	}
 
-	public String getTradeNo() {
-		return tradeNo;
+	public String getMerchantName() {
+		return merchantName;
 	}
 
 	public String getOrderId() {
 		return orderId;
-	}
-
-	public String getThirdPartyId() {
-		return thirdPartyId;
 	}
 
 	public String getResendStatus() {
@@ -54,6 +51,10 @@ public class PaymentCallBack implements Serializable {
 
 	public int getResendCount() {
 		return resendCount;
+	}
+
+	public String getNote() {
+		return note;
 	}
 
 	public Date getCreateDate() {
@@ -84,6 +85,10 @@ public class PaymentCallBack implements Serializable {
 		return deleteDate;
 	}
 
+	public String getRemark() {
+		return remark;
+	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
@@ -92,16 +97,12 @@ public class PaymentCallBack implements Serializable {
 		this.merchantId = merchantId;
 	}
 
-	public void setTradeNo(String tradeNo) {
-		this.tradeNo = tradeNo;
+	public void setMerchantName(String merchantName) {
+		this.merchantName = merchantName;
 	}
 
 	public void setOrderId(String orderId) {
 		this.orderId = orderId;
-	}
-
-	public void setThirdPartyId(String thirdPartyId) {
-		this.thirdPartyId = thirdPartyId;
 	}
 
 	public void setResendStatus(String resendStatus) {
@@ -110,6 +111,10 @@ public class PaymentCallBack implements Serializable {
 
 	public void setResendCount(int resendCount) {
 		this.resendCount = resendCount;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
 	}
 
 	public void setCreateDate(Date createDate) {
@@ -140,12 +145,16 @@ public class PaymentCallBack implements Serializable {
 		this.deleteDate = deleteDate;
 	}
 
-	public String getRemark() {
-		return remark;
-	}
-
 	public void setRemark(String remark) {
 		this.remark = remark;
+	}
+
+	public String getOrderResendId() {
+		return orderResendId;
+	}
+
+	public void setOrderResendId(String orderResendId) {
+		this.orderResendId = orderResendId;
 	}
 
 }

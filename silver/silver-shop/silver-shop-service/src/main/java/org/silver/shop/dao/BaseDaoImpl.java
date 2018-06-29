@@ -391,7 +391,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				while (is.hasNext()) {
 					property = is.next();
 					if ("startDate".equals(property)) {// 驼峰写法实体
-						hql += "model.createDate " + " >= " + "? " + " and ";
+						hql += "model.createDate " + " >= " + " ? " + " and ";
 					} else if ("endDate".equals(property)) {// 驼峰写法实体
 						hql += "model.createDate " + " <= " + "?" + " and ";
 					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体

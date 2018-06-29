@@ -5,10 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,13 +20,9 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.system.manual.ManualService;
 import org.silver.shop.service.system.manual.MdataService;
-import org.silver.shop.utils.CusAccessObjectUtil;
-import org.silver.util.HttpUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
-import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,9 +35,9 @@ import net.sf.json.JSONObject;
 
 @RestController
 @RequestMapping(value = "/manual")
-public class EditRecordController {
+public class ManualController {
 
-	private static Logger logger = LogManager.getLogger(EditRecordController.class);
+	private static Logger logger = LogManager.getLogger(Object.class);
 	@Autowired
 	private ManualService manualService;
 	@Autowired

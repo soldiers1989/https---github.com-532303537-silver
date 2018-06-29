@@ -1,9 +1,5 @@
 package org.silver.shop.controller.system.tenant;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -128,7 +124,10 @@ public class MerchantWalletController {
 		if (StringEmptyUtils.isEmpty(amount) || amount < 0.01) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("结算金额错误!")).toString();
 		}
-		
+		Map<String,Object> reCheckWalletMap = merchantWalletTransaction.getMerchantWallet(merchantId,amount);
+		if(!"1".equals(reCheckWalletMap.get(BaseCode.STATUS.toString()))){
+			return JSONObject.fromObject(reCheckWalletMap).toString();
+		}
 		Map<String, Object> reBankMap = merchantWalletTransaction.getMerchantBankInfo(merchantId);
 		if (!"1".equals(reBankMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(reBankMap).toString();
@@ -142,7 +141,7 @@ public class MerchantWalletController {
 		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
 			return JSONObject.fromObject(reMap).toString();
 		}
-		Map<String,Object> reReceiptLogMap = merchantWalletTransaction.addPaymentReceiptLog(merchantId,amount,serialNo);
+		Map<String,Object> reReceiptLogMap = merchantWalletTransaction.addPaymentReceiptLog(merchantId,amount,serialNo,"withdraw");
 		if(!"1".equals(reReceiptLogMap.get(BaseCode.STATUS.toString()))){
 			return JSONObject.fromObject(reReceiptLogMap).toString();
 		}

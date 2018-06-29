@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
@@ -449,8 +450,9 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			String startDate = paramsMap.get("startDate") + "";
 			String endDate = paramsMap.get("endDate") + "";
 			String merchantId = paramsMap.get("merchantId") + "";
-			StringBuilder sql = new StringBuilder("SELECT COUNT(t1.order_id) AS count,SUM(t1.ActualAmountPaid) AS amount,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date	FROM ym_shop_manual_morder t1 "
-					+ "WHERE t1.status != 0 ");
+			StringBuilder sql = new StringBuilder(
+					"SELECT COUNT(t1.order_id) AS count,SUM(t1.ActualAmountPaid) AS amount,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date	FROM ym_shop_manual_morder t1 "
+							+ "WHERE t1.status != 0 ");
 			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sql.append(" AND t1.merchant_no = ? ");
 				sqlParams.add(merchantId);
@@ -460,7 +462,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				sqlParams.add(startDate);
 			}
 			if (StringEmptyUtils.isNotEmpty(endDate)) {
-				appendEndDate(sql);				
+				appendEndDate(sql);
 				sqlParams.add(endDate);
 			}
 			sql.append(" GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d') ");
@@ -482,7 +484,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	@Override
 	public Table getOrderDailyReportetDetails(Map<String, Object> params) {
-		if(params == null){
+		if (params == null) {
 			return null;
 		}
 		Session session = null;
@@ -524,17 +526,60 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 
 	/**
 	 * 拼接查询条件中,通用的日期开始时间
-	 * @param sql 
+	 * 
+	 * @param sql
 	 */
 	private void appendStartDate(StringBuilder sql) {
 		sql.append(" AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') >= DATE_FORMAT( ? ,'%Y-%m-%d') ");
 	}
-	
+
 	/**
 	 * 拼接查询条件中,通用的日期结束时间
-	 * @param sql 
+	 * 
+	 * @param sql
 	 */
 	private void appendEndDate(StringBuilder sql) {
 		sql.append(" AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ");
+	}
+
+	@Override
+	public List getResendOrderInfo(Class entity, Map<String, Object> params, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = " FROM " + entName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += " WHERE ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " = " + " ? " + " and ";
+					list.add(params.get(property));
+				}
+				hql += " model.resendCount < 10 Order By id DESC";
+			}
+			Query query = session.createQuery(hql);
+			if (!list.isEmpty()) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<Object> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
 	}
 }

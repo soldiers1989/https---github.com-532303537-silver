@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.silver.shop.dao.BaseDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
+import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 
@@ -77,6 +78,7 @@ public interface OrderDao extends BaseDao {
 
 	/**
 	 * 获取每日订单报表信息
+	 * 
 	 * @param paramsMap
 	 * @return
 	 */
@@ -84,9 +86,21 @@ public interface OrderDao extends BaseDao {
 
 	/**
 	 * 获取商户订单报表详情
+	 * 
 	 * @param params
 	 * @return
 	 */
 	public Table getOrderDailyReportetDetails(Map<String, Object> params);
+
+	/**
+	 * 获取需要重发的订单
+	 * 
+	 * @param class1
+	 * @param params
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public List getResendOrderInfo(Class class1, Map<String, Object> params, int page, int size);
 
 }
