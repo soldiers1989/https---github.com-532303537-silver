@@ -6,7 +6,7 @@
          	http://www.springframework.org/schema/aop  
             http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
 
-	<bean id="ManualPaymentInterceptor" class="org.silver.shop.component.ManualPaymentInterceptor" />
+	<!-- <bean id="ManualPaymentInterceptor" class="org.silver.shop.component.ManualPaymentInterceptor" />
 	<aop:config>
 		<aop:aspect ref="ManualPaymentInterceptor">
 			<aop:pointcut id="manualPaymentPointcut"
@@ -15,7 +15,16 @@
 			<aop:after method="methodAfter" pointcut-ref="manualPaymentPointcut" />
 		</aop:aspect>
 	</aop:config>
-
+	 -->
+	<bean id="ManualOrderInterceptor" class="org.silver.shop.component.ManualOrderInterceptor" />
+	<aop:config>
+		<aop:aspect ref="ManualOrderInterceptor">
+			<aop:pointcut id="manualOrderPointcut"
+				expression="execution(* org.silver.shop.impl.system.manual.MpayServiceImpl.*(..))" />
+			<aop:before method="methodBefore" pointcut-ref="manualOrderPointcut" />
+			<aop:after method="methodAfter" pointcut-ref="manualOrderPointcut" />
+		</aop:aspect>
+	</aop:config>
 
 	<!-- <bean id="ChooseDatasourceHandler" class="org.silver.shop.component.ChooseDatasourceHandler" /> 
 		<aop:config> 

@@ -39,7 +39,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		// 扣除服务费后余额
 		double surplus = balance - serviceFee;
 		if (surplus < 0) {
-			return ReturnInfoUtils.errorInfo("余额不足,请先充值后再进行操作!");
+			return ReturnInfoUtils.errorInfo("扣款失败,账户余额不足!");
 		}
 		merchantWallet.setBalance(surplus);
 		merchantWallet.setUpdateDate(new Date());

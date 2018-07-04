@@ -43,8 +43,8 @@ public class Morder implements Serializable {
 	private String update_by;// 更新人
 	private String remarks;//
 	/**
-	 *  备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
-	 *   2018-6-14更新为申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+	 * 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
+	 * 2018-6-14更新为申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
 	 */
 	private int order_record_status;
 	private String order_serial_no;// 服务器接收成功后返回编号
@@ -66,8 +66,10 @@ public class Morder implements Serializable {
 	private String customsCode;// 海关关区代码(导出表中-进/出口岸)
 	private String ciqOrgCode;// 国检机构代码
 	private String thirdPartyId;// 第三方订单唯一标识
-	
-	
+	private int idcardCertifiedFlag;// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+	private int backCoverFlag;// 订单手续费封底标识：1-不封底计算、2-100封底计算
+	private double platformFee;// 订单服务费率
+
 	public long getId() {
 		return id;
 	}
@@ -458,6 +460,30 @@ public class Morder implements Serializable {
 
 	public void setCiqOrgCode(String ciqOrgCode) {
 		this.ciqOrgCode = ciqOrgCode;
+	}
+
+	public int getIdcardCertifiedFlag() {
+		return idcardCertifiedFlag;
+	}
+
+	public int getBackCoverFlag() {
+		return backCoverFlag;
+	}
+
+	public void setIdcardCertifiedFlag(int idcardCertifiedFlag) {
+		this.idcardCertifiedFlag = idcardCertifiedFlag;
+	}
+
+	public void setBackCoverFlag(int backCoverFlag) {
+		this.backCoverFlag = backCoverFlag;
+	}
+
+	public double getPlatformFee() {
+		return platformFee;
+	}
+
+	public void setPlatformFee(double platformFee) {
+		this.platformFee = platformFee;
 	}
 
 }

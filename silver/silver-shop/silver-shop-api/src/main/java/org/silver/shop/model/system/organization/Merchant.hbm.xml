@@ -101,5 +101,6 @@
 		<property name="thirdPartyKey" type="java.lang.String">
 			<column name="thirdPartyKey"  unique="true"/>
 		</property>
+		
 	</class>
 </hibernate-mapping>

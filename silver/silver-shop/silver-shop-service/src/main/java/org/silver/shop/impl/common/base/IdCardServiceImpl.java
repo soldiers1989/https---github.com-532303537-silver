@@ -78,9 +78,8 @@ public class IdCardServiceImpl implements IdCardService {
 	}
 
 	@Override
-	public Map<String, Object> firstUpdateIdCardInfo() {
-		int orderPage = 1;
-		int orderSize = 200;
+	public Map<String, Object> firstUpdateIdCardInfo(int orderPage, int orderSize) {
+		//2018-07-02 更新页为1100
 		Map<String, Object> params = new HashMap<>();
 		// 只有订单备案成功后,才导入进实名库
 		params.put("order_record_status", 3);

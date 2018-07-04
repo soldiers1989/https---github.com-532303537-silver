@@ -20,11 +20,11 @@ import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
 
 /**
- * 商户订单导入日志
+ * 商户手工订单(包含支付单)日志
  */
 @Controller
 @RequestMapping("/orderImplLogs")
-public class OrderImplLogsController {
+public class ManualLogController {
 
 	@Autowired
 	private OrderImplLogsTransaction orderImplLogsTransaction;

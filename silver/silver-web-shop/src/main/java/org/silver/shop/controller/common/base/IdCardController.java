@@ -1,6 +1,5 @@
 package org.silver.shop.controller.common.base;
 
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,13 +33,13 @@ public class IdCardController {
 	@ApiOperation("管理员查询所有身份证信息")
 	@RequiresPermissions("idCard:getAllIdCard")
 	public String getAllIdCard(HttpServletRequest req, HttpServletResponse response, @RequestParam("page") int page,
-			@RequestParam("size") int size, String idName, String idNumber,String type) {
+			@RequestParam("size") int size, String idName, String idNumber, String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardTransaction.getAllIdCard(page, size, idName, idNumber,type)).toString();
+		return JSONObject.fromObject(idCardTransaction.getAllIdCard(page, size, idName, idNumber, type)).toString();
 	}
 
 	/**
@@ -72,12 +71,13 @@ public class IdCardController {
 	@ResponseBody
 	@ApiOperation("管理员首次更新身份证数据")
 	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
-	public String firstUpdateIdCardInfo(HttpServletRequest req, HttpServletResponse response) {
+	public String firstUpdateIdCardInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardTransaction.firstUpdateIdCardInfo()).toString();
+		return JSONObject.fromObject(idCardTransaction.firstUpdateIdCardInfo(page,size)).toString();
 	}
 }

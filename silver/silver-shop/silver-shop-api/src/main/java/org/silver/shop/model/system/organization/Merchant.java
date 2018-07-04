@@ -40,12 +40,11 @@ public class Merchant implements Serializable {
 
 	private String agentParentId ; //代理商Id
 	private String agentParentName ;// 代理商名称
-	private String companyName;//公司名称
+	private String companyName;//公司名称（用于商城显示店铺名称）
 	private String marCode;//(名称来源自启邦)商户在银盟商城平台唯一标识
 	private String sku;//(名称来源自启邦)
 	private int thirdPartyFlag;//第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 	private String thirdPartyKey;//第三方密钥
-	//private int ;//
 	
 	public Long getId() {
 		return id;

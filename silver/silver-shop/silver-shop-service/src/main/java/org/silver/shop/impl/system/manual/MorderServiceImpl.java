@@ -1030,7 +1030,6 @@ public class MorderServiceImpl implements MorderService {
 		order.setOldOrderId(strArr[29]);
 		order.setUpdate_date(new Date());
 		order.setUpdate_by(merchantName);
-
 		try {
 			order.setSerial(Integer.parseInt(strArr[31]));
 		} catch (Exception e) {

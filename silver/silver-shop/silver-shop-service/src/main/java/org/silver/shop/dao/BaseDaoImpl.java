@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -618,10 +619,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		paramMap.put("firstTypeId", Long.parseLong("29"));
 		// List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null,
 		// 0, 0);
-		Map<String, Object> orMap = new HashMap<>();
+	/*	Map<String, Object> orMap = new HashMap<>();
 		orMap.put("order_serial_no", "222");
-		orMap.put("order_id", "65478417");
-		List<Morder> reList = bd.findByPropertyOr2(Morder.class, orMap, 0, 0);
+		orMap.put("order_id", "65478417");*/
+		List<MerchantIdCardCostContent> reList = bd.findByPropertyOr2(MerchantIdCardCostContent.class, null, 0, 0);
 
 		System.out.println("0----->>>>" + reList.size());
 	}

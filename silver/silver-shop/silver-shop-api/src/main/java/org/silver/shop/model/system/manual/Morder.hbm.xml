@@ -177,6 +177,16 @@
 		<property name="ciqOrgCode">
 			<column name="ciqOrgCode" />
 		</property>
+		
+		<property name="idcardCertifiedFlag" type="int">
+			<column name="idcardCertifiedFlag" default="0"/>
+		</property>
+		<property name="backCoverFlag" type="int">
+			<column name="backCoverFlag" default="0"/>
+		</property>
+		<property name="platformFee" type="java.lang.Double">
+			<column name="platformFee" default="0"/>
+		</property>
 	</class>
 
 </hibernate-mapping>

@@ -64,7 +64,7 @@ public class MerchantWalletController {
 			// 生成商户订单 out_trade_no total_amount
 			req.setAttribute("notify_url",
 					"https://ym.191ec.com/silver-web-shop/yspay-receive/walletRecharge");
-			req.setAttribute("return_url", "");
+			req.setAttribute("return_url", "https://asme.191ec.com/200.html");
 			// req.setAttribute("return_url",
 			// "https://www.191ec.com/silver-web-shop/");
 			req.setAttribute("version", DirectPayConfig.VERSION);

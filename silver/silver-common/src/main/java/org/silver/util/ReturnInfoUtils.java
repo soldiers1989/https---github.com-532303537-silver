@@ -101,8 +101,7 @@ public class ReturnInfoUtils {
 	}
 
 	/**
-	 * 多个错误信息返回工具类,由于是多操作,故而有错也算作操作成功提示信息
-	 * 注：通过List集合存放Map(错误信息)返回,并且错误信息在ERROR键中
+	 * 多个错误信息返回工具类,由于是多操作,故而有错也算作操作成功提示信息 注：通过List集合存放Map(错误信息)返回,并且错误信息在ERROR键中
 	 * 
 	 * @param errorList
 	 *            错误信息集合
@@ -118,6 +117,30 @@ public class ReturnInfoUtils {
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		map.put(BaseCode.ERROR.toString(), errorList);
+		return map;
+	}
+
+	/**
+	 * 多个错误信息返回工具类,由于是多操作,故而有错也算作操作成功提示信息,带总条数参数
+	 * 注：通过List集合存放Map(错误信息)返回,并且错误信息在ERROR键中
+	 * 
+	 * @param errorList
+	 *            错误信息集合
+	 * @param totalCount
+	 *            总条数
+	 * @return Map
+	 */
+	public static final Map<String, Object> errorInfo(List<Map<String, Object>> errorList, int totalCount) {
+		if (errorList == null) {
+			return errorInfo("未知错误,返回错误信息失败!");
+		} else if (errorList.isEmpty()) {
+			return successInfo();
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
+		map.put(BaseCode.ERROR.toString(), errorList);
+		map.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 		return map;
 	}
 }

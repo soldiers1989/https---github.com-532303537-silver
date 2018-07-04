@@ -64,7 +64,7 @@ public class CreatePaymentQtz {
 		Map<String, Object> params = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
-		calendar.add(Calendar.MONTH, -3);
+		calendar.add(Calendar.MONTH, -12);
 		calendar.set(Calendar.HOUR_OF_DAY, 00);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
@@ -79,7 +79,8 @@ public class CreatePaymentQtz {
 		params.put("order_record_status", 10);
 		// 网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 		params.put("status", 1);
-		params.put("tradeNoFlag", " is null");
+		//
+		params.put("tradeNoFlag", " IS NULL ");
 		try {
 			int page = 1;
 			int size = 300;
@@ -138,6 +139,7 @@ public class CreatePaymentQtz {
 		//申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
 		paymentMap.put("pay_record_status", 10);
 		Map<String, Object> reCheckMap = paymentService.checkPaymentInfo(checkInfoMap);
+		System.out.println("---reCheckMap->>"+reCheckMap.toString());
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			logger.error("系统扫描自助申报订单,创建支付单失败->" + reCheckMap.get(BaseCode.MSG.toString()));
 			return false;

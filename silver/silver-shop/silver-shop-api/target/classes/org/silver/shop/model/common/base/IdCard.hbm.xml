@@ -1,21 +1,39 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-<!-- Generated 2018-1-26 14:05:00 by Hibernate Tools 3.4.0.CR1 -->
+<!-- Generated 2018-7-2 11:59:21 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
     <class name="org.silver.shop.model.common.base.IdCard" table="ym_shop_base_id_card">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
         </id>
+        <property name="certifiedNo" type="java.lang.String" >
+            <column name="certifiedNo" />
+        </property>
+        <property name="merchantId" type="java.lang.String" >
+            <column name="merchantId" />
+        </property>
+          <property name="merchantName" type="java.lang.String" >
+            <column name="merchantName" />
+        </property>
         <property name="name" type="java.lang.String">
-            <column name="name" not-null="true"/>
+            <column name="name" />
         </property>
         <property name="idNumber" type="java.lang.String">
-            <column name="idNumber" not-null="true" unique="true"/>
+            <column name="idNumber" />
         </property>
         <property name="type" type="int">
-            <column name="type" not-null="true"/>
+            <column name="type" />
+        </property>
+        <property name="status" type="java.lang.String" >
+            <column name="status" />
+        </property>
+        <property name="note" type="java.lang.String" >
+            <column name="note" />
+        </property>
+        <property name="remrak" type="java.lang.String" >
+            <column name="remrak" />
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />
@@ -29,14 +47,17 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
         <property name="deleteBy" type="java.lang.String">
             <column name="deleteBy" />
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
-         <property name="deleteFlag" type="int">
-            <column name="deleteFlag" />
+         <property name="certifiedDate" type="java.util.Date">
+            <column name="certifiedDate" />
         </property>
     </class>
 </hibernate-mapping>

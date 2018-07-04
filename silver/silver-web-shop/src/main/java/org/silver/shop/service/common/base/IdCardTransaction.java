@@ -23,8 +23,8 @@ public class IdCardTransaction {
 	}
 
 
-	public Map<String,Object> firstUpdateIdCardInfo() {
-		return idCardService.firstUpdateIdCardInfo();
+	public Map<String,Object> firstUpdateIdCardInfo(int page, int size) {
+		return idCardService.firstUpdateIdCardInfo(page,size);
 	}
 
 	

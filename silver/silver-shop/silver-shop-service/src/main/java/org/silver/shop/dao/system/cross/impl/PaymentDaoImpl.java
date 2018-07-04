@@ -323,7 +323,7 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			String endDate = params.get("endDate") + "";
 			StringBuilder sql = new StringBuilder(
 					"SELECT t1.merchant_no,t1.create_by AS merchantName,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) AS totalCount,SUM(t1.pay_amount) AS amount,	t2.platformFee,COUNT(case when t1.pay_amount < 100 then t1.pay_amount end) AS backCoverCount,SUM(case when t1.pay_amount >= 100 then t1.pay_amount  ELSE 0 end)  AS normalAmount,t1.customsCode FROM ym_shop_manual_mpay t1 "
-							+ " LEFT JOIN ym_shop_merchant_fee_content t2 ON (t1.merchant_no = t2.merchantId AND t2.type = 'paymentRecord' ) WHERE	 t1.networkStatus != 0 ");
+							+ " LEFT JOIN ym_shop_merchant_fee_content t2 ON (t1.merchant_no = t2.merchantId AND t2.type = 'paymentRecord' ) WHERE t1.networkStatus != 0 AND t1.del_flag = 0 AND t1.pay_record_status != 1 ");
 			String merchantId = params.get("merchantId") + "";
 			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sql.append(" AND t1.merchant_no = ? ");

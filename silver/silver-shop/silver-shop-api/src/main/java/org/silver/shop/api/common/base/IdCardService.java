@@ -27,8 +27,10 @@ public interface IdCardService {
 
 	/**
 	 * 获取所有订单内身份证姓名与号码存入实名表
+	 * @param size 
+	 * @param page 
 	 * @return
 	 */
-	public Map<String, Object> firstUpdateIdCardInfo();
+	public Map<String, Object> firstUpdateIdCardInfo(int page, int size);
 	
 }

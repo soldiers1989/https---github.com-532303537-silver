@@ -45,5 +45,8 @@ public class YmMallConfig {
 	 * 银盟报关网关URL
 	 */
 	public static final String REPORT_URL = "https://ym.191ec.com/silver-web/Eport/Report";
-	
+	/**
+	 * 银盟实名认证网关商户号
+	 */
+	public static final String ID_CARD_CERTIFICATION_MERCHANT_NO = "YM20170000015078659178651922";
 }
