@@ -223,7 +223,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public List<Morder> findByPropertyIn(List<Map<String, Object>> itemList) {
 		Session session = null;
 		try {
-			StringBuilder sbSQL = new StringBuilder(" SELECT * FROM ym_shop_manual_morder t1 WHERE  t1.order_id IN ( ");
+			StringBuilder sbSQL = new StringBuilder(" SELECT * FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
 			for (int i = 0; i < itemList.size(); i++) {
 				sbSQL.append(" ? , ");
 			}

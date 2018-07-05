@@ -210,7 +210,7 @@ public interface PaymentService {
 	public boolean addEntity(Map<String, Object> paymentMap);
 
 	/**
-	 * 当生成的支付流水号更新到订单表中
+	 * 当生成的支付流水号更新到订单表中,并将实名认证状态更新为已实名
 	 * 
 	 * @param merchantId
 	 *            商户Id

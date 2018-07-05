@@ -67,8 +67,8 @@ public class Morder implements Serializable {
 	private String ciqOrgCode;// 国检机构代码
 	private String thirdPartyId;// 第三方订单唯一标识
 	private int idcardCertifiedFlag;// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-	private int backCoverFlag;// 订单手续费封底标识：1-不封底计算、2-100封底计算
-	private double platformFee;// 订单服务费率
+	private int backCoverFlag;// 手续费封底标识：1-不封底计算、2-100封底计算
+	private double platformFee;// 商户对应的订单服务费率
 
 	public long getId() {
 		return id;

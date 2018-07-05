@@ -1,7 +1,5 @@
 package org.silver.shop.quartz;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,27 +15,18 @@ import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.api.system.tenant.MerchantIdCardCostService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.OrderDao;
-import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
-import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
-import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.util.DateUtil;
-import org.silver.util.MD5;
-import org.silver.util.MapSortUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
-import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 /**
  * 定时任务,扫描商户自助申报的订单,进行订单申报
@@ -84,8 +73,6 @@ public class PushOrderRecordQtz {
 	private MpayService mpayService;
 	@Autowired
 	private AccessTokenService accessTokenService;
-	@Autowired
-	private MerchantIdCardCostService merchantIdCardCostService;
 
 	public void pushOrderRecordJob() {
 		if (counter.get() % 10 == 0) {
@@ -110,8 +97,8 @@ public class PushOrderRecordQtz {
 		params.put("order_record_status", 10);
 		// 网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 		params.put("status", 1);
-		//
-		params.put("tradeNoFlag", " IS NOT NULL");
+		//支付流水标识
+		params.put("tradeNoFlag", " IS NOT NULL ");
 		try {
 			int page = 1;
 			int size = 300;
@@ -122,7 +109,10 @@ public class PushOrderRecordQtz {
 				}
 				if (reOrderList != null && !reOrderList.isEmpty()) {
 					for (Morder order : reOrderList) {
-						startSendOrderRecord(order, null);
+						Map<String,Object> reMap = startSendOrderRecord(order, null);
+						if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+							logger.error("--定时扫描待发起备案的订单信息错误--"+reMap.toString());
+						}
 						// 线程休眠0.2秒,防止HTTP请求过快出错
 						Thread.sleep(200);
 					}
@@ -131,7 +121,6 @@ public class PushOrderRecordQtz {
 			}
 			counter.getAndIncrement();
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("--定时扫描待发起备案的订单信息错误--", e);
 		}
 	}
@@ -153,28 +142,16 @@ public class PushOrderRecordQtz {
 			params.put("order_id", order.getOrder_id());
 			List<MorderSub> reOrderGoodsList = orderDao.findByProperty(MorderSub.class, params, 0, 0);
 			if (reOrderGoodsList == null || reOrderGoodsList.isEmpty()) {
-				logger.error(order.getOrder_id() + "<--推送订单失败,订单商品信息不能为空!");
-				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "<--推送订单失败,订单商品信息不能为空!");
+				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单商品信息不能为空!");
 			}
 			int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
 			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-			if (idcardCertifiedFlag == 0 || idcardCertifiedFlag == 2) {
-				Map<String, Object> reIdCardMap = getIdCard(order.getOrderDocName(), order.getOrderDocId(),
-						order.getMerchant_no());
-				String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
-				if ("1".equals(status)) {
-					return sendOrderRecord(order, reOrderGoodsList, subParams);
-				} else if ("-1".equals(status)) {
-					return updateCertifiedStatus(order);
-				} else {
-					logger.error("--推送订单失败--" + reIdCardMap.toString());
-					return reIdCardMap;
-				}
-			} else {
+			if (idcardCertifiedFlag == 1 ) {
 				return sendOrderRecord(order, reOrderGoodsList, subParams);
+			}else{
+				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单尚未实名认证通过!");
 			}
 		} else {
-			System.out.println("------准备开始发送手工订单申报时-订单信息不能为null-------");
 			return ReturnInfoUtils.errorInfo("--准备开始发送手工订单申报时-订单信息不能为null--");
 		}
 	}
@@ -432,291 +409,7 @@ public class PushOrderRecordQtz {
 			}
 		}
 	}
+	
 
-	/**
-	 * 获取本地实名库是否已存在该商户的订单身份证号码
-	 * 
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param merchantId
-	 *            商户id
-	 * @return Map
-	 */
-	private Map<String, Object> getIdCard(String idName, String idNumber, String merchantId) {
-		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idNumber)
-				|| StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("保存实名信息失败,参数错误!");
-		}
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
-		params.put("name", idName.trim());
-		params.put("idNumber", idNumber.trim());
-		List<IdCard> reIdCardList = orderDao.findByProperty(IdCard.class, params, 1, 1);
-		if (reIdCardList == null) {
-			return ReturnInfoUtils.errorInfo("查询身份证信息失败,服务器繁忙!");
-		} else if (reIdCardList.isEmpty()) {
-			return saveIdCardInfo(idName, idNumber, merchantId);
-		} else {// 实名库已存在
-			return updateIdcardInfo( reIdCardList.get(0));
-		}
-	}
-
-	/**
-	 * 保存身份证实名信息
-	 * 
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param merchantId
-	 *            商户id
-	 * @return Map
-	 */
-	private Map<String, Object> saveIdCardInfo(String idName, String idNumber, String merchantId) {
-		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idNumber)
-				|| StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("身份证信息保存至实名库失败,参数不能为空!");
-		}
-		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchantId);
-		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
-			return reCostMap;
-		}
-		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
-		String idCardVerifySwitch = merchantCost.getIdCardVerifySwitch();
-		if ("on".equals(idCardVerifySwitch)) {// 当商户实名认证开启时
-			Map<String, Object> reMap = sendIdCardCertification(idName, idNumber);
-			String status = reMap.get(BaseCode.STATUS.toString()) + "";
-			String msgId = reMap.get("messageID") + "";
-			String msg = reMap.get("msg") + "";
-			System.out.println("---实名认证->>" + reMap.toString());
-			if ("1".equals(status)) {// 实名认证成功
-				return addIdCardInfo(msgId, merchantId, merchantCost.getMerchantName(), idName, idNumber, "success",
-						msg);
-			} else if ("-1".equals(status)) {// 当向网关服务器发起身份证验证失败后
-				Map<String, Object> reIdCardMap = addIdCardInfo(msgId, merchantId, merchantCost.getMerchantName(),
-						idName, idNumber, FAILURE, msg);
-				if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
-					return reIdCardMap;
-				}
-				return reMap;
-			} else {
-				return addIdCardInfo(msgId, merchantId, merchantCost.getMerchantName(), idName, idNumber, "wait", msg);
-			}
-		} else {// 当商户实名认证关闭时
-			return addIdCardInfo(null, merchantId, merchantCost.getMerchantName(), idName, idNumber, "wait", "");
-		}
-	}
-
-	/**
-	 * 开始发送身份证验证请求
-	 * 
-	 * @param idName
-	 *            姓名
-	 * @param idCard
-	 *            身份证号码
-	 * @return Map
-	 */
-	private Map<String, Object> sendIdCardCertification(String idName, String idCard) {
-		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idCard)) {
-			return ReturnInfoUtils.errorInfo("发送身份证校验,请求参数不能为空!");
-		}
-		// 使用银盟商城app请求获取tok
-		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
-		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			// return reTokMap;
-		}
-		String accessToken = reTokMap.get(BaseCode.DATAS.toString()) + "";
-		Map<String, Object> params = new HashMap<>();
-		params.put("version", "1.0");
-		params.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
-		params.put("businessCode", "YS02");
-		JSONObject bizContent = new JSONObject();
-		bizContent.put("user_ID", idCard);
-		bizContent.put("user_name", idName);
-		params.put("bizContent", bizContent);
-		params.put("timestamp", System.currentTimeMillis());
-		params = new MapSortUtils().sortMap(params);
-		String str2 = YmMallConfig.APPKEY + accessToken + params;
-		String clientSign = null;
-		try {
-			clientSign = MD5.getMD5(str2.getBytes("utf-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return ReturnInfoUtils.errorInfo("加密签名错误!");
-		}
-		params.put("clientSign", clientSign);
-		// String result =
-		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
-		// params);
-		String result = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params);
-		if (StringEmptyUtils.isEmpty(result)) {
-			return ReturnInfoUtils.errorInfo("验证身份证失败,网络异常!");
-		} else {
-			return JSONObject.fromObject(result);
-		}
-	}
-
-	/**
-	 * 保存身份证实名认证信息
-	 * 
-	 * @param msgId
-	 *            实名认证流水Id
-	 * @param merchantId
-	 *            商户id
-	 * @param merchantName
-	 *            商户名称
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param status
-	 *            认证状态:success-成功;failure-失败;wait-待验证
-	 * @param msg
-	 *            认证消息
-	 * @return Map key-datas 身份证实名实体
-	 */
-	private Map<String, Object> addIdCardInfo(String msgId, String merchantId, String merchantName, String idName,
-			String idNumber, String status, String msg) {
-
-		IdCard idCard = new IdCard();
-		if (StringEmptyUtils.isNotEmpty(msgId)) {
-			idCard.setCertifiedNo(msgId);
-		}
-		idCard.setMerchantId(merchantId);
-		idCard.setMerchantName(merchantName);
-		idCard.setName(idName);
-		idCard.setIdNumber(idNumber);
-		// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-		idCard.setType(4);
-		// 认证状态:success-成功;failure-失败;wait-待验证
-		idCard.setStatus(status);
-		if (StringEmptyUtils.isNotEmpty(msg)) {
-			idCard.setNote(msg);
-		}
-		if ("success".equals(status)) {// 认证时间
-			idCard.setCertifiedDate(new Date());
-		}
-		idCard.setCreateDate(new Date());
-		if (!orderDao.add(idCard)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successDataInfo(idCard);
-	}
-
-	/**
-	 * 更新实名数据库中已有的身份证信息状态
-	 * 
-	 * @param idCard
-	 *            身份证实名信息类
-	 * @param status
-	 *            认证状态:success-成功;failure-失败;wait-待验证
-	 * @param msg
-	 *            网关返回消息
-	 * @param msgId
-	 *            验证流水号
-	 * @return Map
-	 */
-	private Map<String, Object> updateIdcardStatus(IdCard idCard, String status, String msg, String msgId) {
-		if (idCard == null) {
-			return ReturnInfoUtils.errorInfo("实名信息错误！");
-		}
-		if (StringEmptyUtils.isNotEmpty(msgId)) {
-			idCard.setCertifiedNo(msgId);
-		}
-		idCard.setStatus(status);
-		if ("success".equalsIgnoreCase(status)) {
-			idCard.setCertifiedDate(new Date());
-		}
-		String oldNote = idCard.getNote();
-		if (StringEmptyUtils.isNotEmpty(oldNote) && StringEmptyUtils.isNotEmpty(msg) ) {
-			idCard.setNote(oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + msg);
-		}else if (StringEmptyUtils.isNotEmpty(msg)) {
-			idCard.setNote(msg);
-		}
-		idCard.setUpdateDate(new Date());
-		if (!orderDao.update(idCard)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 更新已存在的身份证实名信息
-	 * 
-	 * @param idCard
-	 *            身份证实名信息实体类
-	 * @param idCardVerifySwitch
-	 *            发起实名认证开关
-	 * @return Map
-	 */
-	private Map<String, Object> updateIdcardInfo(IdCard idCard) {
-		if (idCard == null) {
-			return ReturnInfoUtils.errorInfo("更新身份证实名认证状态失败,参数错误!");
-		}
-		Map<String, Object> map = null;
-		if ("success".equals(idCard.getStatus())) {
-			return ReturnInfoUtils.successInfo();
-		} else if ("wait".equals(idCard.getStatus())) {// 当实名数据库已存在,但并未向实名网关发起过验证时
-			Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(idCard.getMerchantId());
-			if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
-				return reCostMap;
-			}
-			MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap
-					.get(BaseCode.DATAS.toString());
-			String idCardVerifySwitch = merchantCost.getIdCardVerifySwitch();
-			if ("on".equals(idCardVerifySwitch)) {// 当商户实名认证开启时
-				Map<String, Object> reMap = sendIdCardCertification(idCard.getName(), idCard.getIdNumber());
-				String status = reMap.get(BaseCode.STATUS.toString()) + "";
-				String msgId = reMap.get("messageID") + "";
-				String msg = reMap.get("msg") + "";
-				if ("1".equals(status)) {// 实名认证成功
-					return updateIdcardStatus(idCard, "success", msg, msgId);
-				} else if ("-1".equals(status)) {// 当向网关服务器发起身份证验证失败后
-					Map<String, Object> reIdcardMap = updateIdcardStatus(idCard, FAILURE, msg, msgId);
-					if (!"1".equals(reIdcardMap.get(BaseCode.STATUS.toString()))) {
-						return reIdcardMap;
-					}
-					//
-					return reMap;
-				}
-				// 当认证服务器返回异常时,则返回成功结果,继续推送订单
-				return ReturnInfoUtils.successInfo();
-			} else {
-				return ReturnInfoUtils.successInfo();
-			}
-		} else {
-			map = new HashMap<>();
-			map.put(BaseCode.STATUS.toString(), "-1");
-			return map;
-		}
-	}
-
-	/**
-	 * 更新实名认证后的订单实名认证状态与申报状态
-	 * 
-	 * @param order
-	 */
-	private Map<String, Object> updateCertifiedStatus(Morder order) {
-		if (order == null) {
-			return ReturnInfoUtils.errorInfo("更新实名认证失败状态错误,订单信息不能为空!");
-		}
-		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-		order.setIdcardCertifiedFlag(2);
-		//
-		order.setOrder_record_status(4);
-		order.setUpdate_date(new Date());
-		String oldNote = order.getOrder_re_note();
-		if (StringEmptyUtils.isEmpty(oldNote)) {
-			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!");
-		} else {
-			order.setOrder_re_note(
-					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!");
-		}
-		if (!orderDao.update(order)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
+	
 }

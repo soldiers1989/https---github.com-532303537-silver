@@ -131,10 +131,7 @@ public class MdataService {
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String proxyParentId = merchantInfo.getAgentParentId();
-		String proxyParentName = merchantInfo.getAgentParentName();
-		return mpayService.sendMorderRecord(merchantId, customsMap, orderNoPack, proxyParentId, merchantName,
-				proxyParentName);
+		return mpayService.sendMorderRecord(merchantId, customsMap, orderNoPack, merchantName);
 	}
 
 	// 更新订单信息
@@ -558,9 +555,9 @@ public class MdataService {
 	public Map<String, Object> readExcelRedisInfo(String serialNo, String name) {
 		String dateSign = DateUtil.formatDate(new Date(), "yyyyMMdd");
 		String key = "Shop_Key_ExcelIng_" + dateSign + "_" + name + "_" + serialNo;
-		if(StringEmptyUtils.isNotEmpty(name) && "orderImport".equals(name)){
+		if (StringEmptyUtils.isNotEmpty(name) && "orderImport".equals(name)) {
 			String redisInfo = JedisUtil.get(key);
-			if(StringEmptyUtils.isNotEmpty(redisInfo)){
+			if (StringEmptyUtils.isNotEmpty(redisInfo)) {
 				return JSONObject.fromObject(redisInfo);
 			}
 			return ReturnInfoUtils.errorInfo("暂无数据,请等待!");

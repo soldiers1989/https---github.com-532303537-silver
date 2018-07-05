@@ -22,14 +22,10 @@ public interface MpayService {
 	 *            海关口岸信息
 	 * @param orderNoPack
 	 *            订单Id信息
-	 * @param proxyParentId
-	 *            代理商Id
-	 * @param proxyParentName
-	 *            代理商名称
 	 * @return
 	 */
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
-			String proxyParentId, String merchantName, String proxyParentName);
+			String merchantName);
 
 	/**
 	 * 异步回调订单备案信息
@@ -121,5 +117,18 @@ public interface MpayService {
 	 * @return Map
 	 */
 	public Map<String, Object> updateOrderErrorStatus(String orderNo);
+
+	/**
+	 * 添加代理商钱包流水日志
+	 * 
+	 * @param agentWallet
+	 *            代理商钱包实体信息类
+	 * @param datasMap
+	 *            参数:walletId(钱包Id)、balance(余额)、type(类型:1-佣金、2-充值、3-提现、4-缴费、5-购物)、status(
+	 *            状态：success-交易成功、fail-交易失败)、amount(金额)、flag(进出帐标识：in-进账,out-出账)、targetWalletId(目标钱包Id)、targetName(目标名称)
+	 * 
+	 * @return Map
+	 */
+	public Map<String, Object> addAgentWalletLog(Map<String, Object> datas);
 
 }

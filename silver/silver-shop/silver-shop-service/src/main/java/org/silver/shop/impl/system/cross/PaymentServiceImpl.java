@@ -1080,7 +1080,7 @@ public class PaymentServiceImpl implements PaymentService {
 		params.put("morder_id", orderId);
 		List<Mpay> mpayl = paymentDao.findByProperty(Mpay.class, params, 1, 1);
 		if (mpayl != null && !mpayl.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]关联的支付单已经存在,无需再次支付!");
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]无需再次支付!");
 		}
 		String orderDocId = infoMap.get("orderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
@@ -1156,6 +1156,8 @@ public class PaymentServiceImpl implements PaymentService {
 			Morder entity = reList.get(0);
 			entity.setTrade_no(trade_no);
 			entity.setUpdate_date(new Date());
+			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+			entity.setIdcardCertifiedFlag(1);
 			return paymentDao.update(entity);
 		}
 		return false;
