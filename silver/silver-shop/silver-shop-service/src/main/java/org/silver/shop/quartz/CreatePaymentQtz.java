@@ -176,11 +176,7 @@ public class CreatePaymentQtz {
 				return paymentService.addEntity(paymentMap)
 						&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
 			} else {
-				Map<String,Object> reMap = updateCertifiedStatus(order);
-				if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
-					return false;
-				}
-				return true;
+				return updateCertifiedStatus(order);
 			}
 		} else {
 			return paymentService.addEntity(paymentMap)
@@ -269,9 +265,9 @@ public class CreatePaymentQtz {
 	 * 
 	 * @param order
 	 */
-	private Map<String, Object> updateCertifiedStatus(Morder order) {
+	private boolean updateCertifiedStatus(Morder order) {
 		if (order == null) {
-			return ReturnInfoUtils.errorInfo("更新实名认证失败状态错误,订单信息不能为空!");
+			return false;
 		}
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 		order.setIdcardCertifiedFlag(2);
@@ -285,10 +281,7 @@ public class CreatePaymentQtz {
 			order.setOrder_re_note(
 					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!");
 		}
-		if (!orderDao.update(order)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
+		return orderDao.update(order);
 	}
 
 	/**

@@ -1084,7 +1084,7 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		String orderDocId = infoMap.get("orderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]订单人身份证号码错误,请核信息!");
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]下单人身份证号码错误,请核信息!");
 		}
 		String orderDocName = infoMap.get("orderDocName") + "";
 		if (!StringUtil.isContainChinese(orderDocName.trim().replace("·", "")) || orderDocName.trim().contains("先生")

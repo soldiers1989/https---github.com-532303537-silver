@@ -939,6 +939,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private Map<String, Object> editGoodsBaseInfo(Map<String, Object> paramMap, GoodsRecordDetail goodsRecordInfo) {
+		if(paramMap == null || goodsRecordInfo == null){
+			return ReturnInfoUtils.errorInfo("修改商品基本信息失败,请求参数错误!");
+		}
 		String goodsName = String.valueOf(paramMap.get("spareGoodsName"));
 		String goodsFirstTypeId = String.valueOf(paramMap.get("spareGoodsFirstTypeId"));
 		String goodsFirstTypeName = String.valueOf(paramMap.get("spareGoodsFirstTypeName"));
@@ -974,19 +977,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		goodsRecordInfo.setSpareGoodsBrand(goodsBrand);
 		goodsRecordInfo.setSpareGoodsStyle(goodsStyle);
 		goodsRecordInfo.setSpareGoodsUnit(goodsUnit);
-		Map<String, Object> reCountryMap = findAllCountry();
-		if (!"1".equals(reCountryMap.get(BaseCode.STATUS.toString()))) {
-			return reCountryMap;
-		}
-		List<Country> countryList = (List<Country>) reCountryMap.get(BaseCode.DATAS.toString());
-		String str = "";
-		for (Country country : countryList) {
-			if (country.getCountryCode().equals(goodsOriginCountry)) {
-				str = country.getCountryName();
-			}
-		}
-		if (StringEmptyUtils.isNotEmpty(str)) {
-			goodsRecordInfo.setSpareGoodsOriginCountry(str);
+		String countryName = getCountryName(goodsOriginCountry);
+		if (StringEmptyUtils.isNotEmpty(countryName)) {
+			goodsRecordInfo.setSpareGoodsOriginCountry(countryName);
 		} else {
 			return ReturnInfoUtils.errorInfo("原产国错误,请重新输入!");
 		}
@@ -1557,7 +1550,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				status = Integer.parseInt(goodsMap.get("status") + "");
 				// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案,3-审核不通过
 				if (status == 1 || status == 3) {
-
 				} else {
 					return ReturnInfoUtils.errorInfo("已备案商品状态参数错误,请重试!");
 				}
@@ -1593,7 +1585,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					goodsRecordInfo.setSpareGoodsBrand(goodsRecordInfo.getBrand());
 					goodsRecordInfo.setSpareGoodsStyle(goodsRecordInfo.getGoodsStyle());
 					goodsRecordInfo.setSpareGoodsUnit(goodsRecordInfo.getgUnit());
-					goodsRecordInfo.setSpareGoodsOriginCountry(goodsRecordInfo.getOriginCountry());
+					//
+					String countryName = getCountryName(goodsRecordInfo.getOriginCountry());
+					if (StringEmptyUtils.isEmpty(countryName)) {
+						return ReturnInfoUtils.errorInfo("原产国错误,请重新输入");
+					}
+					goodsRecordInfo.setSpareGoodsOriginCountry(countryName);
 					goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
 					goodsRecordInfo.setUpdateBy(managerName);
 					goodsRecordInfo.setUpdateDate(new Date());
@@ -1622,7 +1619,12 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					goodsRecordInfo.setSpareGoodsBrand(goodsRecordInfo.getBrand());
 					goodsRecordInfo.setSpareGoodsStyle(goodsRecordInfo.getGoodsStyle());
 					goodsRecordInfo.setSpareGoodsUnit(goodsRecordInfo.getgUnit());
-					goodsRecordInfo.setSpareGoodsOriginCountry(goodsRecordInfo.getOriginCountry());
+					//
+					String countryName = getCountryName(goodsRecordInfo.getOriginCountry());
+					if (StringEmptyUtils.isEmpty(countryName)) {
+						return ReturnInfoUtils.errorInfo("原产国错误,请重新输入");
+					}
+					goodsRecordInfo.setSpareGoodsOriginCountry(countryName);
 					goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
 					goodsRecordInfo.setUpdateBy(managerName);
 					goodsRecordInfo.setUpdateDate(new Date());
@@ -1639,6 +1641,26 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			}
 		}
 		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据国家代码找到对应的国家中文名称
+	 * @param countryCode 国家代码
+	 * @return String
+	 */
+	private String getCountryName(String countryCode) {
+		Map<String, Object> reCountryMap = findAllCountry();
+		if (!"1".equals(reCountryMap.get(BaseCode.STATUS.toString()))) {
+			return "";
+		}
+		List<Country> countryList = (List<Country>) reCountryMap.get(BaseCode.DATAS.toString());
+		String str = "";
+		for (Country country : countryList) {
+			if (country.getCountryCode().equals(countryCode)) {
+				str = country.getCountryName();
+			}
+		}
+		return str;
 	}
 
 	@Override
@@ -1978,8 +2000,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 		params.put("startTime", DateUtil.parseDate("2018-06-28 00:00:22", "yyyy-MM-dd HH:mm:ss"));
 		params.put("endTime", DateUtil.parseDate("2018-06-29 00:00:22", "yyyy-MM-dd HH:mm:ss"));
-		List<MorderSub> reList = goodsRecordDao.findByPropertyLike(MorderSub.class, params, null, page,
-				size);
+		List<MorderSub> reList = goodsRecordDao.findByPropertyLike(MorderSub.class, params, null, page, size);
 		for (MorderSub goods : reList) {
 			String country = goods.getOriginCountry();
 			if (StringEmptyUtils.isNotEmpty(country) && org.silver.util.StringUtil.isContainChinese(country)) {
@@ -1994,7 +2015,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 						if (country2.getCountryName().equals(country)) {
 							goods.setOriginCountry(country2.getCountryCode());
 							if (goodsRecordDao.update(goods)) {
-								System.out.println(goods.getGoodsName()  + "-旧原产国->" + country + ";新原产国-->"
+								System.out.println(goods.getGoodsName() + "-旧原产国->" + country + ";新原产国-->"
 										+ country2.getCountryName());
 							}
 							cacheMap.put(country2.getCountryName(), country2.getCountryCode());

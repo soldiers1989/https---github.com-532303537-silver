@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-7-6 16:18:33 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.log.IdCardCertificationLog" table="ym_shop_sys_id_card_certification_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="orderId" type="java.lang.String">
+            <column name="orderId" />
+        </property>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" />
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" />
+        </property>
+        <property name="name" type="java.lang.String">
+            <column name="name" />
+        </property>
+        <property name="idNumber" type="java.lang.String">
+            <column name="idNumber" />
+        </property>
+        <property name="fee" type="double">
+            <column name="fee" />
+        </property>
+        <property name="tollFlag" type="int">
+            <column name="tollFlag" default="0"/>
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+    </class>
+</hibernate-mapping>

@@ -355,7 +355,7 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 			}
 			return ReturnInfoUtils.successDataInfo(cacheMap);
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据");
+			return ReturnInfoUtils.errorInfo("没有已开通海关口岸信息,请联系管理员!");
 		}
 	}
 

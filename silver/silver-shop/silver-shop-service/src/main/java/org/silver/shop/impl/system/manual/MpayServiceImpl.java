@@ -223,9 +223,9 @@ public class MpayServiceImpl implements MpayService {
 		// 当商户为自主申报时
 		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
 			double fee = Double.parseDouble(reCheckMap.get("fee") + "");
-			int backCoverFlag = Integer.parseInt(reCheckMap.get("backCoverFlag") + ""); 
-			Map<String, Object> reMap = updateOrderRecordStatus(jsonList, merchantId, eport, customsCode, ciqOrgCode, errorList, fee,
-					backCoverFlag);
+			int backCoverFlag = Integer.parseInt(reCheckMap.get("backCoverFlag") + "");
+			Map<String, Object> reMap = updateOrderRecordStatus(jsonList, merchantId, eport, customsCode, ciqOrgCode,
+					errorList, fee, backCoverFlag);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
@@ -240,11 +240,11 @@ public class MpayServiceImpl implements MpayService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
 		statusMap.put("serialNo", serialNo);
-		statusMap.put("idCardList", reCheckMap.get("idCardList"));
+		//statusMap.put("idCardList", reCheckMap.get("idCardList"));
 		statusMap.put("orderList", reCheckMap.get("list"));
 		statusMap.put(BaseCode.ERROR.toString(), errorList);
 		statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-	//	statusMap.put("totalAmountPaid", reCheckMap.get("totalAmountPaid"));
+		// statusMap.put("totalAmountPaid", reCheckMap.get("totalAmountPaid"));
 		return statusMap;
 	}
 
@@ -319,7 +319,7 @@ public class MpayServiceImpl implements MpayService {
 				}
 			}
 		}
-		return ReturnInfoUtils.errorInfo(errorList, jsonList.size() );
+		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
 	}
 
 	@Override
@@ -341,15 +341,17 @@ public class MpayServiceImpl implements MpayService {
 			return reMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		// 身份证实名认证计费
-		Map<String, Object> reidCardMap = idCardCertification(jsonList, merchantWallet, merchant);
-		if (!"1".equals(reidCardMap.get(BaseCode.STATUS.toString()))) {
-			return reidCardMap;
+		//
+		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchant.getMerchantId());
+		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
+			return reCostMap;
 		}
-		JSONArray idCardList = (JSONArray) reidCardMap.get("idCardList");
-		double idCost = Double.parseDouble(reidCardMap.get("idCost")+"");
-		//计算需要实名认证收费的费用之和
-		double idCertificationFee = idCardList.size() * idCost;
+		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
+		// 实名认证每笔手续费
+		double idCost = merchantCost.getPlatformCost();
+		//JSONArray idCardList = (JSONArray) reidCardMap.get("idCardList");
+		// 计算需要实名认证收费的费用之和
+		double idCertificationFee = jsonList.size() * idCost;
 		// 初始化平台服务费
 		double fee;
 		// 封底标识：1-正常计算、2-不满100提至100计算
@@ -380,15 +382,17 @@ public class MpayServiceImpl implements MpayService {
 				double balance = merchantWallet.getBalance();
 				// 订申报单手续费
 				double serviceFee = totalAmountPaid * fee;
-				System.out.println("---订单+实名手续费之和->>"+(serviceFee + idCertificationFee));
-				if((balance - (serviceFee + idCertificationFee)) < 0 ){
+				System.out.println("---订单+实名手续费之和->>" + (serviceFee + idCertificationFee));
+				if ((balance - (serviceFee + idCertificationFee)) < 0) {
 					return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
 				}
-				/*	Map<String, Object> reTollMap = manualOrderToll(merchantWallet, fee, totalAmountPaid, merchant,
-						newList);
-				if (!"1".equals(reTollMap.get(BaseCode.STATUS.toString()))) {
-					return reTollMap;
-				}*/
+				/*
+				 * Map<String, Object> reTollMap =
+				 * manualOrderToll(merchantWallet, fee, totalAmountPaid,
+				 * merchant, newList); if
+				 * (!"1".equals(reTollMap.get(BaseCode.STATUS.toString()))) {
+				 * return reTollMap; }
+				 */
 			} catch (Exception e) {
 				e.printStackTrace();
 				logger.error("---订单平台服务费计算错误-->", e);
@@ -400,7 +404,6 @@ public class MpayServiceImpl implements MpayService {
 		map.put("backCoverFlag", backCoverFlag);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		map.put("list", newList);
-		map.put("idCardList", idCardList);
 		return map;
 	}
 
@@ -522,103 +525,7 @@ public class MpayServiceImpl implements MpayService {
 		return agentChargeFee(merchant.getAgentParentId(), serviceFee, datas);
 	}
 
-	/**
-	 * 订单推送前发起实名认证
-	 * 
-	 * @param newList
-	 *            系统简单校验身份证号码后的订单集合
-	 * @param merchantWallet
-	 *            商户钱包信息
-	 * @param merchant
-	 *            商户信息
-	 * @return
-	 */
-	private Map<String, Object> idCardCertification(List<Object> newList, MerchantWalletContent merchantWallet,
-			Merchant merchant) {
-		if (newList == null || merchantWallet == null) {
-			return ReturnInfoUtils.errorInfo("发起实名认证失败,参数错误!");
-		}
-		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchant.getMerchantId());
-		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
-			return reCostMap;
-		}
-		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
-		// String idCardVerifySwitch = merchantCost.getIdCardVerifySwitch();
-		// 使用银盟商城app请求获取tok
-		// Map<String, Object> reTokMap =
-		// accessTokenService.getRedisToks(YmMallConfig.APPKEY,
-		// YmMallConfig.APPSECRET);
-		// if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-		// return reTokMap;
-		// }
-		// String accessToken = reTokMap.get(BaseCode.DATAS.toString()) + "";
-		long startTime = System.currentTimeMillis();
-		// startIdcardCertified(newList, merchant, idCardVerifySwitch,
-		// accessToken, realList, successList, errorList);
-		Map<String, Object> reCheckMap = checkTollOrderIdcard(newList);
-		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
-			return reCheckMap;
-		}
-		JSONArray idCardList = (JSONArray) reCheckMap.get(BaseCode.DATAS.toString());
-		long endTime = System.currentTimeMillis();
-		System.out.println("---查询订单是否需要实名收费--耗时>>>" + (endTime - startTime) + "ms");
-		// 实名认证每笔手续费
-		double cost = merchantCost.getPlatformCost();
-		// 需要实名认证数量
-		int realCount = idCardList.size();
-		if (realCount == 0) {// 当实名认证成功数为0时,则代表不需要进行实名认证扣费
-			Map<String, Object> map = new HashMap<>();
-			map.put("idCost", 0);
-			map.put("idCardList", idCardList);
-			map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return map;
-		}else{
-			Map<String, Object> map = new HashMap<>();
-			map.put("idCost", cost);
-			map.put("idCardList", idCardList);
-			map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return map;
-		}
-		// 查询代理商钱包
-	/*	Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
-				merchant.getAgentParentName());
-		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reMerchantWalletMap = updateMerchantWallet(merchant, merchantWallet, balance, serviceFee,
-				realCount, agentWallet);
-		if (!"1".equals(reMerchantWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantWalletMap;
-		}
-		Map<String, Object> reAgentWalletMap = updateAgentWallet(merchantWallet, serviceFee, realCount, agentWallet);
-		if (!"1".equals(reAgentWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentWalletMap;
-		}*/
 	
-	}
-
-	private Map<String, Object> checkTollOrderIdcard(List<Object> jsonList) {
-		if (jsonList == null) {
-			return ReturnInfoUtils.errorInfo("校验订单实名认证数量错误,请求参数不能为空!");
-		}
-		Map<String, Object> params = null;
-		JSONArray cacheList = new JSONArray();
-		for (int i = 0; i < jsonList.size(); i++) {
-			params = new HashMap<>();
-			Map<String,Object> map = (Map<String, Object>) jsonList.get(i);
-			params.put("order_id", map.get("orderNo")+"");
-			List<Morder> reOrderList = morderDao.findByProperty(Morder.class, params, 1, 1);
-			if (reOrderList != null && !reOrderList.isEmpty()) {
-				Morder order = reOrderList.get(0);
-				// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-				if (order.getIdcardCertifiedFlag() == 0 || order.getIdcardCertifiedFlag() == 2) {
-					cacheList.add(order.getOrder_id());
-				}
-			}
-		}
-		return ReturnInfoUtils.successDataInfo(cacheList);
-	}
 
 	private void startIdcardCertified(List<Object> newList, Merchant merchant, String idCardVerifySwitch,
 			String accessToken, JSONArray realList, JSONArray successList, List<Map<String, Object>> errorList) {
@@ -1235,9 +1142,9 @@ public class MpayServiceImpl implements MpayService {
 		}
 		List<Object> newOrderIdList = new ArrayList<>();
 		List<Morder> reList = morderDao.findByPropertyIn(list);
-		if(reList == null){
+		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("推送订单前校验订单数据失败!");
-		}else if (!reList.isEmpty()) {
+		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
 				Morder order = reList.get(i);
 				Map<String, Object> reCheckOrderMap = checkManualOrderInfo(order);
@@ -1245,7 +1152,7 @@ public class MpayServiceImpl implements MpayService {
 					newOrderIdList.add(order.getOrder_id());
 				}
 			}
-		} 
+		}
 		return ReturnInfoUtils.successDataInfo(newOrderIdList);
 	}
 
@@ -1411,7 +1318,7 @@ public class MpayServiceImpl implements MpayService {
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 				order.setOrder_record_status(2);
 				// 订单接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
-				order.setStatus(2);	
+				order.setStatus(2);
 				order.setUpdate_date(new Date());
 				if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
 						&& StringEmptyUtils.isNotEmpty(customsCode)) {

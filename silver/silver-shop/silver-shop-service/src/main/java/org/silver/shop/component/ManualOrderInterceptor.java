@@ -1,6 +1,7 @@
 package org.silver.shop.component;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import org.silver.shop.api.system.tenant.MerchantIdCardCostService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.impl.system.manual.MpayServiceImpl;
+import org.silver.shop.model.common.base.IdCard;
+import org.silver.shop.model.system.log.IdCardCertificationLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
@@ -69,15 +72,16 @@ public class ManualOrderInterceptor {
 	private static final String MERCHANT_NAME = "merchantName";
 
 	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);
-	
+
 	public void methodBefore(JoinPoint joinPoint) {
-	/*	System.out.println(
-				joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " Start");*/
+		/*
+		 * System.out.println( joinPoint.getTarget().getClass().getName() + "."
+		 * + joinPoint.getSignature().getName() + " Start");
+		 */
 	}
 
 	public void methodAfter(JoinPoint joinPoint, Object reValue) {
-
-		Class<?> targetClass = joinPoint.getTarget().getClass();
+		// Class<?> targetClass = joinPoint.getTarget().getClass();
 		String methodName = joinPoint.getSignature().getName();
 		// sendMpayByRecord
 		if ("sendMorderRecord".equals(methodName)) {
@@ -103,14 +107,13 @@ public class ManualOrderInterceptor {
 			if ("1".equals(json.get(BaseCode.STATUS.toString()))) {
 				String merchantId = args[0] + "";
 				try {
-					JSONArray idCardList = JSONArray.fromObject(json.get("idCardList"));
 					JSONArray orderList = JSONArray.fromObject(json.get("orderList"));
-					Map<String,Object> reTollMap = merchantWalletToll(idCardList, orderList, merchantId);
-					logger.error("---商户实名认证与订单申报手续费---结果---"+reTollMap.toString());
-					System.out.println("----reTollMap-->>>"+reTollMap.toString());
+					Map<String, Object> reTollMap = merchantWalletToll(orderList, merchantId);
+					logger.error("---商户实名认证与订单申报手续费---结果---" + reTollMap.toString());
+					System.out.println("----reTollMap-->>>" + reTollMap.toString());
 				} catch (Exception e) {
 					e.printStackTrace();
-					logger.error("---商户实名认证与订单申报手续费--错误--",e);
+					logger.error("---商户实名认证与订单申报手续费--错误--", e);
 				}
 			} else {
 
@@ -118,8 +121,16 @@ public class ManualOrderInterceptor {
 		}
 	}
 
-	private Map<String, Object> merchantWalletToll(JSONArray idCardList, JSONArray orderList, String merchantId) {
-
+	/**
+	 * 商户钱包清算手续费开始
+	 * 
+	 * @param orderList
+	 *            订单id集合
+	 * @param merchantId
+	 *            商户id
+	 * @return Map
+	 */
+	private Map<String, Object> merchantWalletToll(JSONArray orderList, String merchantId) {
 		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchantId);
 		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
 			return reCostMap;
@@ -143,24 +154,33 @@ public class ManualOrderInterceptor {
 			return reAgentMap;
 		}
 		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
-		//
-		int count = idCardList.size();
 		// 计算实名认证的费用
-		double serviceFee = count * merchantCost.getPlatformCost();
-		Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, serviceFee, agentWallet,
-				idCardList, merchantCost.getPlatformCost());
+		Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, orderList,
+				merchantCost.getPlatformCost());
 		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 			return reIdCardMap;
 		}
 		// 订单申报平台服务费
-		return orderToll(orderList, merchantWallet,merchant);
+		return orderToll(orderList, merchantWallet, merchant);
 
 	}
 
-	private Map<String, Object> orderToll(JSONArray orderList, MerchantWalletContent merchantWallet, Merchant merchant) {
-		if(orderList == null){
+	/**
+	 * 订单手续费清算
+	 * 
+	 * @param orderList
+	 *            订单id集合
+	 * @param merchantWallet
+	 *            商户钱包实体
+	 * @param merchant
+	 *            商户实体
+	 * @return Map
+	 */
+	private Map<String, Object> orderToll(JSONArray orderList, MerchantWalletContent merchantWallet,
+			Merchant merchant) {
+		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("订单参数错误-不能为null");
-		}else if(orderList.isEmpty()){//当需要订单的集合为空时,则表示不需要进行计费
+		} else if (orderList.isEmpty()) {// 当需要订单的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
 		Map<String, Object> reOrderMap = getOrderDetails(orderList);
@@ -169,7 +189,7 @@ public class ManualOrderInterceptor {
 		}
 		List<JSONObject> jsonList = (List<JSONObject>) reOrderMap.get(BaseCode.DATAS.toString());
 		double totalAmount = Double.parseDouble(reOrderMap.get("totalAmount") + "");
-		//订单费率
+		// 订单费率
 		double fee = Double.parseDouble(reOrderMap.get("rate") + "");
 		// 钱包余额
 		double balance = merchantWallet.getBalance();
@@ -212,16 +232,23 @@ public class ManualOrderInterceptor {
 		return agentChargeFee(merchant.getAgentParentId(), serviceFee, datas);
 	}
 
+	/**
+	 * 根据订单id集合统计订单交易详情
+	 * 
+	 * @param orderList
+	 *            订单id集合
+	 * @return Map
+	 */
 	private Map<String, Object> getOrderDetails(JSONArray orderList) {
 		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("订单id参数集合不能为空!");
 		}
 		List<JSONObject> jsonList = new ArrayList<>();
-		JSONObject idcardJSON = new JSONObject();
+		JSONObject idcardJSON = null;
 		Map<String, Object> params = new HashMap<>();
 		double totalAmount = 0;
 		double fee = 0;
-		double rate =0;
+		double rate = 0;
 		for (int i = 0; i < orderList.size(); i++) {
 			String orderId = orderList.get(i) + "";
 			params.clear();
@@ -229,6 +256,7 @@ public class ManualOrderInterceptor {
 			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 0, 0);
 			if (reList != null && !reList.isEmpty()) {
 				for (Morder order : reList) {
+					idcardJSON = new JSONObject();
 					// 订单服务费率
 					rate = order.getPlatformFee();
 					idcardJSON.put("orderId", order.getOrder_id());
@@ -245,7 +273,7 @@ public class ManualOrderInterceptor {
 						}
 					}
 					totalAmount += amount;
-					idcardJSON.put("amount ", amount);
+					idcardJSON.put("amount", amount);
 					idcardJSON.put("backCoverFlag", backCoverFlag);
 					idcardJSON.put("rate", rate);
 					idcardJSON.put("fee", fee);
@@ -261,19 +289,41 @@ public class ManualOrderInterceptor {
 		return map;
 	}
 
+	/**
+	 * 商户身份证认证手续费结算
+	 * 
+	 * @param merchant
+	 *            商户实体
+	 * @param merchantWallet
+	 *            商户情报实体
+	 * @param agentWallet
+	 *            代理商钱包实体
+	 * @param orderList
+	 *            订单id集合
+	 * @param fee
+	 *            身份证认证手续费
+	 * @return Map
+	 */
 	private Map<String, Object> idCardCertificationToll(Merchant merchant, MerchantWalletContent merchantWallet,
-			double serviceFee, AgentWalletContent agentWallet, JSONArray idCardList, double fee) {
-		if (merchant == null || merchantWallet == null || agentWallet == null || idCardList == null) {
+			AgentWalletContent agentWallet, JSONArray orderList, double fee) {
+		if (merchant == null || merchantWallet == null || agentWallet == null || orderList == null) {
 			return ReturnInfoUtils.errorInfo("身份证实名认证清算时,参数不能为null!");
 		}
-		if(idCardList.isEmpty()){//当需要实名认证的集合为空时,则表示不需要进行计费
-			return ReturnInfoUtils.successInfo();
+		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchant.getMerchantId());
+		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
+			return reCostMap;
 		}
-		Map<String, Object> reDetailsMap = getidCardDetails(idCardList, fee);
+		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
+		Map<String, Object> reDetailsMap = getidCardDetails(orderList, fee);
 		if (!"1".equals(reDetailsMap.get(BaseCode.STATUS.toString()))) {
 			return reDetailsMap;
 		}
-		List<JSONObject> detailsList = (List<JSONObject>) reDetailsMap.get(BaseCode.DATAS.toString());
+		List<JSONObject> detailsList = (List<JSONObject>) reDetailsMap.get("jsonList");
+		List<JSONObject> newList = (List<JSONObject>) reDetailsMap.get("newList");
+		if (newList.isEmpty()) {// 当需要实名认证的集合为空时,则表示不需要进行计费
+			return ReturnInfoUtils.successInfo();
+		}
+		double serviceFee = newList.size() * merchantCost.getPlatformCost();
 		//
 		Map<String, Object> reMerchantWalletMap = updateMerchantWallet(merchant, merchantWallet, serviceFee,
 				agentWallet, detailsList);
@@ -284,12 +334,23 @@ public class ManualOrderInterceptor {
 		return updateAgentWallet(merchantWallet, serviceFee, agentWallet, detailsList);
 	}
 
+	/**
+	 * 根据订单id集合,查询并记录身份证认证交易流水详情
+	 * 
+	 * @param idCardList
+	 *            订单id集合
+	 * @param fee
+	 *            认证手续费
+	 * @return
+	 */
 	private Map<String, Object> getidCardDetails(JSONArray idCardList, double fee) {
 		if (idCardList == null) {
 			return ReturnInfoUtils.errorInfo("身份证实名信息集合不能为null");
 		}
+		Map<String, Object> cacheMap = new HashMap<>();
 		List<JSONObject> jsonList = new ArrayList<>();
-		JSONObject idcardJSON = new JSONObject();
+		// 新订单id集合---实名认证需要计费
+		List<Object> newList = new ArrayList<>();
 		Map<String, Object> params = new HashMap<>();
 		for (int i = 0; i < idCardList.size(); i++) {
 			String orderId = idCardList.get(i) + "";
@@ -298,14 +359,151 @@ public class ManualOrderInterceptor {
 			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 0, 0);
 			if (reList != null && !reList.isEmpty()) {
 				for (Morder order : reList) {
-					idcardJSON.put("name", order.getOrderDocName());
-					idcardJSON.put("idNumber ", order.getOrderDocId());
-					idcardJSON.put("fee ", fee);
-					jsonList.add(idcardJSON);
+					if (cacheMap.containsKey(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim())) {
+						if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(),
+								order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId(), 0, 2,
+								"一次操作,重复身份证,不计费!")) {
+							logger.error(orderId + "--保存实名认证流水日志失败--");
+						}
+					} else {
+						getIdCardInfo(order, jsonList, fee, newList);
+						cacheMap.put(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim(),
+								order.getOrder_id());
+					}
 				}
 			}
 		}
-		return ReturnInfoUtils.successDataInfo(jsonList);
+		Map<String, Object> map = new HashMap<>();
+		// 新订单id集合---实名认证需要计费
+		map.put("newList", newList);
+		map.put("jsonList", jsonList);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
+	}
+
+	/**
+	 * 根据商户Id与姓名身份证号码查询商城实名库中是否存在该实名认证记录
+	 * 
+	 * @param order
+	 *            订单信息实体类
+	 * @param jsonList
+	 *            实名认证交易流水详情集合
+	 * @param fee
+	 *            实名认证手续费
+	 * @param newList
+	 *            返回需要计算实名认证手续费的订单id集合
+	 */
+	private void getIdCardInfo(Morder order, List<JSONObject> jsonList, double fee, List<Object> newList) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(MERCHANT_ID, order.getMerchant_no());
+		params.put("name", order.getOrderDocName().trim());
+		params.put("idNumber", order.getOrderDocId().trim());
+		List<IdCard> reIdList = morderDao.findByProperty(IdCard.class, params, 1, 1);
+		if (reIdList == null) {
+			//
+		} else if (!reIdList.isEmpty()) {// 实名库已存在身份证信息
+			System.out.println("--实名库已存在身份证信息--");
+			IdCard idCard = reIdList.get(0);
+			// 认证状态:success-成功;failure-失败;wait-待验证
+			if ("failure".equals(idCard.getStatus())) {// 已有但为认证失败,则进行实名计费
+				jsonList.add(addIdcardJSONContent(order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId(),
+						fee, "实名验证手续费"));
+				if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(), order.getOrder_id(),
+						order.getOrderDocName(), order.getOrderDocId(), fee, 1, "实名验证手续费")) {
+					logger.error(order.getOrder_id() + "--保存实名认证流水日志失败--");
+				}
+				// 添加至需要计费的集合中
+				newList.add(order.getOrder_id());
+			} else {//
+				if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(), order.getOrder_id(),
+						order.getOrderDocName(), order.getOrderDocId(), 0, 2, "姓名与身份证号码已验证通过,不进行二次验证!")) {
+					logger.error(order.getOrder_id() + "--保存实名认证流水日志失败--");
+				}
+			}
+		} else {// 实名库没有身份证信息
+			System.out.println("--实名库没有身份证信息--");
+			jsonList.add(addIdcardJSONContent(order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId(), fee,
+					"实名验证手续费"));
+			if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(), order.getOrder_id(),
+					order.getOrderDocName(), order.getOrderDocId(), fee, 1, "实名验证手续费")) {
+				logger.error(order.getOrder_id() + "--保存实名认证流水日志失败--");
+			}
+			newList.add(order.getOrder_id());
+		}
+	}
+
+	/**
+	 * 添加实名认证日志流水记录
+	 * 
+	 * @param merchantId
+	 *            商户Id
+	 * @param merchantName
+	 *            商户名称
+	 * @param orderId
+	 *            订单Id
+	 * @param name
+	 *            姓名
+	 * @param idNumber
+	 *            身份证号码
+	 * @param fee
+	 *            认证手续费
+	 * @param tollFlag
+	 *            收费标识:1-收费、2-不收费
+	 * @param note
+	 *            说明
+	 * @return
+	 */
+	private boolean addIdCardCertificationLog(String merchantId, String merchantName, String orderId, String name,
+			String idNumber, double fee, int tollFlag, String note) {
+		IdCardCertificationLog idcardLog = new IdCardCertificationLog();
+		idcardLog.setOrderId(orderId);
+		idcardLog.setMerchantId(merchantId);
+		idcardLog.setMerchantName(merchantName);
+		idcardLog.setName(name);
+		idcardLog.setIdNumber(idNumber);
+		idcardLog.setFee(fee);
+		idcardLog.setTollFlag(tollFlag);
+		idcardLog.setNote(note);
+		idcardLog.setCreateBy(merchantName);
+		idcardLog.setCreateDate(new Date());
+		return morderDao.add(idcardLog);
+	}
+
+	/**
+	 * 添加实名认证钱包流水json内容
+	 * 
+	 * @param orderId
+	 *            订单Id
+	 * @param orderDocName
+	 *            姓名
+	 * @param orderDocId
+	 *            身份证号码
+	 * @param fee
+	 *            手续费
+	 * @param note
+	 *            说明
+	 * @return JSONObject
+	 */
+	private JSONObject addIdcardJSONContent(String orderId, String orderDocName, String orderDocId, double fee,
+			String note) {
+		JSONObject idcardJSON = new JSONObject();
+		if (StringEmptyUtils.isNotEmpty(orderId)) {
+			idcardJSON.put("orderId", orderId);
+
+		}
+		if (StringEmptyUtils.isNotEmpty(orderDocName)) {
+			idcardJSON.put("name", orderDocName);
+		}
+		if (StringEmptyUtils.isNotEmpty(orderDocId)) {
+			idcardJSON.put("idNumber", orderDocId);
+		}
+		if (StringEmptyUtils.isNotEmpty(fee)) {
+			idcardJSON.put("fee", fee);
+		}
+		if (StringEmptyUtils.isNotEmpty(note)) {
+			idcardJSON.put("note", note);
+		}
+		return idcardJSON;
 	}
 
 	/**
@@ -352,10 +550,15 @@ public class ManualOrderInterceptor {
 
 	/**
 	 * 商户申报订单时,代理商进行实名认证费用收取
-	 * @param merchantWallet 商户钱包信息
-	 * @param serviceFee 平台服务费
-	 * @param agentWallet 代理商钱包信息
-	 * @param detailsList 收费详情集合
+	 * 
+	 * @param merchantWallet
+	 *            商户钱包信息
+	 * @param serviceFee
+	 *            平台服务费
+	 * @param agentWallet
+	 *            代理商钱包信息
+	 * @param detailsList
+	 *            收费详情集合
 	 * @return Map
 	 */
 	private Map<String, Object> updateAgentWallet(MerchantWalletContent merchantWallet, double serviceFee,
@@ -382,6 +585,7 @@ public class ManualOrderInterceptor {
 		// 代理商支付平台佣金后记录支付日志
 		return mpayService.addAgentWalletLog(datas);
 	}
+
 	/**
 	 * 代理商下商户推送订单后佣金结算
 	 * 
@@ -553,7 +757,6 @@ public class ManualOrderInterceptor {
 		return ReturnInfoUtils.successDataInfo(agentWallet);
 	}
 
-	
 	public void methodException(JoinPoint joinPoint) {
 		System.out.println(
 				joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + " mett Error");
