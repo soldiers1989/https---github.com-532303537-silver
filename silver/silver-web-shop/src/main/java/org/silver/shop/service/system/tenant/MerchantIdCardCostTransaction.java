@@ -17,8 +17,8 @@ public class MerchantIdCardCostTransaction {
 	@Reference
 	private MerchantIdCardCostService merchantIdCardCostService;
 
-	public Map<String,Object> getInfo(String merchantId) {
-		return merchantIdCardCostService.getInfo(merchantId);
+	public Map<String,Object> getInfo(String merchantId,int page,int size) {
+		return merchantIdCardCostService.getInfo(merchantId, page, size);
 	}
 	
 	//
@@ -28,6 +28,10 @@ public class MerchantIdCardCostTransaction {
 		String managerName = managerInfo.getManagerName();
 		datasMap.put("managerName", managerName);
 		return merchantIdCardCostService.addInfo(datasMap);
+	}
+
+	public Object updateInfo(Map<String, Object> datasMap) {
+		return merchantIdCardCostService.updateInfo(datasMap);
 	}
 	
 	

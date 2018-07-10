@@ -149,13 +149,17 @@ public class MorderServiceImpl implements MorderService {
 	@Override
 	public Map<String, Object> pageFindRecords(Map<String, Object> dataMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("del_flag", 0);
-		List<Morder> mlist = morderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
-		long count = morderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
-		if(mlist == null ){
+		List orList = (List) reDatasMap.get("orList");
+		List<Morder> mlist = morderDao.findByPropertyOr(Morder.class, paramMap, orList, page, size);
+		long count = morderDao.findByPropertyOrCount(Morder.class, paramMap, orList);
+		if (mlist == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-		}else if (!mlist.isEmpty()) {
+		} else if (!mlist.isEmpty()) {
 			List<Map<String, Object>> lMap = new ArrayList<>();
 			paramMap.clear();
 			for (Morder m : mlist) {
@@ -172,7 +176,7 @@ public class MorderServiceImpl implements MorderService {
 			statusMap.put("datas", lMap);
 			statusMap.put("count", count);
 			return statusMap;
-		}else{
+		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
 	}

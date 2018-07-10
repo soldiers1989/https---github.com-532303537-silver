@@ -3,6 +3,7 @@ package org.silver.shop.dao;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 
 /**
@@ -194,8 +195,7 @@ public interface BaseDao<T> {
 	 *            数目
 	 * @return List
 	 */
-	public List<T> findByPropertyOr(Class<T> entity, Map<String, Object> params, Map<String, List<Object>> orMap,
-			int page, int size);
+	public List<T> findByPropertyOr(Class<T> entity, Map<String, Object> params, List orList, int page, int size);
 
 	/**
 	 * 单独根据实体、列(名)、值Or查询数据
@@ -212,5 +212,16 @@ public interface BaseDao<T> {
 	 */
 	public List<T> findByPropertyOr2(Class<T> entity, Map<String, List<Object>> orMap, int page, int size);
 
-	
+	/**
+	 * 查询or条件下总数
+	 * 
+	 * @param entity
+	 *            实体类
+	 * @param paramMap
+	 *            主参数
+	 * @param orMap
+	 *            or参数
+	 * @return
+	 */
+	public long findByPropertyOrCount(Class<T> entity, Map<String, Object> paramMap, List orList);
 }

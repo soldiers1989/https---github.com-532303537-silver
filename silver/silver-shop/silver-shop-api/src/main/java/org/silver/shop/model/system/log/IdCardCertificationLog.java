@@ -19,7 +19,7 @@ public class IdCardCertificationLog implements Serializable{
 	private String name;//姓名
 	private String idNumber;//身份证号码
 	private double fee ;//实名认证费用
-	private int tollFlag;//收费:1-收费、2-不收费
+	private int tollFlag;//收费标识:1-收费、2-不收费
 	private String note;//备注说明
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间

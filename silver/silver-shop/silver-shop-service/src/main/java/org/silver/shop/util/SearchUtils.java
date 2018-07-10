@@ -1,7 +1,9 @@
 package org.silver.shop.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
@@ -231,6 +233,7 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
+		List<Map<String,Object>> orList=  new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -264,12 +267,6 @@ public final class SearchUtils {
 					paramMap.put(key, " IS NOT NULL ");
 				}
 				break;
-			case "order_record_status":
-				if("10".equals(value) ){
-					value = "2";
-				}
-				paramMap.put(key, Integer.parseInt(value));
-				break;
 			case MERCHANT_NO:
 				paramMap.put(key, value.trim());
 				break;
@@ -294,12 +291,28 @@ public final class SearchUtils {
 			case "customsCode":// 海关关区代码
 				paramMap.put(key, value.trim());
 				break;
+			case "order_record_status":
+				Map<String,Object> orMap = null;
+				if("2".equals(value)){
+					//申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+					orMap = new HashMap<>();
+					orMap.put("order_record_status", 2);
+					orList.add(orMap);
+					orMap = new HashMap<>();
+					orMap.put("order_record_status", 10);
+					orList.add(orMap);
+					System.out.println("-orList-->>"+orList.toString());
+				}else{
+					paramMap.put(key, Integer.parseInt(value));
+				}
+				break;
 			default:
 				break;
 			}
 		}
 		statusMap.put(PARAM, paramMap);
 		statusMap.put("blurry", blurryMap);
+		statusMap.put("orList", orList);
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
 	}
@@ -822,5 +835,59 @@ public final class SearchUtils {
 		statusMap.put("blurry", blurryMap);
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return statusMap;
+	}
+	
+	/**
+	 * 通用检索商户身份证实名认证记录工具类
+	 * @param datasMap
+	 * @return
+	 */
+	public static Map<String, Object> universalIdCardCertificationlogsSearch(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
+		}
+		Map<String, Object> item = new HashMap<>();
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "merchantId":
+				paramMap.put(key, value);
+				break;
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "idNumber":
+				paramMap.put(key, value);
+				break;
+			case "idName":
+				paramMap.put(key, value);
+				break;
+			case "tollFlag":
+				try{
+					paramMap.put(key, Integer.parseInt(value));
+				}catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("收费标识错误!");
+				}
+				break;
+				
+			default:
+				break;
+			}
+		}
+		item.put(PARAM, paramMap);
+		item.put("blurry", blurryMap);
+		item.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return item;
 	}
 }

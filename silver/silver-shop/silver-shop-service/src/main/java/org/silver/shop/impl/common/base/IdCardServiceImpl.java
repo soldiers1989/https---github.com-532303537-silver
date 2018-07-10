@@ -12,9 +12,11 @@ import org.silver.shop.api.common.base.IdCardService;
 import org.silver.shop.dao.common.base.IdCardDao;
 import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -78,47 +80,57 @@ public class IdCardServiceImpl implements IdCardService {
 	}
 
 	@Override
-	public Map<String, Object> firstUpdateIdCardInfo(int orderPage, int orderSize) {
-		//2018-07-02 更新页为1100
+	public Map<String, Object> deleteDuplicateIdCardInfo() {
 		Map<String, Object> params = new HashMap<>();
-		// 只有订单备案成功后,才导入进实名库
-		params.put("order_record_status", 3);
-		List<Morder> morderList = idCardDao.findByProperty(Morder.class, params, 1, 200);
-		while (morderList != null && !morderList.isEmpty() ) {
-			if (orderPage != 1) {
-				params.clear();
-				morderList = idCardDao.findByProperty(Morder.class, params, orderPage, orderSize);
-			}
-			if (!morderList.isEmpty()) {
-				for (Morder order : morderList) {
-					String idNumber = order.getOrderDocId();
-					params.clear();
-					params.put("idNumber", order.getOrderDocId());
-					List<IdCard> idCardList = idCardDao.findByProperty(IdCard.class, params, 0, 0);
-					if (idCardList != null && idCardList.isEmpty()) {
-						IdCard idCard = new IdCard();
-						idCard.setName(order.getOrderDocName());
-						idCard.setIdNumber(idNumber);
-						// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-						if (IdcardValidator.validate18Idcard(idNumber)) {
-							idCard.setType(3);
-						} else {
-							idCard.setType(5);
-						}
-						idCard.setCreateBy("system");
-						idCard.setCreateDate(new Date());
-						idCard.setDeleteFlag(0);
-						if(idCardDao.add(idCard)){
-							System.out.println(orderPage+"<<页数-------身份证信息保存成功---------");
-						}
-					}else {
-						System.out.println(orderPage+"<<页数-------身份证已存在无需重复导入---------");
+		params.put("startDate", DateUtil.parseDate("2018-07-02 11:52:13", "yyyy-MM-dd HH:mm:ss"));
+		params.put("endDate", new Date());
+		List<IdCard> idCardList = idCardDao.findByPropertyLike(IdCard.class, params, null, 0, 0);
+		if (idCardList != null && !idCardList.isEmpty()) {
+			System.out.println("--共计-->>>>" + idCardList.size());
+			Map<String, Object> chacheMap = new HashMap<>();
+			for (IdCard idCard : idCardList) {
+				if (chacheMap
+						.containsKey(idCard.getName() + "_" + idCard.getIdNumber() + "_" + idCard.getMerchantId())) {
+					if (idCardDao.delete(idCard)) {
+						System.out.println("---重名-删除->" + idCard.getName() + "_" + idCard.getIdNumber());
 					}
+				} else {
+					chacheMap.put(idCard.getName() + "_" + idCard.getIdNumber() + "_" + idCard.getMerchantId(), "");
+
 				}
 			}
-			orderPage++;
-			System.out.println(orderPage+"<<页数----");
 		}
-		return ReturnInfoUtils.errorInfo("暂无数据!");
+		return null;
+	}
+
+	@Override
+	public Object temPush() {
+		//
+		int page = 100;
+		int size = 500;
+		List<IdCard> idcardList = idCardDao.findByProperty(IdCard.class, null, page, size);
+		while (idcardList != null && !idcardList.isEmpty()) {
+			if (page != 1) {
+				idcardList = idCardDao.findByProperty(IdCard.class, null, page, size);
+			}
+			Map<String, Object> item = new HashMap<>();
+			long startTime = System.currentTimeMillis();
+			for (IdCard idCard : idcardList) {
+				item.put("user_name", idCard.getName());
+				item.put("user_ID", idCard.getIdNumber());
+				System.out.println(
+						"-0---->>" + YmHttpUtil.HttpPost("http://192.168.1.172:8080/silver-web/real/addInfo", item));
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			page++;
+			long endTime = System.currentTimeMillis();
+			System.out.println("---一次循环耗时->>>"+(endTime - startTime) +"ms");
+			System.out.println(page + "<<页数----");
+		}
+		return null;
 	}
 }

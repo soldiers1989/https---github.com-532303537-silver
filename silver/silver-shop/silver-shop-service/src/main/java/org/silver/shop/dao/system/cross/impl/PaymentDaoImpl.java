@@ -11,6 +11,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.silver.shop.dao.BaseDaoImpl;
 import org.silver.shop.dao.system.cross.PaymentDao;
+import org.silver.shop.model.system.manual.ManualOrderResendContent;
+import org.silver.shop.model.system.manual.ManualPaymentResendContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
@@ -343,6 +345,48 @@ public class PaymentDaoImpl extends BaseDaoImpl implements PaymentDao {
 			session.connection().close();
 			session.close();
 			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	@Override
+	public List<ManualPaymentResendContent> getResendPaymentInfo(Class<ManualPaymentResendContent> entity,
+			Map<String, Object> params, int page, int size) {
+		Session session = null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			String hql = " FROM " + entName + " model ";
+			List<Object> list = new ArrayList<>();
+			if (params != null && params.size() > 0) {
+				hql += " WHERE ";
+				String property;
+				Iterator<String> is = params.keySet().iterator();
+				while (is.hasNext()) {
+					property = is.next();
+					hql = hql + "model." + property + " = " + " ? " + " and ";
+					list.add(params.get(property));
+				}
+				hql += " model.resendCount < 10 Order By id DESC";
+			}
+			Query query = session.createQuery(hql);
+			if (!list.isEmpty()) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List results = query.list();
+			session.close();
+			return results;
 		} catch (Exception re) {
 			re.printStackTrace();
 			return null;

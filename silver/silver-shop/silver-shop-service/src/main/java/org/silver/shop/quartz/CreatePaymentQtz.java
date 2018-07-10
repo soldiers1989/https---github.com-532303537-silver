@@ -164,7 +164,7 @@ public class CreatePaymentQtz {
 		Map<String, Object> reCheckMap = paymentService.checkPaymentInfo(checkInfoMap);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			logger.error("系统扫描自助申报订单,创建支付单失败->" + reCheckMap.get(BaseCode.MSG.toString()));
-			return false;
+			return updateOrder(order,reCheckMap.get(BaseCode.MSG.toString())+"");
 		}
 		int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
@@ -182,6 +182,28 @@ public class CreatePaymentQtz {
 			return paymentService.addEntity(paymentMap)
 					&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
 		}
+	}
+
+	/**
+	 * 更新订单失败原因
+	 * @param order
+	 * @param msg
+	 * @return
+	 */
+	private boolean updateOrder(Morder order, String msg) {
+		if(order == null){
+			return false;
+		}
+		//申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+		order.setOrder_record_status(4);
+		String note = order.getOrder_re_note();
+		if(StringEmptyUtils.isEmpty(note)){
+			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") +" "+msg);
+		}else{
+			order.setOrder_re_note(note+"#"+DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") +" "+msg);
+		}
+		order.setUpdate_date(new Date());
+		return orderDao.update(order);
 	}
 
 	/**

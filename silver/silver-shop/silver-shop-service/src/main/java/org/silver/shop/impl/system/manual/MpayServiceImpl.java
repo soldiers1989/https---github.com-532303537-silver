@@ -1546,7 +1546,7 @@ public class MpayServiceImpl implements MpayService {
 				note = "";
 			}
 			if (StringEmptyUtils.isNotEmpty(reMsg)) {
-				order.setOrder_re_note(note + defaultDate + ":" + reMsg + ";");
+				order.setOrder_re_note(note + defaultDate + " " + reMsg + "#");
 			}
 			if ("1".equals(status)) {
 				//

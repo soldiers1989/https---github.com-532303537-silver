@@ -26,11 +26,11 @@ public interface IdCardService {
 	public Map<String,Object> editIdCardInfo(long id, String idName, String idNumber, int type);
 
 	/**
-	 * 获取所有订单内身份证姓名与号码存入实名表
-	 * @param size 
-	 * @param page 
+	 * 去重
 	 * @return
 	 */
-	public Map<String, Object> firstUpdateIdCardInfo(int page, int size);
+	public Map<String, Object> deleteDuplicateIdCardInfo();
+
+	public Object temPush();
 	
 }

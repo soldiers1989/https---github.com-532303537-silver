@@ -86,12 +86,4 @@ public class ManualOrderController {
 		return JSONObject.fromObject(mdataService.sendMorderRecord(params, orderNoPack)).toString();
 	}
 
-	public static void main(String[] args) {
-		List list = new ArrayList<>();
-		Map<String, Object> item = new HashMap<>();
-		item.put("orderNo", "SO1806050221617474057");
-		list.add("abc");
-		list.add("def");
-		System.out.println("===>>" + list.toString());
-	}
 }

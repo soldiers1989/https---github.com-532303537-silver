@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.shop.dao.BaseDao;
+import org.silver.shop.model.system.manual.ManualOrderResendContent;
+import org.silver.shop.model.system.manual.ManualPaymentResendContent;
 import org.silver.shop.model.system.manual.Morder;
 
 import com.justep.baas.data.Table;
@@ -70,4 +72,15 @@ public interface PaymentDao  extends BaseDao{
 	 * @return
 	 */
 	public Table getPaymentReportDetails(Map<String, Object> params);
+
+	/**
+	 * 查询支付单推送失败,并且推送次数小于10次的支付单
+	 * @param 
+	 * @param params
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public List<ManualPaymentResendContent> getResendPaymentInfo(Class<ManualPaymentResendContent> entity,
+			Map<String, Object> params, int page, int size);
 }

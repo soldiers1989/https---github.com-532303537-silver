@@ -78,8 +78,6 @@ public class StockServiceImpl implements StockService {
 			return statusMap;
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
-			List<Object> list = new ArrayList<>();
-			Map<String, List<Object>> orMap = new HashMap<>();
 			params = new HashMap<>();
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			params.put("goodsMerchantId", merchantId);
@@ -88,11 +86,15 @@ public class StockServiceImpl implements StockService {
 			params.put("entGoodsNo", datasMap.get("entGoodsNo"));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
+			List<Object> orList = new ArrayList<>();
+			Map<String, Object> orMap = null;
 			// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
-			list.add(1);
-			list.add(2);
-			orMap.put("recordFlag", list);
-			List<Object> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orMap, 1, 1);
+			orMap=new HashMap<>();
+			orMap.put("recordFlag", 1);
+			orMap=new HashMap<>();
+			orMap.put("recordFlag", 2);
+			orList.add(orMap);
+			List<Object> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orList, 1, 1);
 			if (goodsList == null) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());

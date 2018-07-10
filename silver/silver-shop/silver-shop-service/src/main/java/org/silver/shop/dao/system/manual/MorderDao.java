@@ -88,6 +88,6 @@ public interface MorderDao extends BaseDao {
 	 * @return double 实际支付金额
 	 */
 	public double backCoverStatisticalManualOrderAmount(List<Object> itemList);
-	
+
 	
 }

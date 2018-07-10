@@ -62,22 +62,30 @@ public class IdCardController {
 		return JSONObject.fromObject(idCardTransaction.editIdCardInfo(id, idName, idNumber, type)).toString();
 	}
 
-	/**
-	 * 管理员首次更新身份证数据
-	 * 
-	 * @return Json
-	 */
-	@RequestMapping(value = "/firstUpdateIdCardInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequestMapping(value = "/deleteDuplicateIdCardInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("管理员首次更新身份证数据")
-	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
-	public String firstUpdateIdCardInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
+	@ApiOperation("管理员去除身份证重复记录")
+	@RequiresRoles("Manager")
+//	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
+	public String deleteDuplicateIdCardInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardTransaction.firstUpdateIdCardInfo(page,size)).toString();
+		return JSONObject.fromObject(idCardTransaction.deleteDuplicateIdCardInfo()).toString();
+	}
+	@RequestMapping(value = "/temPush", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("临时推送身份证至网关")
+	@RequiresRoles("Manager")
+//	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
+	public String temPush(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(idCardTransaction.temPush()).toString();
 	}
 }

@@ -464,7 +464,7 @@ public class OrderServiceImpl implements OrderService {
 			} else {
 				order.setOrderRecordStatus(3);
 			}
-			order.setReNote(note + defaultDate + ":" + reMsg + ";");
+			order.setReNote(note + defaultDate + " " + reMsg + "#");
 			order.setUpdateDate(date);
 			if (!orderDao.update(order)) {
 				return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");

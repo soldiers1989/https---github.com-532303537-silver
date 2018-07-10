@@ -27,7 +27,6 @@ import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-
 /**
  * 定时任务,扫描商户自助申报的订单,进行订单申报
  */
@@ -97,7 +96,7 @@ public class PushOrderRecordQtz {
 		params.put("order_record_status", 10);
 		// 网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 		params.put("status", 1);
-		//支付流水标识
+		// 支付流水标识
 		params.put("tradeNoFlag", " IS NOT NULL ");
 		try {
 			int page = 1;
@@ -109,9 +108,9 @@ public class PushOrderRecordQtz {
 				}
 				if (reOrderList != null && !reOrderList.isEmpty()) {
 					for (Morder order : reOrderList) {
-						Map<String,Object> reMap = startSendOrderRecord(order, null);
-						if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
-							logger.error("--定时扫描待发起备案的订单信息错误--"+reMap.toString());
+						Map<String, Object> reMap = startSendOrderRecord(order, null);
+						if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+							logger.error("--定时扫描待发起备案的订单信息错误--" + reMap.toString());
 						}
 						// 线程休眠0.2秒,防止HTTP请求过快出错
 						Thread.sleep(200);
@@ -146,9 +145,9 @@ public class PushOrderRecordQtz {
 			}
 			int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
 			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-			if (idcardCertifiedFlag == 1 ) {
+			if (idcardCertifiedFlag == 1) {
 				return sendOrderRecord(order, reOrderGoodsList, subParams);
-			}else{
+			} else {
 				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单尚未实名认证通过!");
 			}
 		} else {
@@ -162,7 +161,7 @@ public class PushOrderRecordQtz {
 	 * @param order
 	 * @param reOrderGoodsList
 	 * @param subParams
-	 *            副参数,可传可不传，已有参数key-ORDER_RESEND_ID(重发订单唯一Id)、key-accessToken()
+	 *            副参数,可传可不传，已有参数key-ORDER_RESEND_ID(重发订单唯一Id)
 	 * @return
 	 */
 	private Map<String, Object> sendOrderRecord(Morder order, List<MorderSub> reOrderGoodsList,
@@ -245,13 +244,11 @@ public class PushOrderRecordQtz {
 				&& StringEmptyUtils.isNotEmpty(merchantName)) {
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", FAILURE);
-			String orderResendId = "";
 			if (subParams != null && !subParams.isEmpty()) {
-				orderResendId = subParams.get(ORDER_RESEND_ID) + "";
+				params.put(ORDER_RESEND_ID, subParams.get(ORDER_RESEND_ID));
 			}
-			params.put(ORDER_RESEND_ID, orderResendId);
-			List<ManualOrderResendContent> orderList = orderDao.getResendOrderInfo(ManualOrderResendContent.class,
-					params, 0, 0);
+			List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
+					0, 0);
 			if (orderList != null && !orderList.isEmpty()) {
 				return ReturnInfoUtils.errorInfo(subParams + "<--重发订单唯一标识已存在,无需重复添加");
 			} else {
@@ -327,7 +324,7 @@ public class PushOrderRecordQtz {
 	private void updateResendOrderSuccessStatus(String orderResendId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(ORDER_RESEND_ID, orderResendId);
-		List<ManualOrderResendContent> orderList = orderDao.getResendOrderInfo(ManualOrderResendContent.class, params,
+		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
 				0, 0);
 		if (orderList != null && !orderList.isEmpty()) {
 			ManualOrderResendContent order = orderList.get(0);
@@ -361,7 +358,7 @@ public class PushOrderRecordQtz {
 	private void updateResendOrderCount(String orderResendId, String msg) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(ORDER_RESEND_ID, orderResendId);
-		List<ManualOrderResendContent> orderList = orderDao.getResendOrderInfo(ManualOrderResendContent.class, params,
+		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
 				0, 0);
 		if (orderList != null && !orderList.isEmpty()) {
 			ManualOrderResendContent order = orderList.get(0);
@@ -409,7 +406,5 @@ public class PushOrderRecordQtz {
 			}
 		}
 	}
-	
 
-	
 }

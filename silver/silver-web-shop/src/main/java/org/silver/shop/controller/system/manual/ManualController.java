@@ -640,12 +640,4 @@ public class ManualController {
 		}
 		return "";
 	}
-
-	public static void main(String[] args) {
-		JSONArray list = new JSONArray();
-		Map<String, Object> item = new HashMap<>();
-		item.put("orderNo", "YM180125052168190");
-		list.add(item);
-		System.out.println(list.toString());
-	}
 }

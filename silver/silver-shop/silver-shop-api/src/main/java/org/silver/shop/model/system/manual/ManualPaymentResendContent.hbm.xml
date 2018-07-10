@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-7-9 14:57:54 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.manual.ManualPaymentResendContent" table="ym_shop_manual_payment_resend_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="paymentResendId" type="java.lang.String">
+            <column name="paymentResendId" not-null="true" unique="true"/>
+        </property>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName" not-null="true"/>
+        </property>
+        <property name="tradeNo" type="java.lang.String">
+            <column name="tradeNo" not-null="true"/>
+        </property>
+        <property name="resendStatus" type="java.lang.String">
+            <column name="resendStatus" not-null="true"/>
+        </property>
+        <property name="resendCount" type="int">
+            <column name="resendCount" default="0"/>
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+        <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+    </class>
+</hibernate-mapping>

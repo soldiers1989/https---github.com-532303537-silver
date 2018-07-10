@@ -45,7 +45,7 @@ public class MdataService {
 
 	@Reference
 	private MuserService muserService;
-	@Reference(timeout = 300000)
+	@Reference(timeout = 30000)
 	private MpayService mpayService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;

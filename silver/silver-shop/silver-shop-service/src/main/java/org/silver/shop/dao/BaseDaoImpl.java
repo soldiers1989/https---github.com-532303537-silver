@@ -383,27 +383,19 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		String entName = entity.getSimpleName();
 		try {
 			session = getSession();
-			String hql = "from " + entName + " model ";
+			StringBuilder hql = new StringBuilder(" from " + entName + " model WHERE");
 			List<Object> list = new ArrayList<>();
-			hql += "where ";
+			hql.append("  ");
 			if (params != null && params.size() > 0) {
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if ("startDate".equals(property)) {// 驼峰写法实体
-						hql += "model.createDate " + " >= " + " ? " + " and ";
-					} else if ("endDate".equals(property)) {// 驼峰写法实体
-						hql += "model.createDate " + " <= " + "?" + " and ";
-					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
-						hql += "model.create_date " + " >= " + "? " + " and ";
-					} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
-						hql += "model.create_date " + " <= " + "? " + " and ";
-					} else if ("tradeNoFlag".equals(property)) {
-						hql += "model.trade_no " + params.get(property) + " and ";
+					if ("tradeNoFlag".equals(property)) {
+						hql.append("model.trade_no " + params.get(property) + " AND ");
 						continue;
 					} else {
-						hql += "model." + property + " = " + "?" + " and ";
+						appendDate(hql, property);
 					}
 					list.add(params.get(property));
 				}
@@ -413,16 +405,14 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql += "model." + property + " LIKE " + " ? " + " and ";
+					hql.append("model." + property + " LIKE " + " ? " + " and ");
 					list.add("%" + blurryMap.get(property) + "%");
 				}
 			}
-			hql += " 1=1 Order By id DESC";
-			Query query = session.createQuery(hql);
-			if (list.size() > 0) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, list.get(i));
-				}
+			hql.append(" 1=1 Order By id DESC");
+			Query query = session.createQuery(hql.toString());
+			for (int i = 0; i < list.size(); i++) {
+				query.setParameter(i, list.get(i));
 			}
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
@@ -445,27 +435,18 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		Session session = null;
 		try {
 			String entityName = entity.getSimpleName();
-			String hql = "select count(model) from " + entityName + " model ";
+			StringBuilder hql = new StringBuilder("SELECT count(model) FROM " + entityName + " model WHERE ");
 			List<Object> list = new ArrayList<>();
-			hql += "where ";
 			if (params != null && params.size() > 0) {
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					if (property.equals("startDate")) {
-						hql = hql + "model.createDate" + " >= " + "?" + " and ";
-					} else if ("endDate".equals(property)) {
-						hql = hql + "model.createDate" + " <= " + "?" + " and ";
-					} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
-						hql = hql + "model.create_date " + " >= " + "? " + " and ";
-					} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
-						hql = hql + "model.create_date " + " <= " + "? " + " and ";
-					} else if ("tradeNoFlag".equals(property)) {
-						hql = hql + "model.trade_no " + params.get(property) + " and ";
+					if ("tradeNoFlag".equals(property)) {
+						hql.append("model.trade_no " + params.get(property) + " and ");
 						continue;
 					} else {
-						hql = hql + "model." + property + " = " + "?" + " and ";
+						appendDate(hql, property);
 					}
 					list.add(params.get(property));
 				}
@@ -475,13 +456,13 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				Iterator<String> is = blurryMap.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " LIKE " + " ? " + " and ";
+					hql.append("model." + property + " LIKE " + " ? " + " and ");
 					list.add("%" + blurryMap.get(property) + "%");
 				}
 			}
-			hql += " 1=1 ";
+			hql.append(" 1=1 ");
 			session = getSession();
-			Query query = session.createQuery(hql);
+			Query query = session.createQuery(hql.toString());
 			if (list.size() > 0) {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
@@ -500,45 +481,16 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<T> findByPropertyOr(Class entity, Map params, Map orMap, int page, int size) {
+	public List<T> findByPropertyOr(Class entity, Map params, List orList, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
 			session = getSession();
-			String hql = "from " + entName + " model ";
-			String orHql = "";
+			StringBuilder hql = new StringBuilder(" from " + entName + " model WHERE ");
 			List<Object> list = new ArrayList<>();
-			hql += " where ";
-			if (params != null && params.size() > 0) {
-				String property;
-				Iterator<String> is = params.keySet().iterator();
-				while (is.hasNext()) {
-					property = is.next();
-					hql = hql + "model." + property + " = " + "?" + " and ";
-					list.add(params.get(property));
-				}
-			}
-			if (orMap != null && orMap.size() > 0) {
-				String property2;
-				Iterator<String> isKey = orMap.keySet().iterator();
-				orHql = " ( ";
-				while (isKey.hasNext()) {
-					property2 = isKey.next();
-					List<String> lt = (List<String>) orMap.get(property2);
-					for (int y = 0; y < lt.size(); y++) {
-						orHql = orHql + "model." + property2 + " = " + " ? " + " or ";
-						list.add(lt.get(y));
-					}
-				}
-				// 截取掉最后的 or 防止出错
-				orHql = orHql.substring(0, orHql.length() - 3);
-				orHql += " ) Order By id DESC";
-			} else {
-				hql += " 1=1 Order By id DESC";
-			}
-			// 合并两个sql语句
-			hql += orHql;
-			Query query = session.createQuery(hql);
+			appendParams(params, hql, list);
+			appendOrParams(orList, hql, list);
+			Query query = session.createQuery(hql.toString());
 			if (!list.isEmpty()) {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
@@ -547,7 +499,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-
 			List<T> results = query.list();
 			session.close();
 			return results;
@@ -561,23 +512,115 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	private void appendOrParams(List orList, StringBuilder hql, List<Object> list) {
+		if (orList != null && !orList.isEmpty()) {
+			// 移除 最后拼接的-->AND
+			//hql.delete(hql.length() - 4,hql.length());
+			hql.append(" ( ");
+			for(int i = 0 ; i < orList.size() ; i++){
+				Map<String,Object> map = (Map<String, Object>) orList.get(i);
+				String property;
+				Iterator<String> isKey = map.keySet().iterator();
+				while (isKey.hasNext()) {
+					property = isKey.next();
+					hql.append("model." + property + " = " + " ? " + " or ");
+					list.add(map.get(property));
+				}
+			}
+			// 截取掉最后的 or 防止出错
+			hql.delete(hql.length()- 3 , hql.length() );
+			hql.append(" ) Order By id DESC");
+			System.out.println("==hql=="+hql.toString());
+		} else {
+			hql.append(" 1=1 Order By id DESC");
+		}
+	}
+
+	@Override
+	public long findByPropertyOrCount(Class entity, Map params, List orList) {
+		Session session = null;
+		String entityName = entity.getSimpleName();
+		try {
+			session = getSession();
+			StringBuilder hql = new StringBuilder(" SELECT count(model) FROM " + entityName + " model WHERE ");
+			List<Object> list = new ArrayList<>();
+			appendParams(params, hql, list);
+			appendOrParams(orList, hql, list);
+			hql.append(" 1=1 ");
+			session = getSession();
+			Query query = session.createQuery(hql.toString());
+			if (list.size() > 0) {
+				for (int i = 0; i < list.size(); i++) {
+					query.setParameter(i, list.get(i));
+				}
+			}
+			Long count = (Long) query.uniqueResult();
+			session.close();
+			return count;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return -1;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
+	private void appendParams(Map params, StringBuilder hql, List<Object> list) {
+		if (params != null && params.size() > 0) {
+			String property;
+			Iterator<String> is = params.keySet().iterator();
+			while (is.hasNext()) {
+				property = is.next();
+				if ("tradeNoFlag".equals(property)) {
+					hql.append(" model.trade_no " + params.get(property) + " AND ");
+					continue;
+				} else {
+					appendDate(hql, property);
+				}
+				list.add(params.get(property));
+			}
+		}
+	}
+
+	/**
+	 * 拼接通用型日期时间
+	 * 
+	 * @param hql
+	 * @param property
+	 */
+	private void appendDate(StringBuilder hql, String property) {
+		if (property.equals("startDate")) {
+			hql.append("model.createDate" + " >= " + "? " + " AND ");
+		} else if ("endDate".equals(property)) {
+			hql.append("model.createDate" + " <= " + " ? " + " AND ");
+		} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
+			hql.append("model.create_date " + " >= " + " ? " + " AND ");
+		} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
+			hql.append("model.create_date " + " <= " + " ? " + " AND ");
+		} else {
+			hql.append("model." + property + " = " + " ? " + " AND ");
+		}
+	}
+
 	@Override
 	public List<T> findByPropertyOr2(Class entity, Map orMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
 			session = getSession();
-			String hql = "from " + entName + " model ";
+			String hql = "from " + entName + " model WHERE ";
 			String orHql = "";
 			List<Object> list = new ArrayList<>();
-			hql += " where ";
+			hql += "  ";
 			if (orMap != null && orMap.size() > 0) {
 				Iterator<String> isKey = orMap.keySet().iterator();
 				orHql = " ( ";
 				while (isKey.hasNext()) {
 					String property;
 					property = isKey.next();
-					orHql = orHql + "model." + property + " = " + " ? " + " or ";
+					orHql = orHql + " model." + property + " = " + " ? " + " or ";
 					list.add(orMap.get(property));
 				}
 				// 截取掉最后的 or 防止出错
@@ -597,7 +640,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-
 			List<T> results = query.list();
 			session.close();
 			return results;
@@ -611,7 +653,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
@@ -619,10 +660,13 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		paramMap.put("firstTypeId", Long.parseLong("29"));
 		// List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null,
 		// 0, 0);
-	/*	Map<String, Object> orMap = new HashMap<>();
-		orMap.put("order_serial_no", "222");
-		orMap.put("order_id", "65478417");*/
-		List<MerchantIdCardCostContent> reList = bd.findByPropertyOr2(MerchantIdCardCostContent.class, null, 0, 0);
+		/*
+		 * Map<String, Object> orMap = new HashMap<>();
+		 * orMap.put("order_serial_no", "222"); orMap.put("order_id",
+		 * "65478417");
+		 */
+
+		List<Morder> reList = bd.findByPropertyOr(Morder.class, null, null, 0, 0);
 
 		System.out.println("0----->>>>" + reList.size());
 	}

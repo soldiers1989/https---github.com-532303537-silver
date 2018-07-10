@@ -266,8 +266,10 @@ public class ManualOrderInterceptor {
 					if (backCoverFlag == 1) {
 						fee = amount * rate;
 					} else if (backCoverFlag == 2) {
+						//当订单金额低于100,提升至100计算
 						if (amount < 100) {
 							fee = 100 * rate;
+							amount = 100;
 						} else {
 							fee = amount * rate;
 						}

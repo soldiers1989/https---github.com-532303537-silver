@@ -172,7 +172,7 @@ public class PaymentServiceImpl implements PaymentService {
 			} else {
 				payment.setPayRecord(3);
 			}
-			payment.setReNote(note + defaultDate + ":" + reMsg + ";");
+			payment.setReNote(note + defaultDate + " " + reMsg + "#");
 			payment.setUpdateDate(date);
 			if (!paymentDao.update(payment)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -766,7 +766,7 @@ public class PaymentServiceImpl implements PaymentService {
 				pay.setPay_record_status(4);
 			}
 			if (StringEmptyUtils.isNotEmpty(reMsg)) {
-				pay.setPay_re_note(note + defaultDate + ":" + reMsg + ";");
+				pay.setPay_re_note(note + defaultDate + " " + reMsg + "#");
 			}
 			Map<String, Object> reUpdateMap = updatePaymentRecordInfo(pay);
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {

@@ -22,18 +22,12 @@ public class IdCardTransaction {
 		return idCardService.editIdCardInfo(id,idName,idNumber,type);
 	}
 
-
-	public Map<String,Object> firstUpdateIdCardInfo(int page, int size) {
-		return idCardService.firstUpdateIdCardInfo(page,size);
+	public Map<String,Object> deleteDuplicateIdCardInfo() {
+		return idCardService.deleteDuplicateIdCardInfo();
 	}
 
-	
-	public static void main(String[] args) {
-		for(int i =0 ;i<5; i++){
-			if(i==1){
-				continue;
-			}
-		}
-		System.out.println("----------------");
+
+	public Object temPush() {
+		return idCardService.temPush();
 	}
 }
