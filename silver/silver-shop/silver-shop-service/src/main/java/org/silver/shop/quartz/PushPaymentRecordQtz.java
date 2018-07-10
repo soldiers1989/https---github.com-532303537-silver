@@ -224,7 +224,6 @@ public class PushPaymentRecordQtz {
 				logger.error(tradeNo + "<--接收失败--" + rePaymentMap.get(BaseCode.MSG.toString()));
 				return rePaymentMap;
 			} else {
-				System.out.println("---支付单接收成功->");
 				String rePayMessageID = rePaymentMap.get("messageID") + "";
 				return paymentService.updatePaymentInfo(tradeNo, rePayMessageID, null);
 			}

@@ -900,9 +900,13 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> dataMap, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalMOrderSearch(dataMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		List<Morder> orderList = orderDao.findByPropertyLike(Morder.class, paramMap, null, page, size);
-		Long count = orderDao.findByPropertyLikeCount(Morder.class, paramMap, null);
+		List orList = (List) reDatasMap.get("orList");
+		List<Morder> orderList = orderDao.findByPropertyOr(Morder.class, paramMap, orList, page, size);
+		long count = orderDao.findByPropertyOrCount(Morder.class, paramMap, orList);
 		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!orderList.isEmpty()) {

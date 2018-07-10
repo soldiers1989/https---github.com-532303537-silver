@@ -38,43 +38,67 @@ public class ReportsServiceImpl implements ReportsService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.getRows().isEmpty()) {
 			com.alibaba.fastjson.JSONArray jsonArr = Transform.tableToJson(reList).getJSONArray("rows");
-			List<Object> list = new ArrayList<>();
-			Map<String,Object> datasMap =null;
+			Map<String, Object> pamras2 = null;
+			List<Object> newlist = new ArrayList<>();
 			for (int i = 0; i < jsonArr.size(); i++) {
 				JSONObject json = JSONObject.fromObject(jsonArr.get(i));
 				double fee = 0;
-				params.clear();
-				params.put("merchantId", StringUtil.replace(json.get("merchant_no") + ""));
+				String merchantId = StringUtil.replace(json.get("merchant_no") + "");
+				pamras2 = new HashMap<>();
+				pamras2.put("merchantId", merchantId);
 				// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-				params.put("type", "orderRecord");
-				params.put("customsCode", StringUtil.replace(json.get("customsCode") + ""));
-				List<MerchantFeeContent> feeList = paymentDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+				pamras2.put("type", "orderRecord");
+				pamras2.put("customsCode", StringUtil.replace(json.get("customsCode") + ""));
+				List<MerchantFeeContent> feeList = paymentDao.findByProperty(MerchantFeeContent.class, pamras2, 0, 0);
 				if (feeList != null && !feeList.isEmpty()) {
 					MerchantFeeContent feeContent = feeList.get(0);
 					fee = feeContent.getPlatformFee();
 				}
-				datasMap = new HashMap<>();
-				Iterator<String> sIterator = json.keys();
-				while (sIterator.hasNext()) {
-					// 获得key
-					String key = sIterator.next();
-					// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
-					String value = StringUtil.replace(json.getString(key));
-					if ("platformFee".equals(key) && StringEmptyUtils.isNotEmpty(value)) {
-						datasMap.put(key, fee + Double.parseDouble(value));
-					} else {
-						datasMap.put(key, value);
-					}
+				JSONObject idCardJson = null;
+				Table reIdcardList = paymentDao.getIdCardDetails(params);
+				if (reIdcardList != null && !reIdcardList.getRows().isEmpty()) {
+					com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList)
+							.getJSONArray("rows");
+					idCardJson = JSONObject.fromObject(idCardJsonArr.get(0));
 				}
-				datasMap.remove("userdata");
-				list.add(datasMap);
+				mergeDatas(json, fee, newlist, idCardJson);
+
 			}
 			long endTime = System.currentTimeMillis();
 			System.out.println("--查询综合报表-耗时->>>" + (endTime - startTime) + "ms");
-			return ReturnInfoUtils.successDataInfo(list);
+			return ReturnInfoUtils.successDataInfo(newlist);
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无支付单报表数据!");
+			return ReturnInfoUtils.errorInfo("暂无报表数据!");
 		}
+	}
+
+	private void mergeDatas(JSONObject json, double fee, List<Object> newlist, JSONObject idCardJson) {
+		Map<String, Object> datasMap = new HashMap<>();
+		Iterator<String> sIterator = json.keys();
+		while (sIterator.hasNext()) {//合并商户手续费
+			// 获得key
+			String key = sIterator.next();
+			// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
+			String value = StringUtil.replace(json.getString(key));
+			if ("platformFee".equals(key) && StringEmptyUtils.isNotEmpty(value)) {
+				datasMap.put(key, fee + Double.parseDouble(value));
+			} else {
+				datasMap.put(key, value);
+			}
+		}
+		if (idCardJson != null && !idCardJson.isEmpty()) {
+			Iterator<String> sIterator2 = idCardJson.keys();
+			while (sIterator2.hasNext()) {//身份证实名手续费
+				// 获得key
+				String key = sIterator2.next();
+				// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
+				String value = StringUtil.replace(idCardJson.getString(key));
+				datasMap.put(key, value);
+			}
+		}
+		datasMap.remove("userdata");
+		newlist.add(datasMap);
+
 	}
 
 }

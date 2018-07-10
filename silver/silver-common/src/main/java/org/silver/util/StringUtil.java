@@ -97,7 +97,8 @@ public class StringUtil {
 	}
 	/**
 	 * 通用替换多表查询字符串
-	 * 例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"}
+	 * 例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"} 
+	 * 返回：深圳市前海爱库
 	 * @param str
 	 * @return
 	 */

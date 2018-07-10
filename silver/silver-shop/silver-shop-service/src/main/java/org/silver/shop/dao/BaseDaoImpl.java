@@ -514,7 +514,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 	private void appendOrParams(List orList, StringBuilder hql, List<Object> list) {
 		if (orList != null && !orList.isEmpty()) {
-			// 移除 最后拼接的-->AND
 			//hql.delete(hql.length() - 4,hql.length());
 			hql.append(" ( ");
 			for(int i = 0 ; i < orList.size() ; i++){
@@ -530,7 +529,6 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			// 截取掉最后的 or 防止出错
 			hql.delete(hql.length()- 3 , hql.length() );
 			hql.append(" ) Order By id DESC");
-			System.out.println("==hql=="+hql.toString());
 		} else {
 			hql.append(" 1=1 Order By id DESC");
 		}
