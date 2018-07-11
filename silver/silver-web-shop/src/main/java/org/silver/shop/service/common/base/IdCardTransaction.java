@@ -13,8 +13,8 @@ public class IdCardTransaction {
 	@Reference
 	private IdCardService idCardService;
 	
-	public Map<String,Object> getAllIdCard(int page, int size, String idName,String idNumber, String type) {
-		return idCardService.getAllIdCard(idName,idNumber,page,size,type);
+	public Map<String,Object> getAllIdCard(int page, int size, Map<String,Object>datasMap) {
+		return idCardService.getAllIdCard(page,size,datasMap);
 	}
 
 	

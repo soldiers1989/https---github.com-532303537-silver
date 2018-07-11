@@ -384,38 +384,45 @@ public class MorderServiceImpl implements MorderService {
 
 	@Override
 	public Map<String, Object> deleteByOrderId(String merchantId, String merchantName, String orderIdPack) {
-		Map<String, Object> params = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(orderIdPack);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ReturnInfoUtils.errorInfo("订单Id信息错误,请重试!");
+			return ReturnInfoUtils.errorInfo("订单Id参数格式错误!");
 		}
+		Map<String, Object> params = new HashMap<>();
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		Map<String, Object> errMap = null;
 		for (int i = 0; i < jsonList.size(); i++) {
-			Map<String, Object> item = (Map<String, Object>) jsonList.get(i);
-			String orderId = item.get("orderId") + "";
+			params.clear();
 			params.put("merchant_no", merchantId);
+			String orderId = jsonList.get(i) + "";
 			params.put(ORDER_ID, orderId);
 			List<Morder> orderlist = morderDao.findByProperty(Morder.class, params, 1, 1);
-			params.clear();
 			if (orderlist != null && !orderlist.isEmpty()) {
 				Morder order = orderlist.get(0);
 				// 备案状态：1-未备案,2-备案中,3-备案成功、4-备案失败
 				if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
 					// 删除标识:0-未删除,1-已删除
 					order.setDel_flag(1);
-					if (morderDao.update(order)) {
-						return ReturnInfoUtils.successInfo();
+					order.setUpdate_by(merchantName);
+					order.setUpdate_date(new Date());
+					if (!morderDao.update(order)) {
+						errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), "订单号[" + orderId + "]删除失败,服务器繁忙!");
+						errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+						errorList.add(errMap);
 					}
-					return ReturnInfoUtils.errorInfo("订单删除失败,服务器繁忙!");
-					// deleteMsubByOrderId(orderId);
 				} else {
-					return ReturnInfoUtils.errorInfo("订单当前状态不允许删除,请联系管理员!");
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(), "订单号[" + orderId + "]订单当前状态不允许删除,请联系管理员!");
+					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					errorList.add(errMap);
 				}
 			}
 		}
-		return ReturnInfoUtils.errorInfo("订单信息参数错误,服务器繁忙!");
+		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
 	}
 
 	@Override

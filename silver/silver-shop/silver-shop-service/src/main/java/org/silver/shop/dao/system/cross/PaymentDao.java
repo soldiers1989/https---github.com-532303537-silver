@@ -83,11 +83,5 @@ public interface PaymentDao  extends BaseDao{
 	 */
 	public List<ManualPaymentResendContent> getResendPaymentInfo(Class<ManualPaymentResendContent> entity,
 			Map<String, Object> params, int page, int size);
-
-	/**
-	 * 查询身份证统计报表详情
-	 * @param params
-	 * @return
-	 */
-	public Table getIdCardDetails(Map<String, Object> params);
+	
 }

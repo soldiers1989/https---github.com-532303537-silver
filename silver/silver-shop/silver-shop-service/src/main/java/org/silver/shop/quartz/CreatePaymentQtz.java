@@ -27,12 +27,14 @@ import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import net.sf.json.JSONObject;
 
 /**
  * 定时任务,扫描商户自助申报的订单,生成支付单信息
  */
+@Component
 public class CreatePaymentQtz {
 	/**
 	 * 驼峰命名:商户Id
@@ -207,7 +209,7 @@ public class CreatePaymentQtz {
 	}
 
 	/**
-	 * 获取本地实名库是否已存在该商户的订单身份证号码
+	 * 根据商户id、姓名、身份证号码、进行实名认证，先扫描本地实名数据库,查询是否已认证,本地没有认证时则直接像网关发起实名认证
 	 * 
 	 * @param idName
 	 *            姓名
@@ -217,13 +219,13 @@ public class CreatePaymentQtz {
 	 *            商户id
 	 * @return Map
 	 */
-	private Map<String, Object> getIdCard(String idName, String idNumber, String merchantId) {
+	public Map<String, Object> getIdCard(String idName, String idNumber, String merchantId) {
 		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idNumber)
 				|| StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("保存实名信息失败,参数错误!");
 		}
 		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
+		params.put(MERCHANT_ID, merchantId);
 		params.put("name", idName.trim());
 		params.put("idNumber", idNumber.trim());
 		List<IdCard> reIdCardList = orderDao.findByProperty(IdCard.class, params, 1, 1);
@@ -263,7 +265,7 @@ public class CreatePaymentQtz {
 			String status = reMap.get(BaseCode.STATUS.toString()) + "";
 			String msgId = reMap.get("messageID") + "";
 			String msg = reMap.get("msg") + "";
-			System.out.println("---实名认证->>" + reMap.toString());
+			System.out.println("--实名认证--结果->" + reMap.toString());
 			if ("1".equals(status)) {// 实名认证成功
 				return addIdCardInfo(msgId, merchantId, merchantCost.getMerchantName(), idName, idNumber, "success",
 						msg);
@@ -298,10 +300,10 @@ public class CreatePaymentQtz {
 		order.setUpdate_date(new Date());
 		String oldNote = order.getOrder_re_note();
 		if (StringEmptyUtils.isEmpty(oldNote)) {
-			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!");
+			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
 		} else {
 			order.setOrder_re_note(
-					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!");
+					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
 		}
 		return orderDao.update(order);
 	}
@@ -338,7 +340,6 @@ public class CreatePaymentQtz {
 				if ("1".equals(status)) {// 实名认证成功
 					return updateIdcardStatus(idCard, "success", msg, msgId);
 				} else if ("-1".equals(status)) {// 当向网关服务器发起身份证验证失败后
-					System.out.println("--当向网关服务器发起身份证验证失败后---更新状态");
 					Map<String, Object> reIdcardMap = updateIdcardStatus(idCard, FAILURE, msg, msgId);
 					if (!"1".equals(reIdcardMap.get(BaseCode.STATUS.toString()))) {
 						return reIdcardMap;

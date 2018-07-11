@@ -301,7 +301,6 @@ public final class SearchUtils {
 					orMap = new HashMap<>();
 					orMap.put("order_record_status", 10);
 					orList.add(orMap);
-					System.out.println("-orList-->>"+orList.toString());
 				}else{
 					paramMap.put(key, Integer.parseInt(value));
 				}
@@ -732,9 +731,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -757,10 +754,10 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put("blurry", blurryMap);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 	
 	/**
@@ -772,9 +769,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -797,10 +792,10 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put("blurry", blurryMap);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 	
 	/**
@@ -812,9 +807,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -831,10 +824,10 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put("blurry", blurryMap);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 	
 	/**
@@ -846,9 +839,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
 		}
-		Map<String, Object> item = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -885,9 +876,66 @@ public final class SearchUtils {
 				break;
 			}
 		}
+		Map<String, Object> item = new HashMap<>();
 		item.put(PARAM, paramMap);
-		item.put("blurry", blurryMap);
 		item.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return item;
+	}
+
+	/**
+	 * 通用检索身份证实名库工具类
+	 * @param datasMap
+	 * @return
+	 */
+	public static Map<String, Object> universalIdCardSearch(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
+		}
+		Map<String, Object> paramMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "merchantId":
+				paramMap.put(key, value);
+				break;
+			case "startDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "endDate":
+				paramMap.put(key, DateUtil.parseDate2(value));
+				break;
+			case "idNumber":
+				paramMap.put(key, value);
+				break;
+			case "idName":
+				paramMap.put(key, value);
+				break;
+			case "type":
+				try{
+					paramMap.put(key, Integer.parseInt(value));	
+				}catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("类型参数格式错误!");
+				}
+				break;
+			case "status":
+				paramMap.put(key, value);
+				break;	
+			case "certifiedNo":
+				paramMap.put(key, value);
+				break;	
+			default:
+				break;
+			}
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 }

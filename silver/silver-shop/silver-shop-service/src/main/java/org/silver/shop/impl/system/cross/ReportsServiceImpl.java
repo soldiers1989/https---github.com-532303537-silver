@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.silver.shop.api.system.cross.ReportsService;
 import org.silver.shop.dao.system.cross.PaymentDao;
+import org.silver.shop.dao.system.cross.ReportsDao;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -26,12 +27,16 @@ public class ReportsServiceImpl implements ReportsService {
 
 	@Autowired
 	private PaymentDao paymentDao;
-
+	@Autowired
+	private ReportsDao reportsDao;
+	
+	
 	@Override
 	public Map<String, Object> getSynthesisReportDetails(Map<String, Object> params) {
 		if (params == null || params.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
+		Map<String, Object> viceMap = null;
 		long startTime = System.currentTimeMillis();
 		Table reList = paymentDao.getPaymentReportDetails(params);
 		if (reList == null) {
@@ -55,14 +60,16 @@ public class ReportsServiceImpl implements ReportsService {
 					fee = feeContent.getPlatformFee();
 				}
 				JSONObject idCardJson = null;
-				Table reIdcardList = paymentDao.getIdCardDetails(params);
+				viceMap = new HashMap<>();
+				viceMap.put("merchantId", merchantId);
+				viceMap.put("date", StringUtil.replace(json.get("date")+""));
+				Table reIdcardList = reportsDao.getIdCardDetails(viceMap);
 				if (reIdcardList != null && !reIdcardList.getRows().isEmpty()) {
 					com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList)
 							.getJSONArray("rows");
 					idCardJson = JSONObject.fromObject(idCardJsonArr.get(0));
 				}
 				mergeDatas(json, fee, newlist, idCardJson);
-
 			}
 			long endTime = System.currentTimeMillis();
 			System.out.println("--查询综合报表-耗时->>>" + (endTime - startTime) + "ms");
@@ -75,7 +82,7 @@ public class ReportsServiceImpl implements ReportsService {
 	private void mergeDatas(JSONObject json, double fee, List<Object> newlist, JSONObject idCardJson) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Iterator<String> sIterator = json.keys();
-		while (sIterator.hasNext()) {//合并商户手续费
+		while (sIterator.hasNext()) {// 合并商户手续费
 			// 获得key
 			String key = sIterator.next();
 			// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
@@ -88,7 +95,7 @@ public class ReportsServiceImpl implements ReportsService {
 		}
 		if (idCardJson != null && !idCardJson.isEmpty()) {
 			Iterator<String> sIterator2 = idCardJson.keys();
-			while (sIterator2.hasNext()) {//身份证实名手续费
+			while (sIterator2.hasNext()) {// 身份证实名手续费
 				// 获得key
 				String key = sIterator2.next();
 				// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
@@ -98,7 +105,23 @@ public class ReportsServiceImpl implements ReportsService {
 		}
 		datasMap.remove("userdata");
 		newlist.add(datasMap);
+	}
 
+	@Override
+	public Map<String, Object> getIdCardCertification(Map<String, Object> params) {
+		if(params == null){
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		Table reIdcardList = reportsDao.getIdCardCertificationDetails(params);
+		if(reIdcardList == null){
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		}else if (!reIdcardList.getRows().isEmpty()) {
+			com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList)
+					.getJSONArray("rows");
+			return ReturnInfoUtils.successDataInfo(idCardJsonArr);
+		}else{
+			return ReturnInfoUtils.errorInfo("暂无数据");
+		}
 	}
 
 }

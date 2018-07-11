@@ -17,24 +17,18 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
-import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.manual.MpayService;
-import org.silver.shop.api.system.organization.AgentService;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.api.system.tenant.MerchantIdCardCostService;
-import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
-import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
-import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
-import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
@@ -44,12 +38,9 @@ import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.WalletUtils;
-import org.silver.util.CheckDatasUtil;
 import org.silver.util.CompressUtils;
-import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
-import org.silver.util.MapSortUtils;
 import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
@@ -79,10 +70,6 @@ public class MpayServiceImpl implements MpayService {
 	@Autowired
 	private GoodsRecordService goodsRecordService;
 	@Autowired
-	private MerchantWalletService merchantWalletService;
-	@Autowired
-	private MerchantWalletLogService merchantWalletLogService;
-	@Autowired
 	private BufferUtils bufferUtils;
 	@Autowired
 	private MerchantUtils merchantUtils;
@@ -92,8 +79,6 @@ public class MpayServiceImpl implements MpayService {
 	private MerchantFeeService merchantFeeService;
 	@Autowired
 	private WalletUtils walletUtils;
-	@Autowired
-	private AgentService agentService;
 	@Autowired
 	private MerchantIdCardCostService merchantIdCardCostService;
 
@@ -243,11 +228,9 @@ public class MpayServiceImpl implements MpayService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
 		statusMap.put("serialNo", serialNo);
-		//statusMap.put("idCardList", reCheckMap.get("idCardList"));
 		statusMap.put("orderList", reCheckMap.get("list"));
 		statusMap.put(BaseCode.ERROR.toString(), errorList);
 		statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-		// statusMap.put("totalAmountPaid", reCheckMap.get("totalAmountPaid"));
 		return statusMap;
 	}
 
@@ -392,15 +375,7 @@ public class MpayServiceImpl implements MpayService {
 				if ((balance - (serviceFee + idCertificationFee)) < 0) {
 					return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
 				}
-				/*
-				 * Map<String, Object> reTollMap =
-				 * manualOrderToll(merchantWallet, fee, totalAmountPaid,
-				 * merchant, newList); if
-				 * (!"1".equals(reTollMap.get(BaseCode.STATUS.toString()))) {
-				 * return reTollMap; }
-				 */
 			} catch (Exception e) {
-				e.printStackTrace();
 				logger.error("---订单平台服务费计算错误-->", e);
 				return ReturnInfoUtils.errorInfo("扣费失败,服务器繁忙!");
 			}
@@ -445,10 +420,12 @@ public class MpayServiceImpl implements MpayService {
 				params.put(CUSTOMS_CODE, customsCode);
 				params.put(CIQ_ORG_CODE, ciqOrgCode);
 				params.put("type", "paymentRecord");
-				List<MerchantFeeContent> reFeeList = morderDao.findByProperty(MerchantFeeContent.class, null, 0, 0);
+				List<MerchantFeeContent> reFeeList = morderDao.findByProperty(MerchantFeeContent.class, params,1, 1);
 				if (reFeeList != null && !reFeeList.isEmpty()) {
 					MerchantFeeContent feeContent = reFeeList.get(0);
 					paymentFee = feeContent.getPlatformFee();
+				}else{
+					return ReturnInfoUtils.errorInfo("查询商户费率失败,请联系管理员!");
 				}
 			}
 			// 根据前台传递的商户订单备案口岸费率Id查询
@@ -468,630 +445,6 @@ public class MpayServiceImpl implements MpayService {
 		map.put("backCoverFlag", backCoverFlag);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
-	}
-
-	/**
-	 * 根据商户勾选的所有订单总金额进行申报手续费计算
-	 * 
-	 * @param merchantWallet
-	 *            商户钱包
-	 * @param fee
-	 *            商户口岸费率
-	 * @param totalAmountPaid
-	 *            订单总金额
-	 * @param merchant
-	 *            商户信息实体类
-	 * @param newList
-	 *            校验通过的订单信息集合
-	 * @return Map
-	 */
-	private Map<String, Object> manualOrderToll(MerchantWalletContent merchantWallet, double fee,
-			double totalAmountPaid, Merchant merchant, List<Object> newList) {
-		if (merchant == null || newList == null) {
-			return ReturnInfoUtils.errorInfo("商户钱包扣款时商户信息不能为空!");
-		}
-		// 钱包余额
-		double balance = merchantWallet.getBalance();
-		// 订申报单手续费
-		double serviceFee = totalAmountPaid * fee;
-		// 商户钱包扣款
-		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet, balance,
-				serviceFee);
-		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletDeductionMap;
-		}
-		// 查询代理商钱包
-		Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
-				merchant.getAgentParentName());
-		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> datas = new HashMap<>();
-		datas.put(MERCHANT_ID, merchant.getMerchantId());
-		datas.put(WALLET_ID, merchantWallet.getWalletId());
-		datas.put(MERCHANT_NAME, merchant.getMerchantName());
-		datas.put("serialName", "订单申报-手续费");
-		datas.put("balance", balance);
-		datas.put("amount", serviceFee);
-		datas.put("type", 4);
-		datas.put("flag", "out");
-		datas.put("note", "共计推送[" + newList.size() + "]单,订单号详情为#" + newList.toString());
-		datas.put("targetWalletId", agentWallet.getWalletId());
-		datas.put("targetName", agentWallet.getAgentName());
-		datas.put("count", newList.size());
-		datas.put("status", "success");
-		// 添加商户钱包流水日志
-		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
-		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletLogMap;
-		}
-		datas.put("totalAmountPaid", totalAmountPaid);
-		// 代理商收取订单申报服务费
-		return agentChargeFee(merchant.getAgentParentId(), serviceFee, datas);
-	}
-
-	
-
-	private void startIdcardCertified(List<Object> newList, Merchant merchant, String idCardVerifySwitch,
-			String accessToken, JSONArray realList, JSONArray successList, List<Map<String, Object>> errorList) {
-		Map<String, Object> params = new HashMap<>();
-		for (int i = 0; i < newList.size(); i++) {
-			String orderId = newList.get(i) + "";
-			if (StringEmptyUtils.isNotEmpty(orderId)) {
-				params.clear();
-				params.put(ORDER_ID, orderId);
-				params.put("merchant_no", merchant.getMerchantId());
-				System.out.println("--开始循环--订单号-->" + orderId);
-				List<Morder> reOrderList = morderDao.findByProperty(Morder.class, params, 1, 1);
-				if (reOrderList != null && !reOrderList.isEmpty()) {
-					Morder order = reOrderList.get(0);
-					// 身份证实名认证标识：0-未实名、1-已实名
-					int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
-					if (idcardCertifiedFlag == 0 || idcardCertifiedFlag == 2) {
-						Map<String, Object> reIdCardMap = getIdCard(idCardVerifySwitch, order.getOrderDocName(),
-								order.getOrderDocId(), merchant, accessToken);
-						String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
-						if ("1".equals(status)) {
-							realList.add(order.getOrder_id());
-						} else if ("200".equals(status)) {
-							// 当200状态时,则代表实名库已存在,不需要计费的订单
-							successList.add(order.getOrder_id());
-						} else if ("500".equals(status)) {
-							errorList.add(new ReturnInfoUtils().errorInfo(
-									"订单号[" + order.getOrder_id() + "]" + reIdCardMap.get(BaseCode.MSG.toString())));
-						} else {
-							realList.add(order.getOrder_id());
-							errorList.add(new ReturnInfoUtils()
-									.errorInfo("订单号[" + order.getOrder_id() + "]实名认证失败,姓名或身份证号码错误!"));
-						}
-					}
-				}
-			}
-		}
-
-	}
-
-	private Map<String, Object> updateAgentWallet(MerchantWalletContent merchantWallet, double serviceFee,
-			int successCount, AgentWalletContent agentWallet) {
-		// 获取钱包余额
-		double agentBalance = agentWallet.getBalance();
-		agentWallet.setBalance(agentBalance + serviceFee);
-		if (!morderDao.update(agentWallet)) {
-			return ReturnInfoUtils.errorInfo("实名认证,代理商收款失败,服务器繁忙!");
-		}
-		Map<String, Object> datas = new HashMap<>();
-		datas.put(WALLET_ID, agentWallet.getWalletId());
-		datas.put("agentName", agentWallet.getAgentName());
-		datas.put("serialName", "实名认证-手续费");
-		datas.put("balance", agentBalance);
-		datas.put("amount", serviceFee);
-		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
-		datas.put("type", 4);
-		datas.put("flag", "in");
-		datas.put("note", "商户实名认证[" + successCount + "]条后,平台收取手续费");
-		datas.put("targetWalletId", merchantWallet.getWalletId());
-		datas.put("targetName", merchantWallet.getMerchantId());
-		datas.put("status", "success");
-		// 代理商支付平台佣金后记录支付日志
-		return addAgentWalletLog(datas);
-	}
-
-	/**
-	 * 商户钱包进行身份证实名扣费更新
-	 * 
-	 * @param merchant
-	 *            商户信息实体类
-	 * @param merchantWallet
-	 *            商户钱包信息
-	 * @param balance
-	 *            商户钱包余额
-	 * @param serviceFee
-	 *            平台服务费
-	 * @param count
-	 *            数量
-	 * @param agentWallet
-	 *            代理商钱包
-	 * @return Map
-	 */
-	private Map<String, Object> updateMerchantWallet(Merchant merchant, MerchantWalletContent merchantWallet,
-			double balance, double serviceFee, int count, AgentWalletContent agentWallet) {
-		// 商户钱包扣款
-		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet, balance,
-				serviceFee);
-		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletDeductionMap;
-		}
-		Map<String, Object> datas = new HashMap<>();
-		datas.put(MERCHANT_ID, merchant.getMerchantId());
-		datas.put(WALLET_ID, merchantWallet.getWalletId());
-		datas.put(MERCHANT_NAME, merchant.getMerchantName());
-		datas.put("serialName", "实名认证-手续费");
-		datas.put("balance", balance);
-		datas.put("amount", serviceFee);
-		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
-		datas.put("type", 4);
-		datas.put("flag", "out");
-		datas.put("note", "共计实名认证[" + count + "]条");
-		datas.put("targetWalletId", agentWallet.getWalletId());
-		datas.put("targetName", agentWallet.getAgentName());
-		datas.put("status", "success");
-		// 添加商户钱包流水日志
-		return merchantWalletLogService.addWalletLog(datas);
-	}
-
-	/**
-	 * 获取本地实名库是否已存在该商户的订单身份证号码
-	 * 
-	 * @param idCardVerifySwitch
-	 *            实名认证开关
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param merchant.
-	 *            商户id
-	 * @param accessToken
-	 *            网关tok
-	 * @return Map
-	 */
-	private Map<String, Object> getIdCard(String idCardVerifySwitch, String idName, String idNumber, Merchant merchant,
-			String accessToken) {
-		if (StringEmptyUtils.isEmpty(idCardVerifySwitch) || StringEmptyUtils.isEmpty(idName)
-				|| StringEmptyUtils.isEmpty(idNumber) || merchant == null) {
-			return ReturnInfoUtils.errorInfo("保存实名信息失败,参数错误!");
-		}
-		Map<String, Object> params = new HashMap<>();
-		params.put(MERCHANT_ID, merchant.getMerchantId());
-		params.put("name", idName.trim());
-		params.put("idNumber", idNumber.trim());
-		List<IdCard> reIdCardList = morderDao.findByProperty(IdCard.class, params, 1, 1);
-		if (reIdCardList == null) {
-			return ReturnInfoUtils.errorInfo("查询身份证信息失败,服务器繁忙!");
-		} else if (reIdCardList.isEmpty()) {
-			return saveIdCardInfo(idCardVerifySwitch, idName, idNumber, merchant, accessToken);
-		} else {// 实名库已存在
-			IdCard idCard = reIdCardList.get(0);
-			return updateIdcardInfo(idCard, idCardVerifySwitch, accessToken);
-		}
-	}
-
-	/**
-	 * 更新已存在的身份证实名信息
-	 * 
-	 * @param idCard
-	 *            身份证实名信息实体类
-	 * @param idCardVerifySwitch
-	 *            发起实名认证开关
-	 * @param accessToken
-	 * @return Map
-	 */
-	private Map<String, Object> updateIdcardInfo(IdCard idCard, String idCardVerifySwitch, String accessToken) {
-		if (idCard == null) {
-			return ReturnInfoUtils.errorInfo("更新身份证实名认证状态失败,参数错误!");
-		}
-		Map<String, Object> map = null;
-		if ("success".equals(idCard.getStatus())) {
-			map = new HashMap<>();
-			// 该状态用于实名数据库已存在的身份证号码姓名
-			map.put(BaseCode.STATUS.toString(), "200");
-			map.put(BaseCode.DATAS.toString(), idCard);
-			return map;
-		} else if ("wait".equals(idCard.getStatus())) {// 当实名数据库已存在,但并未向实名网关发起过验证时
-			if ("on".equals(idCardVerifySwitch)) {// 当商户实名认证开启时
-				Map<String, Object> reMap = sendIdCardCertification(idCard.getName(), idCard.getIdNumber(),
-						accessToken);
-				String status = reMap.get(BaseCode.STATUS.toString()) + "";
-				String msgId = reMap.get("messageID") + "";
-				String msg = reMap.get("msg") + "";
-				if ("1".equals(status)) {// 实名认证成功
-					Map<String, Object> reIdcardMap = updateIdcardStatus(idCard, "success", msg, msgId);
-					if (!"1".equals(reIdcardMap.get(BaseCode.STATUS.toString()))) {
-						return reIdcardMap;
-					}
-					map = new HashMap<>();
-					map.put(BaseCode.STATUS.toString(), "200");
-					map.put(BaseCode.DATAS.toString(), idCard);
-					return map;
-				} else if ("-1".equals(status)) {// 当向网关服务器发起身份证验证失败后
-					Map<String, Object> reIdcardMap = updateIdcardStatus(idCard, "failure", msg, msgId);
-					if (!"1".equals(reIdcardMap.get(BaseCode.STATUS.toString()))) {
-						return reIdcardMap;
-					}
-					map = new HashMap<>();
-					map.put(BaseCode.STATUS.toString(), "200");
-					map.put(BaseCode.DATAS.toString(), idCard);
-					return map;
-				}
-				// 该状态用于实名数据库已存在的身份证号码姓名
-				map = new HashMap<>();
-				map.put(BaseCode.STATUS.toString(), "500");
-				map.put(BaseCode.MSG.toString(), "实名认证失败,服务器繁忙,请重试!");
-				return map;
-			} else {
-				map = new HashMap<>();
-				map.put(BaseCode.STATUS.toString(), "200");
-				map.put(BaseCode.DATAS.toString(), idCard);
-				return map;
-			}
-		} else {
-			map = new HashMap<>();
-			map.put(BaseCode.STATUS.toString(), "-1");
-			return map;
-		}
-	}
-
-	/**
-	 * 更新实名数据库中已有的身份证信息状态
-	 * 
-	 * @param idCard
-	 *            身份证实名信息类
-	 * @param status
-	 *            认证状态:success-成功;failure-失败;wait-待验证
-	 * @param msg
-	 *            网关返回消息
-	 * @param msgId
-	 *            验证流水号
-	 * @return Map
-	 */
-	private Map<String, Object> updateIdcardStatus(IdCard idCard, String status, String msg, String msgId) {
-		if (idCard == null) {
-			return ReturnInfoUtils.errorInfo("实名信息错误！");
-		}
-		if (StringEmptyUtils.isNotEmpty(msgId)) {
-			idCard.setCertifiedNo(msgId);
-		}
-		idCard.setStatus(status);
-		if ("success".equalsIgnoreCase(status)) {
-			idCard.setCertifiedDate(new Date());
-		}
-		String note = idCard.getNote();
-		if (StringEmptyUtils.isNotEmpty(note)) {
-			note = DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + note;
-			// idCard.setNote();
-		}
-		if (StringEmptyUtils.isNotEmpty(msg)) {
-			idCard.setNote(msg);
-		}
-		idCard.setUpdateDate(new Date());
-		if (!morderDao.update(idCard)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 保存身份证实名信息
-	 * 
-	 * @param idCardVerifySwitch
-	 *            实名认证开关
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param merchant
-	 *            商户实体信息类
-	 * @param accessToken
-	 *            网关tok
-	 * @return Map
-	 */
-	private Map<String, Object> saveIdCardInfo(String idCardVerifySwitch, String idName, String idNumber,
-			Merchant merchant, String accessToken) {
-		if ("on".equals(idCardVerifySwitch)) {// 当商户实名认证开启时
-			Map<String, Object> reMap = sendIdCardCertification(idName, idNumber, accessToken);
-			String status = reMap.get(BaseCode.STATUS.toString()) + "";
-			String msgId = reMap.get("messageID") + "";
-			String msg = reMap.get("msg") + "";
-			System.out.println("---实名认证->>" + reMap.toString());
-			if ("1".equals(status)) {// 实名认证成功
-				return addIdCardInfo(msgId, merchant.getMerchantId(), merchant.getMerchantName(), idName, idNumber,
-						"success", msg);
-			} else if ("-1".equals(status)) {// 当向网关服务器发起身份证验证失败后
-				Map<String, Object> reIdCardMap = addIdCardInfo(msgId, merchant.getMerchantId(),
-						merchant.getMerchantName(), idName, idNumber, "failure", msg);
-				if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
-					return reIdCardMap;
-				}
-				return reMap;
-			} else {
-				Map<String, Object> reIdCardMap = addIdCardInfo(msgId, merchant.getMerchantId(),
-						merchant.getMerchantName(), idName, idNumber, "wait", msg);
-				if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
-					return reIdCardMap;
-				}
-				Map<String, Object> map = new HashMap<>();
-				map.put(BaseCode.STATUS.toString(), "500");
-				map.put(BaseCode.MSG.toString(), "实名认证失败,服务器繁忙,请重试!");
-				return map;
-			}
-		} else {// 当商户实名认证关闭时
-			return addIdCardInfo(null, merchant.getMerchantId(), merchant.getMerchantName(), idName, idNumber, "wait",
-					"");
-		}
-	}
-
-	/**
-	 * 保存身份证实名认证信息
-	 * 
-	 * @param msgId
-	 *            实名认证流水Id
-	 * @param merchantId
-	 *            商户id
-	 * @param merchantName
-	 *            商户名称
-	 * @param idName
-	 *            姓名
-	 * @param idNumber
-	 *            身份证号码
-	 * @param status
-	 *            认证状态:success-成功;failure-失败;wait-待验证
-	 * @param msg
-	 *            认证消息
-	 * @return Map key-datas 身份证实名实体
-	 */
-	private Map<String, Object> addIdCardInfo(String msgId, String merchantId, String merchantName, String idName,
-			String idNumber, String status, String msg) {
-		IdCard idCard = new IdCard();
-		if (StringEmptyUtils.isNotEmpty(msgId)) {
-			idCard.setCertifiedNo(msgId);
-		}
-		idCard.setMerchantId(merchantId);
-		idCard.setMerchantName(merchantName);
-		idCard.setName(idName);
-		idCard.setIdNumber(idNumber);
-		// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-		idCard.setType(4);
-		// 认证状态:success-成功;failure-失败;wait-待验证
-		idCard.setStatus(status);
-		if (StringEmptyUtils.isNotEmpty(msg)) {
-			idCard.setNote(msg);
-		}
-		if ("success".equals(status)) {// 认证时间
-			idCard.setCertifiedDate(new Date());
-		}
-		idCard.setCreateDate(new Date());
-		if (!morderDao.add(idCard)) {
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successDataInfo(idCard);
-	}
-
-	/**
-	 * 开始发送身份证验证请求
-	 * 
-	 * @param idName
-	 *            姓名
-	 * @param idCard
-	 *            身份证号码
-	 * @param accessToken
-	 *            网关tok
-	 * @return Map
-	 */
-	private Map<String, Object> sendIdCardCertification(String idName, String idCard, String accessToken) {
-		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idCard)
-				|| StringEmptyUtils.isEmpty(accessToken)) {
-			return ReturnInfoUtils.errorInfo("发送身份证校验,请求参数不能为空!");
-		}
-		System.out.println("--发送实名认证->>>" + idName + ";--身份证号码->" + idCard);
-		Map<String, Object> params = new HashMap<>();
-		params.put("version", "1.0");
-		params.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
-		params.put("businessCode", "YS02");
-		JSONObject bizContent = new JSONObject();
-		bizContent.put("user_ID", idCard);
-		bizContent.put("user_name", idName);
-		params.put("bizContent", bizContent);
-		params.put("timestamp", System.currentTimeMillis());
-		params = new MapSortUtils().sortMap(params);
-		String str2 = YmMallConfig.APPKEY + accessToken + params;
-		String clientSign = null;
-		try {
-			clientSign = MD5.getMD5(str2.getBytes("utf-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return ReturnInfoUtils.errorInfo("加密签名错误!");
-		}
-		params.put("clientSign", clientSign);
-		// String result =
-		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
-		// params);
-		String result = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params);
-		if (StringEmptyUtils.isEmpty(result)) {
-			return ReturnInfoUtils.errorInfo("验证身份证失败,网络异常!");
-		} else {
-			return JSONObject.fromObject(result);
-		}
-	}
-
-	/**
-	 * 代理商下商户推送订单后佣金结算
-	 * 
-	 * @param agentId
-	 *            代理商Id
-	 * @param serviceFee
-	 *            平台服务费
-	 * @param datas
-	 *            参数
-	 * @return Map
-	 */
-	private Map<String, Object> agentChargeFee(String agentId, double serviceFee, Map<String, Object> datas) {
-		Map<String, Object> reAgentWalletMap = agentWalletReceipt(agentId, serviceFee, datas);
-		if (!"1".equals(reAgentWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentWalletMap;
-		}
-		double agentFee = Double.parseDouble(datas.get("agentFee") + "");
-		// 银盟平台进行代理商订单佣金收取
-		Map<String, Object> rePlatformMap = platformCommissionFee(serviceFee);
-		if (!"1".equals(rePlatformMap.get(BaseCode.STATUS.toString()))) {
-			return rePlatformMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) rePlatformMap.get(BaseCode.DATAS.toString());
-		// 获取以更新后得总代理钱包余额剪掉佣金,得到原来未变更的钱包余额
-		double balance = agentWallet.getBalance() - agentFee;
-		// 代理商收款来源钱包Id与商户名称
-		String walletId = datas.get(WALLET_ID) + "";
-		String agentName = datas.get("agentName") + "";
-		datas.put(WALLET_ID, agentWallet.getWalletId());
-		datas.put("agentName", "银盟");
-		datas.put("serialName", "申报订单-平台佣金");
-		datas.put("balance", balance);
-		datas.put("amount", agentFee);
-		datas.put("type", 4);
-		datas.put("flag", "in");
-		datas.put("note", "商户申报[" + datas.get("count") + "]订单后,平台收取代理商佣金");
-		datas.put("targetWalletId", walletId);
-		datas.put("targetName", agentName);
-
-		// 添加平台总代理商钱包流水日志
-		Map<String, Object> reTotalWalletLogMap = addAgentWalletLog(datas);
-		if (!"1".equals(reTotalWalletLogMap.get(BaseCode.STATUS.toString()))) {
-			return reTotalWalletLogMap;
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 代理商钱包清算，先将商户申报订单时服务费加入至代理商钱包中,并生成加款日志记录,然后根据代理商与总代理(暂写死为银盟为总代理)协商的佣金率,
-	 * 进行平台平台服务费的扣款,并进行日志记录
-	 * 
-	 * @param agentId
-	 *            商户对应的代理商Id
-	 * @param serviceFee
-	 *            平台服务费
-	 * @param datas
-	 *            日志参数
-	 * @return Map
-	 */
-	private Map<String, Object> agentWalletReceipt(String agentId, double serviceFee, Map<String, Object> datas) {
-		Map<String, Object> reAgentMap = agentService.getAgentInfo(agentId);
-		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentMap;
-		}
-		AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, agent.getAgentId(), agent.getAgentName());
-		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		// 获取钱包余额
-		double balance = agentWallet.getBalance();
-		agentWallet.setBalance(balance + serviceFee);
-		if (!morderDao.update(agentWallet)) {
-			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
-		}
-		// 代理商收款来源钱包Id与商户名称
-		String walletId = datas.get(WALLET_ID) + "";
-		String merchantName = datas.get(MERCHANT_NAME) + "";
-		// 重新放入钱包日志参数
-		datas.put(WALLET_ID, agentWallet.getWalletId());
-		datas.put("agentName", agent.getAgentName());
-		datas.put("balance", balance);
-		datas.put("flag", "in");
-		// 类型1-佣金、2-充值、3-提现、4-缴费
-		datas.put("type", 1);
-		datas.put("targetWalletId", walletId);
-		datas.put("targetName", merchantName);
-		datas.put("serialName", "商户申报订单-手续费");
-		// 添加代理商进账钱包流水日志
-		Map<String, Object> reWalletLogMap = addAgentWalletLog(datas);
-		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletLogMap;
-		}
-		String strAmount = String.valueOf(datas.get("totalAmountPaid"));
-		if (StringEmptyUtils.isEmpty(strAmount)) {
-			return ReturnInfoUtils.errorInfo("订单总金额不能为空!");
-		}
-		double totalAmountPaid = Double.parseDouble(strAmount);
-		// 代理商订单佣金率
-		double agentFee = totalAmountPaid * agent.getOrderCommissionRate();
-		// 变更前的代理商钱包余额
-		double beforeChangingBalance = agentWallet.getBalance();
-		// 代理商支付平台佣金
-		Map<String, Object> reAgentTollMap = agentTollCommissionRate(agentWallet, agentFee);
-		if (!"1".equals(reAgentTollMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentTollMap;
-		}
-		// 使用代理商钱包余额替换缓存中的商户钱包余额
-		// 重新放入钱包日志参数
-		datas.put(WALLET_ID, agentWallet.getWalletId());
-		datas.put("agentName", agent.getAgentName());
-		datas.put("balance", beforeChangingBalance);
-		datas.put("name", "商户申报[" + datas.get("count") + "]订单后,缴纳代理商佣金");
-		datas.put("serialName", "申报订单-平台佣金");
-		datas.put("flag", "out");
-		Map<String, Object> rePlatformWalletMap = walletUtils.checkWallet(3, "AgentId_00001", "银盟");
-		if (!"1".equals(rePlatformWalletMap.get(BaseCode.STATUS.toString()))) {
-			return rePlatformWalletMap;
-		}
-		AgentWalletContent platformWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		datas.put("targetWalletId", platformWallet.getWalletId());
-		datas.put("targetName", "银盟");
-		// 代理商支付平台佣金后记录支付日志
-		Map<String, Object> reAgentWalletLogMap = addAgentWalletLog(datas);
-		if (!"1".equals(reAgentWalletLogMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentWalletLogMap;
-		}
-		datas.put("agentFee", agentFee);
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 订单申报后,代理商抽取佣金
-	 * 
-	 * @param agentWallet
-	 * @param fee
-	 * @return
-	 */
-	private Map<String, Object> agentTollCommissionRate(AgentWalletContent agentWallet, double fee) {
-		double agentOldBalance = agentWallet.getBalance();
-		agentWallet.setBalance(agentOldBalance - fee);
-		if (!morderDao.update(agentWallet)) {
-			return ReturnInfoUtils.errorInfo("订单申报后,代理商抽取佣金失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 平台收取代理商对应的订单申报佣金
-	 * 
-	 * @param fee
-	 *            订单申报佣金
-	 * @return Map
-	 */
-	private Map<String, Object> platformCommissionFee(double fee) {
-		// 查询平台总代理的钱包信息
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, "AgentId_00001", "银盟");
-		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		// 获取总代理商钱包余额
-		double oldB = agentWallet.getBalance();
-		agentWallet.setBalance(oldB + fee);
-		if (!morderDao.update(agentWallet)) {
-			return ReturnInfoUtils.errorInfo("订单申报时,代理商收款失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successDataInfo(agentWallet);
 	}
 
 	@Override
@@ -1500,7 +853,7 @@ public class MpayServiceImpl implements MpayService {
 				// 电商企业名称
 				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
 			}
-			System.out.println("-----------------第二次向电子口岸发送------------");
+			System.out.println("---------订单第二次向电子口岸发送------");
 			// 检验检疫机构代码
 			orderMap.put(CIQ_ORG_CODE, "443400");
 			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);

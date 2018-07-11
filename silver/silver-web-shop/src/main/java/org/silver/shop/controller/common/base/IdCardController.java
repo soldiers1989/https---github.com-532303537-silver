@@ -1,5 +1,9 @@
 package org.silver.shop.controller.common.base;
 
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,13 +37,25 @@ public class IdCardController {
 	@ApiOperation("管理员查询所有身份证信息")
 	@RequiresPermissions("idCard:getAllIdCard")
 	public String getAllIdCard(HttpServletRequest req, HttpServletResponse response, @RequestParam("page") int page,
-			@RequestParam("size") int size, String idName, String idNumber, String type) {
+			@RequestParam("size") int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardTransaction.getAllIdCard(page, size, idName, idNumber, type)).toString();
+		//
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> itkeys = req.getParameterNames();
+		String key = "";
+		while (itkeys.hasMoreElements()) {
+			key = itkeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		datasMap.remove("page");
+		datasMap.remove("size");
+		
+		return JSONObject.fromObject(idCardTransaction.getAllIdCard(page, size,datasMap)).toString();
 	}
 
 	/**

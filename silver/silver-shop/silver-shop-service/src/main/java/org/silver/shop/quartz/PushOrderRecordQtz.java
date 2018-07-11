@@ -72,6 +72,8 @@ public class PushOrderRecordQtz {
 	private MpayService mpayService;
 	@Autowired
 	private AccessTokenService accessTokenService;
+	@Autowired
+	private CreatePaymentQtz createPaymentQtz;
 
 	public void pushOrderRecordJob() {
 		if (counter.get() % 10 == 0) {
@@ -81,7 +83,7 @@ public class PushOrderRecordQtz {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
 		// 设置扫描开始时间点
-		calendar.add(Calendar.MONTH, -1);
+		calendar.add(Calendar.MONTH, -3);
 		calendar.set(Calendar.HOUR_OF_DAY, 00);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
@@ -134,35 +136,71 @@ public class PushOrderRecordQtz {
 	 * @return Map
 	 */
 	private Map<String, Object> startSendOrderRecord(Morder order, Map<String, Object> subParams) {
-		if (order != null) {
-			String merchantId = order.getMerchant_no();
-			Map<String, Object> params = new HashMap<>();
-			params.put(MERCHANT_NO, merchantId);
-			params.put("order_id", order.getOrder_id());
-			List<MorderSub> reOrderGoodsList = orderDao.findByProperty(MorderSub.class, params, 0, 0);
-			if (reOrderGoodsList == null || reOrderGoodsList.isEmpty()) {
-				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单商品信息不能为空!");
-			}
-			int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
-			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-			if (idcardCertifiedFlag == 1) {
-				return sendOrderRecord(order, reOrderGoodsList, subParams);
-			} else {
-				return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单尚未实名认证通过!");
-			}
-		} else {
+		if (order == null) {
 			return ReturnInfoUtils.errorInfo("--准备开始发送手工订单申报时-订单信息不能为null--");
 		}
+		String merchantId = order.getMerchant_no();
+		Map<String, Object> params = new HashMap<>();
+		params.put(MERCHANT_NO, merchantId);
+		params.put("order_id", order.getOrder_id());
+		List<MorderSub> reOrderGoodsList = orderDao.findByProperty(MorderSub.class, params, 0, 0);
+		if (reOrderGoodsList == null || reOrderGoodsList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单商品信息不能为空!");
+		}
+		int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
+		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+		if (idcardCertifiedFlag == 1) {
+			return sendOrderRecord(order, reOrderGoodsList, subParams);
+		} else {
+			//当订单尚未实名认证时,发起实名认证
+			Map<String, Object> reIdCardMap = createPaymentQtz.getIdCard(order.getOrderDocName(), order.getOrderDocId(),
+					merchantId);
+			String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
+			if ("1".equals(status)) {
+				if (!updateCertifiedSuccessStatus(order)) {
+					return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,实名认证状态更新失败!");
+				}
+			} else {
+				return updateCertifiedFailureStatus(order);
+			}
+			return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单尚未实名认证通过!");
+		}
+	}
+
+	private Map<String, Object> updateCertifiedFailureStatus(Morder order) {
+		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+		order.setIdcardCertifiedFlag(2);
+		//申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+		order.setOrder_record_status(4);
+		String oldNote = order.getOrder_re_note();
+		if (StringEmptyUtils.isEmpty(oldNote)) {
+			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+		} else {
+			order.setOrder_re_note(
+					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+		}
+		if(orderDao.update(order)){
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单实名认证失败,更新状态错误!");
+	}
+
+	private boolean updateCertifiedSuccessStatus(Morder order) {
+		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+		order.setIdcardCertifiedFlag(1);
+		return orderDao.update(order);
 	}
 
 	/**
 	 * 开始推送订单
 	 * 
 	 * @param order
+	 *            手工订单实体信息类
 	 * @param reOrderGoodsList
+	 *            订单关联商品集合
 	 * @param subParams
 	 *            副参数,可传可不传，已有参数key-ORDER_RESEND_ID(重发订单唯一Id)
-	 * @return
+	 * @return Map
 	 */
 	private Map<String, Object> sendOrderRecord(Morder order, List<MorderSub> reOrderGoodsList,
 			Map<String, Object> subParams) {
@@ -324,8 +362,8 @@ public class PushOrderRecordQtz {
 	private void updateResendOrderSuccessStatus(String orderResendId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(ORDER_RESEND_ID, orderResendId);
-		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
-				0, 0);
+		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params, 0,
+				0);
 		if (orderList != null && !orderList.isEmpty()) {
 			ManualOrderResendContent order = orderList.get(0);
 			int count = order.getResendCount();
@@ -358,8 +396,8 @@ public class PushOrderRecordQtz {
 	private void updateResendOrderCount(String orderResendId, String msg) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(ORDER_RESEND_ID, orderResendId);
-		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
-				0, 0);
+		List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params, 0,
+				0);
 		if (orderList != null && !orderList.isEmpty()) {
 			ManualOrderResendContent order = orderList.get(0);
 			int count = order.getResendCount();

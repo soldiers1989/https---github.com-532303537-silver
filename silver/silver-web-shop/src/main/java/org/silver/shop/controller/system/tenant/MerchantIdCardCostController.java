@@ -33,24 +33,23 @@ public class MerchantIdCardCostController {
 
 	@RequestMapping(value = "/addInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员添加商户实名认证费率")
-	//@RequiresRoles("Manager")
+	// @RequiresRoles("Manager")
 	@ResponseBody
 	@RequiresPermissions("idCardCost:addInfo")
-	public String addInfo(@RequestParam("recipientInfo") String recipientInfo, HttpServletRequest req,
-			HttpServletResponse response) {
+	public String addInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String,Object> datasMap = new HashMap<>();
-		Enumeration<String> isKeys= req.getParameterNames();
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
-			String key =  isKeys.nextElement();
+			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(datasMap.isEmpty()){
+		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(merchantIdCardCostTransaction.addInfo(datasMap)).toString();
@@ -60,7 +59,7 @@ public class MerchantIdCardCostController {
 	@ApiOperation("管理员查询商户实名认证费率信息")
 	@ResponseBody
 	@RequiresPermissions("idCardCost:getInfo")
-	public String getInfo(HttpServletRequest req, HttpServletResponse response, String merchantId,int page,int size) {
+	public String getInfo(HttpServletRequest req, HttpServletResponse response, String merchantId, int page, int size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -68,7 +67,7 @@ public class MerchantIdCardCostController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(merchantIdCardCostTransaction.getInfo(merchantId, page, size)).toString();
 	}
-	
+
 	@RequestMapping(value = "/updateInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员修改商户实名认证费率信息")
 	@ResponseBody
@@ -79,14 +78,14 @@ public class MerchantIdCardCostController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String,Object> datasMap = new HashMap<>();
-		Enumeration<String> isKeys= req.getParameterNames();
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
-			String key =  isKeys.nextElement();
+			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(datasMap.isEmpty()){
+		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(merchantIdCardCostTransaction.updateInfo(datasMap)).toString();

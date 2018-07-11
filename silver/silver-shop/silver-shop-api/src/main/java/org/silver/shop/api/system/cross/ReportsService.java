@@ -11,4 +11,11 @@ public interface ReportsService {
 	 */
 	public Map<String, Object> getSynthesisReportDetails(Map<String, Object> params);
 
+	/**
+	 * 查询身份证实名认证报表详情
+	 * @param params
+	 * @return
+	 */
+	public Map<String, Object> getIdCardCertification(Map<String, Object> params);
+
 }

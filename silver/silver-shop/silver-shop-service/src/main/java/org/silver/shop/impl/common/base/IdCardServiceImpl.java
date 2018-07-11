@@ -12,6 +12,7 @@ import org.silver.shop.api.common.base.IdCardService;
 import org.silver.shop.dao.common.base.IdCardDao;
 import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
@@ -29,31 +30,23 @@ public class IdCardServiceImpl implements IdCardService {
 	private IdCardDao idCardDao;
 
 	@Override
-	public Map<String, Object> getAllIdCard(String idName, String idNumber, int page, int size, String type) {
+	public Map<String, Object> getAllIdCard(int page, int size, Map<String, Object> datasMap) {
 		if (page >= 0 && size >= 0) {
-			Map<String, Object> params = new HashMap<>();
-			if (StringEmptyUtils.isNotEmpty(idName)) {
-				params.put("name", idName);
+			Map<String, Object> reDatasMap = SearchUtils.universalIdCardSearch(datasMap);
+			if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+				return reDatasMap;
 			}
-			if (StringEmptyUtils.isNotEmpty(idNumber)) {
-				params.put("idNumber", idNumber);
-			}
-			if (StringEmptyUtils.isNotEmpty(type)) {
-				params.put("type", Integer.parseInt(type));
-			}
-			List<IdCard> idList = idCardDao.findByProperty(IdCard.class, params, page, size);
-			long count = idCardDao.findByPropertyCount(IdCard.class, params);
-			if (idList != null && !idList.isEmpty()) {
-				params.clear();
-				params.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				params.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-				params.put(BaseCode.TOTALCOUNT.toString(), count);
-				params.put(BaseCode.DATAS.toString(), idList);
-				return params;
+			Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+			List<IdCard> idList = idCardDao.findByProperty(IdCard.class, paramMap, page, size);
+			long count = idCardDao.findByPropertyCount(IdCard.class, paramMap);
+			if (idList == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			} else if (!idList.isEmpty()) {
+				return ReturnInfoUtils.successDataInfo(idList, count);
 			}
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
-		return ReturnInfoUtils.errorInfo("请求参数出错,请重试!");
+		return ReturnInfoUtils.errorInfo("请求参数错误!");
 	}
 
 	@Override
@@ -128,7 +121,7 @@ public class IdCardServiceImpl implements IdCardService {
 			}
 			page++;
 			long endTime = System.currentTimeMillis();
-			System.out.println("---一次循环耗时->>>"+(endTime - startTime) +"ms");
+			System.out.println("---一次循环耗时->>>" + (endTime - startTime) + "ms");
 			System.out.println(page + "<<页数----");
 		}
 		return null;
