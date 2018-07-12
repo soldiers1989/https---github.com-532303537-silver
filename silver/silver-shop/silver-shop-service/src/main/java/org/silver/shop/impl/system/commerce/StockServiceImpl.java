@@ -1,10 +1,8 @@
 package org.silver.shop.impl.system.commerce;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,16 +12,13 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.dao.system.commerce.StockDao;
-import org.silver.shop.model.system.commerce.GoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.util.SearchUtils;
-import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
@@ -37,10 +32,14 @@ public class StockServiceImpl implements StockService {
 	@Autowired
 	private StockDao stockDao;
 
+	/**
+	 * 驼峰命名：商品自编号
+	 */
+	private static final String ENT_GOODS_NO = "entGoodsNo";
+	
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
 			int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		int one = warehouseCode.indexOf('_');
 		int two = warehouseCode.indexOf('_', one + 1);
 		// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
@@ -48,34 +47,24 @@ public class StockServiceImpl implements StockService {
 		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size);
 		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0);
 		if (reTable == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), Transform.tableToJson(reTable));
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), count.getRows().size());
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reTable), count.getRows().size());
 		}
 	}
 
 	@Override
-	// 添加库存数量
 	public Map<String, Object> addGoodsStockCount(String merchantId, String merchantName, String warehouseCode,
 			String warehouseName, String goodsInfoPack) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> params = null;
-		Map<String, Object> errorMap = new HashMap<>();
+		Map<String, Object> errorMap = null;
 		List<Map<String, Object>> listMap = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.FORMAT_ERR.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("参数格式错误！");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			params = new HashMap<>();
@@ -83,7 +72,7 @@ public class StockServiceImpl implements StockService {
 			params.put("goodsMerchantId", merchantId);
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
-			params.put("entGoodsNo", datasMap.get("entGoodsNo"));
+			params.put(ENT_GOODS_NO, datasMap.get(ENT_GOODS_NO));
 			// 备案状态：1-备案中，2-备案成功，3-备案失败
 			params.put("status", 2);
 			List<Object> orList = new ArrayList<>();
@@ -91,27 +80,24 @@ public class StockServiceImpl implements StockService {
 			// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
 			orMap=new HashMap<>();
 			orMap.put("recordFlag", 1);
+			orList.add(orMap);
 			orMap=new HashMap<>();
 			orMap.put("recordFlag", 2);
 			orList.add(orMap);
-			List<Object> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orList, 1, 1);
+			List<GoodsRecordDetail> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orList, 1, 1);
 			if (goodsList == null) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("查询商品失败,服务器繁忙！");
 			} else if (!goodsList.isEmpty()) {
-				GoodsRecordDetail goodsRecord = (GoodsRecordDetail) goodsList.get(0);
+				GoodsRecordDetail goodsRecord = goodsList.get(0);
 				//
 				saveStockInfo(datasMap, goodsRecord, merchantId, merchantName, warehouseCode, warehouseName, listMap);
 			} else {
-				statusMap.put(BaseCode.MSG.toString(), "编号为：" + datasMap.get("entGoodsNo") + ",商品不存在!");
+				errorMap = new HashMap<>();
+				errorMap.put(BaseCode.MSG.toString(), "商品自编号[" + datasMap.get(ENT_GOODS_NO) + "]对应商品信息不存在，或商品未通过备案审核！");
 				listMap.add(errorMap);
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), listMap);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(listMap,jsonList.size());
 	}
 
 	private void saveStockInfo(Map<String, Object> datasMap, GoodsRecordDetail goodsRecord, String merchantId,
@@ -119,7 +105,7 @@ public class StockServiceImpl implements StockService {
 		Date date = new Date();
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, Object> errorMap = new HashMap<>();
-		paramMap.put("entGoodsNo", datasMap.get("entGoodsNo"));
+		paramMap.put(ENT_GOODS_NO, datasMap.get(ENT_GOODS_NO));
 		List<Object> stockList = stockDao.findByProperty(StockContent.class, paramMap, 1, 1);
 		if (stockList == null) {
 			errorMap.put(BaseCode.MSG.toString(), "查询" + goodsRecord.getGoodsName() + "失败,服务器繁忙！");
@@ -233,13 +219,13 @@ public class StockServiceImpl implements StockService {
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> stockMap = (Map<String, Object>) jsonList.get(i);
-			String entGoodsNo = stockMap.get("entGoodsNo") + "";
+			String entGoodsNo = stockMap.get(ENT_GOODS_NO) + "";
 			params.clear();
 			params.put("merchantId", merchantId);
-			params.put("entGoodsNo", entGoodsNo);
+			params.put(ENT_GOODS_NO, entGoodsNo);
 			List<StockContent> reStockList = stockDao.findByProperty(StockContent.class, params, 1, 1);
 			params.clear();
-			params.put("entGoodsNo", entGoodsNo);
+			params.put(ENT_GOODS_NO, entGoodsNo);
 			params.put("goodsMerchantId", merchantId);
 			List<GoodsRecordDetail> reGoodsRecordList = stockDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
 			if (reStockList == null || reGoodsRecordList == null) {
@@ -296,10 +282,10 @@ public class StockServiceImpl implements StockService {
 			Map<String, Object> params = new HashMap<>();
 			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> stockMap = (Map<String, Object>) jsonList.get(i);
-			String entGoodsNo = stockMap.get("entGoodsNo") + "";
+			String entGoodsNo = stockMap.get(ENT_GOODS_NO) + "";
 			int count = Integer.parseInt(stockMap.get("count") + "");
 			params.put("merchantId", merchantId);
-			params.put("entGoodsNo", entGoodsNo);
+			params.put(ENT_GOODS_NO, entGoodsNo);
 			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
 			if (reStockList == null) {
 				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
@@ -366,14 +352,14 @@ public class StockServiceImpl implements StockService {
 			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
 			Map<String, Object> params = new HashMap<>();
-			String entGoodsNo = datasMap.get("entGoodsNo") + "";
-			params.put("entGoodsNo", entGoodsNo);
-			List<Object> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
+			String entGoodsNo = datasMap.get(ENT_GOODS_NO) + "";
+			params.put(ENT_GOODS_NO, entGoodsNo);
+			List<StockContent> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
 			if (reStockList == null) {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "查询编号：" + entGoodsNo + "商品失败,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]修改失败,服务器繁忙！");
 				errorMsgList.add(errorMap);
 			} else if (!reStockList.isEmpty()) {
-				StockContent stockInfo = (StockContent) reStockList.get(0);
+				StockContent stockInfo = reStockList.get(0);
 				double price = 0.0;
 				try {
 					price = Double.parseDouble(datasMap.get("price") + "");
@@ -395,10 +381,10 @@ public class StockServiceImpl implements StockService {
 					errorMsgList.add(errorMap);
 				}
 			} else {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "没有找到编号为：" + entGoodsNo + "商品,服务器繁忙！");
+				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]未找到对应商品信息！");
 				errorMsgList.add(errorMap);
 			}
 		}
-		return ReturnInfoUtils.errorInfo(errorMsgList);
+		return ReturnInfoUtils.errorInfo(errorMsgList,jsonList.size());
 	}
 }

@@ -198,7 +198,7 @@ public class MpayServiceImpl implements MpayService {
 			return reCheckMap;
 		}
 		long endTime = System.currentTimeMillis();
-		logger.error("=======计算费用耗时========>>"+(endTime - startTime)+"ms");
+		logger.error("=======计算费用耗时========>>" + (endTime - startTime) + "ms");
 		// 总数
 		int totalCount = jsonList.size();
 		params.put(MERCHANT_ID, merchantId);
@@ -224,14 +224,15 @@ public class MpayServiceImpl implements MpayService {
 				return reMap;
 			}
 		}
-		Map<String, Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
-		statusMap.put("serialNo", serialNo);
-		statusMap.put("orderList", reCheckMap.get("list"));
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		statusMap.put(BaseCode.TOTALCOUNT.toString(), totalCount);
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		map.put(BaseCode.MSG.toString(), "执行成功,开始推送订单备案.......");
+		map.put("serialNo", serialNo);
+		map.put("orderList", reCheckMap.get("list"));
+		map.put("idCardList", reCheckMap.get("idCardList"));
+		map.put(BaseCode.ERROR.toString(), errorList);
+		map.put(BaseCode.TOTALCOUNT.toString(), totalCount);
+		return map;
 	}
 
 	/**
@@ -272,14 +273,20 @@ public class MpayServiceImpl implements MpayService {
 				if (order.getOrder_record_status() == 10 || order.getOrder_record_status() == 2) {
 					errMap = new HashMap<>();
 					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					errMap.put(BaseCode.MSG.toString(), "订单号[" + order.getOrder_id() + "]正在申报中,请勿重复申报!");
+					errMap.put(BaseCode.MSG.toString(), "订单[" + order.getOrder_id() + "]正在申报中,请勿重复申报！");
 					errorList.add(errMap);
 					continue;
 				} else if (order.getOrder_record_status() == 3) {
 					errMap = new HashMap<>();
 					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 					errMap.put(BaseCode.MSG.toString(),
-							"订单号[" + order.getOrder_id() + "]已在[" + order.getCreate_date() + "]申报成功,请勿重复申报!");
+							"订单[" + order.getOrder_id() + "]已在[" + order.getCreate_date() + "]申报成功,请勿重复申报！");
+					errorList.add(errMap);
+					continue;
+				} else if (order.getIdcardCertifiedFlag() == 2) {// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+					errMap.put(BaseCode.MSG.toString(), "订单[" + order.getOrder_id() + "]实名认证不通过,不允许申报！");
 					errorList.add(errMap);
 					continue;
 				}
@@ -307,7 +314,7 @@ public class MpayServiceImpl implements MpayService {
 			}
 		}
 		long endTime = System.currentTimeMillis();
-		logger.error("=======更改订单状态耗时========>>"+(endTime - startTime)+"ms");
+		logger.error("=======更改订单状态耗时========>>" + (endTime - startTime) + "ms");
 		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
 	}
 
@@ -338,9 +345,13 @@ public class MpayServiceImpl implements MpayService {
 		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
 		// 实名认证每笔手续费
 		double idCost = merchantCost.getPlatformCost();
-		//JSONArray idCardList = (JSONArray) reidCardMap.get("idCardList");
+		Map<String, Object> reIdCardMap = getTollIdCardList(jsonList);
+		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
+			return reIdCardMap;
+		}
+		List<Object> reIdCardList = (List<Object>) reIdCardMap.get(BaseCode.DATAS.toString());
 		// 计算需要实名认证收费的费用之和
-		double idCertificationFee = jsonList.size() * idCost;
+		double idCertificationFee = reIdCardList.size() * idCost;
 		// 初始化平台服务费
 		double fee;
 		// 封底标识：1-正常计算、2-不满100提至100计算
@@ -385,7 +396,38 @@ public class MpayServiceImpl implements MpayService {
 		map.put("backCoverFlag", backCoverFlag);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		map.put("list", newList);
+		map.put("idCardList", reIdCardList);
 		return map;
+	}
+
+	/**
+	 * 根据订单id统计订单中未实名的订单id集合
+	 * 
+	 * @param jsonList
+	 * @return
+	 */
+	private Map<String, Object> getTollIdCardList(JSONArray jsonList) {
+		if (jsonList == null) {
+			return ReturnInfoUtils.errorInfo("订单id集合不能为null");
+		}
+		List<String> idCardList = new ArrayList<>();
+		Map<String, Object> params = null;
+		for (int i = 0; i < jsonList.size(); i++) {
+			Map<String, Object> map = (Map<String, Object>) jsonList.get(i);
+			params = new HashMap<>();
+			params.put(ORDER_ID, map.get("orderNo") + "");
+			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 1, 1);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("获取订单中实名认证不通过的订单时，查询订单信息失败,服务器繁忙！");
+			} else if (!reList.isEmpty()) {
+				Morder order = reList.get(0);
+				// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+				if (order.getIdcardCertifiedFlag() == 0) {
+					idCardList.add(order.getOrder_id());
+				}
+			}
+		}
+		return ReturnInfoUtils.successDataInfo(idCardList);
 	}
 
 	/**
@@ -420,11 +462,11 @@ public class MpayServiceImpl implements MpayService {
 				params.put(CUSTOMS_CODE, customsCode);
 				params.put(CIQ_ORG_CODE, ciqOrgCode);
 				params.put("type", "paymentRecord");
-				List<MerchantFeeContent> reFeeList = morderDao.findByProperty(MerchantFeeContent.class, params,1, 1);
+				List<MerchantFeeContent> reFeeList = morderDao.findByProperty(MerchantFeeContent.class, params, 1, 1);
 				if (reFeeList != null && !reFeeList.isEmpty()) {
 					MerchantFeeContent feeContent = reFeeList.get(0);
 					paymentFee = feeContent.getPlatformFee();
-				}else{
+				} else {
 					return ReturnInfoUtils.errorInfo("查询商户费率失败,请联系管理员!");
 				}
 			}
@@ -500,6 +542,7 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("推送订单扣费前校验订单信息失败,请求参数不能为空!");
 		}
 		List<Object> newOrderIdList = new ArrayList<>();
+		// 过滤掉已推送过网关得订单
 		List<Morder> reList = morderDao.findByPropertyIn(list);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("推送订单前校验订单数据失败!");
@@ -589,19 +632,19 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("申报订单时,核对订单数据时订单信息不能为空!");
 		}
 		if (order.getFCY() > 2000) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单商品总金额超过2000,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,订单商品总金额超过2000,请核对订单信息!");
 		}
 		if (!checkProvincesCityAreaCode(order)) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单收货人省市区编码不能为空,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,订单收货人省市区编码不能为空,请核对订单信息!");
 		}
 		if (!PhoneUtils.isPhone(order.getRecipientTel().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,收货人手机号码格式不正确,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,收货人手机号码格式不正确,请核对订单信息!");
 		}
 		if (!PhoneUtils.isPhone(order.getOrderDocTel().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,下单人手机号码格式不正确,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,下单人手机号码格式不正确,请核对订单信息!");
 		}
 		if (!IdcardValidator.validate18Idcard(order.getOrderDocId().trim())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,下单人身份证号码错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,下单人身份证号码错误,请核对订单信息!");
 		}
 		// if (!IdcardValidator.validate18Idcard(order.getRecipientID())) {
 		// return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() +
@@ -610,15 +653,15 @@ public class MpayServiceImpl implements MpayService {
 		String recipientName = order.getRecipientName().trim();
 		if (!StringUtil.isChinese(recipientName) || recipientName.contains("先生") || recipientName.contains("女士")
 				|| recipientName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,收货人姓名错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,收货人姓名错误,请核对订单信息!");
 		}
 		String orderDocName = order.getOrderDocName().trim();
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
 				|| orderDocName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单人姓名错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,订单人姓名错误,请核对订单信息!");
 		}
 		if (StringEmptyUtils.isEmpty(order.getOrderDocAcount())) {
-			return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]申报失败,订单下单人账号错误,请核对订单信息!");
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]申报失败,订单下单人账号错误,请核对订单信息!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}

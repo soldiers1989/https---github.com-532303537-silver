@@ -124,15 +124,15 @@ public class MerchantIdCardCostServiceImpl implements MerchantIdCardCostService 
 			}
 			idcardCost.setPlatformCost(fee);
 			idcardCost.setIdCardVerifySwitch(datasMap.get("idCardVerifySwitch") + "");
-			idcardCost.setDeleteFlag(0);
+			//idcardCost.setDeleteFlag(0);
 			idcardCost.setUpdateBy(datasMap.get("managerName") + "");
 			idcardCost.setUpdateDate(new Date());
-			if (!merchantIdCardCostDao.add(idcardCost)) {
+			if (!merchantIdCardCostDao.update(idcardCost)) {
 				return ReturnInfoUtils.errorInfo("更新商户实名认证费率信息失败,服务器繁忙!");
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {
-			return ReturnInfoUtils.errorInfo("未找到商户实名认证费率信息,请联系管理员!");
+			return ReturnInfoUtils.errorInfo("未找到商户实名认证费率信息！");
 		}
 	}
 

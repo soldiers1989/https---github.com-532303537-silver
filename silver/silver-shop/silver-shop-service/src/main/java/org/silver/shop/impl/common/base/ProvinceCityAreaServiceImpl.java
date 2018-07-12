@@ -231,12 +231,5 @@ public class ProvinceCityAreaServiceImpl implements ProvinceCityAreaService {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("省份信息未找到,请核对信息!");
-
-	}
-
-	public static void main(String[] args) {
-		String str = "{\"value\":\"acs\"}";
-
-		System.out.println("---->" + str.replace("{\"value\":\"", "").replace("\"}", ""));
 	}
 }

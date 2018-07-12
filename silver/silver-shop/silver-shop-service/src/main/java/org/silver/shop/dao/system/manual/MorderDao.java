@@ -76,7 +76,7 @@ public interface MorderDao extends BaseDao {
 	public Table getPhoneCount(String recipientTel, String startDate, String endDate);
 
 	/**
-	 * 根据集合中Map key-orderNo,value -订单Id ,通过SQL IN 操作符统一查询批量的订单信息
+	 * 根据集合中Map key-orderNo,value -订单Id ,通过SQL IN 操作符统一查询状态=0(未推送过的)订单信息
 	 * @param itemList 订单Id集合
 	 * @return List
 	 */

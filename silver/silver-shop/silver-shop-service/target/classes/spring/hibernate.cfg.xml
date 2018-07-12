@@ -140,5 +140,7 @@
 			resource="org/silver/shop/model/system/log/IdCardCertificationLog.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/manual/ManualPaymentResendContent.hbm.xml" />
+			<mapping
+			resource="org/silver/shop/model/system/log/StockReviewLog.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

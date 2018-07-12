@@ -9,7 +9,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.apache.shiro.subject.Subject;
+import org.silver.common.LoginType;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.MdataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,4 +90,32 @@ public class ManualOrderController {
 		return JSONObject.fromObject(mdataService.sendMorderRecord(params, orderNoPack)).toString();
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param resp
+	 * @param req
+	 * @return
+	 */
+	@RequestMapping(value = "/updateManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户修改自助申报失败订单")
+	@ResponseBody
+	public String updateManualOrderInfo(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		//
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> itkeys = req.getParameterNames();
+		while (itkeys.hasMoreElements()) {
+			String key = itkeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderInfo(datasMap)).toString();
+	}
+	
 }

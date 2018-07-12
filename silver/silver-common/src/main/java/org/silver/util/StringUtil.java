@@ -49,7 +49,7 @@ public class StringUtil {
 	 * @return
 	 */
 	public static boolean isChinese(String strName) {
-		if(StringEmptyUtils.isEmpty(strName)){
+		if (StringEmptyUtils.isEmpty(strName)) {
 			return false;
 		}
 		char[] ch = strName.toCharArray();
@@ -80,7 +80,9 @@ public class StringUtil {
 
 	/**
 	 * 判断字符串全是数字
-	 * @param str 字符串
+	 * 
+	 * @param str
+	 *            字符串
 	 * @return boolean
 	 */
 	public static boolean isNumeric(String str) {
@@ -95,10 +97,10 @@ public class StringUtil {
 		}
 		return true;
 	}
+
 	/**
-	 * 通用替换多表查询字符串
-	 * 例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"} 
-	 * 返回：深圳市前海爱库
+	 * 通用替换多表查询字符串 例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"} 返回：深圳市前海爱库
+	 * 
 	 * @param str
 	 * @return
 	 */
@@ -112,13 +114,13 @@ public class StringUtil {
 		str = str.replace("}", "");
 		return str;
 	}
-	
+
 	public static void main(String[] args) {
 		String str = "{\"value\":919.04}";
 		String str2 = "{\"value\":\"深圳市前海爱库\"}";
-		
+
 		// System.out.println(StringUtil.addPrefixZero("2356", 8));
-		System.out.println("--->>>>"+replace(str2));
-		//System.out.println(isNumeric("1中"));
+		System.out.println("--->>>>" + isContainChinese("娜地拉·艾孜拉提".replace("·", "")));
+		// System.out.println(isNumeric("1中"));
 	}
 }

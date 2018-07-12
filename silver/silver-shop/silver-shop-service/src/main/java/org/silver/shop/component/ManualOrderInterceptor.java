@@ -65,7 +65,7 @@ public class ManualOrderInterceptor {
 	private AgentService agentService;
 	@Autowired
 	private ManualOrderInterceptor manualOrderInterceptor;
-	
+
 	/**
 	 * 钱包流水Id
 	 */
@@ -112,13 +112,16 @@ public class ManualOrderInterceptor {
 					ExecutorService threadPool = Executors.newCachedThreadPool();
 					String merchantId = args[0] + "";
 					JSONArray orderList = JSONArray.fromObject(json.get("orderList"));
-					MerchantWalletTollTask merchantWalletTollTask = new MerchantWalletTollTask(orderList, merchantId,manualOrderInterceptor);
+					JSONArray idCardList = JSONArray.fromObject(json.get("idCardList"));
+					System.out.println("----idCardList->" + idCardList.toString());
+					MerchantWalletTollTask merchantWalletTollTask = new MerchantWalletTollTask(orderList, merchantId,
+							manualOrderInterceptor, idCardList);
 					threadPool.submit(merchantWalletTollTask);
 					threadPool.shutdown();
 					// Map<String, Object> reTollMap =
 					// merchantWalletToll(orderList, merchantId);
 				} else {
-					logger.error("--商户实名认证与订单申报手续费计算-AOP-结果参数错误--"+ json.toString());
+					logger.error("--商户实名认证与订单申报手续费计算-AOP-结果参数错误--" + json.toString());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -133,17 +136,13 @@ public class ManualOrderInterceptor {
 	 *            订单id集合
 	 * @param merchantId
 	 *            商户id
+	 * @param idCardList
 	 * @return Map
 	 */
-	public Map<String, Object> merchantWalletToll(JSONArray orderList, String merchantId) {
-		if(orderList == null){
+	public Map<String, Object> merchantWalletToll(JSONArray orderList, String merchantId, JSONArray idCardList) {
+		if (orderList == null || idCardList == null) {
 			return ReturnInfoUtils.errorInfo("订单集合参数不能为null");
 		}
-		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchantId);
-		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
-			return reCostMap;
-		}
-		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantMap;
@@ -163,8 +162,7 @@ public class ManualOrderInterceptor {
 		}
 		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
 		// 计算实名认证的费用
-		Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, orderList,
-				merchantCost.getPlatformCost());
+		Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, idCardList);
 		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 			return reIdCardMap;
 		}
@@ -308,15 +306,15 @@ public class ManualOrderInterceptor {
 	 *            商户情报实体
 	 * @param agentWallet
 	 *            代理商钱包实体
-	 * @param orderList
+	 * @param idCardList
 	 *            订单id集合
 	 * @param fee
 	 *            身份证认证手续费
 	 * @return Map
 	 */
 	private Map<String, Object> idCardCertificationToll(Merchant merchant, MerchantWalletContent merchantWallet,
-			AgentWalletContent agentWallet, JSONArray orderList, double fee) {
-		if (merchant == null || merchantWallet == null || agentWallet == null || orderList == null) {
+			AgentWalletContent agentWallet, JSONArray idCardList) {
+		if (merchant == null || merchantWallet == null || agentWallet == null || idCardList == null) {
 			return ReturnInfoUtils.errorInfo("身份证实名认证清算时,参数不能为null!");
 		}
 		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchant.getMerchantId());
@@ -324,7 +322,7 @@ public class ManualOrderInterceptor {
 			return reCostMap;
 		}
 		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reDetailsMap = getidCardDetails(orderList, fee);
+		Map<String, Object> reDetailsMap = getidCardDetails(idCardList, merchantCost.getPlatformCost());
 		if (!"1".equals(reDetailsMap.get(BaseCode.STATUS.toString()))) {
 			return reDetailsMap;
 		}
@@ -372,7 +370,7 @@ public class ManualOrderInterceptor {
 					if (cacheMap.containsKey(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim())) {
 						if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(),
 								order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId(), 0, 2,
-								"一次操作,重复身份证,不计费!")) {
+								"一次操作,重复身份证,不计费！")) {
 							logger.error(orderId + "--保存实名认证流水日志失败--");
 						}
 					} else {

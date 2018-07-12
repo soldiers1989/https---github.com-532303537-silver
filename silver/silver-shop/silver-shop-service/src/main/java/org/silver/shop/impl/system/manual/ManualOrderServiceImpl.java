@@ -16,6 +16,9 @@ import org.silver.shop.api.system.manual.ManualOrderService;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.dao.system.manual.ManualOrderDao;
 import org.silver.shop.impl.system.organization.MemberServiceImpl;
+import org.silver.shop.model.common.base.Area;
+import org.silver.shop.model.common.base.City;
+import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
@@ -488,7 +491,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				&& StringEmptyUtils.isNotEmpty(ebEntName) && StringEmptyUtils.isNotEmpty(DZKNNo)) {
 			JSONObject spareParams = new JSONObject();
 			spareParams.put("marCode", marCode);
-			if(StringEmptyUtils.isNotEmpty(sku)){
+			if (StringEmptyUtils.isNotEmpty(sku)) {
 				spareParams.put("SKU", sku);
 			}
 			spareParams.put("ebEntNo", ebEntNo);
@@ -735,5 +738,127 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		} else {
 			return ReturnInfoUtils.errorInfo(goodsName + "-->该商品不存在,请核实信息!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> updateManualOrderInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("修改参数不能为空！");
+		}
+		Map<String, Object> params = new HashMap<>();
+		String merchantId = datasMap.get(MERCHANT_ID) + "";
+		String orderId = datasMap.get("orderId") + "";
+		params.put("merchant_no", merchantId);
+		params.put(ORDER_ID, orderId);
+		List<Morder> orderList = manualOrderDao.findByProperty(Morder.class, params, 0, 0);
+		if (orderList == null) {
+			return ReturnInfoUtils.errorInfo("查询订单信息失败,服务器繁忙！");
+		} else if (!orderList.isEmpty()) {
+			Morder order = orderList.get(0);
+			// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+			if (order.getOrder_record_status() == 1 || order.getOrder_record_status() == 4) {
+				return updateManualOrder(order, datasMap);
+			} else {
+				return ReturnInfoUtils.errorInfo("当前订单申报状态不允许修改订单信息！");
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到订单信息！");
+		}
+	}
+
+	/**
+	 * 更新手工订单信息
+	 * @param order 订单实体信息类
+	 * @param datasMap 修改参数
+	 * @return Map
+	 */
+	private Map<String, Object> updateManualOrder(Morder order, Map<String, Object> datasMap) {
+		if(order == null || datasMap == null ){ 
+			return ReturnInfoUtils.errorInfo("更新订单信息时,请求参数不能为null！");
+		}
+		String recipientName = datasMap.get("recipientName") + "";
+		// 娜地拉·艾孜拉提
+		if (!StringUtil.isContainChinese(recipientName.replace("·", ""))) {
+			return ReturnInfoUtils.errorInfo("收货人姓名错误！");
+		}
+		order.setRecipientName(recipientName);
+		String recipientID = datasMap.get("recipientID") + "";
+		if (!IdcardValidator.validate18Idcard(recipientID)) {
+			return ReturnInfoUtils.errorInfo("收货人身份证号码错误！");
+		}
+		order.setRecipientID(recipientID);
+		String recipientTel = datasMap.get("recipientTel") + "";
+		if (!PhoneUtils.isPhone(recipientTel)) {
+			return ReturnInfoUtils.errorInfo("收货人电话号码错误！");
+		}
+		order.setRecipientTel(recipientTel);
+		order.setRecipientProvincesCode(datasMap.get("recipientProvincesCode") + "");
+		order.setRecipientProvincesName(datasMap.get("recipientProvincesName") + "");
+		order.setRecipientCityName(datasMap.get("recipientCityName") + "");
+		order.setRecipientCityCode(datasMap.get("recipientCityCode") + "");
+		order.setRecipientAreaCode(datasMap.get("recipientAreaCode") + "");
+		order.setRecipientAreaName(datasMap.get("recipientAreaName") + "");
+		Map<String, Object> reCheckMap = checkProvincesCityArea(order);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+		String oldOrderDocName = order.getOrderDocName();
+		String oldOrderDocId = order.getOrderDocId();
+		String orderDocTel = datasMap.get("orderDocTel") + "";
+		if (!PhoneUtils.isPhone(orderDocTel)) {
+			return ReturnInfoUtils.errorInfo("下单人电话错误！");
+		}
+		order.setOrderDocTel(orderDocTel);
+		order.setRecipientAddr(datasMap.get("recipientAddr") + "");
+		String newOrderDocName = datasMap.get("orderDocName") + "";
+		if (!StringUtil.isContainChinese(newOrderDocName.replace("·", ""))) {
+			return ReturnInfoUtils.errorInfo("下单人姓名错误！");
+		}
+		order.setOrderDocName(newOrderDocName);
+		String newOrderDocId = datasMap.get("orderDocId") + "";
+		if (!IdcardValidator.validate18Idcard(newOrderDocId)) {
+			return ReturnInfoUtils.errorInfo("下单人身份证号码错误！");
+		}
+		order.setOrderDocId(newOrderDocId);
+		if (!oldOrderDocName.equals(newOrderDocName) || !oldOrderDocId.equals(newOrderDocId)) {
+			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+			order.setIdcardCertifiedFlag(0);
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 检查省市区代码与名称是否正确
+	 * @param order 订单信息实体类
+	 * @return Map
+	 */
+	private Map<String, Object> checkProvincesCityArea(Morder order) {
+		if (order == null) {
+			return ReturnInfoUtils.errorInfo("检查省市区失败,订单不能为null！");
+		}
+		String recipientProvincesCode = order.getRecipientProvincesCode();
+		String recipientProvincesName = order.getRecipientProvincesName();
+		Map<String, Object> params = new HashMap<>();
+		params.put("provinceCode", recipientProvincesCode);
+		params.put("provinceName", recipientProvincesName);
+		List<Province> rePronvinceList = manualOrderDao.findByProperty(Province.class, params, 1, 1);
+		if (rePronvinceList == null || rePronvinceList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("收货人省份名称与编码错误！");
+		}
+		params.clear();
+		params.put("cityCode", order.getRecipientCityCode());
+		params.put("cityName", order.getRecipientCityName());
+		List<City> reCityList = manualOrderDao.findByProperty(City.class, params, 1, 1);
+		if (reCityList == null || reCityList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("收货人城市名称与编码错误！");
+		}
+		params.clear();
+		params.put("areaCode", order.getRecipientAreaCode());
+		params.put("areaName", order.getRecipientAreaName());
+		List<Area> reAreaList = manualOrderDao.findByProperty(Area.class, params, 1, 1);
+		if (reAreaList == null || reAreaList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("收货人区域名称与编码错误！");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

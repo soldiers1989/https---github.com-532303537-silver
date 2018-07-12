@@ -300,10 +300,10 @@ public class CreatePaymentQtz {
 		order.setUpdate_date(new Date());
 		String oldNote = order.getOrder_re_note();
 		if (StringEmptyUtils.isEmpty(oldNote)) {
-			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码！#");
 		} else {
 			order.setOrder_re_note(
-					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码！#");
 		}
 		return orderDao.update(order);
 	}

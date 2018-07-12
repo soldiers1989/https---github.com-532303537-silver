@@ -49,7 +49,7 @@ public class MdataService {
 	private MpayService mpayService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
-
+	
 	public Map<String, Object> addEntity(String merchant_no, String[] strs) {
 		return muserService.addEntity(merchant_no, strs);
 
@@ -570,4 +570,6 @@ public class MdataService {
 			return ReturnInfoUtils.errorInfo("暂无数据,请等待!");
 		}
 	}
+
+	
 }

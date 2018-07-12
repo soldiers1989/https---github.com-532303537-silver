@@ -17,6 +17,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.shop.api.system.manual.ManualOrderService;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.api.system.manual.MpayService;
 import org.silver.shop.model.system.organization.Merchant;
@@ -62,6 +63,8 @@ public class ManualOrderTransaction {
 	private ShopQueueSender shopQueueSender;
 	@Reference(timeout = 20000)
 	private MpayService mpayService;
+	@Reference
+	private ManualOrderService manualOrderService;
 	
 	/**
 	 * 商户Id
@@ -720,6 +723,14 @@ public class ManualOrderTransaction {
 		}
 		// excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
+	}
+
+	public Map<String,Object> updateManualOrderInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		datasMap.put(MERCHANT_ID, merchantId);
+		return manualOrderService.updateManualOrderInfo(datasMap);
 	}
 	
 }

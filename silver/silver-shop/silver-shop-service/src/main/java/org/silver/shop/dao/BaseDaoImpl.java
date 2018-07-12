@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
@@ -158,25 +159,21 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		String entName = entity.getSimpleName();
 		try {
 			session = getSession();
-
-			String hql = "from " + entName + " model ";
+			StringBuilder sbHql = new StringBuilder(" FROM " + entName + " MODEL WHERE ");
 			List<Object> list = new ArrayList<>();
 			if (params != null && params.size() > 0) {
-				hql += "where ";
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + "=" + "?" + " and ";
+					sbHql.append(" MODEL." + property + " = " + " ? " + " AND ");
 					list.add(params.get(property));
 				}
-				hql += " 1=1 Order By id DESC";
 			}
-			Query query = session.createQuery(hql);
-			if (!list.isEmpty()) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, list.get(i));
-				}
+			sbHql.append(" 1=1 ORDER By id DESC");
+			Query query = session.createQuery(sbHql.toString());
+			for (int i = 0; i < list.size(); i++) {
+				query.setParameter(i, list.get(i));
 			}
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
@@ -228,30 +225,27 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		String entName = entity.getSimpleName();
 		try {
 			session = getSession();
-			String hql = "from " + entName + " model ";
+			StringBuilder sbHql = new StringBuilder(" FROM " + entName + " MODEL WHERE ");
 			List<Object> list = new ArrayList<>();
 			if (params != null && params.size() > 0) {
-				hql += "where ";
 				String property;
 				Iterator<String> is = params.keySet().iterator();
 				while (is.hasNext()) {
 					property = is.next();
-					hql = hql + "model." + property + " like " + " ? " + " and ";
+					sbHql.append("model." + property + " like " + " ? " + " and ");
 					list.add(params.get(property));
 				}
 				if (startTime != null && !"".equals(startTime.trim())) {
-					hql = hql + "model.createDate >= '" + startTime + " 00:00:00'" + " and ";
+					sbHql.append("model.createDate >= '" + startTime + " 00:00:00'" + " and ");
 				}
 				if (endTime != null && !"".equals(endTime.trim())) {
-					hql = hql + "model.createDate <= '" + endTime + " 23:59:59'" + " and ";
+					sbHql.append("model.createDate <= '" + endTime + " 23:59:59'" + " and ");
 				}
-				hql += " 1=1 Order By id DESC";
 			}
-			Query query = session.createQuery(hql);
-			if (list.size() > 0) {
-				for (int i = 0; i < list.size(); i++) {
-					query.setParameter(i, "%" + list.get(i) + "%");
-				}
+			sbHql.append(" 1=1 ORDER By id DESC");
+			Query query = session.createQuery(sbHql.toString());
+			for (int i = 0; i < list.size(); i++) {
+				query.setParameter(i, "%" + list.get(i) + "%");
 			}
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
@@ -514,10 +508,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 	private void appendOrParams(List orList, StringBuilder hql, List<Object> list) {
 		if (orList != null && !orList.isEmpty()) {
-			//hql.delete(hql.length() - 4,hql.length());
+			// hql.delete(hql.length() - 4,hql.length());
 			hql.append(" ( ");
-			for(int i = 0 ; i < orList.size() ; i++){
-				Map<String,Object> map = (Map<String, Object>) orList.get(i);
+			for (int i = 0; i < orList.size(); i++) {
+				Map<String, Object> map = (Map<String, Object>) orList.get(i);
 				String property;
 				Iterator<String> isKey = map.keySet().iterator();
 				while (isKey.hasNext()) {
@@ -527,7 +521,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 				}
 			}
 			// 截取掉最后的 or 防止出错
-			hql.delete(hql.length()- 3 , hql.length() );
+			hql.delete(hql.length() - 3, hql.length());
 			hql.append(" ) Order By id DESC");
 		} else {
 			hql.append(" 1=1 Order By id DESC");
@@ -663,8 +657,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		 * orMap.put("order_serial_no", "222"); orMap.put("order_id",
 		 * "65478417");
 		 */
-
-		List<Morder> reList = bd.findByPropertyOr(Morder.class, null, null, 0, 0);
+		List<StockReviewLog> reList = bd.findByPropertyOr(StockReviewLog.class, null, null, 0, 0);
 
 		System.out.println("0----->>>>" + reList.size());
 	}
