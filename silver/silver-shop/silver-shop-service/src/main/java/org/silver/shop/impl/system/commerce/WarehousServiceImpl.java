@@ -12,6 +12,7 @@ import org.silver.shop.dao.system.commerce.WarehousDao;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.commerce.WarehouseContent;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -23,18 +24,17 @@ public class WarehousServiceImpl implements WarehousService {
 	private WarehousDao warehousDao;
 
 	@Override
-	public Map<String, Object> getWarehousInfo(String merchantId, String merchantName, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
+	public Map<String, Object> getWarehousInfo(String merchantId, int page, int size) {
 		List<Object> cacheList = new ArrayList<>();
-		params.put("merchantId", merchantId);
+		Map<String, Object> params = new HashMap<>();
+		if(StringEmptyUtils.isNotEmpty(merchantId)){
+			params.put("merchantId", merchantId);
+		}
 		params.put("deleteFlag", 0);
 		List<Object> reList = warehousDao.findByProperty(WarehouseContent.class, params, page, size);
 		long totalCount = warehousDao.findByPropertyCount(WarehouseContent.class, params);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
 				WarehouseContent warehouse = (WarehouseContent) reList.get(i);
@@ -45,9 +45,7 @@ public class WarehousServiceImpl implements WarehousService {
 			}
 			return ReturnInfoUtils.successDataInfo(reList, totalCount);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据！");
 		}
 	}
 

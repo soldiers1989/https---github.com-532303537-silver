@@ -29,7 +29,7 @@ public class WarehousController {
 
 	@RequestMapping(value = "/getWarehousInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("查询商户下仓库")
+	@ApiOperation("商户查询仓库")
 	@RequiresRoles("Merchant")
 	public String getWarehousInfo(@RequestParam("page") int page, @RequestParam("size") int size,
 			HttpServletRequest req, HttpServletResponse response) {
@@ -38,8 +38,20 @@ public class WarehousController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = warehousTransaction.getWarehousInfo(page, size);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(warehousTransaction.getWarehousInfo(page, size)).toString();
 	}
 
+	@RequestMapping(value = "/getInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员查询商户仓库")
+	@RequiresRoles("Manager")
+	public String getInfo(@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
+			HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(warehousTransaction.getInfo(page, size)).toString();
+	}
 }

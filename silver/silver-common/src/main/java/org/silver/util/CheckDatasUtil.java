@@ -193,4 +193,41 @@ public class CheckDatasUtil {
 		}
 	}
 
+	/**
+	 * 根据对应的线下充值信息,将参数名称修改为对应的中文名称方便阅读
+	 * 
+	 * @param jsonList
+	 * @param noNullKeys
+	 * @return Map
+	 */
+	public static Map<String, Object> changeOfflineRechargeMsg(JSONArray jsonList, List<String> noNullKeys) {
+		Map<String, Object> reDataMap = CheckDatasUtil.checkData(jsonList, noNullKeys);
+		String msg = "";
+		if ("1".equals(reDataMap.get(BaseCode.STATUS.toString()))) {
+			return reDataMap;
+		} else {
+			msg = reDataMap.get(BaseCode.MSG.toString()) + "";
+			msg = msg.replace("第1条数据", "");
+			if (msg.contains("beneficiaryAccount")) {
+				msg = msg.replace("beneficiaryAccount", "收款人账号");
+			} else if (msg.contains("beneficiaryName")) {
+				msg = msg.replace("beneficiaryName", "收款人名称");
+			} else if (msg.contains("beneficiaryBank")) {
+				msg = msg.replace("beneficiaryBank", "收款人开户行");
+			} else if (msg.contains("remittanceAmount")) {
+				msg = msg.replace("remittanceAmount", "汇款金额");
+			} else if (msg.contains("remittanceAccount")) {
+				msg = msg.replace("remittanceAccount", "汇款人账号");
+			} else if (msg.contains("remittanceName")) {
+				msg = msg.replace("remittanceName", "汇款人名称");
+			} else if (msg.contains("remittanceBank")) {
+				msg = msg.replace("remittanceBank", "汇款人开户行");
+			} else if (msg.contains("remittanceDate")) {
+				msg = msg.replace("remittanceDate", "汇款时间");
+			} 
+			reDataMap.put(BaseCode.MSG.toString(), msg);
+			return reDataMap;
+		}
+	}
+	
 }

@@ -768,12 +768,15 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 
 	/**
 	 * 更新手工订单信息
-	 * @param order 订单实体信息类
-	 * @param datasMap 修改参数
+	 * 
+	 * @param order
+	 *            订单实体信息类
+	 * @param datasMap
+	 *            修改参数
 	 * @return Map
 	 */
 	private Map<String, Object> updateManualOrder(Morder order, Map<String, Object> datasMap) {
-		if(order == null || datasMap == null ){ 
+		if (order == null || datasMap == null) {
 			return ReturnInfoUtils.errorInfo("更新订单信息时,请求参数不能为null！");
 		}
 		String recipientName = datasMap.get("recipientName") + "";
@@ -793,8 +796,6 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		}
 		order.setRecipientTel(recipientTel);
 		order.setRecipientProvincesCode(datasMap.get("recipientProvincesCode") + "");
-		order.setRecipientProvincesName(datasMap.get("recipientProvincesName") + "");
-		order.setRecipientCityName(datasMap.get("recipientCityName") + "");
 		order.setRecipientCityCode(datasMap.get("recipientCityCode") + "");
 		order.setRecipientAreaCode(datasMap.get("recipientAreaCode") + "");
 		order.setRecipientAreaName(datasMap.get("recipientAreaName") + "");
@@ -824,41 +825,41 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 			order.setIdcardCertifiedFlag(0);
 		}
+		order.setWaybill(datasMap.get(WAYBILL) + "");
+		if (!manualOrderDao.update(order)) {
+			return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
+		}
 		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
 	 * 检查省市区代码与名称是否正确
-	 * @param order 订单信息实体类
+	 * 
+	 * @param order
+	 *            订单信息实体类
 	 * @return Map
 	 */
 	private Map<String, Object> checkProvincesCityArea(Morder order) {
 		if (order == null) {
-			return ReturnInfoUtils.errorInfo("检查省市区失败,订单不能为null！");
+			return ReturnInfoUtils.errorInfo("检查省市区失败,订单不能为null");
 		}
 		String recipientProvincesCode = order.getRecipientProvincesCode();
-		String recipientProvincesName = order.getRecipientProvincesName();
 		Map<String, Object> params = new HashMap<>();
 		params.put("provinceCode", recipientProvincesCode);
-		params.put("provinceName", recipientProvincesName);
 		List<Province> rePronvinceList = manualOrderDao.findByProperty(Province.class, params, 1, 1);
 		if (rePronvinceList == null || rePronvinceList.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("收货人省份名称与编码错误！");
+			return ReturnInfoUtils.errorInfo("收货人省份名称错误！");
 		}
+		Province province = rePronvinceList.get(0);
+		order.setRecipientProvincesName(province.getProvinceName());
 		params.clear();
 		params.put("cityCode", order.getRecipientCityCode());
-		params.put("cityName", order.getRecipientCityName());
 		List<City> reCityList = manualOrderDao.findByProperty(City.class, params, 1, 1);
 		if (reCityList == null || reCityList.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("收货人城市名称与编码错误！");
+			return ReturnInfoUtils.errorInfo("收货人城市名称错误！");
 		}
-		params.clear();
-		params.put("areaCode", order.getRecipientAreaCode());
-		params.put("areaName", order.getRecipientAreaName());
-		List<Area> reAreaList = manualOrderDao.findByProperty(Area.class, params, 1, 1);
-		if (reAreaList == null || reAreaList.isEmpty()) {
-			return ReturnInfoUtils.errorInfo("收货人区域名称与编码错误！");
-		}
+		City city = reCityList.get(0);
+		order.setRecipientCityName(city.getCityName());
 		return ReturnInfoUtils.successInfo();
 	}
 }

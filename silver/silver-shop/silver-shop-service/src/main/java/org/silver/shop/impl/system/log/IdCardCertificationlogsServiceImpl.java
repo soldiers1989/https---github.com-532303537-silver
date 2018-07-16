@@ -1,7 +1,5 @@
 package org.silver.shop.impl.system.log;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,8 +7,6 @@ import org.silver.common.BaseCode;
 import org.silver.shop.api.system.log.IdCardCertificationlogsService;
 import org.silver.shop.dao.system.log.IdCardCertificationlogsDao;
 import org.silver.shop.model.system.log.IdCardCertificationLog;
-import org.silver.shop.model.system.manual.Morder;
-import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +26,8 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 			return reMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reMap.get("param");
-		List<IdCardCertificationLog> idCardlist = ikdCardCertificationlogsDao.findByPropertyLike(IdCardCertificationLog.class, paramMap, null, page, size);
-		long count = ikdCardCertificationlogsDao.findByPropertyLikeCount(IdCardCertificationLog.class, paramMap, null);
+		List<IdCardCertificationLog> idCardlist = ikdCardCertificationlogsDao.findByProperty(IdCardCertificationLog.class, paramMap,  page, size);
+		long count = ikdCardCertificationlogsDao.findByPropertyCount(IdCardCertificationLog.class, paramMap);
 		if(idCardlist == null ){
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		}else if (!idCardlist.isEmpty()) {

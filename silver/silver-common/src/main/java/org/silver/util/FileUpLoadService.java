@@ -18,37 +18,41 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-
-
 @Component("fileUpLoadService")
 public class FileUpLoadService {
-	
+
 	@Resource
 	private CompressPic compressPic;
 
-	
 	public Map<String, Object> groupUpload(HttpServletRequest req, HttpServletResponse resp) {
 		return universalDoUpload(req, "WEB-INF/res/upload/", ".jpg", true, 400, 400, null);
 	}
 
-/**
- * 
- * @param req
- * @param storePath  存储的路径
- * @param fType 存储的格式 后缀名  (如  .jpg ，.png)  
- * @param compress  是否进行压缩
- * @param width 压缩比例宽
- * @param height 压缩比例高
- * @param sign  不为null则作为图片名标识
- * @return  
- */
-	public Map<String, Object> universalDoUpload(HttpServletRequest req,String storePath,String fType,boolean compress,int width,int height,String sign){
+	/**
+	 * 
+	 * @param req
+	 * @param storePath
+	 *            存储的路径
+	 * @param fType
+	 *            存储的格式 后缀名 (如 .jpg ，.png)
+	 * @param compress
+	 *            是否进行压缩
+	 * @param width
+	 *            压缩比例宽
+	 * @param height
+	 *            压缩比例高
+	 * @param sign
+	 *            不为null则作为图片名标识
+	 * @return
+	 */
+	public Map<String, Object> universalDoUpload(HttpServletRequest req, String storePath, String fType,
+			boolean compress, int width, int height, String sign) {
 		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(req.getSession().getServletContext());
 		Map<String, Object> reqMap = new HashMap<>();
 		if (multipartResolver.isMultipart(req)) {
 			MultipartHttpServletRequest multiRequest = (MultipartHttpServletRequest) req;
 			Iterator<String> iter = multiRequest.getFileNames();
-			String imgName="";
+			String imgName = "";
 			List<String> strl = new ArrayList<>();
 			while (iter.hasNext()) {
 				MultipartFile file = multiRequest.getFile(iter.next());
@@ -57,19 +61,23 @@ public class FileUpLoadService {
 					CommonsMultipartFile cf = (CommonsMultipartFile) file;
 					DiskFileItem fi = (DiskFileItem) cf.getFileItem();
 					if (myFileName.trim() != "") {
-						if(sign!=null&&!"".equals(sign)){
+						if (sign != null && !"".equals(sign)) {
 							Random r = new Random();
-							imgName=sign + (r.nextInt(100) + "")+fType;
-						}else{
-							imgName = AppUtil.generateAppKey()+"_"+System.currentTimeMillis() + fType;
+							imgName = sign + (r.nextInt(100) + "") + fType;
+						} else {
+							imgName = AppUtil.generateAppKey() + "_" + System.currentTimeMillis() + fType;
 						}
-						//System.out.println(req.getSession().getServletContext().getRealPath("/"));
-						String path= /*req.getSession().getServletContext().getRealPath("/") + */storePath;
-						if(compress){
+						// System.out.println(req.getSession().getServletContext().getRealPath("/"));
+						String path = /*
+										 * req.getSession().getServletContext().
+										 * getRealPath("/") +
+										 */storePath;
+						if (compress) {
 							try {
-								if (compressPic.compressPic(fi.getStoreLocation(),path,imgName, width, height, true)) {
+								if (compressPic.compressPic(fi.getStoreLocation(), path, imgName, width, height,
+										true)) {
 									strl.add(imgName);
-								}else{
+								} else {
 									strl.add("");
 								}
 							} catch (IllegalStateException e) {
@@ -78,11 +86,11 @@ public class FileUpLoadService {
 								reqMap.put("err", "CompressPic invalid");
 								return reqMap;
 							}
-						}else{
-							File localFile = new File(path+imgName);
+						} else {
+							File localFile = new File(path + imgName);
 							try {
-								if (!localFile.exists()){
-									localFile.mkdirs(); 
+								if (!localFile.exists()) {
+									localFile.mkdirs();
 								}
 								file.transferTo(localFile);
 								strl.add(imgName);
@@ -94,7 +102,7 @@ public class FileUpLoadService {
 							} catch (IOException e) {
 								e.printStackTrace();
 								reqMap.put("status", -2);
-								reqMap.put("err", "IOException : "+e.getMessage() );
+								reqMap.put("err", "IOException : " + e.getMessage());
 								return reqMap;
 							}
 						}
@@ -109,8 +117,7 @@ public class FileUpLoadService {
 		reqMap.put("err", "Invalid params");
 		return reqMap;
 	}
-	
-	
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 

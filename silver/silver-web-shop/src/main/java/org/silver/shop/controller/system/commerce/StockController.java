@@ -260,11 +260,6 @@ public class StockController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	public static void main(String[] args) {
-		// double tax = goodsTotalPrice* (consolidatedTax / 1000d);
-		double d = 100;
-		int count = 1;
-		double c =0;
-		System.out.println(d * (c / 1000d));
-	}
+	
+	
 }

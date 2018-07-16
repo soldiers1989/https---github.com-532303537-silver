@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-7-16 11:51:44 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.OfflineRechargeContent" table="ym_shop_sys_offline_recharge_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="offlineRechargeId" type="java.lang.String">
+            <column name="offlineRechargeId" not-null="true" unique="true"/>
+        </property>
+        <property name="applicantId" type="java.lang.String">
+            <column name="applicantId" not-null="true"/>
+        </property>
+        <property name="applicant" type="java.lang.String">
+            <column name="applicant" not-null="true"/>
+        </property>
+        <property name="beneficiaryAccount" type="java.lang.String">
+            <column name="beneficiaryAccount" not-null="true"/>
+        </property>
+        <property name="beneficiaryName" type="java.lang.String">
+            <column name="beneficiaryName" not-null="true"/>
+        </property>
+        <property name="beneficiaryBank" type="java.lang.String">
+            <column name="beneficiaryBank" not-null="true"/>
+        </property>
+        <property name="remittanceAmount" type="double">
+            <column name="remittanceAmount" not-null="true"/>
+        </property>
+        <property name="remittanceAccount" type="java.lang.String">
+            <column name="remittanceAccount" not-null="true"/>
+        </property>
+        <property name="remittanceName" type="java.lang.String">
+            <column name="remittanceName" not-null="true"/>
+        </property>
+        <property name="remittanceBank" type="java.lang.String">
+            <column name="remittanceBank" not-null="true"/>
+        </property>
+        <property name="remittanceDate" type="java.util.Date">
+            <column name="remittanceDate" not-null="true"/>
+        </property>
+        <property name="remittanceReceipt" type="java.lang.String">
+            <column name="remittanceReceipt" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+        <property name="reviewerType" type="java.lang.String">
+            <column name="reviewerType" />
+        </property>
+    </class>
+</hibernate-mapping>

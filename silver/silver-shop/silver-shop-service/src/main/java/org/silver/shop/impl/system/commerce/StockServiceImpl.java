@@ -14,6 +14,7 @@ import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.dao.system.commerce.StockDao;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
+import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -36,7 +37,7 @@ public class StockServiceImpl implements StockService {
 	 * 驼峰命名：商品自编号
 	 */
 	private static final String ENT_GOODS_NO = "entGoodsNo";
-	
+
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
 			int size) {
@@ -78,13 +79,14 @@ public class StockServiceImpl implements StockService {
 			List<Object> orList = new ArrayList<>();
 			Map<String, Object> orMap = null;
 			// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案
-			orMap=new HashMap<>();
+			orMap = new HashMap<>();
 			orMap.put("recordFlag", 1);
 			orList.add(orMap);
-			orMap=new HashMap<>();
+			orMap = new HashMap<>();
 			orMap.put("recordFlag", 2);
 			orList.add(orMap);
-			List<GoodsRecordDetail> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orList, 1, 1);
+			List<GoodsRecordDetail> goodsList = stockDao.findByPropertyOr(GoodsRecordDetail.class, params, orList, 1,
+					1);
 			if (goodsList == null) {
 				return ReturnInfoUtils.errorInfo("查询商品失败,服务器繁忙！");
 			} else if (!goodsList.isEmpty()) {
@@ -97,7 +99,7 @@ public class StockServiceImpl implements StockService {
 				listMap.add(errorMap);
 			}
 		}
-		return ReturnInfoUtils.errorInfo(listMap,jsonList.size());
+		return ReturnInfoUtils.errorInfo(listMap, jsonList.size());
 	}
 
 	private void saveStockInfo(Map<String, Object> datasMap, GoodsRecordDetail goodsRecord, String merchantId,
@@ -232,27 +234,28 @@ public class StockServiceImpl implements StockService {
 				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]查询失败,服务器繁忙！");
 				errorList.add(errorMap);
 			} else if (!reStockList.isEmpty() && !reGoodsRecordList.isEmpty()) {
-				GoodsRecordDetail goodsRecordInfo =  reGoodsRecordList.get(0);
-				String goodsFirstTypeId = goodsRecordInfo.getSpareGoodsFirstTypeId();
-				String goodsSecondTypeId = goodsRecordInfo.getSpareGoodsSecondTypeId();
-				String goodsThirdTypeId = goodsRecordInfo.getSpareGoodsThirdTypeId();
-				if (StringEmptyUtils.isEmpty(goodsFirstTypeId) || StringEmptyUtils.isEmpty(goodsSecondTypeId)
-						|| StringEmptyUtils.isEmpty(goodsThirdTypeId)) {
-					errorMap.put(BaseCode.MSG.getBaseCode(), goodsRecordInfo.getGoodsName() + " 上/下架状态修改失败,商品类型未设置！");
-					errorList.add(errorMap);
-					continue;
+				GoodsRecordDetail goodsRecordInfo = reGoodsRecordList.get(0);
+				Map<String, Object> reCheckGoodsMap = checkGoodsInfo(goodsRecordInfo, errorList);
+				if (!"1".equals(reCheckGoodsMap.get(BaseCode.STATUS.toString()))) {
+					return reCheckGoodsMap;
 				}
-				StockContent stockInfo =  reStockList.get(0);
-				stockInfo.setSellFlag(type);
-				if(type == 1){//当上架时添加商品上架时间
-					stockInfo.setSellDate(new Date());
-				}else if( type == 2){//当设置下架时添加商品下架时间
-					stockInfo.setDropOffDate(new Date());
+				StockContent stockContent = reStockList.get(0);
+				if (type == 1) {// 当上架时添加商品上架时间
+					stockContent.setSellFlag(1);
+				//	stockContent.setSellFlag(3);
+					//当库存商品商家时，添加商品审核日志,待运营人员审核商品
+					//Map<String,Object> reLogMap  = addStockReviewLog(stockContent);
+					//if(!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))){
+						//return reLogMap;
+					//}
+				} else if (type == 2) {// 当设置下架时添加商品下架时间
+					stockContent.setSellFlag(2);
+					stockContent.setDropOffDate(new Date());
 				}
-				stockInfo.setCreateBy(merchantName);
-				stockInfo.setCreateDate(date);
-				if (!stockDao.update(stockInfo)) {
-					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "商品上/下架状态修改失败,服务器繁忙！");
+				stockContent.setCreateBy(merchantName);
+				stockContent.setCreateDate(date);
+				if (!stockDao.update(stockContent)) {
+					errorMap.put(BaseCode.MSG.getBaseCode(), stockContent.getGoodsName() + "商品上/下架状态修改失败,服务器繁忙！");
 					errorList.add(errorMap);
 				}
 			} else {
@@ -260,11 +263,59 @@ public class StockServiceImpl implements StockService {
 				errorList.add(errorMap);
 			}
 		}
-		Map<String,Object> statusMap = new HashMap<>();
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(errorList);
+	}
+
+	private Map<String, Object> addStockReviewLog(StockContent stockContent) {
+		if(stockContent == null){
+			return ReturnInfoUtils.errorInfo("添加审核日志失败,请求参数不能为null！");
+		}
+		//上下架标识：1-上架,2-下架,3-审核中
+		stockContent.setSellFlag(3);
+		StockReviewLog stockReviewLog = new StockReviewLog();
+		stockReviewLog.setEntGoodsNo(stockContent.getEntGoodsNo());
+		stockReviewLog.setMerchantId(stockContent.getMerchantId());
+		stockReviewLog.setMerchantName(stockContent.getMerchantName());
+		stockReviewLog.setOperationName("商品上架");
+		//审核标识：1-待审核，2-审核通过；3-审核不通过
+		stockReviewLog.setReviewerFlag(1);
+		stockReviewLog.setCreateDate(new Date());
+		if(!stockDao.add(stockReviewLog)){
+			return ReturnInfoUtils.errorInfo("保存库存审核日志失败,服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> checkGoodsInfo(GoodsRecordDetail goodsRecordInfo, List<Map<String, Object>> errorList) {
+		if (goodsRecordInfo == null) {
+			return ReturnInfoUtils.errorInfo("商品信息不能为null");
+		}
+		Map<String, Object> errorMap = null;
+		String goodsFirstTypeId = goodsRecordInfo.getSpareGoodsFirstTypeId();
+		String goodsSecondTypeId = goodsRecordInfo.getSpareGoodsSecondTypeId();
+		String goodsThirdTypeId = goodsRecordInfo.getSpareGoodsThirdTypeId();
+		if (StringEmptyUtils.isEmpty(goodsFirstTypeId) || StringEmptyUtils.isEmpty(goodsSecondTypeId)
+				|| StringEmptyUtils.isEmpty(goodsThirdTypeId)) {
+			errorMap = new HashMap<>();
+			errorMap.put(BaseCode.MSG.getBaseCode(), goodsRecordInfo.getGoodsName() + " 上/下架状态修改失败,商品类型未设置！");
+			errorList.add(errorMap);
+		}
+		// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
+		int status = goodsRecordInfo.getStatus();
+		if (status != 2) {
+			errorMap = new HashMap<>();
+			errorMap.put(BaseCode.MSG.getBaseCode(), goodsRecordInfo.getGoodsName() + " 上/下架状态修改失败,商品尚未备案成功！");
+			errorList.add(errorMap);
+		}
+		// 已备案商品状态:0-已备案,待审核,1-备案审核通过,2-正常备案,3-审核不通过
+		int recordFlag = goodsRecordInfo.getRecordFlag();
+		if (recordFlag == 0 || recordFlag == 3) {
+			errorMap = new HashMap<>();
+			errorMap.put(BaseCode.MSG.getBaseCode(),
+					goodsRecordInfo.getGoodsName() + " 上/下架状态修改失败,已备案商品并未通过审核,请联系管理员！");
+			errorList.add(errorMap);
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -385,6 +436,6 @@ public class StockServiceImpl implements StockService {
 				errorMsgList.add(errorMap);
 			}
 		}
-		return ReturnInfoUtils.errorInfo(errorMsgList,jsonList.size());
+		return ReturnInfoUtils.errorInfo(errorMsgList, jsonList.size());
 	}
 }

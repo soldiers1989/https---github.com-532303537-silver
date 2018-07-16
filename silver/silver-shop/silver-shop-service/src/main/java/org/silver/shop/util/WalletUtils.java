@@ -1,5 +1,6 @@
 package org.silver.shop.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.organization.AgentService;
 import org.silver.shop.api.system.organization.MemberService;
+import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.BaseDao;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Member;
@@ -17,14 +19,17 @@ import org.silver.shop.model.system.tenant.AgentWalletContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.util.CheckDatasUtil;
+import org.silver.util.MD5;
+import org.silver.util.MapSortUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.dubbo.common.json.JSONObject;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  * 钱包操作通用工具类
@@ -172,11 +177,30 @@ public class WalletUtils {
 	}
 	
 	public static void main(String[] args) {
-		Map<String, Object> item = new HashMap<>();
-		item.put("aa", "bb");
-		item.put("1", "2");
-		for (Map.Entry<String, Object> entry : item.entrySet()) {
-			System.out.println(", Value = " + entry.getValue());
-		}
+			String accessToken =  "Ym_WQ9BxIxLrPwqWShZHzOTHnTDDjRmCMhglKyDuN6Qqv1laMPEBFA63EnkuhluM2ZH_nntjrEAwhZkYlY6fC0XB218Eo8NcuB4DuXtkf9JWAaYRasK94kSJ2zBrrJ0TbQX9";
+			
+			Map<String, Object> params2 = new HashMap<>();
+			params2.put("version", "1.0");
+			params2.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
+			params2.put("businessCode", "YS02");
+			JSONObject bizContent = new JSONObject();
+			bizContent.put("user_ID", "44200019850312716X");
+			bizContent.put("user_name", "黃坤娣");
+			params2.put("bizContent", bizContent);
+			params2.put("timestamp", System.currentTimeMillis());
+			params2 = new MapSortUtils().sortMap(params2);
+			String str2 = YmMallConfig.APPKEY + accessToken + params2;
+			String clientSign = null;
+			try {
+				clientSign = MD5.getMD5(str2.getBytes("utf-8"));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			
+			// String result =
+			// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
+			// params);
+			params2.put("clientSign", clientSign);
+			System.out.println("---->>"+YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params2));
 	}
 }

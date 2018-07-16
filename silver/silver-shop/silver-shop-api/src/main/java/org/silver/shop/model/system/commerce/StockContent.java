@@ -34,7 +34,7 @@ public class StockContent implements Serializable {
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间	
 	private String merchantName;//商户名称
-	private int sellFlag;//上下架标识：1-上架,2-下架
+	private int sellFlag;//上下架标识：1-上架,2-下架,3-审核中
 	private String goodsName;// 商品名称
 	private String entGoodsNo;//商品备案ID
 	

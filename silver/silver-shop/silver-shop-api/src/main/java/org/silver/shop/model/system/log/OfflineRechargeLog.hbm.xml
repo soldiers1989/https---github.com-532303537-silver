@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-7-16 11:53:50 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.log.OfflineRechargeLog" table="ym_shop_sys_offline_recharge_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="offlineRechargeId" type="java.lang.String">
+            <column name="offlineRechargeId" not-null="true" unique="true"/>
+        </property>
+        <property name="reviewerId" type="java.lang.String">
+            <column name="reviewerId" />
+        </property>
+        <property name="reviewerName" type="java.lang.String">
+            <column name="reviewerName" />
+        </property>
+        <property name="currentNodeName" type="java.lang.String">
+            <column name="currentNodeName" />
+        </property>
+        <property name="previousNodeName" type="java.lang.String">
+            <column name="previousNodeName" />
+        </property>
+        <property name="reviewerFlag" type="int">
+            <column name="reviewerFlag" />
+        </property>
+        <property name="reviewDate" type="java.util.Date">
+            <column name="reviewDate" />
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+    </class>
+</hibernate-mapping>

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
-@Service("warehousTransaction")
+@Service
 public class WarehousTransaction {
 
 	@Reference
@@ -19,10 +19,13 @@ public class WarehousTransaction {
 	
 	public Map<String,Object> getWarehousInfo(int page,int size) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
-		return warehousService.getWarehousInfo(merchantId,merchantName,page,size);
+		return warehousService.getWarehousInfo(merchantId,page,size);
+	}
+
+	//管理员查询商户仓库
+	public Map<String,Object> getInfo(int page, int size) {
+		return warehousService.getWarehousInfo(null,page,size);
 	}
 }	
