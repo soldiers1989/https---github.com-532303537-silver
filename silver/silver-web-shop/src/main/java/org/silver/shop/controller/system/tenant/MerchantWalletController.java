@@ -2,6 +2,8 @@ package org.silver.shop.controller.system.tenant;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,8 +41,8 @@ public class MerchantWalletController {
 	@Autowired
 	private DaiFuPay daiFuPay;
 
-	private static final String DAI_FU_NOTIFY_URL= "https://ym.191ec.com/silver-web-shop/yspay-receive/dfReceive";
-	
+	private static final String DAI_FU_NOTIFY_URL = "https://ym.191ec.com/silver-web-shop/yspay-receive/dfReceive";
+
 	/**
 	 * 商户钱包充值
 	 * 
@@ -62,8 +64,7 @@ public class MerchantWalletController {
 			req.setAttribute("sign_type", DirectPayConfig.SIGN_ALGORITHM);
 			// request.setAttribute("sign", userName);
 			// 生成商户订单 out_trade_no total_amount
-			req.setAttribute("notify_url",
-					"https://ym.191ec.com/silver-web-shop/yspay-receive/walletRecharge");
+			req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/walletRecharge");
 			req.setAttribute("return_url", "https://asme.191ec.com/200.html");
 			// req.setAttribute("return_url",
 			// "https://www.191ec.com/silver-web-shop/");
@@ -124,8 +125,8 @@ public class MerchantWalletController {
 		if (StringEmptyUtils.isEmpty(amount) || amount < 0.01) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("结算金额错误!")).toString();
 		}
-		Map<String,Object> reCheckWalletMap = merchantWalletTransaction.getMerchantWallet(merchantId,amount);
-		if(!"1".equals(reCheckWalletMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reCheckWalletMap = merchantWalletTransaction.getMerchantWallet(merchantId, amount);
+		if (!"1".equals(reCheckWalletMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(reCheckWalletMap).toString();
 		}
 		Map<String, Object> reBankMap = merchantWalletTransaction.getMerchantBankInfo(merchantId);
@@ -133,23 +134,26 @@ public class MerchantWalletController {
 			return JSONObject.fromObject(reBankMap).toString();
 		}
 		MerchantBankContent bankContent = (MerchantBankContent) reBankMap.get(BaseCode.DATAS.toString());
-		String serialNo= createSerialNo();
-		//向银盛发起代付请求
-		Map<String,Object> reMap= daiFuPay.dfTrade(DAI_FU_NOTIFY_URL, serialNo, serialNo, amount, "商户资金结算", bankContent.getBankProvince(),
-				bankContent.getBankCity(), bankContent.getBankName(), bankContent.getBankAccountNo(),
-				bankContent.getBankAccountName(), bankContent.getBankAccountType(), bankContent.getBankCardType());
-		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+		String serialNo = createSerialNo();
+		// 向银盛发起代付请求
+		Map<String, Object> reMap = daiFuPay.dfTrade(DAI_FU_NOTIFY_URL, serialNo, serialNo, amount, "商户资金结算",
+				bankContent.getBankProvince(), bankContent.getBankCity(), bankContent.getBankName(),
+				bankContent.getBankAccountNo(), bankContent.getBankAccountName(), bankContent.getBankAccountType(),
+				bankContent.getBankCardType());
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(reMap).toString();
 		}
-		Map<String,Object> reReceiptLogMap = merchantWalletTransaction.addPaymentReceiptLog(merchantId,amount,serialNo,"withdraw");
-		if(!"1".equals(reReceiptLogMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reReceiptLogMap = merchantWalletTransaction.addPaymentReceiptLog(merchantId, amount,
+				serialNo, "withdraw");
+		if (!"1".equals(reReceiptLogMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(reReceiptLogMap).toString();
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 	}
-	
+
 	/**
 	 * 生成代付16位流水号
+	 * 
 	 * @return String 流水号
 	 */
 	private String createSerialNo() {
@@ -157,7 +161,53 @@ public class MerchantWalletController {
 		while (no.length() < 7) {
 			no = "0" + no;
 		}
-		return  "F" + DateUtil.formatDate(new Date(), "yyyyMMdd") + no;
+		return "F" + DateUtil.formatDate(new Date(), "yyyyMMdd") + no;
 	}
-	
+
+	@RequestMapping(value = "/offlineRechargeApplication", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("商户申请下线充值")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	// @RequiresPermissions("merchantWallet:offlineRechargeApplication")
+	public String offlineRechargeApplication(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		if (datasMap.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(merchantWalletTransaction.offlineRechargeApplication(req, datasMap)).toString();
+	}
+
+	@RequestMapping(value = "/getOfflineRechargeInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("商户查询下线钱包充值信息")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	// @RequiresPermissions("merchantFee:addServiceFee")
+	public String getOfflineRechargeInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(merchantWalletTransaction.getOfflineRechargeInfo(datasMap, page, size)).toString();
+	}
+
 }

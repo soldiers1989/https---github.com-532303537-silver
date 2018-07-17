@@ -11,10 +11,11 @@ public class Manager implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private long id;
-	private String managerId;// 管理员ID
+	private String managerId;// 管理员id
 	private String managerName;// 管理员名称
 	private String loginPassword;// 登陆密码
-	private int managerMarks;// 管理员标识1-超级管理员2-运营管理员
+	private int managerMarks;// 管理员标识：1-超级管理员、2-运营管理员、3-财务管理员
+	private String realName;// 真实姓名
 	private String description; // 描述
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
@@ -126,6 +127,14 @@ public class Manager implements Serializable {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getRealName() {
+		return realName;
+	}
+
+	public void setRealName(String realName) {
+		this.realName = realName;
 	}
 
 }

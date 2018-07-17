@@ -75,12 +75,12 @@ public class ManagerTransaction {
 	}
 
 	// 创建管理员
-	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks, String description) {
+	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks, String description, String realName) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String reManagerName = managerInfo.getManagerName();
-		return managerService.createManager(managerName, loginPassword, managerMarks, reManagerName,description);
+		return managerService.createManager(managerName, loginPassword, managerMarks, reManagerName,description,realName);
 	}
 
 	// 管理员查询所有商户信息

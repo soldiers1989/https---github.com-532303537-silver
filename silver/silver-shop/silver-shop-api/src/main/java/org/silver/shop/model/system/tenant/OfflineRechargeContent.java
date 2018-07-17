@@ -20,14 +20,15 @@ public class OfflineRechargeContent implements Serializable {
 	private String beneficiaryAccount;// 收款人账号
 	private String beneficiaryName;// 收款人名称
 	private String beneficiaryBank;// 收款人开户行
+	private String remittanceSerialNo;// 汇款流水号
 	private double remittanceAmount;// 汇款金额
 	private String remittanceAccount;// 汇款人账号
 	private String remittanceName;// 汇款人名称
 	private String remittanceBank;// 汇款人开户行
 	private Date remittanceDate;// 汇款时间
 	private String remittanceReceipt;// 汇款回执图片
-	private String reviewerType;//审核类型：firstTrial-运营初审、financialAudit-财务审核、end-结束
-	
+	private String reviewerType;// 审核类型：firstTrial-运营初审、financialAudit-财务审核、end-结束
+
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -202,6 +203,14 @@ public class OfflineRechargeContent implements Serializable {
 
 	public void setReviewerType(String reviewerType) {
 		this.reviewerType = reviewerType;
+	}
+
+	public String getRemittanceSerialNo() {
+		return remittanceSerialNo;
+	}
+
+	public void setRemittanceSerialNo(String remittanceSerialNo) {
+		this.remittanceSerialNo = remittanceSerialNo;
 	}
 
 }

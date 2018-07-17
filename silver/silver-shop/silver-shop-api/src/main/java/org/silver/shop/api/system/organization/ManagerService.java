@@ -23,13 +23,14 @@ public interface ManagerService {
 	 * 创建管理员
 	 * @param managerName 管理员账号名
 	 * @param loginPassword 登陆密码
-	 * @param managerMarks 管理员标识1-超级管理员2-运营管理员
+	 * @param managerMarks 管理员标识：1-超级管理员、2-运营管理员、3-财务管理员
 	 * @param reManagerName 当前管理员姓名
 	 * @param description 描述
+	 * @param realName 真实姓名
 	 * @return
 	 */
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName, String description);
+			String reManagerName, String description, String realName);
 
 	/**
 	 * 管理员查询所有商户信息

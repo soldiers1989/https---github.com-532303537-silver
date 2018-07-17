@@ -6,6 +6,8 @@ import java.util.Map;
 import org.silver.shop.dao.BaseDao;
 import org.silver.shop.dao.BaseDaoImpl;
 
+import com.justep.baas.data.Table;
+
 public interface MerchantWalletDao<E> extends BaseDao{
 
 	/**
@@ -61,4 +63,13 @@ public interface MerchantWalletDao<E> extends BaseDao{
 	 * @return
 	 */
 	public boolean update(Object entity);
+	
+	/**
+	 * 
+	 * @param params
+	 * @param page
+	 * @param size
+	 * @return
+	 */
+	public Table getApplication(Map<String, Object> params, int page, int size);
 }

@@ -1,17 +1,11 @@
 package org.silver.shop.task;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.api.system.tenant.MemberWalletService;
-import org.silver.shop.impl.system.cross.PaymentServiceImpl;
-import org.silver.util.TaskUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * 创建支付单时商户进行钱包扣款子任务

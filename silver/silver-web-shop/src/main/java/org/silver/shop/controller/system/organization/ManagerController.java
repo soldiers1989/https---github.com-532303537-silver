@@ -108,20 +108,16 @@ public class ManagerController {
 	@RequiresPermissions("manager:createManager")
 	public String createManager(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("managerName") String managerName, @RequestParam("loginPassword") String loginPassword,
-			@RequestParam("managerMarks") int managerMarks,String description) {
+			@RequestParam("managerMarks") int managerMarks, String description,String realName) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (managerName != null && loginPassword != null && managerMarks == 1 || managerMarks == 2) {
-			statusMap = managerTransaction.createManager(managerName, loginPassword, managerMarks,description);
-			return JSONObject.fromObject(statusMap).toString();
+		if (managerName != null && loginPassword != null ) {
+			return JSONObject.fromObject(managerTransaction.createManager(managerName, loginPassword, managerMarks, description,realName)).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数错误！")).toString();
 		}
 	}
 
@@ -295,7 +291,7 @@ public class ManagerController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		int type = Integer.parseInt(datasMap.get("type")+"");
+		int type = Integer.parseInt(datasMap.get("type") + "");
 		int imgLength = Integer.parseInt(datasMap.get("imgLength") + "");
 		if (type == 1 || type == 2 && imgLength > 0) {
 			return JSONObject.fromObject(managerTransaction.managerAddMerchantInfo(req, datasMap)).toString();
@@ -317,8 +313,7 @@ public class ManagerController {
 	@ApiOperation("管理员修改商户信息")
 	@ResponseBody
 	@RequiresPermissions("merchant:editMerhcnatInfo")
-	public String editMerhcnatInfo(HttpServletRequest req, HttpServletResponse response,
-			 int length) {
+	public String editMerhcnatInfo(HttpServletRequest req, HttpServletResponse response, int length) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -377,7 +372,7 @@ public class ManagerController {
 	 */
 	@RequestMapping(value = "/findMemberDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	//@RequiresPermissions("member:findAllmemberInfo")
+	// @RequiresPermissions("member:findAllmemberInfo")
 	public String findMemberDetail(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("memberId") String memberId) {
 		String originHeader = req.getHeader("Origin");
@@ -582,8 +577,7 @@ public class ManagerController {
 		Map<String, Object> statusMap = managerTransaction.resetMerchantLoginPassword(merchantId);
 		return JSONObject.fromObject(statusMap).toString();
 	}
-	
-	
+
 	/**
 	 * 管理员获取商户业务(详情)信息
 	 * 
@@ -614,7 +608,7 @@ public class ManagerController {
 			return JSONObject.fromObject(statusMap).toString();
 		}
 	}
-	
+
 	/**
 	 * 临时-管理员更新旧管理员权限信息进权限表中
 	 * 

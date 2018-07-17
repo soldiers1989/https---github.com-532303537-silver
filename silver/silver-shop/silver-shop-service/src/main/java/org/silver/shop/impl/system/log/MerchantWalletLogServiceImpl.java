@@ -47,7 +47,7 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			Map<String, Object> reCheckMap = walletUtils.checkMerchantWalletLogInfo(datasMap);
+			Map<String, Object> reCheckMap = WalletUtils.checkMerchantWalletLogInfo(datasMap);
 			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckMap;
 			}
@@ -93,7 +93,7 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 			}
 			return ReturnInfoUtils.successInfo();
 		} catch (Exception e) {
-			logger.error("----商户钱包扣费并且记录钱包日志-->" + e);
+			logger.error("----商户钱包记录钱包日志错误-->" + e);
 			return ReturnInfoUtils.errorInfo("添加钱包日志失败,服务器繁忙!!");
 		}
 	}

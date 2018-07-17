@@ -5,21 +5,8 @@ import java.util.Map;
 public interface OfflineRechargeService {
 
 	/**
-	 * 商户线下加款申请
-	 * @param datasMap 
-	 * @return Map
-	 */
-	public Map<String, Object> merchantApplication(Map<String, Object> datasMap);
-
-	/**
-	 * 查询线下加款信息
-	 * @param datasMap
-	 * @return
-	 */
-	public Map<String, Object> getApplication(Map<String, Object> datasMap,int page,int size);
-
-	/**
 	 * 获取线下加款申请详情
+	 * 
 	 * @param offlineRechargeId
 	 * @return
 	 */
@@ -27,21 +14,35 @@ public interface OfflineRechargeService {
 
 	/**
 	 * 管理员初审线下加款信息
-	 * @param offlineRechargeId 流水id
-	 * @param managerName 管理员名称
-	 * @param managerId 
-	 * @param reviewerFlag 
-	 * @return
-	 */
-	public Map<String, Object> managerReview(String offlineRechargeId, String managerName, String managerId, int reviewerFlag, String note);
-
-	/**
 	 * 
 	 * @param offlineRechargeId
+	 *            流水id
 	 * @param managerName
+	 *            管理员名称
 	 * @param managerId
+	 *            管理员id
 	 * @param reviewerFlag
+	 *            审核标识：1-待审核、2-通过、3-不通过、
 	 * @param note
+	 *            批注说明信息
+	 * @return
+	 */
+	public Map<String, Object> managerReview(String offlineRechargeId, String managerName, String managerId,
+			int reviewerFlag, String note);
+
+	/**
+	 * 财务审核信息
+	 * 
+	 * @param offlineRechargeId
+	 *            流水id
+	 * @param managerName
+	 *            管理员名称
+	 * @param managerId
+	 *            管理员id
+	 * @param reviewerFlag
+	 *            审核标识：1-待审核、2-通过、3-不通过
+	 * @param note
+	 *            批注说明信息
 	 * @return
 	 */
 	public Map<String, Object> financialReview(String offlineRechargeId, String managerName, String managerId,

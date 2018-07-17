@@ -233,7 +233,7 @@ public final class SearchUtils {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
-		List<Map<String,Object>> orList=  new ArrayList<>();
+		List<Map<String, Object>> orList = new ArrayList<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -292,16 +292,16 @@ public final class SearchUtils {
 				paramMap.put(key, value.trim());
 				break;
 			case "order_record_status":
-				Map<String,Object> orMap = null;
-				if("2".equals(value)){
-					//申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+				Map<String, Object> orMap = null;
+				if ("2".equals(value)) {
+					// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
 					orMap = new HashMap<>();
 					orMap.put("order_record_status", 2);
 					orList.add(orMap);
 					orMap = new HashMap<>();
 					orMap.put("order_record_status", 10);
 					orList.add(orMap);
-				}else{
+				} else {
 					paramMap.put(key, Integer.parseInt(value));
 				}
 				break;
@@ -724,6 +724,7 @@ public final class SearchUtils {
 
 	/**
 	 * 通用检索商户口岸费率
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -759,9 +760,10 @@ public final class SearchUtils {
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}
-	
+
 	/**
 	 * 通用检索商户口岸费率
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -797,9 +799,10 @@ public final class SearchUtils {
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}
-	
+
 	/**
 	 * 通用检索商户钱包工具类
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -829,9 +832,10 @@ public final class SearchUtils {
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}
-	
+
 	/**
 	 * 通用检索商户身份证实名认证记录工具类
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -865,13 +869,12 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "tollFlag":
-				try{
+				try {
 					paramMap.put(key, Integer.parseInt(value));
-				}catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("收费标识错误!");
+				} catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("收费标识错误!");
 				}
 				break;
-				
 			default:
 				break;
 			}
@@ -884,6 +887,7 @@ public final class SearchUtils {
 
 	/**
 	 * 通用检索身份证实名库工具类
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -917,18 +921,18 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "type":
-				try{
-					paramMap.put(key, Integer.parseInt(value));	
-				}catch (Exception e) {
+				try {
+					paramMap.put(key, Integer.parseInt(value));
+				} catch (Exception e) {
 					return ReturnInfoUtils.errorInfo("类型参数格式错误!");
 				}
 				break;
 			case "status":
 				paramMap.put(key, value);
-				break;	
+				break;
 			case "certifiedNo":
 				paramMap.put(key, value);
-				break;	
+				break;
 			default:
 				break;
 			}
@@ -938,4 +942,5 @@ public final class SearchUtils {
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}
+	
 }

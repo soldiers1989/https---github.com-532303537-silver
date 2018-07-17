@@ -38,6 +38,16 @@ public interface MerchantWalletService {
 	 * 
 	 */
 	public void addWalletRechargeLog(String merchantId, String merchantName, double amount, String orderId);
-	
-
+	/**
+	 * 商户线下加款申请
+	 * @param datasMap 
+	 * @return Map
+	 */
+	public Map<String, Object> merchantApplication(Map<String, Object> datasMap);
+	/**
+	 * 查询线下加款信息
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> getOfflineRechargeInfo(Map<String, Object> datasMap,int page,int size);
 }

@@ -1048,7 +1048,9 @@ public class PaymentServiceImpl implements PaymentService {
 						// 当创建完支付流水号之后
 						bufferUtils.writeRedis(errorList, redisMap);
 						// 创建一个生成钱包流水子任务
-						String memberId = redisMap.get("memberId") + "";
+						//String memberId = redisMap.get("memberId") + "";
+						//暂时写死
+						String memberId = "Member_2017000025928";
 						if (StringEmptyUtils.isNotEmpty(memberId)) {
 							WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, merchantId,
 									tradeNo, memberWalletService, order.getActualAmountPaid());

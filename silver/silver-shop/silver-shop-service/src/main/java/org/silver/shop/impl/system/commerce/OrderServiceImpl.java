@@ -133,7 +133,6 @@ public class OrderServiceImpl implements OrderService {
 			return reMap;
 		}
 		double totalPrice = Double.parseDouble(reMap.get(GOODS_TOTAL_PRICE) + "");
-
 		// 订单结算
 		Map<String, Object> reStatusMap = liquidation(memberId, type, jsonList, totalPrice, entOrderNo, memberName);
 		if (!"1".equals(reStatusMap.get(BaseCode.STATUS.toString()))) {
@@ -404,8 +403,6 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	private Map<String, Object> liquidation(String memberId, int type, List jsonList, double totalPrice,
 			String reEntOrderNo, String memberName) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> datasMap = new HashMap<>();
 		if (type == 1) {// 1-余额支付,2-跳转至银盛
 			Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId, memberName);
 			if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
@@ -413,17 +410,14 @@ public class OrderServiceImpl implements OrderService {
 			}
 			MemberWalletContent wallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			double balance = wallet.getBalance();
-			if (balance - totalPrice < 0) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "余额不足!");
-				return statusMap;
+			if ((balance - totalPrice) < 0) {
+				return ReturnInfoUtils.errorInfo("余额不足！");
 			}
 			wallet.setBalance(balance - totalPrice);
 			if (!orderDao.update(wallet)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "扣款失败,请重试！");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("扣款失败,请重试！");
 			}
+			Map<String, Object> datasMap = new HashMap<>();
 			datasMap.put("out_trade_no", reEntOrderNo);
 			datasMap.put("total_amount", totalPrice);
 			Map<String, Object> rePayMap = ysPayReceiveService.balancePayReceive(datasMap);
@@ -536,7 +530,7 @@ public class OrderServiceImpl implements OrderService {
 			params.put(ENT_ORDER_NO, reEntOrderNo);
 			List<Object> orderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 			OrderContent orderBase = (OrderContent) orderList.get(0);
-			// 订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时;
+			// 订单状态：1-待付款,2-已付款;3-商户待处理;4-订单超时
 			orderBase.setStatus(2);
 			if (!orderDao.update(orderBase)) {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
@@ -544,9 +538,7 @@ public class OrderServiceImpl implements OrderService {
 				return statusMap;
 			}
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "更新订单状态失败,订单编号错误,请重试！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("更新订单状态失败,订单编号错误,请重试！");
 		}
 
 		// 遍历购物车中信息,删除已支付的商品
@@ -565,9 +557,7 @@ public class OrderServiceImpl implements OrderService {
 				return statusMap;
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	// 创建订单及订单关联的商品信息
@@ -579,24 +569,16 @@ public class OrderServiceImpl implements OrderService {
 		params.put("orderId", newOrderId);
 		List<Object> reOrderList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
 		if (reOrderList != null && !reOrderList.isEmpty()) {
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count,
-					goodsRecordInfo, stock, entOrderNo, feeMap);
-			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
-				return reGoodsMap;
-			}
-			return reGoodsMap;
+			return createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo, stock, entOrderNo,
+					feeMap);
 		} else {
 			Map<String, Object> reMap = createOrderHeadInfo(memberId, memberName, newOrderId, stock, entOrderNo,
 					recInfo, feeMap);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
-			Map<String, Object> reGoodsMap = createOrderGoodsInfo(memberId, memberName, newOrderId, count,
-					goodsRecordInfo, stock, entOrderNo, feeMap);
-			if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
-				return reGoodsMap;
-			}
-			return reMap;
+			return createOrderGoodsInfo(memberId, memberName, newOrderId, count, goodsRecordInfo, stock, entOrderNo,
+					feeMap);
 		}
 	}
 
@@ -1807,7 +1789,7 @@ public class OrderServiceImpl implements OrderService {
 		// 物流状态：0-待发货,1-快件运输中,2-快件已签收
 		order.setEhsStatus(0);
 		// order.setWbEhsentName(wbEhsentName);
-		//来源标识：1-银盟商城、2-第三方推广
+		// 来源标识：1-银盟商城、2-第三方推广
 		order.setSourceFlag(2);
 		order.setEntOrderNo(createOrderId(2));
 
@@ -2083,7 +2065,8 @@ public class OrderServiceImpl implements OrderService {
 			return reRegisterMap;
 		}
 		try {
-			SendMsg.sendMsg(phone, "【广州银盟】感谢你使用银盟商城进行购物,现已为您自动注册账号,密码为: "+loginPassword+" ,请妥善保管您的登陆密码!链接：https://www.191ec.com");
+			SendMsg.sendMsg(phone,
+					"【广州银盟】感谢你使用银盟商城进行购物,现已为您自动注册账号,密码为: " + loginPassword + " ,请妥善保管您的登陆密码!链接：https://www.191ec.com");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

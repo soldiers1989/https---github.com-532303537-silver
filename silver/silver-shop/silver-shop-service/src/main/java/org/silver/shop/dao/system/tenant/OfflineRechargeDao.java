@@ -8,6 +8,6 @@ import com.justep.baas.data.Table;
 
 public interface OfflineRechargeDao extends BaseDao{
 
-	Table getApplication(Map<String, Object> params, int page, int size);
+	
 
 }

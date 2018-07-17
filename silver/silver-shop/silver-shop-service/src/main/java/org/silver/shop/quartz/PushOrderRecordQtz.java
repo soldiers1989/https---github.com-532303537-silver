@@ -245,15 +245,15 @@ public class PushOrderRecordQtz {
 		customsMap.put("appkey", appkey);
 		Map<String, Object> reOrderMap = mpayService.sendOrder(customsMap, reOrderGoodsList, tok, order);
 		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()) + "")) {
-			logger.error(order.getOrder_id() + "--自助申报订单,推送失败-->" + reOrderMap.get(BaseCode.MSG.toString()));
 			// 当服务器接收失败时,将订单网络接收状态更新为失败
 			Map<String, Object> reMap = mpayService.updateOrderErrorStatus(order.getOrder_id());
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
 			// 添加至重发记录表中
-			addOrderResendInfo(order.getOrder_id(), order.getMerchant_no(), order.getCreate_by(),
+			Map<String,Object> reOrderResendMap = addOrderResendInfo(order.getOrder_id(), order.getMerchant_no(), order.getCreate_by(),
 					reOrderMap.get(BaseCode.MSG.toString()) + "", subParams);
+			logger.error(order.getOrder_id() + "--订单推送失败后,增加至重发记录-->" + reOrderResendMap.get(BaseCode.MSG.toString()));
 			// 当推送订单失败后,返回信息不能为成功,因此返回错误信息
 			return ReturnInfoUtils.errorInfo(reOrderMap.get(BaseCode.MSG.toString()) + "");
 		} else {

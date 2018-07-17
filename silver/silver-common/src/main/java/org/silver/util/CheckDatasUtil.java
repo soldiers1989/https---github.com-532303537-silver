@@ -208,13 +208,7 @@ public class CheckDatasUtil {
 		} else {
 			msg = reDataMap.get(BaseCode.MSG.toString()) + "";
 			msg = msg.replace("第1条数据", "");
-			if (msg.contains("beneficiaryAccount")) {
-				msg = msg.replace("beneficiaryAccount", "收款人账号");
-			} else if (msg.contains("beneficiaryName")) {
-				msg = msg.replace("beneficiaryName", "收款人名称");
-			} else if (msg.contains("beneficiaryBank")) {
-				msg = msg.replace("beneficiaryBank", "收款人开户行");
-			} else if (msg.contains("remittanceAmount")) {
+			 if (msg.contains("remittanceAmount")) {
 				msg = msg.replace("remittanceAmount", "汇款金额");
 			} else if (msg.contains("remittanceAccount")) {
 				msg = msg.replace("remittanceAccount", "汇款人账号");

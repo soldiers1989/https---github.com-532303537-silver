@@ -212,11 +212,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 				}
 				String reOrderMessageID = reOrderMap.get("messageID") + "";
 				// 更新服务器返回订单Id
-				Map<String, Object> reOrderMap2 = updateOrderInfo(orderRecordInfo, reOrderMessageID);
-				if (!"1".equals(reOrderMap2.get(BaseCode.STATUS.toString()) + "")) {
-					return reOrderMap2;
-				}
-				return reOrderMap2;
+				return  updateOrderInfo(orderRecordInfo, reOrderMessageID);
 			} catch (Exception e) {
 				e.printStackTrace();
 				logger.error(Thread.currentThread().getName() + "--支付成功回调-->>", e);
@@ -243,6 +239,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	 * @param entOrderNo
 	 *            订单编号
 	 * @param sourceFlag
+	 * 			来源标识：1-银盟商城、2-第三方推广
 	 * @return Map
 	 */
 	private Map<String, Object> updateWalletFunds(String merchantId, String merchantName, String goodsName,
@@ -259,13 +256,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 		double profit = merchant.getMerchantProfit();
-		// 原钱包资金
-		double oldCash = wallet.getCash();
 		// 平台抽取佣金
 		double commission = 0;
 		//
 		String strCash = "";
 		String strCommission = "";
+		// 原钱包资金
+		double oldCash = wallet.getCash();
+		//来源标识：1-银盟商城、2-第三方推广
 		if (sourceFlag == 2) {
 			// 暂定手续费(佣金)九分之一
 			commission = payAmount / 9;
@@ -1064,9 +1062,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return paramMap;
 				}
 			}
-			paramMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			paramMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return paramMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
 			paramMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 			paramMap.put(BaseCode.MSG.toString(), "更新订单返回messageID错误,服务器繁忙！");
@@ -1131,34 +1127,11 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	public Map<String, Object> balancePayReceive(Map<String, Object> datasMap) {
 		Date date = new Date();
 		// 生成支付交易编号
-		Map<String, Object> rePayNoMap = createPayNo();
-		if (!"1".equals(rePayNoMap.get(BaseCode.STATUS.toString()))) {
-			return rePayNoMap;
-		}
-		String time = DateUtil.formatTime(date);
-		String entPayNo = rePayNoMap.get(BaseCode.DATAS.toString()) + "";
-		datasMap.put("trade_no", entPayNo);
-		datasMap.put("notify_time", time);
+		int count = SerialNoUtils.getSerialNo("paymentId");
+		String tradeNo = SerialNoUtils.createTradeNo("01O", (count + 1), new Date());
+		datasMap.put("trade_no", tradeNo);
+		datasMap.put("notify_time", DateUtil.formatTime(date));
 		return ysPayReceive(datasMap);
-	}
-
-	/**
-	 * 生成交易编号
-	 * 
-	 * @return Map
-	 */
-	private Map<String, Object> createPayNo() {
-		Calendar cl = Calendar.getInstance();
-		int year = cl.get(Calendar.YEAR);
-		String property = "entPayNo";
-		String topStr = "PayNo_";
-		long idCount = ysPayReceiveDao.findSerialNoCount(PaymentContent.class, property, year);
-		if (idCount < 0) {
-			return ReturnInfoUtils.errorInfo("查询交易流水Id失败,服务器繁忙!");
-		} else {
-			String serialNo = SerialNoUtils.getSerialNo(topStr, idCount);
-			return ReturnInfoUtils.successDataInfo(serialNo);
-		}
 	}
 
 	@Override

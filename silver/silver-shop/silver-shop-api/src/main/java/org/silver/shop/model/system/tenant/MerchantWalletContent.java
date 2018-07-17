@@ -10,9 +10,10 @@ import org.silver.shop.model.system.tenant.MemberWalletContent.Builder;
  *
  */
 public class MerchantWalletContent implements Serializable {
-	public MerchantWalletContent(){
-		
+	public MerchantWalletContent() {
+
 	}
+
 	/**
 	 * 
 	 */
@@ -26,8 +27,10 @@ public class MerchantWalletContent implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private Double reserveAmount;//储备金额
-	private Double cash;//商户现金,用于真实转账、付款、收款
+	private Double reserveAmount;// 储备金额
+	private Double cash;// 商户现金,用于真实转账、付款、收款
+	private double freezingFunds;// 冻结资金：用于暂存扣款的金额
+
 	public long getId() {
 		return id;
 	}
@@ -100,7 +103,6 @@ public class MerchantWalletContent implements Serializable {
 		this.updateDate = updateDate;
 	}
 
-	
 	public Double getReserveAmount() {
 		return reserveAmount;
 	}
@@ -108,11 +110,21 @@ public class MerchantWalletContent implements Serializable {
 	public void setReserveAmount(Double reserveAmount) {
 		this.reserveAmount = reserveAmount;
 	}
+
 	public Double getCash() {
 		return cash;
 	}
+
 	public void setCash(Double cash) {
 		this.cash = cash;
+	}
+
+	public double getFreezingFunds() {
+		return freezingFunds;
+	}
+
+	public void setFreezingFunds(double freezingFunds) {
+		this.freezingFunds = freezingFunds;
 	}
 
 	public static class Builder {
@@ -127,6 +139,8 @@ public class MerchantWalletContent implements Serializable {
 		private Date updateDate = null;// 更新日期
 		private double reserveAmount = 0.0;// 储备金额
 		private double cash = 0.0;// 现金
+		private double freezingFunds = 0.0;// 冻结资金
+
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -165,18 +179,26 @@ public class MerchantWalletContent implements Serializable {
 			this.updateDate = updateDate;
 			return this;
 		}
-		
-		public MerchantWalletContent build(){
+
+		public MerchantWalletContent build() {
 			return new MerchantWalletContent(this);
 		}
+
 		public Builder reserveAmount(double reserveAmount) {
 			this.reserveAmount = reserveAmount;
 			return this;
 		}
+
 		public Builder cash(double cash) {
 			this.cash = cash;
 			return this;
 		}
+
+		public Builder freezingFunds(double freezingFunds) {
+			this.freezingFunds = freezingFunds;
+			return this;
+		}
+
 	}
 
 	private MerchantWalletContent(Builder b) {
@@ -190,6 +212,7 @@ public class MerchantWalletContent implements Serializable {
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
 		reserveAmount = b.reserveAmount;
-		cash=b.cash;
+		cash = b.cash;
+		freezingFunds = b.freezingFunds;
 	}
 }

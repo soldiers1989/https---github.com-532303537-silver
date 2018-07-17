@@ -717,11 +717,8 @@ public class ManualOrderTransaction {
 				String msg = "【表格】第" + (r + 1) + "行-->数据不符合规范,请核对数据排序或格式是否正确!";
 				//
 				RedisInfoUtils.errorInfoMq(msg, ERROR, params);
-				//
-				// excelBufferUtils.writeCompletedRedisMq(null, params);
 			}
 		}
-		// excelBufferUtils.writeCompletedRedisMq(null, params);
 		excel.closeExcel();
 	}
 

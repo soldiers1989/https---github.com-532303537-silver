@@ -5,8 +5,8 @@
 <hibernate-mapping>
     <class name="org.silver.shop.model.system.tenant.MerchantIdCardCostContent" table="ym_shop_merchant_idcard_cost_content">
         <id name="id" type="long">
-            <column name="ID" />
-            <generator class="assigned" />
+            <column name="id" />
+            <generator class="identity" />
         </id>
         <property name="idCardCostNo" type="java.lang.String">
             <column name="idCardCostNo" />

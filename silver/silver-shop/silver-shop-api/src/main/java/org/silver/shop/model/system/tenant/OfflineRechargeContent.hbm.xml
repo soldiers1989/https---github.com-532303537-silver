@@ -26,6 +26,9 @@
         <property name="beneficiaryBank" type="java.lang.String">
             <column name="beneficiaryBank" not-null="true"/>
         </property>
+           <property name="remittanceSerialNo" type="java.lang.String">
+            <column name="remittanceSerialNo" not-null="true"/>
+        </property>
         <property name="remittanceAmount" type="double">
             <column name="remittanceAmount" not-null="true"/>
         </property>

@@ -191,14 +191,11 @@ public class MpayServiceImpl implements MpayService {
 		//
 		// 商户口岸费率Id
 		String merchantFeeId = customsMap.get("merchantFeeId") + "";
-		long startTime = System.currentTimeMillis();
 		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId, customsMap,
 				errorList);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
-		long endTime = System.currentTimeMillis();
-		logger.error("=======计算费用耗时========>>" + (endTime - startTime) + "ms");
 		// 总数
 		int totalCount = jsonList.size();
 		params.put(MERCHANT_ID, merchantId);
@@ -259,7 +256,6 @@ public class MpayServiceImpl implements MpayService {
 	private Map<String, Object> updateOrderRecordStatus(JSONArray jsonList, String merchantId, int eport,
 			String customsCode, String ciqOrgCode, List<Map<String, Object>> errorList, double fee, int backCoverFlag) {
 		System.out.println("-------将商户选择的自助申报的订单修改为申报状态(10)--------");
-		long startTime = System.currentTimeMillis();
 		Map<String, Object> errMap = null;
 		for (int i = 0; i < jsonList.size(); i++) {
 			JSONObject json = JSONObject.fromObject(jsonList.get(i));
@@ -313,8 +309,6 @@ public class MpayServiceImpl implements MpayService {
 				}
 			}
 		}
-		long endTime = System.currentTimeMillis();
-		logger.error("=======更改订单状态耗时========>>" + (endTime - startTime) + "ms");
 		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
 	}
 

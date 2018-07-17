@@ -27,6 +27,7 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -42,7 +43,7 @@ public class ManagerServiceImpl implements ManagerService {
 	private MerchantUtils merchantUtils;
 	@Autowired
 	private IdUtils idUtils;
-	
+
 	@Override
 	public List<Object> findManagerBy(String account) {
 		Map<String, Object> params = new HashMap<>();
@@ -67,35 +68,40 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName, String description) {
+			String reManagerName, String description,String realName) {
+		if (StringEmptyUtils.isEmpty(managerName) || StringEmptyUtils.isEmpty(loginPassword)) {
+			return ReturnInfoUtils.errorInfo("参数不能为空！");
+		}
 		Date date = new Date();
-		Manager managerInfo = new Manager();
-		Map<String, Object> statusMap = new HashMap<>();
 		MD5 md5 = new MD5();
-		@SuppressWarnings("unchecked")
-		Map<String,Object> reIdMap = idUtils.createId(Manager.class, "managerId_");
-		if(!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reIdMap = idUtils.createId(Manager.class, "managerId_");
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 			return reIdMap;
 		}
-		String serialNo = reIdMap.get(BaseCode.DATAS.toString())+"";
+		String serialNo = reIdMap.get(BaseCode.DATAS.toString()) + "";
+		Manager managerInfo = new Manager();
 		managerInfo.setManagerId(serialNo);
 		managerInfo.setManagerName(managerName);
 		managerInfo.setLoginPassword(md5.getMD5ofStr(loginPassword));
-		// 管理员标识1-超级管理员2-运营管理员
-		managerInfo.setManagerMarks(managerMarks);
+		// 管理员标识：1-超级管理员、2-运营管理员、3-财务管理员
+		if(managerMarks == 1 || managerMarks ==2 || managerMarks ==3){
+			managerInfo.setManagerMarks(managerMarks);
+		}else{
+			return ReturnInfoUtils.errorInfo("管理员类型错误，请重新选择！");
+		}
+		if(!StringUtil.isContainChinese(realName)){
+			return ReturnInfoUtils.errorInfo("真实姓名错误，请重新输入！");
+		}
+		managerInfo.setRealName(realName);
 		managerInfo.setCreateBy(reManagerName);
 		managerInfo.setCreateDate(date);
 		// 删除标识:0-未删除,1-已删除
 		managerInfo.setDeleteFlag(0);
 		managerInfo.setDescription(description);
 		if (!managerDao.add(managerInfo)) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "创建管理员失败,服务器繁忙!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("创建失败,服务器繁忙!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -632,7 +638,7 @@ public class ManagerServiceImpl implements ManagerService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			Merchant merchant = reList.get(0);
-			MD5 md5 =  new MD5();
+			MD5 md5 = new MD5();
 			// 默认为：Ym@888!333
 			merchant.setLoginPassword(md5.getMD5("Ym@888!333".getBytes()));
 			if (!managerDao.update(merchant)) {
@@ -707,22 +713,26 @@ public class ManagerServiceImpl implements ManagerService {
 						params.clear();
 						params.put("userId", manager.getManagerId());
 						params.put("authorityId", authority.getAuthorityId());
-						List<AuthorityUser> reAuthorityUserList = managerDao.findByProperty(AuthorityUser.class, params, 0, 0);
-						if(reAuthorityUserList !=null && reAuthorityUserList.isEmpty()){
+						List<AuthorityUser> reAuthorityUserList = managerDao.findByProperty(AuthorityUser.class, params,
+								0, 0);
+						if (reAuthorityUserList != null && reAuthorityUserList.isEmpty()) {
 							AuthorityUser authorityUser = new AuthorityUser();
 							authorityUser.setUserId(manager.getManagerId());
 							authorityUser.setUserName(manager.getManagerName());
 							authorityUser.setAuthorityId(authority.getAuthorityId());
 							authorityUser.setAuthorityCode(authority.getSecondCode() + ":" + authority.getThirdCode());
-							System.out.println("---路径-?>>" + authority.getSecondCode() + ":" + authority.getThirdCode());
+							System.out
+									.println("---路径-?>>" + authority.getSecondCode() + ":" + authority.getThirdCode());
 							authorityUser.setCheckFlag("true");
 							authorityUser.setCreateBy("system");
 							authorityUser.setCreateDate(new Date());
 							if (managerDao.add(authorityUser)) {
-								System.out.println("-管理员->>>" + manager.getManagerName() + "保存" + authority.getThirdName());
+								System.out.println(
+										"-管理员->>>" + manager.getManagerName() + "保存" + authority.getThirdName());
 							}
-						}else{
-							System.out.println(manager.getManagerId()+"--管理员Id对应的权限id-->>>"+authority.getId()+"已存在");
+						} else {
+							System.out.println(
+									manager.getManagerId() + "--管理员Id对应的权限id-->>>" + authority.getId() + "已存在");
 						}
 					}
 
