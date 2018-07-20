@@ -51,9 +51,17 @@ public interface OrderDao extends BaseDao {
 	/**
 	 * 商城商家后台并集查询所有手工订单及商城订单
 	 * 
+	 * @param entity
+	 *            实体类
+	 * @param paramMap
+	 *            主表查询参数
+	 * @param viceParams
+	 *            并集副表查询参数
+	 * @param page
+	 * @param size
 	 * @return List
 	 */
-	public List<OrderRecordContent> merchantuUnionOrderInfo(Class entity, Map<String, Object> paramsMap,
+	public List<OrderRecordContent> unionOrderInfo(Class entity, Map<String, Object> paramsMap,
 			Map<String, Object> viceParams, int page, int size);
 
 	/**
@@ -62,10 +70,12 @@ public interface OrderDao extends BaseDao {
 	 * @param entity
 	 *            实体类
 	 * @param paramMap
+	 *            主表查询参数
 	 * @param viceParams
+	 *            并集副表查询参数
 	 * @return
 	 */
-	public long merchantuUnionOrderCount(Class<OrderRecordContent> entity, Map<String, Object> paramMap,
+	public long unionOrderCount(Class<OrderRecordContent> entity, Map<String, Object> paramMap,
 			Map<String, Object> viceParams);
 
 	/**

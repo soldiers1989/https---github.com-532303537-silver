@@ -51,8 +51,11 @@ public class OrderRecordContent implements Serializable {
 	private Date invoiceDate;// 开票日期
 	private String notes;// 备注
 	private Date payTime;// 付款时间
-	private int orderRecordStatus;// 订单备案状态：1-备案中，2-备案成功，3-备案失败
-	
+	/**
+	 * 订单备案状态：1-申报中、2-申报成功、3-申报失败
+	 * 2018-6-14更新为申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+	 */
+	private int orderRecordStatus;
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -62,15 +65,17 @@ public class OrderRecordContent implements Serializable {
 	private Date deleteDate;// 删除时间
 	
 	private String orderSerialNo;// 订单所属商品流水号
-	
 	private String reOrderSerialNo;//订单备案信息接受后返回流水号
 	private String reNote;//返回信息
 	private String recipientCityCode;//城市编码
 	private String recipientAreaCode;//区域编码
 	
+	private String wbEhsentName;// 物流公司名称
 	private String waybillNo;//(快递单号)运单编号
-	private int ehsStatus;// 物流状态：0-未发货1-已发货3-已签收
 	private String expressCompany;//快递公司
+	private int ehsStatus;// 物流状态：0-未发货1-已发货3-已签收
+	private int orderTradingStatus;//订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+	private String orderSourceType;//订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
 	public long getId() {
 		return id;
 	}
@@ -401,6 +406,24 @@ public class OrderRecordContent implements Serializable {
 	}
 	public void setExpressCompany(String expressCompany) {
 		this.expressCompany = expressCompany;
+	}
+	public String getOrderSourceType() {
+		return orderSourceType;
+	}
+	public void setOrderSourceType(String orderSourceType) {
+		this.orderSourceType = orderSourceType;
+	}
+	public int getOrderTradingStatus() {
+		return orderTradingStatus;
+	}
+	public void setOrderTradingStatus(int orderTradingStatus) {
+		this.orderTradingStatus = orderTradingStatus;
+	}
+	public String getWbEhsentName() {
+		return wbEhsentName;
+	}
+	public void setWbEhsentName(String wbEhsentName) {
+		this.wbEhsentName = wbEhsentName;
 	}
 	
 }

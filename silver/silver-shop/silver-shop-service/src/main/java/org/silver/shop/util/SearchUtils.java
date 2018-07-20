@@ -439,7 +439,7 @@ public final class SearchUtils {
 	 */
 	public static final Map<String, Object> universalMerchantOrderSearch(Map<String, Object> datasMap) {
 		if (datasMap == null) {
-			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> viceParams = new HashMap<>();
@@ -457,7 +457,7 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				viceParams.put(ORDER_ID, value);
 				break;
-			case "createDate":
+			case "startDate":
 				doDate(paramMap, viceParams, key, value);
 				break;
 			case "endDate":
@@ -479,7 +479,7 @@ public final class SearchUtils {
 
 	private static void doDate(Map<String, Object> paramMap, Map<String, Object> viceParams, String key, String value) {
 		paramMap.put(key, value);
-		viceParams.put("OrderDate", value);
+		viceParams.put(key, value);
 	}
 
 	/**
@@ -491,7 +491,7 @@ public final class SearchUtils {
 	 */
 	public static final Map<String, Object> universalStockSearch(Map<String, Object> datasMap) {
 		if (datasMap == null) {
-			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
+			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
 		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -941,6 +941,37 @@ public final class SearchUtils {
 		map.put(PARAM, paramMap);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
+	}
+
+	public static Map<String,Object> universalOfflineRechargeSearch(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
+		}
+		Map<String, Object> paramMap = new HashMap<>();
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "applicantId":
+				paramMap.put(key, value);
+				break;		
+			case "reviewerType":
+				paramMap.put(key, value);
+				break;
+			default:
+				break;
+			}
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
+		
 	}
 	
 }

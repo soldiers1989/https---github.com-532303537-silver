@@ -118,5 +118,6 @@
 		  <property name="sourceFlag" type="int">
             <column name="sourceFlag" default="1"/>
         </property>
+        	
 	</class>
 </hibernate-mapping>

@@ -164,7 +164,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	}
 
 	@Override
-	public List<OrderRecordContent> merchantuUnionOrderInfo(Class entity, Map<String, Object> params,
+	public List<OrderRecordContent> unionOrderInfo(Class entity, Map<String, Object> params,
 			Map<String, Object> viceParams, int page, int size) {
 		Session session = null;
 		try {
@@ -176,12 +176,15 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			// 并集
 			sbSQL.append(" UNION  ");
 			//
-			unionMorderInfo(sbSQL, viceParams, list, page, size);
+			unionMorderInfo(sbSQL, viceParams, list);
 			Query query = session.createSQLQuery(sbSQL.toString());
 			if (!list.isEmpty()) {
 				for (int i = 0; i < list.size(); i++) {
 					query.setParameter(i, list.get(i));
 				}
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
 			List<OrderRecordContent> cources = query.list();
 			session.close();
@@ -215,11 +218,11 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			while (is.hasNext()) {
 				property = is.next();
 				if ("startDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" createDate " + " >= " + "? " + " and ");
+					sbSQL.append(" createDate " + " >= " + " ? " + " and ");
 				} else if ("endDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" createDate " + " <= " + "?" + " and ");
+					sbSQL.append(" createDate " + " <= " + " ? " + " and ");
 				} else {
-					sbSQL.append(property + " = " + "?" + " and ");
+					sbSQL.append(property + " = " + " ? " + " and ");
 				}
 				list.add(params.get(property));
 			}
@@ -272,38 +275,34 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	 *            参数
 	 * @param list
 	 *            参数
-	 * @param page
-	 *            页数
-	 * @param size
-	 *            数目
 	 */
-	private void unionMorderInfo(StringBuilder sbSQL, Map<String, Object> viceParams, List<Object> list, int page,
-			int size) {
+	private void unionMorderInfo(StringBuilder sbSQL, Map<String, Object> viceParams, List<Object> list) {
 		sbSQL.append(
-				" SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s'),merchant_no,create_by,del_flag from ym_shop_manual_morder ");
+				" SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') ,merchant_no,create_by,del_flag from ym_shop_manual_morder ");
 		if (viceParams != null && viceParams.size() > 0) {
 			sbSQL.append(" WHERE ");
 			String property;
 			Iterator<String> is = viceParams.keySet().iterator();
 			while (is.hasNext()) {
 				property = is.next();
+				//由于数据库存储格式为yyyyMMddHHmmss，查询语句使用了DATE_FORMAT函数、而前端传递
 				if ("startDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" OrderDate " + " >= " + "? " + " and ");
+					sbSQL.append(" DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') >= DATE_FORMAT( ? ,'%Y-%m-%d %H:%i:%s') AND ");
 				} else if ("endDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" OrderDate " + " <= " + "?" + " and ");
+					sbSQL.append(" DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') <= DATE_FORMAT( ? ,'%Y-%m-%d %H:%i:%s') AND ");
 				} else {
-					sbSQL.append(property + " = " + "?" + " and ");
+					sbSQL.append(property + " = " + "?" + " AND ");
 				}
 				list.add(viceParams.get(property));
 			}
 			sbSQL.append(" trade_no IS NOT NULL ");
 			// 查询分页
-			sbSQL.append(" ORDER BY createDate DESC LIMIT " + (page - 1) + " , " + size);
+			sbSQL.append(" ORDER BY createDate DESC ");
 		}
 	}
 
 	@Override
-	public long merchantuUnionOrderCount(Class<OrderRecordContent> class1, Map<String, Object> paramMap,
+	public long unionOrderCount(Class<OrderRecordContent> class1, Map<String, Object> paramMap,
 			Map<String, Object> viceParams) {
 		Session session = null;
 		try {
@@ -317,7 +316,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			sbSQL.append(" UNION  ");
 			//
 			unionMorderCount(sbSQL, viceParams, list);
-			sbSQL.append(" ) m  ");
+			sbSQL.append(" ) m    ");
 			Query query = session.createSQLQuery(sbSQL.toString());
 			if (!list.isEmpty()) {
 				for (int i = 0; i < list.size(); i++) {
@@ -353,15 +352,15 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			while (is.hasNext()) {
 				property = is.next();
 				if ("startDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" OrderDate " + " >= " + "? " + " and ");
+					sbSQL.append(" DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') >= DATE_FORMAT( ? ,'%Y-%m-%d %H:%i:%s') AND ");
 				} else if ("endDate".equals(property)) {// 驼峰写法实体
-					sbSQL.append(" OrderDate " + " <= " + "?" + " and ");
+					sbSQL.append(" DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') <= DATE_FORMAT( ? ,'%Y-%m-%d %H:%i:%s') AND ");
 				} else {
 					sbSQL.append(property + " = " + "?" + " and ");
 				}
 				list.add(viceParams.get(property));
 			}
-			sbSQL.append(" 1 = 1 ");
+			sbSQL.append(" trade_no IS NOT NULL ");
 		}
 
 	}
@@ -393,7 +392,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				}
 				list.add(params.get(property));
 			}
-			sbSQL.append(" 1 = 1");
+			sbSQL.append(" entPayNo IS NOT NULL");
 		}
 
 	}

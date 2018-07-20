@@ -27,7 +27,7 @@ public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
 	public Table getRelatedMemberFunds(String merchantId, String memberId, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "SELECT t2.memberName,t2.reserveAmount FROM ym_shop_merchant_related_member_content t1 "
+			String sql = "SELECT t2.memberId,t2.memberName,t2.reserveAmount FROM ym_shop_merchant_related_member_content t1 "
 					+ "LEFT JOIN ym_shop_member_wallet_content t2 ON t1.memberId = t2.memberId WHERE t1.merchantId = ?";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(merchantId);

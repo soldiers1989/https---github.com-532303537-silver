@@ -12,6 +12,7 @@ public class MerchantBankContent implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	private long id;
+	private String merchantBankId;//系统银行卡流水id
 	private String merchantId;// 商户ID
 	private String merchantName;//商户名称
 	private String bankProvince;// 开户行省份 广东省
@@ -21,7 +22,7 @@ public class MerchantBankContent implements Serializable {
 	private String bankAccountName;// 银行卡账户名称
 	private String bankAccountType;// 银行卡账户类型 私人(personal) 对公(corporate)
 	private String bankCardType;// 银行卡类别 借记卡(debit) 信用卡(credit) 单位结算卡(unit)
-	private int defaultFlag;// 默认表示：1-默认选中,2-备用
+	private int defaultFlag;// 选中标识：1-默认选中,2-备用
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -137,6 +138,12 @@ public class MerchantBankContent implements Serializable {
 	}
 	public void setBankAccountNo(String bankAccountNo) {
 		this.bankAccountNo = bankAccountNo;
+	}
+	public String getMerchantBankId() {
+		return merchantBankId;
+	}
+	public void setMerchantBankId(String merchantBankId) {
+		this.merchantBankId = merchantBankId;
 	}
 	
 	

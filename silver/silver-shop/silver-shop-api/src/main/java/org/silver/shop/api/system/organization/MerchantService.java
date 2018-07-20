@@ -127,4 +127,20 @@ public interface MerchantService {
 	 */
 	public Map<String, Object> getRelatedMemberFunds(String merchantId, int page, int size);
 
+	/**
+	 * 根据商户id、获取商户业务信息
+	 * @param merchantId 商户id
+	 * @return Map
+	 */
+	public Map<String, Object> getBusinessInfo(String merchantId);
+
+	/**
+	 * 商户修改基本信息
+	 * @param merchantId 商户id
+	 * @param datasMap 
+	 * @param merchantName 
+	 * @return Map
+	 */
+	public Map<String, Object> updateBaseInfo(String merchantId, String merchantName, Map<String, Object> datasMap);
+
 }

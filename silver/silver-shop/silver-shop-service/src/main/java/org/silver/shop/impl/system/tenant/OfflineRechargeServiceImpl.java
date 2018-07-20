@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
-
 @Service(interfaceClass = OfflineRechargeService.class)
 public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 
@@ -66,20 +65,23 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
 			OfflineRechargeLog log = relogList.get(0);
+			OfflineRechargeContent content =reList.get(0);
 			log.setReviewerId(managerId);
 			log.setReviewerName(managerName);
 			log.setReviewDate(new Date());
 			// 审核标识：1-待审核、2-通过、3-不通过
 			if (reviewerFlag == 3) {
 				log.setReviewerFlag(reviewerFlag);
-				return updateFailureLog(log, note);
+				content.setUpdateBy(managerName);
+				content.setUpdateDate(new Date());
+				return updateFailureLog(log, note,content);
 			} else {
 				log.setReviewerFlag(reviewerFlag);
 			}
 			if (!offlineRechargeDao.update(log)) {
 				return ReturnInfoUtils.errorInfo("审核失败，服务器繁忙！");
 			}
-			Map<String, Object> reUpdateMap = updateOfflineRechargeContent(reList.get(0), managerName,
+			Map<String, Object> reUpdateMap = updateOfflineRechargeContent(content, managerName,
 					"financialAudit");
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 				return reUpdateMap;
@@ -96,18 +98,23 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 	 *            线下充值日志实体信息类
 	 * @param note
 	 *            批注说明信息
+	 * @param content
 	 * @return Map
 	 */
-	private Map<String, Object> updateFailureLog(OfflineRechargeLog log, String note) {
+	private Map<String, Object> updateFailureLog(OfflineRechargeLog log, String note, OfflineRechargeContent content) {
 		if (log == null) {
 			return ReturnInfoUtils.errorInfo("日志信息不能为null");
 		}
 		if (StringEmptyUtils.isEmpty(note)) {
 			return ReturnInfoUtils.errorInfo("批注说明不能为空！");
 		}
-
+		if (content == null) {
+			return ReturnInfoUtils.errorInfo("审核信息错误！");
+		}
+		// 审核类型：firstTrial-运营初审、financialAudit-财务审核、termination-终止、carryOut-完成
 		log.setNote(note);
-		if (!offlineRechargeDao.update(log)) {
+		content.setReviewerType("termination");
+		if (!offlineRechargeDao.update(log) || !offlineRechargeDao.update(content) ) {
 			return ReturnInfoUtils.errorInfo("审核失败，服务器繁忙！");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -130,20 +137,22 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 		} else if (!reList.isEmpty()) {
 			// 更新财务审核日志
 			OfflineRechargeLog log = relogList.get(0);
+			OfflineRechargeContent content = reList.get(0);
 			log.setReviewerId(managerId);
 			log.setReviewerName(managerName);
 			log.setReviewDate(new Date());
 			// 审核标识：1-待审核、2-通过、3-不通过
 			if (reviewerFlag == 3) {
 				log.setReviewerFlag(reviewerFlag);
-				return updateFailureLog(log, note);
+				content.setUpdateBy(managerName);
+				content.setUpdateDate(new Date());
+				return updateFailureLog(log, note, content);
 			} else {
 				log.setReviewerFlag(reviewerFlag);
 			}
 			if (!offlineRechargeDao.update(log)) {
 				return ReturnInfoUtils.errorInfo("审核失败，服务器繁忙！");
 			}
-			OfflineRechargeContent content = reList.get(0);
 			Map<String, Object> reUpdateMap = updateOfflineRechargeContent(content, managerName, "end");
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 				return reUpdateMap;
@@ -158,25 +167,24 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 	}
 
 	private Map<String, Object> updateWallet(OfflineRechargeContent content) {
-		if(content == null){
+		if (content == null) {
 			return ReturnInfoUtils.errorInfo("更新钱包信息时,请求参数不能为null");
 		}
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(1, content.getApplicantId(),
-				content.getApplicant());
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(1, content.getApplicantId(), content.getApplicant());
 		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletMap;
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		double oldBalance= merchantWallet.getBalance();
+		double oldBalance = merchantWallet.getBalance();
 		merchantWallet.setBalance(oldBalance + content.getRemittanceAmount());
-		if(!offlineRechargeDao.update(merchantWallet)){
+		if (!offlineRechargeDao.update(merchantWallet)) {
 			return ReturnInfoUtils.errorInfo("加款失败，服务器繁忙！");
 		}
 		Map<String, Object> datas = new HashMap<>();
 		datas.put("merchantId", content.getApplicantId());
 		datas.put("walletId", merchantWallet.getWalletId());
 		datas.put("merchantName", content.getApplicant());
-		datas.put("serialName", "订单申报-手续费");
+		datas.put("serialName", "银盟线下加款");
 		datas.put("balance", oldBalance);
 		datas.put("amount", content.getRemittanceAmount());
 		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
@@ -184,9 +192,9 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 		datas.put("flag", "in");
 		datas.put("note", "线下充值");
 		datas.put("targetWalletId", "000000");
-		datas.put("targetName", "银盟线下加款");
-		datas.put("status", "success"); // 添加商户钱包流水日志 
-		Map<String, Object>	reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
+		datas.put("targetName", "银盟");
+		datas.put("status", "success"); // 添加商户钱包流水日志
+		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}

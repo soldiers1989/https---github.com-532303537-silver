@@ -14,4 +14,6 @@ public interface IdCardCertificationlogsService {
 	 */
 	public Map<String,Object> getlogsInfo(Map<String, Object> datasMap, int page, int size);
 
+	public Object tempUpdate();
+
 }

@@ -10,6 +10,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.MerchantBankInfoService;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.springframework.stereotype.Service;
 
@@ -26,29 +27,11 @@ public class MerchantBankInfoTransaction {
 	 * 
 	 * @return Map
 	 */
-	public Map<String,Object> findMerchantBankInfo(int page, int size) {
+	public Map<String, Object> getBankInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		return merchantBankInfoService.findMerchantBankInfo( merchantInfo.getMerchantId(), page, size);
-	}
-
-	/**
-	 * 添加商戶银行卡信息
-	 * 
-	 * @param bankName
-	 * @param bankAccount
-	 * @param type
-	 *            默认选择：1-默认选中,2-备用
-	 * @return
-	 */
-	public boolean addMerchantBankInfo(String bankName, String bankAccount, int defaultFalg) {
-		boolean flag = false;
-		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
-		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		flag = merchantBankInfoService.addMerchantBankInfo(merchantInfo, bankName, bankAccount, defaultFalg);
-		return flag;
+		return merchantBankInfoService.getMerchantBankInfo(merchantInfo.getMerchantId(), page, size, 0);
 	}
 
 	/**
@@ -95,6 +78,20 @@ public class MerchantBankInfoTransaction {
 		datasMap.put(BaseCode.MSG.getBaseCode(), "参数错误,删除失败!");
 		return datasMap;
 	}
-	
-	
+
+	public Object managerAddBankInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		String managerName = managerInfo.getManagerName();
+		String managerId = managerInfo.getManagerId();
+		datasMap.put("managerId", managerId);
+		datasMap.put("managerName", managerName);
+		return merchantBankInfoService.managerAddBankInfo(datasMap);
+	}
+
+	public Object managerGetBankInfo(int page, int size, String merchantId) {
+		return merchantBankInfoService.getMerchantBankInfo(merchantId, page, size,0);
+	}
+
 }

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
@@ -60,6 +61,7 @@ import org.silver.util.SerialNoUtils;
 import org.silver.util.SerializeUtil;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -195,16 +197,12 @@ public class OrderServiceImpl implements OrderService {
 				// 商品上架数量
 				int sellCount = stock.getSellCount();
 				if (count > sellCount) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.FORMAT_ERR.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), stock.getGoodsName() + "库存不足,请重新输入购买数量!");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo(stock.getGoodsName() + " 库存不足,请重新输入购买数量!");
 				}
 				// 根据商品ID查询商品基本信息
 				List<Object> goodsRecordList = orderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
-				if (goodsRecordList == null || goodsRecordList.size() <= 0) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "查询商品基本信息失败,服务器繁忙!");
-					return statusMap;
+				if (goodsRecordList == null || goodsRecordList.isEmpty()) {
+					return ReturnInfoUtils.errorInfo("查询商品基本信息失败,服务器繁忙!");
 				}
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) goodsRecordList.get(0);
 				// 获取库存中商品上架的单价
@@ -273,8 +271,10 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	private final Map<String, Object> createOrderHeadInfo(String memberId, String memberName, String orderId,
 			StockContent stock, String entOrderNo, RecipientContent recInfo, Map<String, Object> feeMap) {
+		if (stock == null || recInfo == null) {
+			return ReturnInfoUtils.errorInfo("生成订单头信息失败,请求参数错误！");
+		}
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		// 当数据库根据订单ID查询不到订单时,创建一条订单数据
 		OrderContent order = new OrderContent();
 		order.setMerchantId(stock.getMerchantId());
@@ -283,7 +283,6 @@ public class OrderServiceImpl implements OrderService {
 		order.setMemberName(memberName);
 		order.setOrderId(orderId);
 		order.setFreight(0);
-
 		order.setReceiptId(recInfo.getRecipientId());
 		order.setRecipientName(recInfo.getRecipientName());
 		order.setRecipientTel(recInfo.getRecipientTel());
@@ -308,10 +307,9 @@ public class OrderServiceImpl implements OrderService {
 		order.setCreateDate(date);
 		order.setDeleteFlag(0);
 		order.setEntOrderNo(entOrderNo);
+
 		if (!orderDao.add(order)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "订单创建失败!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("订单生成失败,服务器繁忙！");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -449,23 +447,77 @@ public class OrderServiceImpl implements OrderService {
 			OrderRecordContent order = (OrderRecordContent) reList.get(0);
 			String status = datasMap.get("status") + "";
 			String note = order.getReNote();
-			if ("null".equals(note) || note == null) {
+			if (StringEmptyUtils.isEmpty(note)) {
 				note = "";
 			}
 			if ("1".equals(status)) {
-				// 订单备案状态修改为成功
-				order.setOrderRecordStatus(2);
-			} else {
+				// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
 				order.setOrderRecordStatus(3);
+			} else {
+				order.setOrderRecordStatus(4);
 			}
 			order.setReNote(note + defaultDate + " " + reMsg + "#");
 			order.setUpdateDate(date);
+			// 当商城订单三单对碰通过后
+			if (reMsg.contains("逻辑校验通过")) {
+				Map<String, Object> reMap = updateOrderLogistics(order);
+				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+					logger.debug("--三单对碰后，更新快递单号错误-->>" + reMap.get(BaseCode.MSG.toString()));
+				}
+			}
 			if (!orderDao.update(order)) {
 				return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]未找到对应订单信息");
+		}
+	}
+
+	/**
+	 * 当海关清关成功后请求物流信息
+	 * 
+	 * @param order
+	 *            订单实体
+	 * @return
+	 */
+	private Map<String, Object> updateOrderLogistics(OrderRecordContent orderRecord) {
+		if (orderRecord == null) {
+			return ReturnInfoUtils.errorInfo("更新物流状态请求参数不能为null");
+		}
+		Map<String, Object> item = new HashMap<>();
+		String entOrderNo = orderRecord.getEntOrderNo();
+		item.put("order_code", entOrderNo);
+		String reString = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/waybill/queryOrderStatus", item);
+		if (StringEmptyUtils.isNotEmpty(reString)) {
+			JSONObject json = null;
+			try {
+				json = JSONObject.fromObject(reString);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("返回参数格式错误！");
+			}
+			// 快递单号
+			String waybillNumber = json.get("waybill_number") + "";
+			orderRecord.setWaybillNo(waybillNumber);
+			// 订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+			orderRecord.setOrderTradingStatus(4);
+			Map<String, Object> params = new HashMap<>();
+			params.put(ENT_ORDER_NO, entOrderNo);
+			List<OrderContent> reList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
+			if(reList !=null && !reList.isEmpty()){
+				OrderContent order = reList.get(0);
+				// 订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+				order.setStatus(4);
+				order.setWaybillNo(waybillNumber);
+				if(!orderDao.update(order)){
+					return ReturnInfoUtils.errorInfo("更新用户订单快递单号失败，服务器繁忙！");
+				}
+			}else{
+				return ReturnInfoUtils.errorInfo("查询用户订单信息失败，服务器繁忙！");
+			}
+			return ReturnInfoUtils.successInfo();
+		} else {
+			return ReturnInfoUtils.errorInfo("请求物流信息失败，服务器繁忙！");
 		}
 	}
 
@@ -806,28 +858,22 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> statusMap = new HashMap<>();
 		datasMap.put("merchantId", merchantId);
 		Map<String, Object> reDatasMap = SearchUtils.universalMerchantOrderSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> viceParams = (Map<String, Object>) reDatasMap.get("viceParams");
-		List<OrderRecordContent> reList = orderDao.merchantuUnionOrderInfo(OrderRecordContent.class, paramMap,
+		List<OrderRecordContent> reList = orderDao.unionOrderInfo(OrderRecordContent.class, paramMap,
 				viceParams, page, size);
-		long reTotalCount = orderDao.merchantuUnionOrderCount(OrderRecordContent.class, paramMap, viceParams);
+		long reTotalCount = orderDao.unionOrderCount(OrderRecordContent.class, paramMap, viceParams);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), reTotalCount);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reList, reTotalCount);
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("暂无数据！");
 		}
 	}
 
@@ -1052,14 +1098,21 @@ public class OrderServiceImpl implements OrderService {
 				String ebEntNo = json.get("ebEntNo") + "";
 				String ebEntName = json.get("ebEntName") + "";
 				// 电子口岸16位编码
-				String DZKNNo = json.get("DZKNNo") + "";
-				if (StringEmptyUtils.isNotEmpty(marCode) && StringEmptyUtils.isNotEmpty(ebEntNo)
-						&& StringEmptyUtils.isNotEmpty(ebEntName) && StringEmptyUtils.isNotEmpty(DZKNNo)) {
-					JSONObject params = new JSONObject();
+				String dzknNo = json.get("DZKNNo") + "";
+				JSONObject params = new JSONObject();
+				if (StringEmptyUtils.isNotEmpty(marCode)) {
 					params.put("marCode", marCode);
+				}
+				if (StringEmptyUtils.isNotEmpty(ebEntNo)) {
 					params.put("ebEntNo", ebEntNo);
+				}
+				if (StringEmptyUtils.isNotEmpty(ebEntName)) {
 					params.put("ebEntName", ebEntName);
-					params.put("DZKNNo", DZKNNo);
+				}
+				if (StringEmptyUtils.isNotEmpty(dzknNo)) {
+					params.put("DZKNNo", dzknNo);
+				}
+				if (!params.isEmpty()) {
 					goods.setSpareParams(params.toString());
 				}
 			}
@@ -1340,7 +1393,6 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("收货人行政区代码[" + provinceCode + "],未找到对应的省份信息,请核实信息！");
 		}
 		return ReturnInfoUtils.errorInfo("暂无省份数据!");
-
 	}
 
 	/**

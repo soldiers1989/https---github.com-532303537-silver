@@ -59,5 +59,8 @@
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
         </property>
+         <property name="merchantBankId" type="java.lang.String">
+            <column name="merchantBankId" not-null="true" unique="true"/>
+        </property>
     </class>
 </hibernate-mapping>

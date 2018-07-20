@@ -383,22 +383,19 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> getMerchantRecordInfo(String merchantId) {
-		Map<String, Object> params = new HashMap<>();
-		// key=表中列名,value=查询参数
-		params.put("merchantId", merchantId);
-		// 根据商户ID查询商户备案信息数据
-		List<Object> reList = merchantDao.findByProperty(MerchantRecordInfo.class, params, 0, 0);
-		if (reList != null && !reList.isEmpty()) {
-			params.clear();
-			params.put(BaseCode.DATAS.toString(), reList);
-			params.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			params.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		} else {
-			params.clear();
-			params.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			params.put(BaseCode.MSG.toString(), "查询失败,服务器繁忙！");
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("请求参数不能空！");
 		}
-		return params;
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchantId", merchantId);
+		List<Object> reList = merchantDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据!");
+		}
 	}
 
 	@Override
@@ -514,5 +511,43 @@ public class MerchantServiceImpl implements MerchantService {
 			return "";
 		}
 		return str.replace("{\"value\":", "").replace("\"}", "").replace("\"", "").replace("}", "");
+	}
+
+	@Override
+	public Map<String, Object> getBusinessInfo(String merchantId) {
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("商户id不能为空！");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		List<MerchantDetail> reList = merchantDao.findByProperty(MerchantDetail.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户业务信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList);
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到该商户业务信息!");
+		}
+	}
+
+	@Override
+	public Map<String, Object> updateBaseInfo(String merchantId, String merchantName, Map<String, Object> datasMap) {
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
+		}
+		Map<String,Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		List<Merchant> reList = merchantDao.findByProperty(Merchant.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户业务信息失败,服务器繁忙!");
+		} else if (!reList.isEmpty()) {
+			Merchant merchant = reList.get(0);
+			
+			
+			return null;
+			//return ReturnInfoUtils.successDataInfo();
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到该商户业务信息!");
+		}
 	}
 }

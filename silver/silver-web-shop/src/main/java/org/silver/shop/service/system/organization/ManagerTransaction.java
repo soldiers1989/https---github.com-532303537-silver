@@ -161,8 +161,12 @@ public class ManagerTransaction {
 					arrayStr[i] = "";
 				}
 			}
-			return managerService.addMerchantBusinessInfo(merchantId, arrayStr, imglist);
+			Map<String,Object> reMap = managerService.addMerchantBusinessInfo(merchantId, arrayStr, imglist);
+			if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+				return reMap;
+			}
 		}
+		
 		return registerMap;
 	}
 
@@ -235,7 +239,7 @@ public class ManagerTransaction {
 
 	// 管理员查看商户备案信息
 	public Map<String, Object> findMerchantRecordDetail(String merchantId) {
-		return managerService.findMerchantRecordDetail(merchantId);
+		return merchantService.getMerchantRecordInfo(merchantId);
 	}
 
 	// 管理员修改商户备案信息

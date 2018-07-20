@@ -460,21 +460,15 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	private final Map<String, Object> addOrderRecordInfo(OrderContent orderInfo, Map<String, Object> datasMap,
 			Member memberInfo, List<Object> orderList, List<Object> orderGoodsList) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		OrderRecordContent orderRecordInfo = new OrderRecordContent();
 		String entOrderNo = orderInfo.getEntOrderNo();
 		paramMap.put("entOrderNo", entOrderNo);
-		List<Object> reOrderList = ysPayReceiveDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
+		List<OrderRecordContent> reOrderList = ysPayReceiveDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
 		if (reOrderList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "查询备案订单信息是否存在时错误,请重试!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]查询失败，服务器繁忙！");
 		} else if (!reOrderList.isEmpty()) {
-			orderRecordInfo = (OrderRecordContent) reOrderList.get(0);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), orderRecordInfo);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(reOrderList.get(0));
 		} else {
 			paramMap.clear();
 			paramMap.put("entOrderNo", entOrderNo);
@@ -554,20 +548,19 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			}
 			orderRecordInfo.setPayTime(reInvoiceDate);
 			orderRecordInfo.setEntPayNo(datasMap.get("trade_no") + "");
-			//// 订单备案状态：1-备案中，2-备案成功，3-备案失败
-			orderRecordInfo.setOrderRecordStatus(1);
+			// 订单备案状态：1-备案中，2-备案成功，3-备案失败
+			// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+			orderRecordInfo.setOrderRecordStatus(2);
 			orderRecordInfo.setCreateBy(orderInfo.getMemberName());
 			orderRecordInfo.setCreateDate(date);
 			orderRecordInfo.setDeleteFlag(0);
 			orderRecordInfo.setOrderSerialNo("");
+			// 订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
+			orderRecordInfo.setOrderSourceType("online");
 			if (!ysPayReceiveDao.add(orderRecordInfo)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "保存备案订单信息失败,服务器繁忙!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("保存备案订单信息失败,服务器繁忙!");
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.DATAS.toString(), orderRecordInfo);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(orderRecordInfo);
 		}
 
 	}
@@ -758,41 +751,72 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			// paymentMap.put("uploadOrNot", false);
 			String resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, paymentMap);
 			// 当端口号为2(智检时)再往电子口岸多发送一次
-			if (eport == 2) {
-				Map<String, Object> reMerchantMap = merchantUtils.getMerchantRecordInfo(merchantId, 1);
-				if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-					return reMerchantMap;
-				}
-				MerchantRecordInfo merchantRecord = (MerchantRecordInfo) reMerchantMap.get(BaseCode.DATAS.toString());
-				Map<String, Object> paramsMap = new HashMap<>();
-				paramsMap.put("merchantId", merchantId);
-				paramsMap.put("customsPort", 1);
-				// 检验检疫机构代码
-				paymentMap.put("ciqOrgCode", "443400");
-				JSONObject json2 = new JSONObject();
+			if (eport == 2  || "443400".equals(recordMap.get("ciqOrgCode") )) {
 				List<JSONObject> paymentList2 = new ArrayList<>();
-				json2.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
-				json2.element("PayStatus", paymentInfoMap.get("PayStatus"));
-				json2.element("PayAmount", paymentInfoMap.get("PayAmount"));
-				json2.element("PayCurrCode", paymentInfoMap.get("PayCurrCode"));
-				json2.element("PayTime", paymentInfoMap.get("PayTime"));
-				json2.element("PayerName", paymentInfoMap.get("PayerName"));
-				json2.element("PayerDocumentType", paymentInfoMap.get("PayerDocumentType"));
-				json2.element("PayerDocumentNumber", paymentInfoMap.get("PayerDocumentNumber"));
-				json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
-				json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
-				json2.element("Notes", paymentInfoMap.get("Notes"));
-				// 电商平台企业编码
-				json2.element("EBPEntNo", merchantRecord.getEbpEntNo());
-				// 电商平台企业名称
-				json2.element("EBPEntName", merchantRecord.getEbpEntName());
-				paymentList2.add(json2);
-				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-				paymentMap.put("eport", 1);
-				// 电商企业编号
-				paymentMap.put("ebEntNo", merchantRecord.getEbEntNo());
-				// 电商企业名称
-				paymentMap.put("ebEntName", merchantRecord.getEbEntName());
+				if(eport == 1){
+					Map<String, Object> reMerchantMap = merchantUtils.getMerchantRecordInfo(merchantId, 2);
+					if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+						return reMerchantMap;
+					}
+					MerchantRecordInfo merchantRecord = (MerchantRecordInfo) reMerchantMap.get(BaseCode.DATAS.toString());
+					paymentMap.put("eport", 2);
+					// 检验检疫机构代码
+					paymentMap.put("businessType", 3);
+					// 检验检疫机构代码
+					paymentMap.put("ciqOrgCode", "443400");
+					JSONObject json2 = new JSONObject();
+					json2.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
+					json2.element("PayStatus", paymentInfoMap.get("PayStatus"));
+					json2.element("PayAmount", paymentInfoMap.get("PayAmount"));
+					json2.element("PayCurrCode", paymentInfoMap.get("PayCurrCode"));
+					json2.element("PayTime", paymentInfoMap.get("PayTime"));
+					json2.element("PayerName", paymentInfoMap.get("PayerName"));
+					json2.element("PayerDocumentType", paymentInfoMap.get("PayerDocumentType"));
+					json2.element("PayerDocumentNumber", paymentInfoMap.get("PayerDocumentNumber"));
+					json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
+					json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
+					json2.element("Notes", paymentInfoMap.get("Notes"));
+					// 电商平台企业编码
+					json2.element("EBPEntNo", merchantRecord.getEbpEntNo());
+					// 电商平台企业名称
+					json2.element("EBPEntName", merchantRecord.getEbpEntName());
+					paymentList2.add(json2);
+					// 电商企业编号
+					paymentMap.put("ebEntNo", merchantRecord.getEbEntNo());
+					// 电商企业名称
+					paymentMap.put("ebEntName", merchantRecord.getEbEntName());
+				}else if(eport == 2){
+					Map<String, Object> reMerchantMap = merchantUtils.getMerchantRecordInfo(merchantId, 1);
+					if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+						return reMerchantMap;
+					}
+					MerchantRecordInfo merchantRecord = (MerchantRecordInfo) reMerchantMap.get(BaseCode.DATAS.toString());
+					// 检验检疫机构代码
+					paymentMap.put("ciqOrgCode", "443400");
+					// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+					paymentMap.put("eport", 1);
+					JSONObject json2 = new JSONObject();
+					json2.element("EntPayNo", paymentInfoMap.get("EntPayNo"));
+					json2.element("PayStatus", paymentInfoMap.get("PayStatus"));
+					json2.element("PayAmount", paymentInfoMap.get("PayAmount"));
+					json2.element("PayCurrCode", paymentInfoMap.get("PayCurrCode"));
+					json2.element("PayTime", paymentInfoMap.get("PayTime"));
+					json2.element("PayerName", paymentInfoMap.get("PayerName"));
+					json2.element("PayerDocumentType", paymentInfoMap.get("PayerDocumentType"));
+					json2.element("PayerDocumentNumber", paymentInfoMap.get("PayerDocumentNumber"));
+					json2.element("PayerPhoneNumber", paymentInfoMap.get("PayerPhoneNumber"));
+					json2.element("EntOrderNo", paymentInfoMap.get("EntOrderNo"));
+					json2.element("Notes", paymentInfoMap.get("Notes"));
+					// 电商平台企业编码
+					json2.element("EBPEntNo", merchantRecord.getEbpEntNo());
+					// 电商平台企业名称
+					json2.element("EBPEntName", merchantRecord.getEbpEntName());
+					paymentList2.add(json2);
+					// 电商企业编号
+					paymentMap.put("ebEntNo", merchantRecord.getEbEntNo());
+					// 电商企业名称
+					paymentMap.put("ebEntName", merchantRecord.getEbEntName());
+				}
 				paymentMap.put("datas", paymentList2.toString());
 				try {
 					clientsign = MD5

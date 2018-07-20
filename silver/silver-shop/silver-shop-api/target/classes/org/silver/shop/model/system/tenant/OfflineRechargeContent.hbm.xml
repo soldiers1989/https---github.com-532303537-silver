@@ -9,7 +9,7 @@
             <generator class="identity" />
         </id>
         <property name="offlineRechargeId" type="java.lang.String">
-            <column name="offlineRechargeId" not-null="true" unique="true"/>
+            <column name="offlineRechargeId" not-null="true" />
         </property>
         <property name="applicantId" type="java.lang.String">
             <column name="applicantId" not-null="true"/>

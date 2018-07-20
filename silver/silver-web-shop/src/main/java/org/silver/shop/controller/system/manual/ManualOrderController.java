@@ -16,6 +16,7 @@ import org.silver.common.LoginType;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -118,4 +119,10 @@ public class ManualOrderController {
 		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderInfo(datasMap)).toString();
 	}
 	
+	public static void main(String[] args) {
+		Map<String,Object> item = new HashMap<>();
+		item.put("order_code", "76861711609");
+		String reString = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/waybill/queryOrderStatus", item);
+		System.out.println("------[>>"+reString);
+	}
 }

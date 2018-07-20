@@ -57,18 +57,18 @@ public class OrderController {
 	@RequestMapping(value = "/createOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Member")
-	@ApiOperation("用户创建订单")
-	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("goodsInfoPack") String goodsInfoPack, @RequestParam("type") int type,
-			@RequestParam("recipientId") String recipientId) {
-
+	@ApiOperation("用户商城提交订单")
+	public String createOrderInfo(HttpServletRequest req, HttpServletResponse response, String goodsInfoPack,
+			@RequestParam("type") int type, String recipientId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.createOrderInfo(goodsInfoPack, type, recipientId);
-		return JSONObject.fromObject(statusMap).toString();
+		if (StringEmptyUtils.isEmpty(goodsInfoPack) || StringEmptyUtils.isEmpty(recipientId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空！")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.createOrderInfo(goodsInfoPack, type, recipientId)).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantOrderDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -140,7 +140,7 @@ public class OrderController {
 
 	@RequestMapping(value = "/getMemberOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation(value = "获取用户订单信息")
+	@ApiOperation("用户获取订单信息")
 	@RequiresRoles("Member")
 	// @RequiresPermissions("")
 	public String getMemberOrderInfo(HttpServletRequest req, HttpServletResponse response, int page, int size) {
@@ -499,8 +499,9 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "/sendThirdPromoteBusinessCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String sendThirdPromoteBusinessCaptchaCode(String phone, HttpServletRequest req, HttpServletResponse response,
-			String captcha) throws ParserConfigurationException, SAXException, IOException {
+	public String sendThirdPromoteBusinessCaptchaCode(String phone, HttpServletRequest req,
+			HttpServletResponse response, String captcha)
+			throws ParserConfigurationException, SAXException, IOException {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

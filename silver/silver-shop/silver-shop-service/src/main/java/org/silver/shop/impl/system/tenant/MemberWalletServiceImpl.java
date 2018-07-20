@@ -20,6 +20,7 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -42,11 +43,16 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 	public void reserveAmountTransfer(String memberId, String merchantId, String tradeNo, Double amount) {
 		System.out.println("---开始支付单储备资金结算---");
 		try {
+			if (StringEmptyUtils.isEmpty(memberId) || StringEmptyUtils.isEmpty(merchantId)
+					|| StringEmptyUtils.isEmpty(tradeNo) || amount < 0.01) {
+				logger.error("--商户清算用户储备资金--请求参数错误--");
+				throw new Exception();
+			}
 			// 用户储备资金扣款
 			Map<String, Object> reMemberMap = memberWalletReserveAmountTransfer(memberId, amount);
 			if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMemberMap.get(BaseCode.MSG.toString()));
-				throw new Exception(reMemberMap.get(BaseCode.MSG.toString())+"");
+				throw new Exception(reMemberMap.get(BaseCode.MSG.toString()) + "");
 			}
 			MemberWalletContent memberWalletContent = (MemberWalletContent) reMemberMap.get(BaseCode.DATAS.toString());
 			Map<String, Object> params = new HashMap<>();
@@ -68,7 +74,7 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			Map<String, Object> merchantWalletMap = merchantWalletService.getMerchantWallet(merchantId, null);
 			if (!"1".equals(merchantWalletMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(merchantWalletMap.get(BaseCode.MSG.toString()));
-				throw new Exception(merchantWalletMap.get(BaseCode.MSG.toString())+"");
+				throw new Exception(merchantWalletMap.get(BaseCode.MSG.toString()) + "");
 			}
 			MerchantWalletContent merchantWallet = (MerchantWalletContent) merchantWalletMap
 					.get(BaseCode.DATAS.toString());
@@ -79,13 +85,13 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			Map<String, Object> reMemberWalletLogMap = memberWalletLogService.addWalletLog(params);
 			if (!"1".equals(reMemberWalletLogMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMemberWalletLogMap.get(BaseCode.MSG.toString()));
-				throw new Exception(reMemberWalletLogMap.get(BaseCode.MSG.toString())+"");
+				throw new Exception(reMemberWalletLogMap.get(BaseCode.MSG.toString()) + "");
 			}
 			// 商户储备资金收款
 			Map<String, Object> reMerchantMap = merchantWalletReserveAmountTransfer(merchantWallet, amount);
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMerchantMap.get(BaseCode.MSG.toString()));
-				throw new Exception(reMerchantMap.get(BaseCode.MSG.toString())+"");
+				throw new Exception(reMerchantMap.get(BaseCode.MSG.toString()) + "");
 			}
 			params.clear();
 			params.put("walletId", merchantWallet.getWalletId());
@@ -108,7 +114,7 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			Map<String, Object> reMerchantWalletLogMap = merchantWalletLogService.addWalletLog(params);
 			if (!"1".equals(reMerchantWalletLogMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMerchantWalletLogMap.get(BaseCode.MSG.toString()));
-				throw new Exception(reMerchantWalletLogMap.get(BaseCode.MSG.toString())+"");
+				throw new Exception(reMerchantWalletLogMap.get(BaseCode.MSG.toString()) + "");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -118,7 +124,7 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 
 	private Map<String, Object> merchantWalletReserveAmountTransfer(MerchantWalletContent merchantWallet,
 			Double amount) {
-		if(merchantWallet == null ){
+		if (merchantWallet == null) {
 			return ReturnInfoUtils.errorInfo("商户钱包储备资金收款时请求参数不能为空！");
 		}
 		// 原储备资金

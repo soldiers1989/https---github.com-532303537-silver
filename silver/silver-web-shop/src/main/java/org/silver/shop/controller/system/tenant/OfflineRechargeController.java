@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.tenant.OfflineRechargeTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,8 @@ public class OfflineRechargeController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
+		datasMap.remove("page");
+		datasMap.remove("size");
 		return JSONObject.fromObject(offlineRechargeTransaction.managerGetApplication(datasMap, page, size)).toString();
 	}
 
@@ -70,8 +73,8 @@ public class OfflineRechargeController {
 	@RequestMapping(value = "/managerReview", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ApiOperation("管理员初审")
 	@ResponseBody
-	@RequiresRoles("Merchant")
-	// @RequiresPermissions("offlineRecharge:managerReview")
+	//@RequiresRoles("Manager")
+	@RequiresPermissions("offlineRecharge:managerReview")
 	public String managerReview(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("offlineRechargeId") String offlineRechargeId,int reviewerFlag,String note) {
 		String originHeader = req.getHeader("Origin");
@@ -86,7 +89,7 @@ public class OfflineRechargeController {
 	@ApiOperation("财务审核信息")
 	@ResponseBody
 	//@RequiresRoles("Merchant")
-	// @RequiresPermissions("offlineRecharge:addServiceFee")
+	@RequiresPermissions("offlineRecharge:financialReview")
 	public String financialReview(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("offlineRechargeId") String offlineRechargeId,int reviewerFlag,String note) {
 		String originHeader = req.getHeader("Origin");

@@ -90,4 +90,18 @@ public class MerchantIdCardCostController {
 		}
 		return JSONObject.fromObject(merchantIdCardCostTransaction.updateInfo(datasMap)).toString();
 	}
+	
+	@RequestMapping(value = "/merchantGetInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("商户获取实名认证费率信息")
+	@ResponseBody
+	//@RequiresPermissions("idCardCost:getInfo")
+	@RequiresRoles("Merchant")
+	public String merchantGetInfo(HttpServletRequest req, HttpServletResponse response, int page, int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(merchantIdCardCostTransaction.merchantGetInfo( page, size)).toString();
+	}
 }

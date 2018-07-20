@@ -164,15 +164,23 @@
 		<property name="recipientAreaCode" type="java.lang.String">
 			<column name="recipientAreaCode" />
 		</property>
-		
 		<property name="ehsStatus" type="int">
 			<column name="ehsStatus" default="0" />
 		</property>
 		<property name="waybillNo" type="java.lang.String">
 			<column name="waybillNo" />
 		</property>
-			<property name="expressCompany" type="java.lang.String">
+		<property name="expressCompany" type="java.lang.String">
 			<column name="expressCompany" />
+		</property>
+		<property name="orderSourceType">
+			<column name="orderSourceType" />
+		</property>
+		<property name="orderTradingStatus" type="int">
+			<column name="orderTradingStatus" default="0" />
+		</property>
+			<property name="wbEhsentName">
+			<column name="wbEhsentName" />
 		</property>
 	</class>
 </hibernate-mapping>

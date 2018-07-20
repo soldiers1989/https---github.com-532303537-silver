@@ -14,6 +14,7 @@ import org.silver.shop.model.system.log.OfflineRechargeLog;
 import org.silver.shop.model.system.log.PaymentReceiptLog;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.OfflineRechargeContent;
+import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
@@ -201,15 +202,20 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 	@Override
 	public Map<String, Object> getOfflineRechargeInfo(Map<String, Object> datasMap, int page, int size) {
-		if (datasMap == null || datasMap.isEmpty()) {
+		if (datasMap == null ) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		Table table = merchantWalletDao.getApplication(datasMap, page, size);
-		Table tableCount = merchantWalletDao.getApplication(datasMap, 0, 0);
-		if (table == null) {
+		Map<String, Object> reDatasMap = SearchUtils.universalOfflineRechargeSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
+		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		List<OfflineRechargeContent> reList = merchantWalletDao.findByProperty(OfflineRechargeContent.class, paramMap, page, size);
+		long count = merchantWalletDao.findByPropertyCount(OfflineRechargeContent.class,paramMap);
+		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
-		} else if (!table.getRows().isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(table).getJSONArray("rows"),tableCount.getRows().size());
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList,count);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据！");
 		}

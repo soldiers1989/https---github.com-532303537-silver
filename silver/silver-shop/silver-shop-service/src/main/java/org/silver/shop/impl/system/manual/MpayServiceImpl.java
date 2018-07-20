@@ -18,6 +18,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.api.system.manual.MpayService;
+import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.MerchantFeeService;
 import org.silver.shop.api.system.tenant.MerchantIdCardCostService;
 import org.silver.shop.config.YmMallConfig;
@@ -28,6 +29,7 @@ import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
@@ -81,6 +83,8 @@ public class MpayServiceImpl implements MpayService {
 	private WalletUtils walletUtils;
 	@Autowired
 	private MerchantIdCardCostService merchantIdCardCostService;
+	@Autowired
+	private MemberService memberService;
 
 	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);
 
@@ -209,8 +213,8 @@ public class MpayServiceImpl implements MpayService {
 		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
 			double fee = Double.parseDouble(reCheckMap.get("fee") + "");
 			int backCoverFlag = Integer.parseInt(reCheckMap.get("backCoverFlag") + "");
-			Map<String, Object> reMap = updateOrderRecordStatus(jsonList, merchantId, eport, customsCode, ciqOrgCode,
-					errorList, fee, backCoverFlag);
+			Map<String, Object> reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList, fee,
+					backCoverFlag);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
@@ -253,9 +257,21 @@ public class MpayServiceImpl implements MpayService {
 	 *            订单费率
 	 * @return Map
 	 */
-	private Map<String, Object> updateOrderRecordStatus(JSONArray jsonList, String merchantId, int eport,
-			String customsCode, String ciqOrgCode, List<Map<String, Object>> errorList, double fee, int backCoverFlag) {
+	private Map<String, Object> updateOrderRecordStatus(JSONArray jsonList, String merchantId,
+			Map<String, Object> customsMap, List<Map<String, Object>> errorList, double fee, int backCoverFlag) {
 		System.out.println("-------将商户选择的自助申报的订单修改为申报状态(10)--------");
+		if (jsonList == null || customsMap == null || errorList == null) {
+			return ReturnInfoUtils.errorInfo("自助申报失败,服务器繁忙！");
+		}
+		String memberId = customsMap.get("memberId") + "";
+		if (StringEmptyUtils.isEmpty(memberId)) {
+			memberId = "Member_2017000025928";
+		}
+		Map<String, Object> reMemberMap = memberService.getMemberInfo(memberId);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> errMap = null;
 		for (int i = 0; i < jsonList.size(); i++) {
 			JSONObject json = JSONObject.fromObject(jsonList.get(i));
@@ -265,34 +281,21 @@ public class MpayServiceImpl implements MpayService {
 			List<Morder> orderList = morderDao.findByProperty(Morder.class, param, 1, 1);
 			if (orderList != null && !orderList.isEmpty()) {
 				Morder order = orderList.get(0);
-				// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
-				if (order.getOrder_record_status() == 10 || order.getOrder_record_status() == 2) {
-					errMap = new HashMap<>();
-					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					errMap.put(BaseCode.MSG.toString(), "订单[" + order.getOrder_id() + "]正在申报中,请勿重复申报！");
-					errorList.add(errMap);
-					continue;
-				} else if (order.getOrder_record_status() == 3) {
-					errMap = new HashMap<>();
-					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					errMap.put(BaseCode.MSG.toString(),
-							"订单[" + order.getOrder_id() + "]已在[" + order.getCreate_date() + "]申报成功,请勿重复申报！");
-					errorList.add(errMap);
-					continue;
-				} else if (order.getIdcardCertifiedFlag() == 2) {// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-					errMap = new HashMap<>();
-					errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					errMap.put(BaseCode.MSG.toString(), "订单[" + order.getOrder_id() + "]实名认证不通过,不允许申报！");
-					errorList.add(errMap);
-					continue;
-				}
-				Map<String, Object> reCheckMap = checkManualOrderInfo(order);
+				Map<String, Object> reCheckMap = beforePushingCheck(order);
 				if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 					errorList.add(reCheckMap);
 				} else {
-					order.setEport(eport + "");
-					order.setCustomsCode(customsCode);
-					order.setCiqOrgCode(ciqOrgCode);
+					int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
+					String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
+					String customsCode = customsMap.get(CUSTOMS_CODE) + "";
+					if (eport > 0 && StringEmptyUtils.isNotEmpty(customsCode)
+							&& StringEmptyUtils.isNotEmpty(ciqOrgCode)) {
+						order.setEport(eport + "");
+						order.setCustomsCode(customsCode);
+						order.setCiqOrgCode(ciqOrgCode);
+					}
+					setOrderPayer(member, order);
+					// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
 					order.setOrder_record_status(10);
 					// 订单推送至网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 					order.setStatus(1);
@@ -301,7 +304,6 @@ public class MpayServiceImpl implements MpayService {
 					order.setBackCoverFlag(backCoverFlag);
 					if (!morderDao.update(order)) {
 						errMap = new HashMap<>();
-						errMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
 						errMap.put(BaseCode.MSG.toString(), "订单号[" + order.getOrder_id() + "]申报失败,服务器繁忙,请重试!");
 						errorList.add(errMap);
 						continue;
@@ -310,6 +312,26 @@ public class MpayServiceImpl implements MpayService {
 			}
 		}
 		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
+	}
+
+	private Map<String, Object> beforePushingCheck(Morder order) {
+		// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+		if (order.getOrder_record_status() == 10 || order.getOrder_record_status() == 2) {
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]正在申报中,请勿重复申报！");
+		} else if (order.getOrder_record_status() == 3) {
+			return ReturnInfoUtils
+					.errorInfo("订单[" + order.getOrder_id() + "]已在[" + order.getCreate_date() + "]申报成功,请勿重复申报！");
+		} else if (order.getIdcardCertifiedFlag() == 2) {// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
+			return ReturnInfoUtils.errorInfo("订单[" + order.getOrder_id() + "]实名认证不通过,不允许申报！");
+		}
+		return checkManualOrderInfo(order);
+	}
+
+	private void setOrderPayer(Member member, Morder order) {
+		if (order != null && member != null) {
+			order.setOrderPayerId(member.getMemberId());
+			order.setOrderPayerName(member.getMemberName());
+		}
 	}
 
 	@Override
@@ -844,7 +866,12 @@ public class MpayServiceImpl implements MpayService {
 		orderMap.put("inputDate", inputDate);
 		// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 		orderMap.put(E_PORT, eport);
-		if (StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
+		if (eport == 1 && StringEmptyUtils.isNotEmpty(dzkaNo)) {// 往电子口岸
+			// 电商企业编号
+			orderMap.put("ebEntNo", dzkaNo);
+			// 电商企业名称
+			orderMap.put("ebEntName", ebEntName);
+		} else if (StringEmptyUtils.isNotEmpty(ebEntNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 			// 电商企业编号
 			orderMap.put("ebEntNo", ebEntNo);
 			// 电商企业名称
@@ -877,20 +904,31 @@ public class MpayServiceImpl implements MpayService {
 		// 发起订单备案
 		String resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
 		// 当端口号为2(智检时)再往电子口岸多发送一次
-		if (eport == 2) {
-			// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-			orderMap.put(E_PORT, 1);
-			if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
-				// 电商企业编号
-				orderMap.put("ebEntNo", dzkaNo);
+		if (eport == 2 || "443400".equals(customsMap.get(CIQ_ORG_CODE)) ) {
+			if(eport == 1){
+				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+				orderMap.put(E_PORT, 2);
+				// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
+				orderMap.put("businessType", 3);
+				//国检 电商企业编号
+				orderMap.put("ebEntNo", ebEntNo);
 				// 电商企业名称
 				orderMap.put("ebEntName", ebEntName);
-			} else {
-				orderMap.put("ebEntNo", "C010000000537118");
-				// 电商企业名称
-				orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+			}else if(eport == 2){
+				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
+				orderMap.put(E_PORT, 1);
+				if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
+					//电子口岸 电商企业编号
+					orderMap.put("ebEntNo", dzkaNo);
+					// 电商企业名称
+					orderMap.put("ebEntName", ebEntName);
+				} else {
+					orderMap.put("ebEntNo", "C010000000537118");
+					// 电商企业名称
+					orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+				}
 			}
-			System.out.println("---------订单第二次向电子口岸发送------");
+			System.out.println("---------订单第二次发送------");
 			// 检验检疫机构代码
 			orderMap.put(CIQ_ORG_CODE, "443400");
 			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);

@@ -8,7 +8,6 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.tenant.MerchantIdCardCostService;
 import org.silver.shop.dao.system.tenant.MerchantIdCardCostDao;
-import org.silver.shop.model.system.log.IdCardCertificationLog;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.silver.shop.util.IdUtils;

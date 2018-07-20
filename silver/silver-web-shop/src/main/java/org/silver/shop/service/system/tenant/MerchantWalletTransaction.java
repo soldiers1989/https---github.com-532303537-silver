@@ -59,7 +59,7 @@ public class MerchantWalletTransaction {
 	 * @return Map
 	 */
 	public Map<String, Object> getMerchantBankInfo(String merchantId) {
-		return merchantBankInfoService.findMerchantBankInfo(merchantId, 0, 0);
+		return merchantBankInfoService.getMerchantBankInfo(merchantId, 0, 0, 1);
 	}
 
 	// 添加交易记录
@@ -97,15 +97,15 @@ public class MerchantWalletTransaction {
 		String merchantName = merchantInfo.getMerchantName();
 		datasMap.put("merchantId", merchantId);
 		datasMap.put("merchantName", merchantName);
-		String storePath ="/opt/www/img/merchantApplication/" + merchantId + "/";
-		//String storePath = "D:\\";
+		String storePath = "/opt/www/img/merchantApplication/" + merchantId + "/";
+		// String storePath = "D:\\";
 		Map<String, Object> reFileMap = fileUpLoadService.universalDoUpload(req, storePath, ".jpg", false, 800, 800,
 				null);
 		if (!"1".equals(reFileMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reFileMap;
 		}
 		List<String> fileList = (List<String>) reFileMap.get(BaseCode.DATAS.toString());
-		if(fileList.isEmpty()){
+		if (fileList.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("请上传至少一张银行回执图片！");
 		}
 		StringBuilder path = new StringBuilder("https://ym.191ec.com/img/merchantApplication/" + merchantId + "/");
@@ -122,7 +122,7 @@ public class MerchantWalletTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		datasMap.put("merchantId", merchantId);
+		datasMap.put("applicantId", merchantId);
 		return merchantWalletService.getOfflineRechargeInfo(datasMap, page, size);
 	}
 }

@@ -69,7 +69,11 @@ public class Morder implements Serializable {
 	private int idcardCertifiedFlag;// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 	private int backCoverFlag;// 手续费封底标识：1-不封底计算、2-100封底计算
 	private double platformFee;// 商户对应的订单服务费率
-
+	private String orderPayerId;// 订单付款人id
+	private String orderPayerName;// 订单付款人名称
+	private int orderStatus;//订单状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+	private String orderSourceType;//订单录入系统类型：online-线上(商城真实下单)、offline-线下(后台批量导入)
+	
 	public long getId() {
 		return id;
 	}
@@ -484,6 +488,38 @@ public class Morder implements Serializable {
 
 	public void setPlatformFee(double platformFee) {
 		this.platformFee = platformFee;
+	}
+
+	public String getOrderPayerId() {
+		return orderPayerId;
+	}
+
+	public String getOrderPayerName() {
+		return orderPayerName;
+	}
+
+	public void setOrderPayerId(String orderPayerId) {
+		this.orderPayerId = orderPayerId;
+	}
+
+	public void setOrderPayerName(String orderPayerName) {
+		this.orderPayerName = orderPayerName;
+	}
+
+	public int getOrderStatus() {
+		return orderStatus;
+	}
+
+	public String getOrderSourceType() {
+		return orderSourceType;
+	}
+
+	public void setOrderStatus(int orderStatus) {
+		this.orderStatus = orderStatus;
+	}
+
+	public void setOrderSourceType(String orderSourceType) {
+		this.orderSourceType = orderSourceType;
 	}
 
 }

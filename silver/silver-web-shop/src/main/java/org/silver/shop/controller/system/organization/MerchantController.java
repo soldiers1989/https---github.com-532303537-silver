@@ -288,21 +288,16 @@ public class MerchantController {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		Map<String, Object> statusMap = new HashMap<>();
 		if (merchantInfo != null && currentUser.isAuthenticated()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "商户已登陆！");
-
+			return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "未登陆,请先登录！");
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("未登陆,请先登录！")).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantRecordInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("获取商户备案信息")
+	@ApiOperation("商户查看海关备案信息")
 	@RequiresRoles("Merchant")
 	public String getMerchantRecordInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
@@ -310,9 +305,7 @@ public class MerchantController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-
-		Map<String, Object> statusMap = merchantTransaction.getMerchantRecordInfo();
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(merchantTransaction.getMerchantRecordInfo()).toString();
 	}
 
 	@RequestMapping(value = "/publicMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -356,7 +349,38 @@ public class MerchantController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-
 		return JSONObject.fromObject(merchantTransaction.getRelatedMemberFunds(page, size)).toString();
+	}
+	
+	@RequestMapping(value = "/getBusinessInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("获取业务信息")
+	public String getBusinessInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(merchantTransaction.getBusinessInfo()).toString();
+	}
+	
+	@RequestMapping(value = "/updateBaseInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户修改基本信息")
+	public String updateBaseInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key =  isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(merchantTransaction.updateBaseInfo(datasMap)).toString();
 	}
 }

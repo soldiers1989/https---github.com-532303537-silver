@@ -1,8 +1,12 @@
 package org.silver.shop.controller.system.tenant;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
@@ -28,55 +32,66 @@ public class MerchantBankController {
 	@Autowired
 	private MerchantBankInfoTransaction merchantBankInfoTransaction;
 
-	/**
-	 * 添加银行卡信息
-	 * 
-	 * @param bankName
-	 * @param bankAccount
-	 * @param type
-	 *            默认选择：1-默认选中,2-备用
-	 * @return
-	 */
-	@RequestMapping(value = "/addMerchantBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("添加银行卡信息")
-	@RequiresRoles("Merchant")
+	@RequestMapping(value = "/managerAddBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ApiOperation("管理员添加商户银行卡信息")
 	@ResponseBody
-	public String addMerchantBankInfo(@RequestParam("bankName") String bankName,
-			@RequestParam("bankAccount") String bankAccount, @RequestParam("defaultFalg") int defaultFalg) {
-		Map<String, Object> statusMap = new HashMap<>();
-		if (bankName != null && bankAccount != null) {
-			boolean flag = merchantBankInfoTransaction.addMerchantBankInfo(bankName, bankAccount, defaultFalg);
-			if (flag) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), 1);
-				statusMap.put(BaseCode.MSG.getBaseCode(), "保存银行卡信息成功！");
-				return JSONObject.fromObject(statusMap).toString();
-			}
+	// @RequiresRoles("Merchant")
+	// @RequiresPermissions("merchantBank:managerAddBankInfo")
+	public String managerAddBankInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId, @RequestParam("bankProvince") String bankProvince,
+			@RequestParam("bankCity") String bankCity, @RequestParam("bankName") String bankName,
+			@RequestParam("bankAccountNo") String bankAccountNo,
+			@RequestParam("bankAccountName") String bankAccountName,
+			@RequestParam("bankAccountType") String bankAccountType, @RequestParam("bankCardType") String bankCardType,
+			@RequestParam("defaultFlag") int defaultFlag) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
 		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(merchantBankInfoTransaction.managerAddBankInfo(datasMap)).toString();
 	}
 
-	/**
-	 * 获取商户银行卡信息
-	 * 
-	 * @param page
-	 *            页面
-	 * @param size
-	 *            条数
-	 * @return Map
-	 */
-	@RequestMapping(value = "/getMerchantBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	
+	@RequestMapping(value = "/getBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	@ApiOperation("获取商户银行卡信息")
-	public String getMerchantBankInfo(@RequestParam("page") int page, @RequestParam("size") int size) {
-		return JSONObject.fromObject(merchantBankInfoTransaction.findMerchantBankInfo(page, size)).toString();
+	@ApiOperation("商户获取银行卡信息")
+	public String getBankInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(merchantBankInfoTransaction.getBankInfo(page, size)).toString();
 	}
 
+	@RequestMapping(value = "/managerGetBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("管理员获取银行卡信息")
+	// @RequiresPermissions("merchantBank:managerGetBankInfo")
+	public String managerGetBankInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size,String merchantId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(merchantBankInfoTransaction.managerGetBankInfo(page, size,merchantId)).toString();
+	}
 	/**
 	 * 设置默认银行卡
-	 * @param id 
+	 * 
+	 * @param id
 	 * @return
 	 */
 	@RequestMapping(value = "/selectMerchantBankInfoDefault", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

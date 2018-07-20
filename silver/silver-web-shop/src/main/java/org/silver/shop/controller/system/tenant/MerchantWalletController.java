@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -133,7 +134,11 @@ public class MerchantWalletController {
 		if (!"1".equals(reBankMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(reBankMap).toString();
 		}
-		MerchantBankContent bankContent = (MerchantBankContent) reBankMap.get(BaseCode.DATAS.toString());
+		List<MerchantBankContent> bankList = (List) reBankMap.get(BaseCode.DATAS.toString());
+		if(bankList.isEmpty()){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("获取银行卡信息错误")).toString();
+		}
+		MerchantBankContent bankContent = bankList.get(0);
 		String serialNo = createSerialNo();
 		// 向银盛发起代付请求
 		Map<String, Object> reMap = daiFuPay.dfTrade(DAI_FU_NOTIFY_URL, serialNo, serialNo, amount, "商户资金结算",
@@ -207,6 +212,8 @@ public class MerchantWalletController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
+		datasMap.remove("page");
+		datasMap.remove("size");
 		return JSONObject.fromObject(merchantWalletTransaction.getOfflineRechargeInfo(datasMap, page, size)).toString();
 	}
 

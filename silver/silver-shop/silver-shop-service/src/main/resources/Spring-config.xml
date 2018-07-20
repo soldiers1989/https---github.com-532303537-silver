@@ -37,7 +37,7 @@
 	<import resource="spring/dubbo.xml" />
 	<import resource="spring/redis.xml" />
 	<import resource="Spring-Aop.xml" />
-	<!-- <import resource="Spring-Quartz.xml"/> -->
+<!-- 	<import resource="Spring-Quartz.xml"/> -->
 	<!--<import resource="spring/dataSource.xml"/> -->
 	<!--<import resource="spring/mybatis.xml"/> -->
 	<!-- <import resource="spring/*.xml"/> -->

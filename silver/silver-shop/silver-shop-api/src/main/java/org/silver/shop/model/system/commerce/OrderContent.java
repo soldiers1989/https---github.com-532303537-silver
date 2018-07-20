@@ -19,7 +19,7 @@ public class OrderContent implements Serializable {
 	private String orderId;// 订单ID
 	private double freight;// 运费
 	private double orderTotalPrice;// 订单总金额
-	private int status;// 订单状态：1-待付款,2-已付款;3-商户待处理;4-交易关闭,5-交易成功
+	private int status;//订单状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -40,7 +40,7 @@ public class OrderContent implements Serializable {
 	private String recAreaName;// 收货人城市区名称
 	private String recAreaCode;// 收货人城市区代码
 	private String recipientAddr;// 收货人详细地址
-	private int ehsStatus;// 物流状态：0-待发货,1-快件运输中,2-快件已签收
+	private int ehsStatus;// 物流状态：0-待处理、1-待发货、2-快件运输中、3-快件已签收
 	private String wbEhsentName;// 物流公司名称
 	private String wbEhsentNo;// 物流公司备案号
 	private String entOrderNo;// 对接海关订单总编号
@@ -49,6 +49,7 @@ public class OrderContent implements Serializable {
 	private String waybillNo;// (快递单号)运单编号
 	private double tax;// 税费
 	private int sourceFlag;//来源标识：1-银盟商城、2-第三方推广
+
 	public long getId() {
 		return id;
 	}

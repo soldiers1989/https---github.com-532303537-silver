@@ -487,16 +487,23 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String ebEntNo = goodsInfo.get("ebEntNo") + "";
 		String ebEntName = goodsInfo.get("ebEntName") + "";
 		String DZKNNo = goodsInfo.get("DZKNNo") + "";
-		if (StringEmptyUtils.isNotEmpty(marCode) && StringEmptyUtils.isNotEmpty(ebEntNo)
-				&& StringEmptyUtils.isNotEmpty(ebEntName) && StringEmptyUtils.isNotEmpty(DZKNNo)) {
-			JSONObject spareParams = new JSONObject();
+		JSONObject spareParams = new JSONObject();
+		if (StringEmptyUtils.isNotEmpty(marCode)) {
 			spareParams.put("marCode", marCode);
-			if (StringEmptyUtils.isNotEmpty(sku)) {
-				spareParams.put("SKU", sku);
-			}
+		}
+		if (StringEmptyUtils.isNotEmpty(sku)) {
+			spareParams.put("SKU", sku);
+		}
+		if (StringEmptyUtils.isNotEmpty(ebEntNo)) {
 			spareParams.put("ebEntNo", ebEntNo);
+		}
+		if (StringEmptyUtils.isNotEmpty(ebEntName)) {
 			spareParams.put("ebEntName", ebEntName);
+		}
+		if (StringEmptyUtils.isNotEmpty(DZKNNo)) {
 			spareParams.put("DZKNNo", DZKNNo);
+		}
+		if(!spareParams.isEmpty()){
 			mosb.setSpareParams(spareParams.toString());
 		}
 		mosb.setMerchant_no(goodsInfo.get(MERCHANT_ID) + "");
@@ -596,6 +603,8 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				morder.setFcode(FCODE);
 				String randomDate = DateUtil.randomCreateDate();
 				morder.setOrderDate(randomDate);
+				// 订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
+				morder.setOrderSourceType("offline");
 				String ehsEntName = datas.get("ehsEntName") + "";
 				if (StringEmptyUtils.isNotEmpty(ehsEntName)) {
 					JSONObject json = new JSONObject();

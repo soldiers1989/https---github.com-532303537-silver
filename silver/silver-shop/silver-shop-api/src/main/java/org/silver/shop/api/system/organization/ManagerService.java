@@ -119,13 +119,6 @@ public interface ManagerService {
 			Map<String, Object> datasMap);
 
 	/**
-	 * 管理员查看商户备案信息
-	 * @param merchantId 商户Id
-	 * @return Map
-	 */
-	public Map<String, Object> findMerchantRecordDetail(String merchantId);
-
-	/**
 	 * 管理员修改商户备案信息
 	 * @param managerId
 	 * @param managerName

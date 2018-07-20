@@ -108,14 +108,16 @@ public class ManagerController {
 	@RequiresPermissions("manager:createManager")
 	public String createManager(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("managerName") String managerName, @RequestParam("loginPassword") String loginPassword,
-			@RequestParam("managerMarks") int managerMarks, String description,String realName) {
+			@RequestParam("managerMarks") int managerMarks, String description, String realName) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (managerName != null && loginPassword != null ) {
-			return JSONObject.fromObject(managerTransaction.createManager(managerName, loginPassword, managerMarks, description,realName)).toString();
+		if (managerName != null && loginPassword != null) {
+			return JSONObject.fromObject(
+					managerTransaction.createManager(managerName, loginPassword, managerMarks, description, realName))
+					.toString();
 		} else {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数错误！")).toString();
 		}
@@ -627,5 +629,25 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(managerTransaction.tmpUpdateAuthority()).toString();
+	}
+
+	@RequestMapping(value = "/getInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("获取管理员信息")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("merchant:getInfo")
+	public String getInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		if(managerInfo == null){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("未知错误！")).toString();
+		}
+		return JSONObject.fromObject(managerInfo).toString();
 	}
 }

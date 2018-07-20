@@ -27,7 +27,7 @@ public class OfflineRechargeContent implements Serializable {
 	private String remittanceBank;// 汇款人开户行
 	private Date remittanceDate;// 汇款时间
 	private String remittanceReceipt;// 汇款回执图片
-	private String reviewerType;// 审核类型：firstTrial-运营初审、financialAudit-财务审核、end-结束
+	private String reviewerType;// 审核类型：firstTrial-运营初审、financialAudit-财务审核、termination-终止、carryOut-完成
 
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间

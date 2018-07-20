@@ -37,8 +37,8 @@ public class IdCardServiceImpl implements IdCardService {
 				return reDatasMap;
 			}
 			Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-			List<IdCard> idList = idCardDao.findByProperty(IdCard.class, paramMap, page, size);
-			long count = idCardDao.findByPropertyCount(IdCard.class, paramMap);
+			List<IdCard> idList = idCardDao.findByPropertyLike(IdCard.class, paramMap, null,page, size);
+			long count = idCardDao.findByPropertyLikeCount(IdCard.class, paramMap,null);
 			if (idList == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 			} else if (!idList.isEmpty()) {

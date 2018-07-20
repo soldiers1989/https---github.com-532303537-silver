@@ -29,4 +29,8 @@ public class IdCardCertificationlogsTransaction {
 		return idCardCertificationService.getlogsInfo(datasMap,page,size);
 	}
 
+	public Object tempUpdate() {
+		return idCardCertificationService.tempUpdate();
+	}
+
 }

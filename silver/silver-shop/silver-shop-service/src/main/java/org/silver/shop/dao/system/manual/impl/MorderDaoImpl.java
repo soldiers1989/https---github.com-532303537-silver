@@ -275,7 +275,7 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 				order.setOrderDocId(obj[16].toString());
 				order.setOrderDocTel(obj[17].toString());
 				order.setStatus(Integer.parseInt(obj[21].toString()));
-				order.setOrder_record_status(Integer.parseInt(obj[34].toString()));
+				order.setOrder_record_status(Integer.parseInt(obj[31].toString()));
 			}
 			orderList.add(order);
 		}

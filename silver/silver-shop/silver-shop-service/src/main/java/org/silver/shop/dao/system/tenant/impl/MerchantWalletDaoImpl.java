@@ -39,7 +39,7 @@ public class MerchantWalletDaoImpl extends BaseDaoImpl implements MerchantWallet
 			}
 			String reviewerFlag = params.get("reviewerFlag")+"";
 			if(StringEmptyUtils.isNotEmpty(reviewerFlag)){
-				sbSql.append(" t1.reviewerFlag = ? AND ");
+				sbSql.append(" t2.reviewerFlag = ? AND ");
 				sqlParams.add(merchantId);
 			}
 			String startDate = params.get("startDate")+"";

@@ -152,6 +152,8 @@ public class CreatePaymentQtz {
 		int count = SerialNoUtils.getSerialNo("paymentId");
 		String tradeNo = SerialNoUtils.createTradeNo("01O", (count + 1), new Date());
 		paymentMap.put("tradeNo", tradeNo);
+		//
+		order.setTrade_no(tradeNo);
 		paymentMap.put(ORDER_ID, order.getOrder_id());
 		paymentMap.put("amount", order.getActualAmountPaid());
 		paymentMap.put("orderDocName", order.getOrderDocName());
@@ -181,28 +183,28 @@ public class CreatePaymentQtz {
 					order.getMerchant_no());
 			String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
-				startSubtasks(merchantId, tradeNo, order.getActualAmountPaid());
+				startSubtasks(order);
 				return paymentService.addEntity(paymentMap)
 						&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
 			} else {
 				return updateCertifiedStatus(order);
 			}
 		} else {
-			startSubtasks(merchantId, tradeNo, order.getActualAmountPaid());
+			startSubtasks(order);
 			return paymentService.addEntity(paymentMap)
 					&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
 		}
 	}
 
-	private void startSubtasks(String merchantId, String tradeNo, double amount) {
+	private void startSubtasks(Morder order) {
 		// 创建一个生成钱包流水子任务
-		// String memberId = redisMap.get("memberId") + "";
+		String memberId = order.getOrderPayerId();
 		// 暂时写死
-		String memberId = "Member_2017000025928";
+		//String memberId = "Member_2017000025928";
 		if (StringEmptyUtils.isNotEmpty(memberId)) {
 			ExecutorService threadPool = Executors.newCachedThreadPool();
-			WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, merchantId, tradeNo,
-					memberWalletService, amount);
+			WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, order.getMerchant_no(), order.getTrade_no(),
+					memberWalletService, order.getActualAmountPaid());
 			threadPool.submit(walletTransferTask);
 			threadPool.shutdown();
 		}

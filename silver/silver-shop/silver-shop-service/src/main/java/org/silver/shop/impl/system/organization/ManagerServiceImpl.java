@@ -3,18 +3,14 @@ package org.silver.shop.impl.system.organization;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.ManagerService;
 import org.silver.shop.dao.system.organization.ManagerDao;
-import org.silver.shop.impl.system.commerce.StockServiceImpl;
 import org.silver.shop.model.system.Authority;
-import org.silver.shop.model.system.AuthorityGroup;
 import org.silver.shop.model.system.AuthorityUser;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
@@ -500,24 +496,6 @@ public class ManagerServiceImpl implements ManagerService {
 		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		return statusMap;
-	}
-
-	@Override
-	public Map<String, Object> findMerchantRecordDetail(String merchantId) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("merchantId", merchantId);
-		List<Object> reList = managerDao.findByProperty(MerchantRecordInfo.class, paramMap, 0, 0);
-		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-		} else if (!reList.isEmpty()) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), reList);
-			return statusMap;
-		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据!");
-		}
 	}
 
 	@Override

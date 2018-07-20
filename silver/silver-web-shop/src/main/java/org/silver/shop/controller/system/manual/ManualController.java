@@ -302,8 +302,7 @@ public class ManualController {
 		datasMap.put("msg", req.getParameter("msg") + "");
 		datasMap.put("messageID", req.getParameter("messageID") + "");
 		datasMap.put("entOrderNo", req.getParameter("entOrderNo") + "");
-		Map<String, Object> statusMap = mdataService.updateOrderRecordInfo(datasMap);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(mdataService.updateOrderRecordInfo(datasMap)).toString();
 	}
 
 	/**

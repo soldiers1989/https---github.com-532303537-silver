@@ -168,33 +168,51 @@ public class MerchantTransaction {
 		String merchantId = merchantInfo.getMerchantId();
 		String redisKey = "Shop_Key_Merchant_Authority_List_" + merchantId;
 		byte[] redisByte = JedisUtil.get(redisKey.getBytes());
-	//	if (redisByte != null && redisByte.length > 0) {
-			//return (List<String>) SerializeUtil.toObject(redisByte);
-		//} else {
-			Map<String, Object> reMap = merchantService.getMerchantAuthority(merchantId);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return null;
-			}
-			List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
-			JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
-			return item;
-		//}
+		// if (redisByte != null && redisByte.length > 0) {
+		// return (List<String>) SerializeUtil.toObject(redisByte);
+		// } else {
+		Map<String, Object> reMap = merchantService.getMerchantAuthority(merchantId);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return null;
+		}
+		List<String> item = (List<String>) reMap.get(BaseCode.DATAS.toString());
+		JedisUtil.set(redisKey.getBytes(), SerializeUtil.toBytes(item), 3600);
+		return item;
+		// }
 	}
 
-	//管理员设置商户关联的用户信息
-	public Map<String,Object> setRelatedMember(String memberId, String merchantId) {
+	// 管理员设置商户关联的用户信息
+	public Map<String, Object> setRelatedMember(String memberId, String merchantId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
-		return merchantService.setRelatedMember(memberId,merchantId,managerInfo.getManagerName());
+		return merchantService.setRelatedMember(memberId, merchantId, managerInfo.getManagerName());
 	}
 
 	//
-	public Map<String,Object> getRelatedMemberFunds(int page, int size) {
+	public Map<String, Object> getRelatedMemberFunds(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
-		return merchantService.getRelatedMemberFunds(merchantId,page,size);
+		return merchantService.getRelatedMemberFunds(merchantId, page, size);
+	}
+
+	public Map<String, Object> getBusinessInfo() {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		// 获取登录后的商户账号
+		String merchantId = merchantInfo.getMerchantId();
+		return merchantService.getBusinessInfo(merchantId);
+	}
+
+	public Map<String, Object> updateBaseInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		// 获取商户登录时,shiro存入在session中的数据
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		String merchantId = merchantInfo.getMerchantId();
+		String merchantName = merchantInfo.getMerchantName();
+		return merchantService.updateBaseInfo(merchantId,merchantName,datasMap);
 	}
 }
