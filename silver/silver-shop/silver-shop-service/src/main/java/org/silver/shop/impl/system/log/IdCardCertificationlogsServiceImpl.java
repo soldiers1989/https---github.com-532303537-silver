@@ -53,34 +53,12 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 	public Object tempUpdate() {
 		Map<String, Object> item = new HashMap<>();
 		item.put("merchantId", "MerchantId_00057");
-		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
+		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, null, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
 		System.out.println("---merchantlist>>" + merchantlist.size());
 		for (Merchant merchant : merchantlist) {
-			if ("MerchantId_00082".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			if ("MerchantId_00084".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			if ("MerchantId_00080".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			/*if ("MerchantId_00057".equals(merchant.getMerchantId())) {
-				continue;
-			}*/
-			if ("MerchantId_00078".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			//
-			if ("MerchantId_00076".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			if ("MerchantId_00075".equals(merchant.getMerchantId())) {
-				continue;
-			}
-			if ("MerchantId_00074".equals(merchant.getMerchantId())) {
+			if("MerchantId_00074".equals(merchant.getMerchantId())){
 				continue;
 			}
 			params = new HashMap<>();
@@ -139,8 +117,9 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 								idCard.setIdNumber(order.getOrderDocId().trim());
 								idCard.setType(4);
 								idCard.setStatus("wait");
-								idCard.setCreateDate(new Date());
+								idCard.setCreateDate(order.getCreate_date());
 								idCard.setCreateBy("system");
+								idCard.setRemrak("临时补充数据");
 								ikdCardCertificationlogsDao.add(idCard);
 								addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
 										order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),

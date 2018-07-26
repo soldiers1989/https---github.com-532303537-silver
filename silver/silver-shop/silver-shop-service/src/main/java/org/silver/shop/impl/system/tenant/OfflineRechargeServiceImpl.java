@@ -153,11 +153,11 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 			if (!offlineRechargeDao.update(log)) {
 				return ReturnInfoUtils.errorInfo("审核失败，服务器繁忙！");
 			}
-			Map<String, Object> reUpdateMap = updateOfflineRechargeContent(content, managerName, "end");
+			Map<String, Object> reUpdateMap = updateOfflineRechargeContent(content, managerName, "carryOut");
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 				return reUpdateMap;
 			}
-			Map<String, Object> reNewLogMap = addNewLog(offlineRechargeId, "财务审核", "结束", 0, managerName);
+			Map<String, Object> reNewLogMap = addNewLog(offlineRechargeId, "财务审核", "完成", 0, managerName);
 			if (!"1".equals(reNewLogMap.get(BaseCode.STATUS.toString()))) {
 				return reNewLogMap;
 			}
@@ -184,7 +184,7 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 		datas.put("merchantId", content.getApplicantId());
 		datas.put("walletId", merchantWallet.getWalletId());
 		datas.put("merchantName", content.getApplicant());
-		datas.put("serialName", "银盟线下加款");
+		datas.put("serialName", "线下加款");
 		datas.put("balance", oldBalance);
 		datas.put("amount", content.getRemittanceAmount());
 		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
@@ -209,7 +209,7 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 	 * @param managerName
 	 *            管理员名称
 	 * @param reviewerType
-	 *            审核类型：firstTrial-运营初审、financialAudit-财务审核、end-结束
+	 *          审核类型：firstTrial-运营初审、financialAudit-财务审核、termination-终止、carryOut-完成
 	 * @return Map
 	 */
 	private Map<String, Object> updateOfflineRechargeContent(OfflineRechargeContent content, String managerName,

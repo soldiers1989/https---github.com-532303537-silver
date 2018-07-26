@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
@@ -657,7 +658,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		 * orMap.put("order_serial_no", "222"); orMap.put("order_id",
 		 * "65478417");
 		 */
-		List<StockReviewLog> reList = bd.findByPropertyOr(StockReviewLog.class, null, null, 0, 0);
+		Map<String, Object> params2 = new HashMap<>();
+		params2.put("merchantId", "MerchantId_00057");
+		params2.put("name", "李晨燕");
+		params2.put("idNumber", "320525199201121520");
+		List<IdCard> reList = bd.findByProperty(IdCard.class, params2, 1, 1);
 
 		System.out.println("0----->>>>" + reList.size());
 	}

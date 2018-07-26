@@ -1,6 +1,8 @@
 package org.silver.shop.impl.system.cross;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,8 +31,7 @@ public class ReportsServiceImpl implements ReportsService {
 	private PaymentDao paymentDao;
 	@Autowired
 	private ReportsDao reportsDao;
-	
-	
+
 	@Override
 	public Map<String, Object> getSynthesisReportDetails(Map<String, Object> params) {
 		if (params == null || params.isEmpty()) {
@@ -62,7 +63,7 @@ public class ReportsServiceImpl implements ReportsService {
 				JSONObject idCardJson = null;
 				viceMap = new HashMap<>();
 				viceMap.put("merchantId", merchantId);
-				viceMap.put("date", StringUtil.replace(json.get("date")+""));
+				viceMap.put("date", StringUtil.replace(json.get("date") + ""));
 				Table reIdcardList = reportsDao.getIdCardDetails(viceMap);
 				if (reIdcardList != null && !reIdcardList.getRows().isEmpty()) {
 					com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList)
@@ -72,7 +73,7 @@ public class ReportsServiceImpl implements ReportsService {
 				mergeDatas(json, fee, newlist, idCardJson);
 			}
 			long endTime = System.currentTimeMillis();
-			System.out.println("--查询综合报表-耗时->>>" + (endTime - startTime) + "ms");
+			System.out.println("--查询报表耗时-->>"+(endTime - startTime)+ "ms");
 			return ReturnInfoUtils.successDataInfo(newlist);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无报表数据!");
@@ -109,17 +110,16 @@ public class ReportsServiceImpl implements ReportsService {
 
 	@Override
 	public Map<String, Object> getIdCardCertification(Map<String, Object> params) {
-		if(params == null){
+		if (params == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
 		Table reIdcardList = reportsDao.getIdCardCertificationDetails(params);
-		if(reIdcardList == null){
+		if (reIdcardList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
-		}else if (!reIdcardList.getRows().isEmpty()) {
-			com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList)
-					.getJSONArray("rows");
+		} else if (!reIdcardList.getRows().isEmpty()) {
+			com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList).getJSONArray("rows");
 			return ReturnInfoUtils.successDataInfo(idCardJsonArr);
-		}else{
+		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据");
 		}
 	}

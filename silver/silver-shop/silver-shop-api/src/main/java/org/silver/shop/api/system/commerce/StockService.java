@@ -10,9 +10,10 @@ public interface StockService {
 	 * @param warehouseCode 仓库编码
 	 * @param page 页面
 	 * @param size 数目
+	 * @param entGoodsNo 商品自编号
 	 * @return
 	 */
-	public Map<String,Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page, int size);
+	public Map<String,Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page, int size, String entGoodsNo);
 
 	
 	/**

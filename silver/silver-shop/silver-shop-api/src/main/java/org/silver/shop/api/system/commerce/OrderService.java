@@ -86,12 +86,12 @@ public interface OrderService {
 	/**
 	 * 根据指定信息搜索商户订单信息
 	 * 
-	 * @param merchantId
-	 * @param merchantName
-	 * @param param
-	 * @param page
-	 * @param size
-	 * @return
+	 * @param merchantId 商户id
+	 * @param merchantName 商户名称
+	 * @param param 搜索参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
 	 */
 	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
 			Map<String, Object> datasMap, int page, int size);

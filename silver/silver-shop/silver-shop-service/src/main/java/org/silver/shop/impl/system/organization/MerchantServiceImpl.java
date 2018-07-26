@@ -21,9 +21,11 @@ import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantRelatedMemberContent;
 import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.WalletUtils;
+import org.silver.util.EmailUtils;
 import org.silver.util.MD5;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +48,7 @@ public class MerchantServiceImpl implements MerchantService {
 	private MemberService memberService;
 	@Autowired
 	private WalletUtils walletUtils;
-	
+
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
 	private static final String EPORT = "eport";
@@ -186,8 +188,8 @@ public class MerchantServiceImpl implements MerchantService {
 			 * return reAppkeyMap; }
 			 */
 		}
-		Map<String,Object> reWalletMap = walletUtils.checkWallet(1, merchantId, merchantName);
-		if("1".equals(reWalletMap.get(BaseCode.DATAS.toString()))){
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, merchantName);
+		if ("1".equals(reWalletMap.get(BaseCode.DATAS.toString()))) {
 			return reWalletMap;
 		}
 		return ReturnInfoUtils.successDataInfo(merchantId);
@@ -314,7 +316,6 @@ public class MerchantServiceImpl implements MerchantService {
 	public Map<String, Object> editBusinessInfo(String merchantId, List<Object> imglist, int[] array,
 			String customsregistrationCode, String organizationCode, String checktheRegistrationCode,
 			String merchantName) {
-		Date data = new Date();
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		List<MerchantDetail> reList = merchantDao.findByProperty(MerchantDetail.class, params, 1, 1);
@@ -352,7 +353,7 @@ public class MerchantServiceImpl implements MerchantService {
 			merchantDetail.setMerchantChecktheRegistrationCode(checktheRegistrationCode);
 			// 将商户状态修改为审核状态
 			// mInfo.setMerchantStatus("3");
-			merchantDetail.setUpdateDate(data);
+			merchantDetail.setUpdateDate(new Date());
 			merchantDetail.setUpdateBy(merchantName);
 			// 更新实体
 			if (merchantDao.update(merchantDetail)) {
@@ -383,7 +384,7 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> getMerchantRecordInfo(String merchantId) {
-		if(StringEmptyUtils.isEmpty(merchantId)){
+		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能空！");
 		}
 		Map<String, Object> paramMap = new HashMap<>();
@@ -474,8 +475,8 @@ public class MerchantServiceImpl implements MerchantService {
 		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
-		Table t = merchantDao.getRelatedMemberFunds(merchantId, null,page, size);
-		Table count = merchantDao.getRelatedMemberFunds(merchantId,null, 0, 0);
+		Table t = merchantDao.getRelatedMemberFunds(merchantId, null, page, size);
+		Table count = merchantDao.getRelatedMemberFunds(merchantId, null, 0, 0);
 		if (t == null) {
 			return ReturnInfoUtils.errorInfo("查询商户关联的用户信息失败,服务器繁忙!");
 		} else if (!t.getRows().isEmpty()) {
@@ -489,7 +490,7 @@ public class MerchantServiceImpl implements MerchantService {
 					String key = (String) iterator.next();
 					String value = json.get(key) + "";
 					if (StringEmptyUtils.isNotEmpty(value)) {
-						item.put(key, replace(value));
+						item.put(key, StringUtil.replace(value));
 					}
 				}
 				list.add(item);
@@ -500,22 +501,9 @@ public class MerchantServiceImpl implements MerchantService {
 		}
 	}
 
-	/**
-	 * 通用替换多表查询字符串
-	 * 
-	 * @param str
-	 * @return
-	 */
-	private String replace(String str) {
-		if (StringEmptyUtils.isEmpty(str)) {
-			return "";
-		}
-		return str.replace("{\"value\":", "").replace("\"}", "").replace("\"", "").replace("}", "");
-	}
-
 	@Override
 	public Map<String, Object> getBusinessInfo(String merchantId) {
-		if(StringEmptyUtils.isEmpty(merchantId)){
+		if (StringEmptyUtils.isEmpty(merchantId)) {
 			return ReturnInfoUtils.errorInfo("商户id不能为空！");
 		}
 		Map<String, Object> params = new HashMap<>();
@@ -532,20 +520,38 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> updateBaseInfo(String merchantId, String merchantName, Map<String, Object> datasMap) {
-		if(StringEmptyUtils.isEmpty(merchantId)){
+		if (StringEmptyUtils.isEmpty(merchantId) || datasMap == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 		}
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchantId", merchantId);
 		List<Merchant> reList = merchantDao.findByProperty(Merchant.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户业务信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			Merchant merchant = reList.get(0);
-			
-			
-			return null;
-			//return ReturnInfoUtils.successDataInfo();
+			String qq = datasMap.get("qq") + "";
+			if(StringEmptyUtils.isNotEmpty(qq)){
+				merchant.setMerchantQQ(qq);
+			}
+			String email = datasMap.get("email") + "";
+			if (StringEmptyUtils.isNotEmpty(email) ) {
+				if(EmailUtils.checkEmail(email)){
+					merchant.setMerchantEmail(email);
+				}else{
+					return ReturnInfoUtils.errorInfo("邮箱错误！");
+				}
+			}
+			// 公司简称
+			String companyName = datasMap.get("companyName") + "";
+			if (StringEmptyUtils.isEmpty(companyName)) {
+				return ReturnInfoUtils.errorInfo("简称不能为空！");
+			}
+			merchant.setCompanyName(companyName);
+			if (!merchantDao.update(merchant)) {
+				return ReturnInfoUtils.errorInfo("修改失败，服务器繁忙！!");
+			}
+			return ReturnInfoUtils.successDataInfo(merchant);
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到该商户业务信息!");
 		}

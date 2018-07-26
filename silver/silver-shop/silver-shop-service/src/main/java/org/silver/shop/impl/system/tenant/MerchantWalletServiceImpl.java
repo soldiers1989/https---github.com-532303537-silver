@@ -210,6 +210,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			return reDatasMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
+		paramMap.put("deleteFlag", 0);
 		List<OfflineRechargeContent> reList = merchantWalletDao.findByProperty(OfflineRechargeContent.class, paramMap, page, size);
 		long count = merchantWalletDao.findByPropertyCount(OfflineRechargeContent.class,paramMap);
 		if (reList == null) {

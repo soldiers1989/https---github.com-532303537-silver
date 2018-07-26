@@ -197,22 +197,18 @@ public class MerchantController {
 
 	/**
 	 * 修改商户业务信息(营业执照、税务登记证等等图片及编码)
-	 * 
-	 * @param merchantInfoPack
 	 * @return
 	 */
 	@RequestMapping(value = "/editMerchantInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("修改商户业务信息")
-	public String editMerchantInfo(HttpServletRequest req, HttpServletResponse resp) {
-		Map<String, Object> statusMap = new HashMap<>();
-		if (req != null) {
-			statusMap = merchantTransaction.editBusinessInfo(req);
-			return JSONObject.fromObject(statusMap).toString();
-		}
-		statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
-		statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
-		return JSONObject.fromObject(statusMap).toString();
+	public String editMerchantInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject( merchantTransaction.editBusinessInfo(req)).toString();
 	}
 
 	/**
@@ -380,6 +376,9 @@ public class MerchantController {
 			String key =  isKeys.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
+		}
+		if(datasMap.isEmpty()){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("修改参数不能为空！")).toString();
 		}
 		return JSONObject.fromObject(merchantTransaction.updateBaseInfo(datasMap)).toString();
 	}

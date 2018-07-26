@@ -504,15 +504,15 @@ public class OrderServiceImpl implements OrderService {
 			Map<String, Object> params = new HashMap<>();
 			params.put(ENT_ORDER_NO, entOrderNo);
 			List<OrderContent> reList = orderDao.findByProperty(OrderContent.class, params, 1, 1);
-			if(reList !=null && !reList.isEmpty()){
+			if (reList != null && !reList.isEmpty()) {
 				OrderContent order = reList.get(0);
 				// 订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
 				order.setStatus(4);
 				order.setWaybillNo(waybillNumber);
-				if(!orderDao.update(order)){
+				if (!orderDao.update(order)) {
 					return ReturnInfoUtils.errorInfo("更新用户订单快递单号失败，服务器繁忙！");
 				}
-			}else{
+			} else {
 				return ReturnInfoUtils.errorInfo("查询用户订单信息失败，服务器繁忙！");
 			}
 			return ReturnInfoUtils.successInfo();
@@ -863,11 +863,43 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
 			return reDatasMap;
 		}
+		String type = datasMap.get("type") + "";
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> viceParams = (Map<String, Object>) reDatasMap.get("viceParams");
-		List<OrderRecordContent> reList = orderDao.unionOrderInfo(OrderRecordContent.class, paramMap,
-				viceParams, page, size);
-		long reTotalCount = orderDao.unionOrderCount(OrderRecordContent.class, paramMap, viceParams);
+		switch (type) {
+		case "online":
+			return getOnlineOrderInfo(paramMap,page,size);
+		case "offline":
+			return getOfflineOrderInfo(viceParams,page,size);
+		default:
+			List<OrderRecordContent> reList = orderDao.unionOrderInfo(OrderRecordContent.class, paramMap, viceParams, page,
+					size);
+			long reTotalCount = orderDao.unionOrderCount(OrderRecordContent.class, paramMap, viceParams);
+			if (reList == null) {
+				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
+			} else if (!reList.isEmpty()) {
+				return ReturnInfoUtils.successDataInfo(reList, reTotalCount);
+			} else {
+				return ReturnInfoUtils.errorInfo("暂无数据！");
+			}
+		}
+	}
+
+	private Map<String, Object> getOfflineOrderInfo(Map<String, Object> params, int page, int size) {
+		List<Morder> reList = orderDao.findByProperty(Morder.class, params, page, size);
+		long reTotalCount = orderDao.findByPropertyCount(Morder.class, params);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList, reTotalCount);
+		} else {
+			return ReturnInfoUtils.errorInfo("暂无数据！");
+		}
+	}
+
+	private Map<String, Object> getOnlineOrderInfo(Map<String, Object> params, int page, int size) {
+		List<OrderRecordContent> reList = orderDao.findByProperty(OrderRecordContent.class, params, page, size);
+		long reTotalCount = orderDao.findByPropertyCount(OrderRecordContent.class, params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {

@@ -40,13 +40,16 @@ public class StockServiceImpl implements StockService {
 
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
-			int size) {
+			int size, String entGoodsNo) {
+		if(StringEmptyUtils.isEmpty(warehouseCode)){
+			return ReturnInfoUtils.errorInfo("仓库编号不能为空！");
+		}
 		int one = warehouseCode.indexOf('_');
 		int two = warehouseCode.indexOf('_', one + 1);
 		// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
 		String code = warehouseCode.substring(two + 1);
-		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size);
-		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0);
+		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size,entGoodsNo);
+		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0,entGoodsNo);
 		if (reTable == null) {
 			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
 		} else {

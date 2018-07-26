@@ -51,7 +51,7 @@ public class CustomsPortTransaction {
 			return ReturnInfoUtils.successDataInfo(JSONArray.fromObject(SerializeUtil.toObject(redisByte)));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
 			Map<String, Object> datasMap = customsPortService.findAllCustomsPort();
-			if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 				return datasMap;
 			}
 			// 将查询出来的口岸数据放入缓存中

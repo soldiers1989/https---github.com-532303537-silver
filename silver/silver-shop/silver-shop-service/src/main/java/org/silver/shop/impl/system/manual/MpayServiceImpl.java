@@ -902,36 +902,41 @@ public class MpayServiceImpl implements MpayService {
 		// 是否像海关发送
 		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
+		Map<String,Object> newOrderMap = orderMap;
 		String resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
+		//String resultStr = YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report", orderMap);
+		logger.error("--订单内容-->"+orderMap.get("datas"));
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2 || "443400".equals(customsMap.get(CIQ_ORG_CODE)) ) {
 			if(eport == 1){
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-				orderMap.put(E_PORT, 2);
+				newOrderMap.put(E_PORT, 2);
 				// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
-				orderMap.put("businessType", 3);
+				newOrderMap.put("businessType", 3);
 				//国检 电商企业编号
-				orderMap.put("ebEntNo", ebEntNo);
+				newOrderMap.put("ebEntNo", ebEntNo);
 				// 电商企业名称
-				orderMap.put("ebEntName", ebEntName);
+				newOrderMap.put("ebEntName", ebEntName);
 			}else if(eport == 2){
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
-				orderMap.put(E_PORT, 1);
+				newOrderMap.put(E_PORT, 1);
 				if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
 					//电子口岸 电商企业编号
-					orderMap.put("ebEntNo", dzkaNo);
+					newOrderMap.put("ebEntNo", dzkaNo);
 					// 电商企业名称
-					orderMap.put("ebEntName", ebEntName);
+					newOrderMap.put("ebEntName", ebEntName);
 				} else {
-					orderMap.put("ebEntNo", "C010000000537118");
+					newOrderMap.put("ebEntNo", "C010000000537118");
 					// 电商企业名称
-					orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+					newOrderMap.put("ebEntName", "广州银盟信息科技有限公司");
 				}
 			}
-			System.out.println("---------订单第二次发送------");
+			logger.error("第二次--订单内容-->"+newOrderMap.get("datas"));
+			System.out.println("------订单第二次发送----");
 			// 检验检疫机构代码
-			orderMap.put(CIQ_ORG_CODE, "443400");
-			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
+			newOrderMap.put(CIQ_ORG_CODE, "443400");
+			//resultStr = YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report", newOrderMap);
+			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, newOrderMap);
 		}
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
 			return JSONObject.fromObject(resultStr);

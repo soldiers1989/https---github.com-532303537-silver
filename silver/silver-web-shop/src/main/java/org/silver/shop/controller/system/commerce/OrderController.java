@@ -17,12 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.silver.common.BaseCode;
 import org.silver.common.RedisKey;
-import org.silver.common.StatusCode;
-import org.silver.shop.controller.system.cross.DirectPayConfig;
 import org.silver.shop.service.system.commerce.OrderTransaction;
-import org.silver.util.DateUtil;
 import org.silver.util.JedisUtil;
 import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
@@ -197,20 +193,13 @@ public class OrderController {
 	@ApiOperation("根据指定信息搜索商户订单信息")
 	@RequiresRoles("Merchant")
 	public String searchMerchantOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size) {
+			@RequestParam("page") int page, @RequestParam("size") int size,String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page > 0 && size > 0) {
-			statusMap = orderTransaction.searchMerchantOrderInfo(req, page, size);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(orderTransaction.searchMerchantOrderInfo(req, page, size)).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantOrderReport", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

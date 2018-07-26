@@ -152,7 +152,7 @@ public class PushOrderRecordQtz {
 		if (idcardCertifiedFlag == 1) {
 			return sendOrderRecord(order, reOrderGoodsList, subParams);
 		} else {
-			//当订单尚未实名认证时,发起实名认证
+			// 当订单尚未实名认证时,发起实名认证
 			Map<String, Object> reIdCardMap = createPaymentQtz.getIdCard(order.getOrderDocName(), order.getOrderDocId(),
 					merchantId);
 			String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
@@ -167,10 +167,18 @@ public class PushOrderRecordQtz {
 		}
 	}
 
+	/**
+	 * 更新订单认证失败状态
+	 * @param order 订单信息实体类
+	 * @return Map
+	 */
 	private Map<String, Object> updateCertifiedFailureStatus(Morder order) {
+		if(order == null){
+			return ReturnInfoUtils.errorInfo("更新订单认证失败状态错误,请求参数不能为null");
+		}
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 		order.setIdcardCertifiedFlag(2);
-		//申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+		// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
 		order.setOrder_record_status(4);
 		String oldNote = order.getOrder_re_note();
 		if (StringEmptyUtils.isEmpty(oldNote)) {
@@ -179,13 +187,23 @@ public class PushOrderRecordQtz {
 			order.setOrder_re_note(
 					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
 		}
-		if(orderDao.update(order)){
+		if (orderDao.update(order)) {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo(order.getOrder_id() + "--推送订单失败,订单实名认证失败,更新状态错误!");
 	}
 
+	/**
+	 * 更新订单验证成功状态
+	 * 
+	 * @param order
+	 *            订单实体信息
+	 * @return boolean
+	 */
 	private boolean updateCertifiedSuccessStatus(Morder order) {
+		if (order == null) {
+			return false;
+		}
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 		order.setIdcardCertifiedFlag(1);
 		return orderDao.update(order);
@@ -251,8 +269,8 @@ public class PushOrderRecordQtz {
 				return reMap;
 			}
 			// 添加至重发记录表中
-			Map<String,Object> reOrderResendMap = addOrderResendInfo(order.getOrder_id(), order.getMerchant_no(), order.getCreate_by(),
-					reOrderMap.get(BaseCode.MSG.toString()) + "", subParams);
+			Map<String, Object> reOrderResendMap = addOrderResendInfo(order.getOrder_id(), order.getMerchant_no(),
+					order.getCreate_by(), reOrderMap.get(BaseCode.MSG.toString()) + "", subParams);
 			logger.error(order.getOrder_id() + "--订单推送失败后,增加至重发记录-->" + reOrderResendMap.get(BaseCode.MSG.toString()));
 			// 当推送订单失败后,返回信息不能为成功,因此返回错误信息
 			return ReturnInfoUtils.errorInfo(reOrderMap.get(BaseCode.MSG.toString()) + "");

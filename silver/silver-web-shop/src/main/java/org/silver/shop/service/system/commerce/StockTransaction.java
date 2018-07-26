@@ -22,12 +22,12 @@ public class StockTransaction {
 	private StockService stockService;
 	
 	//搜索该仓库下已经备案成功的备案商品信息
-	public Map<String, Object> searchAlreadyRecordGoodsDetails(String warehouseCode, int page, int size) {
+	public Map<String, Object> searchAlreadyRecordGoodsDetails(String warehouseCode, int page, int size, String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		return stockService.searchAlreadyRecordGoodsDetails(merchantId,warehouseCode,page,size);
+		return stockService.searchAlreadyRecordGoodsDetails(merchantId,warehouseCode,page,size,entGoodsNo);
 	}
 
 	public Map<String,Object> addGoodsStockCount(String warehouseCode, String warehouseName, String goodsInfoPack) {

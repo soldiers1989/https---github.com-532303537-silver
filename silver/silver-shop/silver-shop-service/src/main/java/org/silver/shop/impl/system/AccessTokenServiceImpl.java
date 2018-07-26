@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.util.JedisUtil;
@@ -87,7 +86,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 			if (!"1".equals(tokMap.get(BaseCode.STATUS.toString()))) {
 				return tokMap;
 			}
-			// 由于服务器缓存时间为1小时,为岔开时间故而商城为40分钟
+			// 由于服务器缓存时间为1小时,为岔开时间故而商城为50分钟
 			JedisUtil.set(redisKey, 3000, tokMap.get(BaseCode.DATAS.toString()));
 			return tokMap;
 		}

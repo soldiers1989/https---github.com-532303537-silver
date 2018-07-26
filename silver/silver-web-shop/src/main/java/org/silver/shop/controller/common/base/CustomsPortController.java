@@ -1,7 +1,9 @@
 package org.silver.shop.controller.common.base;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +15,7 @@ import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.service.common.base.CustomsPortTransaction;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +35,7 @@ public class CustomsPortController {
 
 	@Autowired
 	private CustomsPortTransaction customsPortTransaction;
-	
-	
+
 	/**
 	 * 查询所有已开通的口岸及关联的海关
 	 * 
@@ -42,13 +44,27 @@ public class CustomsPortController {
 	@RequestMapping(value = "/findAllCustomsPort", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("查询已开通的海关及智检")
-	public String findAllCustomsPort(HttpServletRequest req, HttpServletResponse response) {
+	public String findAllCustomsPort(HttpServletRequest req, HttpServletResponse response, Integer page, Integer size) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(customsPortTransaction.findAllCustomsPort()).toString();
+		Map<String, Object> reMap = customsPortTransaction.findAllCustomsPort();
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reMap).toString();
+		}
+		List<Object> list = (List<Object>) reMap.get(BaseCode.DATAS.toString());
+		if (StringEmptyUtils.isNotEmpty(page) && StringEmptyUtils.isNotEmpty(size)) {
+			List<Object> newWords = new ArrayList<>();
+			int currIdx = (page > 1 ? (page - 1) * size : 0);
+			for (int i = 0; i < size && i < list.size() - currIdx; i++) {
+				Object word = list.get(currIdx + i);
+				newWords.add(word);
+			}
+			return JSONObject.fromObject(ReturnInfoUtils.successDataInfo(newWords, list.size())).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.successDataInfo(list, list.size())).toString();
 	}
 
 	/**
@@ -80,21 +96,21 @@ public class CustomsPortController {
 	@ResponseBody
 	@ApiOperation("添加已开通的海关及智检")
 	@RequiresPermissions("customsPort:addCustomsPort")
-	public String addCustomsPort( HttpServletRequest req, HttpServletResponse response) {
+	public String addCustomsPort(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String,Object> params = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
-			String key =  isKeys.nextElement();
+			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
-		int customsPort = Integer.parseInt(params.get("customsPort")+"");
-		String customsPortName = params.get("customsPortName")+"";
+		int customsPort = Integer.parseInt(params.get("customsPort") + "");
+		String customsPortName = params.get("customsPortName") + "";
 		if (customsPort == 1 && customsPortName.equals("电子口岸") || customsPort == 2 && customsPortName.equals("智检")) {
 			return JSONObject.fromObject(customsPortTransaction.addCustomsPort(params)).toString();
 		}

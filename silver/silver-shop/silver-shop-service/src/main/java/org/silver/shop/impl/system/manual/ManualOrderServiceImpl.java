@@ -16,7 +16,6 @@ import org.silver.shop.api.system.manual.ManualOrderService;
 import org.silver.shop.api.system.manual.MorderService;
 import org.silver.shop.dao.system.manual.ManualOrderDao;
 import org.silver.shop.impl.system.organization.MemberServiceImpl;
-import org.silver.shop.model.common.base.Area;
 import org.silver.shop.model.common.base.City;
 import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
@@ -333,7 +332,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			String msg = "订单号[" + orderId + "]实名认证不通过,请核实身份证与姓名信息!";
+			String msg = "订单号[" + orderId + "]实名认证不通过,请核实姓名与身份证号码！";
 			RedisInfoUtils.errorInfoMq(msg, IDCARD, params);
 		}
 		// 收货人
@@ -342,15 +341,15 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String orderDocName = jsonDatas.get("orderDocName") + "";
 		// 娜地拉·艾孜拉提
 		if (!StringUtil.isChinese(recipientName) || recipientName.contains("先生") || recipientName.contains("女士")) {
-			String msg = "订单号[" + orderId + "]收货人姓名错误,请核对信息!";
+			String msg = "订单号[" + orderId + "]收货人姓名错误,请核对订单信息！";
 			RedisInfoUtils.errorInfoMq(msg, "name", params);
 		}
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")) {
-			String msg = "订单号[" + orderId + "]订单人姓名错误,请核对信息!";
+			String msg = "订单号[" + orderId + "]订单人姓名错误,请核对订单信息！";
 			RedisInfoUtils.errorInfoMq(msg, "name", params);
 		}
 		if (!PhoneUtils.isPhone(recipientTel)) {
-			String msg = "订单号[" + orderId + "]收件人电话错误,请核实信息!";
+			String msg = "订单号[" + orderId + "]收件人电话错误,请核对订单信息！";
 			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		return ReturnInfoUtils.successInfo();
@@ -375,17 +374,16 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			int flag) {
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramsMap = new HashMap<>();
-		String waybill = morder.getWaybill().trim();
 		String orderId = morder.getOrder_id().trim();
 		paramsMap.put("seqNo", goodsInfo.get("seqNo"));
 		paramsMap.put("EntGoodsNo", goodsInfo.get("entGoodsNo"));
 		paramsMap.put(ORDER_ID, morder.getOrder_id());
-		List<MorderSub> ms = manualOrderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
-		if (ms == null) {
-			return ReturnInfoUtils.errorInfo("运单[" + waybill + "]<--查询订单商品信息失败!");
-		} else if (!ms.isEmpty()) {
+		List<MorderSub> orderGoodsList = manualOrderDao.findByProperty(MorderSub.class, paramsMap, 0, 0);
+		if (orderGoodsList == null) {
+			return ReturnInfoUtils.errorInfo("订单号[" + morder.getOrder_id() + "]<--查询订单商品信息失败!");
+		} else if (!orderGoodsList.isEmpty()) {
 			if (flag == 1) {
-				return ReturnInfoUtils.errorInfo("运单[" + waybill + "]<--与商品信息已存在,请勿需重复导入!");
+				return ReturnInfoUtils.errorInfo("运单号[" +  morder.getWaybill() + "]<--与商品信息已存在,请勿需重复导入!");
 			}
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--该订单与商品信息已存在,请勿需重复导入!");
 		} else {
@@ -395,7 +393,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			double newActualAmountPaid = newFcy + tax;
 			morder.setActualAmountPaid(newActualAmountPaid);
 			if (!manualOrderDao.update(morder)) {
-				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--订单更新总价失败,服务器繁忙!");
+				return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--更新总价失败,服务器繁忙!");
 			}
 			statusMap.put("status", 1);
 			statusMap.put(ORDER_ID, morder.getOrder_id());
@@ -405,7 +403,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 					statusMap.put(BaseCode.STATUS.toString(), "10");
 					statusMap.put(ORDER_ID, morder.getOrder_id());
 					statusMap.put(BaseCode.MSG.toString(),
-							"运单号[" + waybill + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
+							"运单号[" +  morder.getWaybill() + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
 				} else if (flag == 2) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
@@ -595,7 +593,10 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				morder.setOrderDocTel(datas.get("orderDocTel") + "");
 				morder.setDateSign(dateSign);
 				morder.setSerial(Integer.parseInt(datas.get("serial") + ""));
-				morder.setWaybill(datas.get("waybillNo") + "");
+				String waybillNo = datas.get("waybillNo") + "";
+				if(StringEmptyUtils.isNotEmpty(waybillNo)){
+					morder.setWaybill(waybillNo);
+				}
 				morder.setDel_flag(0);
 				morder.setOrder_record_status(1);
 				morder.setCreate_date(new Date());

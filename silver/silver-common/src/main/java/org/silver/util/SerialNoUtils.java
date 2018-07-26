@@ -7,6 +7,8 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 
+import javassist.compiler.ast.Symbol;
+
 /**
  * 商城流水号生成工具类
  */
@@ -178,27 +180,25 @@ public class SerialNoUtils {
 	/**
 	 * 模拟银盛生成支付流水号
 	 * 
-	 * @param sign
-	 *            日期标识
+	 * @param topStr
+	 *            流水抬头
 	 * @param id
 	 *            自增Id数
-	 * @param date
-	 *            日期
 	 * @return String
 	 */
-	public static String createTradeNo(String sign, long id, Date date) {
-		String dstr = DateUtil.formatDate(date, "yyMMdd");
+	public static String createTradeNo(String topStr, long id) {
+		String dstr = DateUtil.formatDate(new Date(), "yyMMdd");
 		String nstr = id + "";
 		// 获取或随机4位数
 		int rstr = RandomUtils.getRandom(4);
 		while (nstr.length() < 5) {
 			nstr = "0" + nstr;
 		}
-		return sign + dstr + nstr + rstr;
+		return topStr + dstr + nstr + rstr;
 	}
-	
+
 	public static void main(String[] args) {
 		String str = "000000000000000000000000000091";
-		System.out.println("---->>>"+str.length());
+		System.out.println("---->>>" + createTradeNo("01O",Long.parseLong("01001")));
 	}
 }

@@ -150,10 +150,8 @@ public class CreatePaymentQtz {
 		String merchantId = order.getMerchant_no();
 		paymentMap.put(MERCHANT_ID, merchantId);
 		int count = SerialNoUtils.getSerialNo("paymentId");
-		String tradeNo = SerialNoUtils.createTradeNo("01O", (count + 1), new Date());
+		String tradeNo = SerialNoUtils.createTradeNo("01O", (count + 1));
 		paymentMap.put("tradeNo", tradeNo);
-		//
-		order.setTrade_no(tradeNo);
 		paymentMap.put(ORDER_ID, order.getOrder_id());
 		paymentMap.put("amount", order.getActualAmountPaid());
 		paymentMap.put("orderDocName", order.getOrderDocName());
@@ -183,6 +181,8 @@ public class CreatePaymentQtz {
 					order.getMerchant_no());
 			String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
+				//添加订单交易流水号、作用于用户储备资金结算对应的流水号
+				order.setTrade_no(tradeNo);
 				startSubtasks(order);
 				return paymentService.addEntity(paymentMap)
 						&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
@@ -190,6 +190,8 @@ public class CreatePaymentQtz {
 				return updateCertifiedStatus(order);
 			}
 		} else {
+			//添加订单交易流水号、作用于用户储备资金结算对应的流水号
+			order.setTrade_no(tradeNo);
 			startSubtasks(order);
 			return paymentService.addEntity(paymentMap)
 					&& paymentService.updateOrderPayNo(merchantId, order.getOrder_id(), tradeNo);
@@ -380,6 +382,7 @@ public class CreatePaymentQtz {
 		} else {
 			map = new HashMap<>();
 			map.put(BaseCode.STATUS.toString(), "-1");
+			map.put(BaseCode.MSG.toString(), "实名认证不通过！");
 			return map;
 		}
 	}

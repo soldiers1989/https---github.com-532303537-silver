@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,6 +18,7 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MerchantService;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.EmailUtils;
 import org.silver.util.FileUpLoadService;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
@@ -90,18 +93,20 @@ public class MerchantTransaction {
 	// 修改商户业务信息(图片及编码)
 	public Map<String, Object> editBusinessInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantName + "/";
+		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantId + "/";
 		// 海关注册编码
 		String customsregistrationCode = req.getParameter("merchantCustomsregistrationCode");
 		// 组织机构编码
 		String organizationCode = req.getParameter("merchantOrganizationCode");
 		// 报检注册编码
 		String checktheRegistrationCode = req.getParameter("merchantChecktheRegistrationCode");
-		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", true, 800, 800, null);
+		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", false, 800, 800, null);
+		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()) + "")) {
+			return imgMap;
+		}
 		// 获取文件上传后的文件名称
 		List<Object> imglist = (List) imgMap.get(BaseCode.DATAS.getBaseCode());
 		// 获取前台传递过来的图片数量
@@ -213,6 +218,12 @@ public class MerchantTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		return merchantService.updateBaseInfo(merchantId,merchantName,datasMap);
+
+		Map<String, Object> reUpdateMap = merchantService.updateBaseInfo(merchantId, merchantName, datasMap);
+		if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
+			return reUpdateMap;
+		}
+		currentUser.getSession().setAttribute(LoginType.MERCHANT_INFO.toString(), reUpdateMap.get(BaseCode.DATAS.toString()));;
+		return ReturnInfoUtils.successInfo();
 	}
 }
