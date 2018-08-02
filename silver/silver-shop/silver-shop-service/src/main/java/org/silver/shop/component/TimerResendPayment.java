@@ -53,7 +53,7 @@ public class TimerResendPayment implements InitializingBean {
 			System.out.println("--扫描支付单返回次数10次以下与返回状态为failure--");
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", "failure");
-			List<PaymentCallBack> paymentList = paymentDao.getFailPaymentInfo(PaymentCallBack.class, params, 1, 200);
+			List<PaymentCallBack> paymentList = paymentDao.getReplyThirdPartyFailInfo(PaymentCallBack.class, params, 1, 200);
 			if (paymentList != null && !paymentList.isEmpty()) {
 				for (PaymentCallBack paymentCallBack : paymentList) {
 					// 根据交易流水号/订单Id/商户Id查询支付单信息
@@ -71,6 +71,7 @@ public class TimerResendPayment implements InitializingBean {
 			logger.error("----扫描回调支付单错误-----", e);
 		}
 	}
+	
 	public static void main(String[] args) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());

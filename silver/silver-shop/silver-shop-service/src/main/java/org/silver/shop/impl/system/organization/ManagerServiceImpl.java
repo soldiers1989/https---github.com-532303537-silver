@@ -64,7 +64,7 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> createManager(String managerName, String loginPassword, int managerMarks,
-			String reManagerName, String description,String realName) {
+			String reManagerName, String description, String realName) {
 		if (StringEmptyUtils.isEmpty(managerName) || StringEmptyUtils.isEmpty(loginPassword)) {
 			return ReturnInfoUtils.errorInfo("参数不能为空！");
 		}
@@ -80,12 +80,12 @@ public class ManagerServiceImpl implements ManagerService {
 		managerInfo.setManagerName(managerName);
 		managerInfo.setLoginPassword(md5.getMD5ofStr(loginPassword));
 		// 管理员标识：1-超级管理员、2-运营管理员、3-财务管理员
-		if(managerMarks == 1 || managerMarks ==2 || managerMarks ==3){
+		if (managerMarks == 1 || managerMarks == 2 || managerMarks == 3) {
 			managerInfo.setManagerMarks(managerMarks);
-		}else{
+		} else {
 			return ReturnInfoUtils.errorInfo("管理员类型错误，请重新选择！");
 		}
-		if(!StringUtil.isContainChinese(realName)){
+		if (!StringUtil.isContainChinese(realName)) {
 			return ReturnInfoUtils.errorInfo("真实姓名错误，请重新输入！");
 		}
 		managerInfo.setRealName(realName);
@@ -321,7 +321,7 @@ public class ManagerServiceImpl implements ManagerService {
 		} else if (!reList.isEmpty()) {
 			return updateMerchantDetail(reList.get(0), arrayStr, imglist);
 		}
-		return ReturnInfoUtils.errorInfo("未找到商户详情信息!");
+		return ReturnInfoUtils.errorInfo("未找到商户业务信息!");
 	}
 
 	@Override
@@ -341,7 +341,9 @@ public class ManagerServiceImpl implements ManagerService {
 	 * @param merchantDetail
 	 *            商户详情信息实体类
 	 * @param arrayStr
+	 *            图片对应下标数组
 	 * @param imglist
+	 *            图片名称-集合
 	 * @return Map
 	 */
 	private Map<String, Object> updateMerchantDetail(MerchantDetail merchantDetail, String[] arrayStr,
@@ -379,11 +381,11 @@ public class ManagerServiceImpl implements ManagerService {
 				}
 			}
 			if (!managerDao.update(merchantDetail)) {
-				return ReturnInfoUtils.errorInfo("修改商户详情信息失败,服务器繁忙!");
+				return ReturnInfoUtils.errorInfo("修改商户业务信息失败,服务器繁忙!");
 			}
 			return ReturnInfoUtils.successInfo();
 		}
-		return ReturnInfoUtils.errorInfo("调用修改商户详情方法参数错误!");
+		return ReturnInfoUtils.errorInfo("修改商户业务信息时参数错误!");
 	}
 
 	@Override

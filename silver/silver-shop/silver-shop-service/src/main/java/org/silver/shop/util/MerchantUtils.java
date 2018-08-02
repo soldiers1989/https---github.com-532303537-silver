@@ -7,6 +7,7 @@ import java.util.Map;
 import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantBusinessContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.util.ReturnInfoUtils;
@@ -128,4 +129,26 @@ public class MerchantUtils {
 			return ReturnInfoUtils.errorInfo("商户尚未开通口岸,请联系管理员!");
 		}
 	}
+	
+	/**
+	 * 根据商户id获取平台商户业务信息
+	 * @param merchantId 商户id 
+	 * @return Map
+	 */
+	public Map<String, Object> getMerchantBusinessInfo(String merchantId) {
+		if(StringEmptyUtils.isEmpty(merchantId)){
+			return ReturnInfoUtils.errorInfo("查询商户业务信息时，商户id不能为空！");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put(MERCHANT_ID, merchantId);
+		List<MerchantBusinessContent> reMerchantBuList = paymentDao.findByProperty(MerchantBusinessContent.class, params, 0, 0);
+		if (reMerchantBuList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户业务信息失败,服务器繁忙!");
+		} else if (!reMerchantBuList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reMerchantBuList.get(0));
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到平台商户对应的业务信息，请联系管理员！");
+		}
+	}
+	
 }

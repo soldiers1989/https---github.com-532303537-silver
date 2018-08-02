@@ -7,6 +7,7 @@ import org.silver.shop.dao.BaseDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.manual.ThirdPartyOrderCallBack;
 import org.silver.shop.model.system.organization.Member;
 
 import com.justep.baas.data.Table;

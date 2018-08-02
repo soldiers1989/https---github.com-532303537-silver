@@ -36,26 +36,34 @@ public interface OrderService {
 	 * 
 	 * @param merchantId
 	 *            商户Id
-	 * @param merchantName
-	 *            商户名称
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
 	 * @return
 	 */
-	public Map<String, Object> getMerchantOrderRecordInfo(String merchantId, String merchantName, int page, int size);
+	public Map<String, Object> getMerchantOrderRecordInfo(String merchantId, int page, int size);
 
 	/**
 	 * 检查订单商品是否都属于一个海关口岸,及收货人姓名与身份证号码是否与下单人一致
 	 * 
-	 * @param orderGoodsInfoPack 订单商品Id信息包
-	 * @param recipientId  收货地址Id
+	 * @param orderGoodsInfoPack
+	 *            订单商品Id信息包
+	 * @param recipientId
+	 *            收货地址Id
 	 * @return Map
 	 */
 	public Map<String, Object> checkOrderGoodsCustoms(String orderGoodsInfoPack, String recipientId);
 
 	/**
 	 * 用户查询订单信息
-	 * @param datasMap 查询参数
-	 * @param page 页数
-	 * @param size 数目
+	 * 
+	 * @param datasMap
+	 *            查询参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
 	 * @return Map
 	 */
 	public Map<String, Object> getMemberOrderInfo(Map<String, Object> datasMap, int page, int size);
@@ -86,11 +94,16 @@ public interface OrderService {
 	/**
 	 * 根据指定信息搜索商户订单信息
 	 * 
-	 * @param merchantId 商户id
-	 * @param merchantName 商户名称
-	 * @param param 搜索参数
-	 * @param page 页数
-	 * @param size 数目
+	 * @param merchantId
+	 *            商户id
+	 * @param merchantName
+	 *            商户名称
+	 * @param param
+	 *            搜索参数
+	 * @param page
+	 *            页数
+	 * @param size
+	 *            数目
 	 * @return Map
 	 */
 	public Map<String, Object> searchMerchantOrderInfo(String merchantId, String merchantName,
@@ -125,7 +138,6 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> getManualOrderInfo(Map<String, Object> params, int page, int size);
-
 
 	/**
 	 * 用户删除商城下单信息
@@ -177,26 +189,32 @@ public interface OrderService {
 	 */
 	public Object getThirdPartyInfo(Map<String, Object> datasMap);
 
-	
 	/**
 	 * 根据订单Id校验订单是否归属同一口岸
-	 * @param orderIDs 订单Id集合
-	 * @param merchantId 
+	 * 
+	 * @param orderIDs
+	 *            订单Id集合
+	 * @param merchantId
 	 * @return Map
 	 */
-	public Map<String,Object> checkOrderPort(List<String> orderIDs, String merchantId);
+	public Map<String, Object> checkOrderPort(List<String> orderIDs, String merchantId);
 
 	/**
 	 * 管理员查询商户订单报表信息
-	 * @param startDate 开始日期
-	 * @param endDate 结束日期
-	 * @param merchantId 商户Id
+	 * 
+	 * @param startDate
+	 *            开始日期
+	 * @param endDate
+	 *            结束日期
+	 * @param merchantId
+	 *            商户Id
 	 * @return Map
 	 */
 	public Map<String, Object> managerGetOrderReportInfo(String startDate, String endDate, String merchantId);
-	
+
 	/**
 	 * 查询商户订单信息详情
+	 * 
 	 * @param params
 	 * @return
 	 */
@@ -204,8 +222,10 @@ public interface OrderService {
 
 	/**
 	 * 根据商品自编号、商品数量、姓名、身份证、手机号码、收货人地址进行直接下单
-	 * @param datasMap 参数：
+	 * 
+	 * @param datasMap
+	 *            参数：
 	 * @return
 	 */
-	public Map<String,Object> thirdPromoteBusiness(Map<String, Object> datasMap);
+	public Map<String, Object> thirdPromoteBusiness(Map<String, Object> datasMap);
 }

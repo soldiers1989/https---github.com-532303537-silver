@@ -1,13 +1,11 @@
 package org.silver.shop.service.common.base;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
-import org.silver.common.StatusCode;
+import org.silver.common.RedisKey;
 import org.silver.shop.api.common.base.GACService;
-import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.common.base.GAC;
 import org.silver.util.JedisUtil;
 import org.silver.util.ReturnInfoUtils;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 
-import net.sf.json.JSONArray;
 
 @Service
 public class GACTransaction {
@@ -25,17 +22,15 @@ public class GACTransaction {
 	private GACService gacService;
 
 	public Map<String, Object> getGACInfo() {
-		Map<String, Object> datasMap = new HashMap<>();
-		String key = "SHOP_KEY_ALL_GAC_LIST";
-		byte[] redisByte = JedisUtil.get(key.getBytes(), 3600);
+		byte[] redisByte = JedisUtil.get(RedisKey.SHOP_KEY_GAC_LIST.getBytes(), 3600);
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo((List<GAC>) SerializeUtil.toObject(redisByte));
 		} else {// 缓存中没有数据,重新访问数据库读取数据
-			datasMap = gacService.getGACInfo();
+			Map<String, Object> datasMap = gacService.getGACInfo();
 			if (!"1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 				return datasMap;
 			}
-			JedisUtil.set(key.getBytes(), SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
+			JedisUtil.set(RedisKey.SHOP_KEY_GAC_LIST.getBytes(), SerializeUtil.toBytes(datasMap.get(BaseCode.DATAS.toString())), 3600);
 			return datasMap;
 		}
 	}

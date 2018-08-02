@@ -329,7 +329,7 @@ public class MemberController {
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_ + phone);
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
@@ -337,7 +337,7 @@ public class MemberController {
 				json.put("code", code);
 				System.out.println("--注册验证码-->" + code);
 				// 将查询出来的省市区放入到redis缓存中
-				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_  + phone, 900, json);
+				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE  + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
 				json = JSONObject.fromObject(redisCode);
@@ -352,7 +352,7 @@ public class MemberController {
 					json.put("code", code);
 					System.out.println("--重新发送-注册验证码-->" + code);
 					// 将查询出来的省市区放入到redis缓存中
-					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE_  + phone, 900, json);
+					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE  + phone, 900, json);
 					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
@@ -492,13 +492,13 @@ public class MemberController {
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone);
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
 				json.put("time", new Date().getTime());
 				json.put("code", code);
-				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone, 900, json);
+				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
 				json = JSONObject.fromObject(redisCode);
@@ -513,7 +513,7 @@ public class MemberController {
 					json.put("code", code);
 					System.out.println("--重新发送-注册验证码-->" + code);
 					// 将查询出来的省市区放入到redis缓存中
-					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_  + phone, 900, json);
+					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE  + phone, 900, json);
 					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
@@ -543,7 +543,7 @@ public class MemberController {
 		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(captcha) || StringEmptyUtils.isEmpty(memberId)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
-		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE_ + phone);
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE + phone);
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			JSONObject json = null;
 			try {

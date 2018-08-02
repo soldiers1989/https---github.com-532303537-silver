@@ -15,6 +15,7 @@ import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.manual.ThirdPartyOrderCallBack;
 import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
@@ -581,4 +582,6 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 			}
 		}
 	}
+
+	
 }

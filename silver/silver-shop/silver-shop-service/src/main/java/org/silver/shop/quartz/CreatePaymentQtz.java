@@ -69,7 +69,8 @@ public class CreatePaymentQtz {
 	 * 计数器
 	 */
 	private static AtomicInteger counter = new AtomicInteger(0);
-
+	
+	
 	private static Logger logger = LogManager.getLogger(Object.class);
 
 	@Autowired
@@ -87,8 +88,8 @@ public class CreatePaymentQtz {
 	 * 定时任务扫描商户自助申报的订单,未生成支付流水的订单信息
 	 */
 	public void createPaymentJob() {
-		if (counter.get() % 10 == 0) {
-			System.out.println("---扫描需要生成支付单信息的订单---");
+		if (counter.get() % 50 == 0) {
+			System.out.println("--生成支付单扫描--");
 		}
 		Map<String, Object> params = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
@@ -146,6 +147,15 @@ public class CreatePaymentQtz {
 		if (order == null) {
 			return false;
 		}
+		Map<String, Object> checkInfoMap = new HashMap<>();
+		checkInfoMap.put(ORDER_ID, order.getOrder_id());
+		checkInfoMap.put("orderDocId", order.getOrderDocId());
+		checkInfoMap.put("orderDocName", order.getOrderDocName());
+		Map<String, Object> reCheckMap = paymentService.checkPaymentInfo(checkInfoMap);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			logger.error("系统扫描自助申报订单,创建支付单失败->" + reCheckMap.get(BaseCode.MSG.toString()));
+			return updateOrder(order, reCheckMap.get(BaseCode.MSG.toString()) + "");
+		}
 		Map<String, Object> paymentMap = new HashMap<>();
 		String merchantId = order.getMerchant_no();
 		paymentMap.put(MERCHANT_ID, merchantId);
@@ -163,17 +173,8 @@ public class CreatePaymentQtz {
 		paymentMap.put(CIQ_ORG_CODE, order.getCiqOrgCode());
 		paymentMap.put(CUSTOMS_CODE, order.getCustomsCode());
 		paymentMap.put("thirdPartyId", order.getThirdPartyId());
-		Map<String, Object> checkInfoMap = new HashMap<>();
-		checkInfoMap.put(ORDER_ID, order.getOrder_id());
-		checkInfoMap.put("orderDocId", order.getOrderDocId());
-		checkInfoMap.put("orderDocName", order.getOrderDocName());
 		// 申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
 		paymentMap.put("pay_record_status", 10);
-		Map<String, Object> reCheckMap = paymentService.checkPaymentInfo(checkInfoMap);
-		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
-			logger.error("系统扫描自助申报订单,创建支付单失败->" + reCheckMap.get(BaseCode.MSG.toString()));
-			return updateOrder(order, reCheckMap.get(BaseCode.MSG.toString()) + "");
-		}
 		int idcardCertifiedFlag = order.getIdcardCertifiedFlag();
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 		if (idcardCertifiedFlag == 0 || idcardCertifiedFlag == 2) {
@@ -215,9 +216,9 @@ public class CreatePaymentQtz {
 	/**
 	 * 更新订单失败原因
 	 * 
-	 * @param order
-	 * @param msg
-	 * @return
+	 * @param order 订单信息实体
+	 * @param msg 信息
+	 * @return boolean
 	 */
 	private boolean updateOrder(Morder order, String msg) {
 		if (order == null) {

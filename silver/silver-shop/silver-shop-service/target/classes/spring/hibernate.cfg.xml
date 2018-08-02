@@ -143,5 +143,8 @@
 		<mapping resource="org/silver/shop/model/system/log/StockReviewLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/OfflineRechargeContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/log/OfflineRechargeLog.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/SynthesisReportLog.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/tenant/MerchantBusinessContent.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/manual/ThirdPartyOrderCallBack.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

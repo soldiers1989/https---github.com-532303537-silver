@@ -36,7 +36,9 @@ public class ManagerTransaction {
 	private MerchantService merchantService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
-
+	
+	
+	
 	public Map<String, Object> managerLogin(String account, String loginPassword) {
 		MD5 md5 = new MD5();
 		Map<String, Object> datasMap = new HashMap<>();
@@ -186,8 +188,7 @@ public class ManagerTransaction {
 	}
 
 	// 修改商户业务(图片)信息
-	public Map<String, Object> editMerhcnatBusinessInfo(HttpServletRequest req, int imgLength, String merchantId,
-			String merchantName) {
+	public Map<String, Object> editMerhcnatBusinessInfo(HttpServletRequest req, int imgLength, String merchantId) {
 		Subject currentUser = SecurityUtils.getSubject();
 		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());

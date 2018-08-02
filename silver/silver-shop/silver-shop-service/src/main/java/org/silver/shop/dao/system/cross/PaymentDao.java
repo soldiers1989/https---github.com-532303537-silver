@@ -39,12 +39,12 @@ public interface PaymentDao  extends BaseDao{
 	
 	
 	/**
-	 * 查询支付单回调失败的支付单信息
+	 * 查询第三方回传失败的记录
 	 * @param page
 	 * @param size
 	 * @return Table
 	 */
-	public List getFailPaymentInfo(Class entity, Map<String, Object> params, int page, int size);
+	public List getReplyThirdPartyFailInfo(Class entity, Map<String, Object> params, int page, int size);
 
 	/**
 	 * 当支付单实际支付金额不足100提升至100,后统计支付单金额
@@ -83,5 +83,6 @@ public interface PaymentDao  extends BaseDao{
 	 */
 	public List<ManualPaymentResendContent> getResendPaymentInfo(Class<ManualPaymentResendContent> entity,
 			Map<String, Object> params, int page, int size);
+
 	
 }

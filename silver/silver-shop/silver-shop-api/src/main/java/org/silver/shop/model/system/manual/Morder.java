@@ -49,6 +49,9 @@ public class Morder implements Serializable {
 	private int order_record_status;
 	private String order_serial_no;// 服务器接收成功后返回编号
 	private String order_re_note;// 服务器返回信息
+	private String RecipientProvincesName;// 收货人省份名称
+	private String RecipientCityName;// 收货人城市名称
+	private String RecipientAreaName;// 收货人区域名称
 
 	private String senderName; // 发货人姓名
 	private String senderCountry;// 发货人国家代码
@@ -56,9 +59,6 @@ public class Morder implements Serializable {
 	private String senderAddress;// 发货人地址
 	private String senderTel;// 发货人电话
 	private String postal;// 邮编
-	private String RecipientProvincesName;// 收货人省份名称
-	private String RecipientCityName;// 收货人城市名称
-	private String RecipientAreaName;// 收货人区域名称
 	private String oldOrderId;// 原导入表单中订单Id
 	private String spareParams;// 备用时段,用于存放不供货商的多余字段信息,存储格式为JSON
 
@@ -71,8 +71,12 @@ public class Morder implements Serializable {
 	private double platformFee;// 商户对应的订单服务费率
 	private String orderPayerId;// 订单付款人id
 	private String orderPayerName;// 订单付款人名称
-	private int orderStatus;//订单状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
-	private String orderSourceType;//订单录入系统类型：online-线上(商城真实下单)、offline-线下(后台批量导入)
+	private int orderStatus;// 订单状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+	private String orderSourceType;// 订单录入系统类型：online-线上(商城真实下单)、offline-线下(后台批量导入)
+	private double freight;// 订单运费
+	private double otherPayment;// 抵付金额
+	private String otherPayNotes;// 抵付说明:如果填写抵付金额时，此项必填。
+	private String resendThirdPartyStatus;// 第三方重发状态：success-成功，failure-失败
 	
 	public long getId() {
 		return id;
@@ -520,6 +524,38 @@ public class Morder implements Serializable {
 
 	public void setOrderSourceType(String orderSourceType) {
 		this.orderSourceType = orderSourceType;
+	}
+
+	public double getFreight() {
+		return freight;
+	}
+
+	public double getOtherPayment() {
+		return otherPayment;
+	}
+
+	public String getOtherPayNotes() {
+		return otherPayNotes;
+	}
+
+	public String getResendThirdPartyStatus() {
+		return resendThirdPartyStatus;
+	}
+
+	public void setFreight(double freight) {
+		this.freight = freight;
+	}
+
+	public void setOtherPayment(double otherPayment) {
+		this.otherPayment = otherPayment;
+	}
+
+	public void setOtherPayNotes(String otherPayNotes) {
+		this.otherPayNotes = otherPayNotes;
+	}
+
+	public void setResendThirdPartyStatus(String resendThirdPartyStatus) {
+		this.resendThirdPartyStatus = resendThirdPartyStatus;
 	}
 
 }

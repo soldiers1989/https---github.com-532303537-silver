@@ -177,15 +177,15 @@
 		<property name="ciqOrgCode">
 			<column name="ciqOrgCode" />
 		</property>
-		
+
 		<property name="idcardCertifiedFlag" type="int">
-			<column name="idcardCertifiedFlag" default="0"/>
+			<column name="idcardCertifiedFlag" default="0" />
 		</property>
 		<property name="backCoverFlag" type="int">
-			<column name="backCoverFlag" default="0"/>
+			<column name="backCoverFlag" default="0" />
 		</property>
 		<property name="platformFee" type="java.lang.Double">
-			<column name="platformFee" default="0"/>
+			<column name="platformFee" default="0" />
 		</property>
 		<property name="orderPayerId">
 			<column name="orderPayerId" />
@@ -193,11 +193,24 @@
 		<property name="orderPayerName">
 			<column name="orderPayerName" />
 		</property>
-			<property name="orderStatus" type="int">
-			<column name="orderStatus" default="0"/>
+		<property name="orderStatus" type="int">
+			<column name="orderStatus" default="0" />
 		</property>
 		<property name="orderSourceType">
 			<column name="orderSourceType" />
+		</property>
+
+		<property name="freight" type="java.lang.Double">
+			<column name="freight" default="0" />
+		</property>
+		<property name="otherPayment" type="java.lang.Double">
+			<column name="otherPayment" default="0" />
+		</property>
+		<property name="otherPayNotes">
+			<column name="otherPayNotes" />
+		</property>
+		<property name="resendThirdPartyStatus">
+			<column name="resendThirdPartyStatus" />
 		</property>
 	</class>
 </hibernate-mapping>

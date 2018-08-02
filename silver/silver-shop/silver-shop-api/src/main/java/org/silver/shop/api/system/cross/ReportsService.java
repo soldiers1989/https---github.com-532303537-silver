@@ -2,14 +2,16 @@ package org.silver.shop.api.system.cross;
 
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONArray;
+
 public interface ReportsService {
 
 	/**
 	 * 查询综合报表信息详情
-	 * @param params 查询参数
+	 * @param datasMap 查询参数
 	 * @return
 	 */
-	public Map<String, Object> getSynthesisReportDetails(Map<String, Object> params);
+	public Map<String, Object> getSynthesisReportDetails(Map<String, Object> datasMap);
 
 	/**
 	 * 查询身份证实名认证报表详情
@@ -17,5 +19,14 @@ public interface ReportsService {
 	 * @return
 	 */
 	public Map<String, Object> getIdCardCertification(Map<String, Object> params);
+
+	/**
+	 * 根据查询出的订单报表详情进行对应的身份证实名认证报表数据合并返回
+	 * @param jsonArray
+	 * @return
+	 */
+	public Map<String, Object> oldGetSynthesisReport(JSONArray jsonArray);
+
+	public Map<String, Object> tmpUpdate();
 
 }

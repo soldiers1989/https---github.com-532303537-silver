@@ -47,11 +47,9 @@ import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
-import org.silver.util.CheckDatasUtil;
 import org.silver.util.CopyUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
-import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -126,12 +124,12 @@ public class PaymentServiceImpl implements PaymentService {
 	private static final String E_PORT = "eport";
 
 	/**
-	 * 检验检疫机构代码
+	 * 驼峰命名:检验检疫机构代码
 	 */
 	private static final String CIQ_ORG_CODE = "ciqOrgCode";
 
 	/**
-	 * 主管海关代码
+	 * 驼峰命名:主管海关代码
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
 	/**
@@ -143,12 +141,12 @@ public class PaymentServiceImpl implements PaymentService {
 	 */
 	private static final String TRADE_NO = "trade_no";
 	/**
-	 * 钱包流水Id
+	 * 驼峰命名:钱包流水Id
 	 */
 	private static final String WALLET_ID = "walletId";
 
 	/**
-	 * 商户名称
+	 * 驼峰命名:商户名称
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
 
@@ -792,17 +790,22 @@ public class PaymentServiceImpl implements PaymentService {
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 				System.out.println("--更新支付单信息失败--" + reUpdateMap.get(BaseCode.MSG.toString()));
 			}
-			return reThirdPartyPaymentInfo(pay, pay.getMerchant_no());
+			return reThirdPartyPaymentInfo(pay);
 		} else {
 			return ReturnInfoUtils.errorInfo("支付单[" + entPayNo + "]为找到对应信息,请核对信息!");
 		}
 	}
 
-	private Map<String, Object> reThirdPartyPaymentInfo(Mpay pay, String merchantId) {
-		if (StringEmptyUtils.isEmpty(merchantId) || pay == null) {
-			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	/**
+	 * 返回第三方支付单信息
+	 * @param pay 手工支付单信息
+	 * @return Map
+	 */
+	private Map<String, Object> reThirdPartyPaymentInfo(Mpay pay) {
+		if (pay == null) {
+			return ReturnInfoUtils.errorInfo("返回第三方支付单时，请求参数不能为null");
 		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(pay.getMerchant_no());
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantMap;
 		}
@@ -1009,7 +1012,8 @@ public class PaymentServiceImpl implements PaymentService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.getRows().isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"), totalCount.getRows().size());
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(reList).getJSONArray("rows"),
+					totalCount.getRows().size());
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
@@ -1041,12 +1045,15 @@ public class PaymentServiceImpl implements PaymentService {
 								redisMap);
 						continue;
 					}
-				/*	Map<String, Object> reIdCardCertifiedMap = orderIdcardCertified(order);
-					if (!"1".equals(reIdCardCertifiedMap.get(BaseCode.STATUS.toString()))) {
-						RedisInfoUtils.commonErrorInfo(reIdCardCertifiedMap.get(BaseCode.MSG.toString()) + "",
-								errorList, ERROR, redisMap);
-						continue;
-					}*/
+					/*
+					 * Map<String, Object> reIdCardCertifiedMap =
+					 * orderIdcardCertified(order); if
+					 * (!"1".equals(reIdCardCertifiedMap.get(BaseCode.STATUS.
+					 * toString()))) {
+					 * RedisInfoUtils.commonErrorInfo(reIdCardCertifiedMap.get(
+					 * BaseCode.MSG.toString()) + "", errorList, ERROR,
+					 * redisMap); continue; }
+					 */
 					//
 					Map<String, Object> paymentMap = new HashMap<>();
 					paymentMap.put(MERCHANT_ID, merchantId);
@@ -1189,7 +1196,12 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setMerchant_no(paymentMap.get(MERCHANT_ID) + "");
 		entity.setTrade_no(paymentMap.get("tradeNo") + "");
 		entity.setMorder_id(paymentMap.get(ORDER_ID) + "");
-		entity.setPay_amount(Double.parseDouble(paymentMap.get("amount") + ""));
+		try{
+			entity.setPay_amount(Double.parseDouble(paymentMap.get("amount") + ""));
+		}catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 		entity.setPayer_name(paymentMap.get("orderDocName") + "");
 		entity.setPayer_document_type("01");
 		entity.setPayer_document_number(paymentMap.get("orderDocId") + "");
@@ -1200,17 +1212,21 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setYear(DateUtil.formatDate(new Date(), "yyyy"));
 		entity.setPay_status("D");
 		entity.setPay_currCode("142");
+		// 申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
 		if (StringEmptyUtils.isNotEmpty(paymentMap.get("pay_record_status") + "")) {
 			entity.setPay_record_status(Integer.parseInt(paymentMap.get("pay_record_status") + ""));
 		} else {
-			// 申报状态：1-待申报、2-申报中、3-申报成功、4-申报失败、10-申报中(待系统处理)
 			entity.setPay_record_status(1);
 		}
 		// 网关接收状态： 0-未发起,1-接收成功,2-接收失败
 		entity.setNetworkStatus(0);
-		String orderDate = paymentMap.get("orderDate") + "";
-		Date payTime = DateUtil.randomPaymentDate(orderDate);
-		entity.setPay_time(payTime);
+		if(StringEmptyUtils.isNotEmpty(paymentMap.get("payTime"))){
+			//entity.setPay_time(paymentMap.get("payTime"));
+		}else{
+			String orderDate = paymentMap.get("orderDate") + "";
+			Date payTime = DateUtil.randomPaymentDate(orderDate);
+			entity.setPay_time(payTime);
+		}
 		entity.setCreate_by(paymentMap.get("createBy") + "");
 		// 口岸标识
 		String eport = paymentMap.get(E_PORT) + "";

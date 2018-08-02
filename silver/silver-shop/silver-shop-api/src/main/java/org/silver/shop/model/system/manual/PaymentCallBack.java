@@ -14,7 +14,7 @@ public class PaymentCallBack implements Serializable {
 	private static final long serialVersionUID = -391180442577887112L;
 	private long id;
 	private String merchantId;// 商户Id
-	private String tradeNo;// 模拟银盛支付交易流水 系统唯一
+	private String tradeNo;// 交易流水 系统唯一
 	private String orderId;// 关联的手工订单 id
 	private String thirdPartyId;// 第三方支付单唯一标识
 	private String resendStatus;// 重发状态：success-成功，failure-失败

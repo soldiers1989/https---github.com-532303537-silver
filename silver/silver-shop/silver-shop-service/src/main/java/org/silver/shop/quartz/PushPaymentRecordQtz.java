@@ -65,12 +65,12 @@ public class PushPaymentRecordQtz {
 	 */
 	private static final String PAYMENT_RESEND_ID = "paymentResendId";
 
-	private static Logger logger = LogManager.getLogger(Object.class);
-
 	/**
 	 * 计数器
 	 */
 	private static AtomicInteger counter = new AtomicInteger(0);
+	
+	private static Logger logger = LogManager.getLogger(Object.class);
 
 	@Autowired
 	private PaymentDao paymentDao;
@@ -89,8 +89,8 @@ public class PushPaymentRecordQtz {
 	 * 扫描支付单备案
 	 */
 	public void pushPaymentRecordQtzJob() {
-		if (counter.get() % 10 == 0) {
-			System.out.println("--扫描需要自助申报的支付单--");
+		if (counter.get() % 50 == 0) {
+			System.out.println("--扫描自助申报支付单--");
 		}
 		Map<String, Object> params = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();

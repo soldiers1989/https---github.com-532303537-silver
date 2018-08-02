@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 手工订单重推记录实体信息类
+ * 手工订单申报重发记录实体信息类
  */
 public class ManualOrderResendContent implements Serializable {
 

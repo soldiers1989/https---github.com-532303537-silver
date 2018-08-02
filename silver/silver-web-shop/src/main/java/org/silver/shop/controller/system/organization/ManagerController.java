@@ -346,8 +346,7 @@ public class ManagerController {
 	@ResponseBody
 	@RequiresPermissions("merchant:editMerhcnatBusinessInfo")
 	public String editMerhcnatBusinessInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("imgLength") int imgLength, @RequestParam("merchantId") String merchantId,
-			@RequestParam("merchantName") String merchantName) {
+			@RequestParam("imgLength") int imgLength, @RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -355,7 +354,7 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Map<String, Object> statusMap = new HashMap<>();
 		if (imgLength > 0) {
-			statusMap = managerTransaction.editMerhcnatBusinessInfo(req, imgLength, merchantId, merchantName);
+			statusMap = managerTransaction.editMerhcnatBusinessInfo(req, imgLength, merchantId);
 		} else {
 			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
 			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());

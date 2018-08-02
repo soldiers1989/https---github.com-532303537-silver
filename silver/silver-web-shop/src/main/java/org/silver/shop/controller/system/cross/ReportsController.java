@@ -35,24 +35,23 @@ public class ReportsController {
 	@ApiOperation("新-管理员查询综合报表详情")
 	@RequiresRoles("Manager")
 	// @RequiresPermissions("report:getSynthesisReportDetails")
-	public String getSynthesisReportDetails(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate, String merchantId) {
+	public String getSynthesisReportDetails(HttpServletRequest req, HttpServletResponse response, String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
 			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
-			params.put(key, value);
+			datasMap.put(key, value);
 		}
-		if (params.isEmpty()) {
+		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
-		return JSONObject.fromObject(reportsTransaction.getSynthesisReportDetails(params)).toString();
+		return JSONObject.fromObject(reportsTransaction.getSynthesisReportDetails(datasMap)).toString();
 	}
 	
 	@RequestMapping(value = "/merchantGetSynthesisReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -129,4 +128,21 @@ public class ReportsController {
 		}
 		return JSONObject.fromObject(reportsTransaction.getIdCardCertification(params)).toString();
 	}
+	
+	@RequestMapping(value = "/tmpUpdate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("临时更新当月历史数据")
+	//@RequiresRoles("Manager")
+	// @RequiresPermissions("report:getSynthesisReportDetails")
+	public String tmpUpdate(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+	
+		return JSONObject.fromObject(reportsTransaction.tmpUpdate()).toString();
+	}
 }
+
+

@@ -29,6 +29,8 @@ import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.manual.PaymentCallBack;
+import org.silver.shop.model.system.manual.ThirdPartyOrderCallBack;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
@@ -41,6 +43,7 @@ import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CompressUtils;
+import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
@@ -98,7 +101,7 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private static final String ERROR = "error";
 	/**
-	 * 驼峰写法：商户Id
+	 * 驼峰命名：商户Id
 	 */
 	private static final String MERCHANT_ID = "merchantId";
 	/**
@@ -106,7 +109,7 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private static final String ORDER_ID = "order_id";
 	/**
-	 * 驼峰写法：商户名称
+	 * 驼峰命名：商户名称
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
 
@@ -116,17 +119,17 @@ public class MpayServiceImpl implements MpayService {
 	private static final String E_PORT = "eport";
 
 	/**
-	 * 检验检疫机构代码
+	 * 驼峰命名：检验检疫机构代码
 	 */
 	private static final String CIQ_ORG_CODE = "ciqOrgCode";
 
 	/**
-	 * 主管海关代码
+	 * 驼峰命名：主管海关代码
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
 
 	/**
-	 * 钱包流水Id
+	 * 驼峰命名：钱包流水Id
 	 */
 	private static final String WALLET_ID = "walletId";
 
@@ -831,7 +834,7 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocAcount", order.getOrderDocAcount());
 		orderJson.element("OrderDocName", order.getOrderDocName());
 		orderJson.element("OrderDocType", order.getOrderDocType());
-		orderJson.element("OrderDocId", order.getOrderDocId());
+		orderJson.element("OrderDocId", order.getOrderDocId().replace("x", "X"));
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
 		orderJson.element("OrderDate", order.getOrderDate());
 		orderJson.element("entPayNo", order.getTrade_no());
@@ -902,26 +905,28 @@ public class MpayServiceImpl implements MpayService {
 		// 是否像海关发送
 		// orderMap.put("uploadOrNot", false);
 		// 发起订单备案
-		Map<String,Object> newOrderMap = orderMap;
+		Map<String, Object> newOrderMap = orderMap;
 		String resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, orderMap);
-		//String resultStr = YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report", orderMap);
-		logger.error("--订单内容-->"+orderMap.get("datas"));
+		// String resultStr =
+		// YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report",
+		// orderMap);
+		logger.error("--订单内容-->" + orderMap.get("datas"));
 		// 当端口号为2(智检时)再往电子口岸多发送一次
-		if (eport == 2 || "443400".equals(customsMap.get(CIQ_ORG_CODE)) ) {
-			if(eport == 1){
+		if (eport == 2 || "443400".equals(customsMap.get(CIQ_ORG_CODE))) {
+			if (eport == 1) {
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				newOrderMap.put(E_PORT, 2);
 				// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
 				newOrderMap.put("businessType", 3);
-				//国检 电商企业编号
+				// 国检 电商企业编号
 				newOrderMap.put("ebEntNo", ebEntNo);
 				// 电商企业名称
 				newOrderMap.put("ebEntName", ebEntName);
-			}else if(eport == 2){
+			} else if (eport == 2) {
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				newOrderMap.put(E_PORT, 1);
 				if (StringEmptyUtils.isNotEmpty(dzkaNo) && StringEmptyUtils.isNotEmpty(ebEntName)) {
-					//电子口岸 电商企业编号
+					// 电子口岸 电商企业编号
 					newOrderMap.put("ebEntNo", dzkaNo);
 					// 电商企业名称
 					newOrderMap.put("ebEntName", ebEntName);
@@ -931,11 +936,13 @@ public class MpayServiceImpl implements MpayService {
 					newOrderMap.put("ebEntName", "广州银盟信息科技有限公司");
 				}
 			}
-			logger.error("第二次--订单内容-->"+newOrderMap.get("datas"));
+			logger.error("第二次--订单内容-->" + newOrderMap.get("datas"));
 			System.out.println("------订单第二次发送----");
 			// 检验检疫机构代码
 			newOrderMap.put(CIQ_ORG_CODE, "443400");
-			//resultStr = YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report", newOrderMap);
+			// resultStr =
+			// YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report",
+			// newOrderMap);
 			resultStr = YmHttpUtil.HttpPost(YmMallConfig.REPORT_URL, newOrderMap);
 		}
 		if (StringEmptyUtils.isNotEmpty(resultStr)) {
@@ -995,13 +1002,151 @@ public class MpayServiceImpl implements MpayService {
 				// 备案失败
 				order.setOrder_record_status(4);
 			}
-			return updateOrderRecordInfo(order);
+			Map<String, Object> reUpdateMap = updateOrderInfo(order);
+			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
+				System.out.println("--更新手工订单信息失败-->" + reUpdateMap.get(BaseCode.MSG.toString()));
+			}
+			return reThirdPartyOrderInfo(order, status, reMsg);
 		} else {
 			return ReturnInfoUtils.errorInfo("根据订单[" + entOrderNo + "]与messageId[" + messageId + "]未找到订单信息,请核对信息!");
 		}
 	}
+	
+	@Override
+	public Map<String, Object> reThirdPartyOrderInfo(Morder order, String status, String reMsg) {
+		if (order == null) {
+			return ReturnInfoUtils.errorInfo("返回第三方订单时，请求参数不能为null");
+		}
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(order.getMerchant_no());
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
+		int thirdPartyFlag = merchant.getThirdPartyFlag();
+		if (thirdPartyFlag == 2) {
+			System.out.println("---------返回第三方订单信息----------");
+			Map<String, Object> item = new HashMap<>();
+			JSONObject orderJSON = new JSONObject();
+			orderJSON.element("thirdPartyId", order.getThirdPartyId());
+			orderJSON.element("EntOrderNo", order.getOrder_id());
+			orderJSON.element(MERCHANT_ID, order.getMerchant_no());
+			orderJSON.element("status", status);
+			orderJSON.element("notes", reMsg);
+			item.put("order", orderJSON.toString());
+			// String result =
+			// YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/getway-callback",
+			// item);
+			String result = YmHttpUtil.HttpPost("http://192.168.1.102:8080/silver-web/Eport/getway-callback", item);
+			if (StringEmptyUtils.isNotEmpty(result) && result.replace("\n", "").equalsIgnoreCase("success")) {
+				updateSuccessOrderCallBack(order);
+			} else {
+				// 当第三方接收订单回执失败时,保存重发记录
+				saveOrderCallBack(order);
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
 
-	private Map<String, Object> updateOrderRecordInfo(Morder order) {
+	/**
+	 * 订单回传第三方接收失败后，保存回传记录
+	 * 
+	 * @param order
+	 */
+	private void saveOrderCallBack(Morder order) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("thirdPartyId", order.getThirdPartyId());
+		params.put(MERCHANT_ID, order.getMerchant_no());
+		List<ThirdPartyOrderCallBack> reTpOrderCallBackList = morderDao.findByProperty(ThirdPartyOrderCallBack.class,
+				params, 0, 0);
+		if (reTpOrderCallBackList != null && !reTpOrderCallBackList.isEmpty()) {
+			// 更新订单回传记录中的回传计数器
+			ThirdPartyOrderCallBack thirdPartyOrderCallBack = reTpOrderCallBackList.get(0);
+			int count = thirdPartyOrderCallBack.getResendCount();
+			System.out.println(thirdPartyOrderCallBack.getOrderId() + "--订单->第" + (count + 1) + "次重发接受失败");
+			if (count == 9) {
+				String remark = thirdPartyOrderCallBack.getRemark();
+				String note = DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 订单重发第10次,接收失败!";
+				if (StringEmptyUtils.isNotEmpty(remark)) {
+					thirdPartyOrderCallBack.setNote(remark + "#" + note);
+				} else {
+					thirdPartyOrderCallBack.setNote(note);
+				}
+			}
+			count++;
+			thirdPartyOrderCallBack.setResendCount(count);
+			thirdPartyOrderCallBack.setResendStatus("failure");
+			if (!morderDao.update(thirdPartyOrderCallBack)) {
+				logger.error("--异步更新第三方订单计数器失败--");
+			}
+			order.setResendThirdPartyStatus("failure");
+			if (!morderDao.update(order)) {
+				logger.error("--异步回调第三方订单后更新支付单失败状态--");
+			}
+		} else {
+			ThirdPartyOrderCallBack entity = new ThirdPartyOrderCallBack();
+			entity.setMerchantId(order.getMerchant_no());
+			entity.setMerchantName(order.getCreate_by());
+			entity.setOrderId(order.getOrder_id());
+			entity.setThirdPartyId(order.getThirdPartyId());
+			entity.setCreateBy("system");
+			entity.setCreateDate(new Date());
+			entity.setResendCount(0);
+			entity.setResendStatus("failure");
+			if (!morderDao.add(entity)) {
+				logger.error("--异步保存订单第三方回调信息失败--");
+			}
+		}
+	}
+
+	/**
+	 * 订单回传第三方接收成功后，更新订单与回传记录信息
+	 * 
+	 * @param order
+	 *            订单信息实体
+	 */
+	private void updateSuccessOrderCallBack(Morder order) {
+		if (order != null) {
+			Map<String, Object> params = new HashMap<>();
+			params.put("thirdPartyId", order.getThirdPartyId());
+			params.put(MERCHANT_ID, order.getMerchant_no());
+			List<ThirdPartyOrderCallBack> reTpOrderCallBackList = morderDao
+					.findByProperty(ThirdPartyOrderCallBack.class, params, 0, 0);
+			if (reTpOrderCallBackList != null && !reTpOrderCallBackList.isEmpty()) {
+				// 当有重发记录时，则更新订单重发记录信息
+				Date date = new Date();
+				ThirdPartyOrderCallBack thirdPartyOrderCallBack = reTpOrderCallBackList.get(0);
+				thirdPartyOrderCallBack.setResendStatus("SUCCESS");
+				thirdPartyOrderCallBack.setUpdateDate(date);
+				System.out.println(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 订单重发第"
+						+ thirdPartyOrderCallBack.getResendCount() + "次,接收成功!");
+				thirdPartyOrderCallBack.setRemark(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 订单重发第"
+						+ (thirdPartyOrderCallBack.getResendCount() + 1) + "次,接收成功!");
+				if (!morderDao.update(thirdPartyOrderCallBack)) {
+					logger.error("--异步回调第三方支付单成功后保存信息失败--");
+				}
+			}
+			order.setResendThirdPartyStatus("SUCCESS");
+			// order.setResendDate(new Date());
+			if (!morderDao.update(order)) {
+				logger.error("--异步回调第三方支付单成功后更新支付单回调状态失败--");
+			}
+		} else {
+			logger.error("--异步回调第三方订单成功后，订单等于null--");
+		}
+	}
+
+	/**
+	 * 更新手工订单时间
+	 * 
+	 * @param order
+	 *            订单实体类
+	 * @return Map
+	 */
+	private Map<String, Object> updateOrderInfo(Morder order) {
+		if (order == null) {
+			return ReturnInfoUtils.errorInfo("异步更新订单备案信息失败，请求参数不能为null");
+		}
 		order.setUpdate_date(new Date());
 		if (!morderDao.update(order)) {
 			return ReturnInfoUtils.errorInfo("异步更新订单备案信息错误!");
@@ -1088,5 +1233,4 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("未找到订单数据！");
 		}
 	}
-
 }

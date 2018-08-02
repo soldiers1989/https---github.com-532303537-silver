@@ -37,12 +37,12 @@ public class PushOrderRecordQtz {
 	private static final String E_PORT = "eport";
 
 	/**
-	 * 检验检疫机构代码
+	 * 驼峰命名：检验检疫机构代码
 	 */
 	private static final String CIQ_ORG_CODE = "ciqOrgCode";
 
 	/**
-	 * 主管海关代码
+	 * 驼峰命名：主管海关代码
 	 */
 	private static final String CUSTOMS_CODE = "customsCode";
 	/**
@@ -57,10 +57,6 @@ public class PushOrderRecordQtz {
 	 * 失败标识
 	 */
 	private static final String FAILURE = "failure";
-	/**
-	 * 计数器
-	 */
-	private static AtomicInteger counter = new AtomicInteger(0);
 
 	private static Logger logger = LogManager.getLogger(Object.class);
 
@@ -74,10 +70,16 @@ public class PushOrderRecordQtz {
 	private AccessTokenService accessTokenService;
 	@Autowired
 	private CreatePaymentQtz createPaymentQtz;
-
+	
+	
+	/**
+	 * 计数器
+	 */
+	private static AtomicInteger counter = new AtomicInteger(0);
+	
 	public void pushOrderRecordJob() {
-		if (counter.get() % 10 == 0) {
-			System.out.println("---扫描自助申报订单---");
+		if (counter.get() % 50 == 0) {
+			System.out.println("---扫描自助申报订单--");
 		}
 		Map<String, Object> params = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();

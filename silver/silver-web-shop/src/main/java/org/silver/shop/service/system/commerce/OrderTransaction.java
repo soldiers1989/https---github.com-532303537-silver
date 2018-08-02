@@ -1,10 +1,14 @@
 package org.silver.shop.service.system.commerce;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -44,11 +48,9 @@ public class OrderTransaction {
 	// 商户查看备案订单信息
 	public Map<String, Object> getMerchantOrderRecordInfo(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
-		return orderService.getMerchantOrderRecordInfo(merchantId, merchantName, page, size);
+		return orderService.getMerchantOrderRecordInfo(merchantId, page, size);
 	}
 
 	// 检查订单商品是否都属于一个海关口岸
@@ -193,19 +195,31 @@ public class OrderTransaction {
 	}
 
 	public static void main(String[] args) {
-		Map<String, Object> item = new HashMap<>();
-		item.put("entGoodsNo", "HX171030BJ9111111134");
-		item.put("count", "1");
-		item.put("idName", "来");
-		item.put("idcard", "210502199312170624");
-		item.put("phone", "13825004872");
-		item.put("address", "景德镇");
-		item.put("recProvincesName", "广东省");
-		item.put("recCityName", "广州市");
-		item.put("recAreaName", "天河区");
+		// Map<String, Object> item = new HashMap<>();
+		// item.put("entGoodsNo", "HX171030BJ9111111134");
+		// item.put("count", "1");
+		// item.put("idName", "来");
+		// item.put("idcard", "210502199312170624");
+		// item.put("phone", "13825004872");
+		// item.put("address", "景德镇");
+		// item.put("recProvincesName", "广东省");
+		// item.put("recCityName", "广州市");
+		// item.put("recAreaName", "天河区");
+		//
+		// System.out.println("------->>"
+		// +
+		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPromoteBusiness",
+		// item));
+
+		String str = "a#b#c#";
+		int count = 0;
+		Pattern p = Pattern.compile("#");
+		Matcher m = p.matcher(str);
+		while (m.find()) {
+			count++;
+		}
+		String[] strArr = str.split("#");
 		
-		
-		System.out.println("------->>"
-				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPromoteBusiness", item));
+		System.out.println("--->>" + strArr[(count -1 )]);
 	}
 }

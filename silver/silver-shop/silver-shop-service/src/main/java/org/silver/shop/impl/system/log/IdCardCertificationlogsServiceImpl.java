@@ -52,18 +52,17 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 	@Override
 	public Object tempUpdate() {
 		Map<String, Object> item = new HashMap<>();
-		item.put("merchantId", "MerchantId_00057");
-		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, null, 0, 0);
+		item.put("merchantId", "MerchantId_00074");
+		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
 		System.out.println("---merchantlist>>" + merchantlist.size());
 		for (Merchant merchant : merchantlist) {
-			if("MerchantId_00074".equals(merchant.getMerchantId())){
-				continue;
-			}
+			
 			params = new HashMap<>();
-			params.put("startTime", DateUtil.parseDate("2018-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss"));
-			params.put("endTime", DateUtil.parseDate("2018-07-06 17:44:00", "yyyy-MM-dd HH:mm:ss"));
+			params.put("startTime", DateUtil.parseDate("2018-07-27 00:00:00", "yyyy-MM-dd HH:mm:ss"));
+			params.put("endTime", DateUtil.parseDate("2018-07-31 23:44:00", "yyyy-MM-dd HH:mm:ss"));
+			//params.put("endTime", DateUtil.parseDate("2018-07-31 17:44:00", "yyyy-MM-dd HH:mm:ss"));
 			params.put("merchant_no", merchant.getMerchantId());
 			cacheMap = new HashMap<>();
 			System.out.println(merchant.getMerchantId() + "========================");
@@ -77,13 +76,14 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 				}
 				System.out.println("++++++++++++++++++++++++++++");
 				if (orderlist != null && !orderlist.isEmpty()) {
-					Map<String, Object> reCostMap = merchantIdCardCostService
+					/*Map<String, Object> reCostMap = merchantIdCardCostService
 							.getIdCardCostInfo(merchant.getMerchantId());
 					if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
 						return reCostMap;
 					}
 					MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap
-							.get(BaseCode.DATAS.toString());
+							.get(BaseCode.DATAS.toString());*/
+					
 					for (Morder order : orderlist) {
 						if (cacheMap.containsKey(
 								order.getMerchant_no() + "_" + order.getOrderDocName() + "_" + order.getOrderDocId())) {
@@ -103,7 +103,7 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 								if ("failure".equals(idCard.getStatus())) {
 									addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
 											order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
-											merchantCost.getPlatformCost(), 1, "实名验证手续费", order.getCreate_date());
+											0.5, 1, "实名验证手续费", order.getCreate_date());
 								} else {
 									addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
 											order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
@@ -123,7 +123,7 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 								ikdCardCertificationlogsDao.add(idCard);
 								addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
 										order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
-										merchantCost.getPlatformCost(), 1, "实名验证手续费", order.getCreate_date());
+										0.5, 1, "实名验证手续费", order.getCreate_date());
 							}
 							cacheMap.put(order.getMerchant_no() + "_" + order.getOrderDocName() + "_"
 									+ order.getOrderDocId(), order.getOrder_id());

@@ -424,7 +424,7 @@ public final class DateUtil {
 
 	/**
 	 * 根据订单日期,生成支付单日期,格式为订单日期之上随机增加5分钟与60秒
-	 * @param orderDate 订单日期
+	 * @param orderDate 订单日期格式：yyyyMMddhhmmss
 	 * @return Date 支付单日期
 	 */
 	public static final Date randomPaymentDate(String orderDate) {

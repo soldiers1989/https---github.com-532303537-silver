@@ -1901,6 +1901,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("修改参数不能为空!");
 		}
+		
 		Map<String, Object> params = new HashMap<>();
 		// 商家平台代码
 		String oldMarCode = datasMap.get("oldMarCode") + "";
@@ -1921,6 +1922,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		} else if (!reList.isEmpty()) {
 			GoodsRecordDetail goodsRecordInfo = reList.get(0);
 			goodsRecordInfo.setEntGoodsNo(newEntGoodsNo);
+			goodsRecordInfo.setCiqGoodsNo(datasMap.get("ciqGoodsNo") + "");
+			goodsRecordInfo.setCusGoodsNo(datasMap.get("cusGoodsNo") + "");
 			goodsRecordInfo.setEmsNo(datasMap.get("emsNo") + "");
 			goodsRecordInfo.setItemNo(datasMap.get("itemNo") + "");
 			goodsRecordInfo.setShelfGName(datasMap.get("shelfGName") + "");

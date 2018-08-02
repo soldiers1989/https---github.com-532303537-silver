@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.CountryService;
 import org.silver.shop.model.common.base.Country;
@@ -32,8 +33,7 @@ public class CountryTransaction {
 	 * @return
 	 */
 	public Map<String, Object> findAllCountry() {
-		String key = "SHOP_KEY_COUNTRY_LIST";
-		byte[] redisByte = JedisUtil.get(key.getBytes());
+		byte[] redisByte = JedisUtil.get(RedisKey.SHOP_KEY_COUNTRY_LIST.getBytes());
 		if (redisByte != null) {
 			return ReturnInfoUtils.successDataInfo((List<Country>)SerializeUtil.toObject(redisByte));
 		} else {
@@ -41,7 +41,7 @@ public class CountryTransaction {
 			if (!"1".equals(item.get(BaseCode.STATUS.toString()))) {
 				return item;
 			}
-			JedisUtil.set(key.getBytes(),
+			JedisUtil.set(RedisKey.SHOP_KEY_COUNTRY_LIST.getBytes(),
 					SerializeUtil.toBytes(item.get(BaseCode.DATAS.toString())), 86400);
 			return item;
 		}

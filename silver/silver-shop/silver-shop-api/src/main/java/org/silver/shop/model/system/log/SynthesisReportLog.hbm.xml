@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-7-27 16:45:15 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.log.SynthesisReportLog" table="ym_shop_sys_synthesis_report_log">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="merchantId" type="java.lang.String">
+            <column name="merchantId" not-null="true"/>
+        </property>
+        <property name="merchantName" type="java.lang.String">
+            <column name="merchantName"  not-null="true"/>
+        </property>
+        <property name="date" type="java.util.Date">
+            <column name="date" not-null="true"/>
+        </property>
+        <property name="totalCount" type="int">
+            <column name="totalCount" />
+        </property>
+        <property name="amount" type="double">
+            <column name="amount" />
+        </property>
+        <property name="platformFee" type="double">
+            <column name="platformFee" />
+        </property>
+        <property name="backCoverCount" type="int">
+            <column name="backCoverCount" />
+        </property>
+        <property name="normalAmount" type="double">
+            <column name="normalAmount" />
+        </property>
+        <property name="idCardTotalCount" type="int">
+            <column name="idCardTotalCount" />
+        </property>
+        <property name="idCardTollCount" type="int">
+            <column name="idCardTollCount" />
+        </property>
+        <property name="idCardFreeCount" type="int">
+            <column name="idCardFreeCount" />
+        </property>
+        <property name="idCardCost" type="double">
+            <column name="idCardCost" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+         <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+    </class>
+</hibernate-mapping>

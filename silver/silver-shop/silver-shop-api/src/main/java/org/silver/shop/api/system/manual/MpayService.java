@@ -131,4 +131,17 @@ public interface MpayService {
 	 */
 	public Map<String, Object> addAgentWalletLog(Map<String, Object> datas);
 
+	/**
+	 * 针对第三方订单信息，进行回调处理
+	 * 
+	 * @param order
+	 *            订单信息实体类
+	 * @param status
+	 *            状态码
+	 * @param reMsg
+	 *            返回信息
+	 * @return Map
+	 */
+	public Map<String, Object> reThirdPartyOrderInfo(Morder order, String status, String reMsg);
+
 }

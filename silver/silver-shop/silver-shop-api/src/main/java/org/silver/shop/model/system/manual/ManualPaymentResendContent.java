@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 手工支付单重推记录实体信息类
+ * 手工支付单申报重推记录实体信息类
  */
 public class ManualPaymentResendContent implements Serializable {
 

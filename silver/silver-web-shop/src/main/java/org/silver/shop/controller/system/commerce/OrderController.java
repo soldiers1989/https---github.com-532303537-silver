@@ -501,13 +501,13 @@ public class OrderController {
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
 			JSONObject json = new JSONObject();
 			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone);
+			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone);
 			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
 				int code = RandomUtils.getRandom(6);
 				SendMsg.sendMsg(phone, "【广州银盟】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
 				json.put("time", new Date().getTime());
 				json.put("code", code);
-				JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone, 900, json);
+				JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone, 900, json);
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			} else {
 				json = JSONObject.fromObject(redisCode);
@@ -522,7 +522,7 @@ public class OrderController {
 					json.put("code", code);
 					System.out.println("--重新发送-注册验证码-->" + code);
 					// 将查询出来的省市区放入到redis缓存中
-					JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE_ + phone, 900, json);
+					JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone, 900, json);
 					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 				}
 			}
@@ -536,15 +536,15 @@ public class OrderController {
 		JSONObject order = new JSONObject();
 		JSONObject goods = new JSONObject();
 		JSONObject goods2 = new JSONObject();
-		order.element("EntOrderNo", "TEST1234");
+		order.element("EntOrderNo", "TEST0001");
 		order.element("OrderStatus", "1");
 		order.element("PayStatus", "1");
-		order.element("OrderGoodTotal", 2100);
+		order.element("OrderGoodTotal", 0.01);
 		order.element("OrderGoodTotalCurr", "142");
 		order.element("Freight", 0);
 		order.element("Tax", 0);
 		order.element("OtherPayment", "1");
-		order.element("ActualAmountPaid", 210);
+		order.element("ActualAmountPaid", 0.01);
 		order.element("RecipientName", "收货人姓名");
 		order.element("RecipientAddr", "收货人地址");
 		order.element("RecipientID", "");
@@ -552,7 +552,7 @@ public class OrderController {
 		order.element("RecipientCountry", "116");
 		order.element("RecipientProvincesCode", "110000");
 		order.element("OrderDocAcount", "下单人账号");
-		order.element("OrderDocName", "下单人先生");
+		order.element("OrderDocName", "下单人");
 		order.element("OrderDocType", "1");
 		order.element("OrderDocId", "37021119770918101X");
 		order.element("OrderDocTel", "13812345678");
@@ -572,8 +572,8 @@ public class OrderController {
 		goods.element("Qty", 1);
 		goods.element("HSCode", "HS编码");
 		goods.element("Unit", "110");
-		goods.element("Price", 110);
-		goods.element("Total", (1 * 110));
+		goods.element("Price", 0.01);
+		goods.element("Total", (1 * 0.01));
 		goods.element("CurrCode", "142");
 		goods.element("Brand", "品牌");
 		orderGoodsList.add(goods);
@@ -581,23 +581,23 @@ public class OrderController {
 		goods2.element("EntGoodsNo", "TEst2");
 		goods2.element("CIQGoodsNo", "*");
 		// goods.element("BarCode");
-		goods2.element("CusGoodsNo", "*");
-		goods2.element("GoodsName", "商品名称");
-		goods2.element("GoodsStyle", "商品规格");
-		goods2.element("OriginCountry", "142");
-		goods2.element("Qty", 1);
-		goods2.element("HSCode", "HS编码");
-		goods2.element("Unit", "110");
-		goods2.element("Price", "100");
-		goods2.element("Total", (1 * 100));
-		goods2.element("CurrCode", "142");
-		goods2.element("Brand", "品牌");
-		orderGoodsList.add(goods2);
+//		goods2.element("CusGoodsNo", "*");
+//		goods2.element("GoodsName", "商品名称");
+//		goods2.element("GoodsStyle", "商品规格");
+//		goods2.element("OriginCountry", "142");
+//		goods2.element("Qty", 1);
+//		goods2.element("HSCode", "HS编码");
+//		goods2.element("Unit", "110");
+//		goods2.element("Price", "100");
+//		goods2.element("Total", (1 * 100));
+//		goods2.element("CurrCode", "142");
+//		goods2.element("Brand", "品牌");
+//		orderGoodsList.add(goods2);
 		order.element("orderGoodsList", orderGoodsList);
 
 		item.put("datas", order);
 		item.put("thirdPartyId", "a");
-		item.put("merchantId", "MerchantId_00001");
+		item.put("merchantId", "MerchantId_00047");
 		System.out.println("------->>"
 				+ YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPartyBusiness", item));
 	}
