@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.silver.shop.dao.system.cross.PaymentDao;
+import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantBusinessContent;
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MerchantUtils {
 	@Autowired
-	private PaymentDao paymentDao;
+	private MerchantDao merchantDao;
 	
 	/**
 	 * 商户Id 
@@ -42,7 +43,7 @@ public class MerchantUtils {
 		Map<String, Object> param = new HashMap<>();
 		param.put(MERCHANT_ID, merchantId);
 		param.put("customsPort", eport);
-		List<MerchantRecordInfo> recordList = paymentDao.findByProperty(MerchantRecordInfo.class, param, 1, 1);
+		List<MerchantRecordInfo> recordList = merchantDao.findByProperty(MerchantRecordInfo.class, param, 1, 1);
 		if (recordList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户备案信息失败,服务器繁忙!");
 		} else if (!recordList.isEmpty()) {
@@ -66,7 +67,7 @@ public class MerchantUtils {
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put(MERCHANT_ID, merchantId);
-		List<Merchant> merchantList = paymentDao.findByProperty(Merchant.class, params, 1, 1);
+		List<Merchant> merchantList = merchantDao.findByProperty(Merchant.class, params, 1, 1);
 		if (merchantList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户信息失败,服务器繁忙!");
 		} else if (!merchantList.isEmpty()) {
@@ -86,7 +87,7 @@ public class MerchantUtils {
 	public Map<String, Object> getMerchantAppkey(String merchantId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("merchant_Id", merchantId);
-		List<Appkey> appkeyList = paymentDao.findByProperty(Appkey.class, params, 1, 1);
+		List<Appkey> appkeyList = merchantDao.findByProperty(Appkey.class, params, 1, 1);
 		if (appkeyList == null) {
 			return ReturnInfoUtils.errorInfo("查询appkey失败,服务器繁忙!");
 		} else if (!appkeyList.isEmpty()) {
@@ -120,7 +121,7 @@ public class MerchantUtils {
 		params.put("customsCode", customsCode);
 		params.put("ciqOrgCode", ciqOrgCode);
 		params.put("type", type);
-		List<MerchantFeeContent> reList = paymentDao.findByProperty(MerchantFeeContent.class, params, 1, 1);
+		List<MerchantFeeContent> reList = merchantDao.findByProperty(MerchantFeeContent.class, params, 1, 1);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户口岸费率失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
@@ -141,7 +142,7 @@ public class MerchantUtils {
 		}
 		Map<String, Object> params = new HashMap<>();
 		params.put(MERCHANT_ID, merchantId);
-		List<MerchantBusinessContent> reMerchantBuList = paymentDao.findByProperty(MerchantBusinessContent.class, params, 0, 0);
+		List<MerchantBusinessContent> reMerchantBuList = merchantDao.findByProperty(MerchantBusinessContent.class, params, 0, 0);
 		if (reMerchantBuList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户业务信息失败,服务器繁忙!");
 		} else if (!reMerchantBuList.isEmpty()) {

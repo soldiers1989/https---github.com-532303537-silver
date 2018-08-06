@@ -834,7 +834,7 @@ public class MpayServiceImpl implements MpayService {
 		orderJson.element("OrderDocAcount", order.getOrderDocAcount());
 		orderJson.element("OrderDocName", order.getOrderDocName());
 		orderJson.element("OrderDocType", order.getOrderDocType());
-		orderJson.element("OrderDocId", order.getOrderDocId().replace("x", "X"));
+		orderJson.element("OrderDocId", order.getOrderDocId());
 		orderJson.element("OrderDocTel", order.getOrderDocTel());
 		orderJson.element("OrderDate", order.getOrderDate());
 		orderJson.element("entPayNo", order.getTrade_no());
@@ -1011,7 +1011,7 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("根据订单[" + entOrderNo + "]与messageId[" + messageId + "]未找到订单信息,请核对信息!");
 		}
 	}
-	
+
 	@Override
 	public Map<String, Object> reThirdPartyOrderInfo(Morder order, String status, String reMsg) {
 		if (order == null) {
@@ -1034,10 +1034,8 @@ public class MpayServiceImpl implements MpayService {
 			orderJSON.element("status", status);
 			orderJSON.element("notes", reMsg);
 			item.put("order", orderJSON.toString());
-			// String result =
-			// YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/getway-callback",
-			// item);
-			String result = YmHttpUtil.HttpPost("http://192.168.1.102:8080/silver-web/Eport/getway-callback", item);
+			String result = YmHttpUtil.HttpPost(YmMallConfig.THIRD_PARTY_NOTIFY_URL, item);
+			//String result = YmHttpUtil.HttpPost("http://192.168.1.102:8080/silver-web/Eport/getway-callback", item);
 			if (StringEmptyUtils.isNotEmpty(result) && result.replace("\n", "").equalsIgnoreCase("success")) {
 				updateSuccessOrderCallBack(order);
 			} else {

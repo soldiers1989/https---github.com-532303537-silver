@@ -38,14 +38,14 @@ public class Merchant implements Serializable {
 	private Date deleteDate;// 删除日期
 	private int merchantRealName;// 商户实名表示1-未实名,2-已实名
 
-	private String agentParentId ; //代理商Id
-	private String agentParentName ;// 代理商名称
-	private String companyName;//公司名称（用于商城显示店铺名称）
-	private String marCode;//(名称来源自启邦)商户在银盟商城平台唯一标识
-	private String sku;//(名称来源自启邦)
-	private int thirdPartyFlag;//第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
-	private String thirdPartyKey;//第三方密钥
-	
+	private String agentParentId; // 代理商Id
+	private String agentParentName;// 代理商名称
+	private String companyName;// 公司名称（用于商城显示店铺名称）
+	private String marCode;// (名称来源自启邦)商户在银盟商城平台唯一标识
+	private String sku;// (名称来源自启邦)
+	private int thirdPartyFlag;// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
+	private String thirdPartyKey;// 第三方密钥
+
 	public Long getId() {
 		return id;
 	}
@@ -126,7 +126,6 @@ public class Merchant implements Serializable {
 		this.merchantIdCard = merchantIdCard;
 	}
 
-
 	public String getMerchantAddress() {
 		return merchantAddress;
 	}
@@ -143,7 +142,6 @@ public class Merchant implements Serializable {
 		this.merchantTransport = merchantTransport;
 	}
 
-	
 	public int getMerchantLevel() {
 		return merchantLevel;
 	}
@@ -151,7 +149,7 @@ public class Merchant implements Serializable {
 	public void setMerchantLevel(int merchantLevel) {
 		this.merchantLevel = merchantLevel;
 	}
-	
+
 	public double getMerchantProfit() {
 		return merchantProfit;
 	}
@@ -199,8 +197,6 @@ public class Merchant implements Serializable {
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-
-	
 
 	public int getDeleteFlag() {
 		return deleteFlag;

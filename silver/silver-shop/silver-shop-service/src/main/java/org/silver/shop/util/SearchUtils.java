@@ -493,8 +493,9 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
+
 		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
 		while (isKey.hasNext()) {
 			String key = isKey.next().trim();
@@ -515,9 +516,7 @@ public final class SearchUtils {
 				try {
 					sellFlag = Integer.parseInt(value);
 				} catch (Exception e) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), "上/下架标识参数错误,请重新输入!");
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("上/下架标识参数格式错误！");
 				}
 				if (sellFlag > 0) {
 					paramMap.put(key, sellFlag);
@@ -533,15 +532,17 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "goodsName":
-				paramMap.put(key, value);
+				blurryMap.put(key, "%" + value + "%");
 				break;
 			default:
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put("blurry", blurryMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 
 	/**
@@ -602,7 +603,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为空!");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
+		
 		Map<String, Object> paramMap = new HashMap<>();
 		Map<String, Object> blurryMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
@@ -671,10 +672,11 @@ public final class SearchUtils {
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put("blurry", blurryMap);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put("blurry", blurryMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 
 	/**

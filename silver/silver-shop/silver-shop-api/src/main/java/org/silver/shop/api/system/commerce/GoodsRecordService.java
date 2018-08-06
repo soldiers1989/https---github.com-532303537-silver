@@ -1,9 +1,12 @@
 package org.silver.shop.api.system.commerce;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
+import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Merchant;
 
 public interface GoodsRecordService {
 
@@ -255,9 +258,30 @@ public interface GoodsRecordService {
 	 */
 	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap);
 
+
 	/**
-	 * 临时接口
-	 * @return
+	 * 管理员审核商品信息
+	 * @param managerInfo 管理员信息
+	 * @param entGoodsNo 商品自编码
+	 * @param note 批注
+	 * @param reviewerFlag 审核标识：1-审核中、2-通过、3-不通过
+	 * @return Map
 	 */
-	public Object temUpdateOldOriginCountry();
+	public Map<String, Object> managerReviewerInfo(Manager managerInfo, String entGoodsNo, String note, int reviewerFlag);
+
+	/**
+	 * 商户修改商品备案信息
+	 * @param merchantInfo 商户信息实体
+	 * @param datasMap 修改参数
+	 * @return Map
+	 */
+	public Map<String, Object> merchantUpdateInfo(Merchant merchantInfo, Map<String, Object> datasMap);
+
+	/**
+	 * 商户发起商品审核
+	 * @param merchantInfo 商户信息实体类
+	 * @param goodsIdList 商品id集合
+	 * @return Map
+	 */
+	public Map<String, Object> merchantInitiateReview(Merchant merchantInfo, List<String> goodsIdList);
 }

@@ -146,5 +146,6 @@
 		<mapping resource="org/silver/shop/model/system/log/SynthesisReportLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantBusinessContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/manual/ThirdPartyOrderCallBack.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/GoodsReviewerLog.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>

@@ -70,13 +70,12 @@ public class PushOrderRecordQtz {
 	private AccessTokenService accessTokenService;
 	@Autowired
 	private CreatePaymentQtz createPaymentQtz;
-	
-	
+
 	/**
 	 * 计数器
 	 */
 	private static AtomicInteger counter = new AtomicInteger(0);
-	
+
 	public void pushOrderRecordJob() {
 		if (counter.get() % 50 == 0) {
 			System.out.println("---扫描自助申报订单--");
@@ -171,11 +170,13 @@ public class PushOrderRecordQtz {
 
 	/**
 	 * 更新订单认证失败状态
-	 * @param order 订单信息实体类
+	 * 
+	 * @param order
+	 *            订单信息实体类
 	 * @return Map
 	 */
 	private Map<String, Object> updateCertifiedFailureStatus(Morder order) {
-		if(order == null){
+		if (order == null) {
 			return ReturnInfoUtils.errorInfo("更新订单认证失败状态错误,请求参数不能为null");
 		}
 		// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
@@ -230,7 +231,6 @@ public class PushOrderRecordQtz {
 		// 获取商户信息
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			logger.error(reMerchantMap.get(BaseCode.MSG.toString()));
 			return reMerchantMap;
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
@@ -239,7 +239,6 @@ public class PushOrderRecordQtz {
 		if (thirdPartyFlag == 2) {
 			Map<String, Object> reAppkeyMap = merchantUtils.getMerchantAppkey(merchantId);
 			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
-				logger.error(reAppkeyMap.get(BaseCode.MSG.toString()));
 				return reAppkeyMap;
 			} else {
 				Appkey appkeyInfo = (Appkey) reAppkeyMap.get(BaseCode.DATAS.toString());
@@ -254,7 +253,6 @@ public class PushOrderRecordQtz {
 		// 请求获取tok
 		Map<String, Object> reTokMap = accessTokenService.getRedisToks(appkey, appSecret);
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			logger.error(reTokMap.get(BaseCode.MSG.toString()));
 			return reTokMap;
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
@@ -300,36 +298,36 @@ public class PushOrderRecordQtz {
 			Map<String, Object> subParams) {
 		if (StringEmptyUtils.isNotEmpty(orderId) && StringEmptyUtils.isNotEmpty(merchantId)
 				&& StringEmptyUtils.isNotEmpty(merchantName)) {
-			Map<String, Object> params = new HashMap<>();
-			params.put("resendStatus", FAILURE);
 			if (subParams != null && !subParams.isEmpty()) {
-				params.put(ORDER_RESEND_ID, subParams.get(ORDER_RESEND_ID));
-			}
-			List<ManualOrderResendContent> orderList = orderDao.findByProperty(ManualOrderResendContent.class, params,
-					0, 0);
-			if (orderList != null && !orderList.isEmpty()) {
-				return ReturnInfoUtils.errorInfo(subParams + "<--重发订单唯一标识已存在,无需重复添加");
-			} else {
-				ManualOrderResendContent orderResend = new ManualOrderResendContent();
-				long id = orderDao.findLastId(ManualOrderResendContent.class);
-				if (id < 0) {
-					return ReturnInfoUtils.errorInfo("生成重推订单Id失败!");
+				String resendId = subParams.get(ORDER_RESEND_ID) + "";
+				if (StringEmptyUtils.isNotEmpty(resendId)) {
+					// 已有重发记录无需重复添加
+					return ReturnInfoUtils.successInfo();
 				}
-				orderResend.setOrderResendId(SerialNoUtils.getSerialNo("ORDER-RE-", id));
-				orderResend.setMerchantId(merchantId);
-				orderResend.setMerchantName(merchantName);
-				orderResend.setOrderId(orderId);
-				// 重发状态：success-成功，failure-失败
-				orderResend.setResendStatus(FAILURE);
-				orderResend.setResendCount(0);
-				orderResend.setCreateBy("system");
-				orderResend.setCreateDate(new Date());
-				orderResend.setNote(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + msg);
-				if (!orderDao.add(orderResend)) {
-					return ReturnInfoUtils.errorInfo(orderId + "--保存订单重发记录失败--");
-				}
-				return ReturnInfoUtils.successInfo();
+				// Map<String, Object> params = null;
+				// params = new HashMap<>();
+				// params.put("resendStatus", FAILURE);
+				// params.put(ORDER_RESEND_ID, subParams.get(ORDER_RESEND_ID));
 			}
+			ManualOrderResendContent orderResend = new ManualOrderResendContent();
+			long id = orderDao.findLastId(ManualOrderResendContent.class);
+			if (id < 0) {
+				return ReturnInfoUtils.errorInfo("生成重推订单Id失败!");
+			}
+			orderResend.setOrderResendId(SerialNoUtils.getSerialNo("ORDER_RE_", id));
+			orderResend.setMerchantId(merchantId);
+			orderResend.setMerchantName(merchantName);
+			orderResend.setOrderId(orderId);
+			// 重发状态：success-成功，failure-失败
+			orderResend.setResendStatus(FAILURE);
+			orderResend.setResendCount(0);
+			orderResend.setCreateBy("system");
+			orderResend.setCreateDate(new Date());
+			orderResend.setNote(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + msg);
+			if (!orderDao.add(orderResend)) {
+				return ReturnInfoUtils.errorInfo(orderId + "--保存订单重发记录失败--");
+			}
+			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("--保存订单重发记录失败--请求参数不能为空--");
 		}

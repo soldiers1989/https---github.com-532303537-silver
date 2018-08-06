@@ -1,7 +1,7 @@
 package org.silver.shop.config;
 
 /**
- * 银盟商城配置文件
+ * 银盟商城url
  */
 public class YmMallConfig {
 	//public static final String TOPSTR = "http://192.168.1.116:8080";
@@ -45,8 +45,14 @@ public class YmMallConfig {
 	 * 银盟报关网关URL
 	 */
 	public static final String REPORT_URL = "https://ym.191ec.com/silver-web/Eport/Report";
+	
 	/**
 	 * 银盟实名认证网关商户号
 	 */
 	public static final String ID_CARD_CERTIFICATION_MERCHANT_NO = "YM20170000015078659178651922";
+	
+	/**
+	 * 第三方电商订单、支付单回传url
+	 */
+	public static final String THIRD_PARTY_NOTIFY_URL = "https://ym.191ec.com/silver-web/Eport/getway-callback";
 }

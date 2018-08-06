@@ -9,11 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
@@ -23,7 +20,6 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
-import org.silver.shop.impl.common.base.CustomsPortServiceImpl;
 import org.silver.shop.model.common.base.Country;
 import org.silver.shop.model.common.base.CustomsPort;
 import org.silver.shop.model.system.commerce.GoodsContent;
@@ -31,7 +27,9 @@ import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.commerce.WarehouseContent;
-import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.log.GoodsReviewerLog;
+import org.silver.shop.model.system.organization.Manager;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.CheckDatasUtil;
@@ -56,7 +54,9 @@ import net.sf.json.JSONObject;
 
 @Service(interfaceClass = GoodsRecordService.class)
 public class GoodsRecordServiceImpl implements GoodsRecordService {
+
 	private static final Logger logger = LogManager.getLogger(GoodsRecordServiceImpl.class);
+
 	// 进出境标志I-进，E-出
 	private static final String IEFLAG = "I";
 
@@ -75,29 +75,24 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsInfoPack) {
 		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> params = new HashMap<>();
 		JSONArray jsonList = null;
 		List<Object> goodsBaseList = new ArrayList<>();
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
-			logger.error(e);
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "前端传递基本信息参数错误！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品基本信息参数错误！");
 		}
+		Map<String, Object> params = null;
 		for (int i = 0; i < jsonList.size(); i++) {
 			params = new HashMap<>();
 			Map<String, Object> goodsMap = (Map) jsonList.get(i);
 			// 获取传递过来的商品ID
 			String mapGoodsId = goodsMap.get("goodsId") + "";
 			String descParam = "createDate";
-			// key=数据库列名,value=查询参数
 			params.put("goodsDetailId", mapGoodsId);
 			params.put("goodsMerchantName", merchantName);
 			// 删除标识:0-未删除,1-已删除
 			params.put("deleteFlag", 0);
-			// 根据商品名,扫描商品备案信息表
 			List<Object> goodsRecordList = goodsRecordDao.findByPropertyDesc(GoodsRecordDetail.class, params, descParam,
 					1, 1);
 			if (goodsRecordList != null && goodsRecordList.size() > 0) {// 取出商品备案信息最近一条记录
@@ -131,23 +126,19 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> merchantSendGoodsRecord(String merchantName, String merchantId, String customsPort,
 			String customsCode, String ciqOrgCode, String recordGoodsInfoPack) {
-		Map<String, Object> datasMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(recordGoodsInfoPack);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
-			datasMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-			datasMap.put(BaseCode.MSG.toString(), StatusCode.NOTICE.getMsg());
-			return datasMap;
+			return ReturnInfoUtils.errorInfo("备案商品信息参数格式错误！");
 		}
 		int port = Integer.parseInt(customsPort);
 		// 校验前台传递口岸、海关、智检编码
-		datasMap = checkCustomsPort(port, customsCode, ciqOrgCode);
-		if (!datasMap.get(BaseCode.STATUS.toString()).equals("1")) {
-			return datasMap;
+		Map<String, Object> reCheckMap = checkCustomsPort(port, customsCode, ciqOrgCode);
+		if (!reCheckMap.get(BaseCode.STATUS.toString()).equals("1")) {
+			return reCheckMap;
 		}
-		CustomsPort portInfo = (CustomsPort) datasMap.get(BaseCode.DATAS.toString());
+		CustomsPort portInfo = (CustomsPort) reCheckMap.get(BaseCode.DATAS.toString());
 		// 根据商户ID,口岸编码查询商户备案信息
 		Map<String, Object> merchantInfoMap = getMerchantInfo(merchantId, Integer.valueOf(customsPort));
 		if (!merchantInfoMap.get(BaseCode.STATUS.toString()).equals("1")) {
@@ -432,16 +423,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 *            商户备案信息
 	 * @param portInfo
 	 *            端口信息
-	 * @param ebpEntName
-	 *            电商企业编号
-	 * @param ebpEntNo
-	 *            电商企业名称
-	 * @param ebEntName
-	 *            电商平台企业编号
-	 * @param ebEntNo
-	 *            电商平台名称
-	 * @param jsonList
-	 *            商品信息
 	 * @return Map
 	 */
 	private final Map<String, Object> saveRecordHeadInfo(String merchantId, String merchantName, CustomsPort portInfo,
@@ -601,29 +582,22 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private final Map<String, Object> updateGoodsRecordStatus(String merchantId, String goodsSerialNo) {
-		Map<String, Object> statusMap = new HashMap<>();
 		boolean flag = false;
 		// 修改商品备案头状态
 		// 备案信息接受状态：1-成功,2-失败
 		flag = goodsRecordDao.updateGoodsRecordStatus("ym_shop_goods_record", "merchantId", merchantId, goodsSerialNo,
 				2);
 		if (!flag) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "接受商品备案信息失败后,修改商品备案头状态失败！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("接受商品备案信息失败后,修改商品备案头状态失败！");
 		}
 		// 修改商品备案详情状态
 		// 备案状态：1-备案中，2-备案成功，3-备案失败
 		flag = goodsRecordDao.updateGoodsRecordStatus("ym_shop_goods_record_detail", "goodsMerchantId", merchantId,
 				goodsSerialNo, 3);
 		if (!flag) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "接受商品备案信息失败后,修改商品备案状态失败！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("接受商品备案信息失败后,修改商品备案状态失败！");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -633,14 +607,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				|| StringEmptyUtils.isEmpty(customsCode) || StringEmptyUtils.isEmpty(customsName)) {
 			return ReturnInfoUtils.errorInfo("创建仓库时,请求参数不能为空!");
 		}
-		Date date = new Date();
 		Map<String, Object> paramsMap = new HashMap<>();
 		// 主管海关代码(同仓库编码)
 		String code = merchantId + "_" + customsCode;
-		// key=数据库列名,value=查询参数
 		paramsMap.put("warehouseCode", code);
-		List<Object> reList = goodsRecordDao.findByProperty(WarehouseContent.class, paramsMap, 0, 0);
-		// 数据库查询错误
+		List<WarehouseContent> reList = goodsRecordDao.findByProperty(WarehouseContent.class, paramsMap, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询仓库信息失败,服务器繁忙!");
 		} else if (reList.isEmpty()) {// 当没有仓库时
@@ -650,7 +621,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			warehous.setWarehouseCode(code);
 			warehous.setWarehouseName(customsName);
 			warehous.setCreateBy(merchantName);
-			warehous.setCreateDate(date);
+			warehous.setCreateDate(new Date());
 			warehous.setDeleteFlag(0);
 			if (!goodsRecordDao.add(warehous)) {
 				return ReturnInfoUtils.errorInfo("创建仓库失败,服务器繁忙!");
@@ -939,7 +910,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	 * @return Map
 	 */
 	private Map<String, Object> editGoodsBaseInfo(Map<String, Object> paramMap, GoodsRecordDetail goodsRecordInfo) {
-		if(paramMap == null || goodsRecordInfo == null){
+		if (paramMap == null || goodsRecordInfo == null) {
 			return ReturnInfoUtils.errorInfo("修改商品基本信息失败,请求参数错误!");
 		}
 		String goodsName = String.valueOf(paramMap.get("spareGoodsName"));
@@ -1092,7 +1063,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private Map<String, Object> saveRecordGoodsInfo(Map<String, Object> paramMap, String merchantId,
 			String merchantName, String goodsSerialNo) {
 		Date date = new Date();
-		Map<String, Object> statusMap = new HashMap<>();
 		GoodsRecordDetail goodsRecordDetail = new GoodsRecordDetail();
 		goodsRecordDetail.setSeq(1);
 		goodsRecordDetail.setEntGoodsNo(String.valueOf(paramMap.get("entGoodsNo")));
@@ -1124,9 +1094,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			netWt = Double.valueOf(paramMap.get("netWt") + "");
 			grossWt = Double.valueOf(paramMap.get("grossWt") + "");
 		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "单价或净重/毛重输入错误,请核对后重试!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("单价或净重/毛重输入错误,请核对后重试!");
 		}
 		goodsRecordDetail.setRegPrice(regPrice);
 		goodsRecordDetail.setNetWt(netWt);
@@ -1151,12 +1119,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		// 计算(国内快递)物流费标识：1-无运费,2-计算运费;默认为：1
 		goodsRecordDetail.setFreightFlag(1);
 		if (!goodsRecordDao.add(goodsRecordDetail)) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "保存商品备案信息错误,服务器繁忙!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("保存商品备案信息错误,服务器繁忙!");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -1214,7 +1179,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	@Override
 	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo, String merchantId,
 			String merchantName) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		List<Map<String, Object>> errorList = new ArrayList<>();
 		JSONArray jsonList = null;
@@ -1224,9 +1188,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			jsonList = JSONArray.fromObject(goodsRecordInfo);
 		} catch (Exception e) {
 			logger.error(e);
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.FORMAT_ERR.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "前端传递基本信息参数错误！");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("商品备案信息参数格式错误！");
 		}
 		// 校验商品是否属于同一口岸
 		Map<String, Object> checkMap = checkGoods(jsonList);
@@ -1400,10 +1362,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				}
 			}
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		statusMap.put(BaseCode.ERROR.toString(), errorList);
-		return statusMap;
+		return ReturnInfoUtils.errorInfo(errorList);
 	}
 
 	/**
@@ -1645,7 +1604,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 	/**
 	 * 根据国家代码找到对应的国家中文名称
-	 * @param countryCode 国家代码
+	 * 
+	 * @param countryCode
+	 *            国家代码
 	 * @return String
 	 */
 	private String getCountryName(String countryCode) {
@@ -1898,10 +1859,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 
 	@Override
 	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap) {
-		if (datasMap == null || datasMap.isEmpty()) {
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("修改参数不能为空!");
 		}
-		
 		Map<String, Object> params = new HashMap<>();
 		// 商家平台代码
 		String oldMarCode = datasMap.get("oldMarCode") + "";
@@ -1921,115 +1881,239 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return ReturnInfoUtils.errorInfo("查询商品备案信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			GoodsRecordDetail goodsRecordInfo = reList.get(0);
-			goodsRecordInfo.setEntGoodsNo(newEntGoodsNo);
-			goodsRecordInfo.setCiqGoodsNo(datasMap.get("ciqGoodsNo") + "");
-			goodsRecordInfo.setCusGoodsNo(datasMap.get("cusGoodsNo") + "");
-			goodsRecordInfo.setEmsNo(datasMap.get("emsNo") + "");
-			goodsRecordInfo.setItemNo(datasMap.get("itemNo") + "");
-			goodsRecordInfo.setShelfGName(datasMap.get("shelfGName") + "");
-			goodsRecordInfo.setNcadCode(datasMap.get("ncadCode") + "");
-			goodsRecordInfo.setHsCode(datasMap.get("hsCode") + "");
-			goodsRecordInfo.setBarCode(datasMap.get("barCode") + "");
-			goodsRecordInfo.setGoodsName(datasMap.get("goodsName") + "");
-			goodsRecordInfo.setGoodsStyle(datasMap.get("goodsStyle") + "");
-			goodsRecordInfo.setBrand(datasMap.get("brand") + "");
-			goodsRecordInfo.setgUnit(datasMap.get("gUnit") + "");
-			goodsRecordInfo.setStdUnit(datasMap.get("stdUnit") + "");
-			goodsRecordInfo.setSecUnit(datasMap.get("secUnit") + "");
-			try {
-				goodsRecordInfo.setRegPrice(Double.valueOf(datasMap.get("regPrice") + ""));
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("商品价格错误,请重新输入!");
+			//判断是否是商户请求修改接口，如果是商户修改则进行对应的状态判断
+			if(StringEmptyUtils.isNotEmpty(datasMap.get("updateFlag")) && "merchant".equals(datasMap.get("updateFlag"))){
+				// 备案状态：1-备案中，2-备案成功，3-备案失败,4-未备案
+				if(goodsRecordInfo.getStatus() == 1 || goodsRecordInfo.getStatus() == 2){
+					return ReturnInfoUtils.errorInfo("当前商品备案状态状态不允许修改商品备案信息！");
+				}
+				// 已备案商品状态:0-审核中,1-审核通过,2-正常备案,3-审核不通过
+				if(goodsRecordInfo.getRecordFlag() !=3 ){
+					return ReturnInfoUtils.errorInfo("当前商品备案状态状态不允许修改商品备案信息！");
+				}
 			}
-			goodsRecordInfo.setGiftFlag(datasMap.get("giftFlag") + "");
-			goodsRecordInfo.setOriginCountry(datasMap.get("originCountry") + "");
-			goodsRecordInfo.setQuality(datasMap.get("quality") + "");
-			goodsRecordInfo.setQualityCertify(datasMap.get("qualityCertify") + "");
-			goodsRecordInfo.setManufactory(datasMap.get("manufactory") + "");
-			double netWt = 0.0;
-			try {
-				netWt = Double.valueOf(datasMap.get("netWt") + "");
-				goodsRecordInfo.setNetWt(netWt);
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("商品净重错误,请重新输入!");
-			}
-			double grossWt = 0.0;
-			try {
-				grossWt = Double.valueOf(datasMap.get("grossWt") + "");
-				goodsRecordInfo.setGrossWt(grossWt);
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("商品毛重错误,请重新输入!");
-			}
-			goodsRecordInfo.setNotes(datasMap.get("notes") + "");
-			goodsRecordInfo.setIngredient(datasMap.get("ingredient") + "");
-			goodsRecordInfo.setAdditiveflag(datasMap.get("additiveflag") + "");
-			goodsRecordInfo.setPoisonflag(datasMap.get("poisonflag") + "");
-			goodsRecordInfo.setUpdateDate(new Date());
-			goodsRecordInfo.setUpdateBy(datasMap.get("managerName") + "");
-			if (netWt > grossWt) {
-				return ReturnInfoUtils.errorInfo("商品净重不能大于毛重,请重新输入!");
-			}
-			if (StringEmptyUtils.isNotEmpty(newMarCode)) {
-				JSONObject json = JSONObject.fromObject(goodsRecordInfo.getSpareParams());
-				json.put("SKU", datasMap.get("SKU") + "");
-				json.put("marCode", newMarCode);
-				goodsRecordInfo.setSpareParams(json.toString());
-			}
-			goodsRecordInfo.setDZKNNo(datasMap.get("DZKN_NO") + "");
-			goodsRecordInfo.setEbEntName(datasMap.get("ebEntName") + "");
-			// 电商企业编号(智检)
-			goodsRecordInfo.setEbEntNo(datasMap.get("ebEntNo") + "");
-			if (!goodsRecordDao.update(goodsRecordInfo)) {
-				return ReturnInfoUtils.errorInfo("修改商品备案信息错误,服务器繁忙!");
-			}
-			return ReturnInfoUtils.successInfo();
+			datasMap.put("newEntGoodsNo", newEntGoodsNo);
+			datasMap.put("newMarCode", newMarCode);
+			return modifyGoodsRecordInfo(datasMap, goodsRecordInfo);
 		} else {
 			return ReturnInfoUtils.errorInfo("商品自编号[" + oldEntGoodsNo + "]未找到商品信息!");
 		}
 	}
 
-	@Override
-	public Object temUpdateOldOriginCountry() {
-		Map<String, Object> reCountryMap = countryService.findAllCountry();
-		if (!"1".equals(reCountryMap.get(BaseCode.STATUS.toString()))) {
-			return reCountryMap;
+	/**
+	 * 修改商品备案信息
+	 * 
+	 * @param datasMap
+	 *            修改参数
+	 * @param goodsRecordInfo
+	 *            商品备案信息实体
+	 * @return Map
+	 */
+	private Map<String, Object> modifyGoodsRecordInfo(Map<String, Object> datasMap, GoodsRecordDetail goodsRecordInfo) {
+		if (datasMap == null || goodsRecordInfo == null) {
+			return ReturnInfoUtils.errorInfo("修改参数不能为null");
 		}
-		List<Country> reCountryList = (List<Country>) reCountryMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> cacheMap = new HashMap<>();
-		long startTime = System.currentTimeMillis();
-		int page = 1;
-		int size = 1000;
-		Map<String, Object> params = new HashMap<>();
+		JSONArray jsonArr = new JSONArray();
+		jsonArr.add(datasMap);
+		Map<String, Object> reCheckMap = checkData(jsonArr, 2, 2);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+		goodsRecordInfo.setEntGoodsNo(datasMap.get("newEntGoodsNo") + "");
+		goodsRecordInfo.setCiqGoodsNo(datasMap.get("ciqGoodsNo") + "");
+		goodsRecordInfo.setCusGoodsNo(datasMap.get("cusGoodsNo") + "");
+		goodsRecordInfo.setEmsNo(datasMap.get("emsNo") + "");
+		goodsRecordInfo.setItemNo(datasMap.get("itemNo") + "");
+		goodsRecordInfo.setShelfGName(datasMap.get("shelfGName") + "");
+		goodsRecordInfo.setNcadCode(datasMap.get("ncadCode") + "");
+		goodsRecordInfo.setHsCode(datasMap.get("hsCode") + "");
+		goodsRecordInfo.setBarCode(datasMap.get("barCode") + "");
+		goodsRecordInfo.setGoodsName(datasMap.get("goodsName") + "");
+		goodsRecordInfo.setGoodsStyle(datasMap.get("goodsStyle") + "");
+		goodsRecordInfo.setBrand(datasMap.get("brand") + "");
+		goodsRecordInfo.setgUnit(datasMap.get("gUnit") + "");
+		goodsRecordInfo.setStdUnit(datasMap.get("stdUnit") + "");
+		goodsRecordInfo.setSecUnit(datasMap.get("secUnit") + "");
+		try {
+			goodsRecordInfo.setRegPrice(Double.valueOf(datasMap.get("regPrice") + ""));
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("商品价格错误,请重新输入!");
+		}
+		goodsRecordInfo.setGiftFlag(datasMap.get("giftFlag") + "");
+		goodsRecordInfo.setOriginCountry(datasMap.get("originCountry") + "");
+		goodsRecordInfo.setQuality(datasMap.get("quality") + "");
+		goodsRecordInfo.setQualityCertify(datasMap.get("qualityCertify") + "");
+		goodsRecordInfo.setManufactory(datasMap.get("manufactory") + "");
+		double netWt = 0.0;
+		try {
+			netWt = Double.valueOf(datasMap.get("netWt") + "");
+			goodsRecordInfo.setNetWt(netWt);
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("商品净重错误,请重新输入!");
+		}
+		double grossWt = 0.0;
+		try {
+			grossWt = Double.valueOf(datasMap.get("grossWt") + "");
+			goodsRecordInfo.setGrossWt(grossWt);
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("商品毛重错误,请重新输入!");
+		}
+		goodsRecordInfo.setNotes(datasMap.get("notes") + "");
+		goodsRecordInfo.setIngredient(datasMap.get("ingredient") + "");
+		goodsRecordInfo.setAdditiveflag(datasMap.get("additiveflag") + "");
+		goodsRecordInfo.setPoisonflag(datasMap.get("poisonflag") + "");
+		goodsRecordInfo.setUpdateDate(new Date());
+		goodsRecordInfo.setUpdateBy(datasMap.get("updateBy") + "");
+		if (netWt > grossWt) {
+			return ReturnInfoUtils.errorInfo("商品净重不能大于毛重,请重新输入!");
+		}
+		if (StringEmptyUtils.isNotEmpty(datasMap.get("newMarCode"))) {
+			JSONObject json = JSONObject.fromObject(goodsRecordInfo.getSpareParams());
+			json.put("SKU", datasMap.get("SKU") + "");
+			json.put("marCode", datasMap.get("newMarCode"));
+			goodsRecordInfo.setSpareParams(json.toString());
+		}
+		goodsRecordInfo.setDZKNNo(datasMap.get("DZKN_NO") + "");
+		goodsRecordInfo.setEbEntName(datasMap.get("ebEntName") + "");
+		// 电商企业编号(智检)
+		goodsRecordInfo.setEbEntNo(datasMap.get("ebEntNo") + "");
+		if (!goodsRecordDao.update(goodsRecordInfo)) {
+			return ReturnInfoUtils.errorInfo("修改商品备案信息错误,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
 
-		params.put("startTime", DateUtil.parseDate("2018-06-28 00:00:22", "yyyy-MM-dd HH:mm:ss"));
-		params.put("endTime", DateUtil.parseDate("2018-06-29 00:00:22", "yyyy-MM-dd HH:mm:ss"));
-		List<MorderSub> reList = goodsRecordDao.findByPropertyLike(MorderSub.class, params, null, page, size);
-		for (MorderSub goods : reList) {
-			String country = goods.getOriginCountry();
-			if (StringEmptyUtils.isNotEmpty(country) && org.silver.util.StringUtil.isContainChinese(country)) {
-				if (cacheMap.containsKey(country)) {
-					String countryCode = cacheMap.get(country) + "";
-					goods.setOriginCountry(countryCode);
-					if (goodsRecordDao.update(goods)) {
-						System.out.println(goods.getGoodsName() + "-旧原产国->" + country + ";新原产国-->" + countryCode);
-					}
+	@Override
+	public Map<String, Object> managerReviewerInfo(Manager managerInfo, String entGoodsNo, String note,
+			int reviewerFlag) {
+		if (managerInfo == null || StringEmptyUtils.isEmpty(entGoodsNo)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("entGoodsNo", entGoodsNo);
+		List<GoodsRecordDetail> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
+		} else if (!reList.isEmpty()) {
+			GoodsRecordDetail goodsDetail = reList.get(0);
+			// 审核标识：1-审核中、2-通过、3-不通过
+			switch (reviewerFlag) {
+			case 2:
+				// 已备案商品状态:0-审核中,1-审核通过,2-正常备案,3-审核不通过
+				goodsDetail.setRecordFlag(1);
+				goodsDetail.setUpdateBy(managerInfo.getManagerName());
+				goodsDetail.setUpdateDate(new Date());
+				if (!goodsRecordDao.update(goodsDetail)) {
+					return ReturnInfoUtils.errorInfo("审核失败,服务器繁忙！");
+				}
+				return createReviewerLog(managerInfo, entGoodsNo, reviewerFlag, note);
+			case 3:
+				// 已备案商品状态:0-审核中,1-审核通过,2-正常备案,3-审核不通过
+				goodsDetail.setRecordFlag(3);
+				goodsDetail.setUpdateBy(managerInfo.getManagerName());
+				goodsDetail.setUpdateDate(new Date());
+				if (!goodsRecordDao.update(goodsDetail)) {
+					return ReturnInfoUtils.errorInfo("审核失败,服务器繁忙！");
+				}
+				return createReviewerLog(managerInfo, entGoodsNo, reviewerFlag, note);
+			default:
+				return ReturnInfoUtils.errorInfo("审核标识错误！");
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到商品信息，请联系管理员！");
+		}
+	}
+
+	/**
+	 * 添加审核日志信息
+	 * 
+	 * @param managerInfo
+	 *            管理员信息
+	 * @param entGoodsNo
+	 *            商品自编号
+	 * @param reviewerFlag
+	 *            审核标识：1-审核中、2-通过、3-不通过
+	 * @param note
+	 *            批注说明
+	 * @return Map
+	 */
+	private Map<String, Object> createReviewerLog(Manager managerInfo, String entGoodsNo, int reviewerFlag,
+			String note) {
+		if (managerInfo == null || StringEmptyUtils.isEmpty(entGoodsNo)) {
+			return ReturnInfoUtils.errorInfo("添加审核日志，请求参数不能为null");
+		}
+		GoodsReviewerLog log = new GoodsReviewerLog();
+		log.setEntGoodsNo(entGoodsNo);
+		log.setReviewerId(managerInfo.getManagerId());
+		log.setReviewerName(managerInfo.getRealName());
+		// 审核标识：1-审核中、2-通过、3-不通过
+		if (reviewerFlag == 2) {
+			log.setNote(note);
+		} else if (reviewerFlag == 3 && StringEmptyUtils.isNotEmpty(note)) {
+			log.setNote(note);
+		} else {
+			return ReturnInfoUtils.errorInfo("批注说明不能为空！");
+		}
+		log.setCreateBy(managerInfo.getManagerName());
+		log.setCreateDate(new Date());
+		if (!goodsRecordDao.add(log)) {
+			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> merchantUpdateInfo(Merchant merchantInfo, Map<String, Object> datasMap) {
+		if (merchantInfo == null || datasMap == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		datasMap.put("updateBy", merchantInfo.getMerchantName());
+		//更新人类型
+		datasMap.put("updateFlag", "merchant");
+		return managerUpdateGoodsRecordInfo(datasMap);
+	}
+
+	@Override
+	public Map<String, Object> merchantInitiateReview(Merchant merchantInfo, List<String> goodsIdList) {
+		if (merchantInfo == null || goodsIdList == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		Map<String, Object> errMap = null;
+		Map<String, Object> params = new HashMap<>();
+		for (int i = 0; i < goodsIdList.size(); i++) {
+			String goodsId = goodsIdList.get(i);
+			params.clear();
+			params.put("entGoodsNo", goodsId);
+			List<GoodsRecordDetail> reList = goodsRecordDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
+			if (reList == null) {
+				errMap = new HashMap<>();
+				errMap.put(BaseCode.MSG.toString(), "商品自编号[" + goodsId + "]查询失败，服务器繁忙！");
+				errorList.add(errMap);
+			} else if (!reList.isEmpty()) {
+				GoodsRecordDetail goods = reList.get(0);
+				// 已备案商品状态:0-审核中,1-审核通过,2-正常备案,3-审核不通过
+				if (goods.getRecordFlag() == 3) {
+					errMap = new HashMap<>();
+					errMap.put(BaseCode.MSG.toString(), "商品自编号[" + goodsId + "]当前状态不允许发起审核！");
+					errorList.add(errMap);
 				} else {
-					for (Country country2 : reCountryList) {
-						if (country2.getCountryName().equals(country)) {
-							goods.setOriginCountry(country2.getCountryCode());
-							if (goodsRecordDao.update(goods)) {
-								System.out.println(goods.getGoodsName() + "-旧原产国->" + country + ";新原产国-->"
-										+ country2.getCountryName());
-							}
-							cacheMap.put(country2.getCountryName(), country2.getCountryCode());
-						}
+					goods.setRecordFlag(0);
+					goods.setUpdateBy(merchantInfo.getMerchantName());
+					goods.setUpdateDate(new Date());
+					if (!goodsRecordDao.update(goods)) {
+						errMap = new HashMap<>();
+						errMap.put(BaseCode.MSG.toString(), "商品自编号[" + goodsId + "]发起审核失败，服务器繁忙！");
+						errorList.add(errMap);
 					}
 				}
+			} else {
+				errMap = new HashMap<>();
+				errMap.put(BaseCode.MSG.toString(), "商品自编号[" + goodsId + "]未找到商品信息！");
+				errorList.add(errMap);
 			}
 		}
-		long endTime = System.currentTimeMillis();
-		System.out.println("---耗时->>" + (startTime - endTime) + "ms");
-		return ReturnInfoUtils.successInfo();
+		return ReturnInfoUtils.errorInfo(errorList, goodsIdList.size());
 	}
 
 }

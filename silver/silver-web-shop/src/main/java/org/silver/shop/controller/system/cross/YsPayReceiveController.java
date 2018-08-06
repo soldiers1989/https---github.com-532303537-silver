@@ -37,7 +37,6 @@ public class YsPayReceiveController {
 	@RequestMapping(value = "/ysPayReceive", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
-		System.out.println("--支付回调计数器-->" + counter++);
 		Map params = new HashMap<>();
 		Enumeration<String> iskeys = req.getParameterNames();
 		while (iskeys.hasMoreElements()) {
@@ -46,15 +45,15 @@ public class YsPayReceiveController {
 			params.put(key, value);
 		}
 		logger.error("-银盛支付回调参数->" + params.toString());
-		if (ApipaySubmit.verifySign(req, params)) {
+		//if (ApipaySubmit.verifySign(req, params)) {
 			Map<String, Object> reMap = ysPayReceiveTransaction.ysPayReceive(params);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				logger.error("--支付回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
 			}
-		} else {
-			System.out.println("--银盛支付回调签名认证不通过！----");
-			logger.error("-银盛支付回调签名认证不通过！-");
-		}
+		//} else {
+			//System.out.println("--银盛支付回调签名认证不通过！----");
+			//logger.error("-银盛支付回调签名认证不通过！-");
+		//}
 		return "success";
 	}
 
@@ -116,5 +115,9 @@ public class YsPayReceiveController {
 			logger.error("-银盛支付回调签名认证不通过！-");
 		}
 		return "success";
+	}
+
+	public static void main(String[] args) {
+		System.out.println("--->>" + DaiFuPay.class.getClassLoader().getResource("").getPath() + "credentials");
 	}
 }

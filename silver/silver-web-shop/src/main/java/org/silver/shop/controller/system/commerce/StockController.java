@@ -25,7 +25,6 @@ import net.sf.json.JSONObject;
 
 /**
  * 库存Controller
- *
  */
 @Controller
 @RequestMapping("/stock")
@@ -159,21 +158,17 @@ public class StockController {
 	@ResponseBody
 	@ApiOperation("商户批量与单个商品上/下架状态修改")
 	@RequiresRoles("Merchant")
-	public String merchantSetGoodsSellAndStopSelling(@RequestParam("goodsInfoPack") String goodsInfoPack,
+	public String merchantSetGoodsSellAndStopSelling( String goodsInfoPack,
 			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (goodsInfoPack != null && goodsInfoPack.length() > 0 && type == 1 || type == 2) {
-			statusMap = stockTransaction.merchantSetGoodsSellAndStopSelling(goodsInfoPack, type);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		if(StringEmptyUtils.isEmpty(goodsInfoPack)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品信息不能为空！")).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(stockTransaction.merchantSetGoodsSellAndStopSelling(goodsInfoPack, type)).toString();
 	}
 
 	/**
@@ -217,14 +212,7 @@ public class StockController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (page > 0 && size > 0) {
-			statusMap = stockTransaction.searchGoodsStockInfo(req, page, size);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(stockTransaction.searchGoodsStockInfo(req, page, size)).toString();
 	}
 
 	/**
@@ -241,21 +229,31 @@ public class StockController {
 	@ResponseBody
 	@ApiOperation("商户批量与单个修改商品售卖价或市场价")
 	@RequiresRoles("Merchant")
-	public String merchantSetGoodsSalePriceAndMarketPrice(@RequestParam("goodsInfoPack") String goodsInfoPack,
+	public String merchantSetGoodsSalePriceAndMarketPrice( String goodsInfoPack,
 			@RequestParam("type") int type, HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
-		if (goodsInfoPack != null && goodsInfoPack.length() > 0 && type == 1 || type == 2) {
-			statusMap = stockTransaction.merchantSetGoodsSalePriceAndMarketPrice(goodsInfoPack, type);
-		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
+		if(StringEmptyUtils.isEmpty(goodsInfoPack)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品信息不能为空！")).toString();
 		}
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(stockTransaction.merchantSetGoodsSalePriceAndMarketPrice(goodsInfoPack, type)).toString();
 	}
 
+	@RequestMapping(value = "/managerGetStockInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员获取库存商品信息")
+	@RequiresRoles("Manager")
+	public String managerGetStockInfo(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("page") int page, @RequestParam("size") int size) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(stockTransaction.searchGoodsStockInfo(req, page, size)).toString();
+	}
+	
 }

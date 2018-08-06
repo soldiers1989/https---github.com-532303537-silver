@@ -14,9 +14,9 @@ public class MerchantBusinessContent implements Serializable {
 	private long id;
 	private String merchantId;// 商户ID
 	private String merchantName;// 商户名称
-	private String businessType;//业务类型:all-全部,online-线上支付、offline-线下支付
+	private String businessType;// 业务类型:all-全部,online-线上支付、offline-线下支付
 	private String pushType;// 推送类型：all-全部推送、orderRecord-订单推送、paymentRecord-支付单推送、goodsRecord-商品备案推送
-	private String idCardVerifySwitch;// 商户是否需要身份证认证开关:on-开；off-关
+	private String idCardVerifySwitch;// 实名认证开关:on-开；off-关
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人

@@ -211,15 +211,8 @@ public class OrderTransaction {
 		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPromoteBusiness",
 		// item));
 
-		String str = "a#b#c#";
-		int count = 0;
-		Pattern p = Pattern.compile("#");
-		Matcher m = p.matcher(str);
-		while (m.find()) {
-			count++;
-		}
-		String[] strArr = str.split("#");
+		String str = "X";
 		
-		System.out.println("--->>" + strArr[(count -1 )]);
+		System.out.println("--->>" + str.contains("x"));
 	}
 }

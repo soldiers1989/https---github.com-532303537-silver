@@ -62,7 +62,6 @@ public class StockTransaction {
 	//商户批量与单个商品上/下架状态修改
 	public Map<String, Object> merchantSetGoodsSellAndStopSelling(String goodsInfoPack,int type) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -72,7 +71,6 @@ public class StockTransaction {
 	//商户批量与单个修改商品库存与上架数量
 	public Map<String, Object> merchantSetGoodsStorageAndSellCount(String goodsInfoPack, int type) { 
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -85,14 +83,13 @@ public class StockTransaction {
 		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
 		Enumeration<String> iskey = req.getParameterNames();
 		while (iskey.hasMoreElements()) {
 			String key = iskey.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		return stockService.searchGoodsStockInfo(merchantId, merchantName, datasMap,page,size);
+		return stockService.searchGoodsStockInfo(merchantId,  datasMap,page,size);
 	}
 
 	//商户批量与单个修改商品售卖价或市场价

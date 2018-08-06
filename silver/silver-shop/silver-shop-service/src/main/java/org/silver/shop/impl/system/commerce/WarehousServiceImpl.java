@@ -31,13 +31,13 @@ public class WarehousServiceImpl implements WarehousService {
 			params.put("merchantId", merchantId);
 		}
 		params.put("deleteFlag", 0);
-		List<Object> reList = warehousDao.findByProperty(WarehouseContent.class, params, page, size);
+		List<WarehouseContent> reList = warehousDao.findByProperty(WarehouseContent.class, params, page, size);
 		long totalCount = warehousDao.findByPropertyCount(WarehouseContent.class, params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
-				WarehouseContent warehouse = (WarehouseContent) reList.get(i);
+				WarehouseContent warehouse =  reList.get(i);
 				params.put("warehouseCode", warehouse.getWarehouseCode());
 				long count = warehousDao.findByPropertyCount(StockContent.class, params);
 				warehouse.setReMark(String.valueOf(count));

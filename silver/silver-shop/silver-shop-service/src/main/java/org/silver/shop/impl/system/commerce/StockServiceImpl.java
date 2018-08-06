@@ -41,15 +41,15 @@ public class StockServiceImpl implements StockService {
 	@Override
 	public Map<String, Object> searchAlreadyRecordGoodsDetails(String merchantId, String warehouseCode, int page,
 			int size, String entGoodsNo) {
-		if(StringEmptyUtils.isEmpty(warehouseCode)){
+		if (StringEmptyUtils.isEmpty(warehouseCode)) {
 			return ReturnInfoUtils.errorInfo("仓库编号不能为空！");
 		}
 		int one = warehouseCode.indexOf('_');
 		int two = warehouseCode.indexOf('_', one + 1);
 		// 截取MerchantId_00030_|5165| 第二个下划线后4位数为仓库码
 		String code = warehouseCode.substring(two + 1);
-		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size,entGoodsNo);
-		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0,entGoodsNo);
+		Table reTable = stockDao.getWarehousGoodsInfo(merchantId, code, page, size, entGoodsNo);
+		Table count = stockDao.getWarehousGoodsInfo(merchantId, code, 0, 0, entGoodsNo);
 		if (reTable == null) {
 			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
 		} else {
@@ -245,12 +245,13 @@ public class StockServiceImpl implements StockService {
 				StockContent stockContent = reStockList.get(0);
 				if (type == 1) {// 当上架时添加商品上架时间
 					stockContent.setSellFlag(1);
-				//	stockContent.setSellFlag(3);
-					//当库存商品商家时，添加商品审核日志,待运营人员审核商品
-					//Map<String,Object> reLogMap  = addStockReviewLog(stockContent);
-					//if(!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))){
-						//return reLogMap;
-					//}
+					// stockContent.setSellFlag(3);
+					// 当库存商品商家时，添加商品审核日志,待运营人员审核商品
+					// Map<String,Object> reLogMap =
+					// addStockReviewLog(stockContent);
+					// if(!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))){
+					// return reLogMap;
+					// }
 				} else if (type == 2) {// 当设置下架时添加商品下架时间
 					stockContent.setSellFlag(2);
 					stockContent.setDropOffDate(new Date());
@@ -270,25 +271,34 @@ public class StockServiceImpl implements StockService {
 	}
 
 	private Map<String, Object> addStockReviewLog(StockContent stockContent) {
-		if(stockContent == null){
+		if (stockContent == null) {
 			return ReturnInfoUtils.errorInfo("添加审核日志失败,请求参数不能为null！");
 		}
-		//上下架标识：1-上架,2-下架,3-审核中
+		// 上下架标识：1-上架,2-下架,3-审核中
 		stockContent.setSellFlag(3);
 		StockReviewLog stockReviewLog = new StockReviewLog();
 		stockReviewLog.setEntGoodsNo(stockContent.getEntGoodsNo());
 		stockReviewLog.setMerchantId(stockContent.getMerchantId());
 		stockReviewLog.setMerchantName(stockContent.getMerchantName());
 		stockReviewLog.setOperationName("商品上架");
-		//审核标识：1-待审核，2-审核通过；3-审核不通过
+		// 审核标识：1-待审核，2-审核通过；3-审核不通过
 		stockReviewLog.setReviewerFlag(1);
 		stockReviewLog.setCreateDate(new Date());
-		if(!stockDao.add(stockReviewLog)){
+		if (!stockDao.add(stockReviewLog)) {
 			return ReturnInfoUtils.errorInfo("保存库存审核日志失败,服务器繁忙！");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 检查商品信息是否符合上架要求
+	 * 
+	 * @param goodsRecordInfo
+	 *            商品备案信息
+	 * @param errorList
+	 *            错误集合
+	 * @return Map
+	 */
 	private Map<String, Object> checkGoodsInfo(GoodsRecordDetail goodsRecordInfo, List<Map<String, Object>> errorList) {
 		if (goodsRecordInfo == null) {
 			return ReturnInfoUtils.errorInfo("商品信息不能为null");
@@ -373,9 +383,12 @@ public class StockServiceImpl implements StockService {
 	}
 
 	@Override
-	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
-			Map<String, Object> datasMap, int page, int size) {
+	public Map<String, Object> searchGoodsStockInfo(String merchantId, Map<String, Object> datasMap, int page,
+			int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalStockSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
 		paramMap.put("deleteFlag", 0);
@@ -394,51 +407,86 @@ public class StockServiceImpl implements StockService {
 	@Override
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
 			String goodsInfoPack, int type) {
-		Date date = new Date();
-		List<Map<String, Object>> errorMsgList = new ArrayList<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsInfoPack);
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("商品信息包格式错误!");
 		}
+		List<Map<String, Object>> errorList = new ArrayList<>();
+		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> errorMap = null;
 		for (int i = 0; i < jsonList.size(); i++) {
-			Map<String, Object> errorMap = new HashMap<>();
 			Map<String, Object> datasMap = (Map<String, Object>) jsonList.get(i);
-			Map<String, Object> params = new HashMap<>();
 			String entGoodsNo = datasMap.get(ENT_GOODS_NO) + "";
+			params.clear();
 			params.put(ENT_GOODS_NO, entGoodsNo);
+			params.put("merchantId", merchantId);
 			List<StockContent> reStockList = stockDao.findByProperty(StockContent.class, params, 0, 0);
 			if (reStockList == null) {
-				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]修改失败,服务器繁忙！");
-				errorMsgList.add(errorMap);
+				errorMap = new HashMap<>();
+				errorMap.put(BaseCode.MSG.getBaseCode(), "查询商品信息失败,服务器繁忙！");
+				errorList.add(errorMap);
 			} else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = reStockList.get(0);
-				double price = 0.0;
-				try {
-					price = Double.parseDouble(datasMap.get("price") + "");
-				} catch (Exception e) {
-					errorMap.put(BaseCode.MSG.getBaseCode(), "商品价格错误,请重试！");
-					errorMsgList.add(errorMap);
-					continue;
-				}
-				// 修改类型:1-市场价,2-销售价
-				if (type == 1) {
-					stockInfo.setMarketPrice(price);
-				} else {
-					stockInfo.setRegPrice(price);
-				}
-				stockInfo.setUpdateBy(merchantName);
-				stockInfo.setUpdateDate(date);
-				if (!stockDao.update(stockInfo)) {
-					errorMap.put(BaseCode.MSG.getBaseCode(), stockInfo.getGoodsName() + "修改库存/上架失败,服务器繁忙！");
-					errorMsgList.add(errorMap);
+				Map<String, Object> reMap = updateSalePriceAndMarketPrice(stockInfo, datasMap, type, merchantName);
+				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+					errorList.add(reMap);
 				}
 			} else {
+				errorMap = new HashMap<>();
 				errorMap.put(BaseCode.MSG.getBaseCode(), "商品自编号[" + entGoodsNo + "]未找到对应商品信息！");
-				errorMsgList.add(errorMap);
+				errorList.add(errorMap);
 			}
 		}
-		return ReturnInfoUtils.errorInfo(errorMsgList, jsonList.size());
+		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
+	}
+
+	/**
+	 * 更新商品市场价或销售价
+	 * 
+	 * @param stockInfo
+	 *            库存信息
+	 * @param datasMap
+	 *            参数
+	 * @param type
+	 *            类型:1-市场价,2-销售价
+	 * @param merchantName
+	 *            商户名称
+	 * @return Map
+	 */
+	private Map<String, Object> updateSalePriceAndMarketPrice(StockContent stockInfo, Map<String, Object> datasMap,
+			int type, String merchantName) {
+		if (stockInfo == null || datasMap == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null！");
+		}
+		double price = 0.0;
+		try {
+			price = Double.parseDouble(datasMap.get("price") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]价格错误！");
+		}
+		// 类型:1-市场价,2-销售价
+		switch (type) {
+		case 1:
+			stockInfo.setMarketPrice(price);
+			break;
+		case 2:
+			// 上下架标识：1-上架,2-下架,3-审核中
+			if (stockInfo.getSellFlag() == 2) {
+				stockInfo.setRegPrice(price);
+			} else {
+				return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]当前状态不允许修改价格！");
+			}
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("未知类型");
+		}
+		stockInfo.setUpdateBy(merchantName);
+		stockInfo.setUpdateDate(new Date());
+		if (!stockDao.update(stockInfo)) {
+			return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]修改失败，服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 }

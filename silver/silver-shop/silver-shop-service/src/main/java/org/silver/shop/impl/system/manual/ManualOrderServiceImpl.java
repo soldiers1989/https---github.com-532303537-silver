@@ -755,9 +755,9 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("修改参数不能为空！");
 		}
-		Map<String, Object> params = new HashMap<>();
 		String merchantId = datasMap.get(MERCHANT_ID) + "";
 		String orderId = datasMap.get("orderId") + "";
+		Map<String, Object> params = new HashMap<>();
 		params.put("merchant_no", merchantId);
 		params.put(ORDER_ID, orderId);
 		List<Morder> orderList = manualOrderDao.findByProperty(Morder.class, params, 0, 0);
@@ -782,12 +782,12 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 	 * @param order
 	 *            订单实体信息类
 	 * @param datasMap
-	 *            修改参数
+	 *            订单参数
 	 * @return Map
 	 */
 	private Map<String, Object> updateManualOrder(Morder order, Map<String, Object> datasMap) {
 		if (order == null || datasMap == null) {
-			return ReturnInfoUtils.errorInfo("更新订单信息时,请求参数不能为null！");
+			return ReturnInfoUtils.errorInfo("更新订单信息时,请求参数不能为null");
 		}
 		String recipientName = datasMap.get("recipientName") + "";
 		// 娜地拉·艾孜拉提
@@ -799,10 +799,10 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (!IdcardValidator.validate18Idcard(recipientID)) {
 			return ReturnInfoUtils.errorInfo("收货人身份证号码错误！");
 		}
-		order.setRecipientID(recipientID);
+		order.setRecipientID(recipientID.replace("x", "X"));
 		String recipientTel = datasMap.get("recipientTel") + "";
 		if (!PhoneUtils.isPhone(recipientTel)) {
-			return ReturnInfoUtils.errorInfo("收货人电话号码错误！");
+			return ReturnInfoUtils.errorInfo("收货人电话号码错误,暂只支持移动电话号码！");
 		}
 		order.setRecipientTel(recipientTel);
 		order.setRecipientProvincesCode(datasMap.get("recipientProvincesCode") + "");
@@ -817,7 +817,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String oldOrderDocId = order.getOrderDocId();
 		String orderDocTel = datasMap.get("orderDocTel") + "";
 		if (!PhoneUtils.isPhone(orderDocTel)) {
-			return ReturnInfoUtils.errorInfo("下单人电话错误！");
+			return ReturnInfoUtils.errorInfo("下单人电话错误,暂只支持移动电话号码！");
 		}
 		order.setOrderDocTel(orderDocTel);
 		order.setRecipientAddr(datasMap.get("recipientAddr") + "");
@@ -830,7 +830,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (!IdcardValidator.validate18Idcard(newOrderDocId)) {
 			return ReturnInfoUtils.errorInfo("下单人身份证号码错误！");
 		}
-		order.setOrderDocId(newOrderDocId);
+		order.setOrderDocId(newOrderDocId.replace("x", "X"));
 		if (!oldOrderDocName.equals(newOrderDocName) || !oldOrderDocId.equals(newOrderDocId)) {
 			// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
 			order.setIdcardCertifiedFlag(0);

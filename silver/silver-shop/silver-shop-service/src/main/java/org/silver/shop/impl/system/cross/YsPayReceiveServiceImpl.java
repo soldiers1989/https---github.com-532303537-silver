@@ -442,7 +442,6 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	private Map<String, Object> updateWallet(MerchantWalletContent wallet, double cash) {
 		double oldCash = wallet.getCash();
 		wallet.setCash(oldCash + cash);
-		System.out.println("----商户-存入-->>" + cash + "元");
 		// 将支付金额存入到商户钱包中
 		if (!ysPayReceiveDao.update(wallet)) {
 			return ReturnInfoUtils.errorInfo("商户现金入账失败!");

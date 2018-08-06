@@ -1,7 +1,9 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,7 @@ import net.sf.json.JSONObject;
 @RequestMapping("/goodsRecord")
 @Controller
 public class GoodsRecordController {
+
 	protected static final Logger logger = LogManager.getLogger();
 	@Autowired
 	private GoodsRecordTransaction goodsRecordTransaction;
@@ -127,7 +130,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject( goodsRecordTransaction.getGoodsRecordDetail(entGoodsNo)).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.getGoodsRecordDetail(entGoodsNo)).toString();
 	}
 
 	/**
@@ -286,7 +289,7 @@ public class GoodsRecordController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordInfo(req,page, size);
+		Map<String, Object> statusMap = goodsRecordTransaction.managerGetGoodsRecordInfo(req, page, size);
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
@@ -336,38 +339,92 @@ public class GoodsRecordController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员修改商品备案信息")
-	//@RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
+	// @RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
 	public String managerUpdateGoodsRecordInfo(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String,Object> datasMap = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKes = req.getParameterNames();
 		while (isKes.hasMoreElements()) {
-			String key =  isKes.nextElement();
+			String key = isKes.nextElement();
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		if(datasMap.isEmpty()){
+		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("参数不能为空!")).toString();
 		}
 		return JSONObject.fromObject(goodsRecordTransaction.managerUpdateGoodsRecordInfo(datasMap)).toString();
 	}
-	
-	
-	@RequestMapping(value = "/temUpdateOldOriginCountry", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+
+	@RequestMapping(value = "/managerReviewerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@RequiresRoles("Manager")
-	@ApiOperation("临时接口-更新旧原产国信息")
-	//@RequiresPermissions("goodsRecord:managerUpdateGoodsRecordInfo")
-	public String temUpdateOldOriginCountry(HttpServletRequest req, HttpServletResponse response) {
+	@ApiOperation("管理员审核商品信息")
+	// @RequiresPermissions("goodsRecord:managerReviewerInfo")
+	public String managerReviewerInfo(HttpServletRequest req, HttpServletResponse response, String entGoodsNo,
+			String note, int reviewerFlag) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(goodsRecordTransaction.temUpdateOldOriginCountry()).toString();
+		if (StringEmptyUtils.isNotEmpty(entGoodsNo)) {
+			return JSONObject.fromObject(goodsRecordTransaction.managerReviewerInfo(entGoodsNo, note, reviewerFlag))
+					.toString();
+		} else {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商品自编号不能为空！")).toString();
+		}
+	}
+
+	@RequestMapping(value = "/merchantUpdateInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	// @RequiresPermissions("goodsRecord:managerReviewerInfo")
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户修改商品备案信息")
+	public String merchantUpdateInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKes = req.getParameterNames();
+		while (isKes.hasMoreElements()) {
+			String key = isKes.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(goodsRecordTransaction.merchantUpdateInfo(datasMap)).toString();
+	}
+	
+	@RequestMapping(value = "/merchantInitiateReview", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户发起备案商品审核")
+	// @RequiresPermissions("goodsRecord:managerReviewerInfo")
+	public String merchantInitiateReview(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		List<String> goodsIdList = new ArrayList<>();
+		Enumeration<String> isKes = req.getParameterNames();
+		while (isKes.hasMoreElements()) {
+			String key = isKes.nextElement();
+			String value = req.getParameter(key);
+			goodsIdList.add(value);
+		}
+		return JSONObject.fromObject(goodsRecordTransaction.merchantInitiateReview(goodsIdList)).toString();
+	}
+	
+	public static void main(String[] args) {
+		List<String> list = new ArrayList<>();
+		list.add("a");
+		list.add("b");
+		System.out.println("--->"+list.toString());
 	}
 }

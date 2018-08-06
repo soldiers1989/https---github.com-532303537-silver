@@ -1121,7 +1121,6 @@ public class GoodsRecordTransaction {
 	// 商户删除商品备案信息
 	public Map<String, Object> merchantDeleteGoodsRecordInfo(String entGoodsNo) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
@@ -1131,19 +1130,30 @@ public class GoodsRecordTransaction {
 	// 管理员修改商品备案信息
 	public Map<String, Object> managerUpdateGoodsRecordInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		// String managerId = managerInfo.getManagerId();
 		String managerName = managerInfo.getManagerName();
-		datasMap.put("managerName", managerName);
+		datasMap.put("updateBy", managerName);
 		return goodsRecordService.managerUpdateGoodsRecordInfo(datasMap);
 	}
 
-	//
-	public Object temUpdateOldOriginCountry() {
-		return goodsRecordService.temUpdateOldOriginCountry();
+	// 管理员审核商品信息
+	public Map<String, Object> managerReviewerInfo(String entGoodsNo, String note, int reviewerFlag) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		return goodsRecordService.managerReviewerInfo(managerInfo, entGoodsNo, note, reviewerFlag);
 	}
-	public static void main(String[] args) {
-		System.out.println("0-->"+DateUtil.parseDate("2018-06-28 12:22:22", "yyyy-MM-dd HH:mm:ss"));
+
+	//
+	public Map<String, Object> merchantUpdateInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return goodsRecordService.merchantUpdateInfo(merchantInfo, datasMap);
+	}
+
+	public Map<String,Object> merchantInitiateReview(List<String> goodsIdList) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return goodsRecordService.merchantInitiateReview(merchantInfo, goodsIdList);
 	}
 }

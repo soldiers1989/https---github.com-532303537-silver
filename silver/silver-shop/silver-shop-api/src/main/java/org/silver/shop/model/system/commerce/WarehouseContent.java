@@ -15,6 +15,7 @@ public class WarehouseContent implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
+	private String merchantName;//商户名称
 	private String warehouseCode;// 商户ID+主管海关代码=仓库ID
 	private String warehouseName;// 仓库名称
 	private String createBy;// 创建人
@@ -25,7 +26,6 @@ public class WarehouseContent implements Serializable {
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
 	
-	private String merchantName;//商户名称
 	private String reMark;//
 	public long getId() {
 		return id;

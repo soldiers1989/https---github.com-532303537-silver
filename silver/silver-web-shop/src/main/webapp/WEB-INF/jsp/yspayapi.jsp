@@ -26,7 +26,6 @@
 
 			//接口名称方法
 			String method = (String)request.getAttribute("method");
-			System.out.println("method :   " +method);
 			System.out.println("接口名称方法 :   " +method);
 			//商户号
 			String partner_id = (String)request.getAttribute("partner_id");

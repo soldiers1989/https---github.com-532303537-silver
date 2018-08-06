@@ -1,11 +1,14 @@
 package org.silver.shop.controller.system.commerce;
 
+import java.io.File;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.silver.shop.config.FenZhangConfig;
 import org.silver.shop.service.system.commerce.WarehousTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -45,13 +48,19 @@ public class WarehousController {
 	@ResponseBody
 	@ApiOperation("管理员查询商户仓库")
 	@RequiresRoles("Manager")
-	public String getInfo(@RequestParam("page") int page, @RequestParam("size") int size, HttpServletRequest req,
+	public String getInfo(HttpServletRequest request,
 			HttpServletResponse response) {
-		String originHeader = req.getHeader("Origin");
+		String originHeader = request.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(warehousTransaction.getInfo(page, size)).toString();
+		ServletContext servletContext = request.getServletContext();
+		
+		String realPath = servletContext.getRealPath("/") + "WEB-INF/classes/credentials";
+		String partnerCert = FenZhangConfig.PATH_PARTER_PKCS12;
+		File f = new File(realPath + partnerCert);
+		System.out.println("-f->>"+f.getPath());
+		return realPath;
 	}
 }

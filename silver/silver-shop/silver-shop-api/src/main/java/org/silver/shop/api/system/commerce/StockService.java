@@ -74,23 +74,22 @@ public interface StockService {
 
 	/**
 	 * 根据指定信息搜索库存商品信息
-	 * @param merchantId
-	 * @param merchantName
-	 * @param datasMap
-	 * @param page
-	 * @param size
+	 * @param merchantId 商户id
+	 * @param datasMap 
+	 * @param page 页数
+	 * @param size 数目
 	 * @return
 	 */
-	public Map<String, Object> searchGoodsStockInfo(String merchantId, String merchantName,
+	public Map<String, Object> searchGoodsStockInfo(String merchantId,
 			Map<String, Object> datasMap, int page, int size);
 
 
 	/**
 	 * 商户批量与单个修改商品售卖价或市场价
-	 * @param merchantId
-	 * @param merchantName
-	 * @param goodsInfoPack
-	 * @return
+	 * @param merchantId 商户id
+	 * @param merchantName 商户名称
+	 * @param goodsInfoPack 商品信息包
+	 * @return Map
 	 */
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
 			String goodsInfoPack,int type);

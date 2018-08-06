@@ -849,7 +849,7 @@ public class PaymentServiceImpl implements PaymentService {
 			payment.element(CIQ_ORG_CODE, pay.getCiqOrgCode());
 			payment.element(CUSTOMS_CODE, pay.getCustomsCode());
 			item.put("payment", payment.toString());
-			String result = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/Eport/getway-callback", item);
+			String result = YmHttpUtil.HttpPost(YmMallConfig.THIRD_PARTY_NOTIFY_URL, item);
 			// String result =
 			// YmHttpUtil.HttpPost("http://192.168.1.104:8080/silver-web/Eport/getway-callback",
 			// item);

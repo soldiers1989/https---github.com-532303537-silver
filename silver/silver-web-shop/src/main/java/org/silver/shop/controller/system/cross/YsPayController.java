@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.common.BaseCode;
+import org.silver.shop.config.FenZhangConfig;
 import org.silver.shop.service.system.cross.YsPayTransaction;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -173,6 +174,52 @@ public class YsPayController {
 		// result.getString("sign")+"",
 		// result.get("ysepay_online_trade_query_response")+"", "utf-8");
 		return "";
+	}
+	
+	
+	@RequestMapping(value = "/fen-zhang-pay")
+	public String fenZhangPay(HttpServletRequest req, HttpServletResponse resp) {
+		String entOrderNo = req.getParameter("entOrderNo");
+		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(entOrderNo);
+		float orderTotalPrice = 0;
+		// 当订单ID查询信息无误
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return "error";
+		}
+		//获取订单价格,如有小数点后三位则直接进位,而非四舍五入
+		String totalPrice = reMap.get("orderTotalPrice") + "";
+		orderTotalPrice = Float.parseFloat(totalPrice + "");
+		int a = (int) (orderTotalPrice * 1000);
+		if (a % 10 > 0) {
+			orderTotalPrice = (a - a % 10 + 10 * 1.0f) / 1000.0f;
+		} else {
+			orderTotalPrice = a * 1.0f / 1000.0f;
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		req.setAttribute("method", "ysepay.online.directpay.createbyuser");
+		req.setAttribute("partner_id", FenZhangConfig.PLATFORM_PARTNER_NO);
+		req.setAttribute("timestamp", sdf.format(new Date()));
+		req.setAttribute("charset", FenZhangConfig.DEFAULT_CHARSET);
+		req.setAttribute("sign_type", FenZhangConfig.SIGN_ALGORITHM);
+		// request.setAttribute("sign", userName);
+		// 生成商户订单 out_trade_no total_amount
+		req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/ysPayReceive");
+		req.setAttribute("return_url", "http://www.191ec.com");
+		req.setAttribute("version", FenZhangConfig.VERSION);
+		req.setAttribute("out_trade_no", entOrderNo);// 商品交易订单号
+		req.setAttribute("subject", "购物");
+		req.setAttribute("total_amount", orderTotalPrice);// 支付总金额
+		req.setAttribute("seller_id", FenZhangConfig.PLATFORM_PARTNER_NO);
+		req.setAttribute("seller_name", FenZhangConfig.PLATFORM_PARTNER_NAME);
+		req.setAttribute("timeout_express", "1h");
+		req.setAttribute("business_code", "01000010");
+		req.setAttribute("extra_common_param", "Ezreal");// 支付人姓名
+		// request.setAttribute("pay_mode", "internetbank");
+		req.setAttribute("bank_type", "");
+		req.setAttribute("bank_account_type", "");
+		req.setAttribute("support_card_type", "");
+		req.setAttribute("bank_account_no", "");
+		return "yspayapi";
 	}
 	
 }

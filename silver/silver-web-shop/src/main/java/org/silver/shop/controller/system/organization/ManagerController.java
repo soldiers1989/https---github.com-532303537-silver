@@ -21,6 +21,7 @@ import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.service.system.organization.ManagerTransaction;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -210,15 +211,9 @@ public class ManagerController {
 		}
 	}
 
-	/**
-	 * 超级管理员查询所有运营人员信息
-	 * 
-	 * @param req
-	 * @param response
-	 * @return JSON
-	 */
+	
 	@RequestMapping(value = "/findAllManagerInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("超级管理员查询所有运营人员信息")
+	@ApiOperation("查询所有管理员")
 	@ResponseBody
 	@RequiresPermissions("manager:findAllManagerInfo")
 	public String findAllManagerInfo(HttpServletRequest req, HttpServletResponse response) {
@@ -227,32 +222,24 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.findAllManagerInfo();
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(managerTransaction.findAllManagerInfo()).toString();
 	}
 
-	/**
-	 * 超级管理员重置运营人员密码
-	 * 
-	 * @param req
-	 * @param response
-	 * @param managerId
-	 *            管理员Id
-	 * @return Json
-	 */
 	@RequestMapping(value = "/resetManagerPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ApiOperation("超级管理员重置运营人员密码")
+	@ApiOperation("重置管理员密码")
 	@ResponseBody
 	@RequiresPermissions("manager:resetManagerPassword")
 	public String resetManagerPassword(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("managerId") String managerId) {
+			 String managerId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = managerTransaction.resetManagerPassword(managerId);
-		return JSONObject.fromObject(statusMap).toString();
+		if(StringEmptyUtils.isEmpty(managerId)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("管理员id不能为空！")).toString();
+		}
+		return JSONObject.fromObject(managerTransaction.resetManagerPassword(managerId)).toString();
 	}
 
 	/**
