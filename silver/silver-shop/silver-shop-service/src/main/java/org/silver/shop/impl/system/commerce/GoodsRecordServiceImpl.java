@@ -790,7 +790,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		}
 		if (status == 2) {
 			noNullKeys.add("entGoodsNo");
-			noNullKeys.add("eportGoodsNo");
+			//noNullKeys.add("eportGoodsNo");
 			noNullKeys.add("ciqGoodsNo");
 			noNullKeys.add("cusGoodsNo");
 		}
@@ -860,10 +860,11 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			case 3:
 				return editGoodsStockInfo(paramMap);
 			default:
-				break;
+				return ReturnInfoUtils.errorInfo("修改失败,类型错误！");
 			}
+		}else{
+			return ReturnInfoUtils.errorInfo("商品自编号["+paramMap.get("entGoodsNo")+"]未找到对应商品信息！");
 		}
-		return ReturnInfoUtils.errorInfo("查询商品信息失败,服务器繁忙!");
 	}
 
 	/**

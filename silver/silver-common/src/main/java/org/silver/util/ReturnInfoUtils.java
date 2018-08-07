@@ -21,7 +21,7 @@ public class ReturnInfoUtils {
 	 */
 	public static final Map<String, Object> errorInfo(String message) {
 		if (StringEmptyUtils.isEmpty(message)) {
-			return errorInfo("未知错误,返回错误信息失败!");
+			return errorInfo("未知错误！");
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());

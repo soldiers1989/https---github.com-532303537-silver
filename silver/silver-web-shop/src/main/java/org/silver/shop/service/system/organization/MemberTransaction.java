@@ -151,7 +151,6 @@ public class MemberTransaction {
 
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -160,7 +159,6 @@ public class MemberTransaction {
 
 	public Map<String, Object> getMemberWalletInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
 		String memberId = memberInfo.getMemberId();
 		String memberName = memberInfo.getMemberName();
@@ -189,12 +187,5 @@ public class MemberTransaction {
 	// 用户修改信息
 	public Object editInfo(Map<String, Object> datasMap) {
 		return memberService.editInfo(datasMap);
-	}
-
-	public static void main(String[] args) {
-		Jedis j = new Jedis("150.242.58.22", 6380);
-		j.auth("jugg");
-		j.del("Shop_Login_MemberPasswordError_int_1Member_2017000025928");
-		System.out.println("----------------");
 	}
 }

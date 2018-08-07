@@ -155,10 +155,7 @@ public class GoodsRecordController {
 		try {
 			type = Integer.parseInt(req.getParameter("type"));
 		} catch (Exception e) {
-			logger.error("-------修改指定类型出错------");
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), "type类型传递错误!");
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("type类型传递错误!")).toString();
 		}
 		// type 1-全部修改,2-修改商品信息(价格除外),3-只修改商品价格(商品基本信息不修改)
 		if (type == 1 || type == 2 || type == 3) {

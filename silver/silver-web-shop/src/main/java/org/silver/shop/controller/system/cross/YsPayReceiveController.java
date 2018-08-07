@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.service.system.cross.YsPayReceiveTransaction;
+import org.silver.shop.utils.PaySubmitUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,15 +46,15 @@ public class YsPayReceiveController {
 			params.put(key, value);
 		}
 		logger.error("-银盛支付回调参数->" + params.toString());
-		//if (ApipaySubmit.verifySign(req, params)) {
+		if (ApipaySubmit.verifySign(req, params)) {
 			Map<String, Object> reMap = ysPayReceiveTransaction.ysPayReceive(params);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				logger.error("--支付回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
 			}
-		//} else {
-			//System.out.println("--银盛支付回调签名认证不通过！----");
-			//logger.error("-银盛支付回调签名认证不通过！-");
-		//}
+		} else {
+			System.out.println("--银盛支付回调签名认证不通过！----");
+			logger.error("-银盛支付回调签名认证不通过！-");
+		}
 		return "success";
 	}
 
@@ -117,7 +118,25 @@ public class YsPayReceiveController {
 		return "success";
 	}
 
-	public static void main(String[] args) {
-		System.out.println("--->>" + DaiFuPay.class.getClassLoader().getResource("").getPath() + "credentials");
+	@RequestMapping(value = "/ysFenZhangPayReceive", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String ysFenZhangPayReceive(HttpServletRequest req, HttpServletResponse response) {
+		Map params = new HashMap<>();
+		Enumeration<String> iskeys = req.getParameterNames();
+		while (iskeys.hasMoreElements()) {
+			String key = iskeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		logger.error("-(分账)银盛支付回调参数->" + params.toString());
+		if (PaySubmitUtils.verifySign(req, params)) {
+			Map<String, Object> reMap = ysPayReceiveTransaction.ysPayReceive(params);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("--(分账)支付回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
+			}
+		} else {
+			logger.error("-(分账)银盛支付回调签名认证不通过！-");
+		}
+		return "success";
 	}
 }

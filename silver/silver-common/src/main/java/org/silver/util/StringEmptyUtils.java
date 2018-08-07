@@ -12,9 +12,16 @@ public class StringEmptyUtils {
 	/**
 	 * 判断对象是否Empty(null或元素为0)<br>
 	 * 实用于对如下对象做判断:String Collection及其子类 Map及其子类
+	 * <ul>
+	 * <li>isEmpty(null) = true</li>
+	 * <li>isEmpty("null") = true</li>
+	 * <li>isEmpty("") = true</li>
+	 * <li>isEmpty(" ") = true</li> 
+	 * <li>isEmpty("abc") = false</li>
+	 * </ul>
 	 * 
 	 * @param pObj
-	 *            待检查对象 
+	 *            待检查对象
 	 * @return boolean 返回的布尔值
 	 */
 	public static boolean isEmpty(Object pObj) {
@@ -24,9 +31,9 @@ public class StringEmptyUtils {
 			return true;
 		} else if (pObj instanceof JSONNull) {
 			return true;
-		}else if((pObj+"").trim().equals("null")){
+		} else if ((pObj + "").trim().equals("null")) {
 			return true;
-		}else if (pObj instanceof String) {
+		} else if (pObj instanceof String) {
 			if (((String) pObj).length() == 0) {
 				return true;
 			}
@@ -38,14 +45,20 @@ public class StringEmptyUtils {
 			if (((Map) pObj).size() == 0) {
 				return true;
 			}
-		} 
+		}
 		return false;
 	}
 
 	/**
 	 * 判断对象是否为NotEmpty(!null或元素>0)<br>
 	 * 实用于对如下对象做判断:String Collection及其子类 Map及其子类
-	 * 
+	 * <ul>
+	 * <li>isNotEmpty(null) = false</li>
+	 * <li>isNotEmpty("null") = false</li>
+	 * <li>isNotEmpty("") = false</li>
+	 * <li>isNotEmpty(" ") = true</li> 
+	 * <li>isNotEmpty("abc") = true</li>
+	 * </ul>
 	 * @param pObj
 	 *            待检查对象
 	 * @return boolean 返回的布尔值
@@ -57,9 +70,9 @@ public class StringEmptyUtils {
 			return false;
 		} else if (pObj instanceof JSONNull) {
 			return false;
-		}else if((pObj+"").trim().equals("null")){
+		} else if ((pObj + "").trim().equals("null")) {
 			return false;
-		}else if (pObj instanceof String) {
+		} else if (pObj instanceof String) {
 			if (((String) pObj).length() == 0) {
 				return false;
 			}
@@ -74,12 +87,12 @@ public class StringEmptyUtils {
 		}
 		return true;
 	}
-	
+
 	public static void main(String[] args) {
 		String a = "2";
-		if(isNotEmpty(a)){
+		if (isNotEmpty(a)) {
 			System.out.println("-----");
 		}
-				
+
 	}
 }

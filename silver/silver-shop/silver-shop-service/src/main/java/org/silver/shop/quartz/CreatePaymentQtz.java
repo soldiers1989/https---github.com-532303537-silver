@@ -69,8 +69,7 @@ public class CreatePaymentQtz {
 	 * 计数器
 	 */
 	private static AtomicInteger counter = new AtomicInteger(0);
-	
-	
+
 	private static Logger logger = LogManager.getLogger(Object.class);
 
 	@Autowired
@@ -182,7 +181,7 @@ public class CreatePaymentQtz {
 					order.getMerchant_no());
 			String status = reIdCardMap.get(BaseCode.STATUS.toString()) + "";
 			if ("1".equals(status)) {
-				//添加订单交易流水号、作用于用户储备资金结算对应的流水号
+				// 添加订单交易流水号、作用于用户储备资金结算对应的流水号
 				order.setTrade_no(tradeNo);
 				startSubtasks(order);
 				return paymentService.addEntity(paymentMap)
@@ -191,7 +190,7 @@ public class CreatePaymentQtz {
 				return updateCertifiedStatus(order);
 			}
 		} else {
-			//添加订单交易流水号、作用于用户储备资金结算对应的流水号
+			// 添加订单交易流水号、作用于用户储备资金结算对应的流水号
 			order.setTrade_no(tradeNo);
 			startSubtasks(order);
 			return paymentService.addEntity(paymentMap)
@@ -203,11 +202,11 @@ public class CreatePaymentQtz {
 		// 创建一个生成钱包流水子任务
 		String memberId = order.getOrderPayerId();
 		// 暂时写死
-		//String memberId = "Member_2017000025928";
+		// String memberId = "Member_2017000025928";
 		if (StringEmptyUtils.isNotEmpty(memberId)) {
 			ExecutorService threadPool = Executors.newCachedThreadPool();
-			WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, order.getMerchant_no(), order.getTrade_no(),
-					memberWalletService, order.getActualAmountPaid());
+			WalletTransferTask walletTransferTask = new WalletTransferTask(memberId, order.getMerchant_no(),
+					order.getTrade_no(), memberWalletService, order.getActualAmountPaid());
 			threadPool.submit(walletTransferTask);
 			threadPool.shutdown();
 		}
@@ -216,8 +215,10 @@ public class CreatePaymentQtz {
 	/**
 	 * 更新订单失败原因
 	 * 
-	 * @param order 订单信息实体
-	 * @param msg 信息
+	 * @param order
+	 *            订单信息实体
+	 * @param msg
+	 *            信息
 	 * @return boolean
 	 */
 	private boolean updateOrder(Morder order, String msg) {
@@ -397,7 +398,7 @@ public class CreatePaymentQtz {
 	 *            身份证号码
 	 * @return Map
 	 */
-	private Map<String, Object> sendIdCardCertification(String idName, String idCard) {
+	public Map<String, Object> sendIdCardCertification(String idName, String idCard) {
 		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idCard)) {
 			return ReturnInfoUtils.errorInfo("发送身份证校验,请求参数不能为空!");
 		}
@@ -456,7 +457,7 @@ public class CreatePaymentQtz {
 	 *            认证消息
 	 * @return Map key-datas 身份证实名实体
 	 */
-	private Map<String, Object> addIdCardInfo(String msgId, String merchantId, String merchantName, String idName,
+	public Map<String, Object> addIdCardInfo(String msgId, String merchantId, String merchantName, String idName,
 			String idNumber, String status, String msg) {
 
 		IdCard idCard = new IdCard();

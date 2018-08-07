@@ -125,4 +125,8 @@ public class MerchantWalletTransaction {
 		datasMap.put("applicantId", merchantId);
 		return merchantWalletService.getOfflineRechargeInfo(datasMap, page, size);
 	}
+
+	public Map<String,Object> fenZhang(String orderId, double amount) {
+		return merchantWalletService.fenZhang(orderId, amount);
+	}
 }

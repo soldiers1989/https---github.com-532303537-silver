@@ -87,15 +87,14 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		String reEntOrderNo = datasMap.get("out_trade_no") + "";
 		// 根据订单ID查询订单是否存在
 		params.put("entOrderNo", reEntOrderNo);
-		List<Object> orderList = ysPayReceiveDao.findByProperty(OrderContent.class, params, 0, 0);
-		List<Object> orderGoodsList = ysPayReceiveDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
+		List<OrderContent> orderList = ysPayReceiveDao.findByProperty(OrderContent.class, params, 0, 0);
+		List<OrderGoodsContent> orderGoodsList = ysPayReceiveDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
 		if (orderList == null || orderGoodsList == null) {
 			return ReturnInfoUtils.errorInfo("查询订单失败,服务器繁忙!");
 		} else if (!orderList.isEmpty() && !orderGoodsList.isEmpty()) {
 			try {
-				OrderContent orderInfo = (OrderContent) orderList.get(0);
-				OrderGoodsContent orderGoodsContent = (OrderGoodsContent) orderGoodsList.get(0);
-				String merchantId = orderGoodsContent.getMerchantId();
+				OrderContent orderInfo =  orderList.get(0);
+				String merchantId = orderInfo.getMerchantId();
 				Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 				if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 					return reMerchantMap;
@@ -114,11 +113,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 					return rePaymentMap;
 				}
 				PaymentContent paymentInfo = (PaymentContent) rePaymentMap.get(BaseCode.DATAS.toString());
-				SendMsg.sendMsg(merchantInfo.getMerchantPhone(), "【广州银盟】您有一个订单需要处理,订单号" + reEntOrderNo);
+				SendMsg.sendMsg(merchantInfo.getMerchantPhone(), "【广州银盟】您有一个订单需要处理,订单号：" + reEntOrderNo);
 				// 商户钱包资金更新
-				Map<String, Object> reWalletMap = updateWalletFunds(orderInfo.getMerchantId(),
-						orderGoodsContent.getGoodsName(), paymentInfo.getPayAmount(), orderInfo.getMemberId(),
-						orderInfo.getEntOrderNo(), orderInfo.getSourceFlag());
+				Map<String, Object> reWalletMap = updateWalletFunds(orderInfo ,paymentInfo.getPayAmount());
 				if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 					return reWalletMap;
 				}
@@ -236,10 +233,12 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	 *            来源标识：1-银盟商城、2-第三方推广
 	 * @return Map
 	 */
-	private Map<String, Object> updateWalletFunds(String merchantId, String goodsName, Double payAmount,
-			String memberId, String entOrderNo, int sourceFlag) {
+	private Map<String, Object> updateWalletFunds(OrderContent orderInfo, Double payAmount) {
+		if(orderInfo ==null){
+			return ReturnInfoUtils.errorInfo("更新钱包错误，订单信息不能为null");
+		}
 		// 获取商户钱包信息
-		Map<String, Object> reMerchantWalletMap = walletUtils.checkWallet(1, merchantId, null);
+		Map<String, Object> reMerchantWalletMap = walletUtils.checkWallet(1, orderInfo.getMerchantId(), null);
 		if (!"1".equals(reMerchantWalletMap.get(BaseCode.STATUS.toString()))) {
 			return reMerchantWalletMap;
 		}
@@ -258,7 +257,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 原钱包资金
 		double oldCash = wallet.getCash();
 		// 来源标识：1-银盟商城、2-第三方推广
-		if (sourceFlag == 2) {
+		if (orderInfo.getSourceFlag() == 2) {
 			// 暂定手续费(佣金)九分之一
 			commission = payAmount / 9;
 			DecimalFormat df = new DecimalFormat("#");
@@ -283,17 +282,17 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			return ReturnInfoUtils.errorInfo("交易金额存入商户钱包失败,服务器繁忙!");
 		}
 		Map<String, Object> datas = new HashMap<>();
-		datas.put("merchantId", merchantId);
+		datas.put("merchantId", orderInfo.getMerchantId());
 		datas.put("walletId", wallet.getWalletId());
 		datas.put("merchantName", wallet.getMerchantName());
-		datas.put("serialName", goodsName);
+		datas.put("serialName", "购物");
 		datas.put("balance", oldCash);
 		datas.put("amount", Double.parseDouble(strCash));
 		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物、6-线上
 		datas.put("type", 6);
 		datas.put("flag", "in");
 		// 获取用户钱包信息
-		Map<String, Object> reMemeberWalletMap = walletUtils.checkWallet(2, memberId, null);
+		Map<String, Object> reMemeberWalletMap = walletUtils.checkWallet(2, orderInfo.getMemberId(), null);
 		if (!"1".equals(reMemeberWalletMap.get(BaseCode.STATUS.toString()))) {
 			return reMemeberWalletMap;
 		}
@@ -302,7 +301,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		datas.put("targetName", memberWallet.getMemberName());
 		// 状态：success-交易成功、fail-交易失败
 		datas.put("status", "success");
-		datas.put("note", "订单号[" + entOrderNo + "]用户购买 " + goodsName + " 支付了:" + payAmount + "元,商城平台抽取[" + strCommission
+		datas.put("note", "订单号[" + orderInfo.getEntOrderNo() + "]用户购买 " + "购物" + " 支付了:" + payAmount + "元,商城平台抽取[" + strCommission
 				+ "]元佣金,剩余[" + strCash + "]元存入钱包可用资金!");
 		// 添加商户钱包流水日志
 		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
@@ -310,7 +309,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			return reWalletLogMap;
 		}
 		// 银盟总代理收款
-		return updateAgentWallet(Double.parseDouble(strCommission), goodsName, payAmount, entOrderNo,
+		return updateAgentWallet(Double.parseDouble(strCommission), "购物", payAmount, orderInfo.getEntOrderNo(),
 				wallet.getWalletId(), wallet.getMerchantName());
 	}
 
@@ -375,7 +374,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	}
 
 	// 保存支付单信息
-	private final Map<String, Object> addPaymentInfo(List<Object> orderList, Map<String, Object> datasMap,
+	private final Map<String, Object> addPaymentInfo(List orderList, Map<String, Object> datasMap,
 			Member memberInfo) {
 		Date date = new Date();
 		Map<String, Object> paramMap = new HashMap<>();
@@ -451,10 +450,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 
 	// 保存订单备案信息
 	private final Map<String, Object> addOrderRecordInfo(OrderContent orderInfo, Map<String, Object> datasMap,
-			Member memberInfo, List<Object> orderList, List<Object> orderGoodsList) {
+			Member memberInfo, List orderList, List orderGoodsList) {
 		Date date = new Date();
 		Map<String, Object> paramMap = new HashMap<>();
-		OrderRecordContent orderRecordInfo = new OrderRecordContent();
 		String entOrderNo = orderInfo.getEntOrderNo();
 		paramMap.put("entOrderNo", entOrderNo);
 		List<OrderRecordContent> reOrderList = ysPayReceiveDao.findByProperty(OrderRecordContent.class, paramMap, 1, 1);
@@ -463,8 +461,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		} else if (!reOrderList.isEmpty()) {
 			return ReturnInfoUtils.successDataInfo(reOrderList.get(0));
 		} else {
-			paramMap.clear();
-			paramMap.put("entOrderNo", entOrderNo);
+			OrderRecordContent orderRecordInfo = new OrderRecordContent();
 			orderRecordInfo.setMerchantId(orderInfo.getMerchantId());
 			orderRecordInfo.setMerchantName(orderInfo.getMerchantName());
 			orderRecordInfo.setMemberId(orderInfo.getMemberId());
@@ -550,6 +547,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			orderRecordInfo.setOrderSerialNo("");
 			// 订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
 			orderRecordInfo.setOrderSourceType("online");
+			// 订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+			orderRecordInfo.setOrderTradingStatus(2);
 			if (!ysPayReceiveDao.add(orderRecordInfo)) {
 				return ReturnInfoUtils.errorInfo("保存备案订单信息失败,服务器繁忙!");
 			}

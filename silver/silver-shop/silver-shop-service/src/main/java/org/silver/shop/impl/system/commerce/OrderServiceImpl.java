@@ -162,7 +162,7 @@ public class OrderServiceImpl implements OrderService {
 			name = "shop_Order";
 		} else if (type == 2) {
 			// 用于发往支付与海关的总订单头
-			topStr = "YMGAC";
+			topStr = "YM";
 			name = "total_Shop_Order";
 		}
 		// 查询缓存中商城下单自增Id
@@ -307,7 +307,7 @@ public class OrderServiceImpl implements OrderService {
 		order.setCreateDate(date);
 		order.setDeleteFlag(0);
 		order.setEntOrderNo(entOrderNo);
-
+		
 		if (!orderDao.add(order)) {
 			return ReturnInfoUtils.errorInfo("订单生成失败,服务器繁忙！");
 		}
@@ -1283,7 +1283,7 @@ public class OrderServiceImpl implements OrderService {
 	private Map<String, Object> checkOrderBusinessType(Morder order, Merchant merchant) {
 		int thirdPartyFlag = merchant.getThirdPartyFlag();
 		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
-		if (thirdPartyFlag == 2) {
+		if (thirdPartyFlag == 2 && !"MerchantId_00047".equals(merchant.getMerchantId())) {
 			Map<String, Object> reBusinessMap = merchantUtils.getMerchantBusinessInfo(merchant.getMerchantId());
 			if (!"1".equals(reBusinessMap.get(BaseCode.STATUS.toString()))) {
 				return reBusinessMap;

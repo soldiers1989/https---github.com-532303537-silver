@@ -150,21 +150,29 @@ public class PaymentServiceImpl implements PaymentService {
 	 */
 	private static final String MERCHANT_NAME = "merchantName";
 
+	/**
+	 * 年月日完整日期格式：yyyy-MM-dd HH:mm:ss
+	 */
+	private static final String DATA_FORMAT_YEAR_MONTH_DAY = "yyyy-MM-dd HH:mm:ss";
+	
+	
 	@Override
 	public Map<String, Object> updatePaymentStatus(Map<String, Object> datasMap) {
-		Date date = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
-		String defaultDate = sdf.format(date); // 格式化当前时间
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> paramMap = new HashMap<>();
-		paramMap.put("reSerialNo", datasMap.get("messageID") + "");
-		String reMsg = datasMap.get("errMsg") + "";
-		List<Object> reList = paymentDao.findByProperty(PaymentContent.class, paramMap, 1, 1);
-		if (reList != null && reList.size() > 0) {
-			PaymentContent payment = (PaymentContent) reList.get(0);
+		if(datasMap == null){
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		Map<String, Object> orMap = new HashMap<>();
+		orMap.put("reSerialNo", datasMap.get("messageID") + "");
+		orMap.put("entPayNo", datasMap.get("entPayNo") + "");
+		List<PaymentContent> reList = paymentDao.findByPropertyOr2(PaymentContent.class, orMap, 1, 1);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("更新支付单海关回调失败,服务器繁忙！");
+		} else if (!reList.isEmpty()) {
+			PaymentContent payment = reList.get(0);
+			String reMsg = datasMap.get("errMsg") + "";
 			String status = datasMap.get(BaseCode.STATUS.toString()) + "";
 			String note = payment.getReNote();
-			if ("null".equals(note) || note == null) {
+			if (StringEmptyUtils.isEmpty(note)) {
 				note = "";
 			}
 			if ("1".equals(status)) {
@@ -173,19 +181,17 @@ public class PaymentServiceImpl implements PaymentService {
 			} else {
 				payment.setPayRecord(3);
 			}
-			payment.setReNote(note + defaultDate + " " + reMsg + "#");
-			payment.setUpdateDate(date);
+			payment.setReNote(note + DateUtil.formatDate(new Date(), DATA_FORMAT_YEAR_MONTH_DAY) + " " + reMsg + "#");
+			payment.setUpdateDate(new Date());
 			if (!paymentDao.update(payment)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "异步更新支付单备案信息错误!");
-				return paramMap;
+				return ReturnInfoUtils.errorInfo("支付单msgId[" + datasMap.get("messageID") + "]与支付单流水号["
+						+ datasMap.get("entPayNo") + "]，更新支付单备案信息错误!");
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
+			return ReturnInfoUtils.errorInfo(
+					"支付单msgId[" + datasMap.get("messageID") + "]与支付单流水号[" + datasMap.get("entPayNo") + "]，未找到对应支付单信息！");
 		}
-		return statusMap;
 	}
 
 	@Override
@@ -761,7 +767,7 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public Map<String, Object> updatePayRecordInfo(Map<String, Object> datasMap) {
 		Date date = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 设置时间格式
+		SimpleDateFormat sdf = new SimpleDateFormat(DATA_FORMAT_YEAR_MONTH_DAY); // 设置时间格式
 		String defaultDate = sdf.format(date); // 格式化当前时间
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("pay_serial_no", datasMap.get("messageID") + "");
@@ -798,7 +804,9 @@ public class PaymentServiceImpl implements PaymentService {
 
 	/**
 	 * 返回第三方支付单信息
-	 * @param pay 手工支付单信息
+	 * 
+	 * @param pay
+	 *            手工支付单信息
 	 * @return Map
 	 */
 	private Map<String, Object> reThirdPartyPaymentInfo(Mpay pay) {
@@ -879,9 +887,9 @@ public class PaymentServiceImpl implements PaymentService {
 			paymentCallBack.setResendStatus("SUCCESS");
 			paymentCallBack.setUpdateBy("system");
 			paymentCallBack.setUpdateDate(date);
-			System.out.println(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 支付单重发第"
+			System.out.println(DateUtil.formatDate(date, DATA_FORMAT_YEAR_MONTH_DAY) + " 支付单重发第"
 					+ paymentCallBack.getResendCount() + "次,接收成功!");
-			paymentCallBack.setRemark(DateUtil.formatDate(date, "yyyy-MM-dd HH:mm:ss") + " 支付单重发第"
+			paymentCallBack.setRemark(DateUtil.formatDate(date, DATA_FORMAT_YEAR_MONTH_DAY) + " 支付单重发第"
 					+ (paymentCallBack.getResendCount() + 1) + "次,接收成功!");
 			if (!paymentDao.update(paymentCallBack)) {
 				logger.error("--异步回调第三方支付单成功后保存信息失败--");
@@ -912,7 +920,7 @@ public class PaymentServiceImpl implements PaymentService {
 			System.out.println(pay.getTrade_no() + "--支付单->第" + (count + 1) + "次重发接受失败");
 			if (count == 9) {
 				String remark = paymentCallBack.getRemark();
-				String note = DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + "_支付单重发第10次,接收失败!";
+				String note = DateUtil.formatDate(new Date(), DATA_FORMAT_YEAR_MONTH_DAY) + "_支付单重发第10次,接收失败!";
 				if (StringEmptyUtils.isNotEmpty(remark)) {
 					paymentCallBack.setRemark(remark + "#" + note);
 				} else {
@@ -1151,10 +1159,10 @@ public class PaymentServiceImpl implements PaymentService {
 		order.setOrder_record_status(4);
 		String oldNote = order.getOrder_re_note();
 		if (StringEmptyUtils.isEmpty(oldNote)) {
-			order.setOrder_re_note(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+			order.setOrder_re_note(DateUtil.formatDate(new Date(), DATA_FORMAT_YEAR_MONTH_DAY) + " 实名认证失败,请核对姓名与身份证号码!#");
 		} else {
 			order.setOrder_re_note(
-					oldNote + "#" + DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 实名认证失败,请核对姓名与身份证号码!#");
+					oldNote + "#" + DateUtil.formatDate(new Date(), DATA_FORMAT_YEAR_MONTH_DAY) + " 实名认证失败,请核对姓名与身份证号码!#");
 		}
 		if (paymentDao.update(order)) {
 			return ReturnInfoUtils.successInfo();
@@ -1196,9 +1204,9 @@ public class PaymentServiceImpl implements PaymentService {
 		entity.setMerchant_no(paymentMap.get(MERCHANT_ID) + "");
 		entity.setTrade_no(paymentMap.get("tradeNo") + "");
 		entity.setMorder_id(paymentMap.get(ORDER_ID) + "");
-		try{
+		try {
 			entity.setPay_amount(Double.parseDouble(paymentMap.get("amount") + ""));
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -1220,9 +1228,9 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		// 网关接收状态： 0-未发起,1-接收成功,2-接收失败
 		entity.setNetworkStatus(0);
-		if(StringEmptyUtils.isNotEmpty(paymentMap.get("payTime"))){
-			//entity.setPay_time(paymentMap.get("payTime"));
-		}else{
+		if (StringEmptyUtils.isNotEmpty(paymentMap.get("payTime"))) {
+			// entity.setPay_time(paymentMap.get("payTime"));
+		} else {
 			String orderDate = paymentMap.get("orderDate") + "";
 			Date payTime = DateUtil.randomPaymentDate(orderDate);
 			entity.setPay_time(payTime);

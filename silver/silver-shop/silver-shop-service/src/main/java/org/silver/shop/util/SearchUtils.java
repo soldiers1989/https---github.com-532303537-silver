@@ -441,7 +441,7 @@ public final class SearchUtils {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("搜索参数不能为null");
 		}
-		Map<String, Object> statusMap = new HashMap<>();
+	
 		Map<String, Object> viceParams = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		Iterator<String> isKey = datasMap.keySet().iterator();
@@ -467,14 +467,18 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				viceParams.put(MERCHANT_NO, value);
 				break;
+			case "orderTradingStatus":
+				paramMap.put(key, value);
+				break;
 			default:
 				break;
 			}
 		}
-		statusMap.put(PARAM, paramMap);
-		statusMap.put("viceParams", viceParams);
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		return statusMap;
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put("viceParams", viceParams);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 
 	private static void doDate(Map<String, Object> paramMap, Map<String, Object> viceParams, String key, String value) {

@@ -14,17 +14,17 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.silver.shop.config.FenZhangConfig;
-import org.silver.shop.controller.system.cross.SignUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 /**
- * 针对银盛分配的(银盟)119账号进行对应的加密体检
+ * 针对银盛分配的(银盟)1119账号进行对应的加密体检
  */
 public class PaySubmitUtils {
 
-	private static Logger logger = LoggerFactory.getLogger(Object.class);
+	private static Logger logger = LogManager.getLogger(Object.class);
 
 	/**
 	 * api请求的签名工具方法，把请求参数按照字符排序拼接，然后进行RAS加密 私钥用来签名
@@ -35,7 +35,7 @@ public class PaySubmitUtils {
 	 * @see
 	 */
 	public static String sign1(HttpServletRequest request, Map<String, String> sParaTemp) {
-		Map<String, String> sPara = SignUtils.paraFilter(sParaTemp);
+		Map<String, String> sPara = FenZhangSignUtils.paraFilter(sParaTemp);
 		ServletContext servletContext = request.getServletContext();
 		String partnerId = sParaTemp.get("partner_id");
 		String partnerCert = FenZhangConfig.PATH_PARTER_PKCS12;
@@ -53,7 +53,7 @@ public class PaySubmitUtils {
 
 		String signResult = "";
 		try {
-			signResult = SignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
+			signResult = FenZhangSignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
 		} catch (Exception e) {
 			throw new RuntimeException("签名失败，请检查证书文件是否存在，密码是否正确");
 		}
@@ -83,7 +83,7 @@ public class PaySubmitUtils {
 		}
 		boolean isSign = false;
 		try {
-			isSign = SignUtils.rsaCheckContent(publicCertFileInputStream, responseBody, sign, charset);
+			isSign = FenZhangSignUtils.rsaCheckContent(publicCertFileInputStream, responseBody, sign, charset);
 		} catch (Exception e) {
 			// throw new RuntimeException("验证签名失败，请检查银盛公钥证书文件是否存在");
 			logger.info("验证签名失败，请检查银盛公钥证书文件是否存在");
@@ -103,7 +103,7 @@ public class PaySubmitUtils {
 	public static String buildRequest(HttpServletRequest request, Map<String, String> sParaTemp, String strMethod,
 			String strButtonName) {
 		Map<String, String> sPara = buildRequestPara(request, sParaTemp);
-		List<String> keys = new ArrayList<String>(sPara.keySet());
+		List<String> keys = new ArrayList<>(sPara.keySet());
 
 		StringBuffer sbHtml = new StringBuffer();
 
@@ -111,9 +111,8 @@ public class PaySubmitUtils {
 				+ "\" method =\"" + strMethod + "\" style=\"display:none\">");
 
 		for (int i = 0; i < keys.size(); i++) {
-			String name = (String) keys.get(i);
-			String value = (String) sPara.get(name);
-
+			String name = keys.get(i);
+			String value = sPara.get(name);
 			sbHtml.append("<input type=\"text\" name=\"" + name + "\" value=\"" + StringEscapeUtils.escapeHtml(value)
 					+ "\"/><br/>");
 		}
@@ -154,7 +153,7 @@ public class PaySubmitUtils {
 	}
 
 	private static Map<String, String> buildRequestPara(HttpServletRequest request, Map<String, String> sParaTemp) {
-		Map<String, String> sPara = SignUtils.paraFilter(sParaTemp);
+		Map<String, String> sPara = FenZhangSignUtils.paraFilter(sParaTemp);
 		ServletContext servletContext = request.getServletContext();
 		String partnerId = sParaTemp.get("partner_id");
 		String partnerCert = FenZhangConfig.PATH_PARTER_PKCS12;
@@ -174,7 +173,7 @@ public class PaySubmitUtils {
 		// servletContext.getResourceAsStream(partnerCert);
 		String mysign = "";
 		try {
-			mysign = SignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
+			mysign = FenZhangSignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
 		} catch (Exception e) {
 			throw new RuntimeException("签名失败，请检查证书文件是否存在，密码是否正确");
 		}
@@ -209,7 +208,7 @@ public class PaySubmitUtils {
 		}
 		boolean isSign = false;
 		try {
-			isSign = SignUtils.rsaCheckContent(publicCertFileInputStream, params, sign, FenZhangConfig.DEFAULT_CHARSET);
+			isSign = FenZhangSignUtils.rsaCheckContent(publicCertFileInputStream, params, sign, FenZhangConfig.DEFAULT_CHARSET);
 		} catch (Exception e) {
 			e.printStackTrace();
 			// throw new RuntimeException("验证签名失败，请检查银盛公钥证书文件是否存在");
@@ -235,7 +234,7 @@ public class PaySubmitUtils {
 	}
 
 	public static String signWithFilepath(String realPath, Map<String, String> sParaTemp) {
-		Map<String, String> sPara = SignUtils.paraFilter(sParaTemp);
+		Map<String, String> sPara = FenZhangSignUtils.paraFilter(sParaTemp);
 		String partnerId = sParaTemp.get("partner_id");
 		String partnerCert = FenZhangConfig.PATH_PARTER_PKCS12;
 		if (partnerId.endsWith(FenZhangConfig.PLATFORM_PARTNER_NO)) {
@@ -252,7 +251,7 @@ public class PaySubmitUtils {
 
 		String signResult = "";
 		try {
-			signResult = SignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
+			signResult = FenZhangSignUtils.rsaSign(sPara, sParaTemp.get("charset"), pfxCertFileInputStream);
 		} catch (Exception e) {
 			throw new RuntimeException("签名失败，请检查证书文件是否存在，密码是否正确");
 		}

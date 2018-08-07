@@ -396,19 +396,18 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {
 			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			try {
-				// 钱包余额
-				double balance = merchantWallet.getBalance();
-				// 订申报单手续费
-				double serviceFee = totalAmountPaid * fee;
-				System.out.println("---订单+实名手续费之和->>" + (serviceFee + idCertificationFee));
-				if ((balance - (serviceFee + idCertificationFee)) < 0) {
-					return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
-				}
-			} catch (Exception e) {
-				logger.error("---订单平台服务费计算错误-->", e);
-				return ReturnInfoUtils.errorInfo("扣费失败,服务器繁忙!");
+			// 钱包余额
+			double oldBalance = merchantWallet.getBalance();
+			// 订申报单手续费
+			double serviceFee = totalAmountPaid * fee;
+			double totalFee = serviceFee + idCertificationFee;
+			System.out.println("---订单+实名手续费之和->>" + totalFee);
+			if ((oldBalance - totalFee) < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
 			}
+			//将余额转移至冻结金额
+			//merchantWallet.setBalance(oldBalance - totalFee);
+			//merchantWallet.setFreezingFunds(totalFee);
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put("fee", fee);
@@ -1035,7 +1034,9 @@ public class MpayServiceImpl implements MpayService {
 			orderJSON.element("notes", reMsg);
 			item.put("order", orderJSON.toString());
 			String result = YmHttpUtil.HttpPost(YmMallConfig.THIRD_PARTY_NOTIFY_URL, item);
-			//String result = YmHttpUtil.HttpPost("http://192.168.1.102:8080/silver-web/Eport/getway-callback", item);
+			// String result =
+			// YmHttpUtil.HttpPost("http://192.168.1.102:8080/silver-web/Eport/getway-callback",
+			// item);
 			if (StringEmptyUtils.isNotEmpty(result) && result.replace("\n", "").equalsIgnoreCase("success")) {
 				updateSuccessOrderCallBack(order);
 			} else {

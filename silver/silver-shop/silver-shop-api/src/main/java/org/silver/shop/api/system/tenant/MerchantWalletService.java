@@ -50,4 +50,13 @@ public interface MerchantWalletService {
 	 * @return
 	 */
 	public Map<String, Object> getOfflineRechargeInfo(Map<String, Object> datasMap,int page,int size);
+
+
+	/**
+	 * 临时管理员分账
+	 * @param orderId
+	 * @param amount
+	 * @return
+	 */
+	public Map<String, Object> fenZhang(String orderId, double amount);
 }

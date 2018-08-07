@@ -15,9 +15,9 @@ public class OrderRecordContent implements Serializable {
 
 	private long id;
 	private String merchantId;// 商户ID
-	private String merchantName;//商户名称
+	private String merchantName;// 商户名称
 	private String memberId;// 用户ID
-	private String memberName;//用户名称
+	private String memberName;// 用户名称
 	private String entPayNo;// 支付交易编号
 	private String entOrderNo;// 电商平台的原始订单编号
 	private int orderStatus;// 电子订单状态0-订单确认,1-订单完成,2-订单取消
@@ -63,367 +63,474 @@ public class OrderRecordContent implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
-	
+
 	private String orderSerialNo;// 订单所属商品流水号
-	private String reOrderSerialNo;//订单备案信息接受后返回流水号
-	private String reNote;//返回信息
-	private String recipientCityCode;//城市编码
-	private String recipientAreaCode;//区域编码
-	
+	private String reOrderSerialNo;// 订单备案信息接受后返回流水号
+	private String reNote;// 返回信息
+	private String recipientCityCode;// 城市编码
+	private String recipientAreaCode;// 区域编码
+
 	private String wbEhsentName;// 物流公司名称
-	private String waybillNo;//(快递单号)运单编号
-	private String expressCompany;//快递公司
+	private String waybillNo;// (快递单号)运单编号
+	private String expressCompany;// 快递公司
 	private int ehsStatus;// 物流状态：0-未发货1-已发货3-已签收
-	private int orderTradingStatus;//订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
-	private String orderSourceType;//订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
+	private int orderTradingStatus;// 订单交易状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
+	private String orderSourceType;// 订单录入系统类型：online-商城真实下单(线上)、offline-线下导入
+
 	public long getId() {
 		return id;
 	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
+
 	public String getMerchantId() {
 		return merchantId;
 	}
+
 	public void setMerchantId(String merchantId) {
 		this.merchantId = merchantId;
 	}
-	
+
 	public String getEntOrderNo() {
 		return entOrderNo;
 	}
+
 	public void setEntOrderNo(String entOrderNo) {
 		this.entOrderNo = entOrderNo;
 	}
+
 	public int getOrderStatus() {
 		return orderStatus;
 	}
+
 	public void setOrderStatus(int orderStatus) {
 		this.orderStatus = orderStatus;
 	}
+
 	public int getPayStatus() {
 		return payStatus;
 	}
+
 	public void setPayStatus(int payStatus) {
 		this.payStatus = payStatus;
 	}
-	
+
 	public Double getOrderGoodTotal() {
 		return orderGoodTotal;
 	}
+
 	public void setOrderGoodTotal(Double orderGoodTotal) {
 		this.orderGoodTotal = orderGoodTotal;
 	}
+
 	public String getOrderGoodTotalCurr() {
 		return orderGoodTotalCurr;
 	}
+
 	public void setOrderGoodTotalCurr(String orderGoodTotalCurr) {
 		this.orderGoodTotalCurr = orderGoodTotalCurr;
 	}
+
 	public Double getFreight() {
 		return freight;
 	}
+
 	public void setFreight(Double freight) {
 		this.freight = freight;
 	}
+
 	public Double getTax() {
 		return tax;
 	}
+
 	public void setTax(Double tax) {
 		this.tax = tax;
 	}
+
 	public Double getOtherPayment() {
 		return otherPayment;
 	}
+
 	public void setOtherPayment(Double otherPayment) {
 		this.otherPayment = otherPayment;
 	}
-	
+
 	public String getOtherPayNotes() {
 		return otherPayNotes;
 	}
+
 	public void setOtherPayNotes(String otherPayNotes) {
 		this.otherPayNotes = otherPayNotes;
 	}
+
 	public Double getOtherCharges() {
 		return otherCharges;
 	}
+
 	public void setOtherCharges(Double otherCharges) {
 		this.otherCharges = otherCharges;
 	}
+
 	public Double getActualAmountPaid() {
 		return actualAmountPaid;
 	}
+
 	public void setActualAmountPaid(Double actualAmountPaid) {
 		this.actualAmountPaid = actualAmountPaid;
 	}
+
 	public String getRecipientName() {
 		return recipientName;
 	}
+
 	public void setRecipientName(String recipientName) {
 		this.recipientName = recipientName;
 	}
+
 	public String getRecipientCardId() {
 		return recipientCardId;
 	}
+
 	public void setRecipientCardId(String recipientCardId) {
 		this.recipientCardId = recipientCardId;
 	}
+
 	public String getRecipientTel() {
 		return recipientTel;
 	}
+
 	public void setRecipientTel(String recipientTel) {
 		this.recipientTel = recipientTel;
 	}
+
 	public String getRecipientAddr() {
 		return recipientAddr;
 	}
+
 	public void setRecipientAddr(String recipientAddr) {
 		this.recipientAddr = recipientAddr;
 	}
+
 	public String getRecipientCountry() {
 		return recipientCountry;
 	}
+
 	public void setRecipientCountry(String recipientCountry) {
 		this.recipientCountry = recipientCountry;
 	}
+
 	public String getRecipientProvincesCode() {
 		return recipientProvincesCode;
 	}
+
 	public void setRecipientProvincesCode(String recipientProvincesCode) {
 		this.recipientProvincesCode = recipientProvincesCode;
 	}
+
 	public String getOrderDocAcount() {
 		return orderDocAcount;
 	}
+
 	public void setOrderDocAcount(String orderDocAcount) {
 		this.orderDocAcount = orderDocAcount;
 	}
+
 	public String getOrderDocName() {
 		return orderDocName;
 	}
+
 	public void setOrderDocName(String orderDocName) {
 		this.orderDocName = orderDocName;
 	}
+
 	public int getOrderDocType() {
 		return orderDocType;
 	}
+
 	public void setOrderDocType(int orderDocType) {
 		this.orderDocType = orderDocType;
 	}
-	
+
 	public String getOrderDocId() {
 		return orderDocId;
 	}
+
 	public void setOrderDocId(String orderDocId) {
 		this.orderDocId = orderDocId;
 	}
+
 	public String getOrderDocTel() {
 		return orderDocTel;
 	}
+
 	public void setOrderDocTel(String orderDocTel) {
 		this.orderDocTel = orderDocTel;
 	}
+
 	public String getBatchNumbers() {
 		return batchNumbers;
 	}
+
 	public void setBatchNumbers(String batchNumbers) {
 		this.batchNumbers = batchNumbers;
 	}
+
 	public int getInvoiceType() {
 		return invoiceType;
 	}
+
 	public void setInvoiceType(int invoiceType) {
 		this.invoiceType = invoiceType;
 	}
+
 	public String getInvoiceNo() {
 		return invoiceNo;
 	}
+
 	public void setInvoiceNo(String invoiceNo) {
 		this.invoiceNo = invoiceNo;
 	}
+
 	public String getInvoiceTitle() {
 		return invoiceTitle;
 	}
+
 	public void setInvoiceTitle(String invoiceTitle) {
 		this.invoiceTitle = invoiceTitle;
 	}
+
 	public String getInvoiceIdentifyID() {
 		return invoiceIdentifyID;
 	}
+
 	public void setInvoiceIdentifyID(String invoiceIdentifyID) {
 		this.invoiceIdentifyID = invoiceIdentifyID;
 	}
+
 	public String getInvoiceDesc() {
 		return invoiceDesc;
 	}
+
 	public void setInvoiceDesc(String invoiceDesc) {
 		this.invoiceDesc = invoiceDesc;
 	}
+
 	public String getInvoiceAmount() {
 		return invoiceAmount;
 	}
+
 	public void setInvoiceAmount(String invoiceAmount) {
 		this.invoiceAmount = invoiceAmount;
 	}
+
 	public Date getInvoiceDate() {
 		return invoiceDate;
 	}
+
 	public void setInvoiceDate(Date invoiceDate) {
 		this.invoiceDate = invoiceDate;
 	}
+
 	public String getNotes() {
 		return notes;
 	}
+
 	public void setNotes(String notes) {
 		this.notes = notes;
 	}
+
 	public Date getPayTime() {
 		return payTime;
 	}
+
 	public void setPayTime(Date payTime) {
 		this.payTime = payTime;
 	}
-	
 
 	public int getOrderRecordStatus() {
 		return orderRecordStatus;
 	}
+
 	public void setOrderRecordStatus(int orderRecordStatus) {
 		this.orderRecordStatus = orderRecordStatus;
 	}
+
 	public String getEntPayNo() {
 		return entPayNo;
 	}
+
 	public void setEntPayNo(String entPayNo) {
 		this.entPayNo = entPayNo;
 	}
+
 	public String getCreateBy() {
 		return createBy;
 	}
+
 	public void setCreateBy(String createBy) {
 		this.createBy = createBy;
 	}
+
 	public Date getCreateDate() {
 		return createDate;
 	}
+
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
 	}
+
 	public String getUpdateBy() {
 		return updateBy;
 	}
+
 	public void setUpdateBy(String updateBy) {
 		this.updateBy = updateBy;
 	}
+
 	public Date getUpdateDate() {
 		return updateDate;
 	}
+
 	public void setUpdateDate(Date updateDate) {
 		this.updateDate = updateDate;
 	}
-	
+
 	public int getDeleteFlag() {
 		return deleteFlag;
 	}
+
 	public void setDeleteFlag(int deleteFlag) {
 		this.deleteFlag = deleteFlag;
 	}
+
 	public String getDeleteBy() {
 		return deleteBy;
 	}
+
 	public void setDeleteBy(String deleteBy) {
 		this.deleteBy = deleteBy;
 	}
+
 	public Date getDeleteDate() {
 		return deleteDate;
 	}
+
 	public void setDeleteDate(Date deleteDate) {
 		this.deleteDate = deleteDate;
 	}
+
 	public String getMerchantName() {
 		return merchantName;
 	}
+
 	public void setMerchantName(String merchantName) {
 		this.merchantName = merchantName;
 	}
+
 	public String getMemberId() {
 		return memberId;
 	}
+
 	public void setMemberId(String memberId) {
 		this.memberId = memberId;
 	}
+
 	public String getMemberName() {
 		return memberName;
 	}
+
 	public void setMemberName(String memberName) {
 		this.memberName = memberName;
 	}
+
 	public String getOrderSerialNo() {
 		return orderSerialNo;
 	}
+
 	public void setOrderSerialNo(String orderSerialNo) {
 		this.orderSerialNo = orderSerialNo;
 	}
+
 	public String getReOrderSerialNo() {
 		return reOrderSerialNo;
 	}
+
 	public void setReOrderSerialNo(String reOrderSerialNo) {
 		this.reOrderSerialNo = reOrderSerialNo;
 	}
+
 	public String getReNote() {
 		return reNote;
 	}
+
 	public void setReNote(String reNote) {
 		this.reNote = reNote;
 	}
+
 	public String getRecipientCityCode() {
 		return recipientCityCode;
 	}
+
 	public void setRecipientCityCode(String recipientCityCode) {
 		this.recipientCityCode = recipientCityCode;
 	}
+
 	public String getRecipientAreaCode() {
 		return recipientAreaCode;
 	}
+
 	public void setRecipientAreaCode(String recipientAreaCode) {
 		this.recipientAreaCode = recipientAreaCode;
 	}
+
 	public String getWaybillNo() {
 		return waybillNo;
 	}
+
 	public void setWaybillNo(String waybillNo) {
 		this.waybillNo = waybillNo;
 	}
+
 	public int getEhsStatus() {
 		return ehsStatus;
 	}
+
 	public void setEhsStatus(int ehsStatus) {
 		this.ehsStatus = ehsStatus;
 	}
+
 	public String getExpressCompany() {
 		return expressCompany;
 	}
+
 	public void setExpressCompany(String expressCompany) {
 		this.expressCompany = expressCompany;
 	}
+
 	public String getOrderSourceType() {
 		return orderSourceType;
 	}
+
 	public void setOrderSourceType(String orderSourceType) {
 		this.orderSourceType = orderSourceType;
 	}
+
 	public int getOrderTradingStatus() {
 		return orderTradingStatus;
 	}
+
 	public void setOrderTradingStatus(int orderTradingStatus) {
 		this.orderTradingStatus = orderTradingStatus;
 	}
+
 	public String getWbEhsentName() {
 		return wbEhsentName;
 	}
+
 	public void setWbEhsentName(String wbEhsentName) {
 		this.wbEhsentName = wbEhsentName;
 	}
-	
+
 }

@@ -16,9 +16,11 @@ import org.silver.shop.api.system.tenant.MemberWalletService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MemberWalletDao;
 import org.silver.shop.model.system.log.MerchantWalletLog;
+import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.util.WalletUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,9 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 	private MerchantWalletService merchantWalletService;
 	@Autowired
 	private MemberWalletLogService memberWalletLogService;
-
+	@Autowired
+	private WalletUtils walletUtils;
+	
 	@Override
 	public void reserveAmountTransfer(String memberId, String merchantId, String tradeNo, Double amount) {
 		System.out.println("---开始支付单储备资金结算---");
@@ -164,6 +168,14 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		} else {
 			return ReturnInfoUtils.errorInfo("用户Id[" + memberId + "]未找到钱包信息!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> getInfo(Member memberInfo) {
+		if(memberInfo == null){
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		return walletUtils.checkWallet(2, memberInfo.getMemberId(), memberInfo.getMemberName());
 	}
 
 }

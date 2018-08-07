@@ -9,7 +9,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ page import="org.silver.shop.controller.system.cross.*"%>
-
+<%@ page import="org.silver.shop.utils.*"%>
 <%@ page import="java.util.HashMap"%>
 <%@ page import="java.util.Map"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -117,7 +117,7 @@
 				"确认");
 				out.println(html);
 			}else{
-				String html = ApipaySubmit.buildRequest(request, paramsMap, "post",
+				String html = PaySubmitUtils.buildRequest(request, paramsMap, "post",
 						"确认");
 				out.println(html);
 			}

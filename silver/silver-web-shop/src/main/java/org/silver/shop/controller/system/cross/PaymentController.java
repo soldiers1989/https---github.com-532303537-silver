@@ -48,16 +48,15 @@ public class PaymentController {
 	 */
 	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
-		logger.info("-----备案网关异步回馈支付单信息---");
-		Map<String, Object> datasMap = new HashMap<>();
-		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("errMsg", req.getParameter("errMsg") + "");
-		datasMap.put("messageID", req.getParameter("messageID") + "");
-		datasMap.put("entPayNo", req.getParameter("entPayNo") + "");
-		Map<String, Object> statusMap = paytemTransaction.updatePaymentInfo(datasMap);
-		logger.info(JSONObject.fromObject(statusMap).toString());
-		return JSONObject.fromObject(statusMap).toString();
+	public String reNotifyMsg(HttpServletRequest request, HttpServletResponse response) {
+		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = request.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key =  isKeys.nextElement();
+			String value = request.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(paytemTransaction.updatePaymentInfo(datasMap)).toString();
 	}
 
 	/**

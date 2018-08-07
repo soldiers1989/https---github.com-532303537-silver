@@ -2,6 +2,7 @@ package org.silver.shop.impl.system.tenant;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
+import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.log.OfflineRechargeLog;
 import org.silver.shop.model.system.log.PaymentReceiptLog;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
@@ -21,6 +23,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -28,6 +31,7 @@ import com.justep.baas.data.Table;
 import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MerchantWalletService.class)
 public class MerchantWalletServiceImpl implements MerchantWalletService {
@@ -110,8 +114,8 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		content.setApplicantId(datasMap.get("merchantId") + "");
 		content.setApplicant(datasMap.get("merchantName") + "");
 		String beneficiaryAccountType = datasMap.get("beneficiaryAccountType") + "";
-		Map<String,Object> reChooseMap = chooseBeneficiaryAccount(beneficiaryAccountType,content);
-		if(!"1".equals(reChooseMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reChooseMap = chooseBeneficiaryAccount(beneficiaryAccountType, content);
+		if (!"1".equals(reChooseMap.get(BaseCode.STATUS.toString()))) {
 			return reChooseMap;
 		}
 		double amount;
@@ -157,16 +161,18 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 	/**
 	 * 根据收款人账号类型，选择对应的收款人信息
-	 * @param beneficiaryAccountType 
-	 * 			收款人账号类型：public-对公账号、private-对私账号
+	 * 
+	 * @param beneficiaryAccountType
+	 *            收款人账号类型：public-对公账号、private-对私账号
 	 * @param content
 	 * @return
 	 */
-	private Map<String, Object> chooseBeneficiaryAccount(String beneficiaryAccountType, OfflineRechargeContent content) {
+	private Map<String, Object> chooseBeneficiaryAccount(String beneficiaryAccountType,
+			OfflineRechargeContent content) {
 		if (StringEmptyUtils.isEmpty(beneficiaryAccountType)) {
 			return ReturnInfoUtils.errorInfo("收款账号类型不能为空！");
 		}
-		if(content == null){
+		if (content == null) {
 			return ReturnInfoUtils.errorInfo("申请参数不能为null！");
 		}
 		switch (beneficiaryAccountType) {
@@ -202,7 +208,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 
 	@Override
 	public Map<String, Object> getOfflineRechargeInfo(Map<String, Object> datasMap, int page, int size) {
-		if (datasMap == null ) {
+		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
 		Map<String, Object> reDatasMap = SearchUtils.universalOfflineRechargeSearch(datasMap);
@@ -211,14 +217,61 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		paramMap.put("deleteFlag", 0);
-		List<OfflineRechargeContent> reList = merchantWalletDao.findByProperty(OfflineRechargeContent.class, paramMap, page, size);
-		long count = merchantWalletDao.findByPropertyCount(OfflineRechargeContent.class,paramMap);
+		List<OfflineRechargeContent> reList = merchantWalletDao.findByProperty(OfflineRechargeContent.class, paramMap,
+				page, size);
+		long count = merchantWalletDao.findByPropertyCount(OfflineRechargeContent.class, paramMap);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList,count);
+			return ReturnInfoUtils.successDataInfo(reList, count);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据！");
+		}
+	}
+
+	@Override
+	public Map<String, Object> fenZhang(String orderId, double amount) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("entOrderNo", orderId);
+		List<OrderRecordContent> reList = merchantWalletDao.findByProperty(OrderRecordContent.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询订单信息失败！");
+		} else if (!reList.isEmpty()) {
+			OrderRecordContent order = reList.get(0);
+			Map<String, Object> item = new HashMap<>();
+			item.put("out_trade_no", order.getEntOrderNo());
+			item.put("total_amount", order.getActualAmountPaid());
+			item.put("master_user_code", "yinmeng1119");
+			item.put("master_amount", (order.getActualAmountPaid() - amount));
+			item.put("notify_url", "");
+			JSONArray divList = new JSONArray();
+			JSONObject item1 = new JSONObject();
+			item1.put("division_mer_usercode", "yinmeng1116");
+			item1.put("div_amount", amount);
+			divList.add(item1);
+			item.put("fz_content", divList);
+			String result = YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade", item);
+			if (StringEmptyUtils.isEmpty(result)) {
+				return ReturnInfoUtils.errorInfo("操作失败，服务器繁忙！");
+			} else {
+				JSONObject json = JSONObject.fromObject(result);
+				if (!"1".equals(json.get(BaseCode.STATUS.toString()) + "")) {
+					return ReturnInfoUtils.errorInfo(json.get("msg")+"");
+				}
+				Map<String, Object> reWalletMap = walletUtils.checkWallet(1, order.getMerchantId(), "");
+				if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+					logger.error("--查询商户钱包信息失败-->" + reWalletMap.get(BaseCode.MSG.toString()));
+				}
+				MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+				double oldCash= merchantWallet.getCash();
+				merchantWallet.setCash(amount - oldCash);
+				if(!merchantWalletDao.update(merchantWallet)){
+					return ReturnInfoUtils.errorInfo("更新钱包信息失败！");
+				}
+				return ReturnInfoUtils.successInfo();
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]未找到对应订单信息！");
 		}
 	}
 }

@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2018-8-6 10:52:46 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.log.GoodsReviewerLog" table="GOODSREVIEWERLOG">
+    <class name="org.silver.shop.model.system.log.GoodsReviewerLog" table="ym_shop_sys_goods_reviewer_log">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />

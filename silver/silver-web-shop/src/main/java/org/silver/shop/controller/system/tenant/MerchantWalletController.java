@@ -1,6 +1,7 @@
 package org.silver.shop.controller.system.tenant;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
+import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.annotations.ApiOperation;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
@@ -135,7 +138,7 @@ public class MerchantWalletController {
 			return JSONObject.fromObject(reBankMap).toString();
 		}
 		List<MerchantBankContent> bankList = (List) reBankMap.get(BaseCode.DATAS.toString());
-		if(bankList.isEmpty()){
+		if (bankList.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("获取银行卡信息错误")).toString();
 		}
 		MerchantBankContent bankContent = bankList.get(0);
@@ -217,4 +220,28 @@ public class MerchantWalletController {
 		return JSONObject.fromObject(merchantWalletTransaction.getOfflineRechargeInfo(datasMap, page, size)).toString();
 	}
 
+	@RequestMapping(value = "/clearMerchantCash", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Manager")
+	@ResponseBody
+	@ApiOperation("管理员清算商户资金")
+	// @RequiresPermissions("merchantWallet:managerClearMerchantCash")
+	public String clearMerchantCash(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("merchantId") String merchantId, @RequestParam("amount")double amount,@RequestParam("orderId")String orderId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(merchantId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户id不能为空!")).toString();
+		}
+		if (StringEmptyUtils.isEmpty(amount) || amount < 0.01) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("结算金额错误!")).toString();
+		}
+		Map<String, Object> reCheckWalletMap = merchantWalletTransaction.getMerchantWallet(merchantId, amount);
+		if (!"1".equals(reCheckWalletMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reCheckWalletMap).toString();
+		}
+		return JSONObject.fromObject(merchantWalletTransaction.fenZhang(orderId,amount)).toString();
+	}
 }

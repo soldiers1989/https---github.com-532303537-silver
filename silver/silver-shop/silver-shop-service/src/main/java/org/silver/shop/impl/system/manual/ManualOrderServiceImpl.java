@@ -652,7 +652,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (morder.getDel_flag() == 1) {
 			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单已被刪除,无法再次导入,请联系管理员!", ERROR, params);
 		} else if (morder.getOrder_record_status() == 3) {// 备案状态：1-未备案,2-备案中,3-备案成功,4-备案失败
-			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单在[" + morder.getCreate_date() + "]已经备案成功,请勿重复导入!",
+			RedisInfoUtils.errorInfoMq(morder.getOrder_id() + "<--订单在[" + morder.getCreate_date() + "]已经申报成功,请勿重复导入！",
 					ERROR, params);
 		} else {
 			// 企邦的税费暂写死为0

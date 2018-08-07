@@ -1,5 +1,9 @@
 package org.silver.shop.api.system.tenant;
 
+import java.util.Map;
+
+import org.silver.shop.model.system.organization.Member;
+
 public interface MemberWalletService {
 
 	/**
@@ -10,5 +14,12 @@ public interface MemberWalletService {
 	 * @param amount 交易金额
 	 */
 	public void reserveAmountTransfer(String memberId, String merchantId, String tradeNo, Double amount);
+
+	/**
+	 * 获取用户钱包信息
+	 * @param memberInfo 用户信息
+	 * @return Map 
+	 */
+	public Map<String, Object> getInfo(Member memberInfo);
 
 }

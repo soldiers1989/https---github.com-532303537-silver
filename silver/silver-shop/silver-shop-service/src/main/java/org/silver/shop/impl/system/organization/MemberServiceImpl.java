@@ -19,6 +19,7 @@ import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
+import org.silver.shop.quartz.CreatePaymentQtz;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
@@ -46,7 +47,8 @@ public class MemberServiceImpl implements MemberService {
 	private MemberService memberService;
 	@Autowired
 	private WalletUtils walletUtils;
-	
+	@Autowired
+	private CreatePaymentQtz createPaymentQtz;
 	private static final Object LOCK = "lock";
 
 	@Override
@@ -464,16 +466,15 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("实名库查询身份证信息失败,服务器繁忙!");
 		} else if (reList.isEmpty()) {
 			// 当实名库中没有该身份证号码时,发起验证
-			Map<String, Object> reMap = sendVerification(name, idCard);
+			Map<String, Object> reMap = createPaymentQtz.sendIdCardCertification(name, idCard);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
 			// 存入实名库
-			Map<String, Object> reIdCardMap = addIdCard(name, idCard);
-			if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
-				return reIdCardMap;
-			}
-			return ReturnInfoUtils.successInfo();
+			String msgId = reMap.get("messageID") + "";
+			String msg = reMap.get("msg") + "";
+			return createPaymentQtz.addIdCardInfo(msgId, "", "", name, idCard, "success",
+					msg);
 		} else {
 			IdCard idCardEntity = reList.get(0);
 			int type = idCardEntity.getType();
@@ -481,13 +482,14 @@ public class MemberServiceImpl implements MemberService {
 			if (type == 5) {
 				return ReturnInfoUtils.errorInfo("身份证号码有误,请核对信息!");
 			} else if (type == 1) {
-				Map<String, Object> reMap = sendVerification(name, idCard);
+				Map<String, Object> reMap = createPaymentQtz.sendIdCardCertification(name, idCard);
 				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 					return reMap;
 				}
+				idCardEntity.setCertifiedNo(reMap.get("messageID") + "");
+				idCardEntity.setNote(reMap.get("msg") + "");
 				return updateIdCardInfo(idCardEntity);
 			} else {
-				System.out.println("-----实名库已存在----");
 				return ReturnInfoUtils.successInfo();
 			}
 		}
@@ -506,61 +508,13 @@ public class MemberServiceImpl implements MemberService {
 		}
 		// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
 		idCardEntity.setType(4);
+		idCardEntity.setUpdateDate(new Date());
 		if (!memberDao.update(idCardEntity)) {
 			return ReturnInfoUtils.errorInfo("更新身份证信息失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
-	/**
-	 * 发起实名认证
-	 * 
-	 * @param name
-	 *            姓名
-	 * @param idCard
-	 *            身份证号码
-	 * @return Map
-	 */
-	private Map<String, Object> sendVerification(String name, String idCard) {
-		if (StringEmptyUtils.isEmpty(name) || StringEmptyUtils.isEmpty(idCard)) {
-			return ReturnInfoUtils.errorInfo("姓名或身份证号码不能为空!");
-		}
-		System.out.println("-------发起第三方实名认证---------");
-		YmMallOauth oau = new YmMallOauth();
-		Calendar calendar = Calendar.getInstance();
-		String termTransID = SerialNoUtils.getSerialNo("YMID", calendar.get(Calendar.YEAR),
-				SerialNoUtils.getSerialNo("realName"));
-		Map<String, Object> reOauthMap = oau.oauthInfo(termTransID, "YS02", "", name, idCard, "", "");
-		if (!"1".equals(reOauthMap.get(BaseCode.STATUS.toString()))) {
-			return reOauthMap;
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	/**
-	 * 将已验证的姓名与身份证号码保存至实名库
-	 * 
-	 * @param name
-	 *            姓名
-	 * @param idCard
-	 *            身份证号码
-	 */
-	private Map<String, Object> addIdCard(String name, String idCard) {
-		if (StringEmptyUtils.isEmpty(name) || StringEmptyUtils.isEmpty(idCard)) {
-			return ReturnInfoUtils.errorInfo("姓名或身份证号码不能为空!");
-		}
-		IdCard idCardEntity = new IdCard();
-		idCardEntity.setName(name);
-		idCardEntity.setIdNumber(idCard);
-		idCardEntity.setCreateBy("system");
-		idCardEntity.setCreateDate(new Date());
-		// 类型：1-未验证,2-手工验证,3-海关认证,4-第三方认证,5-错误
-		idCardEntity.setType(4);
-		if (!memberDao.add(idCardEntity)) {
-			return ReturnInfoUtils.errorInfo("保存身份证信息至实名库失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
 
 	/**
 	 * 更新用户实名标识
