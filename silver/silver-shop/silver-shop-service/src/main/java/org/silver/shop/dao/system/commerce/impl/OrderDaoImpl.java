@@ -211,7 +211,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	 */
 	private void unionShopOrderInfo(StringBuilder sbSQL, Map<String, Object> params, List<Object> list) {
 		sbSQL.append(
-				" SELECT entOrderNo, entPayNo,orderGoodTotal,tax,actualAmountPaid,recipientName,recipientAddr ,recipientTel,orderDocAcount,orderDocName,orderDocId,orderDocTel,createDate,merchantId,merchantName,deleteFlag from ym_shop_order_record_content ");
+				" SELECT entOrderNo, entPayNo,orderGoodTotal,tax,actualAmountPaid,recipientName,recipientAddr ,recipientTel,orderDocAcount,orderDocName,orderDocId,orderDocTel,createDate,merchantId,merchantName,deleteFlag,orderTradingStatus  from ym_shop_order_record_content ");
 		if (params != null && params.size() > 0) {
 			sbSQL.append(" WHERE ");
 			String property;
@@ -261,6 +261,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 				order.setMerchantId(obj[13].toString());
 				order.setMerchantName(obj[14].toString());
 				order.setDeleteFlag(Integer.parseInt(obj[15].toString()));
+				order.setOrderTradingStatus(Integer.parseInt(obj[16].toString()));
 			}
 			orderList.add(order);
 		}
@@ -279,7 +280,7 @@ public class OrderDaoImpl extends BaseDaoImpl implements OrderDao {
 	 */
 	private void unionMorderInfo(StringBuilder sbSQL, Map<String, Object> viceParams, List<Object> list) {
 		sbSQL.append(
-				" SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') ,merchant_no,create_by,del_flag from ym_shop_manual_morder ");
+				" SELECT order_id,trade_no ,FCY,Tax,ActualAmountPaid,RecipientName,RecipientAddr,RecipientTel,OrderDocAcount,OrderDocName,OrderDocId,OrderDocTel,DATE_FORMAT(OrderDate,'%Y-%m-%d %H:%i:%s') ,merchant_no,create_by,del_flag, orderStatus from ym_shop_manual_morder ");
 		if (viceParams != null && viceParams.size() > 0) {
 			sbSQL.append(" WHERE ");
 			String property;

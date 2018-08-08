@@ -177,8 +177,8 @@ public class YsPayController {
 	}
 	
 	
-	@RequestMapping(value = "/fen-zhang-pay")
-	public String fenZhangPay(HttpServletRequest req, HttpServletResponse resp) {
+	@RequestMapping(value = "/shoppingPayment")
+	public String shoppingPayment(HttpServletRequest req, HttpServletResponse resp) {
 		String entOrderNo = req.getParameter("entOrderNo");
 		Map<String, Object> reMap = ysPayTransaction.checkOrderInfo(entOrderNo);
 		float orderTotalPrice = 0;
@@ -203,7 +203,7 @@ public class YsPayController {
 		req.setAttribute("sign_type", FenZhangConfig.SIGN_ALGORITHM);
 		// request.setAttribute("sign", userName);
 		// 生成商户订单 out_trade_no total_amount
-		req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/ysFenZhangPayReceive");
+		req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/orderReceive");
 		req.setAttribute("return_url", "http://www.191ec.com");
 		req.setAttribute("version", FenZhangConfig.VERSION);
 		req.setAttribute("out_trade_no", entOrderNo);// 商品交易订单号
@@ -219,7 +219,7 @@ public class YsPayController {
 		req.setAttribute("bank_account_type", "");
 		req.setAttribute("support_card_type", "");
 		req.setAttribute("bank_account_no", "");
-		return "fen_zhang_pay";
+		return "ys_pay";
 	}
 	
 }

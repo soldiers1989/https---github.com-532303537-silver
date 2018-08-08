@@ -73,7 +73,7 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
 		// 创建用户钱包
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId,account);
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId, account);
 		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletMap;
 		}
@@ -363,7 +363,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> checkIdCard(String idcard) {
-		if(StringEmptyUtils.isEmpty(idcard)){
+		if (StringEmptyUtils.isEmpty(idcard)) {
 			return ReturnInfoUtils.errorInfo("身份证号码不能为空");
 		}
 		Map<String, Object> params = new HashMap<>();
@@ -439,8 +439,8 @@ public class MemberServiceImpl implements MemberService {
 		if (!IdcardValidator.validate18Idcard(member.getMemberIdCard())) {
 			return ReturnInfoUtils.errorInfo("身份证号码错误!");
 		}
-		Map<String,Object> reIdCardMap = getIdCardInfo(member.getMemberIdCardName(), member.getMemberIdCard());
-		if(!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reIdCardMap = getIdCardInfo(member.getMemberIdCardName(), member.getMemberIdCard());
+		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 			return reIdCardMap;
 		}
 		return updateRealFlag(member);
@@ -467,14 +467,13 @@ public class MemberServiceImpl implements MemberService {
 		} else if (reList.isEmpty()) {
 			// 当实名库中没有该身份证号码时,发起验证
 			Map<String, Object> reMap = createPaymentQtz.sendIdCardCertification(name, idCard);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()) + "")) {
 				return reMap;
 			}
 			// 存入实名库
 			String msgId = reMap.get("messageID") + "";
 			String msg = reMap.get("msg") + "";
-			return createPaymentQtz.addIdCardInfo(msgId, "", "", name, idCard, "success",
-					msg);
+			return createPaymentQtz.addIdCardInfo(msgId, "", "", name, idCard, "success", msg);
 		} else {
 			IdCard idCardEntity = reList.get(0);
 			int type = idCardEntity.getType();
@@ -483,7 +482,7 @@ public class MemberServiceImpl implements MemberService {
 				return ReturnInfoUtils.errorInfo("身份证号码有误,请核对信息!");
 			} else if (type == 1) {
 				Map<String, Object> reMap = createPaymentQtz.sendIdCardCertification(name, idCard);
-				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()) + "")) {
 					return reMap;
 				}
 				idCardEntity.setCertifiedNo(reMap.get("messageID") + "");
@@ -515,7 +514,6 @@ public class MemberServiceImpl implements MemberService {
 		return ReturnInfoUtils.successInfo();
 	}
 
-
 	/**
 	 * 更新用户实名标识
 	 * 
@@ -534,7 +532,7 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Object updateLoginPassword(String memberId,  String newPassword) {
+	public Object updateLoginPassword(String memberId, String newPassword) {
 		if (StringEmptyUtils.isEmpty(memberId)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}

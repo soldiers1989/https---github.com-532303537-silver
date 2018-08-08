@@ -307,7 +307,7 @@ public class OrderServiceImpl implements OrderService {
 		order.setCreateDate(date);
 		order.setDeleteFlag(0);
 		order.setEntOrderNo(entOrderNo);
-		
+
 		if (!orderDao.add(order)) {
 			return ReturnInfoUtils.errorInfo("订单生成失败,服务器繁忙！");
 		}
@@ -425,8 +425,9 @@ public class OrderServiceImpl implements OrderService {
 			return updateOrderStatusAndShopCar(memberId, jsonList, reEntOrderNo);
 		} else {
 			//
-			//return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/dopay");
-			return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/fen-zhang-pay");
+			// return
+			// ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/dopay");
+			return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/shoppingPayment");
 		}
 	}
 
@@ -882,8 +883,17 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	private Map<String, Object> getOfflineOrderInfo(Map<String, Object> params, int page, int size) {
-		List<Morder> reList = orderDao.findByProperty(Morder.class, params, page, size);
-		long reTotalCount = orderDao.findByPropertyCount(Morder.class, params);
+		// 将日期字段转换
+		if (StringEmptyUtils.isNotEmpty(params.get("startDate"))) {
+			params.put("startTime", params.get("startDate"));
+			params.remove("startDate");
+		}
+		if (StringEmptyUtils.isNotEmpty(params.get("endDate"))) {
+			params.put("endTime", params.get("endDate"));
+			params.remove("endDate");
+		}
+		List<Morder> reList = orderDao.findByPropertyLike(Morder.class, params, null, page, size);
+		long reTotalCount = orderDao.findByPropertyLikeCount(Morder.class, params, null);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
@@ -894,8 +904,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	private Map<String, Object> getOnlineOrderInfo(Map<String, Object> params, int page, int size) {
-		List<OrderRecordContent> reList = orderDao.findByProperty(OrderRecordContent.class, params, page, size);
-		long reTotalCount = orderDao.findByPropertyCount(OrderRecordContent.class, params);
+
+		List<OrderRecordContent> reList = orderDao.findByPropertyLike(OrderRecordContent.class, params, null, page,
+				size);
+		long reTotalCount = orderDao.findByPropertyLikeCount(OrderRecordContent.class, params, null);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
 		} else if (!reList.isEmpty()) {
@@ -1038,11 +1050,11 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("订单参数格式不正确,请核对信息!");
 		}
 		try {
-		Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
-		if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reCheckMerchantMap;
-		}
-		Merchant merchant = (Merchant) reCheckMerchantMap.get(BaseCode.DATAS.toString());
+			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
+			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
+				return reCheckMerchantMap;
+			}
+			Merchant merchant = (Merchant) reCheckMerchantMap.get(BaseCode.DATAS.toString());
 			Map<String, Object> reCheckOrderMap = checkOrderInfo(orderJson);
 			if (!"1".equals(reCheckOrderMap.get(BaseCode.STATUS.toString()) + "")) {
 				return reCheckOrderMap;
@@ -1337,8 +1349,8 @@ public class OrderServiceImpl implements OrderService {
 			double amount = Double.parseDouble(paymentMap.get("amount") + "");
 			String tradeNo = paymentMap.get("trade_no") + "";
 			if (order.getActualAmountPaid() != amount) {
-				return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]中实际支付金额为[" + order.getActualAmountPaid()
-						+ "],与支付信息中支付金额[" + amount + "]不一致,请核对订单信息！");
+				return ReturnInfoUtils.errorInfo("订单号[" + order.getOrder_id() + "]中实际支付金额为["
+						+ order.getActualAmountPaid() + "],与支付信息中支付金额[" + amount + "]不一致,请核对订单信息！");
 			}
 			JSONObject json2 = JSONObject.fromObject(paymentMap.get("update_date"));
 			String payTime = json2.get("time") + "";
@@ -1488,7 +1500,7 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reCheckMap;
 		}
-		
+
 		String countryCode = orderJson.get("RecipientCountry") + "";
 		Map<String, Object> reCheckCountryMap = checkCountry(countryCode);
 		if (!"1".equals(reCheckCountryMap.get(BaseCode.STATUS.toString()) + "")) {
@@ -1512,7 +1524,7 @@ public class OrderServiceImpl implements OrderService {
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
 			return ReturnInfoUtils.errorInfo("订单下单人身份证号码错误！");
 		}
-		if(orderDocId.contains("x")){
+		if (orderDocId.contains("x")) {
 			return ReturnInfoUtils.errorInfo("订单下单人身份证号码必须是大写的[X]");
 		}
 		String recipientTel = orderJson.get("RecipientTel") + "";
@@ -1542,8 +1554,10 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	/**
-	 * 校验订单对应口岸信息是否符合要求 
-	 * @param orderJson 订单信息
+	 * 校验订单对应口岸信息是否符合要求
+	 * 
+	 * @param orderJson
+	 *            订单信息
 	 * @return Map
 	 */
 	private Map<String, Object> checkOrderEport(JSONObject orderJson) {
@@ -1590,7 +1604,7 @@ public class OrderServiceImpl implements OrderService {
 					return ReturnInfoUtils.successInfo();
 				}
 			}
-			return ReturnInfoUtils.errorInfo("收货人行政区代码[" + provinceCode + "],未找到对应的省份信息,请核实信息！");
+			return ReturnInfoUtils.errorInfo("收货人行政区代码[" + provinceCode + "]海关暂未支持，请参照跨境公共平台代码表！");
 		}
 		return ReturnInfoUtils.errorInfo("暂无省份数据!");
 	}
@@ -1615,7 +1629,7 @@ public class OrderServiceImpl implements OrderService {
 					return ReturnInfoUtils.successInfo();
 				}
 			}
-			return ReturnInfoUtils.errorInfo("收货人所在国[" + countryCode + "],未找到对应的国家信息,请核实信息");
+			return ReturnInfoUtils.errorInfo("收货人所在国[" + countryCode + "]海关暂未支持，请参照跨境公共平台代码表！");
 		}
 		return ReturnInfoUtils.errorInfo("国家信息查询失败!");
 	}

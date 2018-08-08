@@ -27,9 +27,8 @@ public class YsPayReceiveTransaction {
 	public Map<String, Object> dfReceive(Map params) {
 		return ysPayReceiveService.dfReceive(params);
 	}
-	
-	public static void main(String[] args) {
-		DecimalFormat df = new DecimalFormat("#");
-		System.out.println("---->>>"+df.format(6.2222222));
+
+	public Map<String, Object> fenZhangReceive(Map params) {
+		return null;
 	}
 }

@@ -28,7 +28,7 @@ public class PaymentReceiptLogServiceImpl implements PaymentReceiptLogService {
 	private WalletUtils walletUtils;
 
 	@Override
-	public Map<String, Object> addPaymentReceiptLog(String merchantId, double amount, String orderId, String operator,
+	public Map<String, Object> addMerchantLog(String merchantId, double amount, String orderId, String operator,
 			String type) {
 		if (StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(amount)
 				|| StringEmptyUtils.isEmpty(orderId)) {

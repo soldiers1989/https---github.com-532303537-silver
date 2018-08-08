@@ -200,10 +200,9 @@ public class ManualOrderInterceptor {
 		// 订申报单手续费
 		double serviceFee = totalAmount * fee;
 		// 商户钱包扣款
-		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet, balance,
-				serviceFee);
-		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletDeductionMap;
+		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
+		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
+			return reDeductionMap;
 		}
 		// 查询代理商钱包
 		Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
@@ -528,11 +527,10 @@ public class ManualOrderInterceptor {
 	private Map<String, Object> updateMerchantWallet(Merchant merchant, MerchantWalletContent merchantWallet,
 			double serviceFee, AgentWalletContent agentWallet, List<JSONObject> detailsList) {
 		double balance = merchantWallet.getBalance();
-		// 商户钱包扣款
-		Map<String, Object> reWalletDeductionMap = merchantWalletService.walletDeduction(merchantWallet, balance,
-				serviceFee);
-		if (!"1".equals(reWalletDeductionMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletDeductionMap;
+		// 商户冻结资金扣款
+		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
+		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
+			return reDeductionMap;
 		}
 		Map<String, Object> datas = new HashMap<>();
 		datas.put(MERCHANT_ID, merchant.getMerchantId());

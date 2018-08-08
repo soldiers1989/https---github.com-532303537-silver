@@ -394,20 +394,24 @@ public class MpayServiceImpl implements MpayService {
 		// 当小于0时,代表查询数据库信息错误
 		if (totalAmountPaid < 0) {
 			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
-		} else if (totalAmountPaid > 0) {
-			// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			// 钱包余额
-			double oldBalance = merchantWallet.getBalance();
+		} else if (totalAmountPaid > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
 			// 订申报单手续费
 			double serviceFee = totalAmountPaid * fee;
+			//申报手续+实名认证手续费
 			double totalFee = serviceFee + idCertificationFee;
+			// 钱包余额
+			double oldBalance = merchantWallet.getBalance();
 			System.out.println("---订单+实名手续费之和->>" + totalFee);
 			if ((oldBalance - totalFee) < 0) {
 				return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
 			}
 			//将余额转移至冻结金额
-			//merchantWallet.setBalance(oldBalance - totalFee);
-			//merchantWallet.setFreezingFunds(totalFee);
+			merchantWallet.setBalance(oldBalance - totalFee);
+			logger.error("-余额转移至冻结金额为->>"+totalFee);
+			merchantWallet.setFreezingFunds(totalFee);
+			if(!morderDao.update(merchantWallet)){
+				return ReturnInfoUtils.errorInfo("钱包余额移至冻结资金失败！");
+			}
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put("fee", fee);
@@ -909,7 +913,6 @@ public class MpayServiceImpl implements MpayService {
 		// String resultStr =
 		// YmHttpUtil.HttpPost("http://192.168.1.183:8080/silver-web/Eport/Report",
 		// orderMap);
-		logger.error("--订单内容-->" + orderMap.get("datas"));
 		// 当端口号为2(智检时)再往电子口岸多发送一次
 		if (eport == 2 || "443400".equals(customsMap.get(CIQ_ORG_CODE))) {
 			if (eport == 1) {
@@ -935,7 +938,6 @@ public class MpayServiceImpl implements MpayService {
 					newOrderMap.put("ebEntName", "广州银盟信息科技有限公司");
 				}
 			}
-			logger.error("第二次--订单内容-->" + newOrderMap.get("datas"));
 			System.out.println("------订单第二次发送----");
 			// 检验检疫机构代码
 			newOrderMap.put(CIQ_ORG_CODE, "443400");

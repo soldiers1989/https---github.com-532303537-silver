@@ -65,10 +65,9 @@ public class MerchantWalletTransaction {
 	// 添加交易记录
 	public Map<String, Object> addPaymentReceiptLog(String merchantId, double amount, String serialNo, String type) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
-		return paymentReceiptLogService.addPaymentReceiptLog(merchantId, amount, serialNo, managerName, type);
+		return paymentReceiptLogService.addMerchantLog(merchantId, amount, serialNo, managerName, type);
 	}
 
 	/**
@@ -127,6 +126,8 @@ public class MerchantWalletTransaction {
 	}
 
 	public Map<String,Object> fenZhang(String orderId, double amount) {
-		return merchantWalletService.fenZhang(orderId, amount);
+		Subject currentUser = SecurityUtils.getSubject();
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		return merchantWalletService.fenZhang(orderId, amount,managerInfo);
 	}
 }

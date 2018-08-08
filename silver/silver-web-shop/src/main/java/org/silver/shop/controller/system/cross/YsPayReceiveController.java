@@ -118,9 +118,15 @@ public class YsPayReceiveController {
 		return "success";
 	}
 
-	@RequestMapping(value = "/ysFenZhangPayReceive", produces = "application/json; charset=utf-8")
+	/**
+	 * 当用户选择商品并在银盛支付后的，订单支付回调
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/orderReceive", produces = "application/json; charset=utf-8")
 	@ResponseBody
-	public String ysFenZhangPayReceive(HttpServletRequest req, HttpServletResponse response) {
+	public String orderReceive(HttpServletRequest req, HttpServletResponse response) {
 		Map params = new HashMap<>();
 		Enumeration<String> iskeys = req.getParameterNames();
 		while (iskeys.hasMoreElements()) {
@@ -128,14 +134,37 @@ public class YsPayReceiveController {
 			String value = req.getParameter(key);
 			params.put(key, value);
 		}
-		logger.error("-(分账)银盛支付回调参数->" + params.toString());
+		logger.error("-(1119账号)银盛支付回调参数->" + params.toString());
 		if (PaySubmitUtils.verifySign(req, params)) {
 			Map<String, Object> reMap = ysPayReceiveTransaction.ysPayReceive(params);
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				logger.error("--(分账)支付回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
+				logger.error("--(1119账号)支付回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
 			}
 		} else {
-			logger.error("-(分账)银盛支付回调签名认证不通过！-");
+			logger.error("-(1119账号)银盛支付回调签名认证不通过！-");
+		}
+		return "success";
+	}
+	
+	
+	@RequestMapping(value = "/fenZhangReceive", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String fenZhangReceive(HttpServletRequest req, HttpServletResponse response) {
+		Map params = new HashMap<>();
+		Enumeration<String> iskeys = req.getParameterNames();
+		while (iskeys.hasMoreElements()) {
+			String key = iskeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		logger.error("-(分账)回调参数->" + params.toString());
+		if (PaySubmitUtils.verifySign(req, params)) {
+			Map<String, Object> reMap = ysPayReceiveTransaction.fenZhangReceive(params);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("--(分账)回调信息处理错误-->" + reMap.get(BaseCode.MSG.toString()));
+			}
+		} else {
+			logger.error("-(分账)回调签名认证不通过！-");
 		}
 		return "success";
 	}

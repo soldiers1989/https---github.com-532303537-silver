@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.tenant;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,11 +10,13 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
+import org.silver.shop.api.system.log.PaymentReceiptLogService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.log.OfflineRechargeLog;
 import org.silver.shop.model.system.log.PaymentReceiptLog;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.OfflineRechargeContent;
 import org.silver.shop.util.SearchUtils;
@@ -40,6 +43,8 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	private MerchantWalletDao merchantWalletDao;
 	@Autowired
 	private WalletUtils walletUtils;
+	@Autowired
+	private PaymentReceiptLogService paymentReceiptLogService;
 
 	@Override
 	public Map<String, Object> getMerchantWallet(String merchantId, String merchantName) {
@@ -230,7 +235,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	}
 
 	@Override
-	public Map<String, Object> fenZhang(String orderId, double amount) {
+	public Map<String, Object> fenZhang(String orderId, double amount, Manager managerInfo) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("entOrderNo", orderId);
 		List<OrderRecordContent> reList = merchantWalletDao.findByProperty(OrderRecordContent.class, params, 0, 0);
@@ -242,30 +247,43 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			item.put("out_trade_no", order.getEntOrderNo());
 			item.put("total_amount", order.getActualAmountPaid());
 			item.put("master_user_code", "yinmeng1119");
+			if(amount > order.getActualAmountPaid()  ){
+				return ReturnInfoUtils.errorInfo("结算金额["+amount+"]不能大于订单金额"+order.getActualAmountPaid()+"！");
+			}
 			item.put("master_amount", (order.getActualAmountPaid() - amount));
-			item.put("notify_url", "");
+			// https://ym.191ec.com/silver-web-shop/yspay-receive/orderReceive
+			item.put("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/fenZhangReceive");
 			JSONArray divList = new JSONArray();
-			JSONObject item1 = new JSONObject();
-			item1.put("division_mer_usercode", "yinmeng1116");
-			item1.put("div_amount", amount);
-			divList.add(item1);
+			JSONObject subJson1 = new JSONObject();
+			subJson1.put("division_mer_usercode", "yinmeng1116");
+			subJson1.put("div_amount", amount);
+			divList.add(subJson1);
 			item.put("fz_content", divList);
-			String result = YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade", item);
+			//String result = YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade", item);
+			String result = YmHttpUtil.HttpPost("https://ezpay.191ec.com/silver-web-ezpay/fz/trade", item);
+			System.out.println("--->>"+result);
 			if (StringEmptyUtils.isEmpty(result)) {
 				return ReturnInfoUtils.errorInfo("操作失败，服务器繁忙！");
 			} else {
 				JSONObject json = JSONObject.fromObject(result);
 				if (!"1".equals(json.get(BaseCode.STATUS.toString()) + "")) {
-					return ReturnInfoUtils.errorInfo(json.get("msg")+"");
+					return ReturnInfoUtils.errorInfo(json.get("msg") + "");
+				}
+				Map<String, Object> reLogMap = paymentReceiptLogService.addMerchantLog(order.getMerchantId(),
+						amount, orderId, managerInfo.getManagerName(), "withdraw");
+				if (!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))) {
+					return reLogMap;
 				}
 				Map<String, Object> reWalletMap = walletUtils.checkWallet(1, order.getMerchantId(), "");
 				if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 					logger.error("--查询商户钱包信息失败-->" + reWalletMap.get(BaseCode.MSG.toString()));
 				}
-				MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-				double oldCash= merchantWallet.getCash();
+				MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap
+						.get(BaseCode.DATAS.toString());
+				double oldCash = merchantWallet.getCash();
 				merchantWallet.setCash(amount - oldCash);
-				if(!merchantWalletDao.update(merchantWallet)){
+				merchantWallet.setFreezingFunds(amount - oldCash);
+				if (!merchantWalletDao.update(merchantWallet)) {
 					return ReturnInfoUtils.errorInfo("更新钱包信息失败！");
 				}
 				return ReturnInfoUtils.successInfo();
@@ -273,5 +291,34 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		} else {
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]未找到对应订单信息！");
 		}
+	}
+
+	@Override
+	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet, double serviceFee) {
+		if (merchantWallet == null) {
+			return ReturnInfoUtils.errorInfo("商户钱包扣费时,请求参数不能为空!");
+		}
+		double freezingFunds = merchantWallet.getFreezingFunds();
+		DecimalFormat df = new DecimalFormat("#.00000");
+		// 由于出现浮点数,故而得出的商品总金额只保留后五位，其余全部舍弃
+		double surplus = Double.parseDouble(df.format(freezingFunds - serviceFee));
+		logger.error("-扣除手续费后剩余的冻结资金->" + surplus);
+		if (surplus < 0) {
+			return ReturnInfoUtils.errorInfo("扣款失败,账户冻结资金不足，请联系管理员！");
+		}
+		// 扣除手续费后剩余的冻结资金
+		merchantWallet.setFreezingFunds(surplus);
+		merchantWallet.setUpdateDate(new Date());
+		if (!merchantWalletDao.update(merchantWallet)) {
+			return ReturnInfoUtils.errorInfo("钱包结算手续费失败,服务器繁忙!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	public static void main(String[] args) {
+		// 由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
+		DecimalFormat df = new DecimalFormat("#.00000");
+		double temToal = Double.parseDouble(df.format(1.21147 - 0.85));
+		System.out.println("--->>" + temToal);
 	}
 }

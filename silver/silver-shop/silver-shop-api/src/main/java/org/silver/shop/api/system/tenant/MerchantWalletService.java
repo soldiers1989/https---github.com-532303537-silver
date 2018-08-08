@@ -2,6 +2,7 @@ package org.silver.shop.api.system.tenant;
 
 import java.util.Map;
 
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 
 public interface MerchantWalletService {
@@ -54,9 +55,19 @@ public interface MerchantWalletService {
 
 	/**
 	 * 临时管理员分账
-	 * @param orderId
-	 * @param amount
+	 * @param orderId 订单id
+	 * @param amount 交易金额
+	 * @param managerInfo 管理员信息实体类
 	 * @return
 	 */
-	public Map<String, Object> fenZhang(String orderId, double amount);
+	public Map<String, Object> fenZhang(String orderId, double amount, Manager managerInfo);
+
+
+	/**
+	 * 商户钱包冻结资金的扣款
+	 * @param merchantWallet 商户钱包实体类
+	 * @param serviceFee 
+	 * @return Map
+	 */
+	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet,  double serviceFee);
 }

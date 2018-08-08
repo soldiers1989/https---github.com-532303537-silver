@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.AuthorityTransaction;
 import org.silver.util.ReturnInfoUtils;
@@ -32,17 +33,11 @@ public class AuthorityController {
 	@Autowired
 	private AuthorityTransaction authorityTransaction;
 
-	/**
-	 * 管理员添加权限信息
-	 * 
-	 * @param req
-	 * @param response
-	 * @return
-	 */
 	@RequestMapping(value = "/addAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
-	@ApiOperation("管理员添加权限信息")
+	//@RequiresRoles("Manager")
+	@ApiOperation("添加权限信息")
+	@RequiresPermissions("authority:addAuthorityInfo")
 	public String addAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") String type, @RequestParam("groupName") String groupName,
 			@RequestParam("firstName") String firstName, @RequestParam("firstCode") String firstCode,
@@ -90,6 +85,7 @@ public class AuthorityController {
 	@ResponseBody
 	@RequiresRoles("Manager")
 	@ApiOperation("管理员获取用户所有权限")
+	// @RequiresPermissions("authority:getUserAuthorityInfo")
 	public String getUserAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("userId") String userId, @RequestParam("groupName") String groupName) {
 		String originHeader = req.getHeader("Origin");
@@ -115,8 +111,9 @@ public class AuthorityController {
 	 */
 	@RequestMapping(value = "/setAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	//@RequiresRoles("Manager")
 	@ApiOperation("管理员设置角色权限信息")
+	@RequiresPermissions("authority:setAuthorityInfo")
 	public String setAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("type") String type, @RequestParam("userId") String userId,
 			@RequestParam("authorityPack") String authorityPack) {
@@ -147,8 +144,9 @@ public class AuthorityController {
 	 */
 	@RequestMapping(value = "/editAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	//@RequiresRoles("Manager")
 	@ApiOperation("管理员修改权限字典信息")
+	@RequiresPermissions("authority:editAuthorityInfo")
 	public String editAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("authorityId") String authorityId) {
 		String originHeader = req.getHeader("Origin");
@@ -168,8 +166,9 @@ public class AuthorityController {
 
 	@RequestMapping(value = "/deleteAuthorityInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Manager")
+	//@RequiresRoles("Manager")
 	@ApiOperation("管理员删除权限字典信息")
+	@RequiresPermissions("authority:deleteAuthorityInfo")
 	public String deleteAuthorityInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("authorityId") String authorityId) {
 		String originHeader = req.getHeader("Origin");

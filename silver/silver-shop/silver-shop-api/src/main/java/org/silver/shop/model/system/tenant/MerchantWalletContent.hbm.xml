@@ -38,5 +38,10 @@
 		<property name="cash" type="java.lang.Double">
 			<column name="cash" default="0"/>
 		</property>
+		<property name="freezingFunds" type="java.lang.Double">
+			<column name="freezingFunds" default="0"/>
+		</property>
+		
+		
     </class>
 </hibernate-mapping>
