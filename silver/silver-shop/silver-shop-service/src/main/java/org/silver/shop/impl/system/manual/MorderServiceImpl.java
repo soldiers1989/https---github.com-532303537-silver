@@ -743,7 +743,6 @@ public class MorderServiceImpl implements MorderService {
 
 	@Override
 	public Map<String, Object> deleteOrderGoodsInfo(String id, String name, String idPack) {
-		Map<String, Object> params = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(idPack);
@@ -751,6 +750,7 @@ public class MorderServiceImpl implements MorderService {
 			e.printStackTrace();
 			return ReturnInfoUtils.errorInfo("参数错误!");
 		}
+		Map<String, Object> params = new HashMap<>();
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> datas = (Map<String, Object>) jsonList.get(i);
 			String orderId = datas.get("orderId") + "";
@@ -761,10 +761,17 @@ public class MorderServiceImpl implements MorderService {
 			params.put("EntGoodsNo", goodsId);
 			List<MorderSub> orderSublist = morderDao.findByProperty(MorderSub.class, params, 1, 1);
 			if (orderSublist != null && !orderSublist.isEmpty()) {
+				Morder order = orderlist.get(0);
+				// 申报状态：1-未申报,2-申报中,3-申报成功、4-申报失败、10-申报中(待系统处理)
+				if (order.getOrder_record_status() == 2 || order.getOrder_record_status() == 3
+						|| order.getOrder_record_status() == 10) {
+					return ReturnInfoUtils.errorInfo("订单当前状态不能删除商品信息！");
+				}
 				MorderSub goodsInfo = orderSublist.get(0);
+				//删除标识
 				goodsInfo.setDeleteFlag(1);
 				if (!morderDao.update(goodsInfo)) {
-					return ReturnInfoUtils.errorInfo(goodsInfo.getGoodsName() + "<----删除失败,服务器繁忙!");
+					return ReturnInfoUtils.errorInfo(goodsInfo.getGoodsName() + "<--删除失败,服务器繁忙!");
 				} else {
 					// 单价
 					Double price = goodsInfo.getPrice();
@@ -772,13 +779,10 @@ public class MorderServiceImpl implements MorderService {
 					int count = goodsInfo.getQty();
 					// 总价
 					Double total = price * count;
-					Map<String, Object> reMap = updateOrderAmount(orderlist, total);
-					if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-						return reMap;
-					}
+					return updateOrderAmount(orderlist, total);
 				}
 			} else {
-				return ReturnInfoUtils.errorInfo("未找到商品信息,请核实参数是否正确!");
+				return ReturnInfoUtils.errorInfo("订单号["+orderId+"]未找到商品信息！");
 			}
 		}
 		return ReturnInfoUtils.successInfo();
@@ -966,7 +970,6 @@ public class MorderServiceImpl implements MorderService {
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("查询订单商品信息错误,请重试!");
-
 	}
 
 	/**

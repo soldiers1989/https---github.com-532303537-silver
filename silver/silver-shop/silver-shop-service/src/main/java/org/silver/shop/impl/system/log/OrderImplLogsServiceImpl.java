@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.log;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.justep.baas.data.Transform;
+
+import net.sf.json.JSONArray;
 
 @Service(interfaceClass = OrderImplLogsService.class)
 public class OrderImplLogsServiceImpl implements OrderImplLogsService {
@@ -57,24 +60,14 @@ public class OrderImplLogsServiceImpl implements OrderImplLogsService {
 	@Override
 	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size, String merchantId,
 			String merchantName) {
-		Map<String, Object> statusMap = new HashMap<>();
-		Map<String, Object> blurryMap = new HashMap<>();
-		String blurryStr = "";
-		if (StringEmptyUtils.isNotEmpty(params.get("blurryStr") + "")) {
-			blurryStr = params.get("blurryStr") + "";
-		}
 		Map<String, Object> reDatasMap = SearchUtils.universalOrderImplLogSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		blurryMap.put("action", blurryStr);
-		paramMap.put("operatorId", merchantId);
+		Map<String, Object> blurryMap =  (Map<String, Object>) reDatasMap.get("blurry");
 		long count = 0;
 		if (page == 0 && size == 0) {
 			paramMap.put("readingSign", 1);
 			count = errorLogsDao.findByPropertyLikeCount(OrderImplLogs.class, paramMap, blurryMap);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.TOTALCOUNT.toString(), count);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo("", count);
 		}
 		List<OrderImplLogs> reList = errorLogsDao.findByPropertyLike(OrderImplLogs.class, paramMap, blurryMap, page,
 				size);
@@ -82,13 +75,16 @@ public class OrderImplLogsServiceImpl implements OrderImplLogsService {
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			for (OrderImplLogs logInfo : reList) {// 更新阅读标识
+			//增加缓存集合，用于修改状态前传递给前台
+			JSONArray cacheList = JSONArray.fromObject(reList);
+			for (OrderImplLogs logInfo : reList) {
+				// 更新阅读标识
 				logInfo.setReadingSign(2);
 				if (!errorLogsDao.update(logInfo)) {
 					return ReturnInfoUtils.errorInfo("更新阅读标识失败,服务器繁忙!");
 				}
 			}
-			return ReturnInfoUtils.successDataInfo(reList, count);
+			return ReturnInfoUtils.successDataInfo(cacheList, count);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}

@@ -66,8 +66,17 @@ public interface MerchantWalletService {
 	/**
 	 * 商户钱包冻结资金的扣款
 	 * @param merchantWallet 商户钱包实体类
-	 * @param serviceFee 
+	 * @param amount 金额
 	 * @return Map
 	 */
-	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet,  double serviceFee);
+	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet,  double amount);
+
+
+	/**
+	 * 根据转移金额对商户钱包余额进行扣款，并将金额转移至冻结资金
+	 * @param merchantWallet 商户钱包实体
+	 * @param amount 转移金额
+	 * @return Map
+	 */
+	public Map<String,Object> balanceTransferFreezingFunds(MerchantWalletContent merchantWallet, double amount);
 }

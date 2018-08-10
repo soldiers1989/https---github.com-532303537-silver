@@ -17,6 +17,7 @@ import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -645,7 +646,11 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-
+	
+	
+	
+	
+	
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
@@ -666,5 +671,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 		System.out.println("0----->>>>" + reList.size());
 	}
+
+	
 
 }

@@ -729,5 +729,11 @@ public class ManualOrderTransaction {
 		datasMap.put(MERCHANT_ID, merchantId);
 		return manualOrderService.updateManualOrderInfo(datasMap);
 	}
+
+	public Map<String,Object> updateManualOrderGoodsInfo(Map<String, Object> datasMap) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return manualOrderService.updateManualOrderGoodsInfo(merchantInfo,datasMap);
+	}
 	
 }

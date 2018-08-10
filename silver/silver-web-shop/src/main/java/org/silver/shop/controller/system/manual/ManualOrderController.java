@@ -1,19 +1,13 @@
 package org.silver.shop.controller.system.manual;
 
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresRoles;
-import org.apache.shiro.subject.Subject;
-import org.silver.common.LoginType;
-import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.MdataService;
 import org.silver.util.YmHttpUtil;
@@ -91,17 +85,10 @@ public class ManualOrderController {
 		params.put("pushType", "selfReportOrder");
 		return JSONObject.fromObject(mdataService.sendMorderRecord(params, orderNoPack)).toString();
 	}
-
-	/**
-	 * 
-	 * 
-	 * @param resp
-	 * @param req
-	 * @return
-	 */
+	
 	@RequestMapping(value = "/updateManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
-	@ApiOperation("商户修改自助申报失败订单")
+	@ApiOperation("商户修改手工订单信息")
 	@ResponseBody
 	public String updateManualOrderInfo(HttpServletResponse resp, HttpServletRequest req) {
 		String originHeader = req.getHeader("Origin");
@@ -118,6 +105,27 @@ public class ManualOrderController {
 			datasMap.put(key, value);
 		}
 		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderInfo(datasMap)).toString();
+	}
+	
+	@RequestMapping(value = "/updateManualOrderGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户修改手工订单商品信息")
+	@ResponseBody
+	public String updateManualOrderGoodsInfo(HttpServletResponse resp, HttpServletRequest req) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		//
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> itkeys = req.getParameterNames();
+		while (itkeys.hasMoreElements()) {
+			String key = itkeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderGoodsInfo(datasMap)).toString();
 	}
 	
 	public static void main(String[] args) {

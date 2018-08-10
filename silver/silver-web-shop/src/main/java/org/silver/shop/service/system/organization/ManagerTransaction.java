@@ -93,6 +93,8 @@ public class ManagerTransaction {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
+		datasMap.remove("page");
+		datasMap.remove("size");
 		return managerService.findAllMerchantInfo(datasMap, page, size);
 	}
 

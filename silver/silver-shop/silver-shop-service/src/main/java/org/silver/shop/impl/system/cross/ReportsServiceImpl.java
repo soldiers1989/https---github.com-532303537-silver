@@ -57,7 +57,7 @@ public class ReportsServiceImpl implements ReportsService {
 	}
 
 	private Map<String, Object> getDayReportInfo(Map<String, Object> datasMap) {
-		if(datasMap == null || datasMap.isEmpty()){
+		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("获取天报表时，请求参数不能为null");
 		}
 		String strDate = datasMap.get("date") + "";
@@ -105,7 +105,7 @@ public class ReportsServiceImpl implements ReportsService {
 	 * @return
 	 */
 	private Map<String, Object> getMonthReportInfo(Map<String, Object> datasMap) {
-		if(datasMap == null || datasMap.isEmpty()){
+		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("获取月份报表时，请求参数不能为null");
 		}
 		String strDate = datasMap.get("date") + "";
@@ -141,19 +141,28 @@ public class ReportsServiceImpl implements ReportsService {
 		long startTime = System.currentTimeMillis();
 		Map<String, Object> pamras2 = null;
 		List<Object> newlist = new ArrayList<>();
+		Map<String, Object> orMap = null;
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject json = JSONObject.fromObject(jsonArray.get(i));
-			double fee = 0;
 			String merchantId = StringUtil.replace(json.get("merchant_no") + "");
 			pamras2 = new HashMap<>();
 			pamras2.put("merchantId", merchantId);
 			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-			pamras2.put("type", "orderRecord");
 			pamras2.put("customsCode", StringUtil.replace(json.get("customsCode") + ""));
-			List<MerchantFeeContent> feeList = paymentDao.findByProperty(MerchantFeeContent.class, pamras2, 0, 0);
+			List<Map<String, Object>> orList = new ArrayList<>();
+			orMap = new HashMap<>();
+			orMap.put("type", "orderRecord");
+			orList.add(orMap);
+			orMap = new HashMap<>();
+			orMap.put("type", "paymentRecord");
+			orList.add(orMap);
+			List<MerchantFeeContent> feeList = paymentDao.findByPropertyOr(MerchantFeeContent.class, pamras2, orList, 0,
+					0);
+			double fee = 0;
 			if (feeList != null && !feeList.isEmpty()) {
-				MerchantFeeContent feeContent = feeList.get(0);
-				fee = feeContent.getPlatformFee();
+				for (MerchantFeeContent feeContent : feeList) {
+					fee += feeContent.getPlatformFee();
+				}
 			}
 			JSONObject idCardJson = null;
 			viceMap = new HashMap<>();
@@ -191,11 +200,10 @@ public class ReportsServiceImpl implements ReportsService {
 			String key = sIterator.next();
 			// 根据key获得value, value也可以是JSONObject,JSONArray,使用对应的参数接收即可
 			String value = StringUtil.replace(json.getString(key));
-			if ("platformFee".equals(key) && StringEmptyUtils.isNotEmpty(value)) {
-				datasMap.put(key, fee + Double.parseDouble(value));
-			} else {
-				datasMap.put(key, value);
+			if (fee > 0) {
+				datasMap.put("platformFee", fee);
 			}
+			datasMap.put(key, value);
 		}
 		if (idCardJson != null && !idCardJson.isEmpty()) {
 			Iterator<String> sIterator2 = idCardJson.keys();
@@ -230,24 +238,8 @@ public class ReportsServiceImpl implements ReportsService {
 	@Override
 	public Map<String, Object> tmpUpdate() {
 		Map<String, Object> params = new HashMap<>();
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		// 获取前一天的日期
-		calendar.add(Calendar.DAY_OF_MONTH, -1);
-		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		calendar.set(Calendar.MINUTE, 59);
-		calendar.set(Calendar.SECOND, 59);
-		Date dayBefore = calendar.getTime();
-		// 一天前的日期字符串
-		String strDayBefore = DateUtil.formatDate(dayBefore, "yyyy-MM-dd HH:mm:ss");
-		params.put("endDate", DateUtil.formatDate(dayBefore, "yyyy-MM-dd"));
-		calendar.clear();
-		calendar.setTime(new Date());
-		calendar.set(Calendar.DAY_OF_MONTH, 1);// 设置为1号,当前日期既为本月第一天
-		calendar.set(Calendar.HOUR_OF_DAY, 00);
-		calendar.set(Calendar.MINUTE, 00);
-		calendar.set(Calendar.SECOND, 00);
-		params.put("startDate", DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd"));
+		params.put("startDate", "2018-07-01 00:00:00");
+		params.put("endDate", "2018-08-09 23:59:59");
 		Table reList = paymentDao.getPaymentReportDetails(params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
@@ -264,6 +256,7 @@ public class ReportsServiceImpl implements ReportsService {
 					System.out.println("---商户名称-不做处理->" + json.get("merchantName"));
 					continue;
 				}
+				System.out.println("---->" + json.toString());
 				// {date=2018-07-02, merchant_no=MerchantId_00076,
 				// amount=861.21, totalCount=4, platformFee=0.006,
 				// merchantName=上海峰赞实业有限公司, idCardTotalCount=4, tollFlag1=0,
@@ -271,14 +264,6 @@ public class ReportsServiceImpl implements ReportsService {
 				// backCoverCount=0, customsCode=5165}
 
 				String date = json.get("date") + "";
-				// MerchantId_00074
-				// System.out.println("--前一天的时间->>>" + newStrDayBefore);
-				calendar.set(Calendar.DAY_OF_MONTH, 1);// 设置为1号,当前日期既为本月第一天
-				calendar.set(Calendar.HOUR_OF_DAY, 00);
-				calendar.set(Calendar.MINUTE, 00);
-				calendar.set(Calendar.SECOND, 00);
-				String monthDate = DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd HH:mm:ss");
-				// System.out.println("--前一天的月份->>>" + monthDate);
 				SynthesisReportLog report = new SynthesisReportLog();
 				report.setMerchantId(json.get("merchant_no") + "");
 				report.setMerchantName(json.get("merchantName") + "");
@@ -304,27 +289,14 @@ public class ReportsServiceImpl implements ReportsService {
 				report.setIdCardCost(idCardCost);
 				report.setCreateBy("system");
 				report.setCreateDate(new Date());
-				
-				String newDate = DateUtil.formatDate(new Date(), "yyyy-MM-dd");
-				// 获取日期
-				String day = newDate.substring(newDate.length() - 2);
-				if (!"02".equals(day)) {
-					String merchantId = json.get("merchant_no") + "";
-					List<SynthesisReportLog> reLogList = reportsDao.findByMonth(monthDate, strDayBefore, merchantId);
-					if (reLogList != null && !reLogList.isEmpty()) {
-						// 获取上一个月份最后一条记录
-						SynthesisReportLog log = reLogList.get(0);
-					
-					}
-				}
-				if (!reportsDao.add(report)) {
-					System.out.println("-保存失败！->");
-				}
+				/*
+				 * if (!reportsDao.add(report)) {
+				 * System.out.println("-保存失败！->"); }
+				 */
 			}
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无报表数据!");
 		}
-
 		return null;
 	}
 

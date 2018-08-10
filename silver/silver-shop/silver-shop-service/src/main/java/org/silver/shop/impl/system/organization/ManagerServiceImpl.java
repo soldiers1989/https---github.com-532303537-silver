@@ -102,20 +102,24 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> findAllMerchantInfo(Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> reDatasMap = SearchUtils.universalSearch(datasMap);
+		Map<String, Object> reDatasMap = SearchUtils.universalMerchantSearch(datasMap);
+		if (!"1".equals(reDatasMap.get(BaseCode.STATUS.toString()))) {
+			return reDatasMap;
+		}
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
-		List<Merchant> reList = managerDao.findByProperty(Merchant.class, paramMap, page, size);
-		Long totalCount = managerDao.findByPropertyCount(Merchant.class, paramMap);
-		List<Object> item = new ArrayList<>();
+		Map<String, Object> blurryMap = (Map<String, Object>) reDatasMap.get("blurry");
+		List<Merchant> reList = managerDao.findByPropertyLike(Merchant.class, paramMap, blurryMap, page, size);
+		Long totalCount = managerDao.findByPropertyLikeCount(Merchant.class, paramMap, blurryMap);
+		List<Merchant> list = new ArrayList<>();
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
 			for (int i = 0; i < reList.size(); i++) {
 				Merchant merchantInfo = reList.get(i);
 				merchantInfo.setLoginPassword("");
-				item.add(merchantInfo);
+				list.add(merchantInfo);
 			}
-			return ReturnInfoUtils.successDataInfo(item, totalCount.intValue());
+			return ReturnInfoUtils.successDataInfo(list, totalCount);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}

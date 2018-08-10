@@ -8,6 +8,7 @@ import org.silver.shop.dao.BaseDao;
 import org.silver.shop.model.system.manual.ManualOrderResendContent;
 import org.silver.shop.model.system.manual.ManualPaymentResendContent;
 import org.silver.shop.model.system.manual.Morder;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 
 import com.justep.baas.data.Table;
 
@@ -84,5 +85,4 @@ public interface PaymentDao  extends BaseDao{
 	public List<ManualPaymentResendContent> getResendPaymentInfo(Class<ManualPaymentResendContent> entity,
 			Map<String, Object> params, int page, int size);
 
-	
 }

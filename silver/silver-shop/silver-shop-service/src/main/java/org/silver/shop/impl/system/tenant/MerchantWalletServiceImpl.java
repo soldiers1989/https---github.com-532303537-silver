@@ -38,6 +38,7 @@ import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MerchantWalletService.class)
 public class MerchantWalletServiceImpl implements MerchantWalletService {
+
 	private static Logger logger = LogManager.getLogger(Object.class);
 	@Autowired
 	private MerchantWalletDao merchantWalletDao;
@@ -45,6 +46,10 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	private WalletUtils walletUtils;
 	@Autowired
 	private PaymentReceiptLogService paymentReceiptLogService;
+	/**
+	 * 商户钱包保留后五位
+	 */
+	private static DecimalFormat format = new DecimalFormat("#.00000");
 
 	@Override
 	public Map<String, Object> getMerchantWallet(String merchantId, String merchantName) {
@@ -247,8 +252,8 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			item.put("out_trade_no", order.getEntOrderNo());
 			item.put("total_amount", order.getActualAmountPaid());
 			item.put("master_user_code", "yinmeng1119");
-			if(amount > order.getActualAmountPaid()  ){
-				return ReturnInfoUtils.errorInfo("结算金额["+amount+"]不能大于订单金额"+order.getActualAmountPaid()+"！");
+			if (amount > order.getActualAmountPaid()) {
+				return ReturnInfoUtils.errorInfo("结算金额[" + amount + "]不能大于订单金额" + order.getActualAmountPaid() + "！");
 			}
 			item.put("master_amount", (order.getActualAmountPaid() - amount));
 			// https://ym.191ec.com/silver-web-shop/yspay-receive/orderReceive
@@ -259,9 +264,11 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			subJson1.put("div_amount", amount);
 			divList.add(subJson1);
 			item.put("fz_content", divList);
-			//String result = YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade", item);
+			// String result =
+			// YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade",
+			// item);
 			String result = YmHttpUtil.HttpPost("https://ezpay.191ec.com/silver-web-ezpay/fz/trade", item);
-			System.out.println("--->>"+result);
+			System.out.println("--->>" + result);
 			if (StringEmptyUtils.isEmpty(result)) {
 				return ReturnInfoUtils.errorInfo("操作失败，服务器繁忙！");
 			} else {
@@ -269,8 +276,8 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 				if (!"1".equals(json.get(BaseCode.STATUS.toString()) + "")) {
 					return ReturnInfoUtils.errorInfo(json.get("msg") + "");
 				}
-				Map<String, Object> reLogMap = paymentReceiptLogService.addMerchantLog(order.getMerchantId(),
-						amount, orderId, managerInfo.getManagerName(), "withdraw");
+				Map<String, Object> reLogMap = paymentReceiptLogService.addMerchantLog(order.getMerchantId(), amount,
+						orderId, managerInfo.getManagerName(), "withdraw");
 				if (!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))) {
 					return reLogMap;
 				}
@@ -294,15 +301,20 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	}
 
 	@Override
-	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet, double serviceFee) {
+	public Map<String, Object> freezingFundFeduction(MerchantWalletContent merchantWallet, double amount) {
 		if (merchantWallet == null) {
 			return ReturnInfoUtils.errorInfo("商户钱包扣费时,请求参数不能为空!");
 		}
 		double freezingFunds = merchantWallet.getFreezingFunds();
-		DecimalFormat df = new DecimalFormat("#.00000");
+		double surplus =  0;
+		try {
 		// 由于出现浮点数,故而得出的商品总金额只保留后五位，其余全部舍弃
-		double surplus = Double.parseDouble(df.format(freezingFunds - serviceFee));
-		logger.error("-扣除手续费后剩余的冻结资金->" + surplus);
+		surplus = Double.parseDouble(format.format(freezingFunds - amount));
+		logger.error("--金额->"+amount+"----剩余冻结资金-->" + surplus);
+		}catch (Exception e) {
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("冻结资金扣款失败，金额错误");
+		}
 		if (surplus < 0) {
 			return ReturnInfoUtils.errorInfo("扣款失败,账户冻结资金不足，请联系管理员！");
 		}
@@ -315,10 +327,29 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		return ReturnInfoUtils.successInfo();
 	}
 
+	@Override
+	public Map<String, Object> balanceTransferFreezingFunds(MerchantWalletContent merchantWallet, double amount) {
+		if (merchantWallet == null) {
+			return ReturnInfoUtils.errorInfo("转移冻结资金请求参数不能为null");
+		}
+		double oldBalance = merchantWallet.getBalance();
+		try {
+			double newBalance = Double.parseDouble(format.format(oldBalance - amount));
+			merchantWallet.setFreezingFunds(Double.parseDouble(format.format(amount)));
+			logger.error("-余额转移至冻结金额为->>" + Double.parseDouble(format.format(amount)));
+			// 将余额转移至冻结金额
+			merchantWallet.setBalance(newBalance);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("余额转移冻结，金额错误！");
+		}
+		if (!merchantWalletDao.update(merchantWallet)) {
+			return ReturnInfoUtils.errorInfo("钱包余额移至冻结资金失败！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+	
 	public static void main(String[] args) {
-		// 由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
-		DecimalFormat df = new DecimalFormat("#.00000");
-		double temToal = Double.parseDouble(df.format(1.21147 - 0.85));
-		System.out.println("--->>" + temToal);
+		System.out.println("--->"+Double.parseDouble(format.format(0)));
 	}
 }

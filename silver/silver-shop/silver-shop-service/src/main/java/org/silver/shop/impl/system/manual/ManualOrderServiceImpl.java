@@ -1,5 +1,6 @@
 package org.silver.shop.impl.system.manual;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +22,10 @@ import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
+import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.RedisInfoUtils;
+import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.PhoneUtils;
@@ -35,6 +38,7 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @Service(interfaceClass = ManualOrderService.class)
@@ -383,7 +387,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 			return ReturnInfoUtils.errorInfo("订单号[" + morder.getOrder_id() + "]<--查询订单商品信息失败!");
 		} else if (!orderGoodsList.isEmpty()) {
 			if (flag == 1) {
-				return ReturnInfoUtils.errorInfo("运单号[" +  morder.getWaybill() + "]<--与商品信息已存在,请勿需重复导入!");
+				return ReturnInfoUtils.errorInfo("运单号[" + morder.getWaybill() + "]<--与商品信息已存在,请勿需重复导入!");
 			}
 			return ReturnInfoUtils.errorInfo("订单号[" + orderId + "]<--该订单与商品信息已存在,请勿需重复导入!");
 		} else {
@@ -403,7 +407,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 					statusMap.put(BaseCode.STATUS.toString(), "10");
 					statusMap.put(ORDER_ID, morder.getOrder_id());
 					statusMap.put(BaseCode.MSG.toString(),
-							"运单号[" +  morder.getWaybill() + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
+							"运单号[" + morder.getWaybill() + "],订单号[" + orderId + "]<--关联商品总计金额超过2000,请核对金额!");
 				} else if (flag == 2) {
 					statusMap.clear();
 					statusMap.put(BaseCode.STATUS.toString(), "10");
@@ -501,7 +505,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		if (StringEmptyUtils.isNotEmpty(DZKNNo)) {
 			spareParams.put("DZKNNo", DZKNNo);
 		}
-		if(!spareParams.isEmpty()){
+		if (!spareParams.isEmpty()) {
 			mosb.setSpareParams(spareParams.toString());
 		}
 		mosb.setMerchant_no(goodsInfo.get(MERCHANT_ID) + "");
@@ -594,7 +598,7 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 				morder.setDateSign(dateSign);
 				morder.setSerial(Integer.parseInt(datas.get("serial") + ""));
 				String waybillNo = datas.get("waybillNo") + "";
-				if(StringEmptyUtils.isNotEmpty(waybillNo)){
+				if (StringEmptyUtils.isNotEmpty(waybillNo)) {
 					morder.setWaybill(waybillNo);
 				}
 				morder.setDel_flag(0);
@@ -871,5 +875,116 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		City city = reCityList.get(0);
 		order.setRecipientCityName(city.getCityName());
 		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> updateManualOrderGoodsInfo(Merchant merchantInfo, Map<String, Object> datasMap) {
+		if(datasMap == null || merchantInfo ==null ){
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		String oldEntGoodsNo = datasMap.get("oldEntGoodsNo")+"";
+		String orderId = datasMap.get("orderId")+"";
+		int  seqNo = Integer.parseInt(datasMap.get("seqNo")+"");
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put(ORDER_ID, orderId);
+		paramMap.put("EntGoodsNo", oldEntGoodsNo);
+		paramMap.put("merchant_no", merchantInfo.getMerchantId());
+		paramMap.put("seqNo",seqNo);
+		List<MorderSub> reOrderSubList = manualOrderDao.findByProperty(MorderSub.class, paramMap, 1, 1);
+		if(reOrderSubList == null){
+			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
+		}else if ( !reOrderSubList.isEmpty()) {
+			MorderSub goodsInfo = reOrderSubList.get(0);
+			JSONArray jsonList = new JSONArray();
+			jsonList.add(datasMap);
+			Map<String,Object> reCheckMap = checkManualOrderGoodsInfo(jsonList);
+			if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
+				return reCheckMap;
+			}
+			return updateManualOrderGoodsInfo(merchantInfo,datasMap,goodsInfo);
+		}else{
+			return ReturnInfoUtils.errorInfo("订单号["+orderId+"]中未找到商品自编号["+oldEntGoodsNo+"]的商品信息！");
+		}
+	}
+
+	private Map<String, Object> updateManualOrderGoodsInfo(Merchant merchantInfo, Map<String, Object> datasMap, MorderSub goodsInfo) {
+		if(datasMap == null || merchantInfo ==null || goodsInfo == null){
+			return ReturnInfoUtils.errorInfo("修改参数不能为null");
+		}
+		//goodsInfo.setSeq(Integer.parseInt(strArr[1]));
+		goodsInfo.setEntGoodsNo(datasMap.get("newEntGoodsNo")+"");
+		goodsInfo.setHSCode(datasMap.get("hsCode")+"");
+		goodsInfo.setGoodsName(datasMap.get("goodsName")+"");
+		goodsInfo.setCusGoodsNo(datasMap.get("cusGoodsNo")+"");
+		goodsInfo.setCIQGoodsNo(datasMap.get("ciqGoodsNo")+"");
+		goodsInfo.setOriginCountry(datasMap.get("originCountry")+"");
+		goodsInfo.setGoodsStyle(datasMap.get("goodsStyle")+"");
+		goodsInfo.setBarCode(datasMap.get("barCode")+"");
+		goodsInfo.setBrand(datasMap.get("brand")+"");
+		goodsInfo.setUnit(datasMap.get("unit")+"");
+		double netWt = 0;
+		double grossWt = 0;
+		try{
+			netWt = Double.parseDouble(datasMap.get("netWt")+"");
+		}catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("净重错误！");
+		}
+		try{
+			grossWt = Double.parseDouble(datasMap.get("grossWt")+"");
+		}catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("毛重错误！");
+		}
+		if(netWt > grossWt){
+			return ReturnInfoUtils.errorInfo("净重不能大于毛重！");
+		}
+		goodsInfo.setNetWt(netWt);
+		goodsInfo.setGrossWt(grossWt);
+		if (StringEmptyUtils.isEmpty(datasMap.get("firstLegalCount")+"")) {
+			goodsInfo.setFirstLegalCount(0.0);
+		} else {
+			goodsInfo.setFirstLegalCount(Double.parseDouble(datasMap.get("firstLegalCount")+""));
+		}
+		if (StringEmptyUtils.isEmpty(datasMap.get("secondLegalCount")+"")) {
+			goodsInfo.setSecondLegalCount(0.0);
+		} else {
+			goodsInfo.setSecondLegalCount(Double.parseDouble(datasMap.get("secondLegalCount")+""));
+		}
+		goodsInfo.setStdUnit(datasMap.get("stdUnit")+"");
+		goodsInfo.setSecUnit(datasMap.get("secUnit")+"");
+		if (StringEmptyUtils.isEmpty(datasMap.get("numOfPackages"))) {
+			goodsInfo.setNumOfPackages(0);
+		} else {
+			goodsInfo.setNumOfPackages(Integer.parseInt(datasMap.get("numOfPackages")+""));
+		}
+		if (StringEmptyUtils.isEmpty(datasMap.get("packageType"))) {
+			goodsInfo.setPackageType(0);
+		} else {
+			goodsInfo.setPackageType(Integer.parseInt(datasMap.get("packageType")+""));
+		}
+		goodsInfo.setTransportModel(datasMap.get("transportModel")+"");
+		goodsInfo.setUpdateBy(merchantInfo.getMerchantName());
+		goodsInfo.setUpdateDate(new Date());
+		if (!manualOrderDao.update(goodsInfo)) {
+			return ReturnInfoUtils.errorInfo("更新订单备案商品错误,请重试!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 校验修改手工订单商品信息
+	 * @param jsonList  
+	 * @return Map
+	 */
+	private Map<String, Object> checkManualOrderGoodsInfo(JSONArray jsonList) {
+		
+		List<String> noNullKeys = new ArrayList<>();
+		noNullKeys.add("newEntGoodsNo");
+		noNullKeys.add("ciqGoodsNo");
+		noNullKeys.add("cusGoodsNo");
+		noNullKeys.add("hsCode");
+		noNullKeys.add("goodsName");
+		noNullKeys.add("goodsStyle");
+		noNullKeys.add("originCountry");
+		return CheckDatasUtil.changeMsg(jsonList, noNullKeys);
 	}
 }

@@ -132,11 +132,11 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-		<!-- 		 <ref bean="CronTriggerBean" />
+			<!-- 	 <ref bean="CronTriggerBean" />
 				<ref bean="pushOrderRecordBean" />
 				<ref bean="pushPaymentRecordBean" />
 				<ref bean="resendPushOrderRecordBean" />  
-				<ref bean="thirdPartyOrderCallBackBean" /> -->
+				<ref bean="thirdPartyOrderCallBackBean" />  -->
 				<!-- <ref bean="createReportBean" /> -->
 			</list>
 		</property>

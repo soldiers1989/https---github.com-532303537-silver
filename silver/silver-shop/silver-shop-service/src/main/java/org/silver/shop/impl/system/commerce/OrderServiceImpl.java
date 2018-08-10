@@ -1500,7 +1500,8 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reCheckMap;
 		}
-
+		//订单自编号
+		String entOrderNo = orderJson.get("EntOrderNo")+"";
 		String countryCode = orderJson.get("RecipientCountry") + "";
 		Map<String, Object> reCheckCountryMap = checkCountry(countryCode);
 		if (!"1".equals(reCheckCountryMap.get(BaseCode.STATUS.toString()) + "")) {
@@ -1514,31 +1515,31 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			double orderGoodTotal = Double.parseDouble(orderJson.get("OrderGoodTotal") + "");
 			if (orderGoodTotal > 2000) {
-				return ReturnInfoUtils.errorInfo("订单商品总金额超过2000！");
+				return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]商品总金额超过2000！");
 			}
 		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("订单商品总金额参数格式错误！");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]商品总金额参数格式错误！");
 		}
 		// 下单人身份证号码
 		String orderDocId = orderJson.get("OrderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			return ReturnInfoUtils.errorInfo("订单下单人身份证号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人身份证号码错误！");
 		}
 		if (orderDocId.contains("x")) {
-			return ReturnInfoUtils.errorInfo("订单下单人身份证号码必须是大写的[X]");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人身份证号码必须是大写的[X]");
 		}
 		String recipientTel = orderJson.get("RecipientTel") + "";
 		if (!PhoneUtils.isPhone(recipientTel)) {
-			return ReturnInfoUtils.errorInfo("订单收货人手机号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]收货人手机号码错误！");
 		}
 		String orderDocTel = orderJson.get("OrderDocTel") + "";
 		if (!PhoneUtils.isPhone(orderDocTel)) {
-			return ReturnInfoUtils.errorInfo("订单下单人手机号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人手机号码错误！");
 		}
 		String orderDocName = orderJson.get("OrderDocName") + "";
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
 				|| orderDocName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单下单人姓名错误！");
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人姓名错误！");
 		}
 		if (StringEmptyUtils.isNotEmpty(orderJson.get("otherPayment"))) {
 			// 抵付金额
@@ -1546,7 +1547,7 @@ public class OrderServiceImpl implements OrderService {
 			if (otherPayment > 0) {
 				String otherPayNotes = orderJson.get("otherPayNotes") + "";
 				if (StringEmptyUtils.isEmpty(otherPayNotes)) {
-					return ReturnInfoUtils.errorInfo("订单抵付金额为[" + otherPayment + "]，抵付说明不能为空！");
+					return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]抵付金额为[" + otherPayment + "]，抵付说明不能为空！");
 				}
 			}
 		}

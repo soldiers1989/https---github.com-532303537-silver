@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
+import org.silver.shop.model.system.tenant.MerchantFeeContent;
 
 /**
  * description：共用Dao方法
@@ -224,4 +225,6 @@ public interface BaseDao<T> {
 	 * @return
 	 */
 	public long findByPropertyOrCount(Class<T> entity, Map<String, Object> paramMap, List orList);
+
+
 }

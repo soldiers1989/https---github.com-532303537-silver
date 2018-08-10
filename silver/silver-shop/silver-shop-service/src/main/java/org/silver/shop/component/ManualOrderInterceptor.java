@@ -37,7 +37,6 @@ import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -142,31 +141,36 @@ public class ManualOrderInterceptor {
 		if (orderList == null || idCardList == null) {
 			return ReturnInfoUtils.errorInfo("订单集合参数不能为null");
 		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
-		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantMap;
+		try{
+			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+				return reMerchantMap;
+			}
+			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+			// 查询商户钱包
+			Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(), merchant.getMerchantName());
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				return reMap;
+			}
+			MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
+			// 查询代理商钱包
+			Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
+					merchant.getAgentParentName());
+			if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
+				return reAgentMap;
+			}
+			AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
+			// 计算实名认证的费用
+			Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, idCardList);
+			if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
+				return reIdCardMap;
+			}
+			// 订单申报平台服务费
+			return orderToll(orderList, merchantWallet, merchant);
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
-		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-		// 查询商户钱包
-		Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(), merchant.getMerchantName());
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return reMap;
-		}
-		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
-		// 查询代理商钱包
-		Map<String, Object> reAgentMap = walletUtils.checkWallet(3, merchant.getAgentParentId(),
-				merchant.getAgentParentName());
-		if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
-			return reAgentMap;
-		}
-		AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
-		// 计算实名认证的费用
-		Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, idCardList);
-		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
-			return reIdCardMap;
-		}
-		// 订单申报平台服务费
-		return orderToll(orderList, merchantWallet, merchant);
+		return null;
 	}
 
 	/**
@@ -199,6 +203,7 @@ public class ManualOrderInterceptor {
 		double balance = merchantWallet.getBalance();
 		// 订申报单手续费
 		double serviceFee = totalAmount * fee;
+		logger.error("--清算时--订单总金额->"+totalAmount+";--费率->"+fee+";--结果--"+serviceFee);
 		// 商户钱包扣款
 		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
 		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
@@ -325,11 +330,13 @@ public class ManualOrderInterceptor {
 			return reDetailsMap;
 		}
 		List<JSONObject> detailsList = (List<JSONObject>) reDetailsMap.get("jsonList");
+		//
 		List<JSONObject> newList = (List<JSONObject>) reDetailsMap.get("newList");
 		if (newList.isEmpty()) {// 当需要实名认证的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
 		double serviceFee = newList.size() * merchantCost.getPlatformCost();
+		logger.error("-清算时-身份证认证数量-->"+newList.size()+";--费率->"+merchantCost.getPlatformCost()+";---结果->"+serviceFee);
 		//
 		Map<String, Object> reMerchantWalletMap = updateMerchantWallet(merchant, merchantWallet, serviceFee,
 				agentWallet, detailsList);

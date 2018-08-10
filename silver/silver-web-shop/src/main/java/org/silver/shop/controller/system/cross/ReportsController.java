@@ -131,7 +131,7 @@ public class ReportsController {
 	
 	@RequestMapping(value = "/tmpUpdate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("临时更新当月历史数据")
+	@ApiOperation("临时更新7月至今数据")
 	//@RequiresRoles("Manager")
 	// @RequiresPermissions("report:getSynthesisReportDetails")
 	public String tmpUpdate(HttpServletRequest req, HttpServletResponse response) {

@@ -52,16 +52,14 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 	@Override
 	public Object tempUpdate() {
 		Map<String, Object> item = new HashMap<>();
-		item.put("merchantId", "MerchantId_00074");
+		item.put("merchantId", "MerchantId_00057");
 		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
-		System.out.println("---merchantlist>>" + merchantlist.size());
 		for (Merchant merchant : merchantlist) {
-			
 			params = new HashMap<>();
-			params.put("startTime", DateUtil.parseDate("2018-07-27 00:00:00", "yyyy-MM-dd HH:mm:ss"));
-			params.put("endTime", DateUtil.parseDate("2018-07-31 23:44:00", "yyyy-MM-dd HH:mm:ss"));
+			params.put("startTime", DateUtil.parseDate("2018-08-10 17:00:00", "yyyy-MM-dd HH:mm:ss"));
+			params.put("endTime", DateUtil.parseDate("2018-08-10 23:44:00", "yyyy-MM-dd HH:mm:ss"));
 			//params.put("endTime", DateUtil.parseDate("2018-07-31 17:44:00", "yyyy-MM-dd HH:mm:ss"));
 			params.put("merchant_no", merchant.getMerchantId());
 			cacheMap = new HashMap<>();
