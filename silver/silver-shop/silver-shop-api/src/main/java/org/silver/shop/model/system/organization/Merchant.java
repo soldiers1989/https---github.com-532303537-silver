@@ -45,7 +45,9 @@ public class Merchant implements Serializable {
 	private String sku;// (名称来源自启邦)
 	private int thirdPartyFlag;// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
 	private String thirdPartyKey;// 第三方密钥
-
+	private String logisticsCompanyCode;//物流企业编码
+	private String logisticsCompanyName;//物流公司名称
+	
 	public Long getId() {
 		return id;
 	}
@@ -298,4 +300,20 @@ public class Merchant implements Serializable {
 		this.thirdPartyKey = thirdPartyKey;
 	}
 
+	public String getLogisticsCompanyCode() {
+		return logisticsCompanyCode;
+	}
+
+	public String getLogisticsCompanyName() {
+		return logisticsCompanyName;
+	}
+
+	public void setLogisticsCompanyCode(String logisticsCompanyCode) {
+		this.logisticsCompanyCode = logisticsCompanyCode;
+	}
+
+	public void setLogisticsCompanyName(String logisticsCompanyName) {
+		this.logisticsCompanyName = logisticsCompanyName;
+	}
+	
 }

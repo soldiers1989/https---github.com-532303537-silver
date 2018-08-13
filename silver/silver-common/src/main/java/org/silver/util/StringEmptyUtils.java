@@ -16,7 +16,6 @@ public class StringEmptyUtils {
 	 * <li>isEmpty(null) = true</li>
 	 * <li>isEmpty("null") = true</li>
 	 * <li>isEmpty("") = true</li>
-	 * <li>isEmpty(" ") = true</li> 
 	 * <li>isEmpty("abc") = false</li>
 	 * </ul>
 	 * 

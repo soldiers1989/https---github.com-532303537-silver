@@ -1,7 +1,9 @@
 package org.silver.shop.controller.system;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 /**
  * 权限Controller
@@ -178,4 +181,14 @@ public class AuthorityController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(authorityTransaction.deleteAuthorityInfo(authorityId)).toString();
 	}
+	
+	public static void main(String[] args) {
+		List list = new ArrayList<>();
+		//JSONArray json = (JSONArray) list;
+		JSONArray arr = new JSONArray();
+		
+		List<?> list2 = JSONArray.toList(arr, new Object(), new JsonConfig());
+		System.out.println("---"+list2.toString());
+	}
 }
+

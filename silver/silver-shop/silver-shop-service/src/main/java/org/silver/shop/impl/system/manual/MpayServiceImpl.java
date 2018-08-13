@@ -8,6 +8,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
@@ -39,6 +42,7 @@ import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.task.OrderIdCardTollTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
 import org.silver.shop.util.MerchantUtils;
@@ -53,6 +57,7 @@ import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.SortUtil;
+import org.silver.util.SplitListUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
 import org.silver.util.YmHttpUtil;
@@ -196,7 +201,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> reTokMap = accessTokenService.getRedisToks(customsMap.get("appkey") + "",
 				customsMap.get("appSecret") + "");
 		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
-			return ReturnInfoUtils.errorInfo(reTokMap.get("errMsg") + "");
+			return ReturnInfoUtils.errorInfo(reTokMap.get("msg") + "");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
 		//
@@ -367,14 +372,17 @@ public class MpayServiceImpl implements MpayService {
 		}
 		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
 		double idCost = merchantCost.getPlatformCost();
+		long startTime = System.currentTimeMillis();
 		// 实名认证每笔手续费
 		Map<String, Object> reIdCardMap = getTollIdCardList(jsonList);
 		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 			return reIdCardMap;
 		}
-		//收费的身份证集合
+		long endTime = System.currentTimeMillis();
+		System.out.println("-查询身份证耗时-->>" + (endTime - startTime) + "ms");
+		// 收费的身份证集合
 		List<Object> reIdCardList = (List<Object>) reIdCardMap.get("idCardList");
-		//免费身份证集合
+		// 免费身份证集合
 		List<Object> reIdCardFreeList = (List<Object>) reIdCardMap.get("idCardFreeList");
 		// 计算需要实名认证收费的费用之和
 		double idCertificationFee = reIdCardList.size() * idCost;
@@ -441,42 +449,37 @@ public class MpayServiceImpl implements MpayService {
 		if (jsonList == null) {
 			return ReturnInfoUtils.errorInfo("订单id集合不能为null");
 		}
-		//收费的身份证集合
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		Map<String, Object> reMap = null;
+		int count = jsonList.size();
+		// 收费的身份证集合
 		List<String> idCardList = new ArrayList<>();
-		//不需要计费的身份证集合
+		// 不需要计费的身份证集合
 		List<String> idCardFreeList = new ArrayList<>();
-		Map<String, Object> params = null;
-		for (int i = 0; i < jsonList.size(); i++) {
-			Map<String, Object> map = (Map<String, Object>) jsonList.get(i);
-			params = new HashMap<>();
-			params.put(ORDER_ID, map.get("orderNo") + "");
-			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 1, 1);
-			if (reList == null) {
-				return ReturnInfoUtils.errorInfo("获取订单中实名认证不通过的订单时，查询订单信息失败,服务器繁忙！");
-			} else if (!reList.isEmpty()) {
-				Morder order = reList.get(0);
-				// 身份证实名认证标识：0-未实名、1-已实名、2-认证失败
-				params.clear();
-				params.put(MERCHANT_ID, order.getMerchant_no());
-				params.put("name", order.getOrderDocName().trim());
-				params.put("idNumber", order.getOrderDocId().trim());
-				List<IdCard> reIdList = morderDao.findByProperty(IdCard.class, params, 1, 1);
-				if (reIdList == null) {
-					logger.error(order.getOrder_id() + "获取订单中实名认证不通过的订单时--查询实名库失败--");
-				} else if (!reIdList.isEmpty()) {// 实名库已存在身份证信息
-					IdCard idCard = reIdList.get(0);
-					// 只要是实名库的认证状态是认证失败,则都需要进行实名计费
-					if ("failure".equals(idCard.getStatus())) {
-						idCardList.add(order.getOrder_id());
-					}else{
-						idCardFreeList.add(order.getOrder_id());
-					}
-				} else {// 当实名库中没有该商户的姓名+身份证号码，则进行计费统计
-					idCardList.add(order.getOrder_id());
-				}
-			}
+		if (count > 100 && count <= 200) {
+			reMap = SplitListUtils.batchList(jsonList, 6);
+		} else if (count > 200 && count <= 300) {
+			reMap = SplitListUtils.batchList(jsonList, 8);
+		} else if (count > 10) {
+			reMap = SplitListUtils.batchList(jsonList, 4);
+		} else {
+			reMap = SplitListUtils.batchList(JSONArray.toList(jsonList, new ArrayList<>(), new JsonConfig()), 1);
 		}
-		Map<String,Object> map = new HashMap<>();
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		List list = (List<?>) reMap.get(BaseCode.DATAS.toString());
+		for (int i = 0; i < list.size(); i++) {
+			List newList = (List) list.get(i);
+			threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao));
+		}
+		threadPool.shutdown();
+		try {//
+			threadPool.awaitTermination(1, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Map<String, Object> map = new HashMap<>();
 		map.put("idCardList", idCardList);
 		map.put("idCardFreeList", idCardFreeList);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -776,6 +779,10 @@ public class MpayServiceImpl implements MpayService {
 				// 订单接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 				order.setStatus(2);
 				order.setUpdate_date(new Date());
+				// 申报时间,防止订单申报时间重复更新，故而没有申报时间才进行时间设置
+				if (StringEmptyUtils.isEmpty(order.getDeclareDate())) {
+					order.setDeclareDate(new Date());
+				}
 				if (StringEmptyUtils.isNotEmpty(eport) && StringEmptyUtils.isNotEmpty(ciqOrgCode)
 						&& StringEmptyUtils.isNotEmpty(customsCode)) {
 					order.setEport(eport);

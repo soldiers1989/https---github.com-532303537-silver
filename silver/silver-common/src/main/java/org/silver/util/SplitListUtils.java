@@ -17,12 +17,12 @@ public class SplitListUtils {
 	/**
 	 * 将List集合拆分为多个
 	 * @param dataList 
-	 * @param size 数量
+	 * @param size 拆分的数量
 	 * @return Map
 	 */
 	public static Map<String, Object> batchList(List dataList, int size) {
 		// 分批处理
-		if (null != dataList && !dataList.isEmpty()) {
+		if (dataList != null && !dataList.isEmpty()) {
 			Map<String, Object> datasMap = new HashMap<>();
 			List<Object> list = new ArrayList<>();
 			Integer totalSize = dataList.size();
@@ -50,18 +50,21 @@ public class SplitListUtils {
 				datasMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 				datasMap.put(BaseCode.DATAS.toString(), list);
 				return datasMap;
+			}else{
+				list.add(dataList);
+				return ReturnInfoUtils.successDataInfo(dataList);
 			}
 		}
-		return ReturnInfoUtils.errorInfo("拆分List错误,参数错误!");
+		return ReturnInfoUtils.errorInfo("拆分List错误！");
 	}
 
 	public static void main(String[] args) {
 		long startTime =System.currentTimeMillis();
 		List<Object> l = new ArrayList();
-		for (int i = 0; i < 1000000; i++) {
+		for (int i = 0; i < 5; i++) {
 			l.add(i);
 		}
-		Map<String, Object> map = batchList(l, 4);
+		Map<String, Object> map = batchList(l, 1);
 		
 		System.out.println(map);
 		long endTime =System.currentTimeMillis();

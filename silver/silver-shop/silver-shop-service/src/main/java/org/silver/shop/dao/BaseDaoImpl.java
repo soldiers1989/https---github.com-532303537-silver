@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +19,12 @@ import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
+import org.silver.util.DateUtil;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
+
+import com.justep.baas.data.DataUtils;
+import com.justep.baas.data.Table;
 
 /**
  * 提供数据访问层共用DAO方法
@@ -646,11 +652,50 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			}
 		}
 	}
-	
-	
-	
-	
-	
+
+	public List<Object> testSql(List<Map<String, Object>> paramsList) {
+		if (paramsList == null) {
+			return null;
+		}
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT * FROM ym_shop_base_id_card t1 WHERE (t1.merchantId,t1.name,t1.idNumber) IN ( ");
+			if (!paramsList.isEmpty()) {
+				for (int i = 0; i < paramsList.size(); i++) {
+					sbSQL.append(" ( ? , ? , ? ) , ");
+					Map<String, Object> map = paramsList.get(i);
+					sqlParams.add(map.get("merchantId"));
+					sqlParams.add(map.get("name"));
+					sqlParams.add(map.get("idNumber"));
+				}
+				// 删除结尾的逗号
+				sbSQL.deleteCharAt(sbSQL.length() - 2);
+				sbSQL.append(" )  AND t1.status != 'failure' ");
+			}
+			session = getSession();
+			Query query = session.createSQLQuery(sbSQL.toString());
+			for (int i = 0; i < sqlParams.size(); i++) {
+				query.setString(i, sqlParams.get(i) + "");
+			}
+			List resources = query.list();
+			System.out.println("--query.list()->>" + query.list().toString());
+			session.connection().close();
+			session.close();
+			return null;
+			// return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			// log.error("查询数据出错！", re);
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> paramMap = new HashMap<>();
@@ -663,15 +708,35 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		 * orMap.put("order_serial_no", "222"); orMap.put("order_id",
 		 * "65478417");
 		 */
-		Map<String, Object> params2 = new HashMap<>();
-		params2.put("merchantId", "MerchantId_00057");
-		params2.put("name", "李晨燕");
-		params2.put("idNumber", "320525199201121520");
-		List<IdCard> reList = bd.findByProperty(IdCard.class, params2, 1, 1);
-
-		System.out.println("0----->>>>" + reList.size());
+		List<Morder> reList1 = bd.findByProperty(Morder.class, null, 1, 1);
+		  ExecutorService threadPool = Executors.newCachedThreadPool();
+		  
+		
+		Map<String, Object> map = null;
+		List<Map<String, Object>> list = new ArrayList<>();
+		long startTime = System.currentTimeMillis();
+		System.out.println("--开始查询----");
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchant_no", "MerchantId_00057");
+		params.put("startTime", DateUtil.parseDate2("2018-07-01 00:00:00"));
+		params.put("endTime", DateUtil.parseDate2("2018-08-10 23:50:50"));
+		int size = 1;
+		for (int i = 0; i < 301; i++) {
+			List<Morder> reList = bd.findByPropertyLike(Morder.class, params, null, size, 1);
+			if (reList != null && !reList.isEmpty()) {
+				map = new HashMap<>();
+				map.put("merchantId", reList.get(0).getMerchant_no());
+				map.put("name", reList.get(0).getOrderDocName());
+				map.put("idNumber", reList.get(0).getOrderDocId());
+				list.add(map);
+			}
+			// System.out.println("--page->>>"+ size);
+			size++;
+		}
+		System.out.println("--list->>" + list.size());
+		bd.testSql(list);
+		long endTime = System.currentTimeMillis();
+		System.out.println("---耗时->>" + (endTime - startTime) + "ms");
 	}
-
-	
 
 }

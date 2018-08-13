@@ -77,7 +77,8 @@ public class Morder implements Serializable {
 	private double otherPayment;// 抵付金额
 	private String otherPayNotes;// 抵付说明:如果填写抵付金额时，此项必填。
 	private String resendThirdPartyStatus;// 第三方重发状态：success-成功，failure-失败
-	
+	private Date declareDate;// 订单申报时间
+
 	public long getId() {
 		return id;
 	}
@@ -556,6 +557,14 @@ public class Morder implements Serializable {
 
 	public void setResendThirdPartyStatus(String resendThirdPartyStatus) {
 		this.resendThirdPartyStatus = resendThirdPartyStatus;
+	}
+
+	public Date getDeclareDate() {
+		return declareDate;
+	}
+
+	public void setDeclareDate(Date declareDate) {
+		this.declareDate = declareDate;
 	}
 
 }

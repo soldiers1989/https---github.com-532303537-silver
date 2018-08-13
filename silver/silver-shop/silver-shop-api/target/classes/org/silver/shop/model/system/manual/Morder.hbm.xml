@@ -9,7 +9,6 @@
 		<id name="id" type="long">
 			<column name="id" />
 			<generator class="identity">
-
 			</generator>
 		</id>
 		<property name="order_id">
@@ -211,6 +210,9 @@
 		</property>
 		<property name="resendThirdPartyStatus">
 			<column name="resendThirdPartyStatus" />
+		</property>
+			<property name="declareDate" type="java.util.Date">
+			<column name="declareDate"  />
 		</property>
 	</class>
 </hibernate-mapping>
