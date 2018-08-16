@@ -29,6 +29,7 @@ public enum StatusCode {
      * 登录已过期
      */
 	LOSS_SESSION("-6","登录已过期"),
+
 	/**
 	 * 未知错误
 	 */

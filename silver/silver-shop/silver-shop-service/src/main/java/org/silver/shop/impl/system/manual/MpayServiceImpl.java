@@ -8,8 +8,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
@@ -221,21 +224,17 @@ public class MpayServiceImpl implements MpayService {
 		String serialNo = "orderRecord_" + SerialNoUtils.getSerialNo("orderRecord");
 		params.put("serialNo", serialNo);
 		String pushType = customsMap.get("pushType") + "";
+		Map<String, Object> reMap = null;
 		// 当商户为自主申报时
 		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
 			double fee = Double.parseDouble(reCheckMap.get("fee") + "");
 			int backCoverFlag = Integer.parseInt(reCheckMap.get("backCoverFlag") + "");
-			Map<String, Object> reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList, fee,
-					backCoverFlag);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
+			reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList, fee, backCoverFlag);
 		} else {
-			Map<String, Object> reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap,
-					params);
-			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-				return reMap;
-			}
+			reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap, params);
+		}
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put("serialNo", serialNo);
@@ -339,6 +338,14 @@ public class MpayServiceImpl implements MpayService {
 		return checkManualOrderInfo(order);
 	}
 
+	/**
+	 * 设置订单支付用户
+	 * 
+	 * @param member
+	 *            用户信息
+	 * @param order
+	 *            订单信息
+	 */
 	private void setOrderPayer(Member member, Morder order) {
 		if (order != null && member != null) {
 			order.setOrderPayerId(member.getMemberId());
@@ -386,7 +393,7 @@ public class MpayServiceImpl implements MpayService {
 		List<Object> reIdCardFreeList = (List<Object>) reIdCardMap.get("idCardFreeList");
 		// 计算需要实名认证收费的费用之和
 		double idCertificationFee = reIdCardList.size() * idCost;
-		logger.error("--订申报时-身份证认证数量-->" + reIdCardList.size() + ";--费率->" + idCost + ";--结果-->" + idCertificationFee);
+		logger.error("--订申报时--免费数量-->"+reIdCardFreeList.size()+";--实名认证收费数量-->" + reIdCardList.size() + ";--费率->" + idCost + ";--结果-->" + idCertificationFee);
 		// 初始化平台服务费
 		double fee;
 		// 封底标识：1-正常计算、2-不满100提至100计算
@@ -435,6 +442,7 @@ public class MpayServiceImpl implements MpayService {
 		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		map.put("list", newList);
 		reIdCardList.addAll(reIdCardFreeList);
+		logger.error("--订申报时-合并后的身份证数量-->"+reIdCardList.size());
 		map.put("idCardList", reIdCardList);
 		return map;
 	}
@@ -451,11 +459,12 @@ public class MpayServiceImpl implements MpayService {
 		}
 		ExecutorService threadPool = Executors.newCachedThreadPool();
 		Map<String, Object> reMap = null;
+		//
 		int count = jsonList.size();
 		// 收费的身份证集合
-		List<String> idCardList = new ArrayList<>();
+		List<String> idCardList = new Vector<String>();
 		// 不需要计费的身份证集合
-		List<String> idCardFreeList = new ArrayList<>();
+		List<String> idCardFreeList = new Vector<String>();
 		if (count > 100 && count <= 200) {
 			reMap = SplitListUtils.batchList(jsonList, 6);
 		} else if (count > 200 && count <= 300) {
@@ -463,22 +472,30 @@ public class MpayServiceImpl implements MpayService {
 		} else if (count > 10) {
 			reMap = SplitListUtils.batchList(jsonList, 4);
 		} else {
-			reMap = SplitListUtils.batchList(JSONArray.toList(jsonList, new ArrayList<>(), new JsonConfig()), 1);
+			reMap = SplitListUtils.batchList(JSONArray.toList(jsonList, new Vector<>(), new JsonConfig()), 1);
 		}
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
-		List list = (List<?>) reMap.get(BaseCode.DATAS.toString());
+		List<?> list = (List<?>) reMap.get(BaseCode.DATAS.toString());
+		List<Future> cacheList = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
 			List newList = (List) list.get(i);
-			threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao));
+			Future future = threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao));
+			cacheList.add(future);
 		}
-		threadPool.shutdown();
-		try {//
-			threadPool.awaitTermination(1, TimeUnit.MINUTES);
+		try {
+			for (int i = 0; i < cacheList.size(); i++) {
+				Future future = cacheList.get(i);
+				System.out.println("--第-" + i + "个线程返回->>" + future.get());
+				future.get();
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
 		}
+		threadPool.shutdown();
 		Map<String, Object> map = new HashMap<>();
 		map.put("idCardList", idCardList);
 		map.put("idCardFreeList", idCardFreeList);

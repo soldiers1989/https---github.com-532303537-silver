@@ -19,6 +19,7 @@ import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.util.DateUtil;
 import org.silver.util.YmHttpUtil;
 import org.springframework.stereotype.Service;
 
@@ -211,8 +212,6 @@ public class OrderTransaction {
 		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web-shop/order/thirdPromoteBusiness",
 		// item));
 
-		String str = "X";
-		
-		System.out.println("--->>" + str.contains("x"));
+		System.out.println("--->"+DateUtil.parseDate("订单日期", "yyyyMMddHHmmss"));
 	}
 }

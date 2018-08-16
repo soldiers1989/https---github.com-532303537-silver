@@ -23,4 +23,14 @@ public class MemberWalletTransaction {
 		return memberWalletService.getInfo(memberInfo);
 	}
 
+	public Map<String,Object> addPayReceipt(double amount, String serialNo) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberWalletService.addPayReceipt(memberInfo,amount,serialNo);
+	}
+
+	//
+	public Map<String, String> memberRechargeReceive(Map<String, String> params) {
+		return memberWalletService.memberRechargeReceive(params);
+	}
 }

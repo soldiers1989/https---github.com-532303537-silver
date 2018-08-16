@@ -87,16 +87,4 @@ public class IdCardCertificationLogController {
 		return JSONObject.fromObject(idCardCertificationTransaction.tempUpdate()).toString();
 	}
 	
-	@RequestMapping(value = "/jmTempUpdate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
-	@RequiresRoles("Merchant")
-	@ApiOperation("临时更新-商户身份证认证日志记录")
-	public String jmTempUpdate(HttpServletRequest req, HttpServletResponse response) {
-		String originHeader = req.getHeader("Origin");
-		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
-		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardCertificationTransaction.tempUpdate()).toString();
-	}
 }

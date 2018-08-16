@@ -1,7 +1,9 @@
 package org.silver.shop.controller.system.manual;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -85,7 +89,7 @@ public class ManualOrderController {
 		params.put("pushType", "selfReportOrder");
 		return JSONObject.fromObject(mdataService.sendMorderRecord(params, orderNoPack)).toString();
 	}
-	
+
 	@RequestMapping(value = "/updateManualOrderInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户修改手工订单信息")
@@ -106,7 +110,7 @@ public class ManualOrderController {
 		}
 		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderInfo(datasMap)).toString();
 	}
-	
+
 	@RequestMapping(value = "/updateManualOrderGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户修改手工订单商品信息")
@@ -127,11 +131,52 @@ public class ManualOrderController {
 		}
 		return JSONObject.fromObject(manualOrderTransaction.updateManualOrderGoodsInfo(datasMap)).toString();
 	}
-	
+
+	@RequestMapping(value = "/sendMsgToLogistics", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户将订单推送至物流")
+	@ResponseBody
+	public String sendMsgToLogistics(HttpServletResponse resp, HttpServletRequest req, @RequestParam("a") String a,
+			@RequestParam("b") String b) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);
+		//
+		List<String> orderList = new ArrayList<>();
+		Enumeration<String> itkeys = req.getParameterNames();
+		while (itkeys.hasMoreElements()) {
+			String key = itkeys.nextElement();
+			orderList.add(req.getParameter(key));
+		}
+		if (orderList.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单id不能为空！")).toString();
+		}
+		return JSONObject.fromObject(manualOrderTransaction.sendMsgToLogistics(orderList)).toString();
+	}
+
+	@RequestMapping(value = "/getWaybillNumber", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户根据订单号获取运单号")
+	@ResponseBody
+	public String getWaybillNumber(HttpServletResponse resp, HttpServletRequest req,
+			@RequestParam("orderId") String orderId) {
+		String originHeader = req.getHeader("Origin");
+		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		resp.setHeader("Access-Control-Allow-Credentials", "true");
+		resp.setHeader("Access-Control-Allow-Origin", originHeader);		
+		if (StringEmptyUtils.isEmpty(orderId)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("订单号不能为空！")).toString();
+		}
+		return JSONObject.fromObject(manualOrderTransaction.getWaybillNumber(orderId)).toString();
+	}
+
 	public static void main(String[] args) {
-		Map<String,Object> item = new HashMap<>();
+		Map<String, Object> item = new HashMap<>();
 		item.put("order_code", "76861711609");
 		String reString = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/waybill/queryOrderStatus", item);
-		System.out.println("------[>>"+reString);
+		System.out.println("------[>>" + reString);
 	}
 }

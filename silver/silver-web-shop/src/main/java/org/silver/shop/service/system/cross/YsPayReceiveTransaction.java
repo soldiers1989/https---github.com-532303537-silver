@@ -31,4 +31,6 @@ public class YsPayReceiveTransaction {
 	public Map<String, Object> fenZhangReceive(Map params) {
 		return null;
 	}
+
+	
 }

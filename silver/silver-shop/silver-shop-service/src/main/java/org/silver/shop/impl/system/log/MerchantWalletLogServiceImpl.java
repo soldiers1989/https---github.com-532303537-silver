@@ -99,7 +99,8 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 	}
 
 	@Override
-	public Map<String,Object> getWalletLog(String merchantId, int type, int page, int size, String startDate, String endDate) {
+	public Map<String, Object> getWalletLog(String merchantId, int type, int page, int size, String startDate,
+			String endDate) {
 		if (page >= 0 && size >= 0 && type >= 0 && StringEmptyUtils.isNotEmpty(startDate)
 				&& StringEmptyUtils.isNotEmpty(endDate)) {
 			Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, "");
@@ -108,18 +109,19 @@ public class MerchantWalletLogServiceImpl implements MerchantWalletLogService {
 			}
 			MerchantWalletContent wallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			Map<String, Object> params = new HashMap<>();
-			try{
-				params.put("startDate", DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss"));
-				params.put("endDate", DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss"));
-			}catch (Exception e) {
+			if (DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss") == null
+					|| DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss") == null) {
 				return ReturnInfoUtils.errorInfo("日期格式错误,请重新输入!");
+
 			}
+			params.put("startDate", DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss"));
+			params.put("endDate", DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss"));
 			params.put("merchantWalletId", wallet.getWalletId());
 			if (type > 0) {
 				params.put("type", type);
 			}
-			List<MerchantWalletLog> reList = merchantWalletLogDao.findByPropertyLike(MerchantWalletLog.class, params, null,
-					page, size);
+			List<MerchantWalletLog> reList = merchantWalletLogDao.findByPropertyLike(MerchantWalletLog.class, params,
+					null, page, size);
 			long tatolCount = merchantWalletLogDao.findByPropertyLikeCount(MerchantWalletLog.class, params, null);
 			if (reList == null) {
 				return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");

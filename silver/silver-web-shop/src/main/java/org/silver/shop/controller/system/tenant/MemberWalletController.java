@@ -2,6 +2,7 @@ package org.silver.shop.controller.system.tenant;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.silver.common.BaseCode;
 import org.silver.shop.config.FenZhangConfig;
 import org.silver.shop.controller.system.cross.DirectPayConfig;
 import org.silver.shop.service.system.tenant.ManagerWalletTransaction;
@@ -50,8 +52,7 @@ public class MemberWalletController {
 		return JSONObject.fromObject(memberWalletTransaction.getInfo()).toString();
 	}
 	
-	@RequestMapping(value = "/onlineRecharge", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
-	@ResponseBody
+	@RequestMapping(value = "/onlineRecharge", produces = "application/json; charset=utf-8")
 	@ApiOperation("线上充值")
 	@RequiresRoles("Member")
 	//@RequiresPermissions("merchantWallet:getMerchantWalletInfo")
@@ -70,7 +71,7 @@ public class MemberWalletController {
 			req.setAttribute("sign_type", FenZhangConfig.SIGN_ALGORITHM);
 			// request.setAttribute("sign", userName);
 			// 生成商户订单 out_trade_no total_amount
-			req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/memberRecharge");
+			req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/memberRechargeReceive");
 			req.setAttribute("return_url", "https://asme.191ec.com/200.html");
 			// req.setAttribute("return_url",
 			// "https://www.191ec.com/silver-web-shop/");
@@ -92,18 +93,16 @@ public class MemberWalletController {
 			req.setAttribute("support_card_type", "");
 			req.setAttribute("bank_account_no", "");
 			// 进行日志记录
-			//merchantWalletTransaction.addWalletRechargeLog(Double.parseDouble(amount), serialNo);
+			Map<String,Object> reMap = memberWalletTransaction.addPayReceipt(Double.parseDouble(amount), serialNo);
+			if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+				return JSONObject.fromObject(reMap).toString();
+			}
 			//return JSONObject.fromObject(memberWalletTransaction.onlineRecharge(amount)).toString();
-			return "fen_zhang_pay";
+			return "ys_pay";
 		} else {
 			// 跳转至错误页面
 			return "yspay_error";
 		}
 	}
 	
-	private static Logger logger = LogManager.getLogger(Object.class);
-	public static void main(String[] args) {
-		logger.error("-error测试！！！！！！！！！！！-");
-		logger.warn("-debug测试！！！！！！！！！！！-");
-	}
 }

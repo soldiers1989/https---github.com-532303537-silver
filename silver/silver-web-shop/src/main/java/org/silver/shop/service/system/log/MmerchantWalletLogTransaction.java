@@ -18,7 +18,6 @@ public class MmerchantWalletLogTransaction {
 	//
 	public Object getMerchantWalletLog(String startDate, String endDate, int type, int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		return merchantWalletLogService.getWalletLog(merchantId,type,page,size,startDate,endDate);

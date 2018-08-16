@@ -49,6 +49,11 @@ public class MemberTransaction {
 		if (!IdcardValidator.validate18Idcard(memberIdCard)) {
 			return ReturnInfoUtils.errorInfo("身份证号输入错误,请重新输入!");
 		}
+		// 由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间
+		String accountRegex = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z_]{8,16}$";
+		if (!account.matches(accountRegex)) {
+			return ReturnInfoUtils.errorInfo("用户名称必须由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间！");
+		}
 		if (loginPass.length() < 6 || loginPass.length() > 20) {
 			return ReturnInfoUtils.errorInfo("密码长度只能在6-20个字符之间!");
 		}
@@ -142,11 +147,19 @@ public class MemberTransaction {
 
 	public Map<String, Object> getMemberInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取用户登录时,shiro存入在session中的数据
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		String memberId = memberInfo.getMemberId();
-		// String memberName = memberInfo.getMemberName();
-		return memberService.getMemberInfo(memberId);
+		String tel = memberInfo.getMemberTel();
+		String telTop = tel.substring(0, 3);
+		String telEnd = tel.substring(tel.length() - 4, tel.length());
+		memberInfo.setMemberTel(telTop + "****" + telEnd);
+//		String name = memberInfo.getMemberIdCardName();
+//		String nameTop = name.substring(0, 1);
+//		memberInfo.setMemberIdCardName(nameTop + "*");
+		String idcard = memberInfo.getMemberIdCard();
+		String idTop = idcard.substring(0, 1);
+		String idEnd = tel.substring(tel.length() - 1, tel.length());
+		memberInfo.setMemberIdCard(idTop + "****************" + idEnd);
+		return ReturnInfoUtils.successDataInfo(memberInfo);
 	}
 
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {

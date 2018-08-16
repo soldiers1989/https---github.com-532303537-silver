@@ -112,6 +112,7 @@ public class ManualOrderInterceptor {
 					String merchantId = args[0] + "";
 					JSONArray orderList = JSONArray.fromObject(json.get("orderList"));
 					JSONArray idCardList = JSONArray.fromObject(json.get("idCardList"));
+					logger.error("--商户实名认证与订单申报手续费计算-AOP-idCardList--" + idCardList.toString());
 					MerchantWalletTollTask merchantWalletTollTask = new MerchantWalletTollTask(orderList, merchantId,
 							manualOrderInterceptor, idCardList);
 					threadPool.submit(merchantWalletTollTask);

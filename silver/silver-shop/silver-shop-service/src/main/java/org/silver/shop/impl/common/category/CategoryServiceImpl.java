@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.silver.common.BaseCode;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.category.CategoryService;
 import org.silver.shop.dao.common.category.CategoryDao;
@@ -673,9 +674,7 @@ public class CategoryServiceImpl implements CategoryService {
 		try {
 			goodsFirstTypeId = Long.parseLong(paramMap.get("firstTypeId") + "");
 		} catch (Exception e) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), "参数错误,请重试!");
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("参数错误！");
 		}
 		// 根据Id查询第一商品类型
 		params.put("id", goodsFirstTypeId);
@@ -698,9 +697,7 @@ public class CategoryServiceImpl implements CategoryService {
 			try {
 				firstNo = Integer.parseInt(paramMap.get("serialNo") + "");
 			} catch (Exception e) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NOTICE.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "序号参数错误,请重试!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo( "序号参数错误,请重试!");
 			}
 			GoodsFirstType goodsFirstType = (GoodsFirstType) goodsFirstList.get(0);
 			goodsFirstType.setFirstTypeName(goodsFirstTypeName);
@@ -708,9 +705,7 @@ public class CategoryServiceImpl implements CategoryService {
 			goodsFirstType.setUpdateDate(date);
 			goodsFirstType.setSerialNo(firstNo);
 			if (!categoryDao.update(goodsFirstType)) {
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "修改商品第一类型失败,请重试！");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("修改商品第一类型失败,请重试！");
 			}
 			for (int i = 0; i < reGoodsRecordDetailList.size(); i++) {
 				GoodsRecordDetail goodsRecordInfo = (GoodsRecordDetail) reGoodsRecordDetailList.get(i);
@@ -730,8 +725,7 @@ public class CategoryServiceImpl implements CategoryService {
 					return statusMap;
 				}
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
 			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
 			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
@@ -745,18 +739,16 @@ public class CategoryServiceImpl implements CategoryService {
 	 * @return
 	 */
 	private final Map<String, Object> refreshCache() {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> datasMap = findGoodsType();
-		String status = datasMap.get(BaseCode.STATUS.toString()) + "";
-		if ("1".equals(status)) {
+		if ("1".equals(datasMap.get(BaseCode.STATUS.toString()))) {
 			datasMap = (Map) datasMap.get(BaseCode.DATAS.getBaseCode());
 			// 将已查询出来的商品类型存入redis,有效期为1小时
 			System.out.println("-重新放入缓存-------------------");
-			JedisUtil.setListDatas("Shop_Key_GoodsCategory_Map", 3600, datasMap);
+			JedisUtil.setListDatas(RedisKey.SHOP_KEY_GOODS_CATEGORY_MAP, 3600, datasMap);
+			return ReturnInfoUtils.successInfo();
+		}else{
+			return ReturnInfoUtils.errorInfo("操作失败，未知错误！");
 		}
-		statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-		statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-		return statusMap;
 	}
 
 	@Override

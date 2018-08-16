@@ -317,13 +317,8 @@ public class MemberServiceImpl implements MemberService {
 		return params;
 	}
 
-	/**
-	 * 根据(手工)订单信息注册会员信息
-	 * 
-	 * @param Morder
-	 *            手工订单实体信息
-	 * @return Map
-	 */
+	
+	@Override
 	public Map<String, Object> registerMember(Morder order) {
 		if (order == null) {
 			return ReturnInfoUtils.errorInfo("注册会员信息失败,请求参数错误!");

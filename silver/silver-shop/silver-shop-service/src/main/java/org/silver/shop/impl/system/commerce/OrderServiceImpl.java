@@ -197,7 +197,7 @@ public class OrderServiceImpl implements OrderService {
 				// 商品上架数量
 				int sellCount = stock.getSellCount();
 				if (count > sellCount) {
-					return ReturnInfoUtils.errorInfo(stock.getGoodsName() + " 库存不足,请重新输入购买数量!");
+					return ReturnInfoUtils.errorInfo(stock.getGoodsName() + " 库存不足！");
 				}
 				// 根据商品ID查询商品基本信息
 				List<Object> goodsRecordList = orderDao.findByProperty(GoodsRecordDetail.class, params, 1, 1);
@@ -1391,6 +1391,7 @@ public class OrderServiceImpl implements OrderService {
 	 * @return Map
 	 */
 	private Map<String, Object> checkAmount(JSONObject orderJson, List<JSONObject> orderGoodsList) {
+		DecimalFormat df = new DecimalFormat("#.00");
 		String entOrderNo = orderJson.get("EntOrderNo") + "";
 		// 商品总金额
 		double goodsTotal = 0.0;
@@ -1415,6 +1416,7 @@ public class OrderServiceImpl implements OrderService {
 		} catch (Exception e) {
 			return ReturnInfoUtils.errorInfo("订单实际支付金额,参数格式错误！");
 		}
+		//
 		for (int i = 0; i < orderGoodsList.size(); i++) {
 			int count = 0;
 			double price;
@@ -1440,14 +1442,16 @@ public class OrderServiceImpl implements OrderService {
 						+ goodsJson.get("Total") + "]格式错误!");
 			}
 			// 由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
-			DecimalFormat df = new DecimalFormat("#.00");
 			double temToal = Double.parseDouble(df.format(count * price));
 			if (temToal != total) {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额为：" + total
 						+ ",与" + count + "(数量)*" + price + "(单价)=" + temToal + "(商品总金额)不对等！");
 			}
-			goodsTotal += total;
+			//
+			goodsTotal += temToal;
 		}
+		// 由于出现浮点数,故而得出的商品总金额只保留后两位
+		goodsTotal = Double.parseDouble(df.format(goodsTotal));
 		// 判断订单商品总金额是否与计算出来的订单信息中商品总金额是否一致
 		if (orderGoodTotal != goodsTotal) {
 			return ReturnInfoUtils.errorInfo(
@@ -1540,6 +1544,9 @@ public class OrderServiceImpl implements OrderService {
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
 				|| orderDocName.contains("小姐")) {
 			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人姓名错误！");
+		}
+		if(DateUtil.parseDate(orderJson.get("OrderDate")+"", "yyyyMMddHHmmss") == null){
+			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单日期错误！");
 		}
 		if (StringEmptyUtils.isNotEmpty(orderJson.get("otherPayment"))) {
 			// 抵付金额
@@ -1956,8 +1963,9 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reOrderGoodsMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderGoodsMap;
 		}
-		return ReturnInfoUtils.successDataInfo(
-				"https://ym.191ec.com/silver-web-shop/yspay/dopay?entOrderNo=" + order.getEntOrderNo());
+		return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/shoppingPayment?entOrderNo=" + order.getEntOrderNo());
+		//return ReturnInfoUtils.successDataInfo(
+			//	"https://ym.191ec.com/silver-web-shop/yspay/dopay?entOrderNo=" + order.getEntOrderNo());
 	}
 
 	/**

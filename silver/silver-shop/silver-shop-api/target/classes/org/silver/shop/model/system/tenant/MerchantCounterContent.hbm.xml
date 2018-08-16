@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+                                   "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-8-14 14:47:41 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping default-lazy="false">
+	<class name="org.silver.shop.model.system.tenant.MerchantCounterContent"
+		table="ym_shop_merchant_counter_content">
+		<id name="id" type="long">
+			<column name="id" />
+			<generator class="identity" />
+		</id>
+		<property name="counterId" type="java.lang.String">
+			<column name="counterId" not-null="true" unique="true"/>
+		</property>
+		<property name="merchantId" type="java.lang.String">
+			<column name="merchantId" not-null="true"/>
+		</property>
+		<property name="merchantName" type="java.lang.String">
+			<column name="merchantName" not-null="true"/>
+		</property>
+		<property name="headContent" type="java.lang.String">
+			<column name="headContent" not-null="true"/>
+		</property>
+		<property name="description" type="java.lang.String">
+			<column name="description" />
+		</property>
+		<property name="counterURL" type="java.lang.String">
+			<column name="counterURL" not-null="true"/>
+		</property>
+		<property name="logo" type="java.lang.String">
+			<column name="logo" />
+		</property>
+		<property name="imge" type="java.lang.String">
+			<column name="imge" />
+		</property>
+		<property name="createBy" type="java.lang.String">
+			<column name="createBy" />
+		</property>
+		<property name="createDate" type="java.util.Date">
+			<column name="createDate" />
+		</property>
+		<property name="updateBy" type="java.lang.String">
+			<column name="updateBy" />
+		</property>
+		<property name="updateDate" type="java.util.Date">
+			<column name="updateDate" />
+		</property>
+		<property name="deleteFlag" type="int">
+			<column name="deleteFlag" />
+		</property>
+		<property name="deleteBy" type="java.lang.String">
+			<column name="deleteBy" />
+		</property>
+		<property name="deleteDate" type="java.util.Date">
+			<column name="deleteDate" />
+		</property>
+	</class>
+</hibernate-mapping>

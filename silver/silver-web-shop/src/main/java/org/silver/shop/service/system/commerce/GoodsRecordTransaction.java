@@ -86,7 +86,6 @@ public class GoodsRecordTransaction {
 	public Map<String, Object> merchantSendGoodsRecord(String customsPort, String customsCode, String ciqOrgCode,
 			String recordGoodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		String merchantId = merchantInfo.getMerchantId();
@@ -98,10 +97,6 @@ public class GoodsRecordTransaction {
 	public Map<String, Object> updateGoodsRecordInfo(HttpServletRequest req) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKey = req.getParameterNames();
-		datasMap.put("status", req.getParameter("status") + "");
-		datasMap.put("msg", req.getParameter("msg") + "");
-		datasMap.put("messageID", req.getParameter("messageID") + "");
-		datasMap.put("entOrderNo", req.getParameter("entOrderNo") + "");
 		while (isKey.hasMoreElements()) {
 			String key = isKey.nextElement();
 			String value = req.getParameter(key) + "";

@@ -99,6 +99,7 @@
 				/merchantFee/*=anon
 				/subMerchant/*=anon
 				/agentWallet/*=anon
+				/merchantCounter/*=anon
 				/memberWallet/*=anon
 				/orderImplLogs/*=anon
 				/managerWallet/*=anon

@@ -143,4 +143,16 @@ public class ReturnInfoUtils {
 		map.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 		return map;
 	}
+	
+	/**
+	 * 服务器报错返回信息
+	 * @return Map
+	 */
+	public static final Map<String, Object> warnInfo() {
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		map.put(BaseCode.MSG.toString(), "查询失败，服务器繁忙！");
+		return map;
+	}
+	
 }

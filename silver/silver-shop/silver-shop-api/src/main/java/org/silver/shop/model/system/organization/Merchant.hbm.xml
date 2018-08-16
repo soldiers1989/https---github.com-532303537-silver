@@ -101,6 +101,11 @@
 		<property name="thirdPartyKey" type="java.lang.String">
 			<column name="thirdPartyKey"  unique="true"/>
 		</property>
-		
+		<property name="logisticsCompanyCode" type="java.lang.String">
+			<column name="logisticsCompanyCode" />
+		</property>
+		<property name="logisticsCompanyName" type="java.lang.String">
+			<column name="logisticsCompanyName" />
+		</property>
 	</class>
 </hibernate-mapping>

@@ -17,6 +17,7 @@ import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
 import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.organization.MemberService;
+import org.silver.shop.api.system.tenant.MemberWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
 import org.silver.shop.model.system.commerce.GoodsRecord;
@@ -79,6 +80,9 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	private MerchantUtils merchantUtils;
 	@Autowired
 	private WalletUtils walletUtils;
+	@Autowired
+	private MemberWalletService memberWalletService;
+	
 
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
@@ -1404,4 +1408,5 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 			log.setRemark(DateUtil.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss") + tradeStatusDescription);
 		}
 	}
+	
 }

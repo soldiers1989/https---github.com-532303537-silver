@@ -25,7 +25,12 @@ public enum BaseCode {
 	/**
 	 * 数据
 	 */
-	DATAS("datas");
+	DATAS("datas"),
+	/**
+	 * 错误
+	 */
+	ERROR_CODE("errorCode");
+	
 
 	private String baseCode;
 

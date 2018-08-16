@@ -1,7 +1,7 @@
 package org.silver.shop.config;
 
 /**
- *	银盛分账(银盟1119账号)的配置文件 
+ *	分账(银盟1119账号)的配置文件 
  */
 public class FenZhangConfig {
 	// 合作商家私钥pkcs12证书路径

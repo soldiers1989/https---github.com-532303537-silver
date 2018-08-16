@@ -1,7 +1,6 @@
 package org.silver.shop.service.system.manual;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,15 +25,11 @@ import org.silver.shop.service.system.commerce.GoodsRecordTransaction;
 import org.silver.shop.utils.ExcelBufferUtils;
 import org.silver.shop.utils.InvokeTaskUtils;
 import org.silver.shop.utils.RedisInfoUtils;
-import org.silver.util.AppUtil;
 import org.silver.util.ExcelUtil;
 import org.silver.util.FileUpLoadService;
-import org.silver.util.FileUtils;
-import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
-import org.silver.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -734,6 +729,18 @@ public class ManualOrderTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		return manualOrderService.updateManualOrderGoodsInfo(merchantInfo,datasMap);
+	}
+
+	public Map<String,Object> sendMsgToLogistics(List<String> orderList) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return manualOrderService.sendMsgToLogistics(merchantInfo,orderList);
+	}
+
+	public Map<String,Object> getWaybillNumber(String orderId) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return manualOrderService.getWaybillNumber(merchantInfo,orderId);
 	}
 	
 }

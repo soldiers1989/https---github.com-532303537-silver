@@ -50,4 +50,8 @@ public class RedisKey {
 	 */
 	public static final String SHOP_KEY_CCIQ_LIST = "SHOP_KEY_CCIQ_LIST";
 
+	/**
+	 * 商城商品类型信息-key
+	 */
+	public static final String SHOP_KEY_GOODS_CATEGORY_MAP = "SHOP_KEY_GOODS_CATEGORY_MAP";
 }

@@ -44,4 +44,6 @@ public interface YsPayReceiveService {
 	 * @return
 	 */
 	public Map<String, Object> dfReceive(Map params);
+
+	
 }

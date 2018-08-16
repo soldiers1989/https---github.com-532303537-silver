@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
 import org.silver.shop.service.system.cross.YsPayReceiveTransaction;
+import org.silver.shop.service.system.tenant.MemberWalletTransaction;
 import org.silver.shop.utils.PaySubmitUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -34,7 +35,10 @@ public class YsPayReceiveController {
 
 	@Autowired
 	private YsPayReceiveTransaction ysPayReceiveTransaction;
-
+	@Autowired
+	private MemberWalletTransaction memberWalletTransaction;
+	
+	
 	@RequestMapping(value = "/ysPayReceive", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String ysPayReceive(HttpServletRequest req, HttpServletResponse response) {
@@ -168,4 +172,33 @@ public class YsPayReceiveController {
 		}
 		return "success";
 	}
+	
+	/**
+	 * 用户调用银盛支付充值货款，成功后回调
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/memberRechargeReceive", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String memberRechargeReceive(HttpServletRequest req, HttpServletResponse response) {
+		Map<String,String> params = new HashMap<>();
+		Enumeration<String> iskeys = req.getParameterNames();
+		while (iskeys.hasMoreElements()) {
+			String key = iskeys.nextElement();
+			String value = req.getParameter(key);
+			params.put(key, value);
+		}
+		logger.error("-会员充值银盛支付回调参数->" + params.toString());
+		if (PaySubmitUtils.verifySign(req, params)) {
+			Map<String, String> reMap = memberWalletTransaction.memberRechargeReceive(params);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("--会员充值银盛支付回调参数-->" + reMap.get(BaseCode.MSG.toString()));
+			}
+		} else {
+			logger.error("-会员充值银盛支付回调参数错误！-");
+		}
+		return "success";
+	}
+	
 }

@@ -23,6 +23,7 @@ import org.silver.shop.util.IdUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.EmailUtils;
 import org.silver.util.MD5;
+import org.silver.util.PhoneUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
@@ -154,6 +155,9 @@ public class MerchantServiceImpl implements MerchantService {
 		String merchantName = datasMap.get("merchantName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
+		if(StringEmptyUtils.isEmpty(PhoneUtils.isPhone(phone))){
+			return ReturnInfoUtils.errorInfo("手机号码错误！");
+		}
 		String agentId = datasMap.get("agentId") + "";
 		String merchantStatus = datasMap.get("merchantStatus") + "";
 		if (type == 1) {// 1-银盟商户注册
@@ -285,7 +289,6 @@ public class MerchantServiceImpl implements MerchantService {
 		if (StringEmptyUtils.isNotEmpty(agentId)) {
 			Map<String, Object> reAgentMap = agentService.getAgentInfo(agentId);
 			if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
-				System.out.println("---->>" + reAgentMap.get(BaseCode.MSG.toString()));
 				return false;
 			}
 			AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.STATUS.toString());

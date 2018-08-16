@@ -921,7 +921,6 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		String goodsSecondTypeName = String.valueOf(paramMap.get("spareGoodsSecondTypeName"));
 		String goodsThirdTypeId = String.valueOf(paramMap.get("spareGoodsThirdTypeId"));
 		String goodsThirdTypeName = String.valueOf(paramMap.get("spareGoodsThirdTypeName"));
-		String goodsDetail = String.valueOf(paramMap.get("spareGoodsDetail"));
 		String goodsBrand = String.valueOf(paramMap.get("spareGoodsBrand"));
 		String goodsStyle = String.valueOf(paramMap.get("spareGoodsStyle"));
 		String goodsUnit = String.valueOf(paramMap.get("spareGoodsUnit"));
@@ -929,6 +928,7 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 		String goodsBarCode = String.valueOf(paramMap.get("spareGoodsBarCode"));
 		String merchantName = String.valueOf(paramMap.get("merchantName"));
 		String goodsImage = String.valueOf(paramMap.get("goodsImage"));
+		String goodsDetail = String.valueOf(paramMap.get("spareGoodsDetail"));
 		int taxFlag;
 		int freightFlag;
 		try {
@@ -938,14 +938,18 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			return ReturnInfoUtils.errorInfo("运费或税费标识错误,请重新输入!");
 		}
 		goodsRecordInfo.setSpareGoodsName(goodsName);
-		goodsRecordInfo.setSpareGoodsImage(goodsImage);
 		goodsRecordInfo.setSpareGoodsFirstTypeId(goodsFirstTypeId);
 		goodsRecordInfo.setSpareGoodsFirstTypeName(goodsFirstTypeName);
 		goodsRecordInfo.setSpareGoodsSecondTypeId(goodsSecondTypeId);
 		goodsRecordInfo.setSpareGoodsSecondTypeName(goodsSecondTypeName);
 		goodsRecordInfo.setSpareGoodsThirdTypeId(goodsThirdTypeId);
 		goodsRecordInfo.setSpareGoodsThirdTypeName(goodsThirdTypeName);
-		goodsRecordInfo.setSpareGoodsDetail(goodsDetail);
+		if(StringEmptyUtils.isNotEmpty(goodsImage)){
+			goodsRecordInfo.setSpareGoodsImage(goodsImage);
+		}
+		if(StringEmptyUtils.isNotEmpty(goodsDetail)){
+			goodsRecordInfo.setSpareGoodsDetail(goodsDetail);
+		}
 		goodsRecordInfo.setSpareGoodsBrand(goodsBrand);
 		goodsRecordInfo.setSpareGoodsStyle(goodsStyle);
 		goodsRecordInfo.setSpareGoodsUnit(goodsUnit);

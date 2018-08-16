@@ -3,6 +3,7 @@ package org.silver.shop.api.system.organization;
 import java.util.List;
 import java.util.Map;
 
+import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
 
 import net.sf.json.JSONArray;
@@ -115,4 +116,13 @@ public interface MemberService {
 	 * @return
 	 */
 	public Map<String, Object> checkIdCard(String idcard);
+	
+	/**
+	 * 根据(手工)订单信息注册会员信息
+	 * 
+	 * @param Morder
+	 *            手工订单实体信息
+	 * @return Map
+	 */
+	public Map<String, Object> registerMember(Morder order);
 }

@@ -115,8 +115,7 @@ public class GoodsRecordController {
 	@RequestMapping(value = "/reNotifyMsg", produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String reNotifyMsg(HttpServletRequest req, HttpServletResponse response) {
-		Map<String, Object> statusMap = goodsRecordTransaction.updateGoodsRecordInfo(req);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(goodsRecordTransaction.updateGoodsRecordInfo(req)).toString();
 	}
 
 	@RequestMapping(value = "/getMerchantGoodsRecordDetail", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -418,10 +417,4 @@ public class GoodsRecordController {
 		return JSONObject.fromObject(goodsRecordTransaction.merchantInitiateReview(goodsIdList)).toString();
 	}
 	
-	public static void main(String[] args) {
-		List<String> list = new ArrayList<>();
-		list.add("a");
-		list.add("b");
-		System.out.println("--->"+list.toString());
-	}
 }

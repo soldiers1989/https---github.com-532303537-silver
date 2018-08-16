@@ -28,7 +28,7 @@ public class Merchant implements Serializable {
 	private String merchantTransport;// 商户商品运输方式
 	private int merchantLevel;// 商户等级
 	private double merchantProfit;// 平台服务费(原分润),按0.0X算
-	private String merchantStatus;// 商户状态：1-启用，2-禁用，3-审核
+	private String merchantStatus;// 商户状态：1-正常，2-禁用，3-审核
 	private String createBy;// 创建人
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
