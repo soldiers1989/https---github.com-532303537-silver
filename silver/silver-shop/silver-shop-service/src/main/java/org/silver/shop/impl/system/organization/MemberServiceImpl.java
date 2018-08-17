@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MemberService.class)
 public class MemberServiceImpl implements MemberService {
@@ -49,6 +50,7 @@ public class MemberServiceImpl implements MemberService {
 	private WalletUtils walletUtils;
 	@Autowired
 	private CreatePaymentQtz createPaymentQtz;
+
 	private static final Object LOCK = "lock";
 
 	@Override
@@ -68,7 +70,7 @@ public class MemberServiceImpl implements MemberService {
 		// 用户状态1-审核2-启用3-禁用
 		member.setMemberStatus(1);
 		// 用户实名1-未实名,2-已实名
-		member.setMemberRealName(1);
+		member.setRealNameFlag(1);
 		if (!memberDao.add(member)) {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
@@ -317,7 +319,6 @@ public class MemberServiceImpl implements MemberService {
 		return params;
 	}
 
-	
 	@Override
 	public Map<String, Object> registerMember(Morder order) {
 		if (order == null) {
@@ -341,7 +342,7 @@ public class MemberServiceImpl implements MemberService {
 		member.setMemberTel(order.getOrderDocTel());
 		member.setMemberIdCardName(order.getOrderDocName());
 		member.setMemberIdCard(order.getOrderDocId());
-		member.setMemberRealName(2);
+		member.setRealNameFlag(2);
 		member.setCreateBy(order.getOrderDocName());
 		// 获取随机下单(生成)订单时间
 		String date = order.getOrderDate();
@@ -425,7 +426,7 @@ public class MemberServiceImpl implements MemberService {
 			return reMemberMap;
 		}
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
-		if (member.getMemberRealName() == 2) {
+		if (member.getRealNameFlag() == 2) {
 			return ReturnInfoUtils.errorInfo("用户已实名认证,无需重复认证!");
 		}
 		if (!StringUtil.isContainChinese(member.getMemberIdCardName())) {
@@ -517,7 +518,7 @@ public class MemberServiceImpl implements MemberService {
 	 * @return Map
 	 */
 	private Map<String, Object> updateRealFlag(Member member) {
-		member.setMemberRealName(2);
+		member.setRealNameFlag(2);
 		member.setUpdateDate(new Date());
 		member.setUpdateBy("system");
 		if (!memberDao.update(member)) {
@@ -567,7 +568,7 @@ public class MemberServiceImpl implements MemberService {
 				member.setMemberTel(String.valueOf(entry.getValue()));
 				break;
 			case "memberIdCardName":
-				if (member.getMemberRealName() == 2) {
+				if (member.getRealNameFlag() == 2) {
 					return ReturnInfoUtils.errorInfo("该用户已实名,不允许修改身份证信息,请联系管理员！");
 				}
 				if (!StringUtil.isContainChinese(String.valueOf(entry.getValue()).replace("·", ""))) {
@@ -576,7 +577,7 @@ public class MemberServiceImpl implements MemberService {
 				member.setMemberIdCardName(String.valueOf(entry.getValue()));
 				break;
 			case "memberIdCard":
-				if (member.getMemberRealName() == 2) {
+				if (member.getRealNameFlag() == 2) {
 					return ReturnInfoUtils.errorInfo("该用户已实名,不允许修改身份证信息,请联系管理员！");
 				}
 				if (!IdcardValidator.validate18Idcard(String.valueOf(entry.getValue()))) {
@@ -593,4 +594,24 @@ public class MemberServiceImpl implements MemberService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> setPaymentPassword(Member memberInfo, String paymentPassword) {
+		if (memberInfo == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		// 支付密码只能是数字，并且是6位数
+		String regex = "^[0-9]{6}$";
+		if (!paymentPassword.matches(regex)) {
+			return ReturnInfoUtils.errorInfo("支付密码只能是数字，且长度为6位");
+		}
+		MD5 md = new MD5();
+		memberInfo.setPaymentPassword(md.getMD5ofStr(paymentPassword));
+		memberInfo.setUpdateDate(new Date());
+		if (!memberDao.update(memberInfo)) {
+			return ReturnInfoUtils.errorInfo("服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
 }

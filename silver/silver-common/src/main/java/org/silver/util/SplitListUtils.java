@@ -29,7 +29,7 @@ public class SplitListUtils {
 			int start = 0;
 			int end = 0;
 			// 判断是否有必要分批
-			if (size < totalSize) {
+			if ( size > 1 && size < totalSize) {
 				int part = totalSize / size;// 分批数
 				//遍历需要创建List的长度
 				for (int i = 0; i < size; i++) {
@@ -52,7 +52,7 @@ public class SplitListUtils {
 				return datasMap;
 			}else{
 				list.add(dataList);
-				return ReturnInfoUtils.successDataInfo(dataList);
+				return ReturnInfoUtils.successDataInfo(list);
 			}
 		}
 		return ReturnInfoUtils.errorInfo("拆分List错误！");

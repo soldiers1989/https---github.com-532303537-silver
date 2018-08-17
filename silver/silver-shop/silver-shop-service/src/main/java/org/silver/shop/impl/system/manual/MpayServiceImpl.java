@@ -2,6 +2,7 @@ package org.silver.shop.impl.system.manual;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -145,6 +147,11 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private static final String WALLET_ID = "walletId";
 
+	/**
+	 * 钱包计算数只保留后五位
+	 */
+	private static DecimalFormat format = new DecimalFormat("#.00000");
+	
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String merchantName) {
@@ -462,9 +469,12 @@ public class MpayServiceImpl implements MpayService {
 		//
 		int count = jsonList.size();
 		// 收费的身份证集合
-		List<String> idCardList = new Vector<String>();
+		List<String> idCardList = new Vector<>();
 		// 不需要计费的身份证集合
-		List<String> idCardFreeList = new Vector<String>();
+		List<String> idCardFreeList = new Vector<>();
+		//
+		ConcurrentHashMap<String,Object> cacheIdcardMap = new ConcurrentHashMap<String,Object>();
+		
 		if (count > 100 && count <= 200) {
 			reMap = SplitListUtils.batchList(jsonList, 6);
 		} else if (count > 200 && count <= 300) {
@@ -472,7 +482,7 @@ public class MpayServiceImpl implements MpayService {
 		} else if (count > 10) {
 			reMap = SplitListUtils.batchList(jsonList, 4);
 		} else {
-			reMap = SplitListUtils.batchList(JSONArray.toList(jsonList, new Vector<>(), new JsonConfig()), 1);
+			reMap = SplitListUtils.batchList(jsonList, 1);
 		}
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
@@ -481,7 +491,7 @@ public class MpayServiceImpl implements MpayService {
 		List<Future> cacheList = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
 			List newList = (List) list.get(i);
-			Future future = threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao));
+			Future future = threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao,cacheIdcardMap));
 			cacheList.add(future);
 		}
 		try {

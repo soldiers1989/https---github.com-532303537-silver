@@ -709,34 +709,10 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		 * "65478417");
 		 */
 		List<Morder> reList1 = bd.findByProperty(Morder.class, null, 1, 1);
-		  ExecutorService threadPool = Executors.newCachedThreadPool();
-		  
+		String str = reList1.get(0).getCreate_date()+"";
+		System.out.println("-->>"+str.substring(0, 10));
 		
-		Map<String, Object> map = null;
-		List<Map<String, Object>> list = new ArrayList<>();
-		long startTime = System.currentTimeMillis();
-		System.out.println("--开始查询----");
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchant_no", "MerchantId_00057");
-		params.put("startTime", DateUtil.parseDate2("2018-07-01 00:00:00"));
-		params.put("endTime", DateUtil.parseDate2("2018-08-10 23:50:50"));
-		int size = 1;
-		for (int i = 0; i < 301; i++) {
-			List<Morder> reList = bd.findByPropertyLike(Morder.class, params, null, size, 1);
-			if (reList != null && !reList.isEmpty()) {
-				map = new HashMap<>();
-				map.put("merchantId", reList.get(0).getMerchant_no());
-				map.put("name", reList.get(0).getOrderDocName());
-				map.put("idNumber", reList.get(0).getOrderDocId());
-				list.add(map);
-			}
-			// System.out.println("--page->>>"+ size);
-			size++;
-		}
-		System.out.println("--list->>" + list.size());
-		bd.testSql(list);
-		long endTime = System.currentTimeMillis();
-		System.out.println("---耗时->>" + (endTime - startTime) + "ms");
+		
 	}
 
 }

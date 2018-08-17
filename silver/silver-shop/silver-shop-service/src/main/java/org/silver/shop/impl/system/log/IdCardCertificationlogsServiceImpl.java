@@ -38,8 +38,8 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reMap.get("param");
 		List<IdCardCertificationLog> idCardlist = ikdCardCertificationlogsDao
-				.findByPropertyLike(IdCardCertificationLog.class, paramMap, null,page, size);
-		long count = ikdCardCertificationlogsDao.findByPropertyLikeCount(IdCardCertificationLog.class, paramMap,null);
+				.findByPropertyLike(IdCardCertificationLog.class, paramMap, null, page, size);
+		long count = ikdCardCertificationlogsDao.findByPropertyLikeCount(IdCardCertificationLog.class, paramMap, null);
 		if (idCardlist == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
 		} else if (!idCardlist.isEmpty()) {
@@ -52,20 +52,21 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 	@Override
 	public Object tempUpdate() {
 		Map<String, Object> item = new HashMap<>();
-		//MerchantId_00069 一合相
-		//MerchantId_00079 海岛号跨境电子商务科技有限公司
-		//MerchantId_00078 中山市澳淘商贸有限公司
-		//MerchantId_00076 上海锋赞实业有限公司
-		//MerchantId_00063 广州颜悦化妆品有限公司
-		item.put("merchantId", "MerchantId_00063");
+		// MerchantId_00069 一合相
+		// MerchantId_00079 海岛号跨境电子商务科技有限公司
+		// MerchantId_00078 中山市澳淘商贸有限公司
+		// MerchantId_00076 上海锋赞实业有限公司
+		// MerchantId_00063 广州颜悦化妆品有限公司
+		item.put("merchantId", "MerchantId_00078");
 		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
 		for (Merchant merchant : merchantlist) {
 			params = new HashMap<>();
-			params.put("startTime", DateUtil.parseDate("2018-08-15 00:00:00", "yyyy-MM-dd HH:mm:ss"));
-			params.put("endTime", DateUtil.parseDate("2018-08-15 23:44:00", "yyyy-MM-dd HH:mm:ss"));
-			//params.put("endTime", DateUtil.parseDate("2018-07-31 17:44:00", "yyyy-MM-dd HH:mm:ss"));
+			String startTime = "2018-08-17 14:00:05";
+			String endTime = "2018-08-17 15:00:00";
+			params.put("startTime", DateUtil.parseDate(startTime, "yyyy-MM-dd HH:mm:ss"));
+			params.put("endTime", DateUtil.parseDate(endTime, "yyyy-MM-dd HH:mm:ss"));
 			params.put("merchant_no", merchant.getMerchantId());
 			cacheMap = new HashMap<>();
 			System.out.println(merchant.getMerchantId() + "========================");
@@ -79,14 +80,14 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 				}
 				System.out.println("++++++++++++++++++++++++++++");
 				if (orderlist != null && !orderlist.isEmpty()) {
-					/*Map<String, Object> reCostMap = merchantIdCardCostService
+					Map<String, Object> reCostMap = merchantIdCardCostService
 							.getIdCardCostInfo(merchant.getMerchantId());
 					if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
 						return reCostMap;
 					}
 					MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap
-							.get(BaseCode.DATAS.toString());*/
-					
+							.get(BaseCode.DATAS.toString());
+
 					for (Morder order : orderlist) {
 						if (cacheMap.containsKey(
 								order.getMerchant_no() + "_" + order.getOrderDocName() + "_" + order.getOrderDocId())) {
@@ -106,11 +107,21 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 								if ("failure".equals(idCard.getStatus())) {
 									addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
 											order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
-											0.5, 1, "实名验证手续费", order.getCreate_date());
+											merchantCost.getPlatformCost(), 1, "实名验证手续费", order.getCreate_date());
 								} else {
-									addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
-											order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
-											0, 2, "姓名与身份证号码已验证通过,不进行二次验证!", order.getCreate_date());
+									String str = idCard.getCreateDate() + "";
+									String reCreateDate = str.substring(0, 10);
+									if (reCreateDate.equals(startTime.substring(0, 10))) {
+										addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
+												order.getOrder_id(), order.getOrderDocName(),
+												order.getOrderDocId().trim(), merchantCost.getPlatformCost(), 1, "实名验证手续费",
+												order.getCreate_date());
+									} else {
+										addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
+												order.getOrder_id(), order.getOrderDocName(),
+												order.getOrderDocId().trim(), 0, 2, "姓名与身份证号码已验证通过,不进行二次验证!",
+												order.getCreate_date());
+									}
 								}
 							} else {
 								IdCard idCard = new IdCard();
@@ -125,8 +136,8 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 								idCard.setRemrak("临时补充数据");
 								ikdCardCertificationlogsDao.add(idCard);
 								addIdCardCertificationLog(order.getMerchant_no(), merchant.getMerchantName(),
-										order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(),
-										0.5, 1, "实名验证手续费", order.getCreate_date());
+										order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId().trim(), merchantCost.getPlatformCost(),
+										1, "实名验证手续费", order.getCreate_date());
 							}
 							cacheMap.put(order.getMerchant_no() + "_" + order.getOrderDocName() + "_"
 									+ order.getOrderDocId(), order.getOrder_id());
@@ -149,11 +160,11 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 		params2.put("merchantId", merchantId);
 		params2.put("name", name);
 		params2.put("idNumber", idNumber);
-		List<IdCardCertificationLog> idlist = ikdCardCertificationlogsDao
-				.findByProperty(IdCardCertificationLog.class, params2, 0, 0);
-		if(idlist !=null && !idlist.isEmpty()){
+		List<IdCardCertificationLog> idlist = ikdCardCertificationlogsDao.findByProperty(IdCardCertificationLog.class,
+				params2, 0, 0);
+		if (idlist != null && !idlist.isEmpty()) {
 			System.out.println("------已存在----");
-		}else{
+		} else {
 			idcardLog.setOrderId(orderId);
 			idcardLog.setMerchantId(merchantId);
 			idcardLog.setMerchantName(merchantName);
@@ -164,8 +175,8 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 			idcardLog.setNote(note);
 			idcardLog.setCreateBy(merchantName);
 			idcardLog.setCreateDate(date);
-			if(!ikdCardCertificationlogsDao.add(idcardLog)){
-				System.out.println(orderId+"--添加失败-"+name+"===="+idNumber);
+			if (!ikdCardCertificationlogsDao.add(idcardLog)) {
+				System.out.println(orderId + "--添加失败-" + name + "====" + idNumber);
 			}
 		}
 	}

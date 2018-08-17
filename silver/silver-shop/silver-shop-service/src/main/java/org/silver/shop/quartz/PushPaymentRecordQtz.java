@@ -149,6 +149,7 @@ public class PushPaymentRecordQtz {
 		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 			logger.error(reMerchantMap.get(BaseCode.MSG.toString()));
+			return reMerchantMap;
 		}
 		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 		int thirdPartyFlag = merchant.getThirdPartyFlag();
@@ -157,6 +158,7 @@ public class PushPaymentRecordQtz {
 			Map<String, Object> reAppkeyMap = merchantUtils.getMerchantAppkey(merchantId);
 			if (!"1".equals(reAppkeyMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reAppkeyMap.get(BaseCode.MSG.toString()));
+				return reAppkeyMap;
 			} else {
 				Appkey appkeyInfo = (Appkey) reAppkeyMap.get(BaseCode.DATAS.toString());
 				appkey = appkeyInfo.getApp_key();
@@ -219,9 +221,9 @@ public class PushPaymentRecordQtz {
 					return reMap;
 				}
 				// 当网关接收失败时，添加至重发记录表中
-				addPaymentResendInfo(tradeNo, payInfo.getMerchant_no(), payInfo.getCreate_by(),
+				Map<String,Object> reResendMap = addPaymentResendInfo(tradeNo, payInfo.getMerchant_no(), payInfo.getCreate_by(),
 						rePaymentMap.get(BaseCode.MSG.toString()) + "", subParams);
-				logger.error(tradeNo + "<--接收失败--" + rePaymentMap.get(BaseCode.MSG.toString()));
+				logger.error(tradeNo + "<--接收失败--服务器返回--" + rePaymentMap.get(BaseCode.MSG.toString())+";--添加重发-->"+reResendMap.get(BaseCode.MSG.toString()));
 				return rePaymentMap;
 			} else {
 				String rePayMessageID = rePaymentMap.get("messageID") + "";
@@ -278,7 +280,7 @@ public class PushPaymentRecordQtz {
 				return ReturnInfoUtils.errorInfo("重发记录已存在,无需重复添加");
 			} else {
 				ManualPaymentResendContent paymentRe = new ManualPaymentResendContent();
-				Map<String, Object> reIdMap = idUtils.createId(ManualPaymentResendContent.class, "PAYMENT-RE-");
+				Map<String, Object> reIdMap = idUtils.createId(ManualPaymentResendContent.class, "RE");
 				if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 					return reIdMap;
 				}
@@ -290,7 +292,6 @@ public class PushPaymentRecordQtz {
 				// 重发状态：success-成功，failure-失败
 				paymentRe.setResendStatus("failure");
 				paymentRe.setResendCount(0);
-				paymentRe.setCreateBy("system");
 				paymentRe.setCreateDate(new Date());
 				if (!paymentDao.add(paymentRe)) {
 					return ReturnInfoUtils.errorInfo("流水号[" + tradeNo + "]保存重发信息失败!");

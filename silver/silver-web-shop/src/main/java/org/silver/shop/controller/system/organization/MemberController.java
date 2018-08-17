@@ -27,6 +27,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.silver.shop.utils.CusAccessObjectUtil;
 import org.silver.util.JedisUtil;
+import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
@@ -90,8 +91,8 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation(value = "用户--登录")
 	public String memberLogin(@RequestParam("account") String account,
-			@RequestParam("loginPassword") String loginPassword, String captcha,
-			HttpServletRequest req, HttpServletResponse response) {
+			@RequestParam("loginPassword") String loginPassword, String captcha, HttpServletRequest req,
+			HttpServletResponse response) {
 		String ipAddress = CusAccessObjectUtil.getIpAddress(req);
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -99,10 +100,10 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
-//		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
-//		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
-//			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入！")).toString();
-//		}
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入！")).toString();
+		}
 		Subject currentUser = SecurityUtils.getSubject();
 		// currentUser.logout();
 		// 将IP地址拼接在账号变量中传递到登陆方法
@@ -162,7 +163,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(memberTransaction.getMemberInfo()).toString();
+		return JSONObject.fromObject(memberTransaction.getInfo()).toString();
 	}
 
 	/**
@@ -171,7 +172,6 @@ public class MemberController {
 	@RequestMapping(value = "/checkMemberLogin", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("检查用户登录")
-	// @RequiresRoles("Merchant")
 	public String checkMemberLogin(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
@@ -192,9 +192,6 @@ public class MemberController {
 		return JSONObject.fromObject(statusMap).toString();
 	}
 
-	/**
-	 * 注销用户信息
-	 */
 	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("用户注销")
@@ -210,8 +207,7 @@ public class MemberController {
 		if (currentUser != null) {
 			try {
 				currentUser.logout();
-				statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-				statusMap.put(BaseCode.MSG.toString(), "用户注销成功,请重新登陆！");
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("注销成功,请重新登陆！")).toString();
 			} catch (Exception e) {
 				e.printStackTrace();
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.PERMISSION_DENIED.getStatus());
@@ -242,8 +238,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = memberTransaction.editShopCartGoodsFlag(goodsInfoPack);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(memberTransaction.editShopCartGoodsFlag(goodsInfoPack)).toString();
 	}
 
 	@RequestMapping(value = "/getMemberWalletInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -545,6 +540,113 @@ public class MemberController {
 			}
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("系统内部错误!")).toString();
+	}
+
+	@RequestMapping(value = "/setPaymentPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户设置支付密码")
+	@RequiresRoles("Member")
+	public String setPaymentPassword(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("paymentPassword") String paymentPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(memberTransaction.setPaymentPassword(paymentPassword)).toString();
+	}
+
+	/**
+	 * 用户修改支付密码时，发送短信验证码
+	 * 
+	 * @param phone
+	 *            手机号码
+	 * @return Map
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	@RequestMapping(value = "/sendUpdatePayPasswordCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String sendUpdatePayPasswordCaptchaCode(HttpServletRequest req, HttpServletResponse response, String captcha)
+			throws ParserConfigurationException, SAXException, IOException {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(captcha)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (captcha.equalsIgnoreCase(captchaCode)) {
+			JSONObject json = new JSONObject();
+			// 获取用户注册保存在缓存中的验证码
+			String redisCode = JedisUtil
+					.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
+			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+				int code = RandomUtils.getRandom(6);
+				SendMsg.sendMsg(memberInfo.getMemberTel(),
+						"【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				json.put("time", new Date().getTime());
+				json.put("code", code);
+				JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel(), 900,
+						json);
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+			} else {
+				json = JSONObject.fromObject(redisCode);
+				long time = Long.parseLong(json.get("time") + "");
+				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
+				if ((new Date().getTime() - time) < 60000) {
+					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
+				} else {// 重新发送验证码
+					int code = RandomUtils.getRandom(6);
+					SendMsg.sendMsg(memberInfo.getMemberTel(),
+							"【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+					json.put("time", new Date().getTime());
+					json.put("code", code);
+					System.out.println("--重新发送-注册验证码-->" + code);
+					JedisUtil.set(RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel(),
+							900, json);
+					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+				}
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
+	}
+
+	@RequestMapping(value = "/updatePayPasswordVerification", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("更新支付密码前---进行短信验证码与登录密码验证")
+	@RequiresRoles("Member")
+	public String updatePayPasswordVerification(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("loginPassword") String loginPassword, String smsCaptcha) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		MD5 md5 = new MD5();
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		String redisCode = JedisUtil
+				.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
+		if (StringEmptyUtils.isNotEmpty(redisCode)) {
+			JSONObject json = JSONObject.fromObject(redisCode);
+			String code = json.get("code") + "";
+			if (code.equals(smsCaptcha)) {// 验证-短信验证码
+				if (memberInfo.getLoginPass().equals(md5.getMD5ofStr(loginPassword))) {// 验证用户登录密码
+					String uuid =  UUID.randomUUID().toString();
+					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+				} else {
+					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录密码错误！")).toString();
+				}
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码错误！")).toString();
 	}
 
 }

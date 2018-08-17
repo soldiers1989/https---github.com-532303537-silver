@@ -33,8 +33,8 @@
 		<property name="memberStatus" type="int">
 			<column name="memberStatus" not-null="true"/>
 		</property>
-		<property name="memberRealName" type="int">
-			<column name="memberRealName" />
+		<property name="realNameFlag" type="int">
+			<column name="realNameFlag" />
 		</property>
 		<property name="createBy" type="java.lang.String">
 			<column name="createBy" />
@@ -56,6 +56,9 @@
 		</property>
 		<property name="deleteDate" type="java.util.Date">
 			<column name="deleteDate" />
+		</property>
+			<property name="paymentPassword" type="java.lang.String">
+			<column name="paymentPassword" />
 		</property>
 	</class>
 </hibernate-mapping>

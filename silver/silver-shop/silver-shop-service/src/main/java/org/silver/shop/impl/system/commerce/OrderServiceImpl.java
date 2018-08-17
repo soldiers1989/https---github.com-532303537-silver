@@ -684,7 +684,7 @@ public class OrderServiceImpl implements OrderService {
 			return reMemberMap;
 		}
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
-		if (member.getMemberRealName() == 1) {
+		if (member.getRealNameFlag() == 1) {
 			return ReturnInfoUtils.errorInfo("用户尚未实名,暂不能下单,请先实名认证!");
 		}
 		if (!(recipient.getRecipientName().trim()).equals(member.getMemberIdCardName())) {

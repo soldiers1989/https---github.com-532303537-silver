@@ -145,23 +145,6 @@ public class MemberTransaction {
 
 	}
 
-	public Map<String, Object> getMemberInfo() {
-		Subject currentUser = SecurityUtils.getSubject();
-		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		String tel = memberInfo.getMemberTel();
-		String telTop = tel.substring(0, 3);
-		String telEnd = tel.substring(tel.length() - 4, tel.length());
-		memberInfo.setMemberTel(telTop + "****" + telEnd);
-//		String name = memberInfo.getMemberIdCardName();
-//		String nameTop = name.substring(0, 1);
-//		memberInfo.setMemberIdCardName(nameTop + "*");
-		String idcard = memberInfo.getMemberIdCard();
-		String idTop = idcard.substring(0, 1);
-		String idEnd = tel.substring(tel.length() - 1, tel.length());
-		memberInfo.setMemberIdCard(idTop + "****************" + idEnd);
-		return ReturnInfoUtils.successDataInfo(memberInfo);
-	}
-
 	public Map<String, Object> editShopCartGoodsFlag(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
@@ -201,4 +184,42 @@ public class MemberTransaction {
 	public Object editInfo(Map<String, Object> datasMap) {
 		return memberService.editInfo(datasMap);
 	}
+
+	public Map<String, Object> setPaymentPassword(String paymentPassword) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberService.setPaymentPassword(memberInfo, paymentPassword);
+	}
+
+	public Map<String, Object> getInfo() {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		Map<String, Object> reMap = memberService.getMemberInfo(memberInfo.getMemberId());
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		Member member = (Member) reMap.get(BaseCode.DATAS.toString());
+		String tel = member.getMemberTel();
+		// 切割手机号码
+		String telTop = tel.substring(0, 3);
+		String telEnd = tel.substring(tel.length() - 4, tel.length());
+		member.setMemberTel(telTop + "****" + telEnd);
+		// 切割真实姓名
+		StringBuilder name = new StringBuilder(member.getMemberIdCardName());
+		member.setMemberIdCardName(name.replace(0, 1, "*").toString());
+		String idcard = member.getMemberIdCard();
+		// 切割身份证号码
+		String idTop = idcard.substring(0, 2);
+		String idEnd = tel.substring(tel.length() - 4, tel.length());
+		member.setMemberIdCard(idTop + "************" + idEnd);
+		member.setLoginPass("");
+		// 设置支付密码串
+		if (StringEmptyUtils.isNotEmpty(member.getPaymentPassword())) {
+			member.setPaymentPassword("aaa");
+		} else {
+			member.setPaymentPassword("");
+		}
+		return ReturnInfoUtils.successDataInfo(member);
+	}
+
 }

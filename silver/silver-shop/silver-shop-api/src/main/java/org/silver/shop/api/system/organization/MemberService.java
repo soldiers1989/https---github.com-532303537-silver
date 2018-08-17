@@ -39,10 +39,10 @@ public interface MemberService {
 	public Map<String, Object> createMemberId();
 
 	/**
-	 * 查询用户基本信息
+	 * 根据用户id，获取用户信息
 	 * 
 	 * @param memberId 用户Id
-	 * @return Map
+	 * @return Map 
 	 */
 	public Map<String, Object> getMemberInfo(String memberId);
 
@@ -125,4 +125,14 @@ public interface MemberService {
 	 * @return Map
 	 */
 	public Map<String, Object> registerMember(Morder order);
+
+	/**
+	 * 设置用户支付密码
+	 * @param memberInfo 用户实体信息
+	 * @param paymentPassword 
+	 * @return Map
+	 */
+	public Map<String, Object> setPaymentPassword(Member memberInfo, String paymentPassword);
+
+
 }

@@ -54,4 +54,10 @@ public class RedisKey {
 	 * 商城商品类型信息-key
 	 */
 	public static final String SHOP_KEY_GOODS_CATEGORY_MAP = "SHOP_KEY_GOODS_CATEGORY_MAP";
+	
+	/**
+	 * 用户修改支付密码时,验证用户身份,发送手机验证码--key
+	 */
+	public static final String SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE = "SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE_";
+	
 }

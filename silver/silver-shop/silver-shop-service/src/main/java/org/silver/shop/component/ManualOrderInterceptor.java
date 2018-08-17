@@ -33,6 +33,7 @@ import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.task.MerchantWalletTollTask;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.WalletUtils;
+import org.silver.util.DoubleOperationUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -274,15 +275,19 @@ public class ManualOrderInterceptor {
 					// 封底标识：1-不封底计算、2-100封底计算
 					if (backCoverFlag == 1) {
 						fee = amount * rate;
-						totalAmount += amount;
+						totalAmount = DoubleOperationUtil.add(totalAmount, amount);
+					//	totalAmount += amount;
 					} else if (backCoverFlag == 2) {
 						// 当订单金额低于100,提升至100计算
 						if (amount < 100) {
 							fee = 100 * rate;
-							totalAmount += 100;
+							//
+							totalAmount = DoubleOperationUtil.add(totalAmount, 100);
+							//totalAmount += 100;
 						} else {
 							fee = amount * rate;
-							totalAmount += amount;
+							totalAmount = DoubleOperationUtil.add(totalAmount, amount);
+							//totalAmount += amount;
 						}
 					}
 					idcardJSON.put("amount", amount);
@@ -381,6 +386,7 @@ public class ManualOrderInterceptor {
 						}
 					} else {
 						getIdCardInfo(order, jsonList, fee, newList);
+						//添加进缓存
 						cacheMap.put(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim(),
 								order.getOrder_id());
 					}

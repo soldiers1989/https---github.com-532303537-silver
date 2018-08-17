@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.silver.shop.service.system.manual.ManualOrderTransaction;
 import org.silver.shop.service.system.manual.MdataService;
+import org.silver.util.DoubleOperationUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
@@ -174,9 +175,23 @@ public class ManualOrderController {
 	}
 
 	public static void main(String[] args) {
-		Map<String, Object> item = new HashMap<>();
-		item.put("order_code", "76861711609");
-		String reString = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/waybill/queryOrderStatus", item);
-		System.out.println("------[>>" + reString);
+//		Map<String, Object> item = new HashMap<>();
+//		item.put("order_code", "76861711609");
+//		String reString = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/waybill/queryOrderStatus", item);
+//		System.out.println("------[>>" + reString);
+//		double totalAmount = 0;
+//		double a= 66.0;
+//		totalAmount = DoubleOperationUtil.add(totalAmount, a);
+//		double b= 34.0;
+//		totalAmount = DoubleOperationUtil.add(totalAmount, b);
+//		double c= 129.8;
+//		totalAmount = DoubleOperationUtil.add(totalAmount, c);
+//		double d= 19.9;
+//		totalAmount = DoubleOperationUtil.add(totalAmount, d);
+//		System.out.println("===>"+totalAmount);
+//		System.out.println("--->"+(DoubleOperationUtil.add(c, d) +a +b));
+		double o = 0.8;
+		double e = 0.9;
+		System.out.println("---->>>"+(o+e));
 	}
 }
