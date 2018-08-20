@@ -42,7 +42,7 @@ public interface MemberService {
 	 * 根据用户id，获取用户信息
 	 * 
 	 * @param memberId 用户Id
-	 * @return Map 
+	 * @return Map datas-用户信息实体
 	 */
 	public Map<String, Object> getMemberInfo(String memberId);
 
@@ -88,19 +88,19 @@ public interface MemberService {
 	public Map<String, Object> batchRegisterMember(JSONArray josnArr);
 
 	/**
-	 * 会员实名认证
-	 * @param memberId 会员Id
+	 * 用户身份证-实名认证
+	 * @param memberInfo 用户信息
 	 * @return Map
 	 */
-	public Map<String, Object> realName(String memberId);
+	public Map<String, Object> realName(Member memberInfo);
 
 	/**
-	 * 根据用户Id，修改会员登陆密码
-	 * @param memberId 用户Id
-	 * @param newPassword 新密码
+	 * 根据用户信息，修改会员登陆密码
+	 * @param memberInfo 用户信息
+	 * @param loginPassword 登录密码
 	 * @return 
 	 */
-	public Object updateLoginPassword(String memberId,  String newPassword);
+	public Map<String,Object> updateLoginPassword(Member memberInfo,  String loginPassword);
 
 	/**
 	 * 修改用户信息
@@ -134,5 +134,11 @@ public interface MemberService {
 	 */
 	public Map<String, Object> setPaymentPassword(Member memberInfo, String paymentPassword);
 
+	/**
+	 * 根据用户名称，查询对应的用户信息
+	 * @param accountName 用户名称/手机号码
+	 * @return Map
+	 */
+	public Map<String, Object> retrieveLoginPassword(String accountName);
 
 }

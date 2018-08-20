@@ -57,14 +57,15 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 		// MerchantId_00078 中山市澳淘商贸有限公司
 		// MerchantId_00076 上海锋赞实业有限公司
 		// MerchantId_00063 广州颜悦化妆品有限公司
-		item.put("merchantId", "MerchantId_00078");
+		// MerchantId_00057 深圳市前海爱库
+		item.put("merchantId", "MerchantId_00057");
 		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
 		for (Merchant merchant : merchantlist) {
 			params = new HashMap<>();
-			String startTime = "2018-08-17 14:00:05";
-			String endTime = "2018-08-17 15:00:00";
+			String startTime = "2018-08-17 00:00:05";
+			String endTime = "2018-08-17 23:00:00";
 			params.put("startTime", DateUtil.parseDate(startTime, "yyyy-MM-dd HH:mm:ss"));
 			params.put("endTime", DateUtil.parseDate(endTime, "yyyy-MM-dd HH:mm:ss"));
 			params.put("merchant_no", merchant.getMerchantId());

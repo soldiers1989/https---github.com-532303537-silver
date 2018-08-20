@@ -18,6 +18,9 @@ import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SplitListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * 订单身份证计费子任务
+ */
 public class OrderIdCardTollTask implements Callable<Object> {
 
 	private static Logger logger = LogManager.getLogger(MpayServiceImpl.class);

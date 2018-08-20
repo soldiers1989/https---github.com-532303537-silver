@@ -12,26 +12,32 @@
 		<property name="memberId" type="java.lang.String">
 			<column name="memberId" not-null="true" unique="true" />
 		</property>
+		<property name="loginName" type="java.lang.String">
+			<column name="loginName" unique="true" />
+		</property>
+		<property name="nickname" type="java.lang.String">
+			<column name="nickname" unique="true" />
+		</property>
 		<property name="memberName" type="java.lang.String">
-			<column name="memberName" not-null="true" />
+			<column name="memberName" not-null="true" unique="true" />
 		</property>
 		<property name="loginPass" type="java.lang.String">
 			<column name="loginPass" not-null="true" />
 		</property>
 		<property name="memberTel" type="java.lang.String">
-			<column name="memberTel" not-null="true"/>
+			<column name="memberTel" not-null="true" />
 		</property>
 		<property name="memberMail" type="java.lang.String">
 			<column name="memberMail" />
 		</property>
 		<property name="memberIdCardName" type="java.lang.String">
-			<column name="memberIdCardName" not-null="true"/>
+			<column name="memberIdCardName" not-null="true" />
 		</property>
 		<property name="memberIdCard" type="java.lang.String">
-			<column name="memberIdCard" not-null="true"/>
+			<column name="memberIdCard" not-null="true" />
 		</property>
 		<property name="memberStatus" type="int">
-			<column name="memberStatus" not-null="true"/>
+			<column name="memberStatus" not-null="true" />
 		</property>
 		<property name="realNameFlag" type="int">
 			<column name="realNameFlag" />
@@ -57,8 +63,14 @@
 		<property name="deleteDate" type="java.util.Date">
 			<column name="deleteDate" />
 		</property>
-			<property name="paymentPassword" type="java.lang.String">
+		<property name="paymentPassword" type="java.lang.String">
 			<column name="paymentPassword" />
+		</property>
+		<property name="remark" type="java.lang.String">
+			<column name="remark" />
+		</property>
+		<property name="memberFlag" type="int">
+			<column name="memberFlag" />
 		</property>
 	</class>
 </hibernate-mapping>

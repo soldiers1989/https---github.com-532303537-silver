@@ -8,36 +8,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.hibernate.loader.custom.Return;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.dao.system.organization.MemberDao;
-import org.silver.shop.impl.system.tenant.MerchantWalletServiceImpl;
 import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.commerce.ShopCarContent;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.quartz.CreatePaymentQtz;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
+import org.silver.util.PhoneUtils;
 import org.silver.util.PinyinUtil;
 import org.silver.util.RandomPasswordUtils;
 import org.silver.util.RandomUtils;
 import org.silver.util.ReturnInfoUtils;
-import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.StringUtil;
-import org.silver.util.YmMallOauth;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 @Service(interfaceClass = MemberService.class)
 public class MemberServiceImpl implements MemberService {
@@ -52,10 +47,28 @@ public class MemberServiceImpl implements MemberService {
 	private CreatePaymentQtz createPaymentQtz;
 
 	private static final Object LOCK = "lock";
+	/**
+	 * 登录密码的组成至少要包括大小写字母、数字及标点符号的其中两项、且长度要在6-20位之间
+	 */
+	private static final String LOGIN_PASSWORD_REGEX = "^(?![A-Za-z]+$)(?!\\d+$)(?![\\W_]+$)\\S{6,20}$";
 
 	@Override
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberId, String memberTel) {
+		if (!StringUtil.isContainChinese(memberIdCardName)) {
+			return ReturnInfoUtils.errorInfo("姓名输入错误,请重新输入!");
+		}
+		if (!IdcardValidator.validate18Idcard(memberIdCard)) {
+			return ReturnInfoUtils.errorInfo("身份证号输入错误,请重新输入!");
+		}
+		// 由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间
+		String accountRegex = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z_-]{6,20}$";
+		if (!account.matches(accountRegex)) {
+			return ReturnInfoUtils.errorInfo("用户名必须由6-20个字符，可由英文、数字、“_”、“-”组成，并且要同时含有数字和字母！");
+		}
+		if (!loginPass.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
+		}
 		Date date = new Date();
 		MD5 md = new MD5();
 		Member member = new Member();
@@ -67,9 +80,9 @@ public class MemberServiceImpl implements MemberService {
 		member.setCreateBy(account);
 		member.setMemberTel(memberTel);
 		member.setCreateDate(date);
-		// 用户状态1-审核2-启用3-禁用
+		// 用户状态：1-审核2-启用3-禁用
 		member.setMemberStatus(1);
-		// 用户实名1-未实名,2-已实名
+		// 用户实名：1-未实名,2-已实名
 		member.setRealNameFlag(1);
 		if (!memberDao.add(member)) {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
@@ -182,9 +195,7 @@ public class MemberServiceImpl implements MemberService {
 				cart.setCount(Integer.parseInt(reMap.get("count") + ""));
 				cart.setFlag(2);
 				if (!memberDao.update(cart)) {
-					statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-					statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-					return statusMap;
+					return ReturnInfoUtils.errorInfo("服务器繁忙！");
 				}
 			} else {
 				statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
@@ -213,7 +224,7 @@ public class MemberServiceImpl implements MemberService {
 		case "memberIdCard":
 			return checkMemberIdCardExist(datas);
 		default:
-			return ReturnInfoUtils.errorInfo("类型错误,请重新输入!");
+			return ReturnInfoUtils.errorInfo("类型错误！");
 		}
 	}
 
@@ -227,6 +238,7 @@ public class MemberServiceImpl implements MemberService {
 	private Map<String, Object> checkMemberIdCardExist(String memberIdCard) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("memberIdCard", memberIdCard);
+		
 		List<Member> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
@@ -336,7 +348,10 @@ public class MemberServiceImpl implements MemberService {
 		}
 		member.setMemberId(reMemberIdMap.get(BaseCode.DATAS.toString()) + "");
 		//
-		member.setMemberName(randomCreateName(order));
+		String memberName = randomCreateName(order);
+		member.setMemberName(memberName);
+		member.setNickname(memberName);
+		member.setLoginName(memberName);
 		MD5 md = new MD5();
 		member.setLoginPass(md.getMD5ofStr(RandomPasswordUtils.createPassWord(8)));
 		member.setMemberTel(order.getOrderDocTel());
@@ -351,6 +366,8 @@ public class MemberServiceImpl implements MemberService {
 		// 在订单下单日期之前30分钟创建会员信息
 		calendar.add(Calendar.MINUTE, -30);
 		member.setCreateDate(calendar.getTime());
+		// 会员注册标识：1-真实用户、2-批量用户
+		member.setMemberFlag(2);
 		if (!memberDao.add(member)) {
 			return ReturnInfoUtils.errorInfo("保存用户失败,服务器繁忙！");
 		}
@@ -417,15 +434,10 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Map<String, Object> realName(String memberId) {
-		if (StringEmptyUtils.isEmpty(memberId)) {
-			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+	public Map<String, Object> realName(Member member) {
+		if (member == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		Map<String, Object> reMemberMap = getMemberInfo(memberId);
-		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
-			return reMemberMap;
-		}
-		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		if (member.getRealNameFlag() == 2) {
 			return ReturnInfoUtils.errorInfo("用户已实名认证,无需重复认证!");
 		}
@@ -514,7 +526,7 @@ public class MemberServiceImpl implements MemberService {
 	 * 更新用户实名标识
 	 * 
 	 * @param member
-	 *            用户信息实体类
+	 *            用户信息
 	 * @return Map
 	 */
 	private Map<String, Object> updateRealFlag(Member member) {
@@ -528,21 +540,20 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public Object updateLoginPassword(String memberId, String newPassword) {
-		if (StringEmptyUtils.isEmpty(memberId)) {
+	public Map<String, Object> updateLoginPassword(Member memberInfo, String newPassword) {
+		if (memberInfo == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
 		}
-		Map<String, Object> reMemberMap = getMemberInfo(memberId);
-		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
-			return reMemberMap;
+		if (!newPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
 		}
-		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		MD5 md5 = new MD5();
-		member.setLoginPass(md5.getMD5ofStr(newPassword));
-		if (memberDao.update(member)) {
+		memberInfo.setLoginPass(md5.getMD5ofStr(newPassword));
+		memberInfo.setUpdateDate(new Date());
+		if (memberDao.update(memberInfo)) {
 			return ReturnInfoUtils.successInfo();
 		}
-		return ReturnInfoUtils.errorInfo("修改密码失败,服务器繁忙!");
+		return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙！");
 	}
 
 	@Override
@@ -613,5 +624,32 @@ public class MemberServiceImpl implements MemberService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> retrieveLoginPassword(String accountName) {
+		// 您输入的账户名不存在，请核对后重新输入。
+		if (StringEmptyUtils.isEmpty(accountName)) {
+			return ReturnInfoUtils.errorInfo("您输入的账户名不存在，请核对后重新输入。");
+		}
+		Map<String, Object> params = new HashMap<>();
+		// 会员注册标识：1-真实用户、2-批量用户
+		params.put("memberFlag", 1);
+		List<Member> reList = null;
+		if (PhoneUtils.isPhone(accountName)) {
+			params.put("memberTel", accountName);
+			reList = memberDao.findByProperty(Member.class, params, 0, 0);
+		} else {
+			params.put("memberName", accountName);
+			reList = memberDao.findByProperty(Member.class, params, 0, 0);
+		}
+		if (reList == null) {
+			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
+		} else if (reList.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("您输入的账户名不存在，请核对后重新输入。");
+		}
+		Member member = reList.get(0);
+		return ReturnInfoUtils.successDataInfo(member);
+	}
+
 
 }

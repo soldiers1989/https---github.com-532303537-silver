@@ -86,24 +86,24 @@ public class MemberWalletLogServiceImpl implements MemberWalletLogService {
 		if (memberInfo == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
-		if (type < 0 || type > 5) {
-			return ReturnInfoUtils.errorInfo("类型错误！");
-		}
 		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberInfo.getMemberId(), "");
 		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletMap;
 		}
 		MemberWalletContent wallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> params = new HashMap<>();
-		params.put("type", type);
+		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
+		if (type > 0) {
+			params.put("type", type);
+		}
 		params.put("memberWalletId", wallet.getWalletId());
-		if (DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss") == null
-				|| DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss") == null) {
+		Date startDate2 = DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss");
+		Date endDate2 = DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss");
+		if (startDate2 == null || endDate2 == null) {
 			return ReturnInfoUtils.errorInfo("日期格式错误,请重新输入!");
 		}
-		params.put("startDate", DateUtil.parseDate(startDate, "yyyy-MM-dd hh:mm:ss"));
-		params.put("endDate", DateUtil.parseDate(endDate, "yyyy-MM-dd hh:mm:ss"));
+		params.put("startDate", startDate2);
+		params.put("endDate", endDate2);
 		List<MemberWalletLog> reList = memberWalletLogDao.findByPropertyLike(MemberWalletLog.class, params, null, page,
 				size);
 		long tatolCount = memberWalletLogDao.findByPropertyLikeCount(MemberWalletLog.class, params, null);

@@ -49,6 +49,7 @@ import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
 import org.silver.util.DateUtil;
+import org.silver.util.DoubleOperationUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.PhoneUtils;
@@ -1447,11 +1448,10 @@ public class OrderServiceImpl implements OrderService {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额为：" + total
 						+ ",与" + count + "(数量)*" + price + "(单价)=" + temToal + "(商品总金额)不对等！");
 			}
-			//
-			goodsTotal += temToal;
+			//累计商品总金额
+			goodsTotal = DoubleOperationUtil.add(goodsTotal, temToal);
+			//goodsTotal += temToal;
 		}
-		// 由于出现浮点数,故而得出的商品总金额只保留后两位
-		goodsTotal = Double.parseDouble(df.format(goodsTotal));
 		// 判断订单商品总金额是否与计算出来的订单信息中商品总金额是否一致
 		if (orderGoodTotal != goodsTotal) {
 			return ReturnInfoUtils.errorInfo(

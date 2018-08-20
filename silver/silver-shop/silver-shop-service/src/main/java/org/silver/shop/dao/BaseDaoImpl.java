@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -653,41 +654,21 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
-	public List<Object> testSql(List<Map<String, Object>> paramsList) {
-		if (paramsList == null) {
-			return null;
-		}
+	public List<Object> testSql() {
 		Session session = null;
 		try {
-			List<Object> sqlParams = new ArrayList<>();
 			StringBuilder sbSQL = new StringBuilder(
-					" SELECT * FROM ym_shop_base_id_card t1 WHERE (t1.merchantId,t1.name,t1.idNumber) IN ( ");
-			if (!paramsList.isEmpty()) {
-				for (int i = 0; i < paramsList.size(); i++) {
-					sbSQL.append(" ( ? , ? , ? ) , ");
-					Map<String, Object> map = paramsList.get(i);
-					sqlParams.add(map.get("merchantId"));
-					sqlParams.add(map.get("name"));
-					sqlParams.add(map.get("idNumber"));
-				}
-				// 删除结尾的逗号
-				sbSQL.deleteCharAt(sbSQL.length() - 2);
-				sbSQL.append(" )  AND t1.status != 'failure' ");
-			}
+					" SELECT t1.memberName FROM ym_shop_member t1 GROUP BY 	t1.memberName HAVING	COUNT(*) > 1");
+
 			session = getSession();
 			Query query = session.createSQLQuery(sbSQL.toString());
-			for (int i = 0; i < sqlParams.size(); i++) {
-				query.setString(i, sqlParams.get(i) + "");
-			}
 			List resources = query.list();
-			System.out.println("--query.list()->>" + query.list().toString());
 			session.connection().close();
 			session.close();
-			return null;
+			return resources;
 			// return t;
 		} catch (Exception re) {
 			re.printStackTrace();
-			// log.error("查询数据出错！", re);
 			return null;
 		} finally {
 			if (session != null && session.isOpen()) {
@@ -698,9 +679,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
-		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		BaseDaoImpl bd = new BaseDaoImpl();
-		paramMap.put("firstTypeId", Long.parseLong("29"));
+		params.put("firstTypeId", Long.parseLong("29"));
 		// List<Object> reThirdTypeList = bd.findByProperty(Proxy.class, null,
 		// 0, 0);
 		/*
@@ -709,10 +690,12 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		 * "65478417");
 		 */
 		List<Morder> reList1 = bd.findByProperty(Morder.class, null, 1, 1);
-		String str = reList1.get(0).getCreate_date()+"";
-		System.out.println("-->>"+str.substring(0, 10));
-		
+		String str = reList1.get(0).getCreate_date() + "";
+		System.out.println("-->>" + str.substring(0, 10));
+
+		List<Member> l = bd.findByProperty(Member.class, params, 0, 0);
 		
 	}
 
+	
 }

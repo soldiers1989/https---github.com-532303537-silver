@@ -1,5 +1,6 @@
 package org.silver.util;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -113,6 +114,24 @@ public class StringUtil {
 		str = str.replace("\"", "");
 		str = str.replace("}", "");
 		return str;
+	}
+
+	/**
+	 * 要求产生字符串的长度
+	 * 
+	 * @param length
+	 *            字符串长度
+	 * @return String
+	 */
+	public static String getRandomString(int length) {
+		String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		Random random = new Random();
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < length; i++) {
+			int number = random.nextInt(62);
+			sb.append(str.charAt(number));
+		}
+		return sb.toString();
 	}
 
 	public static void main(String[] args) {

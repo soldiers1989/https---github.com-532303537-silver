@@ -7,13 +7,13 @@ import java.util.Date;
  * 用户实体类，消费者
  */
 public class Member implements Serializable {
-	/**
-		 * 
-		 */
+
 	private static final long serialVersionUID = 1L;
 	private long id;
 	private String memberId;// 用户ID
-	private String memberName;// 用户名
+	private String memberName;// 用户名称
+	private String loginName;// 用于登录名称
+	private String nickname;// 昵称
 	private String loginPass;// 登录密码
 	private String memberTel;// 手机号码
 	private String memberMail;// 邮箱
@@ -21,7 +21,8 @@ public class Member implements Serializable {
 	private String memberIdCard;// 用户身份号码
 	private int memberStatus;// 状态：1-审核、2-启用、3-禁用
 	private int realNameFlag;// 用户实名标识：1-未实名、2-已实名
-	private String paymentPassword;//用户支付密码
+	private String paymentPassword;// 用户支付密码
+	private String remark;//
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -29,6 +30,7 @@ public class Member implements Serializable {
 	private int deleteFlag;// 删除标识0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除日期
+	private int memberFlag;// 会员注册标识：1-真实用户、2-批量用户
 
 	public long getId() {
 		return id;
@@ -100,7 +102,7 @@ public class Member implements Serializable {
 
 	public void setMemberStatus(int memberStatus) {
 		this.memberStatus = memberStatus;
-	}	
+	}
 
 	public String getCreateBy() {
 		return createBy;
@@ -172,6 +174,38 @@ public class Member implements Serializable {
 
 	public void setRealNameFlag(int realNameFlag) {
 		this.realNameFlag = realNameFlag;
+	}
+
+	public String getNickname() {
+		return nickname;
+	}
+
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+	public String getLoginName() {
+		return loginName;
+	}
+
+	public void setLoginName(String loginName) {
+		this.loginName = loginName;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public int getMemberFlag() {
+		return memberFlag;
+	}
+
+	public void setMemberFlag(int memberFlag) {
+		this.memberFlag = memberFlag;
 	}
 
 }

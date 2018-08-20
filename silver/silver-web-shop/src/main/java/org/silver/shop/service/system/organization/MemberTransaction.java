@@ -43,25 +43,6 @@ public class MemberTransaction {
 	// 用户注册
 	public Map<String, Object> memberRegister(String account, String loginPass, String memberIdCardName,
 			String memberIdCard, String memberTel, int verificationCode) {
-		if (!StringUtil.isContainChinese(memberIdCardName)) {
-			return ReturnInfoUtils.errorInfo("姓名输入错误,请重新输入!");
-		}
-		if (!IdcardValidator.validate18Idcard(memberIdCard)) {
-			return ReturnInfoUtils.errorInfo("身份证号输入错误,请重新输入!");
-		}
-		// 由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间
-		String accountRegex = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z_]{8,16}$";
-		if (!account.matches(accountRegex)) {
-			return ReturnInfoUtils.errorInfo("用户名称必须由数字和字母组成，并且要同时含有数字和字母，且长度要在8-16位之间！");
-		}
-		if (loginPass.length() < 6 || loginPass.length() > 20) {
-			return ReturnInfoUtils.errorInfo("密码长度只能在6-20个字符之间!");
-		}
-		// 密码的组成至少要包括大小写字母、数字及标点符号的其中两项
-		String regex = "^(?![A-Za-z]+$)(?!\\d+$)(?![\\W_]+$)\\S{6,20}$";
-		if (!loginPass.matches(regex)) {
-			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项!");
-		}
 		// 获取缓存中用户注册手机验证码
 		String redis = JedisUtil.get("SHOP_KEY_MEMBER_REGISTER_CODE_" + memberTel);
 		if (StringEmptyUtils.isNotEmpty(redis)) {
@@ -171,13 +152,17 @@ public class MemberTransaction {
 	}
 
 	// 会员实名认证
-	public Map<String, Object> realName(String memberId) {
-		return memberService.realName(memberId);
+	public Map<String, Object> realName() {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberService.realName(memberInfo);
 	}
 
 	// 会员修改登陆密码
-	public Object updateLoginPassword(String memberId, String newPassword) {
-		return memberService.updateLoginPassword(memberId, newPassword);
+	public Object updateLoginPassword(String loginPassword) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberService.updateLoginPassword(memberInfo, loginPassword);
 	}
 
 	// 用户修改信息
@@ -210,7 +195,7 @@ public class MemberTransaction {
 		String idcard = member.getMemberIdCard();
 		// 切割身份证号码
 		String idTop = idcard.substring(0, 2);
-		String idEnd = tel.substring(tel.length() - 4, tel.length());
+		String idEnd = idcard.substring(idcard.length() - 4, idcard.length());
 		member.setMemberIdCard(idTop + "************" + idEnd);
 		member.setLoginPass("");
 		// 设置支付密码串
@@ -222,4 +207,16 @@ public class MemberTransaction {
 		return ReturnInfoUtils.successDataInfo(member);
 	}
 
+	public Map<String,Object> retrieveLoginPassword(String accountName) {
+		return memberService.retrieveLoginPassword(accountName);
+	}
+
+	public Object resetPassword(String memberId, String loginPassword) {
+		Map<String,Object> reMap = memberService.getMemberInfo(memberId);
+		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+			return reMap;
+		}
+		Member member = (Member) reMap.get(BaseCode.DATAS.toString());
+		return memberService.updateLoginPassword(member, loginPassword);
+	}
 }

@@ -11,11 +11,14 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.silver.common.RedisKey;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import net.sf.json.JSONObject;
 
 /**
  * 发送手机验证码
@@ -99,11 +102,63 @@ public class SendMsg {
 		return resultMap;
 	}
 
-	public static void main(String[] args) {
-		try {
-			System.out.println(SendMsg.sendMsg("13533527688", "【广州银盟信息科技有限公司】验证码为"));
-		} catch (ParserConfigurationException | SAXException | IOException e) {
-			e.printStackTrace();
+	/**
+	 * 统一根据手机号码，redis缓存键发送短信验证码
+	 * <li>注：该统一方法缓存保存时间为15分钟</li>
+	 * @param phone 手机号码
+	 * @param redisKey redis缓存键
+	 * @return Map
+	 */
+	public static Map<String, Object> sendVerificationCode(String phone, String redisKey) {
+		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(redisKey)) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 		}
+		if (!PhoneUtils.isPhone(phone)) {
+			return ReturnInfoUtils.errorInfo("手机号码错误！");
+		}
+		// 缓存键命名由redis名称+手机号码
+		String keys = redisKey + phone;
+		JSONObject json = new JSONObject();
+		// 获取用户注册保存在缓存中的验证码
+		String redisCode = JedisUtil.get(keys);
+		try {
+			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
+				int code = RandomUtils.getRandom(6);
+				SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+				json.put("time", new Date().getTime());
+				json.put("code", code);
+				JedisUtil.set(keys, 900, json);
+				return ReturnInfoUtils.successInfo();
+			} else {
+				json = JSONObject.fromObject(redisCode);
+				long time = Long.parseLong(json.get("time") + "");
+				// 当第一次获取时间与当前时间小于两分钟则认为是频繁获取
+				if ((new Date().getTime() - time) < 120000) {
+					return ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!");
+				} else {// 重新发送验证码
+					int code = RandomUtils.getRandom(6);
+					SendMsg.sendMsg(phone, "【银盟信息科技有限公司】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
+					json.put("time", new Date().getTime());
+					json.put("code", code);
+					System.out.println("--重新发送-注册验证码-->" + code);
+					JedisUtil.set(keys, 900, json);
+					return ReturnInfoUtils.successInfo();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("发送短信验证码失败！");
+		}
+
+	}
+
+	public static void main(String[] args) {
+//		try {
+//			System.out.println(SendMsg.sendMsg("13533527688", "【广州银盟信息科技有限公司】验证码为"));
+//		} catch (ParserConfigurationException | SAXException | IOException e) {
+//			e.printStackTrace();
+//		}
+		
+		System.out.println("===>"+sendVerificationCode("13825004872", "RedisKey"));
 	}
 }
