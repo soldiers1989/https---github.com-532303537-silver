@@ -69,7 +69,7 @@ public class PushPaymentRecordQtz {
 	 * 计数器
 	 */
 	private static AtomicInteger counter = new AtomicInteger(0);
-	
+
 	private static Logger logger = LogManager.getLogger(Object.class);
 
 	@Autowired
@@ -95,7 +95,8 @@ public class PushPaymentRecordQtz {
 		Map<String, Object> params = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
-		calendar.add(Calendar.DATE, -7);
+		// 设置扫描开始时间点为三个月内
+		calendar.add(Calendar.MONTH, -3);
 		calendar.set(Calendar.HOUR_OF_DAY, 00);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
@@ -221,9 +222,10 @@ public class PushPaymentRecordQtz {
 					return reMap;
 				}
 				// 当网关接收失败时，添加至重发记录表中
-				Map<String,Object> reResendMap = addPaymentResendInfo(tradeNo, payInfo.getMerchant_no(), payInfo.getCreate_by(),
-						rePaymentMap.get(BaseCode.MSG.toString()) + "", subParams);
-				logger.error(tradeNo + "<--接收失败--服务器返回--" + rePaymentMap.get(BaseCode.MSG.toString())+";--添加重发-->"+reResendMap.get(BaseCode.MSG.toString()));
+				Map<String, Object> reResendMap = addPaymentResendInfo(tradeNo, payInfo.getMerchant_no(),
+						payInfo.getCreate_by(), rePaymentMap.get(BaseCode.MSG.toString()) + "", subParams);
+				logger.error(tradeNo + "<--接收失败--服务器返回--" + rePaymentMap.get(BaseCode.MSG.toString()) + ";--添加重发-->"
+						+ reResendMap.get(BaseCode.MSG.toString()));
 				return rePaymentMap;
 			} else {
 				String rePayMessageID = rePaymentMap.get("messageID") + "";
@@ -252,6 +254,41 @@ public class PushPaymentRecordQtz {
 	}
 
 	/**
+	 * 添加一条新的重发记录
+	 * 
+	 * @param tradeNo
+	 *            交易流水号
+	 * @param merchantId
+	 *            商户id
+	 * @param merchantName
+	 *            商户名称
+	 * @param msg
+	 *            消息说明
+	 * @return Map
+	 */
+	private Map<String, Object> addPaymentResendInfo(String tradeNo, String merchantId, String merchantName,
+			String msg) {
+		ManualPaymentResendContent paymentRe = new ManualPaymentResendContent();
+		Map<String, Object> reIdMap = idUtils.createId(ManualPaymentResendContent.class, "RE");
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
+			return reIdMap;
+		}
+		paymentRe.setNote(DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + msg);
+		paymentRe.setPaymentResendId(reIdMap.get(BaseCode.DATAS.toString()) + "");
+		paymentRe.setMerchantId(merchantId);
+		paymentRe.setMerchantName(merchantName);
+		paymentRe.setTradeNo(tradeNo);
+		// 重发状态：success-成功，failure-失败
+		paymentRe.setResendStatus("failure");
+		paymentRe.setResendCount(0);
+		paymentRe.setCreateDate(new Date());
+		if (!paymentDao.add(paymentRe)) {
+			return ReturnInfoUtils.errorInfo("流水号[" + tradeNo + "]保存重发信息失败!");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
 	 * 添加支付单重发记录
 	 * 
 	 * @param tradeNo
@@ -270,33 +307,11 @@ public class PushPaymentRecordQtz {
 			Map<String, Object> subParams) {
 		if (StringEmptyUtils.isNotEmpty(tradeNo) && StringEmptyUtils.isNotEmpty(merchantId)
 				&& StringEmptyUtils.isNotEmpty(merchantName)) {
-			Map<String, Object> params = new HashMap<>();
-			if (subParams != null && !subParams.isEmpty()) {
-				params.put(PAYMENT_RESEND_ID, subParams.get("PAYMENT_RESEND_ID"));
-			}
-			List<ManualPaymentResendContent> paymentList = paymentDao
-					.getResendPaymentInfo(ManualPaymentResendContent.class, params, 0, 0);
-			if (paymentList != null && !paymentList.isEmpty()) {
-				return ReturnInfoUtils.errorInfo("重发记录已存在,无需重复添加");
+			if (subParams != null && StringEmptyUtils.isNotEmpty(subParams.get(PAYMENT_RESEND_ID))) {
+
+				return ReturnInfoUtils.errorInfo("重发记录已存在,无需重复添加！");
 			} else {
-				ManualPaymentResendContent paymentRe = new ManualPaymentResendContent();
-				Map<String, Object> reIdMap = idUtils.createId(ManualPaymentResendContent.class, "RE");
-				if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
-					return reIdMap;
-				}
-				paymentRe.setNote( DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " " + msg);
-				paymentRe.setPaymentResendId(reIdMap.get(BaseCode.DATAS.toString()) + "");
-				paymentRe.setMerchantId(merchantId);
-				paymentRe.setMerchantName(merchantName);
-				paymentRe.setTradeNo(tradeNo);
-				// 重发状态：success-成功，failure-失败
-				paymentRe.setResendStatus("failure");
-				paymentRe.setResendCount(0);
-				paymentRe.setCreateDate(new Date());
-				if (!paymentDao.add(paymentRe)) {
-					return ReturnInfoUtils.errorInfo("流水号[" + tradeNo + "]保存重发信息失败!");
-				}
-				return ReturnInfoUtils.successInfo();
+				return addPaymentResendInfo(tradeNo, merchantId, merchantName, msg);
 			}
 		} else {
 			return ReturnInfoUtils.errorInfo("保存重发参数不能为空!");
@@ -307,6 +322,7 @@ public class PushPaymentRecordQtz {
 	 * 扫描支付单推送网关失败的重发记录
 	 */
 	public void resendPaymentRecordJob() {
+		System.out.println("==扫描推送网关失败的支付单状态为failure、且返回次数10次以下==");
 		int page = 1;
 		int size = 300;
 		Map<String, Object> params = new HashMap<>();
@@ -329,7 +345,7 @@ public class PushPaymentRecordQtz {
 						updateResendPaymentCount(paymentResend.getPaymentResendId(),
 								reMap.get(BaseCode.MSG.toString()) + "");
 					} else {
-						updateResendPaymentSuccessStatus(paymentResend.getPaymentResendId());
+						updateRePaySuccess(paymentResend.getPaymentResendId());
 					}
 
 				}
@@ -340,14 +356,16 @@ public class PushPaymentRecordQtz {
 
 	/**
 	 * 更新重发支付单成功状态
-	 * @param paymentResendId 支付单重发唯一id
+	 * 
+	 * @param paymentResendId
+	 *            支付单重发唯一id
 	 */
-	private void updateResendPaymentSuccessStatus(String paymentResendId) {
+	private void updateRePaySuccess(String paymentResendId) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(PAYMENT_RESEND_ID, paymentResendId);
 		List<ManualPaymentResendContent> paymentList = paymentDao.findByProperty(ManualPaymentResendContent.class,
 				params, 0, 0);
-		if (paymentList != null && paymentList.isEmpty()) {
+		if (paymentList != null && !paymentList.isEmpty()) {
 			ManualPaymentResendContent paymentRe = paymentList.get(0);
 			int count = paymentRe.getResendCount();
 			count++;
@@ -355,7 +373,7 @@ public class PushPaymentRecordQtz {
 			paymentRe.setResendCount(count);
 			String note = paymentRe.getNote();
 			if (StringEmptyUtils.isNotEmpty(note)) {
-				paymentRe.setNote(note + "#" + "订单第" + count + "次重新申报成功!");
+				paymentRe.setNote(note + "#"+ DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 订单第" + count + "次重新申报成功!");
 			} else {
 				paymentRe.setNote("订单第" + count + "次重新申报成功!");
 			}
@@ -370,15 +388,18 @@ public class PushPaymentRecordQtz {
 
 	/**
 	 * 更新支付单重发次数
-	 * @param paymentResendId 支付单重发唯一id
-	 * @param msg 信息
+	 * 
+	 * @param paymentResendId
+	 *            支付单重发唯一id
+	 * @param msg
+	 *            信息
 	 */
 	private void updateResendPaymentCount(String paymentResendId, String msg) {
 		Map<String, Object> params = new HashMap<>();
 		params.put(PAYMENT_RESEND_ID, paymentResendId);
 		List<ManualPaymentResendContent> paymentList = paymentDao.findByProperty(ManualPaymentResendContent.class,
 				params, 0, 0);
-		if (paymentList != null && paymentList.isEmpty()) {
+		if (paymentList != null && !paymentList.isEmpty()) {
 			ManualPaymentResendContent paymentRe = paymentList.get(0);
 			int count = paymentRe.getResendCount();
 			count++;

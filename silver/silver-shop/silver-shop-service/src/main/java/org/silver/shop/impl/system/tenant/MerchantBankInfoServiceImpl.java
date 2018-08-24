@@ -36,20 +36,13 @@ public class MerchantBankInfoServiceImpl implements MerchantBankInfoService {
 
 	@Override
 	public Map<String, Object> getMerchantBankInfo(String merchantId, int page, int size, int defaultFlag) {
-		if (StringEmptyUtils.isEmpty(merchantId)) {
-			return ReturnInfoUtils.errorInfo("商户id不能为空!");
-		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
-		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantMap;
-		}
-		Map<String, Object> pamras = new HashMap<>();
+		Map<String, Object> params = new HashMap<>();
 		// 选中标识：1-默认选中,2-备用
 		if (defaultFlag > 0) {
-			pamras.put("defaultFlag", defaultFlag);
+			params.put("defaultFlag", defaultFlag);
 		}
-		pamras.put("merchantId", merchantId);
-		List<MerchantBankContent> reList = merchantBankInfoDao.findByProperty(MerchantBankContent.class, pamras, page,
+		params.put("merchantId", merchantId);
+		List<MerchantBankContent> reList = merchantBankInfoDao.findByProperty(MerchantBankContent.class, params, page,
 				size);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询商户银行卡信息失败,服务器繁忙!");

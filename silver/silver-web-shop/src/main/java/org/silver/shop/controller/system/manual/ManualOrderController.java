@@ -137,8 +137,7 @@ public class ManualOrderController {
 	@RequiresRoles("Merchant")
 	@ApiOperation("商户将订单推送至物流")
 	@ResponseBody
-	public String sendMsgToLogistics(HttpServletResponse resp, HttpServletRequest req, @RequestParam("a") String a,
-			@RequestParam("b") String b) {
+	public String sendMsgToLogistics(HttpServletResponse resp, HttpServletRequest req) {
 		String originHeader = req.getHeader("Origin");
 		resp.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		resp.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

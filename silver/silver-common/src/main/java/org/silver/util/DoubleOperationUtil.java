@@ -105,4 +105,10 @@ public class DoubleOperationUtil {
 		BigDecimal one = new BigDecimal("1");
 		return b.divide(one, scale, BigDecimal.ROUND_HALF_UP).doubleValue();
 	}
+	
+	
+	public static void main(String[] args) {
+		System.out.println("--->>"+mul(2,64.90));
+		
+	}
 }

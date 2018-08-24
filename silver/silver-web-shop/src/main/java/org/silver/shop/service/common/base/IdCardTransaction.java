@@ -26,8 +26,7 @@ public class IdCardTransaction {
 		return idCardService.deleteDuplicateIdCardInfo();
 	}
 
-
-	public Object temPush() {
-		return idCardService.temPush();
+	public Object temPush(String name, String idNumber, String phone) {
+		return idCardService.sendIdCardPhoneCertification(name,idNumber,phone);
 	}
 }

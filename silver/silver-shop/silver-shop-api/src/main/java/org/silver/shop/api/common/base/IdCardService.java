@@ -31,5 +31,14 @@ public interface IdCardService {
 	public Map<String, Object> deleteDuplicateIdCardInfo();
 
 	public Object temPush();
+
+	/**
+	 * 姓名与身份证号码+手机号码(三要素)验证、发送身份证验证请求
+	 * @param idName 姓名
+	 * @param idCard 身份证号码
+	 * @param phone 手机号码
+	 * @return Map
+	 */
+	public Map<String, Object> sendIdCardPhoneCertification(String idName, String idCard, String phone);
 	
 }

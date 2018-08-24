@@ -76,7 +76,7 @@ public class MerchantBankController {
 
 	@RequestMapping(value = "/managerGetBankInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Merchant")
+	@RequiresRoles("Manager")
 	@ApiOperation("管理员获取银行卡信息")
 	// @RequiresPermissions("merchantBank:managerGetBankInfo")
 	public String managerGetBankInfo(HttpServletRequest req, HttpServletResponse response,

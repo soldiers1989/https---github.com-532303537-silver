@@ -1048,7 +1048,7 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			orderJson = JSONObject.fromObject(datasMap.get("datas"));
 		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("订单参数格式不正确,请核对信息!");
+			return ReturnInfoUtils.errorInfo("订单参数格式错误！");
 		}
 		try {
 			Map<String, Object> reCheckMerchantMap = merchantUtils.getMerchantInfo(datasMap.get("merchantId") + "");
@@ -1237,6 +1237,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 			order.setRecipientName(orderJson.get("RecipientName") + "");
 			order.setRecipientAddr(orderJson.get("RecipientAddr") + "");
+
 			order.setRecipientID(orderJson.get("RecipientID") + "");
 			order.setRecipientTel(orderJson.get("RecipientTel") + "");
 			order.setRecipientProvincesCode(orderJson.get("RecipientProvincesCode") + "");
@@ -1269,6 +1270,7 @@ public class OrderServiceImpl implements OrderService {
 			// 海关关区代码
 			String customsCode = orderJson.get("customsCode") + "";
 			order.setCustomsCode(customsCode);
+			//
 			Map<String, Object> reCheckMap = checkOrderBusinessType(order, merchant);
 			if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 				return reCheckMap;
@@ -1294,25 +1296,22 @@ public class OrderServiceImpl implements OrderService {
 	 * @return Map
 	 */
 	private Map<String, Object> checkOrderBusinessType(Morder order, Merchant merchant) {
-		int thirdPartyFlag = merchant.getThirdPartyFlag();
-		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
-		if (thirdPartyFlag == 2 && !"MerchantId_00047".equals(merchant.getMerchantId())) {
-			Map<String, Object> reBusinessMap = merchantUtils.getMerchantBusinessInfo(merchant.getMerchantId());
-			if (!"1".equals(reBusinessMap.get(BaseCode.STATUS.toString()))) {
-				return reBusinessMap;
-			}
-			MerchantBusinessContent business = (MerchantBusinessContent) reBusinessMap.get(BaseCode.DATAS.toString());
-			// 推送类型：all-全部推送、orderRecord-订单推送、paymentRecord-支付单推送、goodsRecord-商品备案推送
-			String pustType = business.getPushType();
-			if ("all".equals(pustType) || "orderRecord".equals(pustType)) {
-				order.setOrder_record_status(10);
-				order.setStatus(1);
-			}
-			String businessType = business.getBusinessType();
-			// 业务类型:all-全部,online-线上支付、offline-线下支付
-			if ("all".equals(businessType) || "online".equals(businessType)) {
-				return getPaymentInfo(order);
-			}
+
+		Map<String, Object> reBusinessMap = merchantUtils.getMerchantBusinessInfo(merchant.getMerchantId());
+		if (!"1".equals(reBusinessMap.get(BaseCode.STATUS.toString()))) {
+			return reBusinessMap;
+		}
+		MerchantBusinessContent business = (MerchantBusinessContent) reBusinessMap.get(BaseCode.DATAS.toString());
+		// 推送类型：all-全部推送、orderRecord-订单推送、paymentRecord-支付单推送、goodsRecord-商品备案推送
+		String pustType = business.getPushType();
+		if ("all".equals(pustType) || "orderRecord".equals(pustType)) {
+			order.setOrder_record_status(10);
+			order.setStatus(1);
+		}
+		// 支付业务类型:all-全部,online-线上支付、offline-线下支付
+		String businessType = business.getBusinessType();
+		if ("all".equals(businessType) || "online".equals(businessType)) {
+			return getPaymentInfo(order);
 		}
 		return ReturnInfoUtils.successInfo();
 	}
@@ -1443,14 +1442,15 @@ public class OrderServiceImpl implements OrderService {
 						+ goodsJson.get("Total") + "]格式错误!");
 			}
 			// 由于出现浮点数,故而得出的商品总金额只保留后两位，其余全部舍弃
-			double temToal = Double.parseDouble(df.format(count * price));
+			// double temToal = Double.parseDouble(df.format(count * price));
+			double temToal = DoubleOperationUtil.mul(price, count);
 			if (temToal != total) {
 				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]中关联商品自编号[" + entGoodsNo + "]商品总金额为：" + total
 						+ ",与" + count + "(数量)*" + price + "(单价)=" + temToal + "(商品总金额)不对等！");
 			}
-			//累计商品总金额
+			// 累计商品总金额
 			goodsTotal = DoubleOperationUtil.add(goodsTotal, temToal);
-			//goodsTotal += temToal;
+			// goodsTotal += temToal;
 		}
 		// 判断订单商品总金额是否与计算出来的订单信息中商品总金额是否一致
 		if (orderGoodTotal != goodsTotal) {
@@ -1504,8 +1504,8 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()) + "")) {
 			return reCheckMap;
 		}
-		//订单自编号
-		String entOrderNo = orderJson.get("EntOrderNo")+"";
+		// 订单自编号
+		String entOrderNo = orderJson.get("EntOrderNo") + "";
 		String countryCode = orderJson.get("RecipientCountry") + "";
 		Map<String, Object> reCheckCountryMap = checkCountry(countryCode);
 		if (!"1".equals(reCheckCountryMap.get(BaseCode.STATUS.toString()) + "")) {
@@ -1519,34 +1519,34 @@ public class OrderServiceImpl implements OrderService {
 		try {
 			double orderGoodTotal = Double.parseDouble(orderJson.get("OrderGoodTotal") + "");
 			if (orderGoodTotal > 2000) {
-				return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]商品总金额超过2000！");
+				return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]商品总金额超过2000！");
 			}
 		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]商品总金额参数格式错误！");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]商品总金额参数格式错误！");
 		}
 		// 下单人身份证号码
 		String orderDocId = orderJson.get("OrderDocId") + "";
 		if (!IdcardValidator.validate18Idcard(orderDocId)) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人身份证号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]下单人身份证号码错误！");
 		}
 		if (orderDocId.contains("x")) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人身份证号码必须是大写的[X]");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]下单人身份证号码必须是大写的[X]");
 		}
 		String recipientTel = orderJson.get("RecipientTel") + "";
 		if (!PhoneUtils.isPhone(recipientTel)) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]收货人手机号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]收货人手机号码错误！");
 		}
 		String orderDocTel = orderJson.get("OrderDocTel") + "";
 		if (!PhoneUtils.isPhone(orderDocTel)) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人手机号码错误！");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]下单人手机号码错误！");
 		}
 		String orderDocName = orderJson.get("OrderDocName") + "";
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")
 				|| orderDocName.contains("小姐")) {
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单人姓名错误！");
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]下单人姓名错误！");
 		}
-		if(DateUtil.parseDate(orderJson.get("OrderDate")+"", "yyyyMMddHHmmss") == null){
-			return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]下单日期错误！");
+		if (DateUtil.parseDate(orderJson.get("OrderDate") + "", "yyyyMMddHHmmss") == null) {
+			return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]下单日期错误！");
 		}
 		if (StringEmptyUtils.isNotEmpty(orderJson.get("otherPayment"))) {
 			// 抵付金额
@@ -1554,7 +1554,7 @@ public class OrderServiceImpl implements OrderService {
 			if (otherPayment > 0) {
 				String otherPayNotes = orderJson.get("otherPayNotes") + "";
 				if (StringEmptyUtils.isEmpty(otherPayNotes)) {
-					return ReturnInfoUtils.errorInfo("订单号["+entOrderNo+"]抵付金额为[" + otherPayment + "]，抵付说明不能为空！");
+					return ReturnInfoUtils.errorInfo("订单号[" + entOrderNo + "]抵付金额为[" + otherPayment + "]，抵付说明不能为空！");
 				}
 			}
 		}
@@ -1594,6 +1594,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
+
 	/**
 	 * 根据省份Code校验省份信息是否准确
 	 * 
@@ -1602,6 +1603,8 @@ public class OrderServiceImpl implements OrderService {
 	 * @return Map
 	 */
 	private Map<String, Object> checkProvinceCode(String provinceCode) {
+		provinceCode = provinceCode.substring(0, 2);
+		provinceCode = provinceCode + "0000";
 		List<Province> reList = orderDao.findByProperty(Province.class, null, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询省份信息失败,服务器繁忙!");
@@ -1924,11 +1927,6 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("下单参数不能为空!");
 		}
 
-		Map<String, Object> rePhoneMap = checkPhoneVerificationCode(datasMap);
-		if (!"1".equals(rePhoneMap.get(BaseCode.STATUS.toString()))) {
-			return rePhoneMap;
-		}
-
 		// 校验参数
 		Map<String, Object> reCheckMap = checkDatas(datasMap);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
@@ -1959,13 +1957,17 @@ public class OrderServiceImpl implements OrderService {
 		}
 		OrderContent order = (OrderContent) reOrderHeadMap.get(BaseCode.DATAS.toString());
 		int count = Integer.parseInt(datasMap.get("count") + "");
+		// 商品推广id
+		datasMap.get("promotionNo");
 		Map<String, Object> reOrderGoodsMap = saveOrderContent(order, stock, datasMap.get(ENT_GOODS_NO) + "", count);
 		if (!"1".equals(reOrderGoodsMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderGoodsMap;
 		}
-		return ReturnInfoUtils.successDataInfo("https://ym.191ec.com/silver-web-shop/yspay/shoppingPayment?entOrderNo=" + order.getEntOrderNo());
-		//return ReturnInfoUtils.successDataInfo(
-			//	"https://ym.191ec.com/silver-web-shop/yspay/dopay?entOrderNo=" + order.getEntOrderNo());
+		return ReturnInfoUtils.successDataInfo(
+				"https://ym.191ec.com/silver-web-shop/yspay/shoppingPayment?entOrderNo=" + order.getEntOrderNo());
+		// return ReturnInfoUtils.successDataInfo(
+		// "https://ym.191ec.com/silver-web-shop/yspay/dopay?entOrderNo=" +
+		// order.getEntOrderNo());
 	}
 
 	/**
@@ -1982,6 +1984,9 @@ public class OrderServiceImpl implements OrderService {
 	 * @return Map
 	 */
 	private Map<String, Object> saveOrderContent(OrderContent order, StockContent stock, String entGoodsNo, int count) {
+		if (order == null || stock == null) {
+			return ReturnInfoUtils.errorInfo("保存订单信息失败,请求参数错误！");
+		}
 		OrderGoodsContent orderGoods = new OrderGoodsContent();
 		orderGoods.setMerchantId(order.getMerchantId());
 		orderGoods.setMerchantName(order.getMerchantName());
@@ -2011,6 +2016,7 @@ public class OrderServiceImpl implements OrderService {
 		orderGoods.setEntGoodsNo(entGoodsNo);
 		orderGoods.setEntOrderNo(order.getEntOrderNo());
 		orderGoods.setEvaluationFlag(0);
+
 		if (!orderDao.add(orderGoods)) {
 			return ReturnInfoUtils.errorInfo("添加订单商品信息失败,服务器繁忙！");
 		}
@@ -2072,32 +2078,6 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("保存订单头失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successDataInfo(order);
-	}
-
-	/**
-	 * 校验手机验证码是否正确
-	 * 
-	 * @param datasMap
-	 * @return
-	 */
-	private Map<String, Object> checkPhoneVerificationCode(Map<String, Object> datasMap) {
-		// 手机号码
-		String phone = datasMap.get("phone") + "";
-		String verificationCode = datasMap.get("verificationCode") + "";
-		if (StringEmptyUtils.isEmpty(verificationCode)) {
-			return ReturnInfoUtils.errorInfo("手机验证码不能为空!");
-		}
-		// 获取缓存中用户注册手机验证码
-		String redis = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone);
-		if (StringEmptyUtils.isNotEmpty(redis)) {
-			JSONObject json = JSONObject.fromObject(redis);
-			String code = json.get("code") + "";
-			if (verificationCode.equals(code)) {
-				return ReturnInfoUtils.successInfo();
-			}
-		}
-		return ReturnInfoUtils.errorInfo("手机验证码错误,请重新输入！");
-
 	}
 
 	/**

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
+import org.silver.common.BaseCode;
 import org.silver.common.RedisKey;
 import org.silver.shop.service.system.commerce.OrderTransaction;
 import org.silver.util.JedisUtil;
@@ -193,7 +194,7 @@ public class OrderController {
 	@ApiOperation("根据指定信息搜索商户订单信息")
 	@RequiresRoles("Merchant")
 	public String searchMerchantOrderInfo(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("page") int page, @RequestParam("size") int size,String type) {
+			@RequestParam("page") int page, @RequestParam("size") int size, String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -459,24 +460,59 @@ public class OrderController {
 	@ResponseBody
 	@ApiOperation("第三方商城推广订单下单入口")
 	// @RequiresRoles("Manager")
-	// @RequiresPermissions("orderReport:managerGetOrderReportInfo")
 	public String thirdPromoteBusiness(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> params = new HashMap<>();
+		Map<String, Object> datasMap = new HashMap<>();
 		Enumeration<String> isKeys = req.getParameterNames();
 		while (isKeys.hasMoreElements()) {
 			String key = isKeys.nextElement();
 			String value = req.getParameter(key);
-			params.put(key, value);
+			datasMap.put(key, value);
 		}
-		if (params.isEmpty()) {
+		if (datasMap.isEmpty()) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
-		return JSONObject.fromObject(orderTransaction.thirdPromoteBusiness(params)).toString();
+		Map<String, Object> rePhoneMap = checkPhoneVerificationCode(datasMap);
+		if (!"1".equals(rePhoneMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(rePhoneMap).toString();
+		}
+		
+		return JSONObject.fromObject(orderTransaction.thirdPromoteBusiness(datasMap)).toString();
+	}
+
+	/**
+	 * 校验手机短信验证码是否正确
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	private Map<String, Object> checkPhoneVerificationCode(Map<String, Object> datasMap) {
+		// 手机号码
+		String phone = datasMap.get("phone") + "";
+		if (!PhoneUtils.isPhone(phone)) {
+			return ReturnInfoUtils.errorInfo("手机号码错误！");
+		}
+		// 手机短信验证码
+		String verificationCode = datasMap.get("verificationCode") + "";
+		if (StringEmptyUtils.isEmpty(verificationCode)) {
+			return ReturnInfoUtils.errorInfo("短信验证码不能为空!");
+		}
+		// 获取缓存中用户注册手机验证码
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			JSONObject json = JSONObject.fromObject(redis);
+			String code = json.get("code") + "";
+			if (verificationCode.equals(code)) {
+				return ReturnInfoUtils.successInfo();
+			}
+			// 短信验证码只允许使用一次
+			JedisUtil.del(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone);
+		}
+		return ReturnInfoUtils.errorInfo("短信验证码错误,请重新输入！");
 	}
 
 	/**
@@ -489,8 +525,7 @@ public class OrderController {
 	@RequestMapping(value = "/sendThirdPromoteBusinessCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	public String sendThirdPromoteBusinessCaptchaCode(String phone, HttpServletRequest req,
-			HttpServletResponse response, String captcha)
-			throws ParserConfigurationException, SAXException, IOException {
+			HttpServletResponse response, String captcha){
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -498,36 +533,19 @@ public class OrderController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
 		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
-		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
-			JSONObject json = new JSONObject();
-			// 获取用户注册保存在缓存中的验证码
-			String redisCode = JedisUtil.get(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone);
-			if (StringEmptyUtils.isEmpty(redisCode)) {// redis缓存没有数据
-				int code = RandomUtils.getRandom(6);
-				SendMsg.sendMsg(phone, "【广州银盟】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
-				json.put("time", new Date().getTime());
-				json.put("code", code);
-				JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone, 900, json);
+		if(!PhoneUtils.isPhone(phone)){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码错误,请重新输入!")).toString();
+		}
+		if (captcha.equalsIgnoreCase(captchaCode)) {
+			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(phone,
+					RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE);
+			if (!"1".equals(reMsgMap.get(BaseCode.STATUS.toString()))) {
+				return JSONObject.fromObject(reMsgMap).toString();
+			}else{
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-			} else {
-				json = JSONObject.fromObject(redisCode);
-				long time = Long.parseLong(json.get("time") + "");
-				// 当第一次获取时间与当前时间小于一分钟则认为是频繁获取
-				if ((new Date().getTime() - time) < 58000) {
-					return JSONObject.fromObject(ReturnInfoUtils.errorInfo("已获取过验证码,请勿重复获取!")).toString();
-				} else {// 重新发送验证码
-					int code = RandomUtils.getRandom(6);
-					SendMsg.sendMsg(phone, "【广州银盟】验证码" + code + ",请在15分钟内按页面提示提交验证码,切勿将验证码泄露于他人!");
-					json.put("time", new Date().getTime());
-					json.put("code", code);
-					System.out.println("--重新发送-注册验证码-->" + code);
-					// 将查询出来的省市区放入到redis缓存中
-					JedisUtil.set(RedisKey.SHOP_KEY_THIRD_PROMOTE_BUSINESS_CAPTCHA_CODE + phone, 900, json);
-					return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-				}
 			}
 		}
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
 	}
 
 	public static void main(String[] args) {
@@ -581,18 +599,18 @@ public class OrderController {
 		goods2.element("EntGoodsNo", "TEst2");
 		goods2.element("CIQGoodsNo", "*");
 		// goods.element("BarCode");
-//		goods2.element("CusGoodsNo", "*");
-//		goods2.element("GoodsName", "商品名称");
-//		goods2.element("GoodsStyle", "商品规格");
-//		goods2.element("OriginCountry", "142");
-//		goods2.element("Qty", 1);
-//		goods2.element("HSCode", "HS编码");
-//		goods2.element("Unit", "110");
-//		goods2.element("Price", "100");
-//		goods2.element("Total", (1 * 100));
-//		goods2.element("CurrCode", "142");
-//		goods2.element("Brand", "品牌");
-//		orderGoodsList.add(goods2);
+		// goods2.element("CusGoodsNo", "*");
+		// goods2.element("GoodsName", "商品名称");
+		// goods2.element("GoodsStyle", "商品规格");
+		// goods2.element("OriginCountry", "142");
+		// goods2.element("Qty", 1);
+		// goods2.element("HSCode", "HS编码");
+		// goods2.element("Unit", "110");
+		// goods2.element("Price", "100");
+		// goods2.element("Total", (1 * 100));
+		// goods2.element("CurrCode", "142");
+		// goods2.element("Brand", "品牌");
+		// orderGoodsList.add(goods2);
 		order.element("orderGoodsList", orderGoodsList);
 
 		item.put("datas", order);

@@ -19,6 +19,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.WalletUtils;
+import org.silver.util.DoubleOperationUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,8 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			params.put("serialNo", tradeNo);
 			// 交易名称
 			params.put("serialName", "转账");
-			params.put("beforeChangingBalance", memberWalletContent.getReserveAmount() + amount);
+			params.put("beforeChangingBalance",
+					DoubleOperationUtil.add(memberWalletContent.getReserveAmount(), amount));
 			params.put("amount", amount);
 			params.put("afterChangeBalance", memberWalletContent.getReserveAmount());
 			// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
@@ -107,7 +109,7 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			params.put("serialNo", tradeNo);
 			// 交易名称
 			params.put("serialName", "转账");
-			params.put("balance", merchantWallet.getReserveAmount() - amount);
+			params.put("balance", DoubleOperationUtil.sub(merchantWallet.getReserveAmount(), amount));
 			params.put("amount", amount);
 			// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物
 			params.put("type", 5);

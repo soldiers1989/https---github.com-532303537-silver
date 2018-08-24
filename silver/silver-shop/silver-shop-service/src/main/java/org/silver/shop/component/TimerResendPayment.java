@@ -50,7 +50,7 @@ public class TimerResendPayment implements InitializingBean {
 	 */
 	private void resendPayment() {
 		try {
-			System.out.println("--扫描支付单返回次数10次以下与返回状态为failure--");
+			System.out.println("--扫描第三方支付单返回状态为failure且返回次数10次以下--");
 			Map<String, Object> params = new HashMap<>();
 			params.put("resendStatus", "failure");
 			List<PaymentCallBack> paymentList = paymentDao.getReplyThirdPartyFailInfo(PaymentCallBack.class, params, 1, 200);

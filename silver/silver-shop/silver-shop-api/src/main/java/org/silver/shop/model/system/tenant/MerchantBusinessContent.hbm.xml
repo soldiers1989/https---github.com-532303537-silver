@@ -44,5 +44,8 @@
         <property name="businessType" type="java.lang.String">
             <column name="businessType" not-null="true"/>
         </property>
+        <property name="thirdPartyReType" type="java.lang.String">
+			<column name="thirdPartyReType" />
+		</property>
     </class>
 </hibernate-mapping>

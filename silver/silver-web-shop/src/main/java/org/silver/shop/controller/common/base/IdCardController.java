@@ -93,15 +93,14 @@ public class IdCardController {
 	}
 	@RequestMapping(value = "/temPush", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("临时推送身份证至网关")
-	@RequiresRoles("Manager")
-//	@RequiresPermissions("idCard:firstUpdateIdCardInfo")
-	public String temPush(HttpServletRequest req, HttpServletResponse response) {
+	@ApiOperation("-测试三要素认证")
+	public String temPush(HttpServletRequest req, HttpServletResponse response, @RequestParam("name") String name,
+			@RequestParam("idNumber") String idNumber, @RequestParam("phone") String phone) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		return JSONObject.fromObject(idCardTransaction.temPush()).toString();
+		return JSONObject.fromObject(idCardTransaction.temPush(name,idNumber,phone)).toString();
 	}
 }

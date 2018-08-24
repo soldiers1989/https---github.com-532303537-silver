@@ -143,14 +143,15 @@ public class ManualOrderInterceptor {
 		if (orderList == null || idCardList == null) {
 			return ReturnInfoUtils.errorInfo("订单集合参数不能为null");
 		}
-		try{
+		try {
 			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 			// 查询商户钱包
-			Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(), merchant.getMerchantName());
+			Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(),
+					merchant.getMerchantName());
 			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 				return reMap;
 			}
@@ -163,13 +164,14 @@ public class ManualOrderInterceptor {
 			}
 			AgentWalletContent agentWallet = (AgentWalletContent) reAgentMap.get(BaseCode.DATAS.toString());
 			// 计算实名认证的费用
-			Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet, idCardList);
+			Map<String, Object> reIdCardMap = idCardCertificationToll(merchant, merchantWallet, agentWallet,
+					idCardList);
 			if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 				return reIdCardMap;
 			}
 			// 订单申报平台服务费
 			return orderToll(orderList, merchantWallet, merchant);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -204,8 +206,9 @@ public class ManualOrderInterceptor {
 		// 钱包余额
 		double balance = merchantWallet.getBalance();
 		// 订申报单手续费
-		double serviceFee = totalAmount * fee;
-		logger.error("--清算时--订单总金额->"+totalAmount+";--费率->"+fee+";--结果--"+serviceFee);
+		double serviceFee = DoubleOperationUtil.mul(totalAmount, fee);
+		// double serviceFee = totalAmount * fee;
+		logger.error("--清算时--订单总金额->" + totalAmount + ";--费率->" + fee + ";--结果--" + serviceFee);
 		// 商户钱包扣款
 		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
 		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
@@ -276,18 +279,18 @@ public class ManualOrderInterceptor {
 					if (backCoverFlag == 1) {
 						fee = amount * rate;
 						totalAmount = DoubleOperationUtil.add(totalAmount, amount);
-					//	totalAmount += amount;
+						// totalAmount += amount;
 					} else if (backCoverFlag == 2) {
 						// 当订单金额低于100,提升至100计算
 						if (amount < 100) {
 							fee = 100 * rate;
 							//
 							totalAmount = DoubleOperationUtil.add(totalAmount, 100);
-							//totalAmount += 100;
+							// totalAmount += 100;
 						} else {
 							fee = amount * rate;
 							totalAmount = DoubleOperationUtil.add(totalAmount, amount);
-							//totalAmount += amount;
+							// totalAmount += amount;
 						}
 					}
 					idcardJSON.put("amount", amount);
@@ -341,8 +344,10 @@ public class ManualOrderInterceptor {
 		if (newList.isEmpty()) {// 当需要实名认证的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
-		double serviceFee = newList.size() * merchantCost.getPlatformCost();
-		logger.error("-清算时-身份证认证数量-->"+newList.size()+";--费率->"+merchantCost.getPlatformCost()+";---结果->"+serviceFee);
+		double serviceFee = DoubleOperationUtil.mul(newList.size(), merchantCost.getPlatformCost());
+		// double serviceFee = newList.size() * merchantCost.getPlatformCost();
+		logger.error("-清算时-身份证认证数量-->" + newList.size() + ";--费率->" + merchantCost.getPlatformCost() + ";---结果->"
+				+ serviceFee);
 		//
 		Map<String, Object> reMerchantWalletMap = updateMerchantWallet(merchant, merchantWallet, serviceFee,
 				agentWallet, detailsList);
@@ -386,7 +391,7 @@ public class ManualOrderInterceptor {
 						}
 					} else {
 						getIdCardInfo(order, jsonList, fee, newList);
-						//添加进缓存
+						// 添加进缓存
 						cacheMap.put(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim(),
 								order.getOrder_id());
 					}

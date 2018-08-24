@@ -15,12 +15,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.xmlbeans.impl.tool.BaseSchemaResourceManager;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.AccessTokenService;
@@ -33,13 +33,11 @@ import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.manual.MorderDao;
 import org.silver.shop.dao.system.manual.MpayDao;
-import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.log.AgentWalletLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.MorderSub;
-import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.manual.ThirdPartyOrderCallBack;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
@@ -47,6 +45,7 @@ import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
+import org.silver.shop.task.CheckOrderGoodsPriceTask;
 import org.silver.shop.task.OrderIdCardTollTask;
 import org.silver.shop.util.BufferUtils;
 import org.silver.shop.util.InvokeTaskUtils;
@@ -55,6 +54,7 @@ import org.silver.shop.util.RedisInfoUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CompressUtils;
 import org.silver.util.DateUtil;
+import org.silver.util.DoubleOperationUtil;
 import org.silver.util.IdcardValidator;
 import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
@@ -147,17 +147,13 @@ public class MpayServiceImpl implements MpayService {
 	 */
 	private static final String WALLET_ID = "walletId";
 
-	/**
-	 * 钱包计算数只保留后五位
-	 */
-	private static DecimalFormat format = new DecimalFormat("#.00000");
-	
 	@Override
 	public Object sendMorderRecord(String merchantId, Map<String, Object> customsMap, String orderNoPack,
 			String merchantName) {
+		long startTime = System.currentTimeMillis();
 		// 总参数
 		Map<String, Object> params = new HashMap<>();
-		List<Map<String, Object>> errorList = new ArrayList<>();
+		List<Map<String, Object>> errorList = new Vector<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(orderNoPack);
@@ -167,6 +163,8 @@ public class MpayServiceImpl implements MpayService {
 		if (jsonList == null || jsonList.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("订单Id信息包不能为空!");
 		}
+		// 总数
+		int totalCount = jsonList.size();
 		int eport = Integer.parseInt(customsMap.get(E_PORT) + "");
 		String ciqOrgCode = customsMap.get(CIQ_ORG_CODE) + "";
 		String customsCode = customsMap.get(CUSTOMS_CODE) + "";
@@ -214,7 +212,12 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo(reTokMap.get("msg") + "");
 		}
 		String tok = reTokMap.get(BaseCode.DATAS.toString()) + "";
-		//
+		Map<String, Object> reCheckPriceMap = checkOrderGoodsPrice(
+				JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()), errorList);
+		if (!"1".equals(reCheckPriceMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckPriceMap;
+		}
+		jsonList = JSONArray.fromObject(reCheckPriceMap.get(BaseCode.DATAS.toString()));
 		// 商户口岸费率Id
 		String merchantFeeId = customsMap.get("merchantFeeId") + "";
 		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId, customsMap,
@@ -222,8 +225,6 @@ public class MpayServiceImpl implements MpayService {
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
-		// 总数
-		int totalCount = jsonList.size();
 		params.put(MERCHANT_ID, merchantId);
 		params.put(MERCHANT_NAME, merchantName);
 		params.put("tok", tok);
@@ -234,15 +235,17 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> reMap = null;
 		// 当商户为自主申报时
 		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
-			double fee = Double.parseDouble(reCheckMap.get("fee") + "");
-			int backCoverFlag = Integer.parseInt(reCheckMap.get("backCoverFlag") + "");
-			reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList, fee, backCoverFlag);
+			customsMap.put("fee", reCheckMap.get("fee"));
+			customsMap.put("backCoverFlag", reCheckMap.get("backCoverFlag"));
+			reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList);
 		} else {
 			reMap = invokeTaskUtils.commonInvokeTask(2, totalCount, jsonList, errorList, customsMap, params);
 		}
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
+		long endTime = System.currentTimeMillis();
+		logger.error("--申报总计耗时-->>" + (endTime - startTime) + "ms");
 		Map<String, Object> map = new HashMap<>();
 		map.put("serialNo", serialNo);
 		map.put("orderList", reCheckMap.get("list"));
@@ -261,23 +264,14 @@ public class MpayServiceImpl implements MpayService {
 	 *            订单Id集合
 	 * @param merchantId
 	 *            商户Id
-	 * @param ciqOrgCode
-	 *            国检检疫机构代码
-	 * @param customsCode
-	 *            海关代码
-	 * @param eport
-	 *            口岸
+	 * @param customsMap
+	 *            海关信息
 	 * @param errorList
 	 *            错误信息集合
-	 * @param backCoverFlag
-	 *            封底标识 封底标识：1-正常计算、2-不满100提至100计算
-	 * @param fee
-	 *            订单费率
 	 * @return Map
 	 */
 	private Map<String, Object> updateOrderRecordStatus(JSONArray jsonList, String merchantId,
-			Map<String, Object> customsMap, List<Map<String, Object>> errorList, double fee, int backCoverFlag) {
-		System.out.println("-------将商户选择的自助申报的订单修改为申报状态(10)--------");
+			Map<String, Object> customsMap, List<Map<String, Object>> errorList) {
 		if (jsonList == null || customsMap == null || errorList == null) {
 			return ReturnInfoUtils.errorInfo("自助申报失败,服务器繁忙！");
 		}
@@ -292,6 +286,7 @@ public class MpayServiceImpl implements MpayService {
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		Map<String, Object> errMap = null;
 		for (int i = 0; i < jsonList.size(); i++) {
+			System.out.println("-------将商户选择的自助申报的订单修改为申报状态(10)--------");
 			JSONObject json = JSONObject.fromObject(jsonList.get(i));
 			Map<String, Object> param = new HashMap<>();
 			param.put("merchant_no", merchantId);
@@ -318,6 +313,8 @@ public class MpayServiceImpl implements MpayService {
 					// 订单推送至网关接收状态： 0-未发起,1-已发起,2-接收成功,3-接收失败
 					order.setStatus(1);
 					order.setUpdate_date(new Date());
+					double fee = Double.parseDouble(customsMap.get("fee") + "");
+					int backCoverFlag = Integer.parseInt(customsMap.get("backCoverFlag") + "");
 					order.setPlatformFee(fee);
 					order.setBackCoverFlag(backCoverFlag);
 					if (!morderDao.update(order)) {
@@ -366,6 +363,9 @@ public class MpayServiceImpl implements MpayService {
 		if (jsonList == null || merchant == null) {
 			return ReturnInfoUtils.errorInfo("计算商户钱包余额请求参数不能为空!");
 		}
+		if (jsonList.isEmpty()) {// 当没有需要校验的订单时
+			return ReturnInfoUtils.successInfo();
+		}
 		Map<String, Object> reCheckMap = beforePushingCheckManualOrder(
 				JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
@@ -386,21 +386,19 @@ public class MpayServiceImpl implements MpayService {
 		}
 		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
 		double idCost = merchantCost.getPlatformCost();
-		long startTime = System.currentTimeMillis();
 		// 实名认证每笔手续费
 		Map<String, Object> reIdCardMap = getTollIdCardList(jsonList);
 		if (!"1".equals(reIdCardMap.get(BaseCode.STATUS.toString()))) {
 			return reIdCardMap;
 		}
-		long endTime = System.currentTimeMillis();
-		System.out.println("-查询身份证耗时-->>" + (endTime - startTime) + "ms");
 		// 收费的身份证集合
 		List<Object> reIdCardList = (List<Object>) reIdCardMap.get("idCardList");
 		// 免费身份证集合
 		List<Object> reIdCardFreeList = (List<Object>) reIdCardMap.get("idCardFreeList");
 		// 计算需要实名认证收费的费用之和
 		double idCertificationFee = reIdCardList.size() * idCost;
-		logger.error("--订申报时--免费数量-->"+reIdCardFreeList.size()+";--实名认证收费数量-->" + reIdCardList.size() + ";--费率->" + idCost + ";--结果-->" + idCertificationFee);
+		logger.error("--订申报时--免费数量-->" + reIdCardFreeList.size() + ";--实名认证收费数量-->" + reIdCardList.size() + ";--费率->"
+				+ idCost + ";--结果-->" + idCertificationFee);
 		// 初始化平台服务费
 		double fee;
 		// 封底标识：1-正常计算、2-不满100提至100计算
@@ -426,9 +424,11 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
 		} else if (totalAmountPaid > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
 			// 订申报单手续费
-			double serviceFee = totalAmountPaid * fee;
+			double serviceFee = DoubleOperationUtil.mul(totalAmountPaid, fee);
+			// double serviceFee = totalAmountPaid * fee;
 			// 申报手续+实名认证手续费
-			double totalFee = serviceFee + idCertificationFee;
+			double totalFee = DoubleOperationUtil.add(serviceFee, idCertificationFee);
+			// double totalFee = serviceFee + idCertificationFee;
 			// 钱包余额
 			double oldBalance = merchantWallet.getBalance();
 			logger.error("--订申报时-订单总金额->>" + totalAmountPaid + ";--费率-->" + fee + ";--结果->" + serviceFee);
@@ -449,9 +449,76 @@ public class MpayServiceImpl implements MpayService {
 		map.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
 		map.put("list", newList);
 		reIdCardList.addAll(reIdCardFreeList);
-		logger.error("--订申报时-合并后的身份证数量-->"+reIdCardList.size());
+		logger.error("--订申报时-合并后的身份证数量-->" + reIdCardList.size());
 		map.put("idCardList", reIdCardList);
 		return map;
+	}
+
+	/**
+	 * 根据订单编号校验订单商品价格与是否商品已上架
+	 * 
+	 * @param errorList
+	 * @param datas
+	 *            订单商品集合-内参数为Map对象
+	 * @return Map
+	 */
+	private Map<String, Object> checkOrderGoodsPrice(List<Map<String, Object>> datasList,
+			List<Map<String, Object>> errorList) {
+		if (datasList == null) {
+			return ReturnInfoUtils.errorInfo("校验订单商品价格时，请求参数不能为空");
+		}
+		ExecutorService threadPool = Executors.newCachedThreadPool();
+		Map<String, Object> reMap = splitList(datasList);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		// 商品价格正确的订单集合
+		List<Object> correctList = new Vector<>();
+		List<?> list = (List<?>) reMap.get(BaseCode.DATAS.toString());
+		List<Future> cacheList = new ArrayList<>();
+		for (int i = 0; i < list.size(); i++) {
+			System.out.println("--调用子任务--");
+			List newList = (List) list.get(i);
+			Future<?> future = threadPool
+					.submit(new CheckOrderGoodsPriceTask(newList, correctList, morderDao, errorList));
+			cacheList.add(future);
+		}
+		try {
+			for (int i = 0; i < cacheList.size(); i++) {
+				Future future = cacheList.get(i);
+				System.out.println("--第-" + i + "个线程返回->>" + future.get());
+				future.get();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		threadPool.shutdown();
+		System.out.println("---correctList>>" + correctList.toString());
+		return ReturnInfoUtils.successDataInfo(correctList);
+	}
+
+	/**
+	 * 根据前台传递的订单集合，进行适当的拆分
+	 * 
+	 * @param datasList
+	 *            需要拆分的集合
+	 * @return Map
+	 */
+	private Map<String, Object> splitList(List<Map<String, Object>> datasList) {
+		Map<String, Object> reMap = null;
+		int count = datasList.size();
+		if (count > 100 && count <= 200) {
+			reMap = SplitListUtils.batchList(datasList, 6);
+		} else if (count > 200 && count <= 300) {
+			reMap = SplitListUtils.batchList(datasList, 8);
+		} else if (count > 10) {
+			reMap = SplitListUtils.batchList(datasList, 4);
+		} else {
+			reMap = SplitListUtils.batchList(datasList, 1);
+		}
+		return reMap;
 	}
 
 	/**
@@ -465,25 +532,13 @@ public class MpayServiceImpl implements MpayService {
 			return ReturnInfoUtils.errorInfo("订单id集合不能为null");
 		}
 		ExecutorService threadPool = Executors.newCachedThreadPool();
-		Map<String, Object> reMap = null;
-		//
-		int count = jsonList.size();
 		// 收费的身份证集合
 		List<String> idCardList = new Vector<>();
 		// 不需要计费的身份证集合
 		List<String> idCardFreeList = new Vector<>();
 		//
-		ConcurrentHashMap<String,Object> cacheIdcardMap = new ConcurrentHashMap<String,Object>();
-		
-		if (count > 100 && count <= 200) {
-			reMap = SplitListUtils.batchList(jsonList, 6);
-		} else if (count > 200 && count <= 300) {
-			reMap = SplitListUtils.batchList(jsonList, 8);
-		} else if (count > 10) {
-			reMap = SplitListUtils.batchList(jsonList, 4);
-		} else {
-			reMap = SplitListUtils.batchList(jsonList, 1);
-		}
+		ConcurrentHashMap<String, Object> cacheIdcardMap = new ConcurrentHashMap<String, Object>();
+		Map<String, Object> reMap = splitList(JSONArray.toList(jsonList, new HashMap<>(), new JsonConfig()));
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
@@ -491,13 +546,13 @@ public class MpayServiceImpl implements MpayService {
 		List<Future> cacheList = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
 			List newList = (List) list.get(i);
-			Future future = threadPool.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao,cacheIdcardMap));
+			Future future = threadPool
+					.submit(new OrderIdCardTollTask(newList, idCardList, idCardFreeList, morderDao, cacheIdcardMap));
 			cacheList.add(future);
 		}
 		try {
 			for (int i = 0; i < cacheList.size(); i++) {
 				Future future = cacheList.get(i);
-				System.out.println("--第-" + i + "个线程返回->>" + future.get());
 				future.get();
 			}
 		} catch (InterruptedException e) {

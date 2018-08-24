@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-8-23 13:55:36 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.MemberBankContent" table="ym_shop_member_bank_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="memberBankId" type="java.lang.String">
+            <column name="memberBankId" not-null="true" unique="true"/>
+        </property>
+        <property name="memberId" type="java.lang.String">
+            <column name="memberId" not-null="true"/>
+        </property>
+        <property name="memberName" type="java.lang.String">
+            <column name="memberName" not-null="true"/>
+        </property>
+        <property name="bankProvince" type="java.lang.String">
+            <column name="bankProvince" />
+        </property>
+        <property name="bankCity" type="java.lang.String">
+            <column name="bankCity" />
+        </property>
+        <property name="bankName" type="java.lang.String">
+            <column name="bankName" not-null="true"/>
+        </property>
+        <property name="bankAccountNo" type="java.lang.String">
+            <column name="bankAccountNo" not-null="true"/>
+        </property>
+        <property name="bankAccountName" type="java.lang.String">
+            <column name="bankAccountName"  not-null="true"/>
+        </property>
+        <property name="bankAccountType" type="java.lang.String">
+            <column name="bankAccountType" />
+        </property>
+        <property name="bankCardType" type="java.lang.String">
+            <column name="bankCardType" />
+        </property>
+        <property name="defaultFlag" type="int">
+            <column name="defaultFlag" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

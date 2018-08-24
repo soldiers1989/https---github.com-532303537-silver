@@ -1,5 +1,6 @@
 package org.silver.shop.impl.common.base;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,12 +10,16 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.common.base.IdCardService;
+import org.silver.shop.api.system.AccessTokenService;
+import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.common.base.IdCardDao;
 import org.silver.shop.model.common.base.IdCard;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.util.SearchUtils;
 import org.silver.util.DateUtil;
 import org.silver.util.IdcardValidator;
+import org.silver.util.MD5;
+import org.silver.util.MapSortUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.silver.util.YmHttpUtil;
@@ -23,12 +28,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.mysql.fabric.xmlrpc.base.Array;
 
+import net.sf.json.JSONObject;
+
 @Service(interfaceClass = IdCardService.class)
 public class IdCardServiceImpl implements IdCardService {
 
 	@Autowired
 	private IdCardDao idCardDao;
-
+	@Autowired
+	private AccessTokenService accessTokenService;
+	
 	@Override
 	public Map<String, Object> getAllIdCard(int page, int size, Map<String, Object> datasMap) {
 		if (page >= 0 && size >= 0) {
@@ -96,6 +105,51 @@ public class IdCardServiceImpl implements IdCardService {
 		return null;
 	}
 
+	
+	@Override
+	public Map<String, Object> sendIdCardPhoneCertification(String idName, String idCard,String phone) {
+		if (StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(idCard) || StringEmptyUtils.isEmpty(phone)) {
+			return ReturnInfoUtils.errorInfo("发送身份证校验,请求参数不能为空!");
+		}
+		// 使用银盟商城app请求获取tok
+		Map<String, Object> reTokMap = accessTokenService.getRedisToks(YmMallConfig.APPKEY, YmMallConfig.APPSECRET);
+		if (!"1".equals(reTokMap.get(BaseCode.STATUS.toString()))) {
+			return reTokMap;
+		}
+		String accessToken = reTokMap.get(BaseCode.DATAS.toString()) + "";
+		Map<String, Object> params = new HashMap<>();
+		params.put("version", "1.0");
+		params.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
+		params.put("businessCode", "YS03");
+		JSONObject bizContent = new JSONObject();
+		bizContent.put("user_ID", idCard);
+		bizContent.put("user_name", idName);
+		bizContent.put("bank_mobile", idName);
+		
+		params.put("bizContent", bizContent);
+		params.put("timestamp", System.currentTimeMillis());
+		params = new MapSortUtils().sortMap(params);
+		String str2 = YmMallConfig.APPKEY + accessToken + params;
+		String clientSign = null;
+		try {
+			clientSign = MD5.getMD5(str2.getBytes("utf-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return ReturnInfoUtils.errorInfo("加密签名错误!");
+		}
+		params.put("clientSign", clientSign);
+		// String result =
+		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
+		// params);
+		String result = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params);
+		if (StringEmptyUtils.isEmpty(result)) {
+			return ReturnInfoUtils.errorInfo("验证身份证失败,网络异常!");
+		} else {
+			return JSONObject.fromObject(result);
+		}
+	}
+	
+	
 	@Override
 	public Object temPush() {
 		//

@@ -363,7 +363,8 @@ public final class SearchUtils {
 				paramMap.put(key, value);
 				break;
 			case "entGoodsNo":
-				paramMap.put(key, value);
+				blurryMap.put(key, "%" + value + "%");
+				//paramMap.put(key, value);
 				break;
 			case "warehouseCode":
 				paramMap.put(key, value);

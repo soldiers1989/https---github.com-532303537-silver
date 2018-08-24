@@ -10,12 +10,13 @@
 	<bean id="pushOrderRecordQtz" class="org.silver.shop.quartz.PushOrderRecordQtz" />
 	<bean id="pushPaymentRecordQtzJob" class="org.silver.shop.quartz.PushPaymentRecordQtz" />
 	<bean id="resendPushOrderRecordQtzJob" class="org.silver.shop.quartz.PushOrderRecordQtz" />
+	<bean id="resendPaymentRecordQtzJob" class="org.silver.shop.quartz.PushPaymentRecordQtz" />
 	<bean id="createReportQtzJob" class="org.silver.shop.quartz.CreateReportQtz" />
 	<bean id="thirdPartyOrderCallBackQtzJob" class="org.silver.shop.quartz.ThirdPartyOrderCallBackQtz" />
 
 
-
-	<bean id="SpringQtzJobMethod"
+	<!-- 定时任务,扫描商户自助申报的订单,生成支付单 -->
+	<bean id="createPaymentQtzJobMethod"
 		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="createPaymentJob" />
@@ -70,7 +71,18 @@
 		</property>
 		<property name="concurrent" value="false" />
 	</bean>
-	
+
+	<!-- 定时任务,扫描支付单推送网关失败重发记录 -->
+	<bean id="resendPaymentRecordQtzJobMethod"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="resendPaymentRecordQtzJob" />
+		</property>
+		<property name="targetMethod">
+			<value>resendPaymentRecordJob</value>
+		</property>
+		<property name="concurrent" value="false" />
+	</bean>
 	<!-- 定时任务,扫描第三方订单回调接收失败的订单 -->
 	<bean id="thirdPartyOrderCallBackQtzJobMethod"
 		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
@@ -85,9 +97,9 @@
 
 
 	<!-- ======================== 调度触发器 ======================== -->
-	<bean id="CronTriggerBean"
+	<bean id="createPaymentBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
-		<property name="jobDetail" ref="SpringQtzJobMethod"></property>
+		<property name="jobDetail" ref="createPaymentQtzJobMethod"></property>
 		<property name="cronExpression" value="0/10 * * * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
@@ -108,17 +120,22 @@
 	<bean id="resendPushOrderRecordBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="resendPushOrderRecordQtzJobMethod"></property>
-		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<property name="cronExpression" value="0/60 * * * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
-
+	<bean id="resendPaymentRecordBean"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="resendPaymentRecordQtzJobMethod"></property>
+		<property name="cronExpression" value="0/60 * * * * ?"></property>
+		<property name="startDelay" value="60000" />
+	</bean>
 	<bean id="createReportBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="createReportQtzJobMethod"></property>
 		<property name="cronExpression" value="0/10 * * * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
-	
+
 	<bean id="thirdPartyOrderCallBackBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="thirdPartyOrderCallBackQtzJobMethod"></property>
@@ -132,11 +149,13 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-			<!-- 	 <ref bean="CronTriggerBean" />
+				<!-- <ref bean="createPaymentBean" />
 				<ref bean="pushOrderRecordBean" />
 				<ref bean="pushPaymentRecordBean" />
-				<ref bean="resendPushOrderRecordBean" />  
-				<ref bean="thirdPartyOrderCallBackBean" />  -->
+				<ref bean="resendPushOrderRecordBean" /> 
+				<ref bean="resendPaymentRecordBean" />
+			 	<ref bean="thirdPartyOrderCallBackBean" /> -->
+
 				<!-- <ref bean="createReportBean" /> -->
 			</list>
 		</property>

@@ -36,6 +36,7 @@ import org.silver.shop.model.system.manual.PaymentCallBack;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.AgentWalletContent;
+import org.silver.shop.model.system.tenant.MerchantBusinessContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
@@ -796,7 +797,9 @@ public class PaymentServiceImpl implements PaymentService {
 			if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 				System.out.println("--更新支付单信息失败--" + reUpdateMap.get(BaseCode.MSG.toString()));
 			}
-			return reThirdPartyPaymentInfo(pay);
+			Map<String,Object> reThirdPartyMap =  reThirdPartyPaymentInfo(pay);
+			System.out.println("--第三方返回信息-->"+reThirdPartyMap.toString());
+			return ReturnInfoUtils.successInfo();
 		} else {
 			return ReturnInfoUtils.errorInfo("支付单[" + entPayNo + "]为找到对应信息,请核对信息!");
 		}
@@ -813,14 +816,15 @@ public class PaymentServiceImpl implements PaymentService {
 		if (pay == null) {
 			return ReturnInfoUtils.errorInfo("返回第三方支付单时，请求参数不能为null");
 		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(pay.getMerchant_no());
-		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantMap;
+		Map<String, Object> reMerchantBusinessMap = merchantUtils.getMerchantBusinessInfo(pay.getMerchant_no());
+		if (!"1".equals(reMerchantBusinessMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantBusinessMap;
 		}
-		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		MerchantBusinessContent merchantBusiness = (MerchantBusinessContent) reMerchantBusinessMap.get(BaseCode.DATAS.toString());
 		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
-		int thirdPartyFlag = merchant.getThirdPartyFlag();
-		if (thirdPartyFlag == 2 && StringEmptyUtils.isEmpty(pay.getResendStatus())) {
+		//int thirdPartyFlag = merchant.getThirdPartyFlag();
+		//if (thirdPartyFlag == 2 && StringEmptyUtils.isEmpty(pay.getResendStatus())) {
+		if("all".equals(merchantBusiness.getThirdPartyReType()) || "payment".equals(merchantBusiness.getThirdPartyReType())){
 			System.out.println("---------返回第三方支付单信息----------");
 			rePaymentInfo(pay);
 		}

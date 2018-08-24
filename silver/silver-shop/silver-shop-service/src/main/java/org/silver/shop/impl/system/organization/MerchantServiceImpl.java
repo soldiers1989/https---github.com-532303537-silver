@@ -155,7 +155,7 @@ public class MerchantServiceImpl implements MerchantService {
 		String merchantName = datasMap.get("merchantName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
-		if(StringEmptyUtils.isEmpty(PhoneUtils.isPhone(phone))){
+		if(!PhoneUtils.isPhone(phone)){
 			return ReturnInfoUtils.errorInfo("手机号码错误！");
 		}
 		String agentId = datasMap.get("agentId") + "";

@@ -48,6 +48,7 @@ public class Merchant implements Serializable {
 	private String logisticsCompanyCode;//物流企业编码
 	private String logisticsCompanyName;//物流公司名称
 	
+	
 	public Long getId() {
 		return id;
 	}

@@ -390,7 +390,7 @@ public class CreatePaymentQtz {
 	}
 
 	/**
-	 * 开始发送身份证验证请求
+	 * 姓名与身份证号码(两要素)验证、发送身份证验证请求
 	 * 
 	 * @param idName
 	 *            姓名

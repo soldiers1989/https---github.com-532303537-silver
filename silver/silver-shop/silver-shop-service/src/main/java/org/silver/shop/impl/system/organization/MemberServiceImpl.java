@@ -629,7 +629,7 @@ public class MemberServiceImpl implements MemberService {
 	public Map<String, Object> retrieveLoginPassword(String accountName) {
 		// 您输入的账户名不存在，请核对后重新输入。
 		if (StringEmptyUtils.isEmpty(accountName)) {
-			return ReturnInfoUtils.errorInfo("您输入的账户名不存在，请核对后重新输入。");
+			return ReturnInfoUtils.errorInfo("用户名不能为空！");
 		}
 		Map<String, Object> params = new HashMap<>();
 		// 会员注册标识：1-真实用户、2-批量用户

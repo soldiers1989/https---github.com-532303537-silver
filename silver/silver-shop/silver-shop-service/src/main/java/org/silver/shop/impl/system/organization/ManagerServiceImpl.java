@@ -205,30 +205,22 @@ public class ManagerServiceImpl implements ManagerService {
 
 	@Override
 	public Map<String, Object> resetManagerPassword(String managerId, String managerName) {
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("managerId", managerId);
 		List<Object> reList = managerDao.findByProperty(Manager.class, paramMap, 0, 0);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("操作失败，服务器繁忙！");
 		} else if (!reList.isEmpty()) {
 			Manager managerInfo = (Manager) reList.get(0);
 			// 默认为：888888
 			managerInfo.setLoginPassword("21218CCA77804D2BA1922C33E0151105");
+			managerInfo.setUpdateDate(new Date());
 			if (!managerDao.update(managerInfo)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "重置密码失败,服务器繁忙!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("重置密码失败,服务器繁忙!");
 			}
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.successInfo();
 		} else {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.NO_DATAS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.NO_DATAS.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("未找到管理员信息！");
 		}
 	}
 

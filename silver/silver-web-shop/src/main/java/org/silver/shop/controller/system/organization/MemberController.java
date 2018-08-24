@@ -637,22 +637,26 @@ public class MemberController {
 		String telTop = tel.substring(0, 3);
 		String telEnd = tel.substring(tel.length() - 4, tel.length());
 		String newPhone = telTop + "****" + telEnd;
-		return JSONObject.fromObject(ReturnInfoUtils.successDataInfo(newPhone)).toString();
+		Map<String,Object> map = new HashMap<>();
+		map.put("phone", newPhone);
+		String smsKey = UUID.randomUUID().toString();
+		map.put("smsKey", smsKey);
+		session.setAttribute("SMS_KEY", smsKey);
+		return JSONObject.fromObject(ReturnInfoUtils.successDataInfo(map)).toString();
 	}
 
 	@RequestMapping(value = "/resetPwdSendVerifyCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("用户重置登录密码-发送短信验证码")
-	public String resetPwdSendVerifyCode(HttpServletRequest req, HttpServletResponse response, String captcha) {
+	public String resetPwdSendVerifyCode(HttpServletRequest req, HttpServletResponse response, String key) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
-
-		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
-		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+		String smsKey = (String) session.getAttribute("SMS_KEY");
+		if (StringEmptyUtils.isEmpty(smsKey) || !smsKey.equalsIgnoreCase(key)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误！")).toString();
 		}
 		String phone = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_PHONE) + "";
@@ -688,14 +692,12 @@ public class MemberController {
 			if (smsCaptcha.trim().equals(json.get("code") + "")) {
 				// 以秒为单位，即在没有活动5分钟后，session将失效
 				session.setMaxInactiveInterval(5 * 60);
-				UUID key = UUID.randomUUID();
-				session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, key);
+				session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-			} else {
-				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
-			}
+			} 
+			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE + phone);
 		}
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("系统错误，服务器繁忙！")).toString();
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
 	}
 
 	@RequestMapping(value = "/resetLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -708,13 +710,9 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
-		if (req.getSession(false) == null) {
-			System.out.println("Session has been invalidated!");
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
-		}
 		String key = (String) session.getAttribute(RETRIEVE_LOGIN_PASSWORD_UUID);
 		if (StringEmptyUtils.isEmpty(key)) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("系统繁忙！")).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
 		}
 		String memberId = String.valueOf(session.getAttribute(RETRIEVE_LOGIN_PASSWORD_MEMBER_ID));
 		return JSONObject.fromObject(memberTransaction.resetPassword(memberId, loginPassword)).toString();

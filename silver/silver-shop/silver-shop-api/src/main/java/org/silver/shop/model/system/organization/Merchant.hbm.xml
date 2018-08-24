@@ -107,5 +107,6 @@
 		<property name="logisticsCompanyName" type="java.lang.String">
 			<column name="logisticsCompanyName" />
 		</property>
+		
 	</class>
 </hibernate-mapping>

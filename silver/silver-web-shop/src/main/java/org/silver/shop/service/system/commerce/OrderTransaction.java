@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.LoginType;
+import org.silver.shop.api.common.base.IdCardService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.model.system.organization.AgentBaseContent;
 import org.silver.shop.model.system.organization.Member;
@@ -30,6 +31,9 @@ public class OrderTransaction {
 
 	@Reference
 	private OrderService orderService;
+	@Reference
+	private IdCardService idCardService;
+	
 
 	// 创建订单
 	public Map<String, Object> createOrderInfo(String goodsInfoPack, int type, String recipientId) {
@@ -192,6 +196,9 @@ public class OrderTransaction {
 
 	// 第三方商城推广订单下单入口
 	public Object thirdPromoteBusiness(Map<String, Object> params) {
+		
+		//idCardService.sendIdCardPhoneCertification(idName, idCard, phone);
+		
 		return orderService.thirdPromoteBusiness(params);
 	}
 
