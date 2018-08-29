@@ -63,6 +63,7 @@ public class MemberController {
 	 * 用户重置登录密码时缓存UUID
 	 */
 	private static final String RETRIEVE_LOGIN_PASSWORD_UUID = "RETRIEVE_LOGIN_PASSWORD_UUID";
+	
 	/**
 	 * 用户查询登录密码时缓存的用户id
 	 */
@@ -72,6 +73,11 @@ public class MemberController {
 	 */
 	private static final String UPDATE_LOGIN_PASSWORD_UUID = "UPDATE_LOGIN_PASSWORD_UUID";
 
+	/**
+	 * 用户设置支付密码时缓存UUID
+	 */
+	private static final String SET_PAYMENT_PASSWORD_UUID = "SET_PAYMENT_PASSWORD_UUID";
+	
 	/**
 	 * 
 	 */
@@ -122,7 +128,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
-		String captchaCode = String.valueOf( session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
+		String captchaCode = String.valueOf(session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
 		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入！")).toString();
 		}
@@ -323,10 +329,9 @@ public class MemberController {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
 		}
 		HttpSession session = req.getSession();
-		String captchaCode = String.valueOf( session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
+		String captchaCode = String.valueOf(session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
 		if (PhoneUtils.isPhone(phone) && captcha.equalsIgnoreCase(captchaCode)) {
-			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(phone,
-					RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE + phone);
+			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(phone, RedisKey.SHOP_KEY_MEMBER_REGISTER_CODE);
 			if (!"1".equals(reMsgMap.get(BaseCode.STATUS.toString()))) {
 				return JSONObject.fromObject(reMsgMap).toString();
 			}
@@ -450,10 +455,10 @@ public class MemberController {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时，请重新登录！")).toString();
 		}
 		HttpSession session = req.getSession();
-		String captchaCode = String.valueOf( session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
+		String captchaCode = String.valueOf(session.getAttribute(Constants.KAPTCHA_SESSION_KEY));
 		if (captcha.equalsIgnoreCase(captchaCode)) {
 			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(memberInfo.getMemberTel(),
-					RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE + memberInfo.getMemberTel());
+					RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE);
 			if (!"1".equals(reMsgMap.get(BaseCode.STATUS.toString()))) {
 				return JSONObject.fromObject(reMsgMap).toString();
 			}
@@ -474,6 +479,7 @@ public class MemberController {
 	 * @throws ParserConfigurationException
 	 */
 	@RequestMapping(value = "/updateLoginPasswordVerifyIdentidy", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@RequiresRoles("Member")
 	@ResponseBody
 	public String updateLoginPasswordVerifyIdentidy(HttpServletRequest req, HttpServletResponse response,
 			String smsCaptcha) {
@@ -489,6 +495,7 @@ public class MemberController {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时，请重新登录！")).toString();
 		}
 		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_UPDATE_LOGIN_PASSWORD_CODE + memberInfo.getMemberTel());
+
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			JSONObject json = null;
 			try {
@@ -521,9 +528,84 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String key = (String) session.getAttribute(SET_PAYMENT_PASSWORD_UUID);
+		if (StringEmptyUtils.isEmpty(key)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
+		}
 		return JSONObject.fromObject(memberTransaction.setPaymentPassword(paymentPassword)).toString();
 	}
 
+	@RequestMapping(value = "/setPayPassSendCaptchaCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户设置支付密码时-发送短信验证码")
+	@RequiresRoles("Member")
+	public String setPayPassSendCaptchaCode(HttpServletRequest req, HttpServletResponse response,
+			String captcha) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		if (StringEmptyUtils.isEmpty(captcha)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		if(memberInfo == null){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
+		}
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (captcha.equalsIgnoreCase(captchaCode)) {
+			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(memberInfo.getMemberTel(),
+					RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE);
+			if (!"1".equals(reMsgMap.get(BaseCode.STATUS.toString()))) {
+				return JSONObject.fromObject(reMsgMap).toString();
+			}
+			// 以秒为单位，即在没有活动5分钟后，session将失效
+			session.setMaxInactiveInterval(5 * 60);
+			session.setAttribute(SET_PAYMENT_PASSWORD_UUID, UUID.randomUUID().toString());
+			return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
+	}
+	
+	
+	@RequestMapping(value = "/setPayPassVerifyIdentidy", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户设置支付密码-验证身份信息")
+	public String setPayPassVerifyIdentidy(HttpServletRequest req, HttpServletResponse response,
+			String smsCaptcha) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String phone = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_PHONE) + "";
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + phone);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			JSONObject json = null;
+			try {
+				json = JSONObject.fromObject(redis);
+			} catch (Exception e) {
+				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("缓存信息错误！")).toString();
+			}
+			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + phone);
+			// 判断前台传递的验证码是否与发送至手机的一致
+			if (smsCaptcha.trim().equals(json.get("code") + "")) {
+				// 以秒为单位，即在没有活动5分钟后，session将失效
+				session.setMaxInactiveInterval(5 * 60);
+				session.setAttribute(SET_PAYMENT_PASSWORD_UUID, UUID.randomUUID().toString());
+				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+			}
+		}
+		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
+	}
+	
+	
+	
 	/**
 	 * 用户修改支付密码时，发送短信验证码
 	 * 
@@ -548,11 +630,14 @@ public class MemberController {
 		}
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		if(memberInfo == null){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
+		}
 		HttpSession session = req.getSession();
 		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
 		if (captcha.equalsIgnoreCase(captchaCode)) {
 			Map<String, Object> reMsgMap = SendMsg.sendVerificationCode(memberInfo.getMemberTel(),
-					RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
+					RedisKey.SHOP_KEY_MEMBER_UPDATE_PAYMENT_PASSWORD_CODE);
 			if (!"1".equals(reMsgMap.get(BaseCode.STATUS.toString()))) {
 				return JSONObject.fromObject(reMsgMap).toString();
 			}
@@ -637,7 +722,7 @@ public class MemberController {
 		String telTop = tel.substring(0, 3);
 		String telEnd = tel.substring(tel.length() - 4, tel.length());
 		String newPhone = telTop + "****" + telEnd;
-		Map<String,Object> map = new HashMap<>();
+		Map<String, Object> map = new HashMap<>();
 		map.put("phone", newPhone);
 		String smsKey = UUID.randomUUID().toString();
 		map.put("smsKey", smsKey);
@@ -688,14 +773,14 @@ public class MemberController {
 			} catch (Exception e) {
 				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("缓存信息错误！")).toString();
 			}
+			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE + phone);
 			// 判断前台传递的验证码是否与发送至手机的一致
 			if (smsCaptcha.trim().equals(json.get("code") + "")) {
 				// 以秒为单位，即在没有活动5分钟后，session将失效
 				session.setMaxInactiveInterval(5 * 60);
 				session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-			} 
-			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE + phone);
+			}
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
 	}

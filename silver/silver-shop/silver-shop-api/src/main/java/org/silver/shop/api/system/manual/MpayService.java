@@ -64,21 +64,6 @@ public interface MpayService {
 	public void startSendOrderRecord(JSONArray dataList, List<Map<String, Object>> errorList,
 			Map<String, Object> customsMap, Map<String, Object> paramsMap);
 
-	/**
-	 * 计算商户钱包余额是否足够推送此次手工订单
-	 * 
-	 * @param jsonList
-	 *            订单Id
-	 * @param merchant
-	 *            商户信息实体类
-	 * @param merchantFeeId
-	 *            商户口岸费率流水Id
-	 * @param errorList
-	 *            错误信息集合
-	 * @return Map
-	 */
-	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId,
-			Map<String, Object> customsMap, List<Map<String, Object>> errorList);
 
 	/**
 	 * 发起手工订单备案
@@ -143,5 +128,18 @@ public interface MpayService {
 	 * @return Map
 	 */
 	public Map<String, Object> reThirdPartyOrderInfo(Morder order, String status, String reMsg);
+
+	
+
+	/**
+	 * 获取商户口岸费率
+	 * 
+	 * @param customsMap
+	 *            海关信息集合
+	 * @param merchantId
+	 *            商户id
+	 * @return Map
+	 */
+	public Map<String, Object> getMerchantFee(Map<String, Object> customsMap, String merchantId);
 
 }

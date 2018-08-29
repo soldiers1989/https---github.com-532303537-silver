@@ -95,6 +95,7 @@
 				/captcha/*=anon
 				/agent/*=anon
 				/proxy/*=anon
+				/goodsRisk/*=anon
 				/idCardCertificationLog/*=anon
 				/merchantFee/*=anon
 				/subMerchant/*=anon

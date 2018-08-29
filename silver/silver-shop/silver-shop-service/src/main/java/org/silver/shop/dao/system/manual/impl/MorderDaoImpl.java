@@ -223,7 +223,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	public List<Morder> findByPropertyIn(List<Map<String, Object>> itemList) {
 		Session session = null;
 		try {
-			StringBuilder sbSQL = new StringBuilder(" SELECT * FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
+			StringBuilder sbSQL = new StringBuilder(
+					" SELECT * FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
 			for (int i = 0; i < itemList.size(); i++) {
 				sbSQL.append(" ? , ");
 			}
@@ -233,8 +234,8 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 			session = getSession();
 			Query query = session.createSQLQuery(sbSQL.toString());
 			for (int i = 0; i < itemList.size(); i++) {
-				Map<String,Object> map = itemList.get(i);
-				query.setString(i, map.get("orderNo")+"");
+				Map<String, Object> map = itemList.get(i);
+				query.setString(i, map.get("orderNo") + "");
 			}
 			// session.close();
 			return setEntityInfo(query.list());
@@ -283,15 +284,17 @@ public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
 	}
 
 	@Override
-	public double backCoverStatisticalManualOrderAmount(List<Object> itemList) {
+	public double sumManualOrderFee(List<Object> itemList, double fee, double backCoverFee) {
 		// 当没有订单Id集合则直接返回0
 		if (itemList == null || itemList.isEmpty()) {
 			return 0;
 		}
 		Session session = null;
 		try {
-			StringBuilder sbSQL = new StringBuilder(
-					" SELECT SUM(CASE WHEN t1.ActualAmountPaid < 100 THEN 100 ELSE t1.ActualAmountPaid END ) AS ActualAmountPaid  FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
+			StringBuilder sbSQL = new StringBuilder(" SELECT  SUM(CASE WHEN (t1.ActualAmountPaid * " + fee + ") > "
+					+ backCoverFee + " then (t1.ActualAmountPaid * " + fee + ") WHEN (t1.ActualAmountPaid * " + fee
+					+ ") < " + backCoverFee + " THEN " + backCoverFee
+					+ "  end ) FROM ym_shop_manual_morder t1 WHERE t1.status = 0 AND t1.order_id IN ( ");
 			for (int i = 0; i < itemList.size(); i++) {
 				sbSQL.append(" ? , ");
 			}

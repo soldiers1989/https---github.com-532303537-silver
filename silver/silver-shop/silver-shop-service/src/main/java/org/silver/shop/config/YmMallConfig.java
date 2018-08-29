@@ -55,4 +55,10 @@ public class YmMallConfig {
 	 * 第三方电商订单、支付单回传url
 	 */
 	public static final String THIRD_PARTY_NOTIFY_URL = "https://ym.191ec.com/silver-web/Eport/getway-callback";
+	
+	/**
+	 * 实名认证url
+	 */
+	public static final String REAL_URL = "https://ym.191ec.com/silver-web/real/auth";
+	
 }

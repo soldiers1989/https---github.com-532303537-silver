@@ -13,7 +13,7 @@ public class MerchantFeeContent implements Serializable {
 	 */
 	private static final long serialVersionUID = 3679696160927798741L;
 	private long id;
-	private String merchantFeeId;//商户口岸费率流水Id
+	private String merchantFeeId;// 商户口岸费率流水Id
 	private String merchantId;// 商户Id
 	private String merchantName;// 商户名称
 	private String provinceCode;// 省份编码
@@ -27,8 +27,8 @@ public class MerchantFeeContent implements Serializable {
 	private String ciqOrgCode;// 检验检疫机构代码
 	private String ciqOrgName;// 检验检疫机构名称
 	private double platformFee;// 平台服务费-暂定为千分之几
-	private String type; //类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-	private String status;//状态：1-启用、2-禁用
+	private String type; // 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+	private String status;// 状态：1-启用、2-禁用
 	private String createBy;// 创建人
 	private Date createDate;// 创建时间
 	private String updateBy;// 更新人
@@ -36,7 +36,8 @@ public class MerchantFeeContent implements Serializable {
 	private int deleteFlag;// 删除标识:0-未删除,1-已删除
 	private String deleteBy;// 删除人
 	private Date deleteDate;// 删除时间
-	private int backCoverFlag;//封底标识：1-不封底计算、2-100封底计算
+	private int backCoverFlag;// 封底标识：1-不封底计算、2-封底计算
+	private double backCoverFee;// 封底服务费-暂定为每笔
 	
 	public long getId() {
 		return id;
@@ -49,7 +50,6 @@ public class MerchantFeeContent implements Serializable {
 	public String getMerchantName() {
 		return merchantName;
 	}
-
 
 	public String getProvinceCode() {
 		return provinceCode;
@@ -91,7 +91,6 @@ public class MerchantFeeContent implements Serializable {
 		return ciqOrgName;
 	}
 
-
 	public String getCreateBy() {
 		return createBy;
 	}
@@ -132,7 +131,6 @@ public class MerchantFeeContent implements Serializable {
 		this.merchantName = merchantName;
 	}
 
-
 	public void setProvinceCode(String provinceCode) {
 		this.provinceCode = provinceCode;
 	}
@@ -172,7 +170,6 @@ public class MerchantFeeContent implements Serializable {
 	public void setCiqOrgName(String ciqOrgName) {
 		this.ciqOrgName = ciqOrgName;
 	}
-
 
 	public void setCreateBy(String createBy) {
 		this.createBy = createBy;
@@ -240,6 +237,14 @@ public class MerchantFeeContent implements Serializable {
 
 	public void setBackCoverFlag(int backCoverFlag) {
 		this.backCoverFlag = backCoverFlag;
+	}
+
+	public double getBackCoverFee() {
+		return backCoverFee;
+	}
+
+	public void setBackCoverFee(double backCoverFee) {
+		this.backCoverFee = backCoverFee;
 	}
 
 }

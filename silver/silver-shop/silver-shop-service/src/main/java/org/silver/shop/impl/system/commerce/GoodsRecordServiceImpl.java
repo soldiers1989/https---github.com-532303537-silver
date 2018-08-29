@@ -18,6 +18,7 @@ import org.silver.shop.api.common.base.CountryService;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
+import org.silver.shop.api.system.tenant.GoodsRiskService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
 import org.silver.shop.model.common.base.Country;
@@ -71,6 +72,9 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private AccessTokenService accessTokenService;
 	@Autowired
 	private CountryService countryService;
+	@Autowired
+	private GoodsRiskService goodsRiskService;
+	
 
 	@Override
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsInfoPack) {
@@ -1498,14 +1502,17 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	}
 
 	@Override
-	public Map<String, Object> editGoodsRecordStatus(String managerId, String managerName, String goodsPack) {
+	public Map<String, Object> editGoodsRecordStatus(Manager managerInfo, String goodsPack) {
+		if(managerInfo == null || StringEmptyUtils.isEmpty(goodsPack)){
+			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
+		}
 		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		JSONArray jsonList = null;
 		try {
 			jsonList = JSONArray.fromObject(goodsPack);
 		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("商品备案信息包格式错误,请核对!");
+			return ReturnInfoUtils.errorInfo("商品备案信息参数错误！");
 		}
 		for (int i = 0; i < jsonList.size(); i++) {
 			Map<String, Object> goodsMap = (Map<String, Object>) jsonList.get(i);
@@ -1531,11 +1538,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 				paramMap.clear();
 				paramMap.put("goodsId", goodsId);
 				List<GoodsContent> reGoodsList = goodsRecordDao.findByProperty(GoodsContent.class, paramMap, 1, 1);
-				if (reGoodsList != null && !reGoodsList.isEmpty()) {
+				if (reGoodsList != null && !reGoodsList.isEmpty()) {//
 					GoodsContent goodsInfo = reGoodsList.get(0);
 					// if (status == 2) {
 					goodsRecordInfo.setRecordFlag(status);
-
 					goodsRecordInfo.setStatus(2);
 					goodsRecordInfo.setSpareGoodsName(goodsRecordInfo.getGoodsName());
 					goodsRecordInfo.setSpareGoodsFirstTypeId(goodsInfo.getGoodsFirstTypeId());
@@ -1556,10 +1562,10 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					}
 					goodsRecordInfo.setSpareGoodsOriginCountry(countryName);
 					goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
-					goodsRecordInfo.setUpdateBy(managerName);
+					goodsRecordInfo.setUpdateBy(managerInfo.getManagerName());
 					goodsRecordInfo.setUpdateDate(new Date());
 					String time = DateUtil.formatTime(new Date());
-					goodsRecordInfo.setReNote(time + "#" + managerName + "审核通过!;");
+					goodsRecordInfo.setReNote(time + "#" + managerInfo.getRealName() + "审核通过!;");
 					if (!goodsRecordDao.update(goodsRecordInfo)) {
 						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
 						statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
@@ -1590,15 +1596,15 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 					}
 					goodsRecordInfo.setSpareGoodsOriginCountry(countryName);
 					goodsRecordInfo.setSpareGoodsBarCode(goodsRecordInfo.getBarCode());
-					goodsRecordInfo.setUpdateBy(managerName);
+					goodsRecordInfo.setUpdateBy(managerInfo.getManagerName());
 					goodsRecordInfo.setUpdateDate(new Date());
 					String time = DateUtil.formatTime(new Date());
-					goodsRecordInfo.setReNote(time + "#" + managerName + "审核通过!;");
+					goodsRecordInfo.setReNote(time + "#" + managerInfo.getRealName() + "审核通过!;");
 					if (!goodsRecordDao.update(goodsRecordInfo)) {
-						statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-						statusMap.put(BaseCode.MSG.getBaseCode(), "修改商品备案状态,服务器繁忙!");
-						return statusMap;
+						return ReturnInfoUtils.errorInfo("修改商品备案状态,服务器繁忙!");
 					}
+					//当审核通过后，增加一条商品风控信息
+					//goodsRiskService.addGoodsRiskControlContent(goodsRecordInfo);
 				}
 			} else {
 				return ReturnInfoUtils.errorInfo("商品自编号[" + goodsMap.get("entGoodsNo") + "]为找到对应商品信息,请重试!");

@@ -61,7 +61,7 @@ public class MemberBankController {
 
 	@RequestMapping(value = "/getInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@RequiresRoles("Merchant")
+	@RequiresRoles("Member")
 	@ApiOperation("商户获取银行卡信息")
 	public String getInfo(HttpServletRequest req, HttpServletResponse response,
 			@RequestParam("page") int page, @RequestParam("size") int size) {

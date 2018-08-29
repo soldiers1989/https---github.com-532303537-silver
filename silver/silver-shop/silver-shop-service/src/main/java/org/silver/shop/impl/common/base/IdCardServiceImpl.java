@@ -141,7 +141,7 @@ public class IdCardServiceImpl implements IdCardService {
 		// String result =
 		// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
 		// params);
-		String result = YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params);
+		String result = YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params);
 		if (StringEmptyUtils.isEmpty(result)) {
 			return ReturnInfoUtils.errorInfo("验证身份证失败,网络异常!");
 		} else {

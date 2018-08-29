@@ -199,14 +199,10 @@ public class ManagerController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = new HashMap<>();
 		if (oldLoginPassword != null && newLoginPassword != null) {
-			statusMap = managerTransaction.updateManagerPassword(oldLoginPassword, newLoginPassword);
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(managerTransaction.updateManagerPassword(oldLoginPassword, newLoginPassword)).toString();
 		} else {
-			statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-			statusMap.put(BaseCode.MSG.getBaseCode(), StatusCode.NOTICE.getMsg());
-			return JSONObject.fromObject(statusMap).toString();
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("密码不能为空！")).toString();
 		}
 	}
 

@@ -113,9 +113,10 @@ public class ManualOrderInterceptor {
 					String merchantId = args[0] + "";
 					JSONArray orderList = JSONArray.fromObject(json.get("orderList"));
 					JSONArray idCardList = JSONArray.fromObject(json.get("idCardList"));
+					Map<String, Object> customsMap = JSONObject.fromObject(json.get("customsMap"));
 					logger.error("--商户实名认证与订单申报手续费计算-AOP-idCardList--" + idCardList.toString());
 					MerchantWalletTollTask merchantWalletTollTask = new MerchantWalletTollTask(orderList, merchantId,
-							manualOrderInterceptor, idCardList);
+							manualOrderInterceptor, idCardList, customsMap);
 					threadPool.submit(merchantWalletTollTask);
 					threadPool.shutdown();
 					// Map<String, Object> reTollMap =
@@ -137,9 +138,11 @@ public class ManualOrderInterceptor {
 	 * @param merchantId
 	 *            商户id
 	 * @param idCardList
+	 * @param customsMap
 	 * @return Map
 	 */
-	public Map<String, Object> merchantWalletToll(JSONArray orderList, String merchantId, JSONArray idCardList) {
+	public Map<String, Object> merchantWalletToll(JSONArray orderList, String merchantId, JSONArray idCardList,
+			Map<String, Object> customsMap) {
 		if (orderList == null || idCardList == null) {
 			return ReturnInfoUtils.errorInfo("订单集合参数不能为null");
 		}
@@ -149,6 +152,12 @@ public class ManualOrderInterceptor {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+			Map<String, Object> reFeeMap = mpayService.getMerchantFee(customsMap, merchant.getMerchantId());
+			if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
+				return reFeeMap;
+			}
+			// 封底手续费(每笔)
+			double backCoverFee = Double.parseDouble(reFeeMap.get("backCoverFee") + "");
 			// 查询商户钱包
 			Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(),
 					merchant.getMerchantName());
@@ -170,7 +179,7 @@ public class ManualOrderInterceptor {
 				return reIdCardMap;
 			}
 			// 订单申报平台服务费
-			return orderToll(orderList, merchantWallet, merchant);
+			return orderToll(orderList, merchantWallet, merchant, backCoverFee);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,31 +195,30 @@ public class ManualOrderInterceptor {
 	 *            商户钱包实体
 	 * @param merchant
 	 *            商户实体
+	 * @param backCoverFee
+	 *            封底手续费(每笔)
 	 * @return Map
 	 */
-	private Map<String, Object> orderToll(JSONArray orderList, MerchantWalletContent merchantWallet,
-			Merchant merchant) {
+	private Map<String, Object> orderToll(JSONArray orderList, MerchantWalletContent merchantWallet, Merchant merchant,
+			double backCoverFee) {
 		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("订单参数错误-不能为null");
 		} else if (orderList.isEmpty()) {// 当需要订单的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
-		Map<String, Object> reOrderMap = getOrderDetails(orderList);
+		
+		Map<String, Object> reOrderMap = getOrderDetails(orderList, backCoverFee);
 		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderMap;
 		}
 		List<JSONObject> jsonList = (List<JSONObject>) reOrderMap.get(BaseCode.DATAS.toString());
-		double totalAmount = Double.parseDouble(reOrderMap.get("totalAmount") + "");
-		// 订单费率
-		double fee = Double.parseDouble(reOrderMap.get("rate") + "");
+		//总计手续费
+		double totalFee = Double.parseDouble(reOrderMap.get("totalFee") + "");
 		// 钱包余额
 		double balance = merchantWallet.getBalance();
-		// 订申报单手续费
-		double serviceFee = DoubleOperationUtil.mul(totalAmount, fee);
-		// double serviceFee = totalAmount * fee;
-		logger.error("--清算时--订单总金额->" + totalAmount + ";--费率->" + fee + ";--结果--" + serviceFee);
+		logger.error("--清算时----总计订单手续费结果-->>" + totalFee);
 		// 商户钱包扣款
-		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
+		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, totalFee);
 		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reDeductionMap;
 		}
@@ -227,7 +235,7 @@ public class ManualOrderInterceptor {
 		datas.put(MERCHANT_NAME, merchant.getMerchantName());
 		datas.put("serialName", "订单申报-手续费");
 		datas.put("balance", balance);
-		datas.put("amount", serviceFee);
+		datas.put("amount", totalFee);
 		datas.put("type", 4);
 		datas.put("flag", "out");
 		datas.put("note", "推送[" + jsonList.size() + "]单#" + jsonList.toString());
@@ -240,9 +248,10 @@ public class ManualOrderInterceptor {
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
-		datas.put("totalAmountPaid", totalAmount);
+		//
+		datas.put("totalAmountPaid",reOrderMap.get("orderTotalAoumt") );
 		// 代理商收取订单申报服务费
-		return agentChargeFee(merchant.getAgentParentId(), serviceFee, datas);
+		return agentChargeFee(merchant.getAgentParentId(), totalFee, datas);
 	}
 
 	/**
@@ -250,61 +259,69 @@ public class ManualOrderInterceptor {
 	 * 
 	 * @param orderList
 	 *            订单id集合
+	 * @param backCoverFee
+	 *            封底手续费(每笔)
 	 * @return Map
 	 */
-	private Map<String, Object> getOrderDetails(JSONArray orderList) {
+	private Map<String, Object> getOrderDetails(JSONArray orderList, double backCoverFee) {
 		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("订单id参数集合不能为空!");
 		}
 		List<JSONObject> jsonList = new ArrayList<>();
 		JSONObject idcardJSON = null;
 		Map<String, Object> params = new HashMap<>();
-		double totalAmount = 0;
+		//总计服务费
+		double totalFee = 0;
+		// 服务费
 		double fee = 0;
+		// 订单服务费率
 		double rate = 0;
+		//订单总金额
+		double orderTotalAoumt = 0;
 		for (int i = 0; i < orderList.size(); i++) {
 			String orderId = orderList.get(i) + "";
 			params.clear();
 			params.put("order_id", orderId);
 			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 0, 0);
 			if (reList != null && !reList.isEmpty()) {
-				for (Morder order : reList) {
-					idcardJSON = new JSONObject();
-					// 订单服务费率
-					rate = order.getPlatformFee();
-					idcardJSON.put("orderId", order.getOrder_id());
-					double amount = order.getActualAmountPaid();
-					int backCoverFlag = order.getBackCoverFlag();
-					// 封底标识：1-不封底计算、2-100封底计算
-					if (backCoverFlag == 1) {
-						fee = amount * rate;
-						totalAmount = DoubleOperationUtil.add(totalAmount, amount);
-						// totalAmount += amount;
-					} else if (backCoverFlag == 2) {
-						// 当订单金额低于100,提升至100计算
-						if (amount < 100) {
-							fee = 100 * rate;
-							//
-							totalAmount = DoubleOperationUtil.add(totalAmount, 100);
-							// totalAmount += 100;
-						} else {
-							fee = amount * rate;
-							totalAmount = DoubleOperationUtil.add(totalAmount, amount);
-							// totalAmount += amount;
-						}
+				Morder order = reList.get(0);
+				idcardJSON = new JSONObject();
+				// 订单服务费率
+				rate = order.getPlatformFee();
+				idcardJSON.put("orderId", order.getOrder_id());
+				double amount = order.getActualAmountPaid();
+				int backCoverFlag = order.getBackCoverFlag();
+				// 封底标识：1-不封底计算、2-封底计算
+				if (backCoverFlag == 1) {
+					fee =DoubleOperationUtil.mul(amount, rate);
+				} else if (backCoverFlag == 2) {
+					//
+					double tmpFee = DoubleOperationUtil.mul(amount, rate);
+					if (tmpFee > backCoverFee) {// 当正常计算出来的手续费大于封底手续费时、就正常收费
+						fee = tmpFee;
+						backCoverFlag = 1;
+					} else {
+						// 否则按照封底(每笔)的手续费收取
+						fee = backCoverFee;
+						backCoverFlag = 2;
 					}
-					idcardJSON.put("amount", amount);
-					idcardJSON.put("backCoverFlag", backCoverFlag);
-					idcardJSON.put("rate", rate);
-					idcardJSON.put("fee", fee);
-					jsonList.add(idcardJSON);
+					totalFee = DoubleOperationUtil.add(totalFee, fee);
 				}
+				idcardJSON.put("amount", amount);
+				idcardJSON.put("backCoverFlag", backCoverFlag);
+				idcardJSON.put("rate", rate);
+				idcardJSON.put("fee", fee);
+				idcardJSON.put("backCoverFee", backCoverFee);
+				jsonList.add(idcardJSON);
+				//
+				orderTotalAoumt = DoubleOperationUtil.add(orderTotalAoumt, amount);
 			}
 		}
 		Map<String, Object> map = new HashMap<>();
-		map.put("totalAmount", totalAmount);
 		map.put(BaseCode.DATAS.toString(), jsonList);
-		map.put("rate", rate);
+		map.put("totalFee", totalFee);
+		//
+		map.put("orderTotalAoumt", orderTotalAoumt);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}

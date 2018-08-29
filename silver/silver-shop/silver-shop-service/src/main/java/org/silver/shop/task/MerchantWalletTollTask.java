@@ -20,19 +20,22 @@ public class MerchantWalletTollTask implements Callable<Object> {
 	private JSONArray orderList;// 订单集合
 	private ManualOrderInterceptor orderInterceptor;
 	private JSONArray idCardList;// 身份证订单id集合
+	private Map<String,Object> customsMap;//海关信息
 	
-	public MerchantWalletTollTask(JSONArray orderList, String merchantId, ManualOrderInterceptor orderInterceptor, JSONArray idCardList) {
+	
+	public MerchantWalletTollTask(JSONArray orderList, String merchantId, ManualOrderInterceptor orderInterceptor, JSONArray idCardList, Map<String, Object> customsMap) {
 		this.merchantId = merchantId;
 		this.orderList = orderList;
 		this.orderInterceptor = orderInterceptor;
 		this.idCardList = idCardList;
+		this.customsMap = customsMap;
 	}
 
 	@Override
 	public Map<String, Object> call() {
 		try {
 			long startTime = System.currentTimeMillis();
-			Map<String, Object> reTollMap = orderInterceptor.merchantWalletToll(orderList, merchantId,idCardList);
+			Map<String, Object> reTollMap = orderInterceptor.merchantWalletToll(orderList, merchantId,idCardList,customsMap);
 			long endTime = System.currentTimeMillis();
 			logger.error("---商户实名认证与订单申报手续费---结果--耗时-" + (endTime - startTime) + "ms;==>>>" + reTollMap.toString());
 		} catch (Exception e) {

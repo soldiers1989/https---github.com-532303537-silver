@@ -218,10 +218,8 @@ public class MpayServiceImpl implements MpayService {
 			return reCheckPriceMap;
 		}
 		jsonList = JSONArray.fromObject(reCheckPriceMap.get(BaseCode.DATAS.toString()));
-		// 商户口岸费率Id
-		String merchantFeeId = customsMap.get("merchantFeeId") + "";
-		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, merchantFeeId, customsMap,
-				errorList);
+
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, customsMap, errorList);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
@@ -250,6 +248,8 @@ public class MpayServiceImpl implements MpayService {
 		map.put("serialNo", serialNo);
 		map.put("orderList", reCheckMap.get("list"));
 		map.put("idCardList", reCheckMap.get("idCardList"));
+		map.put("customsMap", customsMap);
+		map.put("serialNo", serialNo);
 		map.put(BaseCode.ERROR.toString(), errorList);
 		map.put(BaseCode.TOTALCOUNT.toString(), totalCount);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
@@ -357,8 +357,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 	}
 
-	@Override
-	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant, String merchantFeeId,
+	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant,
 			Map<String, Object> customsMap, List<Map<String, Object>> errorList) {
 		if (jsonList == null || merchant == null) {
 			return ReturnInfoUtils.errorInfo("计算商户钱包余额请求参数不能为空!");
@@ -404,40 +403,41 @@ public class MpayServiceImpl implements MpayService {
 		// 封底标识：1-正常计算、2-不满100提至100计算
 		int backCoverFlag = 0;
 		// 当商户口岸费率Id不为空时获取商户当前口岸的平台服务费率
-		Map<String, Object> reFeeMap = getMerchantFee(merchantFeeId, customsMap, merchant.getMerchantId());
+		Map<String, Object> reFeeMap = getMerchantFee(customsMap, merchant.getMerchantId());
 		if (!"1".equals(reFeeMap.get(BaseCode.STATUS.toString()))) {
 			return reFeeMap;
 		}
 		fee = Double.parseDouble(reFeeMap.get("fee") + "");
 		backCoverFlag = Integer.parseInt(reFeeMap.get("backCoverFlag") + "");
-		double totalAmountPaid = 0;
-		// 封底标识：1-正常计算、2-不满100提至100计算
+		// 封底手续费(每笔)
+		double backCoverFee = Double.parseDouble(reFeeMap.get("backCoverFee") + "");
+		// 正常计费的订单总金额
+		double totalFee = 0;
+		// 封底标识：1-正常计算、2-封底计算
 		if (backCoverFlag == 2) {
-			// 当订单实际支付金额不足100提升至100,后统计订单实际支付金额
-			totalAmountPaid = morderDao.backCoverStatisticalManualOrderAmount(newList);
+			// 统计订单手续费(其中包括计算订单金额是否超过封底价)
+			totalFee = morderDao.sumManualOrderFee(newList, fee, backCoverFee);
 		} else {
-			// 统计未发起过备案的手工订单实际支付金额的总额
-			totalAmountPaid = morderDao.statisticalManualOrderAmount(newList);
+			double normalAmount = 0;
+			// 正常统计订单价格
+			normalAmount = morderDao.statisticalManualOrderAmount(newList);
+			totalFee = DoubleOperationUtil.mul(normalAmount, fee);
 		}
 		// 当小于0时,代表查询数据库信息错误
-		if (totalAmountPaid < 0) {
+		if (totalFee < 0) {
 			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
-		} else if (totalAmountPaid > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			// 订申报单手续费
-			double serviceFee = DoubleOperationUtil.mul(totalAmountPaid, fee);
-			// double serviceFee = totalAmountPaid * fee;
-			// 申报手续+实名认证手续费
-			double totalFee = DoubleOperationUtil.add(serviceFee, idCertificationFee);
-			// double totalFee = serviceFee + idCertificationFee;
+		} else if (totalFee > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
 			// 钱包余额
 			double oldBalance = merchantWallet.getBalance();
-			logger.error("--订申报时-订单总金额->>" + totalAmountPaid + ";--费率-->" + fee + ";--结果->" + serviceFee);
-			if ((oldBalance - totalFee) < 0) {
-				return ReturnInfoUtils.errorInfo("操作失败,余额不足!");
+			// 总手续费(订单加实名认证手续费)
+			double result = DoubleOperationUtil.add(totalFee, idCertificationFee);
+			logger.error("--总计服务费-" + totalFee + ";--实名认证手续费-->" + idCertificationFee + "--总计手续费-->" + result + ";");
+			if ((oldBalance - result) < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败,余额不足！");
 			}
 			//
 			Map<String, Object> reTransferMap = merchantWalletService.balanceTransferFreezingFunds(merchantWallet,
-					totalFee);
+					result);
 			if (!"1".equals(reTransferMap.get(BaseCode.STATUS.toString()))) {
 				return reTransferMap;
 			}
@@ -569,25 +569,17 @@ public class MpayServiceImpl implements MpayService {
 		return map;
 	}
 
-	/**
-	 * 获取商户口岸费率
-	 * 
-	 * @param merchantFeeId
-	 *            商户口岸费率id
-	 * @param customsMap
-	 *            海关信息集合
-	 * @param merchantId
-	 *            商户id
-	 * @return Map
-	 */
-	private Map<String, Object> getMerchantFee(String merchantFeeId, Map<String, Object> customsMap,
-			String merchantId) {
+	@Override
+	public Map<String, Object> getMerchantFee(Map<String, Object> customsMap, String merchantId) {
 		// 封底标识：1-正常计算、2-不满100提至100计算
 		int backCoverFlag = 0;
+		// 封底手续费
+		double backCoverFee = 0;
 		// 支付单服务费率
 		double paymentFee = 0;
 		// 初始化平台服务费
 		double fee;
+		String merchantFeeId = customsMap.get("merchantFeeId") + "";
 		if (StringEmptyUtils.isNotEmpty(merchantFeeId)) {
 			String pushType = customsMap.get("pushType") + "";
 			// 当推送类型为商户自助申报时,将商户的订单与支付单口岸费率合并一次清算
@@ -618,12 +610,14 @@ public class MpayServiceImpl implements MpayService {
 			//
 			fee = merchantFee.getPlatformFee() + paymentFee;
 			backCoverFlag = merchantFee.getBackCoverFlag();
+			backCoverFee = merchantFee.getBackCoverFee();
 		} else {
 			fee = 0.001;
 		}
 		Map<String, Object> map = new HashMap<>();
 		map.put("fee", fee);
 		map.put("backCoverFlag", backCoverFlag);
+		map.put("backCoverFee", backCoverFee);
 		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
 		return map;
 	}

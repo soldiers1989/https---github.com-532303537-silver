@@ -65,4 +65,9 @@ public class RedisKey {
 	 */
 	public static final String SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE = "SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE_";
 	
+	/**
+	 * 用户首次设置支付密码,验证用户身份,发送手机验证码--key
+	 */
+	public static final String SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE = "SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE_";
+	
 }

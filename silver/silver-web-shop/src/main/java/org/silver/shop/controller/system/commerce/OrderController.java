@@ -480,7 +480,6 @@ public class OrderController {
 		if (!"1".equals(rePhoneMap.get(BaseCode.STATUS.toString()))) {
 			return JSONObject.fromObject(rePhoneMap).toString();
 		}
-		
 		return JSONObject.fromObject(orderTransaction.thirdPromoteBusiness(datasMap)).toString();
 	}
 

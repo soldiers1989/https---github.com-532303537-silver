@@ -685,6 +685,7 @@ public class OrderServiceImpl implements OrderService {
 			return reMemberMap;
 		}
 		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
+		
 		if (member.getRealNameFlag() == 1) {
 			return ReturnInfoUtils.errorInfo("用户尚未实名,暂不能下单,请先实名认证!");
 		}
@@ -1329,7 +1330,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		JSONObject json = null;
 		Map<String, Object> item = new HashMap<>();
-		// 1533028184696
+		// https://ezpay.191ec.com/silver-web-ezpay/ympay/getTradeNo=1533028184696
 		// item.put("out_trade_no", "1533028184696");
 		item.put("out_trade_no", order.getOrder_id());
 		String result = YmHttpUtil.HttpPost("https://ezpay.191ec.com/silver-web-ezpay/ympay/getTradeNo", item);
@@ -1926,7 +1927,6 @@ public class OrderServiceImpl implements OrderService {
 		if (datasMap == null || datasMap.isEmpty()) {
 			return ReturnInfoUtils.errorInfo("下单参数不能为空!");
 		}
-
 		// 校验参数
 		Map<String, Object> reCheckMap = checkDatas(datasMap);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
@@ -1939,7 +1939,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		// 库存信息
 		StockContent stock = (StockContent) reGoodsMap.get(BaseCode.DATAS.toString());
-		// 校验身份证号码
+		// 校验身份证信息
 		Map<String, Object> reCheckIdcardMap = checkIdCardInfo(datasMap);
 		if (!"1".equals(reCheckIdcardMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckIdcardMap;
@@ -1951,15 +1951,16 @@ public class OrderServiceImpl implements OrderService {
 			return reRecipientMap;
 		}
 		RecipientContent recipient = (RecipientContent) reRecipientMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reOrderHeadMap = saveOrderHead(stock, recipient);
-		if (!"1".equals(reOrderHeadMap.get(BaseCode.STATUS.toString()))) {
-			return reOrderHeadMap;
+		Map<String, Object> reOrderMap = saveOrderContent(stock, recipient);
+		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
+			return reOrderMap;
 		}
-		OrderContent order = (OrderContent) reOrderHeadMap.get(BaseCode.DATAS.toString());
+		OrderContent order = (OrderContent) reOrderMap.get(BaseCode.DATAS.toString());
+		//
 		int count = Integer.parseInt(datasMap.get("count") + "");
 		// 商品推广id
-		datasMap.get("promotionNo");
-		Map<String, Object> reOrderGoodsMap = saveOrderContent(order, stock, datasMap.get(ENT_GOODS_NO) + "", count);
+		String promotionNo = datasMap.get("promotionNo")+"";
+		Map<String, Object> reOrderGoodsMap = saveOrderGoodsContent(order, stock, datasMap.get(ENT_GOODS_NO) + "", count,promotionNo);
 		if (!"1".equals(reOrderGoodsMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderGoodsMap;
 		}
@@ -1981,9 +1982,10 @@ public class OrderServiceImpl implements OrderService {
 	 *            商品自编号
 	 * @param count
 	 *            下单商品数量
+	 * @param promotionNo 
 	 * @return Map
 	 */
-	private Map<String, Object> saveOrderContent(OrderContent order, StockContent stock, String entGoodsNo, int count) {
+	private Map<String, Object> saveOrderGoodsContent(OrderContent order, StockContent stock, String entGoodsNo, int count, String promotionNo) {
 		if (order == null || stock == null) {
 			return ReturnInfoUtils.errorInfo("保存订单信息失败,请求参数错误！");
 		}
@@ -2016,7 +2018,10 @@ public class OrderServiceImpl implements OrderService {
 		orderGoods.setEntGoodsNo(entGoodsNo);
 		orderGoods.setEntOrderNo(order.getEntOrderNo());
 		orderGoods.setEvaluationFlag(0);
-
+		
+		if(StringEmptyUtils.isNotEmpty(promotionNo)){
+			orderGoods.setPromotionNo(promotionNo);
+		}
 		if (!orderDao.add(orderGoods)) {
 			return ReturnInfoUtils.errorInfo("添加订单商品信息失败,服务器繁忙！");
 		}
@@ -2032,7 +2037,7 @@ public class OrderServiceImpl implements OrderService {
 	 *            收获地址信息
 	 * @return Map
 	 */
-	private Map<String, Object> saveOrderHead(StockContent stock, RecipientContent recipient) {
+	private Map<String, Object> saveOrderContent(StockContent stock, RecipientContent recipient) {
 		if (stock == null || recipient == null) {
 			return ReturnInfoUtils.errorInfo("保存订单头时,请求参数不能为空!");
 		}
@@ -2050,7 +2055,7 @@ public class OrderServiceImpl implements OrderService {
 		double price = stock.getRegPrice();
 		totalPrice += count * price;
 		order.setOrderTotalPrice(totalPrice);
-		// 订单状态：1-待付款,2-已付款;3-商户待处理;4-交易关闭,5-交易成功
+		//订单状态：1-待付款、2-已付款,待商家处理、3-待揽件、4-快件运输中、5-快件已签收、200-交易成功、400-交易关闭
 		order.setStatus(1);
 		order.setCreateBy(recipient.getMemberName());
 		order.setCreateDate(new Date());
@@ -2281,6 +2286,8 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("身份证号码不能为空");
 		}
 		Map<String, Object> params = new HashMap<>();
+		// 会员注册标识：1-真实用户、2-批量用户
+		params.put("memberFlag", 1);
 		params.put("memberIdCard", idcard);
 		List<Member> memberList = orderDao.findByProperty(Member.class, params, 0, 0);
 		if (memberList == null) {
@@ -2307,7 +2314,6 @@ public class OrderServiceImpl implements OrderService {
 		String idName = datasMap.get("idName") + "";
 		String phone = datasMap.get("phone") + "";
 		Map<String, Object> reIdMap = memberService.createMemberId();
-
 		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 			return reIdMap;
 		}
@@ -2320,7 +2326,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		try {
 			SendMsg.sendMsg(phone,
-					"【广州银盟】感谢你使用银盟商城进行购物,现已为您自动注册账号,密码为: " + loginPassword + " ,请妥善保管您的登陆密码!链接：https://www.191ec.com");
+					"【广州银盟】感谢你使用银盟商城进行购物,现已为您自动注册账号,密码为: " + loginPassword + " ,请妥善保管您的登陆密码！链接：https://www.191ec.com");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

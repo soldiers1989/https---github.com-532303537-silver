@@ -63,6 +63,10 @@ public class MerchantServiceImpl implements MerchantService {
 	private static final String EBPENTNO = "ebpEntNo";
 	// 电商平台名称
 	private static final String EBPENTNAME = "ebpEntName";
+	/**
+	 * 登录密码的组成至少要包括大小写字母、数字及标点符号的其中两项、且长度要在6-20位之间
+	 */
+	private static final String LOGIN_PASSWORD_REGEX = "^(?![A-Za-z]+$)(?!\\d+$)(?![\\W_]+$)\\S{6,20}$";
 
 	//
 	static List<Map<String, Object>> list = null;
@@ -147,6 +151,9 @@ public class MerchantServiceImpl implements MerchantService {
 		Date dateTime = new Date();
 		int type = Integer.parseInt(datasMap.get("type") + "");
 		String loginPassword = datasMap.get("loginPassword") + "";
+		if (!loginPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
+		}
 		Map<String, Object> reIdMap = idUtils.createId(Merchant.class, "MerchantId_");
 		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 			return reIdMap;
@@ -155,7 +162,7 @@ public class MerchantServiceImpl implements MerchantService {
 		String merchantName = datasMap.get("merchantName") + "";
 		String managerName = datasMap.get("managerName") + "";
 		String phone = datasMap.get("phone") + "";
-		if(!PhoneUtils.isPhone(phone)){
+		if (!PhoneUtils.isPhone(phone)) {
 			return ReturnInfoUtils.errorInfo("手机号码错误！");
 		}
 		String agentId = datasMap.get("agentId") + "";
@@ -371,18 +378,21 @@ public class MerchantServiceImpl implements MerchantService {
 
 	@Override
 	public Map<String, Object> updateLoginPassword(Merchant merchantInfo, String newLoginPassword) {
-		Map<String, Object> reMap = new HashMap<>();
-		MD5 md5 = new MD5();
-		merchantInfo.setLoginPassword(md5.getMD5ofStr(newLoginPassword));
-		boolean flag = merchantDao.update(merchantInfo);
-		if (flag) {
-			reMap.put(BaseCode.STATUS.getBaseCode(), 1);
-			reMap.put(BaseCode.MSG.getBaseCode(), "修改成功");
-		} else {
-			reMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.UNKNOWN.getStatus());
-			reMap.put(BaseCode.MSG.getBaseCode(), StatusCode.UNKNOWN.getMsg());
+		if (merchantInfo == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		return reMap;
+		MD5 md5 = new MD5();
+		if (!newLoginPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
+		}
+		merchantInfo.setLoginPassword(md5.getMD5ofStr(newLoginPassword));
+		merchantInfo.setUpdateDate(new Date());
+		merchantInfo.setUpdateBy(merchantInfo.getMerchantName());
+		if (!merchantDao.update(merchantInfo)) {
+			return ReturnInfoUtils.errorInfo("修改失败，服务器繁忙！");
+		}
+		return ReturnInfoUtils.successInfo();
+
 	}
 
 	@Override
@@ -534,14 +544,14 @@ public class MerchantServiceImpl implements MerchantService {
 		} else if (!reList.isEmpty()) {
 			Merchant merchant = reList.get(0);
 			String qq = datasMap.get("qq") + "";
-			if(StringEmptyUtils.isNotEmpty(qq)){
+			if (StringEmptyUtils.isNotEmpty(qq)) {
 				merchant.setMerchantQQ(qq);
 			}
 			String email = datasMap.get("email") + "";
-			if (StringEmptyUtils.isNotEmpty(email) ) {
-				if(EmailUtils.checkEmail(email)){
+			if (StringEmptyUtils.isNotEmpty(email)) {
+				if (EmailUtils.checkEmail(email)) {
 					merchant.setMerchantEmail(email);
-				}else{
+				} else {
 					return ReturnInfoUtils.errorInfo("邮箱错误！");
 				}
 			}

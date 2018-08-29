@@ -40,6 +40,11 @@ public class ManagerServiceImpl implements ManagerService {
 	@Autowired
 	private IdUtils idUtils;
 
+	/**
+	 * 登录密码的组成至少要包括大小写字母、数字及标点符号的其中两项、且长度要在6-20位之间
+	 */
+	private static final String LOGIN_PASSWORD_REGEX = "^(?![A-Za-z]+$)(?!\\d+$)(?![\\W_]+$)\\S{6,20}$";
+	
 	@Override
 	public List<Object> findManagerBy(String account) {
 		Map<String, Object> params = new HashMap<>();
@@ -146,32 +151,27 @@ public class ManagerServiceImpl implements ManagerService {
 	@Override
 	public Map<String, Object> updateManagerPassword(String managerId, String managerName, String oldLoginPassword,
 			String newLoginPassword) {
-		Date date = new Date();
-		MD5 md5 = new MD5();
-		Map<String, Object> statusMap = new HashMap<>();
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("managerId", managerId);
 		List<Object> reList = managerDao.findByProperty(Manager.class, paramMap, 1, 1);
 		if (reList == null) {
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.WARN.getMsg());
-			return statusMap;
+			return ReturnInfoUtils.errorInfo("查询失败，服务器繁忙！");
 		} else if (!reList.isEmpty()) {
 			Manager managerInfo = (Manager) reList.get(0);
+			MD5 md5 = new MD5();
 			String reLoginPassword = managerInfo.getLoginPassword();
 			String md5OldLoginPassword = md5.getMD5ofStr(oldLoginPassword);
 			if (!md5OldLoginPassword.equals(reLoginPassword)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "旧密码错误,请重试!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("旧密码错误,请重试！");
+			}
+			if (!newLoginPassword.matches(LOGIN_PASSWORD_REGEX)) {
+				return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
 			}
 			managerInfo.setLoginPassword(md5.getMD5ofStr(newLoginPassword));
-			managerInfo.setUpdateDate(date);
+			managerInfo.setUpdateDate(new Date());
 			managerInfo.setUpdateBy(managerName);
 			if (!managerDao.update(managerInfo)) {
-				statusMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.WARN.getStatus());
-				statusMap.put(BaseCode.MSG.getBaseCode(), "修改密码错误,服务器繁忙!");
-				return statusMap;
+				return ReturnInfoUtils.errorInfo("修改密码失败,服务器繁忙！");
 			}
 			return ReturnInfoUtils.successInfo();
 		} else {

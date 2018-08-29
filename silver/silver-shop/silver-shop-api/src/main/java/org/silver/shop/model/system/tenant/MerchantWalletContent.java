@@ -28,7 +28,7 @@ public class MerchantWalletContent implements Serializable {
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
 	private Double reserveAmount;// 储备金额
-	private Double cash;// 商户现金,用于真实转账、付款、收款
+	private Double cash;// 商户现金(货款),用于真实转账、付款、收款
 	private double freezingFunds;// 冻结资金：用于暂存扣款的金额
 
 	public long getId() {

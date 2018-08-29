@@ -1233,7 +1233,7 @@ public class PaymentServiceImpl implements PaymentService {
 		// 网关接收状态： 0-未发起,1-接收成功,2-接收失败
 		entity.setNetworkStatus(0);
 		if (StringEmptyUtils.isNotEmpty(paymentMap.get("payTime"))) {
-			// entity.setPay_time(paymentMap.get("payTime"));
+			entity.setPay_time(DateUtil.parseDate(paymentMap.get("payTime")+"", DATA_FORMAT_YEAR_MONTH_DAY));
 		} else {
 			String orderDate = paymentMap.get("orderDate") + "";
 			Date payTime = DateUtil.randomPaymentDate(orderDate);

@@ -37,12 +37,7 @@ public class MerchantFeeController {
 	@ApiOperation("管理员添加商户口岸服务费率")
 	@ResponseBody
 	@RequiresPermissions("merchantFee:addServiceFee")
-	public String addServiceFee(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("merchantId") String merchantId, @RequestParam("customsPort") int customsPort,
-			@RequestParam("customsPortName") String customsPortName, @RequestParam("customsName") String customsName,
-			@RequestParam("customsCode") String customsCode, @RequestParam("ciqOrgName") String ciqOrgName,
-			@RequestParam("ciqOrgCode") String ciqOrgCode, @RequestParam("platformFee") double platformFee,
-			@RequestParam("type") String type, @RequestParam("status") String status) {
+	public String addServiceFee(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

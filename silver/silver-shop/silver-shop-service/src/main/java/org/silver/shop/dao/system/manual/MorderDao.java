@@ -51,7 +51,7 @@ public interface MorderDao extends BaseDao {
 	public long getMOrderAndMGoodsInfoCount(String merchantId, String startDate, String endDate, int page, int size);
 
 	/**
-	 * 统计未发起过备案的手工订单实际支付金额的总额
+	 * 正常统计订单价格
 	 * @param itemList 订单Id集合 
 	 * @return double 总金额
 	 */
@@ -83,11 +83,13 @@ public interface MorderDao extends BaseDao {
 	public List<Morder> findByPropertyIn(List<Map<String,Object>> itemList);
 
 	/**
-	 * 当订单实际支付金额不足100提升至100,后统计订单实际支付金额
+	 * 统计订单手续费(其中包括计算订单金额是否超过封底价)
 	 * @param itemList 订单Id集合
+	 * @param backCoverFee 
+	 * @param fee 
 	 * @return double 实际支付金额
 	 */
-	public double backCoverStatisticalManualOrderAmount(List<Object> itemList);
+	public double sumManualOrderFee(List<Object> itemList, double fee, double backCoverFee);
 
 	
 }

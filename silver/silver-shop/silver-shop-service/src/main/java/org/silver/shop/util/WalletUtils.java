@@ -27,7 +27,6 @@ import org.silver.util.YmHttpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -47,7 +46,7 @@ public class WalletUtils {
 	private MemberService memberService;
 	@Autowired
 	private AgentService agentService;
-	
+
 	/**
 	 * 检查用户钱包是否存在,如果存在则直接返回,如果不存在则根据类型创建钱包信息,当不传name时,则根据Id寻找对应的商户/用户/代理名称
 	 * 
@@ -117,34 +116,34 @@ public class WalletUtils {
 		Date date = new Date();
 		switch (type) {
 		case 1:
-			//根据商户Id获取商户名称
+			// 根据商户Id获取商户名称
 			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(id);
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				return reMerchantMap;
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			wallet = new MerchantWalletContent.Builder(serialNo).merchantId(id).merchantName( merchant.getMerchantName()).createBy( merchant.getMerchantName())
-					.createDate(date).build();
+			wallet = new MerchantWalletContent.Builder(serialNo).merchantId(id).merchantName(merchant.getMerchantName())
+					.createBy(merchant.getMerchantName()).createDate(date).build();
 			break;
 		case 2:
-			//根据用户Id获取用户信息
+			// 根据用户Id获取用户信息
 			Map<String, Object> reMemberMap = memberService.getMemberInfo(id);
 			if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
 				return reMemberMap;
 			}
 			Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
-			wallet = new MemberWalletContent.Builder(serialNo).memberId(id).memberName(member.getMemberName()).createBy(member.getMemberName())
-					.createDate(date).build();
+			wallet = new MemberWalletContent.Builder(serialNo).memberId(id).memberName(member.getMemberName())
+					.createBy(member.getMemberName()).createDate(date).build();
 			break;
 		case 3:
-			//根据代理商Id获取用户信息
+			// 根据代理商Id获取用户信息
 			Map<String, Object> reAgentMap = agentService.getAgentInfo(id);
 			if (!"1".equals(reAgentMap.get(BaseCode.STATUS.toString()))) {
 				return reAgentMap;
 			}
 			AgentBaseContent agent = (AgentBaseContent) reAgentMap.get(BaseCode.DATAS.toString());
-			wallet = new AgentWalletContent.Builder(serialNo).agentId(id).agentName(agent.getAgentName()).createBy(agent.getAgentName())
-					.createDate(date).build();
+			wallet = new AgentWalletContent.Builder(serialNo).agentId(id).agentName(agent.getAgentName())
+					.createBy(agent.getAgentName()).createDate(date).build();
 			break;
 		default:
 			break;
@@ -157,6 +156,7 @@ public class WalletUtils {
 
 	/**
 	 * 通用商户校验钱包日志参数
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -175,32 +175,28 @@ public class WalletUtils {
 		jsonArr.add(datasMap);
 		return CheckDatasUtil.checkData(jsonArr, noNullKeys);
 	}
-	
+
 	public static void main(String[] args) {
-			String accessToken =  "Ym_WQ9BxIxLrPwqWShZHzOTHnTDDjRmCMhglKyDuN6Qqv1laMPEBFA63EnkuhluM2ZH_nntjrEAwhZkYlY6fC0XB218Eo8NcuB4DuXtkf9JWAaYRasK94kSJ2zBrrJ0TbQX9";
-			
-			Map<String, Object> params2 = new HashMap<>();
-			params2.put("version", "1.0");
-			params2.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
-			params2.put("businessCode", "YS02");
-			JSONObject bizContent = new JSONObject();
-			bizContent.put("user_ID", "44200019850312716X");
-			bizContent.put("user_name", "黃坤娣");
-			params2.put("bizContent", bizContent);
-			params2.put("timestamp", System.currentTimeMillis());
-			params2 = new MapSortUtils().sortMap(params2);
-			String str2 = YmMallConfig.APPKEY + accessToken + params2;
-			String clientSign = null;
-			try {
-				clientSign = MD5.getMD5(str2.getBytes("utf-8"));
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			
-			// String result =
-			// YmHttpUtil.HttpPost("http://localhost:8080/silver-web/real/auth",
-			// params);
-			params2.put("clientSign", clientSign);
-			System.out.println("---->>"+YmHttpUtil.HttpPost("https://ym.191ec.com/silver-web/real/auth", params2));
+		String accessToken = "Ym_g75vNG6BHZ1l7mG3h6MF6IGnge5wraT8csfMlQ00J558WaGg2GdDaFsMOyywBfI1_WcjgmOC5OGuT38RaEU05j8CWbaPxE32pQxwDsl8I1WrzgTVzm1f9SnkpR4B7WqSA";
+		Map<String, Object> params2 = new HashMap<>();
+		params2.put("version", "1.0");
+		params2.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
+		params2.put("businessCode", "PT03");
+		JSONObject bizContent = new JSONObject();
+		bizContent.put("user_ID", "460006198503017227");
+		bizContent.put("user_name", "周小琴");
+		bizContent.put("bank_mobile", "17053270898");
+		params2.put("bizContent", bizContent);
+		params2.put("timestamp", System.currentTimeMillis());
+		params2 = new MapSortUtils().sortMap(params2);
+		String str2 = YmMallConfig.APPKEY + accessToken + params2;
+		String clientSign = null;
+		try {
+			clientSign = MD5.getMD5(str2.getBytes("utf-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		params2.put("clientSign", clientSign);
+		System.out.println("---->>" + YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params2));
 	}
 }

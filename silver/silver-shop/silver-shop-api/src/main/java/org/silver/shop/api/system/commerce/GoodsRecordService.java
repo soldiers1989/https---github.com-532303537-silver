@@ -135,15 +135,11 @@ public interface GoodsRecordService {
 	/**
 	 * 修改备案商品状态
 	 * 
-	 * @param managerId
-	 *            管理员Id
-	 * @param managerName
-	 *            管理员名称
 	 * @param goodsPack
 	 *            商品备案Id
 	 * @return Map
 	 */
-	public Map<String, Object> editGoodsRecordStatus(String managerId, String managerName, String goodsPack);
+	public Map<String, Object> editGoodsRecordStatus(Manager managerInfo, String goodsPack);
 
 	/**
 	 * 商户修改备案商品信息(局限于未备案的商品)

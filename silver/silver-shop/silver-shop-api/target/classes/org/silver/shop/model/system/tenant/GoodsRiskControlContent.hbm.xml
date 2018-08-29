@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2018-8-28 13:56:15 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="org.silver.shop.model.system.tenant.GoodsRiskControlContent" table="ym_shop_goods_risk_control_content">
+        <id name="id" type="long">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="riskNo" type="java.lang.String">
+            <column name="riskNo" not-null="true" unique="true"/>
+        </property>
+        <property name="entGoodsNo" type="java.lang.String">
+            <column name="entGoodsNo" />
+        </property>
+        <property name="hsCode" type="java.lang.String">
+            <column name="hsCode" />
+        </property>
+        <property name="goodsName" type="java.lang.String">
+            <column name="goodsName" />
+        </property>
+        <property name="goodsStyle" type="java.lang.String">
+            <column name="goodsStyle" />
+        </property>
+        <property name="goodsBrand" type="java.lang.String">
+            <column name="goodsBrand" />
+        </property>
+        <property name="regPrice" type="java.lang.Double">
+            <column name="regPrice" />
+        </property>
+        <property name="platformOnePrice" type="java.lang.Double">
+            <column name="platformOnePrice" default="0"/>
+        </property>
+        <property name="platformTwoPrice" type="java.lang.Double">
+            <column name="platformTwoPrice" default="0"/>
+        </property>
+        <property name="platformThreePrivce" type="java.lang.Double">
+            <column name="platformThreePrivce" default="0"/>
+        </property>
+        <property name="platformFourPrice" type="java.lang.Double">
+            <column name="platformFourPrice" default="0" />
+        </property>
+        <property name="referencePrice" type="java.lang.Double">
+            <column name="referencePrice" default="0"/>
+        </property>
+        <property name="remake" type="java.lang.String">
+            <column name="remake" />
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
+        <property name="deleteFlag" type="int">
+            <column name="deleteFlag" />
+        </property>
+        <property name="deleteBy" type="java.lang.String">
+            <column name="deleteBy" />
+        </property>
+        <property name="deleteDate" type="java.util.Date">
+            <column name="deleteDate" />
+        </property>
+    </class>
+</hibernate-mapping>

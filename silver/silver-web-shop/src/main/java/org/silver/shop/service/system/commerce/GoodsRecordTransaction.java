@@ -542,7 +542,6 @@ public class GoodsRecordTransaction {
 	// 商户批量或单个商品备案
 	public Map<String, Object> merchantBatchOrSingleGoodsRecord(String goodsRecordInfo) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -552,17 +551,13 @@ public class GoodsRecordTransaction {
 	// 修改备案商品状态
 	public Map<String, Object> editGoodsRecordStatus(String goodsPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
-		String managerId = managerInfo.getManagerId();
-		String managerName = managerInfo.getManagerName();
-		return goodsRecordService.editGoodsRecordStatus(managerId, managerName, goodsPack);
+		return goodsRecordService.editGoodsRecordStatus(managerInfo, goodsPack);
 	}
 
 	// 商户修改备案商品信息(局限于未备案与备案失败的商品)
 	public Map<String, Object> merchantEditGoodsRecordInfo(HttpServletRequest req) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();

@@ -34,79 +34,142 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 
 	@Override
 	public Map<String, Object> addMerchantServiceFee(Map<String, Object> datasMap) {
-		if (datasMap != null) {
-			String merchantId = datasMap.get("merchantId") + "";
-			String customsPortName = datasMap.get("customsPortName") + "";
-			String customsName = datasMap.get("customsName") + "";
-			String customsCode = datasMap.get("customsCode") + "";
-			String ciqOrgName = datasMap.get("ciqOrgName") + "";
-			String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
-			String managerName = datasMap.get("managerName") + "";
-			String type = datasMap.get("type") + "";
-			String status = datasMap.get("status") + "";
-			int customsPort = 0;
-			int backCoverFlag = 0;
-			try {
-				customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
-				backCoverFlag = Integer.parseInt(datasMap.get("backCoverFlag") + "");
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("请求参数格式错误,请重新输入!");
-			}
-			Map<String, Object> reCheckCustomsMap = checkCustomsInfo(customsPort, customsName, customsCode, ciqOrgCode,
-					ciqOrgName);
-			if (!"1".equals(reCheckCustomsMap.get(BaseCode.STATUS.toString()))) {
-				return reCheckCustomsMap;
-			}
-			Map<String, Object> checkFeeMap = checkFee(datasMap);
-			if (!"1".equals(checkFeeMap.get(BaseCode.STATUS.toString()))) {
-				return checkFeeMap;
-			}
-			Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
-			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-				return reMerchantMap;
-			}
-			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-			// 查询当前用户Id是否已添加过该口岸、海关、国检信息
-			Map<String, Object> reCheckMerchantMap = checkMerchantFeeInfo(merchantId, customsName, customsCode,
-					ciqOrgCode, ciqOrgName, type);
-			if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
-				return reCheckMerchantMap;
-			}
-			Map<String, Object> reIdMap = idUtils.createId(MerchantFeeContent.class, "merchantFee_");
-			if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
-				return reIdMap;
-			}
-			MerchantFeeContent merchantFee = new MerchantFeeContent();
-			String merchantFeeId = reIdMap.get(BaseCode.DATAS.toString()) + "";
-			merchantFee.setMerchantFeeId(merchantFeeId);
-			merchantFee.setMerchantId(merchant.getMerchantId());
-			merchantFee.setMerchantName(merchant.getMerchantName());
-			merchantFee.setCustomsPort(customsPort);
-			merchantFee.setCustomsPortName(customsPortName);
-			merchantFee.setCustomsCode(customsCode);
-			merchantFee.setCustomsName(customsName);
-			merchantFee.setCiqOrgCode(ciqOrgCode);
-			merchantFee.setCiqOrgName(ciqOrgName);
-			double platformFee = 0;
-			try {
-				platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
-			} catch (Exception e) {
-				return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,平台服务费率参数格式错误,请重新输入!");
-			}
-			merchantFee.setPlatformFee(platformFee);
-			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-			merchantFee.setType(type);
-			merchantFee.setStatus(status);
-			merchantFee.setCreateBy(managerName);
-			merchantFee.setCreateDate(new Date());
-			// 封底标识：1-不封底计算、2-100封底计算
-			merchantFee.setBackCoverFlag(backCoverFlag);
-			if (merchantFeeDao.add(merchantFee)) {
-				return ReturnInfoUtils.successInfo();
-			}
-			return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		String merchantId = datasMap.get("merchantId") + "";
+		String customsName = datasMap.get("customsName") + "";
+		String customsCode = datasMap.get("customsCode") + "";
+		String ciqOrgName = datasMap.get("ciqOrgName") + "";
+		String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
+		String type = datasMap.get("type") + "";
+		int customsPort = 0;
+		try {
+			customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("参数格式错误！");
+		}
+		Map<String, Object> reCheckCustomsMap = checkCustomsInfo(customsPort, customsName, customsCode, ciqOrgCode,
+				ciqOrgName);
+		if (!"1".equals(reCheckCustomsMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckCustomsMap;
+		}
+		Map<String, Object> checkFeeMap = checkFee(datasMap);
+		if (!"1".equals(checkFeeMap.get(BaseCode.STATUS.toString()))) {
+			return checkFeeMap;
+		}
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		// 查询当前用户Id是否已添加过该口岸、海关、国检信息
+		Map<String, Object> reCheckMerchantMap = checkMerchantFeeInfo(merchantId, customsName, customsCode, ciqOrgCode,
+				ciqOrgName, type);
+		if (!"1".equals(reCheckMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMerchantMap;
+		}
+		return saveMerchantFeeContent(merchant, datasMap);
+	}
+
+	/**
+	 * 保存商户口岸费率信息
+	 * 
+	 * @param merchant
+	 *            商户信息
+	 * @param datasMap
+	 *            口岸信息参数
+	 * @return Map
+	 */
+	private Map<String, Object> saveMerchantFeeContent(Merchant merchant, Map<String, Object> datasMap) {
+		if (merchant == null || datasMap == null) {
+			return ReturnInfoUtils.errorInfo("保存参数不能为null");
+		}
+		String customsPortName = datasMap.get("customsPortName") + "";
+		String customsName = datasMap.get("customsName") + "";
+		String customsCode = datasMap.get("customsCode") + "";
+		String ciqOrgName = datasMap.get("ciqOrgName") + "";
+		String ciqOrgCode = datasMap.get("ciqOrgCode") + "";
+		String managerName = datasMap.get("managerName") + "";
+		String type = datasMap.get("type") + "";
+		String status = datasMap.get("status") + "";
+		int customsPort = 0;
+		int backCoverFlag = 0;
+		try {
+			customsPort = Integer.parseInt(datasMap.get("customsPort") + "");
+			backCoverFlag = Integer.parseInt(datasMap.get("backCoverFlag") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("参数格式错误！");
+		}
+		Map<String, Object> reIdMap = idUtils.createId(MerchantFeeContent.class, "merchantFee_");
+		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
+			return reIdMap;
+		}
+		MerchantFeeContent merchantFee = new MerchantFeeContent();
+		String merchantFeeId = reIdMap.get(BaseCode.DATAS.toString()) + "";
+		merchantFee.setMerchantFeeId(merchantFeeId);
+		merchantFee.setMerchantId(merchant.getMerchantId());
+		merchantFee.setMerchantName(merchant.getMerchantName());
+		merchantFee.setCustomsPort(customsPort);
+		merchantFee.setCustomsPortName(customsPortName);
+		merchantFee.setCustomsCode(customsCode);
+		merchantFee.setCustomsName(customsName);
+		merchantFee.setCiqOrgCode(ciqOrgCode);
+		merchantFee.setCiqOrgName(ciqOrgName);
+		double platformFee = 0;
+		try {
+			platformFee = Double.parseDouble(datasMap.get("platformFee") + "");
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("添加商户口岸费率失败,平台服务费率参数格式错误,请重新输入!");
+		}
+		merchantFee.setPlatformFee(platformFee);
+		// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+		merchantFee.setType(type);
+		merchantFee.setStatus(status);
+		merchantFee.setCreateBy(managerName);
+		merchantFee.setCreateDate(new Date());
+		// 封底标识：1-不封底计算、2-封底计算
+		merchantFee.setBackCoverFlag(backCoverFlag);
+		String backCoverFee = datasMap.get("backCoverFee") + "";
+		Map<String, Object> reMap = addBackCoverFee(merchantFee, backCoverFee, backCoverFlag);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		if (merchantFeeDao.add(merchantFee)) {
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙!");
+
+	}
+
+	/**
+	 * 添加封底服务费率
+	 * 
+	 * @param merchantFee
+	 *            商户口岸费率信息
+	 * @param backCoverFee
+	 *            封底服务费
+	 * @param backCoverFlag
+	 *            封底标识：1-不封底计算、2-封底计算
+	 * @return Map
+	 */
+	private Map<String, Object> addBackCoverFee(MerchantFeeContent merchantFee, String backCoverFee,
+			int backCoverFlag) {
+		if (merchantFee == null || backCoverFlag < 0) {
+			return ReturnInfoUtils.errorInfo("添加封底服务费率，参数错误！");
+		}
+		if (backCoverFlag == 2) {
+			if (StringEmptyUtils.isEmpty(backCoverFee)) {
+				return ReturnInfoUtils.errorInfo("封底手续费不能为空！");
+			} else {
+				try {
+					merchantFee.setBackCoverFee(Double.parseDouble(backCoverFee));
+				} catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("封底手续费错误！");
+				}
+			}
+		}
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -245,10 +308,11 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		// 删除标识:0-未删除,1-已删除
 		params.put("deleteFlag", 0);
 		List<MerchantFeeContent> reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+		long count = merchantFeeDao.findByPropertyCount(MerchantFeeContent.class, params);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询已开通海关口岸信息失败,服务器繁忙!");
 		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList);
+			return ReturnInfoUtils.successDataInfo(reList,count);
 		} else {
 			return ReturnInfoUtils.errorInfo("没有已开通海关口岸信息,请联系管理员!");
 		}
@@ -294,16 +358,77 @@ public class MerchantFeeServiceImpl implements MerchantFeeService {
 		merchantFee.setCiqOrgCode(ciqOrgCode);
 		merchantFee.setCiqOrgName(ciqOrgName);
 		merchantFee.setPlatformFee(platformFee);
+		// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
 		merchantFee.setType(type);
+		//
 		merchantFee.setStatus(status);
 		merchantFee.setUpdateBy(managerName);
 		merchantFee.setUpdateDate(new Date());
-		// 封底标识：1-不封底计算、2-100封底计算
+		// 封底标识：1-不封底计算、2-封底计算
 		merchantFee.setBackCoverFlag(backCoverFlag);
+		String backCoverFee = datasMap.get("backCoverFee") + "";
+		Map<String, Object> reMap = addBackCoverFee(merchantFee, backCoverFee, backCoverFlag);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
 		if (merchantFeeDao.update(merchantFee)) {
+			if(backCoverFlag == 2){
+				// 同步支付单或者订单口岸的封底手续费
+				Map<String, Object> reSynMap = synUpdateAnotherOne(merchantFee.getMerchantId(), type, customsCode, ciqOrgCode,
+						backCoverFee);
+				if (!"1".equals(reSynMap.get(BaseCode.STATUS.toString()))) {
+					return reSynMap;
+				}
+			}
 			return ReturnInfoUtils.successInfo();
 		}
 		return ReturnInfoUtils.errorInfo("修改失败,服务器繁忙!");
+	}
+
+	/**
+	 * 
+	 * @param type
+	 *            类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+	 * @param customsCode
+	 *            海关代码
+	 * @param ciqOrgCode
+	 *            国检检疫机构代码
+	 * @param merchantId
+	 *            商户id
+	 * @param d
+	 * @return Map
+	 */
+	private Map<String, Object> synUpdateAnotherOne(String merchantId, String type, String customsCode,
+			String ciqOrgCode, String backCoverFee) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		params.put("customsCode", customsCode);
+		params.put("ciqOrgCode", ciqOrgCode);
+		List<MerchantFeeContent> reList = null;
+		switch (type) {
+		case "orderRecord":
+			// 当修改类型为订单时，则同步修改的是支付单申报的口岸费率信息
+			params.put("type", "paymentRecord");
+			reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+			break;
+		case "paymentRecord":
+			// 当修改类型为支付单时，则同步修改的是订单申报的口岸费率信息
+			params.put("type", "orderRecord");
+			reList = merchantFeeDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("同步更新时，错误类型！");
+		}
+		if (reList != null && !reList.isEmpty()) {
+			MerchantFeeContent content = reList.get(0);
+			content.setBackCoverFee(Double.parseDouble(backCoverFee));
+			if (merchantFeeDao.update(content)) {
+				return ReturnInfoUtils.successInfo();
+			}
+		}else{
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("同步更新失败！");
 	}
 
 	@Override

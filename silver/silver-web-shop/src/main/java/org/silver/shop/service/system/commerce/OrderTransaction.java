@@ -196,9 +196,7 @@ public class OrderTransaction {
 
 	// 第三方商城推广订单下单入口
 	public Object thirdPromoteBusiness(Map<String, Object> params) {
-		
 		//idCardService.sendIdCardPhoneCertification(idName, idCard, phone);
-		
 		return orderService.thirdPromoteBusiness(params);
 	}
 

@@ -373,9 +373,9 @@ public class PushPaymentRecordQtz {
 			paymentRe.setResendCount(count);
 			String note = paymentRe.getNote();
 			if (StringEmptyUtils.isNotEmpty(note)) {
-				paymentRe.setNote(note + "#"+ DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 订单第" + count + "次重新申报成功!");
+				paymentRe.setNote(note + "#"+ DateUtil.formatDate(new Date(), "yyyy-MM-dd HH:mm:ss") + " 支付单第" + count + "次重新申报成功！");
 			} else {
-				paymentRe.setNote("订单第" + count + "次重新申报成功!");
+				paymentRe.setNote("支付单第" + count + "次重新申报成功！");
 			}
 			paymentRe.setResendStatus("success");
 			paymentRe.setUpdateBy("system");

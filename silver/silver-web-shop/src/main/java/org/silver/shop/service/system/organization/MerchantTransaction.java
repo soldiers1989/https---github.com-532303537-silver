@@ -130,24 +130,19 @@ public class MerchantTransaction {
 
 	// 修改登录密码
 	public Map<String, Object> editLoginPassword(String oldLoginPassword, String newLoginPassword) {
-		Map<String, Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// 获取登录后的商户账号
 		String account = merchantInfo.getMerchantName();
+		
 		// 验证输入的原密码是否能登录
 		Map<String, Object> reMap = merchantLogin(account, oldLoginPassword);
 		if (reMap != null) {
 			String status = reMap.get(BaseCode.STATUS.getBaseCode()) + "";
 			if (status.equals("1")) {
-				datasMap = merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
-				return datasMap;
+				return merchantService.updateLoginPassword(merchantInfo, newLoginPassword);
 			}
 		}
-		datasMap.put(BaseCode.STATUS.getBaseCode(), StatusCode.NOTICE.getStatus());
-		datasMap.put(BaseCode.MSG.getBaseCode(), "原登录密码输入错误");
-		return datasMap;
+		return ReturnInfoUtils.errorInfo("原登录密码输入错误!");
 	}
 
 	// 获取商户备案信息

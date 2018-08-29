@@ -869,4 +869,52 @@ public final class SearchUtils {
 		return map;
 	}
 
+	/**
+	 * 通用检索商品风控信息
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	public static Map<String, Object> goodsRiskControl(Map<String, Object> datasMap) {
+		if (datasMap == null) {
+			return ReturnInfoUtils.errorInfo("搜索参数错误,请重新输入!");
+		}
+		Map<String, Object> paramMap = new HashMap<>();
+		Map<String, Object> blurryMap = null;
+		Iterator<String> isKey = datasMap.keySet().iterator();
+		while (isKey.hasNext()) {
+			String key = isKey.next().trim();
+			String value = datasMap.get(key) + "".trim();
+			// value值为空时不需要添加检索参数
+			if (StringEmptyUtils.isEmpty(value)) {
+				continue;
+			}
+			switch (key) {
+			case "goodsName":
+				blurryMap = new HashMap<>();
+				blurryMap.put(key, "%" + value + "%");
+				break;
+			case "hsCode":
+				paramMap.put(key, value.trim());
+				break;
+			case "goodsStyle":
+				paramMap.put(key, value.trim());
+				break;
+			case "goodsBrand":
+				paramMap.put(key, value.trim());
+				break;
+			case "regPrice":
+				paramMap.put(key, Double.parseDouble(value));
+				break;
+			default:
+				break;
+			}
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(PARAM, paramMap);
+		map.put("blurry", blurryMap);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
+	}
+	
 }

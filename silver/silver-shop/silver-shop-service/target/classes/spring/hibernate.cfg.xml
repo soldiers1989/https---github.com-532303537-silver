@@ -149,7 +149,8 @@
 		<mapping resource="org/silver/shop/model/system/log/GoodsReviewerLog.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/commerce/CounterGoodsContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantCounterContent.hbm.xml" />
-		
 		<mapping resource="org/silver/shop/model/system/tenant/MemberBankContent.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/tenant/GoodsRiskControlContent.hbm.xml" />
+		
 	</session-factory>
 </hibernate-configuration>

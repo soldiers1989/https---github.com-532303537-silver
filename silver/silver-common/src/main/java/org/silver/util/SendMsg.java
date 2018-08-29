@@ -110,7 +110,7 @@ public class SendMsg {
 	 * @return Map
 	 */
 	public static Map<String, Object> sendVerificationCode(String phone, String redisKey) {
-		if (StringEmptyUtils.isEmpty(phone) || StringEmptyUtils.isEmpty(redisKey)) {
+		if ( StringEmptyUtils.isEmpty(redisKey)) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为空！");
 		}
 		if (!PhoneUtils.isPhone(phone)) {

@@ -12,6 +12,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.tenant.MemberBankContent;
 import org.silver.shop.model.system.tenant.MerchantBankContent;
 import org.silver.shop.util.IdUtils;
+import org.silver.util.BankCardUtils;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,12 @@ public class MemberBankServiceImpl implements MemberBankService {
 		entity.setBankProvince(datasMap.get("bankProvince") + "");
 		entity.setBankCity(datasMap.get("bankCity") + "");
 		entity.setBankName(datasMap.get("bankName") + "");
-		entity.setBankAccountNo(datasMap.get("bankAccountNo") + "");
+		//银行卡号
+		String bankAccountNo = datasMap.get("bankAccountNo") + "";
+		if(!BankCardUtils.checkBankCard(bankAccountNo)){
+			return ReturnInfoUtils.errorInfo("银行卡号错误！");
+		}
+		entity.setBankAccountNo(bankAccountNo);
 		entity.setBankAccountName(datasMap.get("bankAccountName") + "");
 		// 银行卡账户类型 私人(personal) 对公(corporate)
 		entity.setBankAccountType(datasMap.get("bankAccountType") + "");

@@ -159,9 +159,12 @@ public class ReportsServiceImpl implements ReportsService {
 			List<MerchantFeeContent> feeList = paymentDao.findByPropertyOr(MerchantFeeContent.class, pamras2, orList, 0,
 					0);
 			double fee = 0;
+			//封底手续费
+			double backCoverFee = 0;
 			if (feeList != null && !feeList.isEmpty()) {
 				for (MerchantFeeContent feeContent : feeList) {
 					fee += feeContent.getPlatformFee();
+					backCoverFee = feeContent.getBackCoverFee();
 				}
 			}
 			JSONObject idCardJson = null;
@@ -173,7 +176,7 @@ public class ReportsServiceImpl implements ReportsService {
 				com.alibaba.fastjson.JSONArray idCardJsonArr = Transform.tableToJson(reIdcardList).getJSONArray("rows");
 				idCardJson = JSONObject.fromObject(idCardJsonArr.get(0));
 			}
-			mergeDatas(json, fee, newlist, idCardJson);
+			mergeDatas(json, fee, newlist, idCardJson,backCoverFee);
 		}
 		long endTime = System.currentTimeMillis();
 		System.out.println("--查询报表耗时-->>" + (endTime - startTime) + "ms");
@@ -191,8 +194,9 @@ public class ReportsServiceImpl implements ReportsService {
 	 *            合并后的集合
 	 * @param idCardJson
 	 *            身份证认证参数
+	 * @param backCoverFee 封底手续费
 	 */
-	private void mergeDatas(JSONObject json, double fee, List<Object> newlist, JSONObject idCardJson) {
+	private void mergeDatas(JSONObject json, double fee, List<Object> newlist, JSONObject idCardJson, double backCoverFee) {
 		Map<String, Object> datasMap = new HashMap<>();
 		Iterator<String> sIterator = json.keys();
 		while (sIterator.hasNext()) {// 合并商户手续费
@@ -202,6 +206,8 @@ public class ReportsServiceImpl implements ReportsService {
 			String value = StringUtil.replace(json.getString(key));
 			if (fee > 0) {
 				datasMap.put("platformFee", fee);
+				//
+				datasMap.put("backCoverFee", backCoverFee);
 			}
 			datasMap.put(key, value);
 		}
