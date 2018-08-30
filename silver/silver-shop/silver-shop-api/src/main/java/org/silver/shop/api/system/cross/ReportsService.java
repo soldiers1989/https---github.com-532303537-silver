@@ -27,6 +27,10 @@ public interface ReportsService {
 	 */
 	public Map<String, Object> oldGetSynthesisReport(JSONArray jsonArray);
 
-	public Map<String, Object> tmpUpdate();
+	/**
+	 * 临时创建报表数据
+	 * @return Map
+	 */
+	public Map<String, Object> tmpCreate();
 
 }

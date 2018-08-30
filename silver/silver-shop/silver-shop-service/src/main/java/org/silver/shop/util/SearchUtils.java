@@ -768,7 +768,7 @@ public final class SearchUtils {
 			case "idNumber":
 				paramMap.put(key, value);
 				break;
-			case "idName":
+			case "name":
 				paramMap.put(key, value);
 				break;
 			case "type":

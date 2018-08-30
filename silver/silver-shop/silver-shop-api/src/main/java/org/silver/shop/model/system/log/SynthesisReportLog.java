@@ -18,8 +18,9 @@ public class SynthesisReportLog implements Serializable {
 	private Date date;// 日期
 	private int totalCount;// 订单总数
 	private double amount;// 订单总金额
-	private double platformFee;// 订单申报服务费率
-	private int backCoverCount;// 100封底数量
+	private double platformFee;// 申报服务费率
+	private int backCoverCount;// 封底数量
+	private double backCoverFee;// 封底服务费/每笔
 	private double normalAmount;// 正常价格的订单金额
 	private int idCardTotalCount;// 身份证总数
 	private int idCardTollCount;// 身份证收费数量
@@ -139,6 +140,12 @@ public class SynthesisReportLog implements Serializable {
 	}
 	public void setIdCardFreeCount(int idCardFreeCount) {
 		this.idCardFreeCount = idCardFreeCount;
+	}
+	public double getBackCoverFee() {
+		return backCoverFee;
+	}
+	public void setBackCoverFee(double backCoverFee) {
+		this.backCoverFee = backCoverFee;
 	}
 	
 	

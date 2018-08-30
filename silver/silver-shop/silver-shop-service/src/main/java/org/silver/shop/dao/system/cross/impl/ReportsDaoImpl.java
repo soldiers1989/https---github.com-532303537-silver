@@ -140,27 +140,26 @@ public class ReportsDaoImpl extends BaseDaoImpl implements ReportsDao {
 		Session session = null;
 		try {
 			List<Object> list = new ArrayList<>();
-			StringBuilder sbSQL = new StringBuilder(
-					" FROM SynthesisReportLog MODEL WHERE  ");
-			
-			if(StringEmptyUtils.isNotEmpty(monthFirstDate)){
+			StringBuilder sbSQL = new StringBuilder(" FROM SynthesisReportLog MODEL WHERE  ");
+
+			if (StringEmptyUtils.isNotEmpty(monthFirstDate)) {
 				sbSQL.append(" MODEL.date >= ? AND ");
 				list.add(DateUtil.parseDate(monthFirstDate, "yyyy-MM-dd HH:mm:ss"));
 			}
-			if(StringEmptyUtils.isNotEmpty(strDayBefore)){
+			if (StringEmptyUtils.isNotEmpty(strDayBefore)) {
 				sbSQL.append(" MODEL.date <= ? AND ");
 				list.add(DateUtil.parseDate(strDayBefore, "yyyy-MM-dd HH:mm:ss"));
 			}
-			if(StringEmptyUtils.isNotEmpty(merchantId)){
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
 				sbSQL.append(" MODEL.merchantId = ? AND ");
 				list.add(merchantId);
 			}
 			sbSQL.append(" 1=1  ORDER BY createDate DESC ");
 			session = getSession();
 			Query query = session.createQuery(sbSQL.toString());
-			//Query query = session.createSQLQuery(sbSQL.toString());
+			// Query query = session.createSQLQuery(sbSQL.toString());
 			for (int i = 0; i < list.size(); i++) {
-				query.setParameter(i,list.get(i));
+				query.setParameter(i, list.get(i));
 			}
 			List resources = query.list();
 			session.close();
@@ -177,7 +176,7 @@ public class ReportsDaoImpl extends BaseDaoImpl implements ReportsDao {
 
 	@Override
 	public Table getPaymentReportDetails(Map<String, Object> datasMap) {
-		if(datasMap == null){
+		if (datasMap == null) {
 			return null;
 		}
 		Session session = null;
@@ -214,6 +213,7 @@ public class ReportsDaoImpl extends BaseDaoImpl implements ReportsDao {
 			}
 		}
 	}
+
 	/**
 	 * 拼接查询条件中,通用的日期开始时间
 	 * 
@@ -230,5 +230,47 @@ public class ReportsDaoImpl extends BaseDaoImpl implements ReportsDao {
 	 */
 	private void appendEndDate(StringBuilder sql) {
 		sql.append(" AND DATE_FORMAT(t1.create_date, '%Y-%m-%d') <= DATE_FORMAT( ? ,'%Y-%m-%d') ");
+	}
+
+	@Override
+	public Table getDailyReportDetails(Map<String, Object> params, double fee, double backCoverFee) {
+		if (params == null) {
+			return null;
+		}
+		Session session = null;
+		try {
+			List<Object> sqlParams = new ArrayList<>();
+			StringBuilder sql = new StringBuilder(
+					" SELECT t1.merchant_no,t1.create_by AS merchantName,DATE_FORMAT(t1.create_date, '%Y-%m-%d') AS date,COUNT(t1.trade_no) AS totalCount,SUM(t1.pay_amount) AS amount,"
+					+ "	COUNT( CASE WHEN (t1.pay_amount * "+fee+") < "+backCoverFee+" THEN 1 END) AS backCoverCount,"
+					+ " SUM(CASE WHEN (t1.pay_amount *  "+fee+") >= "+backCoverFee+" THEN	t1.pay_amount	ELSE 0	END)  AS normalAmount,t1.customsCode FROM ym_shop_manual_mpay t1 "
+					+ "  WHERE t1.networkStatus != 0 AND t1.del_flag = 0 AND t1.pay_record_status != 1 ");
+			String merchantId = params.get("merchantId") + "";
+			if (StringEmptyUtils.isNotEmpty(merchantId)) {
+				sql.append(" AND t1.merchant_no = ? ");
+				sqlParams.add(merchantId);
+			}
+			if (StringEmptyUtils.isNotEmpty(params.get("startDate"))) {
+				appendStartDate(sql);
+				sqlParams.add(params.get("startDate"));
+			}
+			if (StringEmptyUtils.isNotEmpty(params.get("endDate"))) {
+				appendEndDate(sql);
+				sqlParams.add(params.get("endDate"));
+			}
+			sql.append(" GROUP BY DATE_FORMAT(t1.create_date, '%Y-%m-%d'), t1.create_by  ");
+			session = getSession();
+			Table t = DataUtils.queryData(session.connection(), sql.toString(), sqlParams, null, null, null);
+			session.connection().close();
+			session.close();
+			return t;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
 	}
 }

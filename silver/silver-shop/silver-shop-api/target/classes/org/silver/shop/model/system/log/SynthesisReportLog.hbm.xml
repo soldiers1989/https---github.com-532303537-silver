@@ -59,5 +59,8 @@
          <property name="remark" type="java.lang.String">
             <column name="remark" />
         </property>
+        <property name="backCoverFee" type="double">
+            <column name="backCoverFee" />
+        </property>
     </class>
 </hibernate-mapping>

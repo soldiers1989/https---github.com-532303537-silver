@@ -556,12 +556,12 @@ public class OrderController {
 		order.element("EntOrderNo", "TEST0001");
 		order.element("OrderStatus", "1");
 		order.element("PayStatus", "1");
-		order.element("OrderGoodTotal", 0.01);
+		order.element("OrderGoodTotal", 100);
 		order.element("OrderGoodTotalCurr", "142");
 		order.element("Freight", 0);
 		order.element("Tax", 0);
 		order.element("OtherPayment", "1");
-		order.element("ActualAmountPaid", 0.01);
+		order.element("ActualAmountPaid", 100);
 		order.element("RecipientName", "收货人姓名");
 		order.element("RecipientAddr", "收货人地址");
 		order.element("RecipientID", "");
@@ -573,14 +573,15 @@ public class OrderController {
 		order.element("OrderDocType", "1");
 		order.element("OrderDocId", "37021119770918101X");
 		order.element("OrderDocTel", "13812345678");
-		order.element("OrderDate", "订单日期");
+		order.element("OrderDate", "20180830160015");
 		order.element("eport", "1");
 		order.element("ciqOrgCode", "440300");
 		order.element("customsCode", "5165");
 
 		goods.element("Seq", 1);
-		goods.element("EntGoodsNo", "TEst321");
+		goods.element("EntGoodsNo", "AK47");
 		goods.element("CIQGoodsNo", "*");
+		goods.element("marCode", "IK01");
 		// goods.element("BarCode");
 		goods.element("CusGoodsNo", "*");
 		goods.element("GoodsName", "商品名称");
@@ -589,8 +590,8 @@ public class OrderController {
 		goods.element("Qty", 1);
 		goods.element("HSCode", "HS编码");
 		goods.element("Unit", "110");
-		goods.element("Price", 0.01);
-		goods.element("Total", (1 * 0.01));
+		goods.element("Price", 100);
+		goods.element("Total", (1 * 100));
 		goods.element("CurrCode", "142");
 		goods.element("Brand", "品牌");
 		orderGoodsList.add(goods);

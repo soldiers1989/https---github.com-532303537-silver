@@ -40,5 +40,15 @@ public interface ReportsDao extends BaseDao{
 	public List<SynthesisReportLog> findByMonth(String monthFirstDate, String strDayBefore, String merchantId);
 
 	public Table getPaymentReportDetails(Map<String, Object> datasMap);
+
+	
+	/**
+	 * 查询每日报表详情
+	 * @param params 查询条件参数
+	 * @param backCoverFee 封底手续费
+	 * @param fee 平台服务费率
+	 * @return Table
+	 */
+	public Table getDailyReportDetails(Map<String, Object> params, double fee, double backCoverFee);
 	
 }

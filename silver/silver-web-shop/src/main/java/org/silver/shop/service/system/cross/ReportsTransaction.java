@@ -43,18 +43,8 @@ public class ReportsTransaction {
 		return reportsService.getIdCardCertification(params);
 	}
 
-	public Map<String,Object> tmpUpdate() {
-		return reportsService.tmpUpdate();
-	}
-	
-	public static void main(String[] args) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(DateUtil.parseDate("2018-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss"));
-		calendar.add(Calendar.MONTH, 1);
-		calendar.set(Calendar.DAY_OF_MONTH, 0);
-		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		calendar.set(Calendar.MINUTE, 59);
-		calendar.set(Calendar.SECOND, 59);
-		System.out.println("---endDate->>" + DateUtil.formatDate(calendar.getTime(), "yyyy-MM-dd HH:mm:ss"));
+
+	public Map<String,Object> tmpCreate() {
+		return reportsService.tmpCreate();
 	}
 }

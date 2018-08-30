@@ -41,6 +41,7 @@ import org.silver.shop.model.system.manual.MorderSub;
 import org.silver.shop.model.system.manual.ThirdPartyOrderCallBack;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MerchantBusinessContent;
 import org.silver.shop.model.system.tenant.MerchantFeeContent;
 import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
@@ -998,10 +999,14 @@ public class MpayServiceImpl implements MpayService {
 			// 电商企业名称
 			orderMap.put("ebEntName", ebEntName);
 		} else {
-			String ebEntNo2 = eport == 1 ? "C010000000537118" : "1509007917";
-			orderMap.put("ebEntNo", ebEntNo2);
+			Map<String,Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(order.getMerchant_no(), eport);
+			if(!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))){
+				return merchantRecordMap;
+			}
+			MerchantRecordInfo recordInfo  = (MerchantRecordInfo) merchantRecordMap.get(BaseCode.DATAS.toString());
+			orderMap.put("ebEntNo", recordInfo.getEbEntNo());
 			// 电商企业名称
-			orderMap.put("ebEntName", "广州银盟信息科技有限公司");
+			orderMap.put("ebEntName", recordInfo.getEbEntName());
 		}
 		orderMap.put(CIQ_ORG_CODE, customsMap.get(CIQ_ORG_CODE));
 		orderMap.put(CUSTOMS_CODE, customsMap.get(CUSTOMS_CODE));
@@ -1033,12 +1038,18 @@ public class MpayServiceImpl implements MpayService {
 			if (eport == 1) {
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				newOrderMap.put(E_PORT, 2);
+				//查询国检的备案信息
+				Map<String,Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(order.getMerchant_no(), 2);
+				if(!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))){
+					return merchantRecordMap;
+				}
+				MerchantRecordInfo recordInfo  = (MerchantRecordInfo) merchantRecordMap.get(BaseCode.DATAS.toString());
 				// 1-特殊监管区域BBC保税进口;2-保税仓库BBC保税进口;3-BC直购进口
 				newOrderMap.put("businessType", 3);
 				// 国检 电商企业编号
-				newOrderMap.put("ebEntNo", ebEntNo);
+				newOrderMap.put("ebEntNo", recordInfo.getEbEntNo());
 				// 电商企业名称
-				newOrderMap.put("ebEntName", ebEntName);
+				newOrderMap.put("ebEntName", recordInfo.getEbEntName());
 			} else if (eport == 2) {
 				// 1:广州电子口岸(目前只支持BC业务) 2:南沙智检(支持BBC业务)
 				newOrderMap.put(E_PORT, 1);
@@ -1048,9 +1059,18 @@ public class MpayServiceImpl implements MpayService {
 					// 电商企业名称
 					newOrderMap.put("ebEntName", ebEntName);
 				} else {
-					newOrderMap.put("ebEntNo", "C010000000537118");
+					//查询电子口岸的商户备案信息
+					Map<String,Object> merchantRecordMap = merchantUtils.getMerchantRecordInfo(order.getMerchant_no(), 1);
+					if(!"1".equals(merchantRecordMap.get(BaseCode.STATUS.toString()))){
+						return merchantRecordMap;
+					}
+					MerchantRecordInfo recordInfo  = (MerchantRecordInfo) merchantRecordMap.get(BaseCode.DATAS.toString());
+					// 电商企业电子口岸编码
+					newOrderMap.put("ebEntNo", recordInfo.getEbEntNo());
 					// 电商企业名称
-					newOrderMap.put("ebEntName", "广州银盟信息科技有限公司");
+					newOrderMap.put("ebEntName", recordInfo.getEbEntName());
+					//newOrderMap.put("ebEntNo", "C010000000537118");
+					//newOrderMap.put("ebEntName", "广州银盟信息科技有限公司");
 				}
 			}
 			System.out.println("------订单第二次发送----");
@@ -1133,14 +1153,15 @@ public class MpayServiceImpl implements MpayService {
 		if (order == null) {
 			return ReturnInfoUtils.errorInfo("返回第三方订单时，请求参数不能为null");
 		}
-		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(order.getMerchant_no());
-		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-			return reMerchantMap;
+		
+		Map<String, Object> reMerchantBusinessMap = merchantUtils.getMerchantBusinessInfo(order.getMerchant_no());
+		if (!"1".equals(reMerchantBusinessMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantBusinessMap;
 		}
-		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-		// 第三方标识：1-银盟(银盟商城平台),2-第三方商城平台
-		int thirdPartyFlag = merchant.getThirdPartyFlag();
-		if (thirdPartyFlag == 2) {
+		MerchantBusinessContent merchantBusiness = (MerchantBusinessContent) reMerchantBusinessMap.get(BaseCode.DATAS.toString());
+		//第三方返回类型：all-全部、order-订单、payment-支付单
+		String thirdPartyReType = merchantBusiness.getThirdPartyReType();
+		if("all".equals(thirdPartyReType) || "order".equals(thirdPartyReType)){
 			System.out.println("---------返回第三方订单信息----------");
 			Map<String, Object> item = new HashMap<>();
 			JSONObject orderJSON = new JSONObject();

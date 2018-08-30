@@ -129,20 +129,25 @@ public class ReportsController {
 		return JSONObject.fromObject(reportsTransaction.getIdCardCertification(params)).toString();
 	}
 	
-	@RequestMapping(value = "/tmpUpdate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+
+
+	
+	@RequestMapping(value = "/tmpCreate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("临时更新7月至今数据")
+	@ApiOperation("临时创建报表数据")
 	//@RequiresRoles("Manager")
 	// @RequiresPermissions("report:getSynthesisReportDetails")
-	public String tmpUpdate(HttpServletRequest req, HttpServletResponse response) {
+	public String tmpCreate(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-	
-		return JSONObject.fromObject(reportsTransaction.tmpUpdate()).toString();
+		
+		return JSONObject.fromObject(reportsTransaction.tmpCreate()).toString();
 	}
+	
+	
 }
 
 

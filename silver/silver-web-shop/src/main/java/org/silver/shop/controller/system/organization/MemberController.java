@@ -582,9 +582,12 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		HttpSession session = req.getSession();
-		String phone = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_PHONE) + "";
-		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + phone);
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		if(memberInfo == null){
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
+		}
+		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
 		if (StringEmptyUtils.isNotEmpty(redis)) {
 			JSONObject json = null;
 			try {
@@ -592,12 +595,9 @@ public class MemberController {
 			} catch (Exception e) {
 				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("缓存信息错误！")).toString();
 			}
-			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + phone);
+			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
 			// 判断前台传递的验证码是否与发送至手机的一致
 			if (smsCaptcha.trim().equals(json.get("code") + "")) {
-				// 以秒为单位，即在没有活动5分钟后，session将失效
-				session.setMaxInactiveInterval(5 * 60);
-				session.setAttribute(SET_PAYMENT_PASSWORD_UUID, UUID.randomUUID().toString());
 				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
 			}
 		}
