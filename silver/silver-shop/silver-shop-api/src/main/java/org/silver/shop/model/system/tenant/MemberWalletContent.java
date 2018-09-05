@@ -8,8 +8,8 @@ import java.util.Date;
  * 用户钱包实体类 
  */
 public class MemberWalletContent implements Serializable{
-	public MemberWalletContent(){
-		
+	public MemberWalletContent() {
+
 	}
 	/**
 	 * 
@@ -24,7 +24,10 @@ public class MemberWalletContent implements Serializable{
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private Double reserveAmount;//储备金额-暂定用于商户订单导入时选择指定的用户进行资金扣费
+	private Double reserveAmount;// 储备金额-暂定用于商户订单导入时选择指定的用户进行资金扣费
+	private double freezingFunds;// 冻结资金：用于暂存扣款的金额
+	private String verifyCode;//校验码
+	
 	public long getId() {
 		return id;
 	}
@@ -85,6 +88,22 @@ public class MemberWalletContent implements Serializable{
 	public void setReserveAmount(Double reserveAmount) {
 		this.reserveAmount = reserveAmount;
 	}
+	public double getFreezingFunds() {
+		return freezingFunds;
+	}
+	public void setFreezingFunds(double freezingFunds) {
+		this.freezingFunds = freezingFunds;
+	}
+
+	public String getVerifyCode() {
+		return verifyCode;
+	}
+	public void setVerifyCode(String verifyCode) {
+		this.verifyCode = verifyCode;
+	}
+
+
+
 
 	//Builder(建造者模式)
 	public static class Builder {
@@ -98,7 +117,8 @@ public class MemberWalletContent implements Serializable{
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
 		private double reserveAmount = 0.0;// 储备金额
-		
+		private double freezingFunds = 0;//冻结金额
+		private String verifyCode = null;// 校验码
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -145,6 +165,15 @@ public class MemberWalletContent implements Serializable{
 			this.reserveAmount = reserveAmount;
 			return this;
 		}
+		public Builder freezingFunds(double freezingFunds) {
+			this.freezingFunds = freezingFunds;
+			return this;
+		}
+		public Builder verifyCode(String verifyCode) {
+			this.verifyCode = verifyCode;
+			return this;
+		}
+		
 	}
 
 	private MemberWalletContent(Builder b) {
@@ -158,6 +187,8 @@ public class MemberWalletContent implements Serializable{
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
 		reserveAmount = b.reserveAmount;
+		freezingFunds = b.freezingFunds;
+		verifyCode = b.verifyCode;
 	}
 	
 }

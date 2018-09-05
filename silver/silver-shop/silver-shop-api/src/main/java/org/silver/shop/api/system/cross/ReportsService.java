@@ -29,8 +29,16 @@ public interface ReportsService {
 
 	/**
 	 * 临时创建报表数据
+	 * @param merchantId 商户id
 	 * @return Map
 	 */
-	public Map<String, Object> tmpCreate();
+	public Map<String, Object> tmpCreate(String merchantId);
+
+	/**
+	 * 查询已生成的综合报表数据
+	 * @param datasMap 查询参数
+	 * @return Map
+	 */
+	public Map<String, Object> getSynthesisReportInfo(Map<String, Object> datasMap);
 
 }

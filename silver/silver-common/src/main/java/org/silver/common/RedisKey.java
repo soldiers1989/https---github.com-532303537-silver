@@ -70,4 +70,13 @@ public class RedisKey {
 	 */
 	public static final String SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE = "SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE_";
 	
+	/**
+	 * 用户更换手机号码,发送手机验证码--key
+	 */
+	public static final String SHOP_KEY_MEMBER_UPDATE_PHONE_CODE = "SHOP_KEY_MEMBER_UPDATE_PHONE_CODE_";
+	
+	/**
+	 * 用户重置支付密码,发送手机验证码--key
+	 */
+	public static final String SHOP_KEY_MEMBER_RESET_PAYMENT_PASSWORD_CODE = "SHOP_KEY_MEMBER_RESET_PAYMENT_PASSWORD_CODE_";
 }

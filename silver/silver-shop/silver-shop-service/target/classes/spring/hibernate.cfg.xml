@@ -127,7 +127,7 @@
 		<mapping resource="org/silver/shop/model/system/log/MemberWalletLog.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/commerce/OrderHistoryReports.hbm.xml" />
-		<mapping resource="org/silver/shop/model/system/log/PaymentReceiptLog.hbm.xml" />
+		<mapping resource="org/silver/shop/model/system/log/TradeReceiptLog.hbm.xml" />
 		<mapping
 			resource="org/silver/shop/model/system/manual/OldManualPayment.hbm.xml" />
 		<mapping
@@ -151,6 +151,5 @@
 		<mapping resource="org/silver/shop/model/system/tenant/MerchantCounterContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/MemberBankContent.hbm.xml" />
 		<mapping resource="org/silver/shop/model/system/tenant/GoodsRiskControlContent.hbm.xml" />
-		
 	</session-factory>
 </hibernate-configuration>

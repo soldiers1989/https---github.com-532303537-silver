@@ -226,5 +226,14 @@ public interface BaseDao<T> {
 	 */
 	public long findByPropertyOrCount(Class<T> entity, Map<String, Object> paramMap, List orList);
 
-
+	/**
+	 * 根据实体与查询参数，分页查询
+	 * 
+	 * @param <T>
+	 * @param entity
+	 * @param page
+	 * @param size
+	 * @return list
+	 */
+	public List<T> find(Class<T> entity,Map<String, Object> params,  int page, int size);
 }

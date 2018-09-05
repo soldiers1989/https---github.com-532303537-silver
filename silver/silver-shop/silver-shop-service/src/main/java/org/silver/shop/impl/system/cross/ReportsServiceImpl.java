@@ -96,11 +96,11 @@ public class ReportsServiceImpl implements ReportsService {
 	 */
 	private Map<String, Object> analysisInfo(Table table) {
 		if (table == null) {
-			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
+			return ReturnInfoUtils.warnInfo();
 		} else if (!table.getRows().isEmpty()) {
 			return oldGetSynthesisReport(Transform.tableToJson(table).getJSONArray("rows"));
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无报表数据!");
+			return ReturnInfoUtils.noDatas();
 		}
 
 	}
@@ -251,18 +251,48 @@ public class ReportsServiceImpl implements ReportsService {
 	}
 
 	@Override
-	public Map<String, Object> tmpCreate() {
+	public Map<String, Object> tmpCreate(String merchantId) {
 		double fee = 0;
 		double backCoverFee = 0;
 		Map<String, Object> params = new HashMap<>();
-		List<MerchantIdCardCostContent> merchantList = reportsDao.findByProperty(MerchantIdCardCostContent.class, null,
-				0, 0);
+		// MerchantId_00074 深圳市前海九米信息技术有限公司
+		// MerchantId_00089 深圳市承和润文化传播股份有限公司
+		if(StringEmptyUtils.isNotEmpty(merchantId)){
+			params.put("merchantId", merchantId);
+		}
+		List<MerchantIdCardCostContent> merchantList = reportsDao.findByProperty(MerchantIdCardCostContent.class,
+				params, 0, 0);
 		for (MerchantIdCardCostContent idCardCost : merchantList) {
-			setFee(idCardCost, fee, backCoverFee);
+			params.clear();
+			params.put("merchantId", idCardCost.getMerchantId());
+			List<MerchantFeeContent> merchantFeeList = reportsDao.findByProperty(MerchantFeeContent.class, params, 0,
+					0);
+			if (merchantFeeList != null && !merchantFeeList.isEmpty()) {
+				// 随便取一个封底手续费即可
+				MerchantFeeContent feeContent = merchantFeeList.get(0);
+				fee = feeContent.getPlatformFee();
+				params.clear();
+				params.put("merchantId", idCardCost.getMerchantId());
+				params.put("customsCode", feeContent.getCustomsCode());
+				params.put("ciqOrgCode", feeContent.getCiqOrgCode());
+				// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+				if ("orderRecord".equals(feeContent.getType())) {
+					params.put("type", "paymentRecord");
+				} else {
+					params.put("type", "orderRecord");
+				}
+				List<MerchantFeeContent> merchantFeeList2 = reportsDao.findByProperty(MerchantFeeContent.class, params,
+						0, 0);
+				if (merchantFeeList2 != null && !merchantFeeList2.isEmpty()) {
+					MerchantFeeContent fee2 = merchantFeeList2.get(0);
+					fee = DoubleOperationUtil.add(fee, fee2.getPlatformFee());
+				}
+				backCoverFee = feeContent.getBackCoverFee();
+			}
 			System.out.println("--商户-->" + idCardCost.getMerchantName() + ";--费率-->" + fee + "--封底费-->" + backCoverFee);
 			params.clear();
-			params.put("startDate", "2018-08-01 00:00:00");
-			params.put("endDate", "2018-08-01 23:59:59");
+			params.put("startDate", "2018-09-04 00:00:00");
+			params.put("endDate", "2018-09-04 23:59:59");
 			params.put("merchantId", idCardCost.getMerchantId());
 			Table reList = reportsDao.getDailyReportDetails(params, fee, backCoverFee);
 			JSONArray arr = Transform.tableToJson(reList).getJSONArray("rows");
@@ -288,35 +318,6 @@ public class ReportsServiceImpl implements ReportsService {
 		return null;
 	}
 
-	private void setFee(MerchantIdCardCostContent idCardCost, double fee, double backCoverFee) {
-		Map<String, Object> params = new HashMap<>();
-		params.clear();
-		params.put("merchantId", idCardCost.getMerchantId());
-		List<MerchantFeeContent> merchantFeeList = reportsDao.findByProperty(MerchantFeeContent.class, params, 0, 0);
-		if (merchantFeeList != null && !merchantFeeList.isEmpty()) {
-			// 随便取一个封底手续费即可
-			MerchantFeeContent feeContent = merchantFeeList.get(0);
-			fee = feeContent.getPlatformFee();
-			params.clear();
-			params.put("merchantId", idCardCost.getMerchantId());
-			params.put("customsCode", feeContent.getCustomsCode());
-			params.put("ciqOrgCode", feeContent.getCiqOrgCode());
-			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-			if ("orderRecord".equals(feeContent.getType())) {
-				params.put("type", "paymentRecord");
-			} else {
-				params.put("type", "orderRecord");
-			}
-			List<MerchantFeeContent> merchantFeeList2 = reportsDao.findByProperty(MerchantFeeContent.class, params, 0,
-					0);
-			if (merchantFeeList2 != null && !merchantFeeList2.isEmpty()) {
-				MerchantFeeContent fee2 = merchantFeeList2.get(0);
-				fee = DoubleOperationUtil.add(fee, fee2.getPlatformFee());
-			}
-			backCoverFee = feeContent.getBackCoverFee();
-		}
-	}
-
 	private void saveReportLog(JSONObject json, JSONObject idCardJson, double platformCost, double fee,
 			double backCoverFee) {
 		SynthesisReportLog log = new SynthesisReportLog();
@@ -330,8 +331,8 @@ public class ReportsServiceImpl implements ReportsService {
 		log.setBackCoverFee(backCoverFee);
 		log.setNormalAmount(Double.parseDouble(StringUtil.replace(json.get("normalAmount") + "")));
 		log.setIdCardTotalCount(Integer.parseInt(StringUtil.replace(idCardJson.get("idCardTotalCount") + "")));
-		log.setIdCardTollCount(Integer.parseInt(StringUtil.replace(idCardJson.get("tollFlag1") + "")));
-		log.setIdCardFreeCount(Integer.parseInt(StringUtil.replace(idCardJson.get("tollFlag2") + "")));
+		log.setIdCardTollCount(Integer.parseInt(StringUtil.replace(idCardJson.get("idCardTollCount") + "")));
+		log.setIdCardFreeCount(Integer.parseInt(StringUtil.replace(idCardJson.get("idCardFreeCount") + "")));
 		log.setIdCardCost(platformCost);
 		log.setCreateDate(new Date());
 		log.setCreateBy("system");
@@ -339,5 +340,137 @@ public class ReportsServiceImpl implements ReportsService {
 			System.out.println("-----保存失败！----");
 		}
 		System.out.println("--==保存成功=======");
+	}
+
+	@Override
+	public Map<String, Object> getSynthesisReportInfo(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为空!");
+		}
+		String type = datasMap.get("type") + "";
+		datasMap.remove("type");
+		switch (type) {
+		case "day":
+			return getDayReport(datasMap);
+		case "week":
+
+			break;
+		case "month":
+			return getMonthReport(datasMap);
+		default:
+			return getReport(datasMap);
+		}
+		return null;
+	}
+
+	/**
+	 * 自定义时间范围查询报表数据
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	private Map<String, Object> getReport(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("获取月份报表时，请求参数不能为null");
+		}
+		String startDate = datasMap.get("startDate") + "";
+		if (DateUtil.parseDate(startDate, "yyyy-MM-dd HH:mm:ss") == null) {
+			return ReturnInfoUtils.errorInfo("开始时间错误！");
+		}
+		String endDate = datasMap.get("endDate") + "";
+		if (DateUtil.parseDate(endDate, "yyyy-MM-dd HH:mm:ss") == null) {
+			return ReturnInfoUtils.errorInfo("结束时间错误！");
+		}
+		datasMap.put("startDate", DateUtil.parseDate(startDate, "yyyy-MM-dd HH:mm:ss"));
+		datasMap.put("endDate", DateUtil.parseDate(endDate, "yyyy-MM-dd HH:mm:ss"));
+		return getReportInfo(datasMap, 0, 0);
+	}
+
+	/**
+	 * 根据商户id与日期、查询商户历史报表数据
+	 * @param datasMap  日期+商户id参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
+	 */
+	private Map<String, Object> getReportInfo(Map<String, Object> datasMap, int page, int size) {
+		List<SynthesisReportLog> reList = reportsDao.getReportInfo(datasMap, page, size);
+		if (reList == null) {
+			return ReturnInfoUtils.warnInfo();
+		} else if (reList.isEmpty()) {
+			return ReturnInfoUtils.noDatas();
+		} else {
+			return ReturnInfoUtils.successDataInfo(reList);
+		}
+	}
+
+	/**
+	 * 获取月报表-历史记录
+	 * 
+	 * @param datasMap
+	 * @return
+	 */
+	private Map<String, Object> getMonthReport(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("获取月份报表时，请求参数不能为null");
+		}
+		String strDate = datasMap.get("date") + "";
+		if (strDate.length() != 7 || DateUtil.parseDate(strDate, "yyyy-MM") == null) {
+			return ReturnInfoUtils.errorInfo("日期错误！");
+		}
+		Date date = DateUtil.parseDate(strDate + "-01 00:00:00", "yyyy-MM-dd HH:mm:ss");
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 00);
+		calendar.set(Calendar.MINUTE, 00);
+		calendar.set(Calendar.SECOND, 00);
+		datasMap.put("startDate", calendar.getTime());
+		calendar.clear();
+		calendar.setTime(date);
+		// 获取当前月的最后一天
+		calendar.add(Calendar.MONTH, 1);
+		calendar.set(Calendar.DAY_OF_MONTH, 0);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		datasMap.put("endDate", calendar.getTime());
+		return getReportInfo(datasMap, 0, 0);
+	}
+
+	/**
+	 * 获取指定某一天的历史报表数据
+	 * 
+	 * @param datasMap
+	 *            查询参数
+	 * @return Map
+	 */
+	private Map<String, Object> getDayReport(Map<String, Object> datasMap) {
+		if (datasMap == null || datasMap.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("获取天报表时，请求参数不能为null");
+		}
+		String strDate = datasMap.get("date") + "";
+		if (strDate.length() != 10 || DateUtil.parseDate(strDate, "yyyy-MM-dd") == null) {
+			return ReturnInfoUtils.errorInfo("日期错误！");
+		}
+		// 判断查询日期是否为今天
+		if (DateUtil.isThisTime(DateUtil.parseDate(strDate, "yyyy-MM-dd").getTime(), "yyyy-MM-dd")) {
+			// 当查询时间为今天时，则查询实时数据
+			return getDayReportInfo(datasMap);
+		}
+		Date date = DateUtil.parseDate(strDate + " 00:00:00", "yyyy-MM-dd HH:mm:ss");
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 00);
+		calendar.set(Calendar.MINUTE, 00);
+		calendar.set(Calendar.SECOND, 00);
+		datasMap.put("date", calendar.getTime());
+		List<SynthesisReportLog> reportList = reportsDao.findByProperty(SynthesisReportLog.class, datasMap, 0, 0);
+		if (reportList == null) {
+			return ReturnInfoUtils.warnInfo();
+		} else if (reportList.isEmpty()) {
+			return ReturnInfoUtils.noDatas();
+		} else {
+			return ReturnInfoUtils.successDataInfo(reportList);
+		}
 	}
 }

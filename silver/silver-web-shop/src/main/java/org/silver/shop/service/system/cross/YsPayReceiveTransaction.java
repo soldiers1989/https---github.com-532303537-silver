@@ -32,5 +32,10 @@ public class YsPayReceiveTransaction {
 		return null;
 	}
 
+	//
+	public Map<String, Object> memberWithdraw(Map datasMap) {
+		return ysPayReceiveService.memberWithdraw(datasMap);
+	}
+
 	
 }

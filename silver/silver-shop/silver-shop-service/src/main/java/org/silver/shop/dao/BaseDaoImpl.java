@@ -677,6 +677,61 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		}
 	}
 
+	@Override
+	public List<T> find(Class entity, Map params,int page, int size) {
+		Session session = null;
+//		String entName = entity.getSimpleName();
+//		try {
+//			session = getSession();
+//			StringBuilder hql = new StringBuilder(" from " + entName + " model WHERE");
+//			List<Object> list = new ArrayList<>();
+//			hql.append("  ");
+//			if (params != null && params.size() > 0) {
+//				String property;
+//				Iterator<String> is = params.keySet().iterator();
+//				while (is.hasNext()) {
+//					property = is.next();
+//					if ("tradeNoFlag".equals(property)) {
+//						hql.append("model.trade_no " + params.get(property) + " AND ");
+//						continue;
+//					} else {
+//						appendDate(hql, property);
+//					}
+//					list.add(params.get(property));
+//				}
+//			}
+//			if (blurryMap != null && !blurryMap.isEmpty()) {
+//				String property;
+//				Iterator<String> is = blurryMap.keySet().iterator();
+//				while (is.hasNext()) {
+//					property = is.next();
+//					hql.append("model." + property + " LIKE " + " ? " + " and ");
+//					list.add("%" + blurryMap.get(property) + "%");
+//				}
+//			}
+//			hql.append(" 1=1 Order By id DESC");
+//			Query query = session.createQuery(hql.toString());
+//			for (int i = 0; i < list.size(); i++) {
+//				query.setParameter(i, list.get(i));
+//			}
+//			if (page > 0 && size > 0) {
+//				query.setFirstResult((page - 1) * size).setMaxResults(size);
+//			}
+//			List<Object> results = query.list();
+//			session.close();
+//			return results;
+//		} catch (Exception re) {
+//			re.printStackTrace();
+//			return null;
+//		} finally {
+//			if (session != null && session.isOpen()) {
+//				session.close();
+//			}
+//		}
+		return null;
+	}
+	
+	
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> params = new HashMap<>();
@@ -696,6 +751,8 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		List<Member> l = bd.findByProperty(Member.class, params, 0, 0);
 		
 	}
+
+	
 
 	
 }

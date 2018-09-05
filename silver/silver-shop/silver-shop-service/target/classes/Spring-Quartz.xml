@@ -132,7 +132,8 @@
 	<bean id="createReportBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="createReportQtzJobMethod"></property>
-		<property name="cronExpression" value="0/10 * * * * ?"></property>
+		<!-- 生成报表每日凌晨30分启动 -->
+		<property name="cronExpression" value="0 0 1 * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
 

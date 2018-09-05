@@ -27,7 +27,7 @@ public enum BaseCode {
 	 */
 	DATAS("datas"),
 	/**
-	 * 错误
+	 * 错误代码
 	 */
 	ERROR_CODE("errorCode");
 	

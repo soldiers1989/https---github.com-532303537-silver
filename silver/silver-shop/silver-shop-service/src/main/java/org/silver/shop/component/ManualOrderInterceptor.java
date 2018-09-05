@@ -206,13 +206,13 @@ public class ManualOrderInterceptor {
 		} else if (orderList.isEmpty()) {// 当需要订单的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
-		
+
 		Map<String, Object> reOrderMap = getOrderDetails(orderList, backCoverFee);
 		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderMap;
 		}
 		List<JSONObject> jsonList = (List<JSONObject>) reOrderMap.get(BaseCode.DATAS.toString());
-		//总计手续费
+		// 总计手续费
 		double totalFee = Double.parseDouble(reOrderMap.get("totalFee") + "");
 		// 钱包余额
 		double balance = merchantWallet.getBalance();
@@ -249,7 +249,7 @@ public class ManualOrderInterceptor {
 			return reWalletLogMap;
 		}
 		//
-		datas.put("totalAmountPaid",reOrderMap.get("orderTotalAoumt") );
+		datas.put("totalAmountPaid", reOrderMap.get("orderTotalAoumt"));
 		// 代理商收取订单申报服务费
 		return agentChargeFee(merchant.getAgentParentId(), totalFee, datas);
 	}
@@ -270,13 +270,13 @@ public class ManualOrderInterceptor {
 		List<JSONObject> jsonList = new ArrayList<>();
 		JSONObject idcardJSON = null;
 		Map<String, Object> params = new HashMap<>();
-		//总计服务费
+		// 总计服务费
 		double totalFee = 0;
 		// 服务费
 		double fee = 0;
 		// 订单服务费率
 		double rate = 0;
-		//订单总金额
+		// 订单总金额
 		double orderTotalAoumt = 0;
 		for (int i = 0; i < orderList.size(); i++) {
 			String orderId = orderList.get(i) + "";
@@ -293,7 +293,7 @@ public class ManualOrderInterceptor {
 				int backCoverFlag = order.getBackCoverFlag();
 				// 封底标识：1-不封底计算、2-封底计算
 				if (backCoverFlag == 1) {
-					fee =DoubleOperationUtil.mul(amount, rate);
+					fee = DoubleOperationUtil.mul(amount, rate);
 				} else if (backCoverFlag == 2) {
 					//
 					double tmpFee = DoubleOperationUtil.mul(amount, rate);
@@ -399,19 +399,17 @@ public class ManualOrderInterceptor {
 			params.put("order_id", orderId);
 			List<Morder> reList = morderDao.findByProperty(Morder.class, params, 0, 0);
 			if (reList != null && !reList.isEmpty()) {
-				for (Morder order : reList) {
-					if (cacheMap.containsKey(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim())) {
-						if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(),
-								order.getOrder_id(), order.getOrderDocName(), order.getOrderDocId(), 0, 2,
-								"一次操作,重复身份证,不计费！")) {
-							logger.error(orderId + "--保存实名认证流水日志失败--");
-						}
-					} else {
-						getIdCardInfo(order, jsonList, fee, newList);
-						// 添加进缓存
-						cacheMap.put(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim(),
-								order.getOrder_id());
+				Morder order = reList.get(0);
+				if (cacheMap.containsKey(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim())) {
+					if (!addIdCardCertificationLog(order.getMerchant_no(), order.getCreate_by(), order.getOrder_id(),
+							order.getOrderDocName(), order.getOrderDocId(), 0, 2, "一次操作,重复身份证,不计费！")) {
+						logger.error(orderId + "--保存实名认证流水日志失败--");
 					}
+				} else {
+					getIdCardInfo(order, jsonList, fee, newList);
+					// 添加进缓存
+					cacheMap.put(order.getOrderDocName().trim() + "_" + order.getOrderDocId().trim(),
+							order.getOrder_id());
 				}
 			}
 		}
@@ -584,6 +582,10 @@ public class ManualOrderInterceptor {
 		datas.put("status", "success");
 		// 添加商户钱包流水日志
 		return merchantWalletLogService.addWalletLog(datas);
+	}
+
+	void add(String id, double total) {
+
 	}
 
 	/**

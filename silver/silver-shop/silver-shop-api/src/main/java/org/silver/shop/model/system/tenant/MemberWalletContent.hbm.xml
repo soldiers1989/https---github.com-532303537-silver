@@ -22,7 +22,26 @@
 			<column name="balance" />
 		</property>
 		<property name="reserveAmount" type="java.lang.Double">
-			<column name="reserveAmount" default="0"/>
+			<column name="reserveAmount" default="0" />
 		</property>
+		<property name="freezingFunds" type="java.lang.Double">
+			<column name="freezingFunds" default="0" />
+		</property>
+		<property name="verifyCode" type="java.lang.String">
+			<column name="verifyCode" not-null="true" />
+		</property>
+		
+		 <property name="createBy" type="java.lang.String">
+            <column name="createBy" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="createDate" />
+        </property>
+        <property name="updateBy" type="java.lang.String">
+            <column name="updateBy" />
+        </property>
+        <property name="updateDate" type="java.util.Date">
+            <column name="updateDate" />
+        </property>
 	</class>
 </hibernate-mapping>

@@ -26,6 +26,7 @@ import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.service.system.organization.MemberTransaction;
 import org.silver.shop.utils.CusAccessObjectUtil;
+import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
 import org.silver.util.PhoneUtils;
@@ -63,7 +64,7 @@ public class MemberController {
 	 * 用户重置登录密码时缓存UUID
 	 */
 	private static final String RETRIEVE_LOGIN_PASSWORD_UUID = "RETRIEVE_LOGIN_PASSWORD_UUID";
-	
+
 	/**
 	 * 用户查询登录密码时缓存的用户id
 	 */
@@ -77,9 +78,19 @@ public class MemberController {
 	 * 用户设置支付密码时缓存UUID
 	 */
 	private static final String SET_PAYMENT_PASSWORD_UUID = "SET_PAYMENT_PASSWORD_UUID";
-	
+
 	/**
-	 * 
+	 * 用户重置交易密码时缓存UUID
+	 */
+	private static final String RETRIEVE_PAYMENT_PASSWORD_UUID = "RETRIEVE_PAYMENT_PASSWORD_UUID";
+
+	/**
+	 * 用户重置交易密码时缓存身份证号码
+	 */
+	private static final String RETRIEVE_PAYMENT_PASSWORD_ID_NUMBER = "RETRIEVE_PAYMENT_PASSWORD_ID_NUMBER";
+
+	/**
+	 * 用户登录信息
 	 */
 	private static final String USER_LOGIN_TYPE = LoginType.MEMBER.toString();
 
@@ -540,8 +551,7 @@ public class MemberController {
 	@ResponseBody
 	@ApiOperation("用户设置支付密码时-发送短信验证码")
 	@RequiresRoles("Member")
-	public String setPayPassSendCaptchaCode(HttpServletRequest req, HttpServletResponse response,
-			String captcha) {
+	public String setPayPassSendCaptchaCode(HttpServletRequest req, HttpServletResponse response, String captcha) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -552,7 +562,7 @@ public class MemberController {
 		}
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		if(memberInfo == null){
+		if (memberInfo == null) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
 		}
 		HttpSession session = req.getSession();
@@ -570,13 +580,11 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("手机号码或验证码错误,请重新输入!")).toString();
 	}
-	
-	
+
 	@RequestMapping(value = "/setPayPassVerifyIdentidy", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("用户设置支付密码-验证身份信息")
-	public String setPayPassVerifyIdentidy(HttpServletRequest req, HttpServletResponse response,
-			String smsCaptcha) {
+	public String setPayPassVerifyIdentidy(HttpServletRequest req, HttpServletResponse response, String smsCaptcha) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
@@ -584,7 +592,7 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		if(memberInfo == null){
+		if (memberInfo == null) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
 		}
 		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_SET_PAYMENT_PASSWORD_CODE + memberInfo.getMemberTel());
@@ -603,9 +611,7 @@ public class MemberController {
 		}
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
 	}
-	
-	
-	
+
 	/**
 	 * 用户修改支付密码时，发送短信验证码
 	 * 
@@ -630,7 +636,7 @@ public class MemberController {
 		}
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		if(memberInfo == null){
+		if (memberInfo == null) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("登录超时！")).toString();
 		}
 		HttpSession session = req.getSession();
@@ -765,23 +771,14 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
 		String phone = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_PHONE) + "";
-		String redis = JedisUtil.get(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE + phone);
-		if (StringEmptyUtils.isNotEmpty(redis)) {
-			JSONObject json = null;
-			try {
-				json = JSONObject.fromObject(redis);
-			} catch (Exception e) {
-				return JSONObject.fromObject(ReturnInfoUtils.errorInfo("缓存信息错误！")).toString();
-			}
-			JedisUtil.del(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE + phone);
-			// 判断前台传递的验证码是否与发送至手机的一致
-			if (smsCaptcha.trim().equals(json.get("code") + "")) {
-				// 以秒为单位，即在没有活动5分钟后，session将失效
-				session.setMaxInactiveInterval(5 * 60);
-				session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
-				return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
-			}
+		
+		Map<String, Object> reRedisMap = SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE,
+				phone, smsCaptcha);
+		if (!"1".equals(reRedisMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reRedisMap).toString();
 		}
+		session.setMaxInactiveInterval(5 * 60);
+		session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
 	}
 
@@ -799,8 +796,136 @@ public class MemberController {
 		if (StringEmptyUtils.isEmpty(key)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
 		}
+		//获取用户第一步操作中用户id
 		String memberId = String.valueOf(session.getAttribute(RETRIEVE_LOGIN_PASSWORD_MEMBER_ID));
 		return JSONObject.fromObject(memberTransaction.resetPassword(memberId, loginPassword)).toString();
+	}
+
+	@RequestMapping(value = "/updatePhoneSendVerifyCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户更换手机号码-发送短信验证码")
+	public String updatePhoneSendVerifyCode(HttpServletRequest req, HttpServletResponse response, String oldPhone,
+			String idNumber, String captcha, String newPhone) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误！")).toString();
+		}
+		if (!PhoneUtils.isPhone(newPhone)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("新手机号码错误！", "502")).toString();
+		}
+		Map<String, Object> reMap = memberTransaction.getOldPhone(oldPhone, idNumber);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reMap).toString();
+		}
+		return JSONObject.fromObject(SendMsg.sendVerificationCode(newPhone, RedisKey.SHOP_KEY_MEMBER_UPDATE_PHONE_CODE))
+				.toString();
+	}
+
+	@RequestMapping(value = "/updatePhone", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户更换手机号码")
+	public String updatePhone(HttpServletRequest req, HttpServletResponse response, String smsCaptcha, String oldPhone,
+			String idNumber, String newPhone) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> reRedisMap = SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MEMBER_UPDATE_PHONE_CODE, newPhone,
+				smsCaptcha);
+		if (!"1".equals(reRedisMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reRedisMap).toString();
+		}
+		return JSONObject.fromObject(memberTransaction.updatePhone(oldPhone, idNumber, newPhone)).toString();
+	}
+
+	@RequestMapping(value = "/updatePayPwd", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户修改交易密码")
+	public String updatePayPwd(HttpServletRequest req, HttpServletResponse response, String newPayPassword,
+			String oldPayPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(memberTransaction.updatePayPwd(newPayPassword, oldPayPassword)).toString();
+	}
+
+	@RequestMapping(value = "/resetPayPwdSendVerifyCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户重置交易密码-发送短信验证码")
+	public String updatePayPwdSendVerifyCode(HttpServletRequest req, HttpServletResponse response, String idNumber,
+			String phone, String captcha) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误！")).toString();
+		}
+		Map<String, Object> reCheckMap = memberTransaction.getOldPhone(phone ,idNumber);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reCheckMap).toString();
+		}
+		return JSONObject
+				.fromObject(SendMsg.sendVerificationCode(phone, RedisKey.SHOP_KEY_MEMBER_RESET_PAYMENT_PASSWORD_CODE))
+				.toString();
+	}
+
+	@RequestMapping(value = "/resetPayPwdVerifyIdentidy", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户重置支付密码-验证身份信息")
+	public String updatePayPwdVerifyIdentidy(HttpServletRequest req, HttpServletResponse response, String smsCaptcha,
+			String idNumber, String phone) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		Map<String, Object> reCheckMap = memberTransaction.getOldPhone(phone ,idNumber);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reCheckMap).toString();
+		}
+		Map<String, Object> reRedisMap = SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MEMBER_RESET_PAYMENT_PASSWORD_CODE,
+				phone, smsCaptcha);
+		if (!"1".equals(reRedisMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reRedisMap).toString();
+		}
+		// 以秒为单位，即在没有活动5分钟后，session将失效
+		session.setMaxInactiveInterval(5 * 60);
+		session.setAttribute(RETRIEVE_PAYMENT_PASSWORD_UUID, UUID.randomUUID().toString());
+		session.setAttribute(RETRIEVE_PAYMENT_PASSWORD_ID_NUMBER, idNumber);
+		
+		return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+	}
+
+	@RequestMapping(value = "/resetPayPwd", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("用户重置交易密码")
+	public String resetPayPwd(HttpServletRequest req, HttpServletResponse response, String newPayPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String uuid = session.getAttribute(RETRIEVE_PAYMENT_PASSWORD_UUID) + "";
+		if (StringEmptyUtils.isEmpty(uuid)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
+		}
+		String idNumber = session.getAttribute(RETRIEVE_PAYMENT_PASSWORD_ID_NUMBER) + "";
+		return JSONObject.fromObject(memberTransaction.resetPayPwd(newPayPassword,idNumber)).toString();
 	}
 
 }

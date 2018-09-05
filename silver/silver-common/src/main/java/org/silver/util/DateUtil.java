@@ -410,11 +410,11 @@ public final class DateUtil {
 		java.util.Random random = new java.util.Random();// 定义随机类
 		int result = random.nextInt(5);// 返回[0,10)集合中的整数，注意不包括10
 		Date dNow = new Date(); // 当前时间
-		Calendar calendar2 = Calendar.getInstance(); // 得到日历
+		Calendar calendar2 = Calendar.getInstance(); 
 		calendar2.setTime(dNow);// 将当前时间赋给日历
 		calendar2.add(Calendar.DATE, -2);
 		dNow = calendar2.getTime();//
-		Calendar calendar = Calendar.getInstance(); // 得到日历
+		Calendar calendar = Calendar.getInstance(); 
 		calendar.setTime(dNow);// 把当前时间赋给日历
 		calendar.add(Calendar.DATE, -(result + 2));
 		calendar.setTime(calendar.getTime());
@@ -424,7 +424,9 @@ public final class DateUtil {
 
 	/**
 	 * 根据订单日期,生成支付单日期,格式为订单日期之上随机增加5分钟与60秒
-	 * @param orderDate 订单日期格式：yyyyMMddhhmmss
+	 * 
+	 * @param orderDate
+	 *            订单日期格式：yyyyMMddhhmmss
 	 * @return Date 支付单日期
 	 */
 	public static final Date randomPaymentDate(String orderDate) {
@@ -437,5 +439,69 @@ public final class DateUtil {
 		nowTime.add(Calendar.MINUTE, (minute + 1));
 		nowTime.add(Calendar.SECOND, (second + 1));
 		return nowTime.getTime();
+	}
+
+	/**
+	 * 判断日期是否是本日，本周，本月
+	 * 
+	 * @param time
+	 *            需要判断的时间
+	 * @param pattern
+	 *            日期格式
+	 * @return boolean
+	 */
+	public static boolean isThisTime(long time, String pattern) {
+		Date date = new Date(time);
+		SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+		String param = sdf.format(date);// 参数时间
+		String now = sdf.format(new Date());// 当前时间
+		return param.equals(now);
+	}
+
+	/**
+	 * 根据日期字符串获取前一天的起始时间
+	 * @param dateStr 日期字符串-格式：yyyy-MM-dd
+	 * @return Date 前一天的起始时间
+	 */
+	public static Date getStartTime(String dateStr) {
+		Calendar calendar = Calendar.getInstance();
+		Date date = parseDate(dateStr, "yyyy-MM-dd");
+		if (date == null) {
+			return date;
+		}
+		calendar.setTime(date);
+		calendar.add(Calendar.DAY_OF_MONTH, -1);
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
+	/**
+	 * 根据日期字符串获取前一天的结束时间
+	 * @param dateStr 日期字符串-格式：yyyy-MM-dd
+	 * @return Date 前一天的结束时间
+	 */
+	public static Date getEndTime(String dateStr) {
+		Calendar calendar = Calendar.getInstance();
+		Date date = parseDate(dateStr, "yyyy-MM-dd");
+		if (date == null) {
+			return date;
+		}
+		calendar.setTime(date);
+		calendar.add(Calendar.DAY_OF_MONTH, -1);
+		calendar.set(Calendar.HOUR, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	public static void main(String[] args) {
+		System.out.println("--->>"+new Date().toString());
+		
+		Date date = new Date();
+		System.out.println("---->>>" + format(getEndTime(format(date, "yyyy-MM-dd HH:mm:ss")), "yyyy-MM-dd HH:mm:ss"));
 	}
 }

@@ -9,7 +9,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
-import org.silver.shop.api.system.log.PaymentReceiptLogService;
+import org.silver.shop.api.system.log.TradeReceiptLogService;
 import org.silver.shop.api.system.tenant.MerchantBankInfoService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.model.system.organization.Manager;
@@ -30,7 +30,7 @@ public class MerchantWalletTransaction {
 	@Reference
 	private MerchantBankInfoService merchantBankInfoService;
 	@Reference
-	private PaymentReceiptLogService paymentReceiptLogService;
+	private TradeReceiptLogService tradeReceiptLogService;
 	@Autowired
 	private FileUpLoadService fileUpLoadService;
 
@@ -67,7 +67,7 @@ public class MerchantWalletTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
-		return paymentReceiptLogService.addMerchantLog(merchantId, amount, serialNo, managerName, type);
+		return tradeReceiptLogService.addMerchantLog(merchantId, amount, serialNo, managerName, type);
 	}
 
 	/**

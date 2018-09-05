@@ -201,4 +201,35 @@ public class YsPayReceiveController {
 		return "success";
 	}
 	
+	
+	/**
+	 * 用户发起资金提现后，银盛返回异步回调
+	 * <li>2018-09-05 暂定操作储备资金</li>
+	 * @param req
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "/memberWithdraw", produces = "application/json; charset=utf-8")
+	@ResponseBody
+	public String memberWithdraw(HttpServletRequest req, HttpServletResponse response) {
+		Map datasMap = new HashMap<>();
+		Enumeration<String> iskeys = req.getParameterNames();
+		while (iskeys.hasMoreElements()) {
+			String key = iskeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		logger.error("--用户提现回调参数-->" + datasMap.toString());
+		if (ApipaySubmit.verifySign(req, datasMap)) {
+			Map<String, Object> reMap = ysPayReceiveTransaction.memberWithdraw(datasMap);
+			if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+				logger.error("-用户提现失败-->" + reMap.get(BaseCode.MSG.toString()));
+			}
+		} else {
+			System.out.println("--银盛支付回调签名认证不通过！----");
+			logger.error("-银盛支付回调签名认证不通过！-");
+		}
+		return "success";
+	}
+	
 }

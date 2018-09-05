@@ -3,7 +3,7 @@
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 <!-- Generated 2018-6-19 14:43:35 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.log.PaymentReceiptLog" table="ym_shop_sys_payment_receipt_log">
+    <class name="org.silver.shop.model.system.log.TradeReceiptLog" table="ym_shop_sys_trade_receipt_log">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
@@ -52,6 +52,13 @@
         </property>
           <property name="notifyTime" type="java.util.Date">
             <column name="notifyTime" />
+        </property>
+        
+        <property name="note" type="java.lang.String">
+            <column name="note" />
+        </property>
+        <property name="sourceType" type="java.lang.String">
+            <column name="sourceType" />
         </property>
     </class>
 </hibernate-mapping>

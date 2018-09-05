@@ -91,6 +91,7 @@ public class IdCardController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		return JSONObject.fromObject(idCardTransaction.deleteDuplicateIdCardInfo()).toString();
 	}
+	
 	@RequestMapping(value = "/temPush", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("-测试三要素认证")

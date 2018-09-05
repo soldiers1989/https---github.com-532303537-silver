@@ -238,7 +238,7 @@ public class MemberServiceImpl implements MemberService {
 	private Map<String, Object> checkMemberIdCardExist(String memberIdCard) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("memberIdCard", memberIdCard);
-		
+
 		List<Member> reList = memberDao.findByProperty(Member.class, paramMap, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙!");
@@ -612,10 +612,10 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
 		// 支付密码只能是数字，并且是6位数
-		String regex = "^[0-9]{6}$";
-		if (!paymentPassword.matches(regex)) {
-			return ReturnInfoUtils.errorInfo("支付密码只能是数字，且长度为6位");
+		if (!paymentPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
 		}
+
 		MD5 md = new MD5();
 		memberInfo.setPaymentPassword(md.getMD5ofStr(paymentPassword));
 		memberInfo.setUpdateDate(new Date());
@@ -651,5 +651,66 @@ public class MemberServiceImpl implements MemberService {
 		return ReturnInfoUtils.successDataInfo(member);
 	}
 
+	@Override
+	public Map<String, Object> updatePhone(String memberId, String phone) {
+		Map<String, Object> reMap = memberService.getMemberInfo(memberId);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		Member member = (Member) reMap.get(BaseCode.DATAS.toString());
+		if (!PhoneUtils.isPhone(phone)) {
+			return ReturnInfoUtils.errorInfo("手机号码错误！");
+		}
+		member.setMemberTel(phone);
+		return updateMemberInfo(member);
+	}
+
+	@Override
+	public Map<String, Object> updateMemberInfo(Member entity) {
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("更新实体信息，参数不能为null");
+		}
+		entity.setUpdateDate(new Date());
+		if (memberDao.update(entity)) {
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("更新失败，服务器繁忙！");
+	}
+
+	@Override
+	public Map<String, Object> updatePayPwd(String memberId, String newPayPassword, String oldPayPassword) {
+		Map<String, Object> reMap = memberService.getMemberInfo(memberId);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		Member member = (Member) reMap.get(BaseCode.DATAS.toString());
+		MD5 md5 = new MD5();
+		if (!member.getPaymentPassword().equals(md5.getMD5ofStr(oldPayPassword))) {
+			return ReturnInfoUtils.errorInfo("原交易密码错误！");
+		}
+		member.setPaymentPassword(md5.getMD5ofStr(newPayPassword));
+		return updateMemberInfo(member);
+	}
+
+	@Override
+	public Map<String, Object> getInfo(Map<String, Object> params, int page, int size) {
+		List<Member> reList = memberDao.findByProperty(Member.class, params, page, size);
+		if (reList == null) {
+			return ReturnInfoUtils.warnInfo();
+		} else if (!reList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(reList);
+		} else {
+			return ReturnInfoUtils.noDatas();
+		}
+	}
+
+	@Override
+	public Map<String, Object> updatePayPwd(String newPayPassword) {
+		
+		if (!newPayPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
+		}
+		return null;
+	}
 
 }

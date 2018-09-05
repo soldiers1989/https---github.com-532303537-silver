@@ -149,9 +149,44 @@ public class SendMsg {
 			e.printStackTrace();
 			return ReturnInfoUtils.errorInfo("发送短信验证码失败！");
 		}
-
 	}
 
+	/**
+	 * 校验缓存中的短信验证码是否正确
+	 * 
+	 * @param redisKey
+	 *            缓存键
+	 * @param phone
+	 *            手机号码
+	 * @param smsCaptcha
+	 *            短信验证码
+	 * @return Map
+	 */
+	public static  Map<String, Object> checkRedisInfo(String redisKey, String phone, String smsCaptcha) {
+		if(!PhoneUtils.isPhone(phone)){
+			return ReturnInfoUtils.errorInfo("手机号码错误！");
+		}
+		String redis = JedisUtil.get(redisKey + phone);
+		if (StringEmptyUtils.isNotEmpty(redis)) {
+			JSONObject json = null;
+			try {
+				json = JSONObject.fromObject(redis);
+			} catch (Exception e) {
+				return ReturnInfoUtils.errorInfo("缓存信息错误！");
+			}
+			// 判断前台传递的验证码是否与发送至手机的一致
+			if (smsCaptcha.trim().equals(json.get("code") + "")) {
+				// 当缓存中的短信验证码使用过一次后，则进行删除
+				JedisUtil.del(redisKey + phone);
+				return ReturnInfoUtils.successInfo();
+			} else {
+				return ReturnInfoUtils.errorInfo("短信验证码错误！","500");
+			}
+		} else {
+			return ReturnInfoUtils.errorInfo("短信验证码错误！","500");
+		}
+	}
+	
 	public static void main(String[] args) {
 //		try {
 //			System.out.println(SendMsg.sendMsg("13533527688", "【广州银盟信息科技有限公司】验证码为"));

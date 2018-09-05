@@ -37,6 +37,7 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 			return reMap;
 		}
 		Map<String, Object> paramMap = (Map<String, Object>) reMap.get("param");
+		paramMap.put("deleteFlag", 0);
 		List<IdCardCertificationLog> idCardlist = ikdCardCertificationlogsDao
 				.findByPropertyLike(IdCardCertificationLog.class, paramMap, null, page, size);
 		long count = ikdCardCertificationlogsDao.findByPropertyLikeCount(IdCardCertificationLog.class, paramMap, null);
@@ -58,14 +59,16 @@ public class IdCardCertificationlogsServiceImpl implements IdCardCertificationlo
 		// MerchantId_00076 上海锋赞实业有限公司
 		// MerchantId_00063 广州颜悦化妆品有限公司
 		// MerchantId_00057 深圳市前海爱库
-		item.put("merchantId", "MerchantId_00057");
+		// MerchantId_00074 深圳市前海九米信息技术有限公司
+		// MerchantId_00089 深圳市承和润文化传播股份有限公司
+		item.put("merchantId", "MerchantId_00089");
 		List<Merchant> merchantlist = ikdCardCertificationlogsDao.findByProperty(Merchant.class, item, 0, 0);
 		Map<String, Object> params = null;
 		Map<String, Object> cacheMap = null;
 		for (Merchant merchant : merchantlist) {
 			params = new HashMap<>();
-			String startTime = "2018-08-17 00:00:05";
-			String endTime = "2018-08-17 23:00:00";
+			String startTime = "2018-08-01 00:00:05";
+			String endTime = "2018-08-31 23:00:00";
 			params.put("startTime", DateUtil.parseDate(startTime, "yyyy-MM-dd HH:mm:ss"));
 			params.put("endTime", DateUtil.parseDate(endTime, "yyyy-MM-dd HH:mm:ss"));
 			params.put("merchant_no", merchant.getMerchantId());

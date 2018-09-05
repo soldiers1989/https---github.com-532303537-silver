@@ -1,6 +1,7 @@
 package org.silver.shop.service.system.organization;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import org.silver.shop.model.system.organization.Member;
 import org.silver.util.IdcardValidator;
 import org.silver.util.JedisUtil;
 import org.silver.util.MD5;
+import org.silver.util.PhoneUtils;
 import org.silver.util.RedisUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerializeUtil;
@@ -191,12 +193,12 @@ public class MemberTransaction {
 		member.setMemberTel(telTop + "****" + telEnd);
 		// 切割真实姓名
 		StringBuilder name = new StringBuilder(member.getMemberIdCardName());
-		member.setMemberIdCardName(name.replace(0, 1, "*").toString());
+		member.setMemberIdCardName(name.replace(1, 2, "*").toString());
 		String idcard = member.getMemberIdCard();
 		// 切割身份证号码
-		String idTop = idcard.substring(0, 2);
+		String idTop = idcard.substring(0, 4);
 		String idEnd = idcard.substring(idcard.length() - 4, idcard.length());
-		member.setMemberIdCard(idTop + "************" + idEnd);
+		member.setMemberIdCard(idTop + "**********" + idEnd);
 		member.setLoginPass("");
 		// 设置支付密码串
 		if (StringEmptyUtils.isNotEmpty(member.getPaymentPassword())) {
@@ -207,16 +209,98 @@ public class MemberTransaction {
 		return ReturnInfoUtils.successDataInfo(member);
 	}
 
-	public Map<String,Object> retrieveLoginPassword(String accountName) {
+	public Map<String, Object> retrieveLoginPassword(String accountName) {
 		return memberService.retrieveLoginPassword(accountName);
 	}
 
 	public Object resetPassword(String memberId, String loginPassword) {
-		Map<String,Object> reMap = memberService.getMemberInfo(memberId);
-		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reMap = memberService.getMemberInfo(memberId);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
 		Member member = (Member) reMap.get(BaseCode.DATAS.toString());
 		return memberService.updateLoginPassword(member, loginPassword);
+	}
+
+	//
+	public Map<String, Object> updatePhone(String oldPhone, String idNumber, String newPhone) {
+		Map<String, Object> reCheckMap = getOldPhone(oldPhone, idNumber);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return reCheckMap;
+		}
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberService.updatePhone(memberInfo.getMemberId(), newPhone);
+	}
+
+	//
+	public Map<String, Object> updatePayPwd(String newPayPassword, String oldPayPassword) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		return memberService.updatePayPwd(memberInfo.getMemberId(), newPayPassword, oldPayPassword);
+	}
+
+	/**
+	 * 根据登录的会员id，查询会员实时信息,并且进行原手机号码与身份证验证
+	 * 
+	 * @param oldPhone
+	 *            原手机号码
+	 * @param idNumber
+	 *            身份证号码
+	 * @return Map
+	 */
+	public Map<String, Object> getOldPhone(String oldPhone, String idNumber) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
+		Member member = null;
+		Map<String, Object> reMemberMap = null;
+		if (memberInfo != null) {// 根据用户id查询
+			reMemberMap = memberService.getMemberInfo(memberInfo.getMemberId());
+		} else {// 当用户未登录时，使用身份证号码进行查询用户信息
+			Map<String, Object> params = new HashMap<>();
+			params.put("memberIdCard", idNumber);
+			reMemberMap = memberService.getInfo(params, 0, 0);
+		}
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		List<Member> memberList = (List<Member>) reMemberMap.get(BaseCode.DATAS.toString());
+		member = memberList.get(0);
+		return checkPhoneAndIdNumber(oldPhone, idNumber, member);
+	}
+
+	/**
+	 * 校验信息
+	 * 
+	 * @param oldPhone
+	 *            原手机
+	 * @param idNumber
+	 *            身份证号码
+	 * @param member
+	 *            用户信息
+	 * @return Map
+	 */
+	private Map<String, Object> checkPhoneAndIdNumber(String oldPhone, String idNumber, Member member) {
+		if (!member.getMemberTel().equals(oldPhone.trim())) {
+			return ReturnInfoUtils.errorInfo("原手机号码错误！", "500");
+		}
+		if (!member.getMemberIdCard().equals(idNumber.trim())) {
+			return ReturnInfoUtils.errorInfo("身份证号码错误！", "501");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	public Map<String, Object> resetPayPwd(String newPayPassword, String idNumber) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("memberIdCard", idNumber);
+		Map<String, Object> reMemberMap = memberService.getInfo(params, 0, 0);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		List<Member> memberList = (List<Member>) reMemberMap.get(BaseCode.DATAS.toString());
+		Member member = memberList.get(0);
+		MD5 md5 = new MD5();
+		member.setPaymentPassword(md5.getMD5ofStr(newPayPassword));
+		return memberService.updateMemberInfo(member);
 	}
 }

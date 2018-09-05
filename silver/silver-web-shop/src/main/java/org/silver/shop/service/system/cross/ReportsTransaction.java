@@ -44,7 +44,11 @@ public class ReportsTransaction {
 	}
 
 
-	public Map<String,Object> tmpCreate() {
-		return reportsService.tmpCreate();
+	public Map<String,Object> tmpCreate(String merchantId) {
+		return reportsService.tmpCreate(merchantId);
+	}
+
+	public Map<String,Object> getSynthesisReportInfo(Map<String, Object> datasMap) {
+		return reportsService.getSynthesisReportInfo(datasMap);
 	}
 }

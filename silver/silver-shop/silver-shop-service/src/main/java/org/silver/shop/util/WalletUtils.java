@@ -177,15 +177,15 @@ public class WalletUtils {
 	}
 
 	public static void main(String[] args) {
-		String accessToken = "Ym_g75vNG6BHZ1l7mG3h6MF6IGnge5wraT8csfMlQ00J558WaGg2GdDaFsMOyywBfI1_WcjgmOC5OGuT38RaEU05j8CWbaPxE32pQxwDsl8I1WrzgTVzm1f9SnkpR4B7WqSA";
+		String accessToken = "Ym_tw0j1xxmiYgR8AkKD72841fLV5bcP3Bb0FiYQJKQAwUeXkXVbBfohfoTV8Oe6sbh_lrm3B1KS5eXC1Ay0m8bkrwpcoEI7vin9iOIbD4nV0fYzpQ2Lihx2tt2ZZwiW2riN";
 		Map<String, Object> params2 = new HashMap<>();
 		params2.put("version", "1.0");
 		params2.put("merchantNo", YmMallConfig.ID_CARD_CERTIFICATION_MERCHANT_NO);
 		params2.put("businessCode", "PT03");
 		JSONObject bizContent = new JSONObject();
-		bizContent.put("user_ID", "460006198503017227");
-		bizContent.put("user_name", "周小琴");
-		bizContent.put("bank_mobile", "17053270898");
+		bizContent.put("user_ID", "44098219861015566X");
+		bizContent.put("user_name", "林金英");
+		bizContent.put("bank_mobile", "13533288817");
 		params2.put("bizContent", bizContent);
 		params2.put("timestamp", System.currentTimeMillis());
 		params2 = new MapSortUtils().sortMap(params2);

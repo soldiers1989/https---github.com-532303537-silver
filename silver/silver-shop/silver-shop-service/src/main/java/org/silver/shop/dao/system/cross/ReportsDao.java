@@ -39,6 +39,11 @@ public interface ReportsDao extends BaseDao{
 	 */
 	public List<SynthesisReportLog> findByMonth(String monthFirstDate, String strDayBefore, String merchantId);
 
+	/**
+	 * 根据支付单统计报表
+	 * @param datasMap
+	 * @return
+	 */
 	public Table getPaymentReportDetails(Map<String, Object> datasMap);
 
 	
@@ -50,5 +55,15 @@ public interface ReportsDao extends BaseDao{
 	 * @return Table
 	 */
 	public Table getDailyReportDetails(Map<String, Object> params, double fee, double backCoverFee);
+
+	
+	/**
+	 * 自由参数查询报表信息
+	 * @param datasMap
+	 * @return 
+	 */
+	public Table getReport(Map<String, Object> datasMap);
+
+	public List<SynthesisReportLog> getReportInfo(Map<String, Object> params, int page, int size);
 	
 }

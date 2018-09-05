@@ -111,6 +111,11 @@ public class OrderServiceImpl implements OrderService {
 	 */
 	private static final String THIR_DPARTY_ID = "thirdPartyId";
 
+	/**
+	 * 商品归属商家代码
+	 */
+	private static final String MAR_CODE = "MarCode";
+	
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
 			String recipientId) {
@@ -1165,7 +1170,7 @@ public class OrderServiceImpl implements OrderService {
 			return ReturnInfoUtils.errorInfo("保存商品信息失败，请求参数不能未null");
 		}
 		Map<String, Object> params = new HashMap<>();
-		String marCode = goodsJson.get("marCode") + "";
+		String marCode = goodsJson.get(MAR_CODE) + "";
 		String entGoodsNo = goodsJson.get("EntGoodsNo") + "";
 		params.put("entGoodsNo", entGoodsNo + "_" + marCode);
 		//params.put("goodsMerchantId", merchant.getMerchantId());
@@ -1811,7 +1816,7 @@ public class OrderServiceImpl implements OrderService {
 		for (int i = 0; i < orderGoodsList.size(); i++) {
 			params.clear();
 			JSONObject goodsJson = orderGoodsList.get(i);
-			String marCode = goodsJson.get("marCode") + "";
+			String marCode = goodsJson.get(MAR_CODE) + "";
 			String entGoodsNo = goodsJson.get("EntGoodsNo") + "";
 			params.put("entGoodsNo", entGoodsNo + "_" + marCode);
 			// 上/下架标识：1-上架,2-下架,3-审核中,4-审核不通过

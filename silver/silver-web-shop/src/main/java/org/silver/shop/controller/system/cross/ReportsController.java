@@ -26,10 +26,10 @@ import net.sf.json.JSONObject;
 @Controller
 @RequestMapping(value = "/reports")
 public class ReportsController {
-	
+
 	@Autowired
 	private ReportsTransaction reportsTransaction;
-	
+
 	@RequestMapping(value = "/getSynthesisReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("新-管理员查询综合报表详情")
@@ -53,7 +53,7 @@ public class ReportsController {
 		}
 		return JSONObject.fromObject(reportsTransaction.getSynthesisReportDetails(datasMap)).toString();
 	}
-	
+
 	@RequestMapping(value = "/merchantGetSynthesisReportDetails", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("新-商户查询综合报表详情")
@@ -78,7 +78,7 @@ public class ReportsController {
 		}
 		return JSONObject.fromObject(reportsTransaction.merchantGetSynthesisReportDetails(params)).toString();
 	}
-	
+
 	@RequestMapping(value = "/merchantGetIdCardCertification", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("商户查询身份证认证报表信息")
@@ -103,7 +103,7 @@ public class ReportsController {
 		}
 		return JSONObject.fromObject(reportsTransaction.merchantGetIdCardCertification(params)).toString();
 	}
-	
+
 	@RequestMapping(value = "/getIdCardCertification", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("管理员查询身份证认证报表信息")
@@ -128,26 +128,43 @@ public class ReportsController {
 		}
 		return JSONObject.fromObject(reportsTransaction.getIdCardCertification(params)).toString();
 	}
-	
 
-
-	
 	@RequestMapping(value = "/tmpCreate", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
 	@ApiOperation("临时创建报表数据")
-	//@RequiresRoles("Manager")
+	// @RequiresRoles("Manager")
 	// @RequiresPermissions("report:getSynthesisReportDetails")
-	public String tmpCreate(HttpServletRequest req, HttpServletResponse response) {
+	public String tmpCreate(HttpServletRequest req, HttpServletResponse response, @RequestParam("merchantId") String merchantId) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		
-		return JSONObject.fromObject(reportsTransaction.tmpCreate()).toString();
+		return JSONObject.fromObject(reportsTransaction.tmpCreate(merchantId)).toString();
 	}
-	
-	
+
+	@RequestMapping(value = "/getSynthesisReportInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员查询综合报表-历史数据")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("report:getSynthesisReportInfo")
+	public String getSynthesisReportInfo(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		if (datasMap.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(reportsTransaction.getSynthesisReportInfo(datasMap)).toString();
+	}
 }
-
-

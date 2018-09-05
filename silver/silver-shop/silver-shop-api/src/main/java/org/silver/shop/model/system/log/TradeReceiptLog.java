@@ -6,7 +6,7 @@ import java.util.Date;
 /**
  * 记录所有钱包充值、提现、转账、等交易记录
  */
-public class PaymentReceiptLog implements Serializable {
+public class TradeReceiptLog implements Serializable {
 
 	/**
 	 * 
@@ -28,7 +28,8 @@ public class PaymentReceiptLog implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-
+	private String note;
+	private String sourceType;// 交易金额来源类型 
 	public long getId() {
 		return id;
 	}
@@ -155,6 +156,22 @@ public class PaymentReceiptLog implements Serializable {
 
 	public void setNotifyTime(Date notifyTime) {
 		this.notifyTime = notifyTime;
+	}
+
+	public String getNote() {
+		return note;
+	}
+
+	public void setNote(String note) {
+		this.note = note;
+	}
+
+	public String getSourceType() {
+		return sourceType;
+	}
+
+	public void setSourceType(String sourceType) {
+		this.sourceType = sourceType;
 	}
 
 }

@@ -155,4 +155,41 @@ public class ReturnInfoUtils {
 		return map;
 	}
 	
+	/**
+	 * 未找到数据
+	 * <li>增加一个errorCode键，值为-1</li>
+	 * @return Map
+	 */
+	public static final Map<String, Object> noDatas() {
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), StatusCode.WARN.getStatus());
+		map.put(BaseCode.MSG.toString(), "暂无数据！");
+		map.put(BaseCode.ERROR_CODE.toString(), StatusCode.NO_DATAS.getStatus());
+		return map;
+	}
+	
+	/**
+	 * 错误返回信息,并且自定义状态码
+	 * <li>注：该信息为单条错误信息返回,并且错误信息在msg键中</li>
+	 * 
+	 * @param message
+	 *            提示信息
+	 * @return Map
+	 */
+	public static final Map<String, Object> errorInfo(String message,String status) {
+		if (StringEmptyUtils.isEmpty(message)) {
+			return errorInfo("未知错误！");
+		}
+		if(StringEmptyUtils.isEmpty(status)){
+			return ReturnInfoUtils.errorInfo("返回错误信息时，状态码不能为空！");
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put(BaseCode.STATUS.toString(), status);
+		map.put(BaseCode.MSG.toString(), message);
+		return map;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println("--->"+noDatas().toString());
+	}
 }

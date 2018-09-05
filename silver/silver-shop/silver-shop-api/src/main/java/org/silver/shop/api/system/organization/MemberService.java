@@ -141,4 +141,46 @@ public interface MemberService {
 	 */
 	public Map<String, Object> retrieveLoginPassword(String accountName);
 
+	/**
+	 * 更新用户手机号码
+	 * @param memberId 用户id
+	 * @param phone 手机号码
+	 * @return Map
+	 */
+	public Map<String, Object> updatePhone(String memberId, String phone);
+	
+	/**
+	 * 更新用户信息
+	 * 
+	 * @param entity
+	 *            用户信息实体类
+	 * @return Map
+	 */
+	public Map<String, Object> updateMemberInfo(Member entity);
+
+	/**
+	 * 更新用户支付密码
+	 * @param memberId 用户id
+	 * @param newPayPassword 新支付密码
+	 * @param oldPayPassword 旧支付密码
+	 * @return Map
+	 */
+	public Map<String, Object> updatePayPwd(String memberId, String newPayPassword, String oldPayPassword);
+
+	/**
+	 * 查询用户信息
+	 * @param params 查询参数
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map 
+	 */
+	public Map<String, Object> getInfo(Map<String, Object> params, int page, int size);
+
+	/**
+	 * 设置支付密码
+	 * @param newPayPassword 新支付密码
+	 * @return
+	 */
+	public Map<String, Object> updatePayPwd(String newPayPassword);
+
 }

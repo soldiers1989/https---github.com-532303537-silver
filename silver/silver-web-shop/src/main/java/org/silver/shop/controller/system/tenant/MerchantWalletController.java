@@ -45,6 +45,9 @@ public class MerchantWalletController {
 	@Autowired
 	private DaiFuPay daiFuPay;
 
+	/**
+	 * 代付RUL
+	 */
 	private static final String DAI_FU_NOTIFY_URL = "https://ym.191ec.com/silver-web-shop/yspay-receive/dfReceive";
 
 	/**

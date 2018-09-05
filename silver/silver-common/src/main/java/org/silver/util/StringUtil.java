@@ -100,8 +100,8 @@ public class StringUtil {
 	}
 
 	/**
-	 * 通用替换多表查询字符串 
-	 * <li>例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"} </li>
+	 * 通用替换多表查询字符串
+	 * <li>例:{\"value\":919.04}、{\"value\":\"深圳市前海爱库\"}</li>
 	 * <li>返回：深圳市前海爱库</li>
 	 * 
 	 * @param str
@@ -143,5 +143,24 @@ public class StringUtil {
 		// System.out.println(StringUtil.addPrefixZero("2356", 8));
 		System.out.println("--->>>>" + isContainChinese("娜地拉·艾孜拉提".replace("·", "")));
 		// System.out.println(isNumeric("1中"));
+
+		System.out.println("-=--=->>>" + reservedInitialsReplaceOther("艾孜拉提"));
+	}
+
+	/**
+	 * 保留首字母，剩余的全部替换为"*"
+	 * @param string 需要替换的字符串
+	 * @return String 替换后的字符串
+	 */
+	public static String reservedInitialsReplaceOther(String string) {
+		if (StringEmptyUtils.isEmpty(string)) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder(string.substring(1, string.length()));
+		String x = "";
+		for (int i = 0; i < sb.length(); i++) {
+			x += "*";
+		}
+		return string.charAt(0) + "" + sb.replace(0, sb.length(), x);
 	}
 }

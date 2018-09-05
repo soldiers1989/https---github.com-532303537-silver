@@ -9,12 +9,12 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
-import org.silver.shop.api.system.log.PaymentReceiptLogService;
+import org.silver.shop.api.system.log.TradeReceiptLogService;
 import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.MerchantWalletDao;
 import org.silver.shop.model.system.commerce.OrderRecordContent;
 import org.silver.shop.model.system.log.OfflineRechargeLog;
-import org.silver.shop.model.system.log.PaymentReceiptLog;
+import org.silver.shop.model.system.log.TradeReceiptLog;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
@@ -45,7 +45,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	@Autowired
 	private WalletUtils walletUtils;
 	@Autowired
-	private PaymentReceiptLogService paymentReceiptLogService;
+	private TradeReceiptLogService tradeReceiptLogService;
 	@Autowired
 	private MerchantUtils merchantUtils;
 
@@ -84,7 +84,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			}
 			MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 			//
-			PaymentReceiptLog log = new PaymentReceiptLog();
+			TradeReceiptLog log = new TradeReceiptLog();
 			log.setUserId(merchantId);
 			log.setUserName(merchantName);
 			log.setOrderId(orderId);
@@ -290,7 +290,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			if (!"1".equals(json.get(BaseCode.STATUS.toString()) + "")) {
 				return ReturnInfoUtils.errorInfo(json.get("msg") + "");
 			}
-			Map<String, Object> reLogMap = paymentReceiptLogService.addMerchantLog(order.getMerchantId(), amount,
+			Map<String, Object> reLogMap = tradeReceiptLogService.addMerchantLog(order.getMerchantId(), amount,
 					order.getEntOrderNo(), managerInfo.getManagerName(), "withdraw");
 			if (!"1".equals(reLogMap.get(BaseCode.STATUS.toString()))) {
 				return reLogMap;

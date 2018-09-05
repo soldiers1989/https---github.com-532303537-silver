@@ -45,5 +45,12 @@ public interface YsPayReceiveService {
 	 */
 	public Map<String, Object> dfReceive(Map params);
 
+	/**
+	 * 用户发起提现操作后，银盛回调操作
+	 * @param datasMap 
+	 * @return
+	 */
+	public Map<String, Object> memberWithdraw(Map datasMap);
+
 	
 }

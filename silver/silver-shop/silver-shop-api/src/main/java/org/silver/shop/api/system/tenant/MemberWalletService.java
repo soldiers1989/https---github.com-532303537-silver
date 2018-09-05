@@ -25,11 +25,11 @@ public interface MemberWalletService {
 	public Map<String, Object> addPayReceipt(Member memberInfo, double amount, String serialNo);
 
 	/**
-	 *	获取用户钱包信息 
-	 * @param memberInfo
-	 * @return
+	 *	根据用户id、获取钱包信息 
+	 * @param memberId 用户id
+	 * @return Map
 	 */
-	public Map<String, Object> getInfo(Member memberInfo);
+	public Map<String, Object> getInfo(String memberId);
 	
 	/**
 	 * 用户调用银盛支付充值货款，成功后回调
@@ -37,5 +37,65 @@ public interface MemberWalletService {
 	 * @return
 	 */
 	public Map<String, String> memberRechargeReceive(Map datasMap);
+
+	/**
+	 * 根据用户id,校验钱包货款金额
+	 * @param memberId 用户id
+	 * @param amount 金额
+	 * @return Map
+	 */
+	public Map<String, Object> checkReserveAmount(String memberId, double amount);
+
+	/**
+	 * 根据用户id，生成用户钱包校验码
+	 * @param memberId 
+	 * @return 
+	 */
+	public Map<String,Object> generateSign(String memberId);
+
+	/**
+	 * 储备资金转移至冻结金额
+	 * @param memberId
+	 * @param amount
+	 * @return
+	 */
+	public Map<String, Object> reserveAmountDeduction(String memberId, double amount);
+
+	public Object tmpAddAmount(String memberId, double amount);
+
+	/**
+	 * 校验用户交易密码
+	 * @param memberId 用户id
+	 * @param payPassword 交易密码
+	 * @return Map
+	 */
+	public Map<String,Object> checkPayPassword(String memberId, String payPassword);
+	
+	/**
+	 * 根据用户id查询钱包信息后，进行对应的冻结资金操作
+	 * 
+	 * @param memberId
+	 *            用户id
+	 * @param amount
+	 *            金额
+	 * @param type
+	 *            类型：add-加款、sub-扣款
+	 * @return Map
+	 */
+	public Map<String, Object> freezingFundsOperating(String memberId, double amount, String type);
+
+	
+	/**
+	 * 根据用户id查询钱包信息后，进行对应的货款操作
+	 * 
+	 * @param memberId
+	 *            用户id
+	 * @param amount
+	 *            金额
+	 * @param type
+	 *            类型：add-加款、sub-扣款
+	 * @return Map
+	 */
+	public Map<String, Object> reserveAmountOperating(String memberId, double amount, String type);
 
 }

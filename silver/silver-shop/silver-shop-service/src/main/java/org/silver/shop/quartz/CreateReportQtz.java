@@ -11,6 +11,7 @@ import java.util.TimerTask;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.silver.common.BaseCode;
+import org.silver.common.StatusCode;
 import org.silver.shop.api.system.cross.ReportsService;
 import org.silver.shop.dao.system.commerce.OrderDao;
 import org.silver.shop.dao.system.cross.PaymentDao;
@@ -48,43 +49,17 @@ public class CreateReportQtz {
 
 	public void createReportJob() {
 		System.out.println("--定时任务生成订单报表数据--");
-		double fee = 0;
-		double backCoverFee = 0;
 		Map<String, Object> params = new HashMap<>();
 		List<MerchantIdCardCostContent> merchantList = reportsDao.findByProperty(MerchantIdCardCostContent.class, null, 0, 0);
-		for (MerchantIdCardCostContent merchant : merchantList) {
+		for (MerchantIdCardCostContent merchantIdCardCost : merchantList) {
+			Map<String,Object> reFeeMap = getMerchantFee(merchantIdCardCost);
+			double fee = Double.parseDouble(reFeeMap.get("fee")+"");
+			double backCoverFee = Double.parseDouble(reFeeMap.get("backCoverFee")+"");
 			params.clear();
-			params.put("merchantId", merchant.getMerchantId());
-			List<MerchantFeeContent> merchantFeeList = reportsDao.findByProperty(MerchantFeeContent.class, params, 0,
-					0);
-			if (merchantFeeList != null && !merchantFeeList.isEmpty()) {
-				// 随便取一个封底手续费即可
-				MerchantFeeContent feeContent = merchantFeeList.get(0);
-				fee = feeContent.getPlatformFee();
-				params.clear();
-				params.put("merchantId", merchant.getMerchantId());
-				params.put("customsCode", feeContent.getCustomsCode());
-				params.put("ciqOrgCode", feeContent.getCiqOrgCode());
-				// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
-				if ("orderRecord".equals(feeContent.getType())) {
-					params.put("type", "paymentRecord");
-				} else {
-					params.put("type", "orderRecord");
-				}
-				List<MerchantFeeContent> merchantFeeList2 = reportsDao.findByProperty(MerchantFeeContent.class, params,
-						0, 0);
-				if (merchantFeeList2 != null && !merchantFeeList2.isEmpty()) {
-					MerchantFeeContent fee2 = merchantFeeList2.get(0);
-					fee = DoubleOperationUtil.add(fee, fee2.getPlatformFee());
-				}
-				backCoverFee = feeContent.getBackCoverFee();
-				System.out.println("--商户-->" + merchant.getMerchantName() + ";--费率-->" + fee + "--封底费-->"
-						+ feeContent.getBackCoverFee());
-			}
-			params.clear();
-			params.put("startDate", "2018-08-01 00:00:00");
-			params.put("endDate", "2018-08-01 23:59:59");
-			params.put("merchantId", merchant.getMerchantId());
+			Date date = new Date();
+			params.put("startDate", DateUtil.getStartTime(DateUtil.format(date, "yyyy-MM-dd HH:mm:ss")));
+			params.put("endDate", DateUtil.getEndTime(DateUtil.format(date, "yyyy-MM-dd HH:mm:ss")));
+			params.put("merchantId", merchantIdCardCost.getMerchantId());
 			Table reList = reportsDao.getDailyReportDetails(params, fee, backCoverFee);
 			JSONArray arr = Transform.tableToJson(reList).getJSONArray("rows");
 			Map<String, Object> viceMap = null;
@@ -94,7 +69,7 @@ public class CreateReportQtz {
 				System.out.println("--->>>" + (json.toString()));
 				JSONObject idCardJson = null;
 				viceMap = new HashMap<>();
-				viceMap.put("merchantId", merchant.getMerchantId());
+				viceMap.put("merchantId", merchantIdCardCost.getMerchantId());
 				viceMap.put("date", StringUtil.replace(json.get("date") + ""));
 				Table reIdcardList = reportsDao.getIdCardDetails(viceMap);
 				if (reIdcardList != null && !reIdcardList.getRows().isEmpty()) {
@@ -102,11 +77,48 @@ public class CreateReportQtz {
 							.getJSONArray("rows");
 					idCardJson = JSONObject.fromObject(idCardJsonArr.get(0));
 					System.out.println("==身份证==>>" + idCardJson.toString());
-					saveReportLog(json,idCardJson,merchant.getPlatformCost(),fee,backCoverFee);
+					saveReportLog(json,idCardJson,merchantIdCardCost.getPlatformCost(),fee,backCoverFee);
 				}
 			}
 		}
-		return null;
+	}
+
+	private Map<String, Object> getMerchantFee(MerchantIdCardCostContent merchantIdCardCost) {
+		Map<String, Object> params = new HashMap<>();
+		double fee = 0;
+		double backCoverFee = 0;
+		params.put("merchantId", merchantIdCardCost.getMerchantId());
+		List<MerchantFeeContent> merchantFeeList = reportsDao.findByProperty(MerchantFeeContent.class, params, 0,
+				0);
+		if (merchantFeeList != null && !merchantFeeList.isEmpty()) {
+			// 随便取一个封底手续费即可
+			MerchantFeeContent feeContent = merchantFeeList.get(0);
+			fee = feeContent.getPlatformFee();
+			params.clear();
+			params.put("merchantId", merchantIdCardCost.getMerchantId());
+			params.put("customsCode", feeContent.getCustomsCode());
+			params.put("ciqOrgCode", feeContent.getCiqOrgCode());
+			// 类型：goodsRecord-商品备案、orderRecord-订单申报、paymentRecord-支付单申报
+			if ("orderRecord".equals(feeContent.getType())) {
+				params.put("type", "paymentRecord");
+			} else {
+				params.put("type", "orderRecord");
+			}
+			List<MerchantFeeContent> merchantFeeList2 = reportsDao.findByProperty(MerchantFeeContent.class, params,
+					0, 0);
+			if (merchantFeeList2 != null && !merchantFeeList2.isEmpty()) {
+				MerchantFeeContent fee2 = merchantFeeList2.get(0);
+				fee = DoubleOperationUtil.add(fee, fee2.getPlatformFee());
+			}
+			backCoverFee = feeContent.getBackCoverFee();
+			System.out.println("--商户-->" + merchantIdCardCost.getMerchantName() + ";--费率-->" + fee + "--封底费-->"
+					+ feeContent.getBackCoverFee());
+		}
+		Map<String,Object> map = new HashMap<>();
+		map.put("fee", fee);
+		map.put("backCoverFee", backCoverFee);
+		map.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
+		return map;
 	}
 
 	/**
@@ -130,8 +142,8 @@ public class CreateReportQtz {
 		log.setNormalAmount(Double.parseDouble(StringUtil.replace(json.get("normalAmount") + "")));
 		log.setIdCardTotalCount(
 				Integer.parseInt(StringUtil.replace(idCardJson.get("idCardTotalCount") + "")));
-		log.setIdCardTollCount(Integer.parseInt(StringUtil.replace(idCardJson.get("tollFlag1") + "")));
-		log.setIdCardFreeCount(Integer.parseInt(StringUtil.replace(idCardJson.get("tollFlag2") + "")));
+		log.setIdCardTollCount(Integer.parseInt(StringUtil.replace(idCardJson.get("idCardTollCount") + "")));
+		log.setIdCardFreeCount(Integer.parseInt(StringUtil.replace(idCardJson.get("idCardFreeCount") + "")));
 		log.setIdCardCost(platformCost);
 		log.setCreateDate(new Date());
 		log.setCreateBy("system");
@@ -141,12 +153,5 @@ public class CreateReportQtz {
 		System.out.println("--==保存成功=======");
 	}
 	
-	public static void main(String[] args) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		calendar.add(Calendar.DAY_OF_MONTH, -1);
-		Date date = calendar.getTime();
-		String d = DateUtil.formatDate(new Date(), "yyyy-MM-dd");
-		System.out.println("-->>" +d.substring(d.length()-2));
-	}
+	
 }
