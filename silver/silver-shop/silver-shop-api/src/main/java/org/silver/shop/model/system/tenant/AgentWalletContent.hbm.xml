@@ -32,8 +32,17 @@
         <property name="updateDate" type="java.util.Date">
             <column name="updateDate" />
         </property>
-        <property name="cash" type="double">
-            <column name="cash" default="0"/>
-        </property>
+        <property name="reserveAmount" type="java.lang.Double">
+			<column name="reserveAmount" default="0"/>
+		</property>
+		<property name="cash" type="java.lang.Double">
+			<column name="cash" default="0"/>
+		</property>
+		<property name="freezingFunds" type="java.lang.Double">
+			<column name="freezingFunds" default="0"/>
+		</property>
+			<property name="verifyCode" type="java.lang.String">
+			<column name="verifyCode" not-null="true" />
+		</property>
     </class>
 </hibernate-mapping>

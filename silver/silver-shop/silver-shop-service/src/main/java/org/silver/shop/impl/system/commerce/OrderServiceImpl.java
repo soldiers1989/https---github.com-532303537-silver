@@ -1,6 +1,5 @@
 package org.silver.shop.impl.system.commerce;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +16,7 @@ import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.api.system.cross.PaymentService;
 import org.silver.shop.api.system.cross.YsPayReceiveService;
+import org.silver.shop.api.system.log.FenZhangLogService;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.RecipientService;
 import org.silver.shop.dao.system.commerce.OrderDao;
@@ -27,6 +27,7 @@ import org.silver.shop.model.common.base.Metering;
 import org.silver.shop.model.common.base.Province;
 import org.silver.shop.model.common.category.GoodsThirdType;
 import org.silver.shop.model.common.category.HsCode;
+import org.silver.shop.model.system.commerce.CounterGoodsContent;
 import org.silver.shop.model.system.commerce.GoodsRecord;
 import org.silver.shop.model.system.commerce.GoodsRecordDetail;
 import org.silver.shop.model.system.commerce.OrderContent;
@@ -41,6 +42,7 @@ import org.silver.shop.model.system.manual.OldManualOrder;
 import org.silver.shop.model.system.manual.OldManualOrderSub;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.ExpadndMerchantContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantBusinessContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
@@ -92,6 +94,8 @@ public class OrderServiceImpl implements OrderService {
 	private WalletUtils walletUtils;
 	@Autowired
 	private PaymentService paymentService;
+	@Autowired
+	private FenZhangLogService fenZhangLogService;
 
 	/**
 	 * 小写开头订单编号
@@ -115,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 	 * 商品归属商家代码
 	 */
 	private static final String MAR_CODE = "MarCode";
-	
+
 	@Override
 	public Map<String, Object> createOrderInfo(String memberId, String memberName, String goodsInfoPack, int type,
 			String recipientId) {
@@ -1173,7 +1177,7 @@ public class OrderServiceImpl implements OrderService {
 		String marCode = goodsJson.get(MAR_CODE) + "";
 		String entGoodsNo = goodsJson.get("EntGoodsNo") + "";
 		params.put("entGoodsNo", entGoodsNo + "_" + marCode);
-		//params.put("goodsMerchantId", merchant.getMerchantId());
+		// params.put("goodsMerchantId", merchant.getMerchantId());
 		List<GoodsRecordDetail> goodsList = orderDao.findByProperty(GoodsRecordDetail.class, params, 0, 0);
 		if (goodsList == null) {
 			return ReturnInfoUtils.errorInfo("商品自编号[" + entGoodsNo + "]查询失败,服务器繁忙！");
@@ -2162,6 +2166,7 @@ public class OrderServiceImpl implements OrderService {
 	 * @param count
 	 *            下单商品数量
 	 * @param promotionNo
+	 *            商品推广id
 	 * @return Map
 	 */
 	private Map<String, Object> saveOrderGoodsContent(OrderContent order, StockContent stock, String entGoodsNo,
@@ -2198,7 +2203,7 @@ public class OrderServiceImpl implements OrderService {
 		orderGoods.setEntGoodsNo(entGoodsNo);
 		orderGoods.setEntOrderNo(order.getEntOrderNo());
 		orderGoods.setEvaluationFlag(0);
-
+		// 商品推广唯一流水
 		if (StringEmptyUtils.isNotEmpty(promotionNo)) {
 			orderGoods.setPromotionNo(promotionNo);
 		}
@@ -2609,4 +2614,190 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> managerOrderFenZhang(List<String> orderList, String managerId, String managerName) {
+		if (orderList == null) {
+			return ReturnInfoUtils.errorInfo("请求参数不能为null");
+		}
+		List<Map<String,Object>> errorList = new ArrayList<>();
+		for (int i = 0; i < orderList.size(); i++) {
+			String entOrderNo = orderList.get(i);
+			Map<String,Object> reMap = getDividendRatio(entOrderNo);
+			if(!"1".equals(BaseCode.STATUS.toString())){
+				errorList.add(reMap);
+			}
+		}
+		return ReturnInfoUtils.errorInfo(errorList, orderList.size());
+	}
+
+	private Map<String, Object> getDividendRatio(String entOrderNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("entOrderNo", entOrderNo);
+		List<OrderGoodsContent> reList = orderDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
+		if (reList == null) {
+			return ReturnInfoUtils.warnInfo();
+		} else if (reList.isEmpty()) {
+			return ReturnInfoUtils.noDatas();
+		} else {
+			// 订单总金额
+			double orderTotalAmount = 0;
+			// 主商户收款金额
+			double masterReceiptAmount = 0;
+			//
+			double platformFee = 0;
+			//
+			String ysPartnerNo = "";
+			JSONObject spareParams = new JSONObject();
+			for (OrderGoodsContent goods : reList) {
+				orderTotalAmount = DoubleOperationUtil.add(goods.getGoodsPrice(), orderTotalAmount);
+				params.clear();
+				params.put("serialNo", goods.getPromotionNo());
+				List<CounterGoodsContent> counterGoodsList = orderDao.findByProperty(CounterGoodsContent.class, params,
+						0, 0);
+				if (counterGoodsList != null && !counterGoodsList.isEmpty()) {
+					CounterGoodsContent counterGoods = counterGoodsList.get(0);
+					// 商品价格
+					double price = counterGoods.getRegPrice();
+					// 专柜商品 推广分润比例
+					double popularizeProfit = counterGoods.getPopularizeProfit();
+					// 专柜所属人id
+					String counterOwnerId = counterGoods.getCounterOwnerId();
+					// 专柜商品归属商户id
+					String goodsMerchantId = counterGoods.getGoodsMerchantId();
+					// 商户平台服务费率
+					Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(goodsMerchantId);
+					if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+						return reMerchantMap;
+					}
+					Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+					ysPartnerNo = merchant.getYsPartnerNo();
+					if ("expadnd".contains(counterOwnerId)) {// 如果是推广商(子商户)
+						// 推广商获得金额
+						double exReceiptAmount = DoubleOperationUtil.mul(price, popularizeProfit);
+						// 平台服务费
+						double d2 = DoubleOperationUtil.mul(price, merchant.getMerchantProfit());
+						if (price + (exReceiptAmount + d2) != price) {
+							return ReturnInfoUtils.errorInfo("费率计算错误！");
+						}
+						masterReceiptAmount = DoubleOperationUtil.sub(price, (exReceiptAmount + d2));
+						Map<String, Object> reExpadndMerchantMap = getExpadndMerchantInfo(goodsMerchantId);
+						if (!"1".equals(reExpadndMerchantMap.get(BaseCode.STATUS.toString()))) {
+							return reExpadndMerchantMap;
+						}
+						ExpadndMerchantContent exMerchant = (ExpadndMerchantContent) reExpadndMerchantMap
+								.get(BaseCode.STATUS.toString());
+						spareParams.put("divPartnerNo", exMerchant.getYsPartnerNo());
+						spareParams.put("exReceiptAmount", exReceiptAmount);
+					} else {
+						// 平台服务费
+						double d2 = DoubleOperationUtil.mul(price, merchant.getMerchantProfit());
+						platformFee = DoubleOperationUtil.add(platformFee, d2);
+						masterReceiptAmount = DoubleOperationUtil.sub(price, platformFee);
+					}
+				}
+			}
+			return initiateFenZhang(entOrderNo, orderTotalAmount, platformFee, ysPartnerNo, masterReceiptAmount,
+					spareParams);
+		}
+	}
+
+	/**
+	 * 发起分账
+	 * @param entOrderNo 交易订单号
+	 * @param orderTotalAmount 订单总金额
+	 * @param platformFee 银盟账号收款金额
+	 * @param ysPartnerNo 银盟商城商户在银盛的钱包账号
+	 * @param masterReceiptAmount 主商户收款金额
+	 * @param spareParams 推广商参数
+	 * @return Map
+	 */
+	private Map<String, Object> initiateFenZhang(String entOrderNo, double orderTotalAmount, double platformFee,
+			String ysPartnerNo, double masterReceiptAmount, JSONObject spareParams) {
+		Map<String, Object> map = new HashMap<>();
+		Map<String, Object> item = new HashMap<>();
+		item.put("out_trade_no", entOrderNo);
+		item.put("total_amount", orderTotalAmount);
+		item.put("master_user_code", "yinmeng1119");
+		// 平台服务费(原分润),0.0X
+		item.put("master_amount", platformFee);
+		// https://ym.191ec.com/silver-web-shop/yspay-receive/orderReceive
+		item.put("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/fenZhangReceive");
+		JSONArray divList = new JSONArray();
+		JSONObject subJson1 = new JSONObject();
+		// 主商户的银盛钱包账号
+		subJson1.put("division_mer_usercode", ysPartnerNo);
+		subJson1.put("div_amount", masterReceiptAmount);
+		divList.add(subJson1);
+		// 当有推广商参与分润时
+		if (spareParams != null && !spareParams.isEmpty()) {
+			JSONObject subJson2 = new JSONObject();
+			subJson2.put("division_mer_usercode", spareParams.get("divPartnerNo"));
+			subJson2.put("div_amount", spareParams.get("exReceiptAmount"));
+			divList.add(subJson2);
+			map.put("divPartnerNo", spareParams.toString());
+		}
+		item.put("fz_content", divList);
+		// String result =
+		// YmHttpUtil.HttpPost("http://192.168.1.161:8080/silver-web-ezpay/fz/trade",
+		// item);
+		String result = YmHttpUtil.HttpPost("https://ezpay.191ec.com/silver-web-ezpay/fz/trade", item);
+		System.out.println("--->>" + result);
+		if (StringEmptyUtils.isEmpty(result)) {
+			return ReturnInfoUtils.errorInfo("操作失败，服务器繁忙！");
+		} else {
+			JSONObject json = JSONObject.fromObject(result);
+			if (!"1".equals(json.get(BaseCode.STATUS.toString()) + "")) {
+				return ReturnInfoUtils.errorInfo(json.get("msg") + "");
+			}
+			map.put("orderId", entOrderNo);
+			map.put("ysPartnerNo", ysPartnerNo);
+			map.put("platformFee", platformFee);
+			map.put("originalAmount", orderTotalAmount);
+			map.put("masterReceiptAmount", masterReceiptAmount);
+			map.put("tradingStatus", "process");
+			map.put("createBy", "system");
+			return fenZhangLogService.saveFenZhangLog(map);
+
+		}
+	}
+
+	/**
+	 * 根据商户id信息获取推广商的信息
+	 * 
+	 * @param goodsMerchantId
+	 * @return
+	 */
+	private Map<String, Object> getExpadndMerchantInfo(String expadndMerchantCode) {
+		if (StringEmptyUtils.isEmpty(expadndMerchantCode)) {
+			return ReturnInfoUtils.errorInfo("获取商户信息时,id不能为空!");
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("expadndMerchantCode", expadndMerchantCode);
+		List<ExpadndMerchantContent> merchantList = orderDao.findByProperty(ExpadndMerchantContent.class, params, 1, 1);
+		if (merchantList == null) {
+			return ReturnInfoUtils.errorInfo("查询商户信息失败,服务器繁忙!");
+		} else if (!merchantList.isEmpty()) {
+			return ReturnInfoUtils.successDataInfo(merchantList.get(0));
+		} else {
+			return ReturnInfoUtils.errorInfo("未找到商户信息!");
+		}
+	}
+
+	/**
+	 * 根据商户id，获取商户平台分润比例
+	 * 
+	 * @param merchantId
+	 *            商户id
+	 * @return double 平台分润
+	 */
+	public double getMerchantProfit(String merchantId) {
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(merchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return -1;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		return merchant.getMerchantProfit();
+	}
+
 }

@@ -18,6 +18,7 @@ import org.silver.common.LoginType;
 import org.silver.shop.api.common.base.IdCardService;
 import org.silver.shop.api.system.commerce.OrderService;
 import org.silver.shop.model.system.organization.AgentBaseContent;
+import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Member;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.util.DateUtil;
@@ -218,5 +219,12 @@ public class OrderTransaction {
 		// item));
 
 		System.out.println("--->"+DateUtil.parseDate("订单日期", "yyyyMMddHHmmss"));
+	}
+
+	//
+	public Map<String,Object> managerOrderFenZhang(List<String> orderList) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
+		return orderService.managerOrderFenZhang(orderList,managerInfo.getManagerId(),managerInfo.getManagerName());
 	}
 }

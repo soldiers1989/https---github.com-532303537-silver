@@ -15,6 +15,7 @@ import org.silver.shop.model.system.commerce.StockContent;
 import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.MerchantCounterContent;
 import org.silver.shop.util.IdUtils;
+import org.silver.shop.util.InquireHelperService;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.SerialNoUtils;
 import org.silver.util.StringEmptyUtils;
@@ -31,6 +32,8 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 	private MerchantCounterDao merchantCounterDao;
 	@Autowired
 	private IdUtils idUtils;
+	@Autowired
+	private InquireHelperService inquireHelperService;
 
 	@Override
 	public Map<String, Object> getInfo(Map<String, Object> datasMap, int page, int size) {
@@ -74,7 +77,8 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 	}
 
 	@Override
-	public Map<String, Object> addCounterInfo(Merchant merchantInfo, Map<String, Object> datasMap) {
+	public Map<String, Object> addCounterInfo(Merchant merchantInfo, Map<String, Object> datasMap,
+			List<Object> imglist) {
 		if (merchantInfo == null || datasMap == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
@@ -83,22 +87,27 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 		if (id < 0) {
 			return ReturnInfoUtils.errorInfo("查询id失败，服务器繁忙！");
 		}
-		String counterId = SerialNoUtils.getSerialNo("counterId_", id);
+		String counterId = SerialNoUtils.getSerialNo("C", id);
 		counter.setCounterId(counterId);
 		counter.setMerchantId(merchantInfo.getMerchantId());
 		counter.setMerchantName(merchantInfo.getMerchantName());
-		Map<String,Object> reCheckMap = checkCounterInfo(datasMap);
-		if(!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))){
+		Map<String, Object> reCheckMap = checkCounterInfo(datasMap);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
 		counter.setHeadContent(datasMap.get("headContent") + "");
 		counter.setDescription(datasMap.get("description") + "");
-		counter.setCounterURL(datasMap.get("counterURL") + "\\"+counterId);
-		counter.setLogo(datasMap.get("logo") + "");
+		if (imglist == null || imglist.isEmpty()) {
+			return ReturnInfoUtils.errorInfo("log图片不能为空");
+		}
+		// https://vip.191ec.com?counterId=
+		String topUrl = "https://vip.191ec.com?counterId=";
+		counter.setCounterURL(topUrl + counterId);
+		counter.setLogo(imglist.get(0) + "");
 		counter.setImge(datasMap.get("imge") + "");
 		counter.setCreateBy(merchantInfo.getMerchantName());
 		counter.setCreateDate(new Date());
-		if(!merchantCounterDao.add(counter)){
+		if (!merchantCounterDao.add(counter)) {
 			return ReturnInfoUtils.errorInfo("保存失败，服务器繁忙！");
 		}
 		return ReturnInfoUtils.successInfo();
@@ -106,6 +115,7 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 
 	/**
 	 * 校验专柜必填信息
+	 * 
 	 * @param datasMap
 	 * @return
 	 */
@@ -116,14 +126,6 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 		String headContent = datasMap.get("headContent") + "";
 		if (StringEmptyUtils.isEmpty(headContent)) {
 			return ReturnInfoUtils.errorInfo("专柜名称不能为空！");
-		}
-		String counterURL = datasMap.get("counterURL") + "";
-		if (StringEmptyUtils.isEmpty(counterURL)) {
-			return ReturnInfoUtils.errorInfo("专柜地址不能为空！");
-		}
-		String logo = datasMap.get("logo") + "";
-		if (StringEmptyUtils.isEmpty(logo)) {
-			return ReturnInfoUtils.errorInfo("专柜logo不能为空！");
 		}
 		String imge = datasMap.get("imge") + "";
 		if (StringEmptyUtils.isEmpty(imge)) {
@@ -138,13 +140,6 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
 		Map<String, Object> params = new HashMap<>();
-		if ("MerchantId_00047".equals(merchantInfo.getMerchantId())) {
-			params.put("counterId", datasMap.get("counterId") + "");
-		} else if ("MerchantId_00069".equals(merchantInfo.getMerchantId())) {
-			params.put("counterId", datasMap.get("counterId") + "");
-		} else {
-			return ReturnInfoUtils.errorInfo("未找到专柜信息，请联系管理员！");
-		}
 		params.put("merchantId", merchantInfo.getMerchantId());
 		List<MerchantCounterContent> reList = merchantCounterDao.findByProperty(MerchantCounterContent.class, params, 0,
 				0);
@@ -180,23 +175,23 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 					errMap.put(BaseCode.MSG.toString(), "商品自编号[" + entGoodsNo + "]对应的商品尚未上架，不能放入专柜中！");
 					errorList.add(errMap);
 				} else {
+					StockContent stock = reStockList.get(0);
 					GoodsRecordDetail goods = reGoodsList.get(0);
 					CounterGoodsContent content = new CounterGoodsContent();
 					content.setSerialNo(SerialNoUtils.getSerialNo("C", id));
 					content.setCounterId(datasMap.get("counterId") + "");
 					content.setCounterOwnerId(merchantInfo.getMerchantId());
 					content.setCounterOwnerName(merchantInfo.getMerchantName());
-					content.setMerchantId(goods.getGoodsMerchantId());
-					content.setMerchantName(goods.getGoodsMerchantName());
+					content.setGoodsMerchantId(goods.getGoodsMerchantId());
+					content.setGoodsMerchantName(goods.getGoodsMerchantName());
 					content.setEntGoodsNo(entGoodsNo);
 					content.setGoodsName(goods.getGoodsName());
-					content.setRegPrice(goods.getRegPrice());
+					content.setRegPrice(stock.getRegPrice());
 					// 推广标识：1-允许分销、2-不允许分销
 					content.setPopularizeFlag(2);
 					content.setCreateDate(new Date());
 					content.setCreateBy(merchantInfo.getMerchantName());
-					content.setRemark(goods.getSpareGoodsImage());
-					// popularizeProfit
+					content.setGoodsImage(goods.getSpareGoodsImage());
 					if (!merchantCounterDao.add(content)) {
 						return ReturnInfoUtils.errorInfo("保存失败,服务器繁忙！");
 					}
@@ -227,4 +222,41 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 		return ReturnInfoUtils.errorInfo("暂无柜台信息！");
 	}
 
+	@Override
+	public Map<String, Object> updatePopularizeFlag(Map<String, Object> datasMap) {
+		String popularizeProfit = datasMap.get("popularizeProfit") + "";
+		String popularizeFlag = datasMap.get("popularizeFlag") + "";
+		datasMap.remove("popularizeProfit");
+		datasMap.remove("popularizeFlag");
+		Map<String, Object> reMap = inquireHelperService.getInfo(CounterGoodsContent.class, datasMap, 1, 1);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		CounterGoodsContent goods = (CounterGoodsContent) reMap.get(BaseCode.DATAS.toString());
+		int flag = 0;
+		try {
+			flag = Integer.parseInt(popularizeFlag);
+		} catch (Exception e) {
+			return ReturnInfoUtils.errorInfo("推广标识错误！");
+		}
+		goods.setPopularizeFlag(flag);
+		if (flag == 1) {// 推广标识：1-允许分销、2-不允许分销
+			if (StringEmptyUtils.isEmpty(popularizeProfit) || Double.parseDouble(popularizeProfit) == 0) {
+				return ReturnInfoUtils.errorInfo("推广分润不能为0");
+			}
+			goods.setPopularizeProfit(Double.parseDouble(popularizeProfit));
+		}
+		return updateCounterGoods(goods);
+	}
+
+	private Map<String, Object> updateCounterGoods(CounterGoodsContent entity) {
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("更新参数不能为null");
+		}
+		entity.setUpdateDate(new Date());
+		if (!merchantCounterDao.update(entity)) {
+			return ReturnInfoUtils.errorInfo("更新商品信息失败,服务器繁忙！");
+		}
+		return ReturnInfoUtils.successDataInfo(entity);
+	}
 }

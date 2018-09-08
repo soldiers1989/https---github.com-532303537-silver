@@ -13,7 +13,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("stockDao")
-public class StockDaoImpl extends BaseDaoImpl<Object> implements StockDao {
+public class StockDaoImpl extends BaseDaoImpl implements StockDao {
 
 	@Override
 	public Table getWarehousGoodsInfo(String merchantId, String warehouseCode, int page, int size, String entGoodsNo) {

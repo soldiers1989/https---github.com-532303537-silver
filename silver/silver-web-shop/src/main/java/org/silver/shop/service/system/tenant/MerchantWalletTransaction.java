@@ -130,4 +130,8 @@ public class MerchantWalletTransaction {
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		return merchantWalletService.fenZhang(orderId, amount,managerInfo);
 	}
+
+	public Map<String,Object> generateSign(String merchantId) {
+		return merchantWalletService.generateSign(merchantId);
+	}
 }

@@ -74,4 +74,19 @@ public class AgentWalletController {
 		}
 		return JSONObject.fromObject(statusMap).toString();
 	}
+	
+	@RequestMapping(value = "/generateSign", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("代理商钱包-生成校验码")
+	@RequiresRoles("Manager")
+	// @RequiresPermissions("merchantWallet:getMerchantWalletInfo")
+	public String generateSign(HttpServletRequest req, HttpServletResponse response,
+			@RequestParam("agentId") String agentId) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		return JSONObject.fromObject(agentWalletTransaction.generateSign(agentId)).toString();
+	}
 }

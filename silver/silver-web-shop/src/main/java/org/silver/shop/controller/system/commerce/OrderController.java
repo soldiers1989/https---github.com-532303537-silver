@@ -79,8 +79,7 @@ public class OrderController {
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		Map<String, Object> statusMap = orderTransaction.getMerchantOrderDetail(entOrderNo);
-		return JSONObject.fromObject(statusMap).toString();
+		return JSONObject.fromObject(orderTransaction.getMerchantOrderDetail(entOrderNo)).toString();
 	}
 
 	/**
@@ -547,6 +546,31 @@ public class OrderController {
 		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误,请重新输入!")).toString();
 	}
 
+	@RequestMapping(value = "/managerOrderFenZhang", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("管理员为订单分账")
+	// @RequiresRoles("Manager")
+	public String managerOrderFenZhang(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Enumeration<String> isKeys = req.getParameterNames();
+		List<String> orderList = new ArrayList<>();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			orderList.add(req.getParameter(key));
+		}
+		if (orderList.isEmpty()) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("请求参数不能为空!")).toString();
+		}
+		return JSONObject.fromObject(orderTransaction.managerOrderFenZhang(orderList)).toString();
+	}
+	
+	
+	
+	
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		List<JSONObject> orderGoodsList = new ArrayList<>();

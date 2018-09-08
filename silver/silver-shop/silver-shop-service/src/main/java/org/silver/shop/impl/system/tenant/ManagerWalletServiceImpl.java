@@ -8,6 +8,7 @@ import java.util.Map;
 import org.silver.common.BaseCode;
 import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.ManagerWalletService;
+import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.dao.system.tenant.ManagerWalletDao;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.SearchUtils;
@@ -21,6 +22,8 @@ public class ManagerWalletServiceImpl implements ManagerWalletService {
 
 	@Autowired
 	private ManagerWalletDao managerWalletDao;
+	@Autowired
+	private MerchantWalletService merchantWalletService;
 
 	@Override
 	public Map<String, Object> getMerchantWalletInfo(int page, int size, Map<String, Object> dataMap) {
@@ -43,20 +46,7 @@ public class ManagerWalletServiceImpl implements ManagerWalletService {
 
 	@Override
 	public Map<String, Object> updateMerchantWalletAmount(String merchantId, String managerName, double amount) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("merchantId", merchantId);
-		List<MerchantWalletContent> reList = managerWalletDao.findByProperty(MerchantWalletContent.class, params, 1, 1);
-		if (reList != null && !reList.isEmpty()) {
-			MerchantWalletContent merchantWallet = reList.get(0);
-			Double oldBalance = merchantWallet.getBalance();
-			merchantWallet.setBalance(oldBalance + amount);
-			merchantWallet.setUpdateBy(managerName);
-			merchantWallet.setUpdateDate(new Date());
-			if (!managerWalletDao.update(merchantWallet)) {
-				return ReturnInfoUtils.errorInfo("充值失败,服务器繁忙,请重试!");
-			}
-			return ReturnInfoUtils.successInfo();
-		}
-		return ReturnInfoUtils.errorInfo("未找到商户,请核对信息是否正确!");
+
+		return merchantWalletService.balanceOperating(merchantId, amount, "add");
 	}
 }

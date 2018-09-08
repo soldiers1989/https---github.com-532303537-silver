@@ -28,6 +28,7 @@ import org.silver.shop.dao.system.cross.PaymentDao;
 import org.silver.shop.dao.system.organization.MerchantDao;
 import org.silver.shop.model.system.cross.PaymentContent;
 import org.silver.shop.model.system.log.AgentWalletLog;
+import org.silver.shop.model.system.log.TradeReceiptLog;
 import org.silver.shop.model.system.manual.Appkey;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.manual.Mpay;
@@ -830,6 +831,9 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+	
+	
+	
 
 	/**
 	 * 返回给第三方电商平台,支付单信息
@@ -1658,4 +1662,14 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 		return ReturnInfoUtils.successInfo();
 	}
+
+	@Override
+	public Map<String, Object> manualReThirdParty(Map<String, Object> datasMap) {
+		List<Mpay> reList = paymentDao.find(Mpay.class, datasMap, null, 0, 0);
+		if(reList!=null && !reList.isEmpty()){
+			System.out.println("--->>"+reThirdPartyPaymentInfo(reList.get(0)));
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+	
 }

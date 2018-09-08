@@ -17,7 +17,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("goodsContentDao")
-public class GoodsContentDaoImpl<T> extends BaseDaoImpl<T> implements GoodsContentDao {
+public class GoodsContentDaoImpl extends BaseDaoImpl implements GoodsContentDao {
 
 	@Override
 	public Long findLastId() {

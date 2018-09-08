@@ -12,7 +12,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("categoryDao")
-public class CategoryDaoImpl extends BaseDaoImpl<Object> implements CategoryDao {
+public class CategoryDaoImpl<E> extends BaseDaoImpl<E> implements CategoryDao<E> {
 
 	@Override
 	public Table findAllCategory() {

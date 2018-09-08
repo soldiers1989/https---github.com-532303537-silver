@@ -17,4 +17,10 @@ public class TradeReceiptLogTransaction {
 		return tradeReceiptLogService.addLog(datasMap);
 	}
 
+	//
+	public Map<String,Object> getInfo(Map<String, Object> datasMap, int page, int size) {
+		
+		return tradeReceiptLogService.getInfo(datasMap, page, size);
+	}
+
 }

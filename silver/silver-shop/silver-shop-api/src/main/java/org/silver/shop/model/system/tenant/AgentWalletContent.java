@@ -3,6 +3,8 @@ package org.silver.shop.model.system.tenant;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.silver.shop.model.system.tenant.MemberWalletContent.Builder;
+
 /**
  * 代理商钱包信息实体类
  */
@@ -25,7 +27,11 @@ public class AgentWalletContent implements Serializable {
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
 	private Double cash;// 代理商现金,用于真实转账、付款、收款
-
+	private Double reserveAmount;// 储备金额-暂定用于商户订单导入时选择指定的用户进行资金扣费
+	private double freezingFunds;// 冻结资金：用于暂存扣款的金额
+	private String verifyCode;//校验码
+	
+	
 	public long getId() {
 		return id;
 	}
@@ -105,6 +111,32 @@ public class AgentWalletContent implements Serializable {
 	public void setCash(Double cash) {
 		this.cash = cash;
 	}
+	
+	
+	public Double getReserveAmount() {
+		return reserveAmount;
+	}
+
+	public double getFreezingFunds() {
+		return freezingFunds;
+	}
+
+	public String getVerifyCode() {
+		return verifyCode;
+	}
+
+	public void setReserveAmount(Double reserveAmount) {
+		this.reserveAmount = reserveAmount;
+	}
+
+	public void setFreezingFunds(double freezingFunds) {
+		this.freezingFunds = freezingFunds;
+	}
+
+	public void setVerifyCode(String verifyCode) {
+		this.verifyCode = verifyCode;
+	}
+
 
 	public static class Builder {
 		private long id;
@@ -117,7 +149,9 @@ public class AgentWalletContent implements Serializable {
 		private String updateBy = null;// 更新人
 		private Date updateDate = null;// 更新日期
 		private double cash = 0.0;// 现金
-
+		private double reserveAmount = 0.0;// 储备金额
+		private double freezingFunds = 0;//冻结金额
+		private String verifyCode = null;// 校验码
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -173,6 +207,18 @@ public class AgentWalletContent implements Serializable {
 			this.cash = cash;
 			return this;
 		}
+		public Builder reserveAmount(double reserveAmount) {
+			this.reserveAmount = reserveAmount;
+			return this;
+		}
+		public Builder freezingFunds(double freezingFunds) {
+			this.freezingFunds = freezingFunds;
+			return this;
+		}
+		public Builder verifyCode(String verifyCode) {
+			this.verifyCode = verifyCode;
+			return this;
+		}
 	}
 
 	private AgentWalletContent(Builder b) {
@@ -186,5 +232,8 @@ public class AgentWalletContent implements Serializable {
 		updateBy = b.updateBy;
 		updateDate = b.updateDate;
 		cash = b.cash;
+		reserveAmount = b.reserveAmount;
+		freezingFunds = b.freezingFunds;
+		verifyCode = b.verifyCode;
 	}
 }

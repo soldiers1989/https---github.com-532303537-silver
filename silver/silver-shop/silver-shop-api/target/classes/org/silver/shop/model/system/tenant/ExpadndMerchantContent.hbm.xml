@@ -1,33 +1,33 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-<!-- Generated 2018-3-7 15:07:56 by Hibernate Tools 3.4.0.CR1 -->
+<!-- Generated 2018-9-6 14:20:35 by Hibernate Tools 3.4.0.CR1 -->
 <hibernate-mapping>
-    <class name="org.silver.shop.model.system.tenant.SubMerchantContent" table="ym_shop_sub_merchant_content">
+    <class name="org.silver.shop.model.system.tenant.ExpadndMerchantContent" table="ym_shop_expadnd_merchant_content">
         <id name="id" type="long">
             <column name="id" />
             <generator class="identity" />
         </id>
-        <property name="merchantId" type="java.lang.String">
-            <column name="merchantId" not-null="true"/>
+        <property name="supMerchantId" type="java.lang.String">
+            <column name="supMerchantId" not-null="true" />
         </property>
-        <property name="merchantName" type="java.lang.String">
-            <column name="merchantName" not-null="true"/>
+        <property name="supMerchantName" type="java.lang.String">
+            <column name="supMerchantName" not-null="true"/>
         </property>
-        <property name="companyName" type="java.lang.String">
-            <column name="companyName" not-null="true"/>
+        <property name="expadndMerchantCode" type="java.lang.String">
+            <column name="expadndMerchantCode" not-null="true" unique="true"/>
         </property>
-        <property name="customsRecordCode" type="java.lang.String">
-            <column name="customsRecordCode" not-null="true" />
+        <property name="expadndMerchantName" type="java.lang.String">
+            <column name="expadndMerchantName" not-null="true"/>
         </property>
-        <property name="ciqRecoreCode" type="java.lang.String">
-            <column name="ciqRecoreCode" />
+         <property name="loginName" type="java.lang.String">
+            <column name="loginName" not-null="true" unique="true"/>
         </property>
-        <property name="marCode" type="java.lang.String">
-            <column name="marCode" not-null="true" unique="true"/>
+         <property name="legalName" type="java.lang.String">
+            <column name="legalName" />
         </property>
-        <property name="sku" type="java.lang.String">
-            <column name="sku" />
+        <property name="ysPartnerNo" type="java.lang.String">
+            <column name="ysPartnerNo" not-null="true"/>
         </property>
         <property name="createBy" type="java.lang.String">
             <column name="createBy" />
@@ -49,6 +49,12 @@
         </property>
         <property name="deleteDate" type="java.util.Date">
             <column name="deleteDate" />
+        </property>
+          <property name="remark" type="java.lang.String">
+            <column name="remark" />
+        </property>
+         <property name="profit" type="double">
+            <column name="profit" />
         </property>
     </class>
 </hibernate-mapping>

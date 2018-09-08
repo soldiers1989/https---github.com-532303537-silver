@@ -8,5 +8,5 @@ import org.silver.shop.dao.system.commerce.WarehousDao;
 import org.springframework.stereotype.Repository;
 
 @Repository("warehousDao")
-public class WarehousDaoImpl extends BaseDaoImpl<Object> implements WarehousDao {
+public class WarehousDaoImpl extends BaseDaoImpl implements WarehousDao {
 }

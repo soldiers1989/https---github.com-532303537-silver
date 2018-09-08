@@ -27,10 +27,11 @@ public class MerchantWalletContent implements Serializable {
 	private Date createDate;// 创建日期
 	private String updateBy;// 更新人
 	private Date updateDate;// 更新日期
-	private Double reserveAmount;// 储备金额
+	private Double reserveAmount;// 储备金额-代付会员的货款
 	private Double cash;// 商户现金(货款),用于真实转账、付款、收款
 	private double freezingFunds;// 冻结资金：用于暂存扣款的金额
-
+	private String verifyCode;//校验码
+	
 	public long getId() {
 		return id;
 	}
@@ -127,6 +128,16 @@ public class MerchantWalletContent implements Serializable {
 		this.freezingFunds = freezingFunds;
 	}
 
+	
+	public String getVerifyCode() {
+		return verifyCode;
+	}
+
+	public void setVerifyCode(String verifyCode) {
+		this.verifyCode = verifyCode;
+	}
+
+
 	public static class Builder {
 		private long id;
 		private String walletId = null;// 钱包Id
@@ -140,7 +151,7 @@ public class MerchantWalletContent implements Serializable {
 		private double reserveAmount = 0.0;// 储备金额
 		private double cash = 0.0;// 现金
 		private double freezingFunds = 0.0;// 冻结资金
-
+		private String verifyCode = null;// 校验码
 		public Builder(String walletId) {
 			this.walletId = walletId;
 		}
@@ -198,7 +209,10 @@ public class MerchantWalletContent implements Serializable {
 			this.freezingFunds = freezingFunds;
 			return this;
 		}
-
+		public Builder verifyCode(String verifyCode) {
+			this.verifyCode = verifyCode;
+			return this;
+		}
 	}
 
 	private MerchantWalletContent(Builder b) {
@@ -214,5 +228,6 @@ public class MerchantWalletContent implements Serializable {
 		reserveAmount = b.reserveAmount;
 		cash = b.cash;
 		freezingFunds = b.freezingFunds;
+		verifyCode = b.verifyCode;
 	}
 }

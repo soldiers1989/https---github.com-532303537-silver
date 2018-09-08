@@ -260,32 +260,19 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 平台抽取佣金
 		double commission = 0;
 		//
-		String strCash = "";
-		String strCommission = "";
+		double cash = 0;
 		// 原钱包资金
 		double oldCash = wallet.getCash();
 		// 来源标识：1-银盟商城、2-第三方推广
 		if (orderInfo.getSourceFlag() == 2) {
 			// 暂定手续费(佣金)九分之一
-			commission = payAmount / 9;
-			DecimalFormat df = new DecimalFormat("#");
-			// 取整
-			strCommission = df.format(commission);
-			// 扣除平台佣金后商户所得资金
-			double cash = (payAmount - Double.parseDouble(strCommission));
-			//
-			strCash = String.valueOf(cash);
+			commission = DoubleOperationUtil.div(payAmount, 9);
 		} else {
-			commission = payAmount * profit;
-			DecimalFormat df = new DecimalFormat("#.00000");
-			// 保留后五位
-			strCommission = df.format(commission);
-			// 扣除平台佣金后商户所得资金
-			double cash = (payAmount - Double.parseDouble(strCommission));
-			// 保留后五位
-			strCash = df.format(cash);
+			commission = DoubleOperationUtil.mul(payAmount, profit);
 		}
-		Map<String, Object> reWalletMap = updateWallet(wallet, Double.parseDouble(strCash));
+		// 扣除平台佣金后商户所得资金
+		cash = DoubleOperationUtil.sub(payAmount, commission);
+		Map<String, Object> reWalletMap = updateWallet(wallet, cash);
 		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
 			return ReturnInfoUtils.errorInfo("交易金额存入商户钱包失败,服务器繁忙!");
 		}
@@ -295,7 +282,7 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		datas.put("merchantName", wallet.getMerchantName());
 		datas.put("serialName", "购物");
 		datas.put("balance", oldCash);
-		datas.put("amount", Double.parseDouble(strCash));
+		datas.put("amount", cash);
 		// 类型:1-佣金、2-充值、3-提现、4-缴费、5-购物、6-线上
 		datas.put("type", 6);
 		datas.put("flag", "in");
@@ -310,15 +297,15 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 状态：success-交易成功、fail-交易失败
 		datas.put("status", "success");
 		datas.put("note", "订单号[" + orderInfo.getEntOrderNo() + "]用户购买 " + "购物" + " 支付了:" + payAmount + "元,商城平台抽取["
-				+ strCommission + "]元佣金,剩余[" + strCash + "]元存入钱包可用资金!");
+				+ commission + "]元佣金,剩余[" + cash + "]元存入钱包可用资金!");
 		// 添加商户钱包流水日志
 		Map<String, Object> reWalletLogMap = merchantWalletLogService.addWalletLog(datas);
 		if (!"1".equals(reWalletLogMap.get(BaseCode.STATUS.toString()))) {
 			return reWalletLogMap;
 		}
 		// 银盟总代理收款
-		return updateAgentWallet(Double.parseDouble(strCommission), "购物", payAmount, orderInfo.getEntOrderNo(),
-				wallet.getWalletId(), wallet.getMerchantName());
+		return updateAgentWallet(commission, "购物", payAmount, orderInfo.getEntOrderNo(), wallet.getWalletId(),
+				wallet.getMerchantName());
 	}
 
 	/**

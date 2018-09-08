@@ -3,14 +3,12 @@ package org.silver.shop.dao;
 import java.util.List;
 import java.util.Map;
 
-import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.tenant.MerchantFeeContent;
 
 /**
  * description：共用Dao方法
  */
-public interface BaseDao<T> {
+public interface BaseDao<E> {
 
 	/**
 	 * 根据实体查询所有数据(带分页查询)
@@ -21,7 +19,7 @@ public interface BaseDao<T> {
 	 * @param size
 	 * @return list
 	 */
-	public List<Object> findAll(Class<T> entity, int page, int size);
+	public List<E> findAll(Class<E> entity, int page, int size);
 
 	/**
 	 * 根据实体、列(名)、值查询数据
@@ -36,7 +34,7 @@ public interface BaseDao<T> {
 	 *            数目
 	 * @return List
 	 */
-	public List<T> findByProperty(Class<T> entity, Map<String, Object> params, int page, int size);
+	public List<E> findByProperty(Class<E> entity, Map<String, Object> params, int page, int size);
 
 	/**
 	 * 将实体类实例化
@@ -80,7 +78,7 @@ public interface BaseDao<T> {
 	 *            实体类名
 	 * @return
 	 */
-	public Long findAllCount(Class<T> entity);
+	public Long findAllCount(Class<E> entity);
 
 	/**
 	 * 查询数据库表中最后一条记录的自增ID
@@ -89,7 +87,7 @@ public interface BaseDao<T> {
 	 *            实体类名
 	 * @return
 	 */
-	public long findLastId(Class<T> entity);
+	public long findLastId(Class<E> entity);
 
 	/**
 	 * 模糊查询数据匹配时间段参数
@@ -108,7 +106,7 @@ public interface BaseDao<T> {
 	 *            结束时间 yyyy-dd-mm
 	 * @return List
 	 */
-	public List<Object> findBlurryProperty(Class<T> entity, Map<String, Object> params, String startTime,
+	public List<E> findBlurryProperty(Class<E> entity, Map<String, Object> params, String startTime,
 			String endTime, int page, int size);
 
 	/**
@@ -126,7 +124,7 @@ public interface BaseDao<T> {
 	 *            数据条数
 	 * @return List
 	 */
-	public List<Object> findByPropertyDesc(Class<T> entity, Map<String, Object> params, String descParams, int page,
+	public List<E> findByPropertyDesc(Class<E> entity, Map<String, Object> params, String descParams, int page,
 			int size);
 
 	/**
@@ -137,7 +135,7 @@ public interface BaseDao<T> {
 	 * @param year
 	 * @return
 	 */
-	public long findSerialNoCount(Class<T> entity, String property, int year);
+	public long findSerialNoCount(Class<E> entity, String property, int year);
 
 	/**
 	 * 查询总数
@@ -148,7 +146,7 @@ public interface BaseDao<T> {
 	 *            查询参数
 	 * @return
 	 */
-	public long findByPropertyCount(Class<T> entity, Map<String, Object> params);
+	public long findByPropertyCount(Class<E> entity, Map<String, Object> params);
 
 	/**
 	 * 根据实体、列(名)、值模糊查询数据
@@ -165,7 +163,7 @@ public interface BaseDao<T> {
 	 *            数目
 	 * @return List
 	 */
-	public List<Object> findByPropertyLike(Class<T> entity, Map<String, Object> params, Map blurryMap, int page,
+	public List<Object> findByPropertyLike(Class<E> entity, Map<String, Object> params, Map blurryMap, int page,
 			int size);
 
 	/**
@@ -179,7 +177,7 @@ public interface BaseDao<T> {
 	 *            模糊查询参数
 	 * @return
 	 */
-	long findByPropertyLikeCount(Class<T> entity, Map<String, Object> params, Map<String, Object> blurryMap);
+	long findByPropertyLikeCount(Class<E> entity, Map<String, Object> params, Map<String, Object> blurryMap);
 
 	/**
 	 * 根据实体、列(名)、值模糊查询数据
@@ -196,7 +194,7 @@ public interface BaseDao<T> {
 	 *            数目
 	 * @return List
 	 */
-	public List<T> findByPropertyOr(Class<T> entity, Map<String, Object> params, List orList, int page, int size);
+	public List<E> findByPropertyOr(Class<E> entity, Map<String, Object> params, List orList, int page, int size);
 
 	/**
 	 * 单独根据实体、列(名)、值Or查询数据
@@ -211,7 +209,7 @@ public interface BaseDao<T> {
 	 *            数目
 	 * @return List
 	 */
-	public List<T> findByPropertyOr2(Class<T> entity, Map<String, List<Object>> orMap, int page, int size);
+	public List<E> findByPropertyOr2(Class<E> entity, Map<String, List<Object>> orMap, int page, int size);
 
 	/**
 	 * 查询or条件下总数
@@ -224,16 +222,35 @@ public interface BaseDao<T> {
 	 *            or参数
 	 * @return
 	 */
-	public long findByPropertyOrCount(Class<T> entity, Map<String, Object> paramMap, List orList);
+	public long findByPropertyOrCount(Class<E> entity, Map<String, Object> paramMap, List orList);
 
 	/**
-	 * 根据实体与查询参数，分页查询
+	 * 根据实体与参数，分页查询
 	 * 
-	 * @param <T>
 	 * @param entity
+	 *            实体类
+	 * @param params
+	 *            查询参数
+	 * @param blurryMap
+	 *            模糊查询参数
 	 * @param page
+	 *            页数
 	 * @param size
+	 *            数目
 	 * @return list
 	 */
-	public List<T> find(Class<T> entity,Map<String, Object> params,  int page, int size);
+	public List<E> find(Class<E> entity, Map<String, Object> params, Map<String, Object> blurryMap, int page, int size);
+
+	/**
+	 * 根据实体与参数查询统计数
+	 * 
+	 * @param entity
+	 *            实体类
+	 * @param params
+	 *            查询参数
+	 * @param blurryMap
+	 *            模糊查询参数
+	 * @return long
+	 */
+	public long findCount(Class<E> entity, Map<String, Object> params, Map<String, Object> blurryMap);
 }

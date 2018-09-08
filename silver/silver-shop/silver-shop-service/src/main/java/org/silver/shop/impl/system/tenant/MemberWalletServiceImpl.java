@@ -52,8 +52,9 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 	private MemberWalletLogService memberWalletLogService;
 	@Autowired
 	private WalletUtils walletUtils;
-	
-	
+	@Autowired
+	private MerchantWalletService merchantWalletService;
+
 	@Override
 	public void reserveAmountTransfer(String memberId, String merchantId, String tradeNo, Double amount) {
 		System.out.println("---开始支付单储备资金结算---");
@@ -96,18 +97,24 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 					.get(BaseCode.DATAS.toString());
 			params.put("targetWalletId", merchantWallet.getWalletId());
 			params.put("targetName", merchantWallet.getMerchantName());
-
 			// 用户钱包日志记录
 			Map<String, Object> reMemberWalletLogMap = memberWalletLogService.addWalletLog(params);
 			if (!"1".equals(reMemberWalletLogMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMemberWalletLogMap.get(BaseCode.MSG.toString()));
 				throw new Exception(reMemberWalletLogMap.get(BaseCode.MSG.toString()) + "");
 			}
+			
 			// 商户储备资金收款
-			Map<String, Object> reMerchantMap = merchantWalletReserveAmountTransfer(merchantWallet, amount);
+			Map<String, Object> reMerchantMap = merchantWalletService.reserveAmountOperating(merchantId, amount, "add");
 			if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
 				logger.error(reMerchantMap.get(BaseCode.MSG.toString()));
 				throw new Exception(reMerchantMap.get(BaseCode.MSG.toString()) + "");
+			}
+			// 商户加款成功后，用户冻结资金进行扣除
+			Map<String, Object> reMemberDeductionMap = freezingFundsDeduction(memberId, amount);
+			if (!"1".equals(reMemberDeductionMap.get(BaseCode.STATUS.toString()))) {
+				logger.error(reMemberDeductionMap.get(BaseCode.MSG.toString()));
+				throw new Exception(reMemberDeductionMap.get(BaseCode.MSG.toString()) + "");
 			}
 			params.clear();
 			params.put("walletId", merchantWallet.getWalletId());
@@ -138,31 +145,9 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		System.out.println("---结束支付单储备资金结算---");
 	}
 
-	/**
-	 * 商户钱包收取关联用户的货款
-	 * 
-	 * @param merchantWallet
-	 * @param amount
-	 * @return
-	 */
-	private Map<String, Object> merchantWalletReserveAmountTransfer(MerchantWalletContent merchantWallet,
-			Double amount) {
-		if (merchantWallet == null) {
-			return ReturnInfoUtils.errorInfo("商户钱包储备资金收款时请求参数不能为空！");
-		}
-		// 原储备资金
-		double oldReserveAmount = merchantWallet.getReserveAmount();
-		merchantWallet.setReserveAmount(Double.parseDouble(format.format(oldReserveAmount + amount)));
-		merchantWallet.setUpdateBy("system");
-		merchantWallet.setUpdateDate(new Date());
-		if (memberWalletDao.update(merchantWallet)) {
-			return ReturnInfoUtils.successInfo();
-		}
-		return ReturnInfoUtils.errorInfo("商户钱包储备资金收款失败！");
-	}
 
 	/**
-	 * 用户储备资金的扣款
+	 * 将用户钱包中的储备资金转移至冻结资金
 	 * 
 	 * @param memberId
 	 * @param amount
@@ -278,42 +263,6 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		return memberWalletLogService.addWalletLog(datas);
 	}
 
-	/**
-	 * 用户统一的更新钱包储备资金方法
-	 * 
-	 * @param memberId
-	 *            用户id
-	 * @param amount
-	 *            金额
-	 * @param flag
-	 *            标识：in-进账、out-出账
-	 * @return Map datas-用户钱包信息
-	 */
-	private Map<String, Object> updateReserveAmount(String memberId, double amount, String flag) {
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId, null);
-		MemberWalletContent wallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		if (amount < 0.01) {
-			return ReturnInfoUtils.errorInfo("更新储备资金，金额错误！");
-		}
-		double oldReserveAmount = wallet.getReserveAmount();
-		double newReserveAmount = 0;
-		switch (flag) {
-		case "in":
-			newReserveAmount = oldReserveAmount + amount;
-			break;
-		case "out":
-			newReserveAmount = oldReserveAmount - amount;
-			break;
-		default:
-			return ReturnInfoUtils.errorInfo("更新失败，未知标识！");
-		}
-		wallet.setReserveAmount(newReserveAmount);
-		wallet.setUpdateDate(new Date());
-		if (!memberWalletDao.update(wallet)) {
-			return ReturnInfoUtils.errorInfo("更新用户储备资金失败,服务器繁忙！");
-		}
-		return ReturnInfoUtils.successDataInfo(wallet);
-	}
 
 	/**
 	 * 更新用户充值的交易日志记录信息
@@ -401,15 +350,14 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			}
 			break;
 		default:
-			return ReturnInfoUtils.errorInfo("校验钱包余额是否满足扣款失败，未知类型[" + type + "]");
+			return ReturnInfoUtils.errorInfo("校验钱包余额是否满足扣款，未知类型[" + type + "]");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
-	
 	@Override
 	public Map<String, Object> reserveAmountOperating(String memberId, double amount, String type) {
-		Map<String, Object> verifyMap = verifySign(memberId);
+		Map<String, Object> verifyMap = walletUtils.verifySign(2, memberId);
 		if (!"1".equals(verifyMap.get(BaseCode.STATUS.toString()))) {
 			return verifyMap;
 		}
@@ -430,45 +378,9 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		default:
 			return ReturnInfoUtils.errorInfo("操作失败，未知类型[" + type + "]");
 		}
-		entity.setVerifyCode(generateSign(entity.getWalletId(), entity.getBalance(), entity.getReserveAmount(),
-				entity.getFreezingFunds()));
+		entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+				entity.getReserveAmount(), entity.getFreezingFunds()));
 		return updateWallet(entity);
-	}
-
-	/**
-	 * 根据用户钱包信息生成校验码
-	 * 
-	 * @param entity
-	 *            用户钱包信息实体
-	 */
-	private String generateSign(String walletId, double balance, double reserveAmount, double freezingFunds) {
-		MD5 md5 = new MD5();
-		return md5.getMD5ofStr("YM_" + walletId + balance + reserveAmount + freezingFunds);
-	}
-
-	/**
-	 * 检查用户钱包校验码
-	 * <li>校验码=钱包id+余额+用户储备资金+冻结资金</li>
-	 * 
-	 * @param memberId
-	 *            用户id
-	 * @return
-	 */
-	private Map<String, Object> verifySign(String memberId) {
-		MemberWalletContent entity = findByIdWallet(memberId);
-		if (entity == null) {
-			return ReturnInfoUtils.errorInfo("查询资金失败！");
-		}
-		MD5 md5 = new MD5();
-		String id = entity.getWalletId();
-		double balance = entity.getBalance();
-		double reserveAmount = entity.getReserveAmount();
-		double freezingFunds = entity.getFreezingFunds();
-		String oldSign = md5.getMD5ofStr("YM_" + id + balance + reserveAmount + freezingFunds);
-		if (!entity.getVerifyCode().equals(oldSign)) {
-			return ReturnInfoUtils.errorInfo("资金异常！");
-		}
-		return ReturnInfoUtils.successInfo();
 	}
 
 	@Override
@@ -478,14 +390,14 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 			if (entity == null) {
 				return ReturnInfoUtils.errorInfo("钱包查询失败！");
 			}
-			entity.setVerifyCode(generateSign(entity.getWalletId(), entity.getBalance(), entity.getReserveAmount(),
-					entity.getFreezingFunds()));
+			entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+					entity.getReserveAmount(), entity.getFreezingFunds()));
 			return updateWallet(entity);
 		} else {
 			List<MemberWalletContent> reList = memberWalletDao.findByProperty(MemberWalletContent.class, null, 0, 0);
 			if (reList != null && !reList.isEmpty()) {
 				for (MemberWalletContent entity : reList) {
-					entity.setVerifyCode(generateSign(entity.getWalletId(), entity.getBalance(),
+					entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
 							entity.getReserveAmount(), entity.getFreezingFunds()));
 					Map<String, Object> reUpdateMap = updateWallet(entity);
 					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
@@ -508,8 +420,8 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 	}
 
 	@Override
-	public Map<String,Object> checkPayPassword(String memberId, String payPassword) {
-		Map<String,Object> params = new HashMap<>();
+	public Map<String, Object> checkPayPassword(String memberId, String payPassword) {
+		Map<String, Object> params = new HashMap<>();
 		params.put("memberId", memberId);
 		List<Member> reList = memberWalletDao.findByProperty(Member.class, params, 0, 0);
 		if (reList == null) {
@@ -517,20 +429,19 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		} else if (!reList.isEmpty()) {
 			MD5 md5 = new MD5();
 			Member member = reList.get(0);
-			if(member.getPaymentPassword().equals(md5.getMD5ofStr(payPassword))){
+			if (member.getPaymentPassword().equals(md5.getMD5ofStr(payPassword))) {
 				return ReturnInfoUtils.successInfo();
-			}else{
+			} else {
 				return ReturnInfoUtils.errorInfo("交易密码错误！");
 			}
 		} else {
 			return ReturnInfoUtils.noDatas();
 		}
 	}
-	
-	
+
 	@Override
 	public Map<String, Object> freezingFundsOperating(String memberId, double amount, String type) {
-		Map<String, Object> verifyMap = verifySign(memberId);
+		Map<String, Object> verifyMap = walletUtils.verifySign(2, memberId);
 		if (!"1".equals(verifyMap.get(BaseCode.STATUS.toString()))) {
 			return verifyMap;
 		}
@@ -538,22 +449,38 @@ public class MemberWalletServiceImpl implements MemberWalletService {
 		if (entity == null) {
 			return ReturnInfoUtils.errorInfo("钱包查询失败！");
 		}
-		double oldAmount = entity.getFreezingFunds();
+		// 获取钱包原冻结金额
+		double oldFreezingFunds = entity.getFreezingFunds();
 		switch (type) {
 		case "add":// 冻结资金加钱
-			entity.setFreezingFunds(DoubleOperationUtil.add(oldAmount, amount));
+			entity.setFreezingFunds(DoubleOperationUtil.add(oldFreezingFunds, amount));
 			break;
 		case "sub":// 冻结资金扣钱
-			entity.setFreezingFunds(DoubleOperationUtil.sub(oldAmount, amount));
+			entity.setFreezingFunds(DoubleOperationUtil.sub(oldFreezingFunds, amount));
 			break;
 		default:
 			return ReturnInfoUtils.errorInfo("操作失败，未知类型[" + type + "]");
 		}
-		entity.setVerifyCode(generateSign(entity.getWalletId(), entity.getBalance(), entity.getReserveAmount(),
-				entity.getFreezingFunds()));
+		entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+				entity.getReserveAmount(), entity.getFreezingFunds()));
 		return updateWallet(entity);
 	}
 
+	/**
+	 * 用户冻结资金的清算
+	 * 
+	 * @param memberId
+	 *            用户id
+	 * @param amount
+	 *            金额
+	 * @return Map
+	 */
+	private Map<String, Object> freezingFundsDeduction(String memberId, Double amount) {
+		Map<String, Object> checkMap = checkEnoughMoney(memberId, amount, "freezingFunds");
+		if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
+			return checkMap;
+		}
+		return freezingFundsOperating(memberId, amount, "sub");
+	}
 
 }
-

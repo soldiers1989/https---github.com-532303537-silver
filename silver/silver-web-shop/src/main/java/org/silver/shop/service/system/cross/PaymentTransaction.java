@@ -160,4 +160,8 @@ public class PaymentTransaction {
 		return paymentService.managerDeleteMpay(json,note,managerName);
 	}
 
+	public Map<String,Object> manualReThirdParty(Map<String, Object> datasMap) {
+		return  paymentService.manualReThirdParty(datasMap);
+	}
+
 }

@@ -228,4 +228,13 @@ public interface OrderService {
 	 * @return
 	 */
 	public Map<String, Object> thirdPromoteBusiness(Map<String, Object> datasMap);
+
+	/**
+	 * 管理员发起订单分账
+	 * @param orderList 订单id集合
+	 * @param managerName 管理员名称
+	 * @param managerId  管理员id
+	 * @return
+	 */
+	public Map<String, Object> managerOrderFenZhang(List<String> orderList, String managerId, String managerName);
 }

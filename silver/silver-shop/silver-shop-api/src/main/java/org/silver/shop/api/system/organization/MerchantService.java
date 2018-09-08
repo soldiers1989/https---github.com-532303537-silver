@@ -111,12 +111,14 @@ public interface MerchantService {
 
 	/**
 	 * 设置商户关联的用户账号
-	 * @param memberId 用户Id
 	 * @param merchantId 商户Id
-	 * @param managerName  管理员名称
+	 * @param accountName 用户账号
+	 * @param loginPassword  用户登录密码
+	 * @param payPassword  支付密码
+	 * @param payPassword 
 	 * @return Map
 	 */
-	public Map<String, Object> setRelatedMember(String memberId, String merchantId, String managerName );
+	public Map<String, Object> setRelatedMember(String merchantId, String merchantName, String accountName, String loginPassword, String payPassword );
 
 	/**
 	 * 获取关联的用户资金信息

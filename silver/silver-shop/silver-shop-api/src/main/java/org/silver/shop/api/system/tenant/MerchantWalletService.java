@@ -79,4 +79,54 @@ public interface MerchantWalletService {
 	 * @return Map
 	 */
 	public Map<String,Object> balanceTransferFreezingFunds(MerchantWalletContent merchantWallet, double amount);
+
+
+	/**
+	 * 根据商户id查询钱包信息后，进行对应的货款操作
+	 * 
+	 * @param merchantId
+	 *            商户id
+	 * @param amount
+	 *            金额
+	 * @param type
+	 *            类型：add-加款、sub-扣款
+	 * @return Map
+	 */
+	public Map<String, Object> reserveAmountOperating(String merchantId, double amount, String type);
+
+
+	/**
+	 * 根据商户id生成钱包校验码
+	 * @param merchantId 商户id
+ 	 * @return
+	 */
+	public Map<String, Object> generateSign(String merchantId);
+
+
+	/**
+	 * 根据商户id查询钱包信息后，进行对应的余额操作
+	 * @param merchantId 商户id
+	 * @param amount 金额
+	 * @param type 类型：add-加款、sub-扣款
+	 * @return Map
+	 */
+	public Map<String, Object> balanceOperating(String merchantId, double amount, String type);
+
+
+	/**
+	 * 商户余额清算
+	 * @param merchantId 商户id
+	 * @param amount 金额
+	 * @return Map
+	 */
+	public Map<String, Object> balanceDeduction(String merchantId, Double amount);
+	
+	/**
+	 * 根据商户id查询钱包信息后，进行冻结资金对应的操作
+	 * @param merchantId 商户id
+	 * @param amount 金额
+	 * @param type 类型：add-加款、sub-扣款
+	 * @return Map
+	 */
+	public Map<String, Object> freezingFundsOperating(String merchantId, double amount, String type) ;
 }

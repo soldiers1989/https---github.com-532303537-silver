@@ -2,6 +2,7 @@ package org.silver.shop.impl.system.log;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.CheckDatasUtil;
+import org.silver.util.DateUtil;
 import org.silver.util.ReturnInfoUtils;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,7 @@ public class TradeReceiptLogServiceImpl implements TradeReceiptLogService {
 	@Autowired
 	private MerchantUtils merchantUtils;
 	@Autowired
-	private TradeReceiptLogDao tradeReceiptLogDao;
+	private TradeReceiptLogDao<TradeReceiptLog> tradeReceiptLogDao;
 	@Autowired
 	private WalletUtils walletUtils;
 
@@ -148,6 +150,56 @@ public class TradeReceiptLogServiceImpl implements TradeReceiptLogService {
 			return ReturnInfoUtils.errorInfo("更新交易记录失败,服务器繁忙！");
 		}
 		return ReturnInfoUtils.successDataInfo(entity);
+	}
+
+	@Override
+	public Map<String, Object> getInfo(Map<String, Object> datasMap, int page, int size) {
+		if(StringEmptyUtils.isNotEmpty(datasMap.get("startDate"))){
+			Date startDate= DateUtil.parseDate(datasMap.get("startDate")+"", "yyyy-MM-dd HH:mm:ss");
+			if(startDate == null){
+				return ReturnInfoUtils.errorInfo("日期格式错误！");
+			}
+			datasMap.put("startDate", startDate);
+		}
+		if(StringEmptyUtils.isNotEmpty(datasMap.get("endDate"))){
+			Date endDate= DateUtil.parseDate(datasMap.get("endDate")+"", "yyyy-MM-dd HH:mm:ss");
+			if(endDate == null){
+				return ReturnInfoUtils.errorInfo("日期格式错误！");
+			}
+			datasMap.put("endDate", endDate);
+		}
+		Map<String,Object> blurryMap = new HashMap<>();
+		//校验前台参数是否带模糊查询字样
+		for(Map.Entry<String, Object> entry : datasMap.entrySet()){
+			if(entry.getKey().contains("blurry")){
+				blurryMap.put(entry.getKey().replace("blurry", ""), entry.getValue());
+			}
+		}
+		List<TradeReceiptLog> reList = tradeReceiptLogDao.find(TradeReceiptLog.class, datasMap, blurryMap, page, size);
+		Long count = tradeReceiptLogDao.findCount(TradeReceiptLog.class, datasMap, blurryMap);
+		return uniteResult(reList,count,page,size);
+	}
+	
+	/**
+	 * 统一处理查询结果返回
+	 * @param reList 查询结果集合
+	 * @param count 数量
+	 * @param page 页数
+ 	 * @param size 数目
+	 * @return Map
+	 */
+	private Map<String, Object> uniteResult(List reList, Long count, int page, int size) {
+		if(reList == null){
+			return ReturnInfoUtils.warnInfo();
+		}else if(reList.isEmpty()){
+			return ReturnInfoUtils.noDatas();
+		}else{
+			if(page == 1 && size == 1){
+				return ReturnInfoUtils.successDataInfo(reList.get(0));
+			}else{
+				return ReturnInfoUtils.successDataInfo(reList,count);
+			}
+		}
 	}
 	
 }

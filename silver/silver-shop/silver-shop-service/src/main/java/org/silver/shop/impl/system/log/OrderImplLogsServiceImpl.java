@@ -58,8 +58,7 @@ public class OrderImplLogsServiceImpl implements OrderImplLogsService {
 	}
 
 	@Override
-	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size, String merchantId,
-			String merchantName) {
+	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size) {
 		Map<String, Object> reDatasMap = SearchUtils.universalOrderImplLogSearch(params);
 		Map<String, Object> paramMap = (Map<String, Object>) reDatasMap.get("param");
 		Map<String, Object> blurryMap =  (Map<String, Object>) reDatasMap.get("blurry");

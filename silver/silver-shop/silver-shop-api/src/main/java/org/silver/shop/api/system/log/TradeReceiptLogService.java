@@ -45,4 +45,13 @@ public interface TradeReceiptLogService {
 	 */
 	public Map<String, Object> updateLog(TradeReceiptLog entity);
 
+	/**
+	 * 查询交易日志记录
+	 * @param datasMap 查询参数
+	 * @param page 
+	 * @param size 
+	 * @return
+	 */
+	public Map<String, Object> getInfo(Map<String, Object> datasMap, int page, int size);
+
 }

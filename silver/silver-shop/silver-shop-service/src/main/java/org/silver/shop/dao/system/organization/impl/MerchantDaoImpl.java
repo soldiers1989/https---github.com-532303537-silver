@@ -15,8 +15,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("merchantDao")
-public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
-
+public class MerchantDaoImpl extends BaseDaoImpl implements MerchantDao {
 
 	@Override
 	public long findLastId() {
@@ -27,17 +26,15 @@ public class MerchantDaoImpl<T> extends BaseDaoImpl<T> implements MerchantDao {
 	public Table getRelatedMemberFunds(String merchantId, String memberId, int page, int size) {
 		Session session = null;
 		try {
-			String sql = "SELECT t2.memberId,t2.memberName,t2.reserveAmount FROM ym_shop_merchant_related_member_content t1 "
-					+ "LEFT JOIN ym_shop_member_wallet_content t2 ON t1.memberId = t2.memberId WHERE t1.merchantId = ?";
+			String sql = "SELECT  m.*,t3.memberIdCard,t3.memberIdCardName FROM (SELECT t2.memberId,t2.memberName,t2.reserveAmount FROM 	ym_shop_merchant_related_member_content t1 LEFT JOIN ym_shop_member_wallet_content t2 ON t1.memberId = t2.memberId WHERE t1.merchantId = ? )m  "
+					+ "LEFT JOIN ym_shop_member t3 on m.memberId = t3.memberId";
 			List<Object> sqlParams = new ArrayList<>();
 			sqlParams.add(merchantId);
-			if(StringEmptyUtils.isNotEmpty(memberId)){
-				sql +=  "AND t2.memberId = ? ";
+			if (StringEmptyUtils.isNotEmpty(memberId)) {
+				sql += "AND t3.memberIdCardName = ? ";
 				sqlParams.add(memberId);
 			}
 			session = getSession();
-			//ConnectionProvider cp = ((SessionFactoryImplementor) session.getSessionFactory()).getConnectionProvider();
-			//Connection c = cp.getConnection();
 			Table t = null;
 			if (page > 0 && size > 0) {
 				page = page - 1;

@@ -1,5 +1,6 @@
 package org.silver.shop.api.system.commerce;
 
+import java.util.List;
 import java.util.Map;
 
 import org.silver.shop.model.system.organization.Merchant;
@@ -29,9 +30,10 @@ public interface MerchantCounterService {
 	 * 商户添加专柜信息
 	 * @param merchantInfo 商户信息实体类
 	 * @param datasMap 专柜信息
+	 * @param imglist 图片集合
 	 * @return Map
 	 */
-	public Map<String, Object> addCounterInfo(Merchant merchantInfo, Map<String, Object> datasMap);
+	public Map<String, Object> addCounterInfo(Merchant merchantInfo, Map<String, Object> datasMap, List<Object> imglist);
 
 	/**
 	 * 商户向专柜添加商品信息
@@ -49,6 +51,13 @@ public interface MerchantCounterService {
 	 * @return Map
 	 */
 	public Map<String, Object> counterInfo(String counterId);
+
+	/**
+	 * 设置专柜商品是否允许分销
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> updatePopularizeFlag(Map<String, Object> datasMap);
 
 
 }

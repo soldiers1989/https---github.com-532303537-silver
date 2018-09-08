@@ -12,8 +12,11 @@ import org.silver.common.StatusCode;
 import org.silver.shop.api.system.tenant.AgentWalletService;
 import org.silver.shop.dao.system.tenant.ProxyWalletDao;
 import org.silver.shop.model.system.log.AgentWalletLog;
+import org.silver.shop.model.system.tenant.AgentWalletContent;
+import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -69,4 +72,57 @@ public class AgentWalletServiceImpl implements AgentWalletService {
 		}
 	}
 
+	@Override
+	public Map<String, Object> generateSign(String agentId) {
+		if (StringEmptyUtils.isNotEmpty(agentId)) {
+			AgentWalletContent entity = findByIdWallet(agentId);
+			if (entity == null) {
+				return ReturnInfoUtils.errorInfo("钱包查询失败！");
+			}
+			entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+					entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash()));
+			return updateWallet(entity);
+		} else {
+			List<AgentWalletContent> reList = proxyWalletDao.findByProperty(AgentWalletContent.class, null, 0,
+					0);
+			if (reList != null && !reList.isEmpty()) {
+				for (AgentWalletContent entity : reList) {
+					entity.setVerifyCode(WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+							entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash()));
+					Map<String, Object> reUpdateMap = updateWallet(entity);
+					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
+						return reUpdateMap;
+					}
+				}
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	private Map<String, Object> updateWallet(AgentWalletContent entity) {
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("更新钱包时，请求参数不能为null");
+		}
+		entity.setUpdateDate(new Date());
+		if (!proxyWalletDao.update(entity)) {
+			return ReturnInfoUtils.errorInfo("商户钱包更新失败！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据商户id查询、钱包信息
+	 * 
+	 * @param merchantId
+	 *            商户id
+	 * @return MerchantWalletContent 商户钱包实体
+	 */
+	private AgentWalletContent findByIdWallet(String agentId) {
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(3, agentId, null);
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			return null;
+		}
+		return (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+	}
+	
 }

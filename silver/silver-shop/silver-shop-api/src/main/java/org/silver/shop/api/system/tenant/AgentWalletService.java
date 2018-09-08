@@ -22,4 +22,11 @@ public interface AgentWalletService {
 	 * @return Map
 	 */
 	public Map<String, Object> getAgentWalletInfo(String agentId, String agentName);
+
+	/**
+	 * 生成代理商钱包校验码
+	 * @param agentId 代理商id
+	 * @return Map
+	 */
+	public Map<String, Object> generateSign(String agentId);
 }

@@ -119,8 +119,6 @@ public class ManualOrderInterceptor {
 							manualOrderInterceptor, idCardList, customsMap);
 					threadPool.submit(merchantWalletTollTask);
 					threadPool.shutdown();
-					// Map<String, Object> reTollMap =
-					// merchantWalletToll(orderList, merchantId);
 				} else {
 					logger.error("--商户实名认证与订单申报手续费计算-AOP-结果参数错误--" + json.toString());
 				}
@@ -218,7 +216,8 @@ public class ManualOrderInterceptor {
 		double balance = merchantWallet.getBalance();
 		logger.error("--清算时----总计订单手续费结果-->>" + totalFee);
 		// 商户钱包扣款
-		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, totalFee);
+		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundsOperating(merchant.getMerchantId(),
+				totalFee, "sub");
 		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reDeductionMap;
 		}
@@ -361,8 +360,8 @@ public class ManualOrderInterceptor {
 		if (newList.isEmpty()) {// 当需要实名认证的集合为空时,则表示不需要进行计费
 			return ReturnInfoUtils.successInfo();
 		}
+		// 服务费
 		double serviceFee = DoubleOperationUtil.mul(newList.size(), merchantCost.getPlatformCost());
-		// double serviceFee = newList.size() * merchantCost.getPlatformCost();
 		logger.error("-清算时-身份证认证数量-->" + newList.size() + ";--费率->" + merchantCost.getPlatformCost() + ";---结果->"
 				+ serviceFee);
 		//
@@ -560,9 +559,12 @@ public class ManualOrderInterceptor {
 	 */
 	private Map<String, Object> updateMerchantWallet(Merchant merchant, MerchantWalletContent merchantWallet,
 			double serviceFee, AgentWalletContent agentWallet, List<JSONObject> detailsList) {
-		double balance = merchantWallet.getBalance();
+
+		System.out.println("---商户冻结资金扣款---111-");
 		// 商户冻结资金扣款
-		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundFeduction(merchantWallet, serviceFee);
+		Map<String, Object> reDeductionMap = merchantWalletService.freezingFundsOperating(merchant.getMerchantId(),
+				serviceFee, "sub");
+		double balance = merchantWallet.getBalance();
 		if (!"1".equals(reDeductionMap.get(BaseCode.STATUS.toString()))) {
 			return reDeductionMap;
 		}
@@ -582,10 +584,6 @@ public class ManualOrderInterceptor {
 		datas.put("status", "success");
 		// 添加商户钱包流水日志
 		return merchantWalletLogService.addWalletLog(datas);
-	}
-
-	void add(String id, double total) {
-
 	}
 
 	/**

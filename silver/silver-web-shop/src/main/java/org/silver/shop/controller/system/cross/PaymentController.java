@@ -446,6 +446,27 @@ public class PaymentController {
 		return JSONObject.fromObject(paytemTransaction.managerDeleteMpay(json, note)).toString();
 	}
 	
+	
+	@RequestMapping(value = "/manualReThirdParty", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("手动重发第三方")
+	//@RequiresRoles("Merchant")
+	public String manualReThirdParty(HttpServletRequest req, HttpServletResponse response,@RequestParam("morder_id") String morder_id) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String, Object> datasMap = new HashMap<>();
+		Enumeration<String> isKeys = req.getParameterNames();
+		while (isKeys.hasMoreElements()) {
+			String key = isKeys.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(paytemTransaction.manualReThirdParty(datasMap)).toString();
+	}
+	
 	public static void main(String[] args) {
 		Map<String, Object> item = new HashMap<>();
 		// YM180125052191327

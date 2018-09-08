@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.silver.common.BaseCode;
 import org.silver.shop.api.system.log.MerchantWalletLogService;
+import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.api.system.tenant.OfflineRechargeService;
 import org.silver.shop.dao.system.tenant.OfflineRechargeDao;
 import org.silver.shop.model.system.log.OfflineRechargeLog;
@@ -28,7 +29,10 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 	private MerchantWalletLogService merchantWalletLogService;
 	@Autowired
 	private WalletUtils walletUtils;
-
+	@Autowired
+	private MerchantWalletService merchantWalletService;
+	
+	
 	@Override
 	public Map<String, Object> getApplicationDetail(String offlineRechargeId) {
 		if (StringEmptyUtils.isEmpty(offlineRechargeId)) {
@@ -166,6 +170,11 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 		return ReturnInfoUtils.errorInfo("暂无数据！");
 	}
 
+	/**
+	 * 
+	 * @param content
+	 * @return
+	 */
 	private Map<String, Object> updateWallet(OfflineRechargeContent content) {
 		if (content == null) {
 			return ReturnInfoUtils.errorInfo("更新钱包信息时,请求参数不能为null");
@@ -176,9 +185,9 @@ public class OfflineRechargeServiceImpl implements OfflineRechargeService {
 		}
 		MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
 		double oldBalance = merchantWallet.getBalance();
-		merchantWallet.setBalance(oldBalance + content.getRemittanceAmount());
-		if (!offlineRechargeDao.update(merchantWallet)) {
-			return ReturnInfoUtils.errorInfo("加款失败，服务器繁忙！");
+		Map<String,Object> reMap = merchantWalletService.balanceOperating(content.getApplicantId(), content.getRemittanceAmount(), "add");
+		if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+			return reMap;
 		}
 		Map<String, Object> datas = new HashMap<>();
 		datas.put("merchantId", content.getApplicantId());

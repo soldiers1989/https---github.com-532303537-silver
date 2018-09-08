@@ -28,19 +28,12 @@ public interface OrderImplLogsService {
 	/**
 	 * 商户获取日志信息
 	 * 
-	 * @param type
-	 *            类型1-错误,2-警告订单超额....待续
-	 * @param startDate
-	 *            开始日期
-	 * @param endDate
-	 *            结束日期
 	 * @param page
 	 *            页数
 	 * @param size
 	 *            数目
 	 * @return Map
 	 */
-	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size, String merchantId,
-			String merchantName);
+	public Object merchantGetErrorLogs(Map<String, Object> params, int page, int size);
 
 }

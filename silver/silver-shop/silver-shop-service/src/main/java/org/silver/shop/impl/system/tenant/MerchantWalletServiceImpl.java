@@ -17,6 +17,7 @@ import org.silver.shop.model.system.log.OfflineRechargeLog;
 import org.silver.shop.model.system.log.TradeReceiptLog;
 import org.silver.shop.model.system.organization.Manager;
 import org.silver.shop.model.system.organization.Merchant;
+import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantWalletContent;
 import org.silver.shop.model.system.tenant.OfflineRechargeContent;
 import org.silver.shop.util.MerchantUtils;
@@ -300,12 +301,6 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 		}
 	}
 
-	public static void main(String[] args) {
-		double a = 50;
-		double b = 0.3;
-		System.out.println("--->>"+DoubleOperationUtil.mul(a, b));
-	}
-	
 	/**
 	 * 商户现金(货款)的扣款与加款
 	 * 
@@ -376,10 +371,221 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 			e.printStackTrace();
 			return ReturnInfoUtils.errorInfo("余额转移冻结，金额错误！");
 		}
-		if (!merchantWalletDao.update(merchantWallet)) {
-			return ReturnInfoUtils.errorInfo("钱包余额移至冻结资金失败！");
+		return updateWallet(merchantWallet);
+	}
+
+	/**
+	 * 根据类型校验钱包是否有足够的金额，进行扣款
+	 * 
+	 * @param merchantId
+	 *            商户
+	 * @param amount
+	 *            金额
+	 * @param type
+	 *            类型：balance-余额、reserveAmount-储备资金、freezingFunds-冻结资金
+	 * 
+	 */
+	private Map<String, Object> checkEnoughMoney(String merchantId, double amount, String type) {
+		MerchantWalletContent entity = findByIdWallet(merchantId);
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("钱包查询失败！");
+		}
+		switch (type) {
+		case "balance":
+			if (DoubleOperationUtil.sub(entity.getBalance(), amount) < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败，余额不足！");
+			}
+			break;
+		case "reserveAmount":
+			if (DoubleOperationUtil.sub(entity.getReserveAmount(), amount) < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败，资金不足！");
+			}
+			break;
+		case "freezingFunds":
+			if (DoubleOperationUtil.sub(entity.getFreezingFunds(), amount) < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败，冻结金额不足！");
+			}
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("校验钱包余额是否满足扣款，未知类型[" + type + "]");
 		}
 		return ReturnInfoUtils.successInfo();
 	}
 
+	/**
+	 * 根据商户id查询、钱包信息
+	 * 
+	 * @param merchantId
+	 *            商户id
+	 * @return MerchantWalletContent 商户钱包实体
+	 */
+	private MerchantWalletContent findByIdWallet(String merchantId) {
+		Map<String, Object> reWalletMap = walletUtils.checkWallet(1, merchantId, null);
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			logger.error("--商户钱包查询失败-->" + reWalletMap.toString());
+			return null;
+		}
+		return (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+	}
+
+	@Override
+	public Map<String, Object> reserveAmountOperating(String merchantId, double amount, String type) {
+		Map<String, Object> verifyMap = walletUtils.verifySign(1, merchantId);
+		if (!"1".equals(verifyMap.get(BaseCode.STATUS.toString()))) {
+			return verifyMap;
+		}
+		MerchantWalletContent entity = findByIdWallet(merchantId);
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("查询资金失败！");
+		}
+		double oldAmount = entity.getReserveAmount();
+		switch (type) {
+		case "add":// 加款
+			entity.setReserveAmount(DoubleOperationUtil.add(oldAmount, amount));
+			break;
+		case "sub":// 扣款,并将金额转移至冻结金额
+			entity.setReserveAmount(DoubleOperationUtil.sub(oldAmount, amount));
+			double oldFreezingFunds = entity.getFreezingFunds();
+			entity.setFreezingFunds(DoubleOperationUtil.add(oldFreezingFunds, amount));
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("操作失败，未知类型[" + type + "]");
+		}
+		String sign = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(), entity.getReserveAmount(),
+				entity.getFreezingFunds(), entity.getCash());
+		entity.setVerifyCode(sign);
+		return updateWallet(entity);
+	}
+
+	/**
+	 * 更新商户钱包
+	 * 
+	 * @param entity
+	 *            商户钱包实体
+	 * @return Map
+	 */
+	private Map<String, Object> updateWallet(MerchantWalletContent entity) {
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("更新钱包时，请求参数不能为null");
+		}
+		entity.setUpdateDate(new Date());
+		if (!merchantWalletDao.update(entity)) {
+			return ReturnInfoUtils.errorInfo("商户钱包更新失败！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> generateSign(String merchantId) {
+		if (StringEmptyUtils.isNotEmpty(merchantId)) {
+			MerchantWalletContent entity = findByIdWallet(merchantId);
+			if (entity == null) {
+				return ReturnInfoUtils.errorInfo("钱包查询失败！");
+			}
+			String newSign = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+					entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash());
+			entity.setVerifyCode(newSign);
+			return updateWallet(entity);
+		} else {
+			List<MerchantWalletContent> reList = merchantWalletDao.findByProperty(MerchantWalletContent.class, null, 0,
+					0);
+			if (reList != null && !reList.isEmpty()) {
+				for (MerchantWalletContent entity : reList) {
+					String newSign = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+							entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash());
+					entity.setVerifyCode(newSign);
+					WalletUtils.checkVerifyCode2(entity.getVerifyCode(), entity.getWalletId(), entity.getBalance(),
+							entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash());
+					Map<String, Object> reUpdateMap = updateWallet(entity);
+					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
+						return reUpdateMap;
+					}
+				}
+			}
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	@Override
+	public Map<String, Object> balanceOperating(String merchantId, double amount, String type) {
+		Map<String, Object> verifyMap = walletUtils.verifySign(1, merchantId);
+		if (!"1".equals(verifyMap.get(BaseCode.STATUS.toString()))) {
+			return verifyMap;
+		}
+		MerchantWalletContent entity = findByIdWallet(merchantId);
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("查询资金失败！");
+		}
+		double oldBalance = entity.getBalance();
+		switch (type) {
+		case "add":// 加款
+			entity.setBalance(DoubleOperationUtil.add(oldBalance, amount));
+			break;
+		case "sub":// 扣款,并将金额转移至冻结金额
+			entity.setBalance(DoubleOperationUtil.sub(oldBalance, amount));
+			double oldFreezingFunds = entity.getFreezingFunds();
+			entity.setFreezingFunds(DoubleOperationUtil.add(oldFreezingFunds, amount));
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("操作失败，未知类型[" + type + "]");
+		}
+		String sign = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(), entity.getReserveAmount(),
+				entity.getFreezingFunds(), entity.getCash());
+		entity.setVerifyCode(sign);
+		return updateWallet(entity);
+	}
+
+	/**
+	 * 商户余额清算
+	 * 
+	 * @param merchantId
+	 *            商户id
+	 * @param amount
+	 *            金额
+	 * @return Map
+	 */
+	@Override
+	public Map<String, Object> balanceDeduction(String merchantId, Double amount) {
+		Map<String, Object> checkMap = checkEnoughMoney(merchantId, amount, "balance");
+		if (!"1".equals(checkMap.get(BaseCode.STATUS.toString()))) {
+			return checkMap;
+		}
+		return balanceOperating(merchantId, amount, "sub");
+	}
+	
+
+
+	@Override
+	public Map<String, Object> freezingFundsOperating(String merchantId, double amount, String type) {
+		Map<String, Object> verifyMap = walletUtils.verifySign(1, merchantId);
+		if (!"1".equals(verifyMap.get(BaseCode.STATUS.toString()))) {
+			return verifyMap;
+		}
+		MerchantWalletContent entity = findByIdWallet(merchantId);
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("钱包查询失败！");
+		}
+		// 获取钱包原冻结金额
+		double oldFreezingFunds = entity.getFreezingFunds();
+		switch (type) {
+		case "add":// 冻结资金加钱
+			entity.setFreezingFunds(DoubleOperationUtil.add(oldFreezingFunds, amount));
+			break;
+		case "sub":// 冻结资金扣钱
+			double remaining = DoubleOperationUtil.sub(entity.getFreezingFunds(), amount);
+			if ( remaining < 0) {
+				return ReturnInfoUtils.errorInfo("操作失败，冻结金额不足！");
+			}
+			entity.setFreezingFunds(remaining);
+			break;
+		default:
+			return ReturnInfoUtils.errorInfo("操作失败，未知类型[" + type + "]");
+		}
+		String sgin = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
+				entity.getReserveAmount(), entity.getFreezingFunds(),entity.getCash());
+		entity.setVerifyCode(sgin);
+		return updateWallet(entity);
+		
+	}
+	
 }

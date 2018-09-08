@@ -59,8 +59,7 @@ public class ReportsController {
 	@ApiOperation("新-商户查询综合报表详情")
 	@RequiresRoles("Merchant")
 	// @RequiresPermissions("report:getSynthesisReportDetails")
-	public String merchantGetSynthesisReportDetails(HttpServletRequest req, HttpServletResponse response,
-			@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+	public String merchantGetSynthesisReportDetails(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");

@@ -13,7 +13,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("memberDao")
-public class MemberDaoImpl<T> extends BaseDaoImpl<T> implements MemberDao {
+public class MemberDaoImpl extends BaseDaoImpl implements MemberDao {
 	@Override
 	public long findLastId() { 
 		return this.findLastId(Member.class);

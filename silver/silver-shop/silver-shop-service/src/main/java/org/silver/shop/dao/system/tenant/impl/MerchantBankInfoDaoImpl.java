@@ -11,7 +11,7 @@ import org.silver.shop.dao.system.tenant.MerchantBankInfoDao;
 import org.springframework.stereotype.Repository;
 
 @Repository("merchantBankInfoDao")
-public class MerchantBankInfoDaoImpl<T> extends BaseDaoImpl<T> implements MerchantBankInfoDao {
+public class MerchantBankInfoDaoImpl extends BaseDaoImpl implements MerchantBankInfoDao {
 
 	
 }

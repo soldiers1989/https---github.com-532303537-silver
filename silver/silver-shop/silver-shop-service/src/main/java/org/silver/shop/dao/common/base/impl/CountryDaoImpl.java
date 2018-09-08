@@ -8,6 +8,6 @@ import org.silver.shop.model.common.base.Country;
 import org.springframework.stereotype.Repository;
 
 @Repository("countryDao")
-public class CountryDaoImpl extends BaseDaoImpl<Object> implements CountryDao {
+public class CountryDaoImpl extends BaseDaoImpl implements CountryDao {
 
 }

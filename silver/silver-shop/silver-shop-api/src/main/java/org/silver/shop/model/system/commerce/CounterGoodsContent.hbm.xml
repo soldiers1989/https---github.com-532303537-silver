@@ -21,11 +21,11 @@
 		<property name="counterOwnerName" type="java.lang.String">
 			<column name="counterOwnerName" not-null="true" />
 		</property>
-		<property name="merchantId" type="java.lang.String">
-			<column name="merchantId" not-null="true" />
+		<property name="goodsMerchantId" type="java.lang.String">
+			<column name="goodsMerchantId" not-null="true" />
 		</property>
-		<property name="merchantName" type="java.lang.String">
-			<column name="merchantName" not-null="true" />
+		<property name="goodsMerchantName" type="java.lang.String">
+			<column name="goodsMerchantName" not-null="true" />
 		</property>
 		<property name="entGoodsNo" type="java.lang.String">
 			<column name="entGoodsNo" not-null="true" />
@@ -65,6 +65,12 @@
 		</property>
 		<property name="remark" type="java.lang.String">
 			<column name="remark" />
+		</property>
+		<property name="goodsImage" type="java.lang.String">
+			<column name="goodsImage" />
+		</property>
+			<property name="profitType" type="java.lang.String">
+			<column name="profitType" />
 		</property>
 	</class>
 </hibernate-mapping>

@@ -616,7 +616,7 @@ public class ManagerServiceImpl implements ManagerService {
 			Merchant merchant = reList.get(0);
 			MD5 md5 = new MD5();
 			// 默认为：Ym@888!333
-			merchant.setLoginPassword(md5.getMD5("Ym@888!333".getBytes()));
+			merchant.setLoginPassword(md5.getMD5ofStr("Ym@888!333"));
 			if (!managerDao.update(merchant)) {
 				return ReturnInfoUtils.errorInfo("重置密码失败,服务器繁忙!");
 			}
@@ -626,6 +626,11 @@ public class ManagerServiceImpl implements ManagerService {
 		}
 	}
 
+	public static void main(String[] args) {
+		MD5 md5 = new MD5();
+		// 默认为：Ym@888!333
+		System.out.println("--->"+md5.getMD5ofStr("Ym@888!333"));
+	}
 	@Override
 	public Map<String, Object> getMerchantBusinessInfo(String merchantId) {
 		Map<String, Object> paramMap = new HashMap<>();

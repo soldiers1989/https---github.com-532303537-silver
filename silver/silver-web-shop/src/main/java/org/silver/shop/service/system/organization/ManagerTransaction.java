@@ -101,7 +101,6 @@ public class ManagerTransaction {
 	// 管理员查询商户详情
 	public Map<String, Object> findMerchantDetail(String merchantId) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
 		String managerName = managerInfo.getManagerName();
 		return managerService.findMerchantDetail(managerName, merchantId);

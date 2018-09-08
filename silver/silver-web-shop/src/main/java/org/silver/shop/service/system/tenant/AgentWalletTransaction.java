@@ -41,4 +41,9 @@ public class AgentWalletTransaction {
 		return agentWalletService.getProxyWalletLog(proxyUUid, proxyName, type, page, size);
 	}
 
+	//
+	public Map<String,Object> generateSign(String agentId) {
+		return agentWalletService.generateSign(agentId);
+	}
+
 }

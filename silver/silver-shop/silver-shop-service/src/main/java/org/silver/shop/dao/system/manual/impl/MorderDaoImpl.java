@@ -21,7 +21,7 @@ import com.justep.baas.data.DataUtils;
 import com.justep.baas.data.Table;
 
 @Repository("morderDao")
-public class MorderDaoImpl<T> extends BaseDaoImpl<T> implements MorderDao {
+public class MorderDaoImpl extends BaseDaoImpl implements MorderDao {
 
 	@Override
 	public Table getOrderAndOrderGoodsInfo(String merchantId, String date, int serialNo) {

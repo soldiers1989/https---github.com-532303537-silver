@@ -90,7 +90,7 @@ public class MerchantCounterController {
 			String value = req.getParameter(key);
 			datasMap.put(key, value);
 		}
-		return JSONObject.fromObject(merchantCounterTransaction.addCounterInfo(datasMap)).toString();
+		return JSONObject.fromObject(merchantCounterTransaction.addCounterInfo(req,datasMap)).toString();
 	}
 	
 	@RequestMapping(value = "/addGoodsInfo", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
@@ -150,4 +150,25 @@ public class MerchantCounterController {
 		}
 		return JSONObject.fromObject(merchantCounterTransaction.counterGoods(datasMap,page,size)).toString();
 	}
+	
+	@RequestMapping(value = "/updatePopularizeFlag", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@RequiresRoles("Merchant")
+	@ApiOperation("商户专柜添加商品信息")
+	public String updatePopularizeFlag(HttpServletRequest req, HttpServletResponse response) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		Map<String,Object> datasMap = new HashMap<>();
+		Enumeration<String> isKey = req.getParameterNames();
+		while (isKey.hasMoreElements()) {
+			String key =  isKey.nextElement();
+			String value = req.getParameter(key);
+			datasMap.put(key, value);
+		}
+		return JSONObject.fromObject(merchantCounterTransaction.updatePopularizeFlag(datasMap)).toString();
+	}
+	
 }

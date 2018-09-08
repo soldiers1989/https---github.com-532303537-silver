@@ -197,6 +197,136 @@ public class WalletUtils {
 			e.printStackTrace();
 		}
 		params2.put("clientSign", clientSign);
-		System.out.println("---->>" + YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params2));
+		System.out.println("--->"+generateSign("walletId_2018_000165126", 5257.58119, 120.49, 1.26561, 0));
+		//System.out.println("---->>" + YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params2));
 	}
+
+	/**
+	 * 生成钱包校验码
+	 * 
+	 * @param walletId
+	 *            钱包id
+	 * @param balance
+	 *            余额
+	 * @param reserveAmount
+	 *            储备资金
+	 * @param freezingFunds
+	 *            冻结金额
+	 * @return String 校验码
+	 */
+	public static final String generateSign(String walletId, double balance, double reserveAmount,
+			double freezingFunds) {
+		MD5 md5 = new MD5();
+		return md5.getMD5ofStr("YM_" + walletId + balance + reserveAmount + freezingFunds);
+	}
+
+	/**
+	 * 生成钱包校验码
+	 * <li>注：用于生成带现金字段的钱包校验码</li>
+	 * <li>暂时针对商户钱包</li>
+	 * @param walletId
+	 *            钱包id
+	 * @param balance
+	 *            余额
+	 * @param reserveAmount
+	 *            储备资金
+	 * @param freezingFunds
+	 *            冻结金额
+	 * @param cash
+	 *            真实余额(可提现的)
+	 * @return String 校验码
+	 */
+	public static final String generateSign(String walletId, double balance, double reserveAmount, double freezingFunds,
+			double cash) {
+		
+		MD5 md5 = new MD5();
+		return md5.getMD5ofStr("YM_" + walletId + balance + reserveAmount + freezingFunds + cash);
+	}
+	
+
+	/**
+	 * 检查用户钱包校验码
+	 * <li>校验码=钱包id+余额+用户储备资金+冻结资金</li>
+	 * 
+	 * @param type
+	 *            1-商户,2-用户,3-代理商
+	 * @param userId
+	 * @return
+	 */
+	public Map<String, Object> verifySign(int type, String userId) {
+		Map<String, Object> reWalletMap = checkWallet(type, userId, "");
+		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+			return reWalletMap;
+		}
+		switch (type) {
+		case 1:
+			MerchantWalletContent merchantWallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			//
+			return checkVerifyCode2(merchantWallet.getVerifyCode(), merchantWallet.getWalletId(),
+					merchantWallet.getBalance(), merchantWallet.getReserveAmount(), merchantWallet.getFreezingFunds(),
+					merchantWallet.getCash());
+		case 2:
+			MemberWalletContent memberWallet = (MemberWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			return checkVerifyCode(memberWallet.getVerifyCode(), memberWallet.getWalletId(), memberWallet.getBalance(),
+					memberWallet.getReserveAmount(), memberWallet.getFreezingFunds());
+		case 3:
+			AgentWalletContent agentwallet = (AgentWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
+			return checkVerifyCode(agentwallet.getVerifyCode(), agentwallet.getWalletId(), agentwallet.getBalance(),
+					agentwallet.getReserveAmount(), agentwallet.getFreezingFunds());
+		default:
+			return ReturnInfoUtils.errorInfo("未知类型");
+		}
+
+	}
+
+	/**
+	 * 校验钱包校验码是否正确
+	 * 
+	 * @param oldVerifyCode
+	 *            原钱包验证码
+	 * @param walletId
+	 *            钱包id
+	 * @param balance
+	 *            余额
+	 * @param reserveAmount
+	 *            储备资金()
+	 * @param freezingFunds
+	 *            冻结金额
+	 * @param cash
+	 *            真实余额(可提现的)
+	 * @return Map
+	 */
+	public static Map<String, Object> checkVerifyCode2(String oldVerifyCode, String walletId, double balance,
+			double reserveAmount, double freezingFunds, double cash) {
+		String sign = generateSign(walletId, balance, reserveAmount, freezingFunds, cash);
+		if (!oldVerifyCode.equals(sign)) {
+			return ReturnInfoUtils.errorInfo("资金异常！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 校验钱包校验码是否正确
+	 * 
+	 * @param oldVerifyCode
+	 *            原钱包验证码
+	 * @param walletId
+	 *            钱包id
+	 * @param balance
+	 *            余额
+	 * @param reserveAmount
+	 *            储备资金()
+	 * @param freezingFunds
+	 *            冻结金额
+	 * @return Map
+	 */
+	private Map<String, Object> checkVerifyCode(String oldVerifyCode, String walletId, double balance,
+			double reserveAmount, double freezingFunds) {
+		String oldSign = generateSign(walletId, balance, reserveAmount, freezingFunds);
+		if (!oldVerifyCode.equals(oldSign)) {
+			return ReturnInfoUtils.errorInfo("资金异常！");
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
 }

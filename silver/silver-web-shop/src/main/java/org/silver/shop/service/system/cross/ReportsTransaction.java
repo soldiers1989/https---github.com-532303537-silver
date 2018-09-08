@@ -28,7 +28,7 @@ public class ReportsTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		params.put("merchantId", merchantId);
-		return reportsService.getSynthesisReportDetails(params);
+		return reportsService.getSynthesisReportInfo(params);
 	}
 
 	public Map<String,Object> merchantGetIdCardCertification(Map<String, Object> params) {

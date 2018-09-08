@@ -96,7 +96,9 @@ public class MerchantTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantId + "/";
+		//String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantId + "/";
+		String path ="/opt/www/img/merchant/" + merchantId + "/";
+		
 		// 海关注册编码
 		String customsregistrationCode = req.getParameter("merchantCustomsregistrationCode");
 		// 组织机构编码
@@ -182,18 +184,16 @@ public class MerchantTransaction {
 	}
 
 	// 管理员设置商户关联的用户信息
-	public Map<String, Object> setRelatedMember(String memberId, String merchantId) {
+	public Map<String, Object> setRelatedMember(String accountName, String loginPassword, String payPassword) {
 		Subject currentUser = SecurityUtils.getSubject();
-		Manager managerInfo = (Manager) currentUser.getSession().getAttribute(LoginType.MANAGER_INFO.toString());
-		return merchantService.setRelatedMember(memberId, merchantId, managerInfo.getManagerName());
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return merchantService.setRelatedMember(merchantInfo.getMerchantId(),merchantInfo.getMerchantName(),accountName,loginPassword,payPassword);
 	}
 
 	//
 	public Map<String, Object> getRelatedMemberFunds(int page, int size) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return merchantService.getRelatedMemberFunds(merchantId, page, size);
 	}

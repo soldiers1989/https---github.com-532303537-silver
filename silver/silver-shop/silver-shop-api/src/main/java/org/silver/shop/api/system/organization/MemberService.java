@@ -24,9 +24,9 @@ public interface MemberService {
 			String memberIdCard, String memberId, String memberTel);
 
 	/**
-	 * 根据用户名查询数据
+	 * 根据账号名称、手机号码、身份证号码，查询用户
 	 * 
-	 * @param account  用户名
+	 * @param account  账号名称
 	 * @return
 	 */
 	public List<Member> findMemberBy(String account);

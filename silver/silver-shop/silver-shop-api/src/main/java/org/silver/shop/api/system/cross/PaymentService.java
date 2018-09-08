@@ -261,4 +261,11 @@ public interface PaymentService {
 	 * @return
 	 */
 	public Map<String, Object> managerDeleteMpay(JSONArray json, String note, String managerName);
+
+	/**
+	 * 临时-手工支付单重发
+	 * @param datasMap
+	 * @return
+	 */
+	public Map<String, Object> manualReThirdParty(Map<String, Object> datasMap);
 }

@@ -5,33 +5,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.silver.shop.model.common.base.IdCard;
-import org.silver.shop.model.system.log.StockReviewLog;
 import org.silver.shop.model.system.manual.Morder;
 import org.silver.shop.model.system.organization.Member;
-import org.silver.shop.model.system.tenant.MerchantIdCardCostContent;
-import org.silver.util.DateUtil;
-import org.silver.util.StringEmptyUtils;
 import org.springframework.stereotype.Repository;
 
-import com.justep.baas.data.DataUtils;
-import com.justep.baas.data.Table;
 
 /**
  * 提供数据访问层共用DAO方法
  */
 @Repository("baseDao")
-public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
+public class BaseDaoImpl<E> extends HibernateDaoImpl implements BaseDao<E> {
 	protected static final Logger logger = LogManager.getLogger();
 
 	@Override
@@ -138,7 +127,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<Object> findAll(Class entity, int page, int size) {
+	public List<E> findAll(Class entity, int page, int size) {
 		Session session = null;
 		try {
 			String entName = entity.getSimpleName();
@@ -148,7 +137,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<Object> list = query.list();
+			List<E> list = query.list();
 			session.close();
 			return list;
 		} catch (Exception re) {
@@ -163,7 +152,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<Object> findByProperty(Class entity, Map params, int page, int size) {
+	public List<E> findByProperty(Class entity, Map params, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -187,7 +176,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<Object> results = query.list();
+			List<E> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -228,7 +217,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<Object> findBlurryProperty(Class entity, Map params, String startTime, String endTime, int page,
+	public List<E> findBlurryProperty(Class entity, Map params, String startTime, String endTime, int page,
 			int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
@@ -259,7 +248,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<Object> results = query.list();
+			List<E> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -484,7 +473,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<T> findByPropertyOr(Class entity, Map params, List orList, int page, int size) {
+	public List<E> findByPropertyOr(Class entity, Map params, List orList, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -502,7 +491,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<T> results = query.list();
+			List<E> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -587,6 +576,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 
 	/**
 	 * 拼接通用型日期时间
+	 * <li>createDate-用于驼峰命名版本实体参数(createDate)</li>
+	 * <li>startTime-用于兼容下划线版本实体参数(create_date)</li>
+	 * <li>endTime-用于兼容下划线版本实体参数(create_date)</li>
 	 * 
 	 * @param hql
 	 * @param property
@@ -596,9 +588,9 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			hql.append("model.createDate" + " >= " + "? " + " AND ");
 		} else if ("endDate".equals(property)) {
 			hql.append("model.createDate" + " <= " + " ? " + " AND ");
-		} else if ("startTime".equals(property)) {// 用于兼容下划线版本实体
+		} else if ("startTime".equals(property)) {
 			hql.append("model.create_date " + " >= " + " ? " + " AND ");
-		} else if ("endTime".equals(property)) {// 用于兼容下划线版本实体
+		} else if ("endTime".equals(property)) {
 			hql.append("model.create_date " + " <= " + " ? " + " AND ");
 		} else {
 			hql.append("model." + property + " = " + " ? " + " AND ");
@@ -606,7 +598,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<T> findByPropertyOr2(Class entity, Map orMap, int page, int size) {
+	public List<E> findByPropertyOr2(Class entity, Map orMap, int page, int size) {
 		Session session = null;
 		String entName = entity.getSimpleName();
 		try {
@@ -641,7 +633,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 			if (page > 0 && size > 0) {
 				query.setFirstResult((page - 1) * size).setMaxResults(size);
 			}
-			List<T> results = query.list();
+			List<E> results = query.list();
 			session.close();
 			return results;
 		} catch (Exception re) {
@@ -678,60 +670,104 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 	}
 
 	@Override
-	public List<T> find(Class entity, Map params,int page, int size) {
+	public List<E> find(Class<E> entity, Map<String,Object> params, Map<String,Object> blurryMap, int page, int size) {
 		Session session = null;
-//		String entName = entity.getSimpleName();
-//		try {
-//			session = getSession();
-//			StringBuilder hql = new StringBuilder(" from " + entName + " model WHERE");
-//			List<Object> list = new ArrayList<>();
-//			hql.append("  ");
-//			if (params != null && params.size() > 0) {
-//				String property;
-//				Iterator<String> is = params.keySet().iterator();
-//				while (is.hasNext()) {
-//					property = is.next();
-//					if ("tradeNoFlag".equals(property)) {
-//						hql.append("model.trade_no " + params.get(property) + " AND ");
-//						continue;
-//					} else {
-//						appendDate(hql, property);
-//					}
-//					list.add(params.get(property));
-//				}
-//			}
-//			if (blurryMap != null && !blurryMap.isEmpty()) {
-//				String property;
-//				Iterator<String> is = blurryMap.keySet().iterator();
-//				while (is.hasNext()) {
-//					property = is.next();
-//					hql.append("model." + property + " LIKE " + " ? " + " and ");
-//					list.add("%" + blurryMap.get(property) + "%");
-//				}
-//			}
-//			hql.append(" 1=1 Order By id DESC");
-//			Query query = session.createQuery(hql.toString());
-//			for (int i = 0; i < list.size(); i++) {
-//				query.setParameter(i, list.get(i));
-//			}
-//			if (page > 0 && size > 0) {
-//				query.setFirstResult((page - 1) * size).setMaxResults(size);
-//			}
-//			List<Object> results = query.list();
-//			session.close();
-//			return results;
-//		} catch (Exception re) {
-//			re.printStackTrace();
-//			return null;
-//		} finally {
-//			if (session != null && session.isOpen()) {
-//				session.close();
-//			}
-//		}
-		return null;
+		String entName = entity.getSimpleName();
+		try {
+			session = getSession();
+			StringBuilder hql = new StringBuilder(" FROM " + entName + " model WHERE");
+			List<Object> paramlist = new ArrayList<>();
+			hql.append("  ");
+			appendParameter(hql, params, paramlist);
+			appendBlurry(hql, blurryMap, paramlist);
+			hql.append(" 1=1 ORDER BY id DESC");
+			Query query = session.createQuery(hql.toString());
+			for (int i = 0; i < paramlist.size(); i++) {
+				query.setParameter(i, paramlist.get(i));
+			}
+			if (page > 0 && size > 0) {
+				query.setFirstResult((page - 1) * size).setMaxResults(size);
+			}
+			List<E> results = query.list();
+			session.close();
+			return results;
+		} catch (Exception re) {
+			re.printStackTrace();
+			return null;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+
 	}
-	
-	
+
+	/**
+	 * 拼接(精准“=”)查询参数
+	 * 
+	 * @param hql
+	 * @param params
+	 * @param paramlist
+	 */
+	private void appendParameter(StringBuilder hql, Map params, List<Object> paramlist) {
+		if (params != null && params.size() > 0) {
+			String property;
+			Iterator<String> is = params.keySet().iterator();
+			while (is.hasNext()) {
+				property = is.next();
+				appendDate(hql, property);
+				paramlist.add(params.get(property));
+			}
+		}
+	}
+
+	/**
+	 * 拼接模糊字符串的查询
+	 * 
+	 * @param hql
+	 * @param blurryMap
+	 *            模糊查询参数
+	 * @param paramlist
+	 */
+	private void appendBlurry(StringBuilder hql, Map blurryMap, List<Object> paramlist) {
+		if (blurryMap != null && !blurryMap.isEmpty()) {
+			String property;
+			Iterator<String> is = blurryMap.keySet().iterator();
+			while (is.hasNext()) {
+				property = is.next();
+				hql.append("model." + property + " LIKE " + " ? " + " AND ");
+				paramlist.add("%" + blurryMap.get(property) + "%");
+			}
+		}
+	}
+
+	@Override
+	public long findCount(Class entity, Map params, Map blurryMap) {
+		Session session = null;
+		try {
+			String entityName = entity.getSimpleName();
+			StringBuilder hql = new StringBuilder("SELECT count(model) FROM " + entityName + " model WHERE ");
+			List<Object> paramlist = new ArrayList<>();
+			appendParameter(hql, params, paramlist);
+			appendBlurry(hql, blurryMap, paramlist);
+			hql.append(" 1=1 ");
+			session = getSession();
+			Query query = session.createQuery(hql.toString());
+			for (int i = 0; i < paramlist.size(); i++) {
+				query.setParameter(i, paramlist.get(i));
+			}
+			Long count = (Long) query.uniqueResult();
+			session.close();
+			return count;
+		} catch (Exception re) {
+			return (long) 0;
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		// ChooseDatasourceHandler.hibernateDaoImpl.setSession(SessionFactory.getSession());
 		Map<String, Object> params = new HashMap<>();
@@ -749,10 +785,7 @@ public class BaseDaoImpl<T> extends HibernateDaoImpl implements BaseDao {
 		System.out.println("-->>" + str.substring(0, 10));
 
 		List<Member> l = bd.findByProperty(Member.class, params, 0, 0);
-		
+
 	}
 
-	
-
-	
 }

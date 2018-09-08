@@ -220,7 +220,7 @@ public class MpayServiceImpl implements MpayService {
 		}
 		jsonList = JSONArray.fromObject(reCheckPriceMap.get(BaseCode.DATAS.toString()));
 
-		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, customsMap, errorList);
+		Map<String, Object> reCheckMap = computingCostsManualOrder(jsonList, merchant, customsMap);
 		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckMap;
 		}
@@ -234,6 +234,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> reMap = null;
 		// 当商户为自主申报时
 		if (StringEmptyUtils.isNotEmpty(pushType) && "selfReportOrder".equals(pushType)) {
+			System.out.println("---->>"+reCheckMap.get("fee"));
 			customsMap.put("fee", reCheckMap.get("fee"));
 			customsMap.put("backCoverFlag", reCheckMap.get("backCoverFlag"));
 			reMap = updateOrderRecordStatus(jsonList, merchantId, customsMap, errorList);
@@ -358,8 +359,15 @@ public class MpayServiceImpl implements MpayService {
 		}
 	}
 
+	/**
+	 * 手工订单计算费用
+	 * @param jsonList
+	 * @param merchant
+	 * @param customsMap
+	 * @return
+	 */
 	public Map<String, Object> computingCostsManualOrder(JSONArray jsonList, Merchant merchant,
-			Map<String, Object> customsMap, List<Map<String, Object>> errorList) {
+			Map<String, Object> customsMap) {
 		if (jsonList == null || merchant == null) {
 			return ReturnInfoUtils.errorInfo("计算商户钱包余额请求参数不能为空!");
 		}
@@ -373,12 +381,6 @@ public class MpayServiceImpl implements MpayService {
 		}
 		// 获取校验通过的订单信息集合
 		List<Object> newList = (List<Object>) reCheckMap.get(BaseCode.DATAS.toString());
-		// 查询商户钱包
-		Map<String, Object> reMap = walletUtils.checkWallet(1, merchant.getMerchantId(), merchant.getMerchantName());
-		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
-			return reMap;
-		}
-		MerchantWalletContent merchantWallet = (MerchantWalletContent) reMap.get(BaseCode.DATAS.toString());
 		//
 		Map<String, Object> reCostMap = merchantIdCardCostService.getIdCardCostInfo(merchant.getMerchantId());
 		if (!"1".equals(reCostMap.get(BaseCode.STATUS.toString()))) {
@@ -413,34 +415,27 @@ public class MpayServiceImpl implements MpayService {
 		// 封底手续费(每笔)
 		double backCoverFee = Double.parseDouble(reFeeMap.get("backCoverFee") + "");
 		// 正常计费的订单总金额
-		double totalFee = 0;
+		double orderTotalFee = 0;
 		// 封底标识：1-正常计算、2-封底计算
 		if (backCoverFlag == 2) {
 			// 统计订单手续费(其中包括计算订单金额是否超过封底价)
-			totalFee = morderDao.sumManualOrderFee(newList, fee, backCoverFee);
+			orderTotalFee = morderDao.sumManualOrderFee(newList, fee, backCoverFee);
 		} else {
 			double normalAmount = 0;
 			// 正常统计订单价格
 			normalAmount = morderDao.statisticalManualOrderAmount(newList);
-			totalFee = DoubleOperationUtil.mul(normalAmount, fee);
+			orderTotalFee = DoubleOperationUtil.mul(normalAmount, fee);
 		}
 		// 当小于0时,代表查询数据库信息错误
-		if (totalFee < 0) {
+		if (orderTotalFee < 0) {
 			return ReturnInfoUtils.errorInfo("查询订单总金额失败,服务器繁忙!");
-		} else if (totalFee > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
-			// 钱包余额
-			double oldBalance = merchantWallet.getBalance();
-			// 总手续费(订单加实名认证手续费)
-			double result = DoubleOperationUtil.add(totalFee, idCertificationFee);
-			logger.error("--总计服务费-" + totalFee + ";--实名认证手续费-->" + idCertificationFee + "--总计手续费-->" + result + ";");
-			if ((oldBalance - result) < 0) {
-				return ReturnInfoUtils.errorInfo("操作失败,余额不足！");
-			}
-			//
-			Map<String, Object> reTransferMap = merchantWalletService.balanceTransferFreezingFunds(merchantWallet,
-					result);
-			if (!"1".equals(reTransferMap.get(BaseCode.STATUS.toString()))) {
-				return reTransferMap;
+		} else if (orderTotalFee > 0) {// 当查询出来手工订单总金额大于0时,进行平台服务费计算
+			// 总手续费(订单+实名认证手续费)
+			double result = DoubleOperationUtil.add(orderTotalFee, idCertificationFee);
+			logger.error("--总计服务费-" + orderTotalFee + ";--实名认证手续费-->" + idCertificationFee + "--总计手续费-->" + result + ";");
+			Map<String,Object> reBalanceMap = merchantWalletService.balanceDeduction(merchant.getMerchantId(), result);
+			if(!"1".equals(reBalanceMap.get(BaseCode.STATUS.toString()))){
+				return reBalanceMap;
 			}
 		}
 		Map<String, Object> map = new HashMap<>();

@@ -132,7 +132,7 @@
 	<bean id="createReportBean"
 		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
 		<property name="jobDetail" ref="createReportQtzJobMethod"></property>
-		<!-- 生成报表每日凌晨30分启动 -->
+		<!-- 生成报表每日凌晨1点启动 -->
 		<property name="cronExpression" value="0 0 1 * * ?"></property>
 		<property name="startDelay" value="60000" />
 	</bean>
@@ -150,13 +150,13 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-				<!-- <ref bean="createPaymentBean" />
-				<ref bean="pushOrderRecordBean" />
+				<ref bean="createPaymentBean" />
+				<!-- <ref bean="pushOrderRecordBean" />
 				<ref bean="pushPaymentRecordBean" />
 				<ref bean="resendPushOrderRecordBean" /> 
 				<ref bean="resendPaymentRecordBean" />
-			 	<ref bean="thirdPartyOrderCallBackBean" /> -->
-
+			 	<ref bean="thirdPartyOrderCallBackBean" />
+ -->
 				<!-- <ref bean="createReportBean" /> -->
 			</list>
 		</property>

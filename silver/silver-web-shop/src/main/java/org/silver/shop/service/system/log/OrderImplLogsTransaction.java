@@ -35,20 +35,19 @@ public class OrderImplLogsTransaction {
 
 	//获取商户日志
 	public Object merchantGetErrorLogs(HttpServletRequest req ,int page,int size) {
-		Map<String,Object> params = new HashMap<>();
+		Map<String,Object> datasMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		String merchantId = merchantInfo.getMerchantId();
-		String merchantName = merchantInfo.getMerchantName();
 		Enumeration<String>  isKey = req.getParameterNames();
 		while (isKey.hasMoreElements()) {
 			String key =  isKey.nextElement();
 			String value = req.getParameter(key);
-			params.put(key, value);
+			datasMap.put(key, value);
 		}
-		params.remove("page");
-		params.remove("size");
-		return orderImplLogsService.merchantGetErrorLogs(params,page,size,merchantId,merchantName); 
+		datasMap.remove("page");
+		datasMap.remove("size");
+		datasMap.put("operatorId", merchantInfo.getMerchantId());
+		return orderImplLogsService.merchantGetErrorLogs(datasMap,page,size); 
 	}
 	
 	
