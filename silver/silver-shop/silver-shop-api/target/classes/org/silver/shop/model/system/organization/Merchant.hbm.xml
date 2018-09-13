@@ -110,5 +110,8 @@
 		<property name="ysPartnerNo" type="java.lang.String">
 			<column name="ysPartnerNo" />
 		</property>
+		<property name="loginName" type="java.lang.String">
+			<column name="loginName" unique="true"/>
+		</property>
 	</class>
 </hibernate-mapping>

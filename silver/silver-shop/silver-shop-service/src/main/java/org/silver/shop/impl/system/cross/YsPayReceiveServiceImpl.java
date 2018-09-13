@@ -19,6 +19,7 @@ import org.silver.shop.api.system.log.MerchantWalletLogService;
 import org.silver.shop.api.system.log.TradeReceiptLogService;
 import org.silver.shop.api.system.organization.MemberService;
 import org.silver.shop.api.system.tenant.MemberWalletService;
+import org.silver.shop.api.system.tenant.MerchantWalletService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.cross.YsPayReceiveDao;
 import org.silver.shop.model.system.commerce.GoodsRecord;
@@ -87,6 +88,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	private TradeReceiptLogService tradeReceiptLogService;
 	@Autowired
 	private MemberWalletLogService memberWalletLogService;
+	@Autowired
+	private MerchantWalletService merchantWalletService;
 
 	@Override
 	public Map<String, Object> ysPayReceive(Map<String, Object> datasMap) {
@@ -1197,25 +1200,27 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 	 *            交易日志记录
 	 * @return Map
 	 */
-	private Map<String, Object> updateMerchantWallet(TradeReceiptLog paymentReceiptLog) {
+	private Map<String, Object> updateMerchantWallet(TradeReceiptLog receiptLog) {
 		System.out.println("--------更新商户钱包余额--");
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(1, paymentReceiptLog.getUserId(), "");
-		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
+		Map<String, Object> reMap = merchantWalletService.balanceOperating(receiptLog.getUserId(),
+				receiptLog.getAmount(), "add");
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		Map<String,Object> reWalletMap = walletUtils.checkWallet(1, receiptLog.getUserId(), "");
+		if(!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))){
 			return reWalletMap;
 		}
 		MerchantWalletContent wallet = (MerchantWalletContent) reWalletMap.get(BaseCode.DATAS.toString());
-		double oldBalance = wallet.getBalance();
-		wallet.setBalance(oldBalance + paymentReceiptLog.getAmount());
-		if (!ysPayReceiveDao.update(wallet)) {
-			return ReturnInfoUtils.errorInfo("商户钱包加款失败!");
-		}
 		Map<String, Object> datas = new HashMap<>();
 		datas.put("walletId", wallet.getWalletId());
 		datas.put("merchantName", wallet.getMerchantName());
 		//
 		datas.put("serialName", "钱包充值");
-		datas.put("balance", oldBalance);
-		datas.put("amount", paymentReceiptLog.getAmount());
+		//充值金额
+		double amount = receiptLog.getAmount();
+		datas.put("balance", DoubleOperationUtil.sub(wallet.getBalance(), amount));
+		datas.put("amount", receiptLog.getAmount());
 		//
 		datas.put("type", 2);
 		//
@@ -1223,8 +1228,8 @@ public class YsPayReceiveServiceImpl implements YsPayReceiveService {
 		// 由于商户充值是像银盛发起故而没有目标钱包Id
 		datas.put("targetWalletId", "000000");
 		datas.put("targetName", "银盛");
-		datas.put("merchantId", paymentReceiptLog.getUserId());
-		datas.put("serialNo", paymentReceiptLog.getTradeNo());
+		datas.put("merchantId", receiptLog.getUserId());
+		datas.put("serialNo", receiptLog.getTradeNo());
 		datas.put("status", "success");
 		// 添加日志
 		return merchantWalletLogService.addWalletLog(datas);

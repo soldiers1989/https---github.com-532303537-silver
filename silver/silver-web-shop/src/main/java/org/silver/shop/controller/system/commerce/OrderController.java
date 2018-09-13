@@ -457,7 +457,7 @@ public class OrderController {
 
 	@RequestMapping(value = "/thirdPromoteBusiness", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
 	@ResponseBody
-	@ApiOperation("第三方商城推广订单下单入口")
+	@ApiOperation("VIP商城推广订单下单入口")
 	// @RequiresRoles("Manager")
 	public String thirdPromoteBusiness(HttpServletRequest req, HttpServletResponse response) {
 		String originHeader = req.getHeader("Origin");

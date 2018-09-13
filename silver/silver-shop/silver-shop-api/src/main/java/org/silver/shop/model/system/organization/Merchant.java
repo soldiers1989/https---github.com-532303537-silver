@@ -48,6 +48,7 @@ public class Merchant implements Serializable {
 	private String logisticsCompanyCode;//物流企业编码
 	private String logisticsCompanyName;//物流公司名称
 	private String ysPartnerNo;//银盛分配的分账--账号
+	private String loginName;// 用于登录名称
 	
 	public Long getId() {
 		return id;
@@ -323,6 +324,14 @@ public class Merchant implements Serializable {
 
 	public void setYsPartnerNo(String ysPartnerNo) {
 		this.ysPartnerNo = ysPartnerNo;
+	}
+
+	public String getLoginName() {
+		return loginName;
+	}
+
+	public void setLoginName(String loginName) {
+		this.loginName = loginName;
 	}
 	
 }

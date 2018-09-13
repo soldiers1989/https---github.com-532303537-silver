@@ -883,7 +883,7 @@ public class MpayServiceImpl implements MpayService {
 		Map<String, Object> orderMap = new HashMap<>();
 		JSONObject goodsJson = null;
 		JSONObject orderJson = new JSONObject();
-		// 排序商品seq
+		//根据订单商品中的seqNo(下线订单导入表格中的)序号，排序商品seq
 		SortUtil.sortList(orderSubList, "seqNo", "ASC");
 		String ebEntNo = "";
 		String ebEntName = "";

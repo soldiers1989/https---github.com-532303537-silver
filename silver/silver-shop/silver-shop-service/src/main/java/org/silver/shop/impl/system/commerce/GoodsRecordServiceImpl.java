@@ -18,6 +18,7 @@ import org.silver.shop.api.common.base.CountryService;
 import org.silver.shop.api.common.base.CustomsPortService;
 import org.silver.shop.api.system.AccessTokenService;
 import org.silver.shop.api.system.commerce.GoodsRecordService;
+import org.silver.shop.api.system.commerce.StockService;
 import org.silver.shop.api.system.tenant.GoodsRiskService;
 import org.silver.shop.config.YmMallConfig;
 import org.silver.shop.dao.system.commerce.GoodsRecordDao;
@@ -74,7 +75,8 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 	private CountryService countryService;
 	@Autowired
 	private GoodsRiskService goodsRiskService;
-	
+	@Autowired
+	private StockService stockService;
 
 	@Override
 	public Map<String, Object> getGoodsRecordInfo(String merchantName, String goodsInfoPack) {
@@ -886,21 +888,20 @@ public class GoodsRecordServiceImpl implements GoodsRecordService {
 			regPrice = Double.parseDouble(String.valueOf(paramMap.get("regPrice")));
 			marketPrice = Double.parseDouble(String.valueOf(paramMap.get("marketPrice")));
 		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("字段错误,请重新输入!");
+			return ReturnInfoUtils.errorInfo("价格错误,请重新输入!");
 		}
 		params.put("entGoodsNo", paramMap.get("entGoodsNo"));
 		List<StockContent> reStockList = goodsRecordDao.findByProperty(StockContent.class, params, 0, 0);
 		if (reStockList != null && !reStockList.isEmpty()) {
 			StockContent stockInfo = reStockList.get(0);
 			String merchantName = String.valueOf(paramMap.get("merchantName"));
-			stockInfo.setRegPrice(regPrice);
-			stockInfo.setMarketPrice(marketPrice);
-			stockInfo.setUpdateDate(new Date());
-			stockInfo.setUpdateBy(merchantName);
-			if (!goodsRecordDao.update(stockInfo)) {
-				return ReturnInfoUtils.errorInfo("修改库存信息错误!");
+			if(marketPrice > 0){//当市场价输入了则进行更新
+				Map<String,Object> reMap = stockService.updateSalePriceAndMarketPrice(stockInfo, marketPrice, 1, merchantName);
+				if(!"1".equals(reMap.get(BaseCode.STATUS.toString()))){
+					return reMap;
+				}
 			}
-			return ReturnInfoUtils.successInfo();
+			return stockService.updateSalePriceAndMarketPrice(stockInfo, regPrice, 2, merchantName);
 		}
 		return ReturnInfoUtils.errorInfo("查询商品对应的库存信息失败,服务器繁忙!");
 	}

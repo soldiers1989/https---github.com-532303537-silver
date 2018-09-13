@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.silver.common.BaseCode;
 import org.silver.common.LoginType;
+import org.silver.common.RedisKey;
 import org.silver.common.StatusCode;
 import org.silver.shiro.CustomizedToken;
 import org.silver.shop.model.system.organization.Merchant;
@@ -25,6 +27,7 @@ import org.silver.shop.service.system.organization.MerchantTransaction;
 import org.silver.shop.utils.RedisInfoUtils;
 import org.silver.util.IdcardValidator;
 import org.silver.util.ReturnInfoUtils;
+import org.silver.util.SendMsg;
 import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.code.kaptcha.Constants;
 
 import io.swagger.annotations.ApiOperation;
 import net.sf.json.JSONObject;
@@ -45,6 +50,16 @@ public class MerchantController {
 
 	private static final String USER_LOGIN_TYPE = LoginType.MERCHANT.toString();
 
+	/**
+	 * 重置登录密码的商户id
+	 */
+	private static final String RETRIEVE_LOGIN_PASSWORD_MERCHANT_ID = "RETRIEVE_LOGIN_PASSWORD_MERCHANT_ID";
+	
+	/**
+	 * 
+	 */
+	private static final String RETRIEVE_LOGIN_PASSWORD_UUID = "RETRIEVE_LOGIN_PASSWORD_UUID";
+	
 	@Autowired
 	private MerchantTransaction merchantTransaction;
 
@@ -390,4 +405,76 @@ public class MerchantController {
 		}
 		return JSONObject.fromObject(merchantTransaction.updateBaseInfo(datasMap)).toString();
 	}
+	
+	@RequestMapping(value = "/resetLoginPwdSendVerifyCode", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户重置登录密码-发送短信验证码")
+	public String resetLoginPwdSendVerifyCode(HttpServletRequest req, HttpServletResponse response,@RequestParam("merchantName") String merchantName,
+			@RequestParam("phone")String phone, String captcha) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String captchaCode = (String) session.getAttribute(Constants.KAPTCHA_SESSION_KEY);
+		if (StringEmptyUtils.isEmpty(captcha) || !captcha.equalsIgnoreCase(captchaCode)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("验证码错误！")).toString();
+		}
+		Map<String, Object> reCheckMap = merchantTransaction.checkMerchant(phone ,merchantName);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reCheckMap).toString();
+		}
+		return JSONObject
+				.fromObject(SendMsg.sendVerificationCode(phone, RedisKey.SHOP_KEY_MERCHANT_RESET_LOGIN_PASSWORD_CODE))
+				.toString();
+	}
+	
+	
+	@RequestMapping(value = "/resetLoginPwdVerifyIdentidy", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户重置登录密码-验证身份信息")
+	public String resetLoginPwdVerifyIdentidy(HttpServletRequest req, HttpServletResponse response, String smsCaptcha,
+			String merchantName, String phone) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		Map<String, Object> reCheckMap = merchantTransaction.checkMerchant(phone ,merchantName);
+		if (!"1".equals(reCheckMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reCheckMap).toString();
+		}
+		Merchant merchant = (Merchant) reCheckMap.get(BaseCode.DATAS.toString());
+		Map<String, Object> reRedisMap = SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MERCHANT_RESET_LOGIN_PASSWORD_CODE,
+				phone, smsCaptcha);
+		if (!"1".equals(reRedisMap.get(BaseCode.STATUS.toString()))) {
+			return JSONObject.fromObject(reRedisMap).toString();
+		}
+		// 以秒为单位，即在没有活动5分钟后，session将失效
+		session.setMaxInactiveInterval(5 * 60);
+		session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
+		session.setAttribute(RETRIEVE_LOGIN_PASSWORD_MERCHANT_ID, merchant.getMerchantId());
+		return JSONObject.fromObject(ReturnInfoUtils.successInfo()).toString();
+	}
+	
+	@RequestMapping(value = "/resetLoginPwd", method = RequestMethod.POST, produces = "application/json; charset=utf-8")
+	@ResponseBody
+	@ApiOperation("商户重新设置登录密码")
+	public String resetLoginPwd(HttpServletRequest req, HttpServletResponse response, String loginPassword) {
+		String originHeader = req.getHeader("Origin");
+		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
+		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
+		response.setHeader("Access-Control-Allow-Credentials", "true");
+		response.setHeader("Access-Control-Allow-Origin", originHeader);
+		HttpSession session = req.getSession();
+		String uuid = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_UUID) + "";
+		if (StringEmptyUtils.isEmpty(uuid)) {
+			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("操作超时！")).toString();
+		}
+		String merchantId = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_MERCHANT_ID) + "";
+		return JSONObject.fromObject(merchantTransaction.resetLoginPwd(merchantId, loginPassword)).toString();
+	}
+	
 }

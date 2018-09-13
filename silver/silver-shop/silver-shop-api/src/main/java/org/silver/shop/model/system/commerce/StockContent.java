@@ -38,13 +38,13 @@ public class StockContent implements Serializable {
 	private String goodsName;// 商品名称
 	private String entGoodsNo;// 企业商品自编号
 
-	private double originalPrice;// 商品(入库)价格
-	private double marketPrice;// 商品(市场)价格
-	private double salePrice;// 商品(特卖)价格
-	private double memberPrice;// 商品(会员)价格
-	private int readingCount;// 商品浏览数量
-	private Date sellDate;// 商品上架时间
-	private Date dropOffDate;// 商品下架时间
+	private double originalPrice;// (入库)价格
+	private double marketPrice;// (市场)价格
+	private double salePrice;// (特卖)价格
+	private double memberPrice;// (会员)价格
+	private int readingCount;// 浏览数量
+	private Date sellDate;// 上架时间
+	private Date dropOffDate;// 下架时间
 	private String reMark;// 备用字段
 
 	public long getId() {

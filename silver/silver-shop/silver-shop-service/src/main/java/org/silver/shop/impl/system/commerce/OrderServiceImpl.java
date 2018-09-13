@@ -45,7 +45,9 @@ import org.silver.shop.model.system.organization.Merchant;
 import org.silver.shop.model.system.tenant.ExpadndMerchantContent;
 import org.silver.shop.model.system.tenant.MemberWalletContent;
 import org.silver.shop.model.system.tenant.MerchantBusinessContent;
+import org.silver.shop.model.system.tenant.PromoteUserSourcesContent;
 import org.silver.shop.model.system.tenant.RecipientContent;
+import org.silver.shop.util.InquireHelperService;
 import org.silver.shop.util.MerchantUtils;
 import org.silver.shop.util.SearchUtils;
 import org.silver.shop.util.WalletUtils;
@@ -96,6 +98,8 @@ public class OrderServiceImpl implements OrderService {
 	private PaymentService paymentService;
 	@Autowired
 	private FenZhangLogService fenZhangLogService;
+	@Autowired
+	private InquireHelperService inquireHelperService;
 
 	/**
 	 * 小写开头订单编号
@@ -818,8 +822,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String entOrderNo) {
-		Map<String, Object> statusMap = new HashMap<>();
+	public Map<String, Object> getMerchantOrderDetail(String merchantId, String entOrderNo) {
 		Map<String, Object> paramMap = new HashMap<>();
 		List<Map<String, Object>> lm = new ArrayList<>();
 		paramMap.put("merchantId", merchantId);
@@ -831,10 +834,7 @@ public class OrderServiceImpl implements OrderService {
 			item.put("order", reOrderList);
 			item.put("orderGoods", reOrderGoodsList);
 			lm.add(item);
-			statusMap.put(BaseCode.STATUS.toString(), StatusCode.SUCCESS.getStatus());
-			statusMap.put(BaseCode.MSG.toString(), StatusCode.SUCCESS.getMsg());
-			statusMap.put(BaseCode.DATAS.toString(), lm);
-			return statusMap;
+			return ReturnInfoUtils.successDataInfo(lm);
 		} else {
 			return ReturnInfoUtils.errorInfo("暂无数据!");
 		}
@@ -876,7 +876,9 @@ public class OrderServiceImpl implements OrderService {
 		Map<String, Object> viceParams = (Map<String, Object>) reDatasMap.get("viceParams");
 		switch (type) {
 		case "online":
-			return getOnlineOrderInfo(paramMap, page, size);
+			// 获取线上订单信息
+			return inquireHelperService.findInfo(OrderRecordContent.class, paramMap, page, size);
+		// return getOnlineOrderInfo(paramMap, page, size);
 		case "offline":
 			return getOfflineOrderInfo(viceParams, page, size);
 		default:
@@ -914,19 +916,22 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
-	private Map<String, Object> getOnlineOrderInfo(Map<String, Object> params, int page, int size) {
-
-		List<OrderRecordContent> reList = orderDao.findByPropertyLike(OrderRecordContent.class, params, null, page,
-				size);
-		long reTotalCount = orderDao.findByPropertyLikeCount(OrderRecordContent.class, params, null);
-		if (reList == null) {
-			return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
-		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList, reTotalCount);
-		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据！");
-		}
-	}
+	// private Map<String, Object> getOnlineOrderInfo(Map<String, Object>
+	// params, int page, int size) {
+	//
+	// List<OrderRecordContent> reList =
+	// orderDao.findByPropertyLike(OrderRecordContent.class, params, null, page,
+	// size);
+	// long reTotalCount =
+	// orderDao.findByPropertyLikeCount(OrderRecordContent.class, params, null);
+	// if (reList == null) {
+	// return ReturnInfoUtils.errorInfo("查询失败,服务器繁忙！");
+	// } else if (!reList.isEmpty()) {
+	// return ReturnInfoUtils.successDataInfo(reList, reTotalCount);
+	// } else {
+	// return ReturnInfoUtils.errorInfo("暂无数据！");
+	// }
+	// }
 
 	@Override
 	public Map<String, Object> getMerchantOrderDailyReport(String merchantId, String merchantName, String startDate,
@@ -1129,12 +1134,15 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			return ReturnInfoUtils.successInfo();
-		} else {
+		} else {//
 			for (int i = 0; i < orderGoodsList.size(); i++) {
 				JSONObject goodsJson = orderGoodsList.get(i);
 				MorderSub goods = new MorderSub();
 				String entGoodsNo = goodsJson.get("EntGoodsNo") + "";
-				goods.setSeq(Integer.parseInt(goodsJson.get("Seq") + ""));
+				int seq = Integer.parseInt(goodsJson.get("Seq") + "");
+				goods.setSeq(seq);
+				// 跟随商品序号，推送订单时会根据seqNo(下线订单导入表格中的)序号进行升序排序
+				goods.setSeqNo(seq);
 				goods.setEntGoodsNo(entGoodsNo);
 				goods.setCIQGoodsNo(goodsJson.get("CIQGoodsNo") + "");
 				goods.setCusGoodsNo(goodsJson.get("CusGoodsNo") + "");
@@ -1184,7 +1192,10 @@ public class OrderServiceImpl implements OrderService {
 		} else if (!goodsList.isEmpty()) {
 			GoodsRecordDetail goodsContent = goodsList.get(0);
 			MorderSub goods = new MorderSub();
-			goods.setSeq(Integer.parseInt(goodsJson.get("Seq") + ""));
+			int seq = Integer.parseInt(goodsJson.get("Seq") + "");
+			goods.setSeq(seq);
+			// 跟随商品序号，推送订单时会根据seqNo(下线订单导入表格中的)序号进行升序排序
+			goods.setSeqNo(seq);
 			goods.setEntGoodsNo(entGoodsNo);
 			goods.setCIQGoodsNo(goodsContent.getCiqGoodsNo());
 			goods.setCusGoodsNo(goodsContent.getCusGoodsNo());
@@ -2121,8 +2132,10 @@ public class OrderServiceImpl implements OrderService {
 		}
 		// 库存信息
 		StockContent stock = (StockContent) reGoodsMap.get(BaseCode.DATAS.toString());
+		// 商品推广id
+		String promotionNo = datasMap.get("promotionNo") + "";
 		// 校验身份证信息
-		Map<String, Object> reCheckIdcardMap = checkIdCardInfo(datasMap);
+		Map<String, Object> reCheckIdcardMap = checkIdCardInfo(datasMap, promotionNo);
 		if (!"1".equals(reCheckIdcardMap.get(BaseCode.STATUS.toString()))) {
 			return reCheckIdcardMap;
 		}
@@ -2133,15 +2146,13 @@ public class OrderServiceImpl implements OrderService {
 			return reRecipientMap;
 		}
 		RecipientContent recipient = (RecipientContent) reRecipientMap.get(BaseCode.DATAS.toString());
-		Map<String, Object> reOrderMap = saveOrderContent(stock, recipient);
+		Map<String, Object> reOrderMap = saveOrderContent(stock, recipient, promotionNo);
 		if (!"1".equals(reOrderMap.get(BaseCode.STATUS.toString()))) {
 			return reOrderMap;
 		}
 		OrderContent order = (OrderContent) reOrderMap.get(BaseCode.DATAS.toString());
 		//
 		int count = Integer.parseInt(datasMap.get("count") + "");
-		// 商品推广id
-		String promotionNo = datasMap.get("promotionNo") + "";
 		Map<String, Object> reOrderGoodsMap = saveOrderGoodsContent(order, stock, datasMap.get(ENT_GOODS_NO) + "",
 				count, promotionNo);
 		if (!"1".equals(reOrderGoodsMap.get(BaseCode.STATUS.toString()))) {
@@ -2220,9 +2231,10 @@ public class OrderServiceImpl implements OrderService {
 	 *            库存信息
 	 * @param recipient
 	 *            收获地址信息
+	 * @param promotionNo
 	 * @return Map
 	 */
-	private Map<String, Object> saveOrderContent(StockContent stock, RecipientContent recipient) {
+	private Map<String, Object> saveOrderContent(StockContent stock, RecipientContent recipient, String promotionNo) {
 		if (stock == null || recipient == null) {
 			return ReturnInfoUtils.errorInfo("保存订单头时,请求参数不能为空!");
 		}
@@ -2264,10 +2276,83 @@ public class OrderServiceImpl implements OrderService {
 		order.setSourceFlag(2);
 		order.setEntOrderNo(createOrderId(2));
 
+		calculateDividends(order, promotionNo);
+
 		if (!orderDao.add(order)) {
 			return ReturnInfoUtils.errorInfo("保存订单头失败,服务器繁忙!");
 		}
 		return ReturnInfoUtils.successDataInfo(order);
+	}
+
+	/**
+	 * 计算订单分红
+	 * 
+	 * @param order
+	 *            订单信息
+	 * @param promotionNo
+	 *            专柜商品推广编号
+	 * @return
+	 */
+	private Map<String, Object> calculateDividends(OrderContent order, String promotionNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("serialNo", promotionNo);
+		Map<String, Object> reMap = inquireHelperService.findInfo(CounterGoodsContent.class, params, 1, 1);
+		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
+			return reMap;
+		}
+		CounterGoodsContent counterGoods = (CounterGoodsContent) reMap.get(BaseCode.DATAS.toString());
+		// 获取专柜商品归属id
+		String goodsMerchantId = counterGoods.getGoodsMerchantId();
+		Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(goodsMerchantId);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		// 商品归属的商户平台服务费率
+		double profit = merchant.getMerchantProfit();
+		/**
+		 * 订单实际支付金额 2018-09-12 暂用订单商品总金额计算
+		 */
+		double actualAmountPaid = order.getOrderTotalPrice();
+		// 平台服务费
+		double platformDividendAmount = DoubleOperationUtil.mul(actualAmountPaid, profit);
+		//
+		int tmp = 1;
+		// 当专柜商户与专柜商品归属的商户id都是同一人时，则不设定推广商
+		if (goodsMerchantId.equals(counterGoods.getCounterOwnerId())) {
+			order.setMasterDividendRatio(DoubleOperationUtil.sub(tmp, profit));
+			//
+			order.setMasterDividendAmount(DoubleOperationUtil.sub(actualAmountPaid, platformDividendAmount));
+		} else {
+			// 推广分润
+			double popularizeProfit = counterGoods.getPopularizeProfit();
+			// 推广商分红
+			double dividendAmount = 0;
+			// 分润计算类型：1-比例，2-按固定分润数
+			String profitType = counterGoods.getProfitType();
+			if ("2".equals(profitType)) {
+				dividendAmount = popularizeProfit;
+			} else {// 根据比例计算订单分红
+				dividendAmount = DoubleOperationUtil.mul(actualAmountPaid, popularizeProfit);
+			}
+			// 分红总计比例
+			double dividendToltal = DoubleOperationUtil.add(profit, popularizeProfit);
+			//
+			order.setDividendAmount(dividendAmount);
+			order.setDividendRatio(popularizeProfit);
+			order.setMasterDividendRatio(DoubleOperationUtil.sub(tmp, dividendToltal));
+			//
+			order.setMasterDividendAmount(DoubleOperationUtil.sub(actualAmountPaid,
+					DoubleOperationUtil.add(dividendAmount, platformDividendAmount)));
+			//
+			order.setExpadndMerchantCode(counterGoods.getCounterOwnerId());
+			order.setExpadndMerchantName(counterGoods.getCounterOwnerName());
+		}
+
+		//
+		order.setPlatformDividendAmount(platformDividendAmount);
+		order.setPlatformDividendRatio(profit);
+		return ReturnInfoUtils.successInfo();
 	}
 
 	/**
@@ -2440,64 +2525,134 @@ public class OrderServiceImpl implements OrderService {
 	 * 校验身份证号码是否已在商城注册,如果已经注册则需要提供用户登陆密码,进行登陆验证,如果没有注册过,则进行会员注册
 	 * 
 	 * @param datasMap
+	 * @param promotionNo
+	 *            专柜商品流水号(唯一标识)
 	 * @return
 	 */
-	private Map<String, Object> checkIdCardInfo(Map<String, Object> datasMap) {
+	private Map<String, Object> checkIdCardInfo(Map<String, Object> datasMap, String promotionNo) {
 		if (datasMap == null) {
 			return ReturnInfoUtils.errorInfo("核对身份证是否注册时,请求参数不能为空!");
 		}
 		String idcard = datasMap.get("idcard") + "";
-		Map<String, Object> reMemberMap = getMemberInfo(idcard);
-		String msg = reMemberMap.get(BaseCode.MSG.toString()) + "";
-		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
-			if (msg.contains("暂无数据")) {
-				// 当身份号码在系统中不存在时进行会员注册
-				return memberRegister(datasMap);
-			} else {
-				return reMemberMap;
-			}
-		} else {
-			return reMemberMap;
-		}
-	}
-
-	/**
-	 * 根据身份证号码,查询用户信息
-	 * 
-	 * @return
-	 */
-	private Map<String, Object> getMemberInfo(String idcard) {
-		if (StringEmptyUtils.isEmpty(idcard)) {
-			return ReturnInfoUtils.errorInfo("身份证号码不能为空");
-		}
 		Map<String, Object> params = new HashMap<>();
 		// 会员注册标识：1-真实用户、2-批量用户
 		params.put("memberFlag", 1);
 		params.put("memberIdCard", idcard);
-		List<Member> memberList = orderDao.findByProperty(Member.class, params, 0, 0);
-		if (memberList == null) {
-			return ReturnInfoUtils.errorInfo("查询会员信息失败！");
-		} else if (!memberList.isEmpty()) {
-			Member member = memberList.get(0);
-			return ReturnInfoUtils.successDataInfo(member.getMemberId());
+		Map<String, Object> reMemberMap = inquireHelperService.findInfo(Member.class, params, 1, 1);
+		if ("-1".equals(reMemberMap.get(BaseCode.ERROR_CODE.toString()))) {
+			// 当身份号码在系统中不存在时进行会员注册
+			String idName = datasMap.get("idName") + "";
+			String phone = datasMap.get("phone") + "";
+			// 注册会员
+			Map<String, Object> reRegisterMap = memberRegister(idName, idcard, phone);
+			if (!"1".equals(reRegisterMap.get(BaseCode.STATUS.toString()))) {
+				return reRegisterMap;
+			}
+			String memberId = reRegisterMap.get(BaseCode.DATAS.toString()) + "";
+			// 判断用户在哪个商户名下下单
+			return checkUserSource(memberId, promotionNo);
+		} else if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
 		} else {
-			return ReturnInfoUtils.errorInfo("暂无数据");
+			Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
+			return ReturnInfoUtils.successDataInfo(member.getMemberId());
 		}
 	}
 
 	/**
-	 * 会员注册
+	 * 检查用户来源
 	 * 
-	 * @param datasMap
+	 * @param memberId
+	 * @param promotionNo
 	 * @return
 	 */
-	private Map<String, Object> memberRegister(Map<String, Object> datasMap) {
-		if (datasMap == null) {
+	private Map<String, Object> checkUserSource(String memberId, String promotionNo) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("serialNo", promotionNo);
+		Map<String, Object> reGoodsMap = inquireHelperService.findInfo(CounterGoodsContent.class, params, 1, 1);
+		if (!"1".equals(reGoodsMap.get(BaseCode.STATUS.toString()))) {
+			return reGoodsMap;
+		}
+		CounterGoodsContent goods = (CounterGoodsContent) reGoodsMap.get(BaseCode.DATAS.toString());
+		params.clear();
+		params.put("memberId", memberId);
+		Map<String, Object> reMemberMap = inquireHelperService.findInfo(Member.class, params, 1, 1);
+		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
+			return reMemberMap;
+		}
+		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
+		params.clear();
+		params.put("merchantId", goods.getGoodsMerchantId());
+		params.put("memberId", memberId);
+		Map<String, Object> reSourcesMap = inquireHelperService.findInfo(PromoteUserSourcesContent.class, params, 1, 1);
+		if ("-1".equals(reSourcesMap.get(BaseCode.ERROR_CODE.toString()))) {
+			// 判断专柜商户与商品归属商户是否是同一人
+			if (goods.getCounterOwnerId().equals(goods.getGoodsMerchantId())) {
+				return saveUserSource(member, goods.getGoodsMerchantId(), goods.getGoodsMerchantName(), null, null);
+			} else {// 当不是同一商户时，则传当前专柜归属商户的id与名称
+				return saveUserSource(member, goods.getGoodsMerchantId(), goods.getGoodsMerchantName(),
+						goods.getCounterOwnerId(), goods.getCounterOwnerName());
+			}
+		} else if (!"1".equals(reSourcesMap.get(BaseCode.STATUS.toString()))) {
+			return reSourcesMap;
+		}
+		return ReturnInfoUtils.successInfo();
+	}
+
+	/**
+	 * 根据用户id，与归属商户id、名称，创建关联的用户信息
+	 * 
+	 * @param member
+	 *            用户实体信息
+	 * @param merchantId
+	 *            主商户id
+	 * @param merchantName
+	 *            主商户名称
+	 * @param exMerchantCode
+	 *            推广商id
+	 * @param exMerchantName
+	 *            推广商名称
+	 * @return Map
+	 */
+	private Map<String, Object> saveUserSource(Member member, String merchantId, String merchantName,
+			String exMerchantCode, String exMerchantName) {
+		if (member == null || StringEmptyUtils.isEmpty(merchantId) || StringEmptyUtils.isEmpty(merchantName)) {
+			return ReturnInfoUtils.errorInfo("保存商户关联的用户来源时，参数不能为空！");
+		}
+
+		PromoteUserSourcesContent entity = new PromoteUserSourcesContent();
+		entity.setMerchantId(merchantId);
+		entity.setMerchantName(merchantName);
+		if (StringEmptyUtils.isNotEmpty(exMerchantCode) && StringEmptyUtils.isNotEmpty(exMerchantName)) {
+			entity.setExpadndMerchantCode(exMerchantCode);
+			entity.setExpadndMerchantName(exMerchantName);
+		}
+		entity.setMemberId(member.getMemberId());
+		entity.setMemberName(member.getMemberName());
+		entity.setMemberIdCardName(member.getMemberIdCardName());
+		entity.setMemberIdCard(member.getMemberIdCard());
+		entity.setMemberTel(member.getMemberTel());
+		if (orderDao.add(entity)) {
+			return ReturnInfoUtils.successDataInfo(member.getMemberId());
+		}
+		return ReturnInfoUtils.errorInfo("保存商户会员信息失败！");
+	}
+
+	/**
+	 * 根据姓名、身份证号码、手机号码、注册会员信息
+	 * 
+	 * @param idName
+	 *            姓名
+	 * @param idcard
+	 *            身份号码
+	 * @param phone
+	 *            手机号码
+	 * @return
+	 */
+	private Map<String, Object> memberRegister(String idName, String idcard, String phone) {
+		if (StringEmptyUtils.isEmpty(idcard) || StringEmptyUtils.isEmpty(idName) || StringEmptyUtils.isEmpty(phone)) {
 			return ReturnInfoUtils.errorInfo("注册会员账号时,请求参数不能为空!");
 		}
-		String idcard = datasMap.get("idcard") + "";
-		String idName = datasMap.get("idName") + "";
-		String phone = datasMap.get("phone") + "";
 		Map<String, Object> reIdMap = memberService.createMemberId();
 		if (!"1".equals(reIdMap.get(BaseCode.STATUS.toString()))) {
 			return reIdMap;
@@ -2509,6 +2664,7 @@ public class OrderServiceImpl implements OrderService {
 		if (!"1".equals(reRegisterMap.get(BaseCode.STATUS.toString()))) {
 			return reRegisterMap;
 		}
+
 		try {
 			SendMsg.sendMsg(phone,
 					"【广州银盟】感谢你使用银盟商城进行购物,现已为您自动注册账号,密码为: " + loginPassword + " ,请妥善保管您的登陆密码！链接：https://www.191ec.com");
@@ -2620,11 +2776,11 @@ public class OrderServiceImpl implements OrderService {
 		if (orderList == null) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null");
 		}
-		List<Map<String,Object>> errorList = new ArrayList<>();
+		List<Map<String, Object>> errorList = new ArrayList<>();
 		for (int i = 0; i < orderList.size(); i++) {
 			String entOrderNo = orderList.get(i);
-			Map<String,Object> reMap = getDividendRatio(entOrderNo);
-			if(!"1".equals(BaseCode.STATUS.toString())){
+			Map<String, Object> reMap = getDividendRatio(entOrderNo);
+			if (!"1".equals(BaseCode.STATUS.toString())) {
 				errorList.add(reMap);
 			}
 		}
@@ -2634,82 +2790,61 @@ public class OrderServiceImpl implements OrderService {
 	private Map<String, Object> getDividendRatio(String entOrderNo) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("entOrderNo", entOrderNo);
-		List<OrderGoodsContent> reList = orderDao.findByProperty(OrderGoodsContent.class, params, 0, 0);
+		List<OrderContent> reList = orderDao.findByProperty(OrderContent.class, params, 0, 0);
 		if (reList == null) {
 			return ReturnInfoUtils.warnInfo();
 		} else if (reList.isEmpty()) {
 			return ReturnInfoUtils.noDatas();
 		} else {
-			// 订单总金额
-			double orderTotalAmount = 0;
-			// 主商户收款金额
-			double masterReceiptAmount = 0;
-			//
-			double platformFee = 0;
-			//
-			String ysPartnerNo = "";
-			JSONObject spareParams = new JSONObject();
-			for (OrderGoodsContent goods : reList) {
-				orderTotalAmount = DoubleOperationUtil.add(goods.getGoodsPrice(), orderTotalAmount);
-				params.clear();
-				params.put("serialNo", goods.getPromotionNo());
-				List<CounterGoodsContent> counterGoodsList = orderDao.findByProperty(CounterGoodsContent.class, params,
-						0, 0);
-				if (counterGoodsList != null && !counterGoodsList.isEmpty()) {
-					CounterGoodsContent counterGoods = counterGoodsList.get(0);
-					// 商品价格
-					double price = counterGoods.getRegPrice();
-					// 专柜商品 推广分润比例
-					double popularizeProfit = counterGoods.getPopularizeProfit();
-					// 专柜所属人id
-					String counterOwnerId = counterGoods.getCounterOwnerId();
-					// 专柜商品归属商户id
-					String goodsMerchantId = counterGoods.getGoodsMerchantId();
-					// 商户平台服务费率
-					Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(goodsMerchantId);
-					if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
-						return reMerchantMap;
+			JSONObject spareParams = null;
+			for (OrderContent order : reList) {
+				Map<String, Object> reMerchantMap = merchantUtils.getMerchantInfo(order.getMerchantId());
+				if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+					return reMerchantMap;
+				}
+				Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+				String expadndMerchantCode = order.getExpadndMerchantCode();
+				if (StringEmptyUtils.isNotEmpty(expadndMerchantCode)) {
+					params.clear();
+					params.put("", expadndMerchantCode);
+					Map<String, Object> reExpadndMerchantMap = inquireHelperService
+							.findInfo(ExpadndMerchantContent.class, params, 1, 1);
+					if (!"1".equals(reExpadndMerchantMap.get(BaseCode.STATUS.toString()))) {
+						return reExpadndMerchantMap;
 					}
-					Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
-					ysPartnerNo = merchant.getYsPartnerNo();
-					if ("expadnd".contains(counterOwnerId)) {// 如果是推广商(子商户)
-						// 推广商获得金额
-						double exReceiptAmount = DoubleOperationUtil.mul(price, popularizeProfit);
-						// 平台服务费
-						double d2 = DoubleOperationUtil.mul(price, merchant.getMerchantProfit());
-						if (price + (exReceiptAmount + d2) != price) {
-							return ReturnInfoUtils.errorInfo("费率计算错误！");
-						}
-						masterReceiptAmount = DoubleOperationUtil.sub(price, (exReceiptAmount + d2));
-						Map<String, Object> reExpadndMerchantMap = getExpadndMerchantInfo(goodsMerchantId);
-						if (!"1".equals(reExpadndMerchantMap.get(BaseCode.STATUS.toString()))) {
-							return reExpadndMerchantMap;
-						}
-						ExpadndMerchantContent exMerchant = (ExpadndMerchantContent) reExpadndMerchantMap
-								.get(BaseCode.STATUS.toString());
-						spareParams.put("divPartnerNo", exMerchant.getYsPartnerNo());
-						spareParams.put("exReceiptAmount", exReceiptAmount);
-					} else {
-						// 平台服务费
-						double d2 = DoubleOperationUtil.mul(price, merchant.getMerchantProfit());
-						platformFee = DoubleOperationUtil.add(platformFee, d2);
-						masterReceiptAmount = DoubleOperationUtil.sub(price, platformFee);
-					}
+					ExpadndMerchantContent exMerchant = (ExpadndMerchantContent) reExpadndMerchantMap
+							.get(BaseCode.DATAS.toString());
+					spareParams = new JSONObject();
+					spareParams.put("divPartnerNo", exMerchant.getYsPartnerNo());
+					spareParams.put("exReceiptAmount", order.getDividendAmount());
+				}
+				Map<String, Object> reFenZhangMap = initiateFenZhang(order.getEntOrderNo(), order.getOrderTotalPrice(),
+						order.getPlatformDividendAmount(), merchant.getYsPartnerNo(), order.getMasterDividendAmount(),
+						spareParams);
+				if (!"1".equals(reFenZhangMap.get(BaseCode.STATUS.toString()) + "")) {
+					return reFenZhangMap;
 				}
 			}
-			return initiateFenZhang(entOrderNo, orderTotalAmount, platformFee, ysPartnerNo, masterReceiptAmount,
-					spareParams);
+			return ReturnInfoUtils.successInfo();
+
 		}
 	}
 
 	/**
 	 * 发起分账
-	 * @param entOrderNo 交易订单号
-	 * @param orderTotalAmount 订单总金额
-	 * @param platformFee 银盟账号收款金额
-	 * @param ysPartnerNo 银盟商城商户在银盛的钱包账号
-	 * @param masterReceiptAmount 主商户收款金额
-	 * @param spareParams 推广商参数
+	 * 
+	 * @param entOrderNo
+	 *            交易订单号
+	 * @param orderTotalAmount
+	 *            订单总金额
+	 * @param platformFee
+	 *            银盟账号收款金额
+	 * @param ysPartnerNo
+	 *            银盟商城商户在银盛的钱包账号
+	 * @param masterReceiptAmount
+	 *            主商户收款金额
+	 * @param spareParams
+	 *            推广商参数
 	 * @return Map
 	 */
 	private Map<String, Object> initiateFenZhang(String entOrderNo, double orderTotalAmount, double platformFee,

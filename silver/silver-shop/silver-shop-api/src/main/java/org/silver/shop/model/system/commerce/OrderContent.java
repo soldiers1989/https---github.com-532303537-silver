@@ -45,10 +45,21 @@ public class OrderContent implements Serializable {
 	private String wbEhsentNo;// 物流公司备案号
 	private String entOrderNo;// 对接海关订单总编号
 	private String reMark;//
-
 	private String waybillNo;// (快递单号)运单编号
+	private double actualAmountPaid;// 实际支付金额
 	private double tax;// 税费
 	private int sourceFlag;// 来源标识：1-银盟商城、2-第三方推广
+	
+	
+	private String profitType;// 分润计算类型：1-比例，2-按固定分润数
+	private double dividendRatio;// 推广商分润比例
+	private double dividendAmount;// 推广商分红金额
+	private double masterDividendRatio;// 主商户分红比例
+	private double masterDividendAmount;// 主商户分红金额
+	private double platformDividendRatio;// 平台手续费-费率
+	private double platformDividendAmount;// 平台手续费
+	private String expadndMerchantCode;// 推广商code
+	private String expadndMerchantName;// 推广商名称
 
 	public long getId() {
 		return id;
@@ -346,4 +357,85 @@ public class OrderContent implements Serializable {
 		this.sourceFlag = sourceFlag;
 	}
 
+	public String getProfitType() {
+		return profitType;
+	}
+
+	public double getDividendRatio() {
+		return dividendRatio;
+	}
+
+	public double getDividendAmount() {
+		return dividendAmount;
+	}
+
+	public double getMasterDividendRatio() {
+		return masterDividendRatio;
+	}
+
+	public double getMasterDividendAmount() {
+		return masterDividendAmount;
+	}
+
+	public double getPlatformDividendRatio() {
+		return platformDividendRatio;
+	}
+
+	public double getPlatformDividendAmount() {
+		return platformDividendAmount;
+	}
+
+	public void setProfitType(String profitType) {
+		this.profitType = profitType;
+	}
+
+	public void setDividendRatio(double dividendRatio) {
+		this.dividendRatio = dividendRatio;
+	}
+
+	public void setDividendAmount(double dividendAmount) {
+		this.dividendAmount = dividendAmount;
+	}
+
+	public void setMasterDividendRatio(double masterDividendRatio) {
+		this.masterDividendRatio = masterDividendRatio;
+	}
+
+	public void setMasterDividendAmount(double masterDividendAmount) {
+		this.masterDividendAmount = masterDividendAmount;
+	}
+
+	public void setPlatformDividendRatio(double platformDividendRatio) {
+		this.platformDividendRatio = platformDividendRatio;
+	}
+
+	public void setPlatformDividendAmount(double platformDividendAmount) {
+		this.platformDividendAmount = platformDividendAmount;
+	}
+
+	public String getExpadndMerchantCode() {
+		return expadndMerchantCode;
+	}
+
+	public String getExpadndMerchantName() {
+		return expadndMerchantName;
+	}
+
+	public void setExpadndMerchantCode(String expadndMerchantCode) {
+		this.expadndMerchantCode = expadndMerchantCode;
+	}
+
+	public void setExpadndMerchantName(String expadndMerchantName) {
+		this.expadndMerchantName = expadndMerchantName;
+	}
+
+	public double getActualAmountPaid() {
+		return actualAmountPaid;
+	}
+
+	public void setActualAmountPaid(double actualAmountPaid) {
+		this.actualAmountPaid = actualAmountPaid;
+	}
+
+	
 }

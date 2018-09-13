@@ -22,6 +22,8 @@ import org.silver.util.StringEmptyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.justep.baas.data.Table;
+import com.justep.baas.data.Transform;
 
 import net.sf.json.JSONArray;
 
@@ -57,23 +59,18 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 
 	@Override
 	public Map<String, Object> getGoodsInfo(String merchantId, Map<String, Object> datasMap, int page, int size) {
-		Map<String, Object> params = new HashMap<>();
 		if (StringEmptyUtils.isNotEmpty(merchantId)) {
-			params.put("counterOwnerId", merchantId);
+			datasMap.put("counterOwnerId", merchantId);
 		}
-		if (StringEmptyUtils.isNotEmpty(datasMap.get("counterId"))) {
-			params.put("counterId", datasMap.get("counterId") + "");
-		}
-		params.put("deleteFlag", 0);
-		List<CounterGoodsContent> reList = merchantCounterDao.findByProperty(CounterGoodsContent.class, params, page,
-				size);
-		long count = merchantCounterDao.findByPropertyCount(CounterGoodsContent.class, params);
-		if (reList == null) {
-			return ReturnInfoUtils.warnInfo();
-		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList, count);
-		}
-		return ReturnInfoUtils.errorInfo("暂无数据！");
+//		if (StringEmptyUtils.isNotEmpty(datasMap.get("counterId"))) {
+//			params.put("counterId", datasMap.get("counterId") + "");
+//		}
+		datasMap.put("deleteFlag", 0);
+		// 上/下架标识：1-上架,2-下架,
+		datasMap.put("sellFlag", "1");
+		datasMap.remove("page");
+		datasMap.remove("size");
+		return inquireHelperService.findInfo(CounterGoodsContent.class, datasMap, page, size);
 	}
 
 	@Override
@@ -101,7 +98,7 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 			return ReturnInfoUtils.errorInfo("log图片不能为空");
 		}
 		// https://vip.191ec.com?counterId=
-		String topUrl = "https://vip.191ec.com?counterId=";
+		String topUrl = "https://vshop.191ec.com?counterId=";
 		counter.setCounterURL(topUrl + counterId);
 		counter.setLogo(imglist.get(0) + "");
 		counter.setImge(datasMap.get("imge") + "");
@@ -178,7 +175,7 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 					StockContent stock = reStockList.get(0);
 					GoodsRecordDetail goods = reGoodsList.get(0);
 					CounterGoodsContent content = new CounterGoodsContent();
-					content.setSerialNo(SerialNoUtils.getSerialNo("C", id));
+					content.setSerialNo(SerialNoUtils.getSerialNo("CG", id));
 					content.setCounterId(datasMap.get("counterId") + "");
 					content.setCounterOwnerId(merchantInfo.getMerchantId());
 					content.setCounterOwnerName(merchantInfo.getMerchantName());
@@ -189,6 +186,8 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 					content.setRegPrice(stock.getRegPrice());
 					// 推广标识：1-允许分销、2-不允许分销
 					content.setPopularizeFlag(2);
+					//上/下架标识：1-上架,2-下架
+					content.setSellFlag("1");
 					content.setCreateDate(new Date());
 					content.setCreateBy(merchantInfo.getMerchantName());
 					content.setGoodsImage(goods.getSpareGoodsImage());
@@ -228,7 +227,7 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 		String popularizeFlag = datasMap.get("popularizeFlag") + "";
 		datasMap.remove("popularizeProfit");
 		datasMap.remove("popularizeFlag");
-		Map<String, Object> reMap = inquireHelperService.getInfo(CounterGoodsContent.class, datasMap, 1, 1);
+		Map<String, Object> reMap = inquireHelperService.findInfo(CounterGoodsContent.class, datasMap, 1, 1);
 		if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 			return reMap;
 		}
@@ -249,6 +248,12 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 		return updateCounterGoods(goods);
 	}
 
+	
+	/**
+	 * 更新专柜商品信息
+	 * @param entity 专柜商品实体信息类
+	 * @return Map
+	 */
 	private Map<String, Object> updateCounterGoods(CounterGoodsContent entity) {
 		if (entity == null) {
 			return ReturnInfoUtils.errorInfo("更新参数不能为null");
@@ -258,5 +263,18 @@ public class MerchantCounterServiceImpl implements MerchantCounterService {
 			return ReturnInfoUtils.errorInfo("更新商品信息失败,服务器繁忙！");
 		}
 		return ReturnInfoUtils.successDataInfo(entity);
+	}
+
+	@Override
+	public Map<String, Object> getEnteringTheCabinetGoods(String merchantId, Map<String, Object> datasMap, int page, int size) {
+		Table table = merchantCounterDao.getEnteringTheCabinetGoods(merchantId,datasMap,page,size);
+		Table count = merchantCounterDao.getEnteringTheCabinetGoods(merchantId,datasMap,0,0);
+		if(table == null){
+			return ReturnInfoUtils.warnInfo();
+		}else if(table.getRows().isEmpty()){
+			return ReturnInfoUtils.noDatas();
+		}else{
+			return ReturnInfoUtils.successDataInfo(Transform.tableToJson(table).get("rows"),count.getRows().size());
+		}
 	}
 }

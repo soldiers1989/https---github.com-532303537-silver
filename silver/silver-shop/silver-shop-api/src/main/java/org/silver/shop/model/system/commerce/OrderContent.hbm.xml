@@ -115,9 +115,40 @@
 		<property name="tax" type="java.lang.Double">
 			<column name="tax" default="0.0" />
 		</property>
-		  <property name="sourceFlag" type="int">
-            <column name="sourceFlag" default="1"/>
-        </property>
-        	
+		<property name="sourceFlag" type="int">
+			<column name="sourceFlag" default="1" />
+		</property>
+		<property name="profitType" type="int">
+			<column name="profitType" default="0" />
+		</property>
+
+		<property name="dividendRatio" type="java.lang.Double">
+			<column name="dividendRatio" default="0.0" />
+		</property>
+		<property name="dividendAmount" type="java.lang.Double">
+			<column name="dividendAmount" default="0.0" />
+		</property>
+		<property name="masterDividendRatio" type="java.lang.Double">
+			<column name="masterDividendRatio" default="0.0" />
+		</property>
+		<property name="masterDividendAmount" type="java.lang.Double">
+			<column name="masterDividendAmount" default="0.0" />
+		</property>
+		<property name="platformDividendRatio" type="java.lang.Double">
+			<column name="platformDividendRatio" default="0.0" />
+		</property>
+		<property name="platformDividendAmount" type="java.lang.Double">
+			<column name="platformDividendAmount" default="0.0" />
+		</property>
+
+		<property name="expadndMerchantCode" type="java.lang.String">
+			<column name="expadndMerchantCode" />
+		</property>
+		<property name="expadndMerchantName" type="java.lang.String">
+			<column name="expadndMerchantName" />
+		</property>
+		<property name="actualAmountPaid" type="java.lang.Double">
+			<column name="actualAmountPaid" default="0.0" />
+		</property>
 	</class>
 </hibernate-mapping>

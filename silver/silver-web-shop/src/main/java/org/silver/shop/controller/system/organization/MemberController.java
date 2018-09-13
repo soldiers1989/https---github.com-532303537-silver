@@ -771,15 +771,10 @@ public class MemberController {
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
 		HttpSession session = req.getSession();
 		String phone = session.getAttribute(RETRIEVE_LOGIN_PASSWORD_PHONE) + "";
-		
-		Map<String, Object> reRedisMap = SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE,
-				phone, smsCaptcha);
-		if (!"1".equals(reRedisMap.get(BaseCode.STATUS.toString()))) {
-			return JSONObject.fromObject(reRedisMap).toString();
-		}
 		session.setMaxInactiveInterval(5 * 60);
 		session.setAttribute(RETRIEVE_LOGIN_PASSWORD_UUID, UUID.randomUUID().toString());
-		return JSONObject.fromObject(ReturnInfoUtils.errorInfo("短信验证码无效！")).toString();
+		return JSONObject.fromObject(SendMsg.checkRedisInfo(RedisKey.SHOP_KEY_MEMBER_RESET_LOGIN_PASSWORD_CODE,
+				phone, smsCaptcha)).toString();
 	}
 
 	@RequestMapping(value = "/resetLoginPassword", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

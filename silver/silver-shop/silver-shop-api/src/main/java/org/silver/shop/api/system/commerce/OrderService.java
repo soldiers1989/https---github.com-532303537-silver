@@ -79,7 +79,7 @@ public interface OrderService {
 	 *            订单id
 	 * @return
 	 */
-	public Map<String, Object> getMerchantOrderDetail(String merchantId, String merchantName, String entOrderNo);
+	public Map<String, Object> getMerchantOrderDetail(String merchantId,  String entOrderNo);
 
 	/**
 	 * 用户查看订单详情

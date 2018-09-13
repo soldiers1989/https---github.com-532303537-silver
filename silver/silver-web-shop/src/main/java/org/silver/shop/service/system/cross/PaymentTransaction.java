@@ -34,9 +34,7 @@ public class PaymentTransaction {
 	// 发送支付单备案
 	public Object sendMpayRecord(Map<String, Object> recordMap, String tradeNoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
 		String proxyParentId = merchantInfo.getAgentParentId();

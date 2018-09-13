@@ -36,6 +36,7 @@ public class MemberTransaction {
 
 	@Autowired
 	private MemberService memberService;
+		
 
 	/**
 	 * 用户登录密码输入错误缓存计数KEY
@@ -252,20 +253,19 @@ public class MemberTransaction {
 	public Map<String, Object> getOldPhone(String oldPhone, String idNumber) {
 		Subject currentUser = SecurityUtils.getSubject();
 		Member memberInfo = (Member) currentUser.getSession().getAttribute(LoginType.MEMBER_INFO.toString());
-		Member member = null;
 		Map<String, Object> reMemberMap = null;
+		Map<String, Object> params = new HashMap<>();
 		if (memberInfo != null) {// 根据用户id查询
-			reMemberMap = memberService.getMemberInfo(memberInfo.getMemberId());
+			params.put("memberId", memberInfo.getMemberId());
+			reMemberMap = memberService.getInfo(params,1,1);
 		} else {// 当用户未登录时，使用身份证号码进行查询用户信息
-			Map<String, Object> params = new HashMap<>();
 			params.put("memberIdCard", idNumber);
-			reMemberMap = memberService.getInfo(params, 0, 0);
+			reMemberMap = memberService.getInfo(params,1, 1);
 		}
 		if (!"1".equals(reMemberMap.get(BaseCode.STATUS.toString()))) {
 			return reMemberMap;
 		}
-		List<Member> memberList = (List<Member>) reMemberMap.get(BaseCode.DATAS.toString());
-		member = memberList.get(0);
+		Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 		return checkPhoneAndIdNumber(oldPhone, idNumber, member);
 	}
 

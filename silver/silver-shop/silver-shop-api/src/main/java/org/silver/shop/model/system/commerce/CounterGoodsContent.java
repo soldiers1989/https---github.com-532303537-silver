@@ -24,6 +24,9 @@ public class CounterGoodsContent implements Serializable {
 	private double regPrice;// 单价
 	private int popularizeFlag;// 推广标识：1-允许分销、2-不允许分销
 	private String profitType;// 分润计算类型：1-比例，2-按固定分润数
+	private String sellFlag;// 上/下架标识：1-上架,2-下架,
+	private Date sellDate;// 商品上架时间
+	private Date dropOffDate;// 商品下架时间
 	private double popularizeProfit;// 推广分润
 	private String goodsImage;// 商品主图
 	private String remark;//
@@ -215,4 +218,29 @@ public class CounterGoodsContent implements Serializable {
 		this.goodsMerchantName = goodsMerchantName;
 	}
 
+	public String getSellFlag() {
+		return sellFlag;
+	}
+
+	public Date getSellDate() {
+		return sellDate;
+	}
+
+	public Date getDropOffDate() {
+		return dropOffDate;
+	}
+
+	public void setSellFlag(String sellFlag) {
+		this.sellFlag = sellFlag;
+	}
+
+	public void setSellDate(Date sellDate) {
+		this.sellDate = sellDate;
+	}
+
+	public void setDropOffDate(Date dropOffDate) {
+		this.dropOffDate = dropOffDate;
+	}
+
+	
 }

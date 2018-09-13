@@ -2,6 +2,8 @@ package org.silver.shop.api.system.commerce;
 
 import java.util.Map;
 
+import org.silver.shop.model.system.commerce.StockContent;
+
 public interface StockService {
 
 	/**
@@ -93,5 +95,21 @@ public interface StockService {
 	 */
 	public Map<String, Object> merchantSetGoodsSalePriceAndMarketPrice(String merchantId, String merchantName,
 			String goodsInfoPack,int type);
+
+	/**
+	 * 更新商品市场价或销售价
+	 * 
+	 * @param stockInfo
+	 *            库存信息
+	 * @param price
+	 *            价格
+	 * @param type
+	 *            类型:1-市场价,2-销售价
+	 * @param merchantName
+	 *            商户名称
+	 * @return Map
+	 */
+	public Map<String, Object> updateSalePriceAndMarketPrice(StockContent stockInfo, double price, int type,
+			String merchantName);
 
 }

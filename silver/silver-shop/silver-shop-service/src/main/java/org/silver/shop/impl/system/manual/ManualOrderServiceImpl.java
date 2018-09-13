@@ -346,15 +346,15 @@ public class ManualOrderServiceImpl implements ManualOrderService, MessageListen
 		String orderDocName = jsonDatas.get("orderDocName") + "";
 		// 娜地拉·艾孜拉提
 		if (!StringUtil.isChinese(recipientName) || recipientName.contains("先生") || recipientName.contains("女士")) {
-			String msg = "订单号[" + orderId + "]收货人姓名错误,请核对订单信息！";
+			String msg = "订单号[" + orderId + "]收货人姓名错误！";
 			RedisInfoUtils.errorInfoMq(msg, "name", params);
 		}
 		if (!StringUtil.isChinese(orderDocName) || orderDocName.contains("先生") || orderDocName.contains("女士")) {
-			String msg = "订单号[" + orderId + "]订单人姓名错误,请核对订单信息！";
+			String msg = "订单号[" + orderId + "]订单人姓名错误！";
 			RedisInfoUtils.errorInfoMq(msg, "name", params);
 		}
 		if (!PhoneUtils.isPhone(recipientTel)) {
-			String msg = "订单号[" + orderId + "]收件人电话错误,请核对订单信息！";
+			String msg = "订单号[" + orderId + "]收件人电话错误！";
 			RedisInfoUtils.errorInfoMq(msg, "phone", params);
 		}
 		return ReturnInfoUtils.successInfo();

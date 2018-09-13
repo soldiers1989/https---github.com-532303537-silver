@@ -50,6 +50,13 @@ public class MerchantWalletController {
 	 */
 	private static final String DAI_FU_NOTIFY_URL = "https://ym.191ec.com/silver-web-shop/yspay-receive/dfReceive";
 
+	@RequestMapping(value = "/redirectHTML", produces = "application/json; charset=utf-8")
+	// @RequiresPermissions("merchantWallet:walletRecharge")
+	public String redirectHTML(HttpServletRequest req, HttpServletResponse resp) {
+		return "redirect:https://asme.191ec.com/200.html";
+	}
+	
+	
 	/**
 	 * 商户钱包充值
 	 * 
@@ -72,7 +79,7 @@ public class MerchantWalletController {
 			// request.setAttribute("sign", userName);
 			// 生成商户订单 out_trade_no total_amount
 			req.setAttribute("notify_url", "https://ym.191ec.com/silver-web-shop/yspay-receive/walletRecharge");
-			req.setAttribute("return_url", "https://asme.191ec.com/200.html");
+			req.setAttribute("return_url", "https://asme.191ec.com/silver-web-shop/merchantWallet/redirectHTML");
 			// req.setAttribute("return_url",
 			// "https://www.191ec.com/silver-web-shop/");
 			req.setAttribute("version", DirectPayConfig.VERSION);

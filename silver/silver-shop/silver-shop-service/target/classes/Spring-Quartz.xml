@@ -150,14 +150,13 @@
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
-				<ref bean="createPaymentBean" />
-				<!-- <ref bean="pushOrderRecordBean" />
+				<!--<ref bean="pushOrderRecordBean" />
+			 	<ref bean="createPaymentBean" />
 				<ref bean="pushPaymentRecordBean" />
 				<ref bean="resendPushOrderRecordBean" /> 
 				<ref bean="resendPaymentRecordBean" />
 			 	<ref bean="thirdPartyOrderCallBackBean" />
- -->
-				<!-- <ref bean="createReportBean" /> -->
+				<ref bean="createReportBean" /> -->
 			</list>
 		</property>
 	</bean>

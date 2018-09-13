@@ -17,20 +17,6 @@ public interface MerchantWalletService {
 
 
 	/**
-	 * 商户钱包扣款
-	 * 
-	 * @param merchantWallet
-	 *            商户钱包实体类
-	 * @param balance
-	 *            商户原钱包余额
-	 * @param serviceFee
-	 *            手续费(平台服务费)
-	 * @return Map
-	 */
-	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
-			double serviceFee);
-
-	/**
 	 * 添加用户钱包日志
 	 * @param orderId 订单Id
 	 * @param amount 交易金额

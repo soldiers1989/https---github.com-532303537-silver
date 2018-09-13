@@ -59,5 +59,16 @@ public interface MerchantCounterService {
 	 */
 	public Map<String, Object> updatePopularizeFlag(Map<String, Object> datasMap);
 
+	
+	/**
+	 * 根据商户id查询商户能加入专柜的商品信息
+	 * @param merchantId 商户id
+	 * @param datasMap 查询参数
+	 * @param size 
+	 * @param page 
+	 * @return Map
+	 */
+	public Map<String, Object> getEnteringTheCabinetGoods(String merchantId, Map<String, Object> datasMap, int page, int size);
+
 
 }

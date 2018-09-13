@@ -88,11 +88,7 @@ public class MemberServiceImpl implements MemberService {
 			return ReturnInfoUtils.errorInfo("注册失败,服务器繁忙!");
 		}
 		// 创建用户钱包
-		Map<String, Object> reWalletMap = walletUtils.checkWallet(2, memberId, account);
-		if (!"1".equals(reWalletMap.get(BaseCode.STATUS.toString()))) {
-			return reWalletMap;
-		}
-		return ReturnInfoUtils.successInfo();
+		return walletUtils.checkWallet(2, memberId, account);
 	}
 
 	@Override
@@ -694,11 +690,17 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> getInfo(Map<String, Object> params, int page, int size) {
+
 		List<Member> reList = memberDao.findByProperty(Member.class, params, page, size);
+		long count = memberDao.findByPropertyCount(Member.class, params);
 		if (reList == null) {
 			return ReturnInfoUtils.warnInfo();
 		} else if (!reList.isEmpty()) {
-			return ReturnInfoUtils.successDataInfo(reList);
+			if (page == 1 && size == 1) {
+				return ReturnInfoUtils.successDataInfo(reList.get(0));
+			} else {
+				return ReturnInfoUtils.successDataInfo(reList, count);
+			}
 		} else {
 			return ReturnInfoUtils.noDatas();
 		}
@@ -706,7 +708,6 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public Map<String, Object> updatePayPwd(String newPayPassword) {
-		
 		if (!newPayPassword.matches(LOGIN_PASSWORD_REGEX)) {
 			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
 		}

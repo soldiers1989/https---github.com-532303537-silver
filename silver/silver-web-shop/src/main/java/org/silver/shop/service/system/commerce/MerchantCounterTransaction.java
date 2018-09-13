@@ -46,8 +46,8 @@ public class MerchantCounterTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		//路径
-		String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantInfo.getMerchantId() + "/";
-		//String path = "/opt/www/img/counter/" + merchantInfo.getMerchantId() + "/";
+	//	String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantInfo.getMerchantId() + "/";
+		String path = "/opt/www/img/counter/" + merchantInfo.getMerchantId() + "/";
 		Map<String, Object> imgMap = fileUpLoadService.universalDoUpload(req, path, ".jpg", false, 800, 800, null);
 		if (!"1".equals(imgMap.get(BaseCode.STATUS.toString()) + "")) {
 			return imgMap;
@@ -76,6 +76,13 @@ public class MerchantCounterTransaction {
 
 	public Map<String,Object> updatePopularizeFlag(Map<String, Object> datasMap) {
 		return merchantCounterService.updatePopularizeFlag(datasMap);
+	}
+
+	//
+	public Map<String,Object> getEnteringTheCabinetGoods(Map<String, Object> datasMap, int page, int size) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return merchantCounterService.getEnteringTheCabinetGoods(merchantInfo.getMerchantId(),datasMap,page,size);
 	}
 	
 }

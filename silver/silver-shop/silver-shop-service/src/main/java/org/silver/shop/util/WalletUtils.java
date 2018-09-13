@@ -123,7 +123,9 @@ public class WalletUtils {
 			}
 			Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
 			wallet = new MerchantWalletContent.Builder(serialNo).merchantId(id).merchantName(merchant.getMerchantName())
-					.createBy(merchant.getMerchantName()).createDate(date).build();
+					.createBy(merchant.getMerchantName()).createDate(date)
+					.verifyCode(generateSign(serialNo, 0, 0, 0, 0)).build();
+
 			break;
 		case 2:
 			// 根据用户Id获取用户信息
@@ -133,7 +135,8 @@ public class WalletUtils {
 			}
 			Member member = (Member) reMemberMap.get(BaseCode.DATAS.toString());
 			wallet = new MemberWalletContent.Builder(serialNo).memberId(id).memberName(member.getMemberName())
-					.createBy(member.getMemberName()).createDate(date).build();
+					.createBy(member.getMemberName()).createDate(date).verifyCode(generateSign(serialNo, 0, 0, 0))
+					.build();
 			break;
 		case 3:
 			// 根据代理商Id获取用户信息
@@ -197,8 +200,9 @@ public class WalletUtils {
 			e.printStackTrace();
 		}
 		params2.put("clientSign", clientSign);
-		System.out.println("--->"+generateSign("walletId_2018_000165126", 5257.58119, 120.49, 1.26561, 0));
-		//System.out.println("---->>" + YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params2));
+		System.out.println("--->" + generateSign("walletId_2018_000165126", 5257.58119, 120.49, 1.26561, 0));
+		// System.out.println("---->>" +
+		// YmHttpUtil.HttpPost(YmMallConfig.REAL_URL, params2));
 	}
 
 	/**
@@ -224,6 +228,7 @@ public class WalletUtils {
 	 * 生成钱包校验码
 	 * <li>注：用于生成带现金字段的钱包校验码</li>
 	 * <li>暂时针对商户钱包</li>
+	 * 
 	 * @param walletId
 	 *            钱包id
 	 * @param balance
@@ -238,11 +243,10 @@ public class WalletUtils {
 	 */
 	public static final String generateSign(String walletId, double balance, double reserveAmount, double freezingFunds,
 			double cash) {
-		
+
 		MD5 md5 = new MD5();
 		return md5.getMD5ofStr("YM_" + walletId + balance + reserveAmount + freezingFunds + cash);
 	}
-	
 
 	/**
 	 * 检查用户钱包校验码

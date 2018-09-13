@@ -69,8 +69,17 @@
 		<property name="goodsImage" type="java.lang.String">
 			<column name="goodsImage" />
 		</property>
-			<property name="profitType" type="java.lang.String">
+		<property name="profitType" type="java.lang.String">
 			<column name="profitType" />
+		</property>
+		<property name="sellFlag" type="java.lang.String">
+			<column name="sellFlag" />
+		</property>
+		<property name="sellDate" type="java.util.Date">
+			<column name="sellDate" />
+		</property>
+		<property name="dropOffDate" type="java.util.Date">
+			<column name="dropOffDate" />
 		</property>
 	</class>
 </hibernate-mapping>

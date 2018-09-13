@@ -56,26 +56,6 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 	}
 
 	@Override
-	public Map<String, Object> walletDeduction(MerchantWalletContent merchantWallet, double balance,
-			double serviceFee) {
-		if (merchantWallet == null) {
-			return ReturnInfoUtils.errorInfo("商户钱包扣费时,请求参数不能为空!");
-		}
-		// 扣除服务费后余额
-		double surplus = balance - serviceFee;
-		if (surplus < 0) {
-			return ReturnInfoUtils.errorInfo("扣款失败,账户余额不足!");
-		}
-		merchantWallet.setBalance(surplus);
-		merchantWallet.setUpdateDate(new Date());
-		merchantWallet.setUpdateBy("system");
-		if (!merchantWalletDao.update(merchantWallet)) {
-			return ReturnInfoUtils.errorInfo("钱包结算手续费失败,服务器繁忙!");
-		}
-		return ReturnInfoUtils.successInfo();
-	}
-
-	@Override
 	public void addWalletRechargeLog(String merchantId, String merchantName, double amount, String orderId) {
 		if (StringEmptyUtils.isNotEmpty(merchantId) && StringEmptyUtils.isNotEmpty(merchantName)
 				&& StringEmptyUtils.isNotEmpty(orderId) && amount >= 0.01) {
@@ -493,9 +473,7 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 				for (MerchantWalletContent entity : reList) {
 					String newSign = WalletUtils.generateSign(entity.getWalletId(), entity.getBalance(),
 							entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash());
-					entity.setVerifyCode(newSign);
-					WalletUtils.checkVerifyCode2(entity.getVerifyCode(), entity.getWalletId(), entity.getBalance(),
-							entity.getReserveAmount(), entity.getFreezingFunds(), entity.getCash());
+					entity.setVerifyCode(newSign);					
 					Map<String, Object> reUpdateMap = updateWallet(entity);
 					if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 						return reUpdateMap;
@@ -585,7 +563,6 @@ public class MerchantWalletServiceImpl implements MerchantWalletService {
 				entity.getReserveAmount(), entity.getFreezingFunds(),entity.getCash());
 		entity.setVerifyCode(sgin);
 		return updateWallet(entity);
-		
 	}
 	
 }

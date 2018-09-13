@@ -27,9 +27,10 @@ public class MerchantFeeTransaction {
 		return merchantFeeService.addMerchantServiceFee(params);
 	}
 
-	//管理员查询商户口岸费率信息
-	public Map<String,Object> getMerchantServiceFee(String merchantId, String type) {
-		return merchantFeeService.getMerchantServiceFee(merchantId,type);
+	public Map<String,Object> getMerchantServiceFee( String type) {
+		Subject currentUser = SecurityUtils.getSubject();
+		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
+		return merchantFeeService.getMerchantServiceFee(merchantInfo.getMerchantId(),type);
 	}
 
 	//管理员修改商户口岸费率信息

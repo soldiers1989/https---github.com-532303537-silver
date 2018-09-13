@@ -96,9 +96,10 @@ public class MerchantTransaction {
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
-		//String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/" + merchantId + "/";
-		String path ="/opt/www/img/merchant/" + merchantId + "/";
-		
+		// String path = "E:/STSworkspace/apache-tomcat-7.0.57/webapps/UME/img/"
+		// + merchantId + "/";
+		String path = "/opt/www/img/merchant/" + merchantId + "/";
+
 		// 海关注册编码
 		String customsregistrationCode = req.getParameter("merchantCustomsregistrationCode");
 		// 组织机构编码
@@ -135,7 +136,7 @@ public class MerchantTransaction {
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String account = merchantInfo.getMerchantName();
-		
+
 		// 验证输入的原密码是否能登录
 		Map<String, Object> reMap = merchantLogin(account, oldLoginPassword);
 		if (reMap != null) {
@@ -150,9 +151,7 @@ public class MerchantTransaction {
 	// 获取商户备案信息
 	public Map<String, Object> getMerchantRecordInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return merchantService.getMerchantRecordInfo(merchantId);
 	}
@@ -164,7 +163,6 @@ public class MerchantTransaction {
 
 	public List<String> getMerchantAuthority() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
@@ -187,7 +185,8 @@ public class MerchantTransaction {
 	public Map<String, Object> setRelatedMember(String accountName, String loginPassword, String payPassword) {
 		Subject currentUser = SecurityUtils.getSubject();
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		return merchantService.setRelatedMember(merchantInfo.getMerchantId(),merchantInfo.getMerchantName(),accountName,loginPassword,payPassword);
+		return merchantService.setRelatedMember(merchantInfo.getMerchantId(), merchantInfo.getMerchantName(),
+				accountName, loginPassword, payPassword);
 	}
 
 	//
@@ -200,16 +199,13 @@ public class MerchantTransaction {
 
 	public Map<String, Object> getBusinessInfo() {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
-		// 获取登录后的商户账号
 		String merchantId = merchantInfo.getMerchantId();
 		return merchantService.getBusinessInfo(merchantId);
 	}
 
 	public Map<String, Object> updateBaseInfo(Map<String, Object> datasMap) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();
@@ -218,7 +214,24 @@ public class MerchantTransaction {
 		if (!"1".equals(reUpdateMap.get(BaseCode.STATUS.toString()))) {
 			return reUpdateMap;
 		}
-		currentUser.getSession().setAttribute(LoginType.MERCHANT_INFO.toString(), reUpdateMap.get(BaseCode.DATAS.toString()));;
+		currentUser.getSession().setAttribute(LoginType.MERCHANT_INFO.toString(),
+				reUpdateMap.get(BaseCode.DATAS.toString()));
 		return ReturnInfoUtils.successInfo();
+	}
+
+	public Map<String, Object> checkMerchant(String phone, String merchantName) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantPhone", phone);
+		params.put("merchantName", merchantName);
+		Map<String,Object> reMap = merchantService.getMerchantInfo(params, 1, 1);
+		if("-1".equals(reMap.get(BaseCode.ERROR_CODE.toString()))){
+			return ReturnInfoUtils.errorInfo("登录账户或手机号码错误！");
+		}else{
+			return reMap;
+		}
+	}
+
+	public Map<String,Object> resetLoginPwd(String merchantId ,String loginPassword) {
+		return merchantService.resetLoginPwd(merchantId, loginPassword);
 	}
 }

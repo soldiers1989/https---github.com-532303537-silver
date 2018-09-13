@@ -21,6 +21,7 @@ import org.silver.shop.model.system.organization.MerchantDetail;
 import org.silver.shop.model.system.tenant.MerchantRecordInfo;
 import org.silver.shop.model.system.tenant.MerchantRelatedMemberContent;
 import org.silver.shop.util.IdUtils;
+import org.silver.shop.util.InquireHelperService;
 import org.silver.shop.util.WalletUtils;
 import org.silver.util.EmailUtils;
 import org.silver.util.MD5;
@@ -50,6 +51,8 @@ public class MerchantServiceImpl implements MerchantService {
 	private MemberService memberService;
 	@Autowired
 	private WalletUtils walletUtils;
+	@Autowired
+	private InquireHelperService inquireHelperService;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	// 口岸
@@ -470,7 +473,7 @@ public class MerchantServiceImpl implements MerchantService {
 			return ReturnInfoUtils.errorInfo("登录密码错误！", "501");
 		}
 		String paymentPassword = member.getPaymentPassword();
-		if(StringEmptyUtils.isEmpty(paymentPassword)){
+		if (StringEmptyUtils.isEmpty(paymentPassword)) {
 			return ReturnInfoUtils.errorInfo("用户还未设置交易密码，请先设置交易密码！");
 		}
 		if (!paymentPassword.equals(md5.getMD5ofStr(payPassword))) {
@@ -532,13 +535,14 @@ public class MerchantServiceImpl implements MerchantService {
 				while (iterator.hasNext()) {
 					String key = (String) iterator.next();
 					String value = json.get(key) + "";
+					System.out.println("-----key>>"+key+";==value="+value);
 					if (StringEmptyUtils.isNotEmpty(value)) {
 						item.put(key, StringUtil.replace(value));
 					}
 				}
 				newList.add(item);
 			}
-			return ReturnInfoUtils.successDataInfo(newList,count.getRows().size());
+			return ReturnInfoUtils.successDataInfo(newList, count.getRows().size());
 		} else {
 			return ReturnInfoUtils.noDatas();
 		}
@@ -598,5 +602,44 @@ public class MerchantServiceImpl implements MerchantService {
 		} else {
 			return ReturnInfoUtils.errorInfo("未找到该商户业务信息!");
 		}
+	}
+
+	@Override
+	public Map<String, Object> getMerchantInfo(Map<String, Object> params, int page, int size) {
+		return inquireHelperService.findInfo(Merchant.class, params, page, size);
+	}
+
+	@Override
+	public Map<String, Object> resetLoginPwd(String merchantId, String newPassword) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("merchantId", merchantId);
+		Map<String, Object> reMerchantMap = inquireHelperService.findInfo(Merchant.class, params, 1, 1);
+		if (!"1".equals(reMerchantMap.get(BaseCode.STATUS.toString()))) {
+			return reMerchantMap;
+		}
+		Merchant merchant = (Merchant) reMerchantMap.get(BaseCode.DATAS.toString());
+		if (!newPassword.matches(LOGIN_PASSWORD_REGEX)) {
+			return ReturnInfoUtils.errorInfo("密码至少要由包括大小写字母、数字、特殊符号的其中两项，且长度要在6-20位之间！");
+		}
+		MD5 md5 = new MD5();
+		merchant.setLoginPassword(md5.getMD5ofStr(newPassword));
+		return updateMerchantInfo(merchant);
+	}
+
+	/**
+	 * 更新商户基本信息
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	private Map<String, Object> updateMerchantInfo(Merchant entity) {
+		if (entity == null) {
+			return ReturnInfoUtils.errorInfo("更新参数不能为null");
+		}
+		entity.setUpdateDate(new Date());
+		if (merchantDao.update(entity)) {
+			return ReturnInfoUtils.successInfo();
+		}
+		return ReturnInfoUtils.errorInfo("修改失败，服务器繁忙！!");
 	}
 }

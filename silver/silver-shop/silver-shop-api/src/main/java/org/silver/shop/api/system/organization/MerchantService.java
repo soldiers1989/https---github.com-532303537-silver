@@ -140,9 +140,26 @@ public interface MerchantService {
 	 * 商户修改基本信息
 	 * @param merchantId 商户id
 	 * @param datasMap 
-	 * @param merchantName 
+	 * @param merchantName 商户名称 
 	 * @return Map
 	 */
 	public Map<String, Object> updateBaseInfo(String merchantId, String merchantName, Map<String, Object> datasMap);
+
+	/**
+	 * 查询商户信息
+	 * @param params 查询参数
+	 * @param size 
+	 * @param page 
+	 * @return
+	 */
+	public Map<String, Object> getMerchantInfo(Map<String, Object> params, int page, int size);
+
+	/**
+	 * 根据用户id重新设置登录密码
+	 * @param merchantId 商户id
+	 * @param newPassword 新的登录密码
+	 * @return 
+	 */
+	public Map<String, Object> resetLoginPwd(String merchantId, String newPassword);
 
 }

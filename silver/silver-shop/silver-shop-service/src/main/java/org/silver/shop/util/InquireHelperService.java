@@ -24,14 +24,16 @@ public class InquireHelperService<T> {
 	
 	
 	/**
+	 * 
 	 * <li>注：当page=1、size=1 时则直接传回实体信息<li>
-	 * @param entity
+	 * @param entity 实体类
 	 * @param datasMap
-	 * @param page
-	 * @param size
-	 * @return
+	 * 		<li>查询参数中的键必须与数据库中的键名一致</li>
+	 * @param page 页数
+	 * @param size 数目
+	 * @return Map
 	 */
-	public Map<String, Object> getInfo(Class<T> entity,Map<String, Object> datasMap, int page, int size) {
+	public Map<String, Object> findInfo(Class<T> entity,Map<String, Object> datasMap, int page, int size) {
 		if(StringEmptyUtils.isNotEmpty(datasMap.get("startDate"))){
 			Date startDate= DateUtil.parseDate(datasMap.get("startDate")+"", "yyyy-MM-dd HH:mm:ss");
 			if(startDate == null){
@@ -79,5 +81,8 @@ public class InquireHelperService<T> {
 			}
 		}
 	}
+	
+
+	
 	
 }

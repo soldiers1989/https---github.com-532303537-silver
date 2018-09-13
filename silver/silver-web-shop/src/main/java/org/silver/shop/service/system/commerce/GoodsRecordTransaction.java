@@ -76,7 +76,6 @@ public class GoodsRecordTransaction {
 	// 商户选择商品基本信息后,根据商品ID与商品名查询已发起备案的商品信息
 	public Map<String, Object> getMerchantGoodsRecordInfo(String goodsInfoPack) {
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantName = merchantInfo.getMerchantName();
 		return goodsRecordService.getGoodsRecordInfo(merchantName, goodsInfoPack);
@@ -114,7 +113,6 @@ public class GoodsRecordTransaction {
 	public Map<String, Object> editMerchantRecordGoodsDetailInfo(HttpServletRequest req, int type) {
 		Map<String, Object> paramMap = new HashMap<>();
 		Subject currentUser = SecurityUtils.getSubject();
-		// 获取商户登录时,shiro存入在session中的数据
 		Merchant merchantInfo = (Merchant) currentUser.getSession().getAttribute(LoginType.MERCHANT_INFO.toString());
 		String merchantId = merchantInfo.getMerchantId();
 		String merchantName = merchantInfo.getMerchantName();

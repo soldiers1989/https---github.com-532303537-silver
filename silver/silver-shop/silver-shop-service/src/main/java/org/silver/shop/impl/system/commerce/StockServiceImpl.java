@@ -429,7 +429,13 @@ public class StockServiceImpl implements StockService {
 				errorList.add(errorMap);
 			} else if (!reStockList.isEmpty()) {
 				StockContent stockInfo = reStockList.get(0);
-				Map<String, Object> reMap = updateSalePriceAndMarketPrice(stockInfo, datasMap, type, merchantName);
+				double price = 0.0;
+				try {
+					price = Double.parseDouble(datasMap.get("price") + "");
+				} catch (Exception e) {
+					return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]价格错误！");
+				}
+				Map<String, Object> reMap = updateSalePriceAndMarketPrice(stockInfo, price, type, merchantName);
 				if (!"1".equals(reMap.get(BaseCode.STATUS.toString()))) {
 					errorList.add(reMap);
 				}
@@ -442,29 +448,11 @@ public class StockServiceImpl implements StockService {
 		return ReturnInfoUtils.errorInfo(errorList, jsonList.size());
 	}
 
-	/**
-	 * 更新商品市场价或销售价
-	 * 
-	 * @param stockInfo
-	 *            库存信息
-	 * @param datasMap
-	 *            参数
-	 * @param type
-	 *            类型:1-市场价,2-销售价
-	 * @param merchantName
-	 *            商户名称
-	 * @return Map
-	 */
-	private Map<String, Object> updateSalePriceAndMarketPrice(StockContent stockInfo, Map<String, Object> datasMap,
+	@Override
+	public Map<String, Object> updateSalePriceAndMarketPrice(StockContent stockInfo, double price,
 			int type, String merchantName) {
-		if (stockInfo == null || datasMap == null) {
+		if (stockInfo == null ) {
 			return ReturnInfoUtils.errorInfo("请求参数不能为null！");
-		}
-		double price = 0.0;
-		try {
-			price = Double.parseDouble(datasMap.get("price") + "");
-		} catch (Exception e) {
-			return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]价格错误！");
 		}
 		// 类型:1-市场价,2-销售价
 		switch (type) {
@@ -475,6 +463,7 @@ public class StockServiceImpl implements StockService {
 			// 上下架标识：1-上架,2-下架,3-审核中
 			if (stockInfo.getSellFlag() == 2) {
 				stockInfo.setRegPrice(price);
+				
 			} else {
 				return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]当前状态不允许修改价格！");
 			}
@@ -483,6 +472,14 @@ public class StockServiceImpl implements StockService {
 			return ReturnInfoUtils.errorInfo("未知类型");
 		}
 		stockInfo.setUpdateBy(merchantName);
+		return updateStockInfo(stockInfo);
+	}
+
+	
+	private Map<String, Object> updateStockInfo(StockContent stockInfo) {
+		if(stockInfo == null){
+			return ReturnInfoUtils.errorInfo("更新参数不能为null");
+		}
 		stockInfo.setUpdateDate(new Date());
 		if (!stockDao.update(stockInfo)) {
 			return ReturnInfoUtils.errorInfo("商品自编号[" + stockInfo.getEntGoodsNo() + "]修改失败，服务器繁忙！");

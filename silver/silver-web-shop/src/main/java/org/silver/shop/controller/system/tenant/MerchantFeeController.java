@@ -60,20 +60,17 @@ public class MerchantFeeController {
 	@ApiOperation("商户获取口岸服务费信息")
 	@ResponseBody
 	@RequiresRoles("Merchant")
-	public String getMerchantServiceFee(HttpServletRequest req, HttpServletResponse response, String merchantId,
+	public String getMerchantServiceFee(HttpServletRequest req, HttpServletResponse response, 
 			String type) {
 		String originHeader = req.getHeader("Origin");
 		response.setHeader("Access-Control-Allow-Headers", "X-Requested-With, accept, content-type, xxxx");
 		response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, TRACE, OPTIONS, PATCH");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setHeader("Access-Control-Allow-Origin", originHeader);
-		if (StringEmptyUtils.isEmpty(merchantId)) {
-			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户Id不能为空!")).toString();
-		}
 		if (StringEmptyUtils.isEmpty(type)) {
 			return JSONObject.fromObject(ReturnInfoUtils.errorInfo("商户口岸费率类型不能为空!")).toString();
 		}
-		return JSONObject.fromObject(merchantFeeTransaction.getMerchantServiceFee(merchantId, type)).toString();
+		return JSONObject.fromObject(merchantFeeTransaction.getMerchantServiceFee( type)).toString();
 	}
 
 	@RequestMapping(value = "/updateServiceFee", method = RequestMethod.POST, produces = "application/json; charset=utf-8")

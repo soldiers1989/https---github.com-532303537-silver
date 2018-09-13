@@ -350,6 +350,7 @@ public class ManualOrderInterceptor {
 			return reCostMap;
 		}
 		MerchantIdCardCostContent merchantCost = (MerchantIdCardCostContent) reCostMap.get(BaseCode.DATAS.toString());
+		//
 		Map<String, Object> reDetailsMap = getidCardDetails(idCardList, merchantCost.getPlatformCost());
 		if (!"1".equals(reDetailsMap.get(BaseCode.STATUS.toString()))) {
 			return reDetailsMap;
